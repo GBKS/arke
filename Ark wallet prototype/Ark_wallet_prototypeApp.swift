@@ -6,27 +6,17 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct Ark_wallet_prototypeApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var walletManager = WalletManager()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
+                .environment(walletManager)
         }
-        .modelContainer(sharedModelContainer)
+        .defaultSize(width: 800, height: 600)
+        .windowResizability(.contentMinSize)
     }
 }
