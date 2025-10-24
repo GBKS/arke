@@ -76,7 +76,7 @@ struct ArkeButtonStyle: ButtonStyle {
         case .outline:
             return isPressed ? .white : color
         case .ghost:
-            return isPressed ? .black.opacity(0.6) : .black
+            return isPressed ? .primary.opacity(0.6) : .primary
         }
     }
     

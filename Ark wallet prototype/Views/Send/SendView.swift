@@ -28,8 +28,7 @@ struct SendView: View {
     @State private var amount = ""
     @State private var error: String?
     @State private var sendModalState: SendModalState?
-    @State private var clipboardAddress: String?
-    @State private var showClipboardPrompt = false
+    @State private var clipboardAddress: ParsedAddress?
     
     // MARK: - Computed Properties for Balance Display
     
@@ -37,7 +36,7 @@ struct SendView: View {
     private var maxSpendableAmount: Int {
         if recipient.isEmpty {
             return manager.totalBalance?.totalSpendableSat ?? 0
-        } else if isBitcoinAddress(recipient) {
+        } else if AddressValidator.isBitcoinAddress(recipient) {
             return manager.onchainBalance?.trustedSpendableSat ?? 0
         } else {
             return manager.arkBalance?.spendableSat ?? 0
@@ -47,24 +46,44 @@ struct SendView: View {
     /// Returns the appropriate balance text based on the recipient address type
     private var availableBalanceText: String {
         if recipient.isEmpty {
-            return "Available: \(manager.totalBalance?.totalSpendableSat.formatted() ?? "0") ₿ (Total balance)"
-        } else if isBitcoinAddress(recipient) {
+            let formattedBalance = BitcoinFormatter.formatAmount(manager.totalBalance?.totalSpendableSat ?? 0)
+            return "Available: \(formattedBalance) (Total balance)"
+        } else if AddressValidator.isBitcoinAddress(recipient) {
             let balance = manager.onchainBalance?.trustedSpendableSat ?? 0
-            return "Available: \(balance.formatted()) ₿ (Savings balance)"
+            let formattedBalance = BitcoinFormatter.formatAmount(balance)
+            return "Available: \(formattedBalance) (Savings balance)"
         } else {
             let balance = manager.arkBalance?.spendableSat ?? 0
-            return "Available: \(balance.formatted()) ₿ (Spending balance)"
+            let formattedBalance = BitcoinFormatter.formatAmount(balance)
+            return "Available: \(formattedBalance) (Spending balance)"
         }
     }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // Clipboard prompt banner
+                if let parsedAddress = clipboardAddress {
+                    ClipboardAddressBanner(
+                        parsedAddress: parsedAddress,
+                        onUseAddress: {
+                            recipient = parsedAddress.address
+                            // Pre-fill amount if it's a BIP-21 URI with amount
+                            if let bip21Amount = parsedAddress.amount {
+                                amount = "\(bip21Amount)"
+                            }
+                            clipboardAddress = nil
+                        },
+                        onDismiss: {
+                            clipboardAddress = nil
+                        }
+                    )
+                }
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Recipient")
                         .font(.title2)
                     
-                    TextField("ark1q... or bc1q...", text: $recipient)
+                    TextField("ark1q..., bc1q..., user@domain.com, or ₿user.domain.com", text: $recipient)
                         .textFieldStyle(.plain)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
@@ -104,12 +123,15 @@ struct SendView: View {
                 }
                 
                 if let error = error {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    ErrorView(
+                        errorMessage: error,
+                        onRetry: {
+                            sendPayment()
+                        },
+                        onDismiss: {
+                            self.error = nil
+                        }
+                    )
                 }
                 
                 Button("Send") {
@@ -126,28 +148,14 @@ struct SendView: View {
                 
                 Spacer()
             }
+            .frame(maxWidth: 600)
             .padding()
         }
         .navigationTitle("Send bitcoin")
         .onAppear {
             checkClipboardForAddress()
         }
-        .alert("Use clipboard address?", isPresented: $showClipboardPrompt) {
-            Button("Use Address") {
-                if let address = clipboardAddress {
-                    recipient = address
-                }
-                clipboardAddress = nil
-            }
-            Button("Cancel", role: .cancel) {
-                clipboardAddress = nil
-            }
-        } message: {
-            if let address = clipboardAddress {
-                let addressType = isBitcoinAddress(address) ? "Bitcoin" : "Ark"
-                Text("Found \(addressType) address in clipboard:\n\(address)")
-            }
-        }
+
         .sheet(item: Binding(
             get: { sendModalState.map { ModalState(state: $0) } },
             set: { _ in sendModalState = nil }
@@ -164,7 +172,7 @@ struct SendView: View {
         
         // Validate against the appropriate balance
         if amountInt > maxSpendableAmount {
-            if isBitcoinAddress(recipient) {
+            if AddressValidator.isBitcoinAddress(recipient) {
                 error = "Amount exceeds onchain balance (\(maxSpendableAmount.formatted()) sats)"
             } else {
                 error = "Amount exceeds ark balance (\(maxSpendableAmount.formatted()) sats)"
@@ -177,7 +185,7 @@ struct SendView: View {
         
         Task {
             do {
-                if isBitcoinAddress(recipient) {
+                if AddressValidator.isBitcoinAddress(recipient) {
                     _ = try await manager.sendOnchain(to: recipient, amount: amountInt)
                 } else {
                     _ = try await manager.send(to: recipient, amount: amountInt)
@@ -194,38 +202,7 @@ struct SendView: View {
         }
     }
     
-    /// Determines if the address is a Bitcoin network address (taproot, segwit, etc.)
-    private func isBitcoinAddress(_ address: String) -> Bool {
-        // Bitcoin address patterns
-        let bitcoinPatterns = [
-            "^bc1[a-z0-9]{39,59}$",  // Bech32 (segwit v0 and v1/taproot mainnet)
-            "^tb1[a-z0-9]{39,59}$",  // Bech32 (segwit testnet)
-            "^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$", // Legacy P2PKH and P2SH mainnet
-            "^[2mn][a-km-zA-HJ-NP-Z1-9]{25,34}$" // Legacy testnet
-        ]
-        
-        for pattern in bitcoinPatterns {
-            if address.range(of: pattern, options: .regularExpression) != nil {
-                return true
-            }
-        }
-        
-        return false
-    }
-    
-    /// Determines if the address is an Ark address
-    private func isArkAddress(_ address: String) -> Bool {
-        // Ark address pattern - starts with "ark1" followed by alphanumeric characters
-        let arkPattern = "^ark1[a-z0-9]+$"
-        return address.range(of: arkPattern, options: .regularExpression) != nil
-    }
-    
-    /// Checks if the address is either a Bitcoin or Ark address
-    private func isValidAddress(_ address: String) -> Bool {
-        return isBitcoinAddress(address) || isArkAddress(address)
-    }
-    
-    /// Checks clipboard for valid Bitcoin or Ark addresses
+    /// Checks clipboard for valid Bitcoin, Ark, Lightning, BIP-353, or BIP-21 addresses
     private func checkClipboardForAddress() {
         // Only check if recipient field is empty
         guard recipient.isEmpty else { return }
@@ -235,9 +212,8 @@ struct SendView: View {
         let trimmedString = clipboardString.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Check if clipboard contains a valid address
-        if isValidAddress(trimmedString) {
-            clipboardAddress = trimmedString
-            showClipboardPrompt = true
+        if let parsedAddress = AddressValidator.parseAddress(trimmedString) {
+            clipboardAddress = parsedAddress
         }
     }
 }

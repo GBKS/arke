@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum TransactionStatusEnum {
+enum TransactionStatusEnum: Codable {
     case confirmed
     case pending
     case failed

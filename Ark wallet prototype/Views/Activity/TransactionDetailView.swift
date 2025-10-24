@@ -17,10 +17,13 @@ struct TransactionDetailView: View {
                 // Header Section
                 VStack(spacing: 16) {
                     // Transaction Icon and Type
-                    HStack {
+                    HStack(spacing: 15) {
                         Image(systemName: transaction.type.iconName)
-                            .font(.system(size: 40))
+                            .font(.system(size: 20))
                             .foregroundColor(transaction.type.iconColor)
+                            .frame(width: 40, height: 40)
+                            .background(transaction.type.iconColor.opacity(0.1))
+                            .cornerRadius(8)
                         
                         VStack(alignment: .leading) {
                             Text(transaction.type.displayName)
@@ -38,7 +41,7 @@ struct TransactionDetailView: View {
                     // Amount
                     Text(transaction.formattedAmount)
                         .font(.largeTitle)
-                        .fontWeight(.bold)
+                        .fontWeight(.medium)
                         .foregroundColor(transaction.type.amountColor)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     

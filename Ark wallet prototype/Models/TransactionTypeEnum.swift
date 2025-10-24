@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum TransactionTypeEnum {
+enum TransactionTypeEnum: Codable {
     case sent
     case received
     case pending
@@ -30,7 +30,7 @@ enum TransactionTypeEnum {
     
     var iconColor: Color {
         switch self {
-        case .sent: return .red
+        case .sent: return .primary
         case .received: return .green
         case .pending: return .orange
         }
@@ -38,7 +38,7 @@ enum TransactionTypeEnum {
     
     var amountColor: Color {
         switch self {
-        case .sent: return .red
+        case .sent: return .primary
         case .received: return .green
         case .pending: return .orange
         }

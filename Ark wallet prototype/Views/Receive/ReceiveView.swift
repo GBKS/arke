@@ -37,7 +37,7 @@ struct ReceiveView: View {
     private var headerSection: some View {
         VStack(spacing: 8) {
             Text("Choose balance to receive to")
-                .font(.headline)
+                .font(.title2)
                 .multilineTextAlignment(.center)
             
             BalanceTypePicker(selectedBalance: $selectedBalance)
@@ -119,15 +119,13 @@ struct ReceiveView: View {
 }
 
 #Preview("Loaded State") {
-    @Previewable @State var mockManager = {
-        let manager = WalletManager(useMock: true)
-        // Simulate loaded addresses
-        manager.arkAddress = "ark1qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqs2q8tyyq"
-        manager.onchainAddress = "bc1qxyxsxqgpqyqszqgpqyqszqgpqyqszqgpqyqsz2q8tyy"
-        return manager
-    }()
+    @Previewable @State var mockManager = WalletManager(useMock: true)
     
     ReceiveView()
         .environment(mockManager)
         .frame(width: 600, height: 600)
+        .task {
+            // Initialize the mock manager to load mock addresses
+            await mockManager.initialize()
+        }
 }

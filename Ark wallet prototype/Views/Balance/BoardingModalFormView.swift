@@ -24,47 +24,52 @@ struct BoardingModalFormView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Transfer to payments")
-                    .font(.title)
-                    .fontWeight(.semibold)
-                
-                Text("Move funds to the Ark network for fast and low-fee payments.")
-                    .font(.default)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top)
+        HStack(alignment: .top, spacing: 15) {
+            Image("board")
+                .resizable()
+                .frame(width: 75, height: 75)
+                .cornerRadius(10)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Amount in satoshis")
-                    .font(.headline)
-                    .fontWeight(.medium)
+            VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Transfer to payments")
+                        .font(.system(size: 24, design: .serif))
+                    
+                    Text("Move funds to the Ark network for fast and low-fee payments.")
+                        .font(.default)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
                 
-                TextField("Enter amount", text: $amountText)
-                    .textFieldStyle(.plain)
-                    .font(.title)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(16)
-                    .onChange(of: amountText) { oldValue, newValue in
-                        let filtered = newValue.filter { "0123456789".contains($0) }
-                        if filtered != newValue {
-                            amountText = filtered
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Amount in satoshis")
+                        .font(.headline)
+                        .fontWeight(.medium)
+                    
+                    TextField("Enter amount", text: $amountText)
+                        .textFieldStyle(.plain)
+                        .font(.title)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(16)
+                        .onChange(of: amountText) { oldValue, newValue in
+                            let filtered = newValue.filter { "0123456789".contains($0) }
+                            if filtered != newValue {
+                                amountText = filtered
+                            }
                         }
-                    }
+                }
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                }
+                
+                Spacer()
             }
-            
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-            }
-            
-            Spacer()
         }
         .padding()
         .toolbar {

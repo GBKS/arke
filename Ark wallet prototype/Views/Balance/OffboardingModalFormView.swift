@@ -16,72 +16,77 @@ struct OffboardingModalFormView: View {
     let onCancel: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Transfer to savings")
-                    .font(.title)
-                    .fontWeight(.semibold)
-                
-                Text("Move funds to the Bitcoin network for the best security.")
-                    .font(.default)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top)
+        HStack(alignment: .top, spacing: 15) {
+            Image("offboard")
+                .resizable()
+                .frame(width: 75, height: 75)
+                .cornerRadius(10)
             
-            // VTXO Selection List
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Select coins to transfer")
-                    .font(.headline)
-                    .fontWeight(.medium)
-                
-                if isLoading {
-                    SkeletonLoader(
-                        itemCount: 3,
-                        itemHeight: 20,
-                        spacing: 10,
-                        cornerRadius: 15
-                    )
-                    .padding(.top, 5)
-                } else if vtxos.isEmpty {
-                    Text("No coins available")
+            VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Transfer to savings")
+                        .font(.system(size: 24, design: .serif))
+                    
+                    Text("Move funds to the Bitcoin network for the best security.")
+                        .font(.default)
                         .foregroundColor(.secondary)
-                        .padding(.vertical)
-                } else {
-                    VStack(spacing: 0) {
-                        ForEach(vtxos, id: \.id) { vtxo in
-                            SelectableVTXORowView(
-                                vtxo: vtxo,
-                                isSelected: selectedVTXOs.contains(vtxo.id),
-                                onToggle: {
-                                    if selectedVTXOs.contains(vtxo.id) {
-                                        selectedVTXOs.remove(vtxo.id)
-                                    } else {
-                                        selectedVTXOs.insert(vtxo.id)
+                        .multilineTextAlignment(.center)
+                }
+                
+                // VTXO Selection List
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Select coins to transfer")
+                        .font(.headline)
+                        .fontWeight(.medium)
+                    
+                    if isLoading {
+                        SkeletonLoader(
+                            itemCount: 3,
+                            itemHeight: 20,
+                            spacing: 10,
+                            cornerRadius: 15
+                        )
+                        .padding(.top, 5)
+                    } else if vtxos.isEmpty {
+                        Text("No coins available")
+                            .foregroundColor(.secondary)
+                            .padding(.vertical)
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(vtxos, id: \.id) { vtxo in
+                                SelectableVTXORowView(
+                                    vtxo: vtxo,
+                                    isSelected: selectedVTXOs.contains(vtxo.id),
+                                    onToggle: {
+                                        if selectedVTXOs.contains(vtxo.id) {
+                                            selectedVTXOs.remove(vtxo.id)
+                                        } else {
+                                            selectedVTXOs.insert(vtxo.id)
+                                        }
                                     }
+                                )
+                                
+                                if vtxo.id != vtxos.last?.id {
+                                    Divider()
                                 }
-                            )
-                            
-                            if vtxo.id != vtxos.last?.id {
-                                Divider()
                             }
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
                 }
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                }
+                
+                Spacer()
             }
-            
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
-                    .multilineTextAlignment(.center)
-            }
-            
-            Spacer()
         }
         .padding()
         .toolbar {

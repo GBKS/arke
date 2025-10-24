@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct Ark_wallet_prototypeApp: App {
@@ -18,5 +19,6 @@ struct Ark_wallet_prototypeApp: App {
         }
         .defaultSize(width: 800, height: 600)
         .windowResizability(.contentMinSize)
+        .modelContainer(for: PersistedTransaction.self)
     }
 }

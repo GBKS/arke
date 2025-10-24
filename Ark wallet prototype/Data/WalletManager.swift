@@ -7,182 +7,159 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
-// MARK: - JSON Parsing Models for Movements
-
-private struct MovementData: Codable {
-    let id: Int
-    let fees: Int
-    let spends: [TransactionOutput]
-    let receives: [TransactionOutput]
-    let recipients: [RecipientData]
-    let createdAt: String
+// MARK: - Export Data Structure
+struct WalletExportData: Codable {
+    let addresses: AddressData
+    let balances: BalanceData
+    let transactions: [TransactionModel]
+    let vtxos: [VTXOModel]
+    let utxos: [UTXOModel]
+    let configuration: ArkConfigModel
+    let arkInfo: ArkInfoModel
+    let blockHeight: Int
+    let exportTimestamp: Date
     
-    enum CodingKeys: String, CodingKey {
-        case id, fees, spends, receives, recipients
-        case createdAt = "created_at"
+    struct AddressData: Codable {
+        let arkAddress: String
+        let onchainAddress: String
     }
-}
-
-private struct RecipientData: Codable {
-    let recipient: String
-    let amountSat: Int
     
-    enum CodingKeys: String, CodingKey {
-        case recipient
-        case amountSat = "amount_sat"
-    }
-}
-
-private struct TransactionOutput: Codable {
-    let id: String
-    let amountSat: Int
-    let policyType: String?
-    let userPubkey: String?
-    let serverPubkey: String?
-    let expiryHeight: Int?
-    let exitDelta: Int?
-    let chainAnchor: String?
-    let exitDepth: Int?
-    let arkoorDepth: Int?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case amountSat = "amount_sat"
-        case policyType = "policy_type"
-        case userPubkey = "user_pubkey"
-        case serverPubkey = "server_pubkey"
-        case expiryHeight = "expiry_height"
-        case exitDelta = "exit_delta"
-        case chainAnchor = "chain_anchor"
-        case exitDepth = "exit_depth"
-        case arkoorDepth = "arkoor_depth"
+    struct BalanceData: Codable {
+        let arkBalance: ArkBalanceModel?
+        let onchainBalance: OnchainBalanceModel?
+        let totalBalance: TotalBalanceModel?
     }
 }
 
 @MainActor
 @Observable
 class WalletManager {
+    // MARK: - Coordinator State
     var isInitialized: Bool = false
-    var arkBalance: ArkBalanceModel?
-    var onchainBalance: OnchainBalanceModel?
-    var totalBalance: TotalBalanceModel?
-    var transactions: [TransactionModel] = []
-    var arkAddress: String = ""
-    var onchainAddress: String = ""
     var error: String?
     var isRefreshing: Bool = false
     var hasLoadedOnce: Bool = false
     
+    // MARK: - Services
     private var wallet: BarkWalletProtocol?
     private let asp = "ark.signet.2nd.dev"
+    private let taskManager = TaskDeduplicationManager()
+    private let cacheManager = WalletCacheManager()
+    private var modelContext: ModelContext?
     
-    // Request deduplication - track in-flight operations
-    private var refreshTask: Task<Void, Never>?
-    private var initializeTask: Task<Void, Never>?
-    private var arkBalanceTask: Task<ArkBalanceModel, Error>?
-    private var onchainBalanceTask: Task<OnchainBalanceModel, Error>?
-    private var addressTask: Task<Void, Never>?
-    private var transactionsTask: Task<Void, Never>?
-    private var blockHeightTask: Task<Int, Error>?
+    private var transactionService: TransactionService?
+    private var balanceService: BalanceService?
+    private var addressService: AddressService?
+    private var walletOperationsService: WalletOperationsService?
     
-    // Block height caching
-    private var cachedBlockHeight: Int?
-    private var blockHeightCacheTime: Date?
-    private let blockHeightCacheTimeout: TimeInterval = 60 // Cache for 1 minute
+    // MARK: - Computed Properties - Data Access
+    var transactions: [TransactionModel] {
+        transactionService?.transactions ?? []
+    }
     
-    // Ark info caching for round interval
-    private var cachedArkInfo: ArkInfoModel?
-    private var arkInfoCacheTime: Date?
-    private let arkInfoCacheTimeout: TimeInterval = 300 // Cache for 5 minutes
+    var arkAddress: String {
+        addressService?.arkAddress ?? ""
+    }
     
-    // MARK: - Computed Properties for UI
+    var onchainAddress: String {
+        addressService?.onchainAddress ?? ""
+    }
     
-    /// Formatted total spendable balance across all wallets
+    var arkBalance: ArkBalanceModel? {
+        balanceService?.arkBalance
+    }
+    
+    var onchainBalance: OnchainBalanceModel? {
+        balanceService?.onchainBalance
+    }
+    
+    var totalBalance: TotalBalanceModel? {
+        balanceService?.totalBalance
+    }
+    
+    // MARK: - Computed Properties - Formatted Values
     var formattedSpendableBalance: String {
-        guard let totalBalance = totalBalance else { return "0 sats" }
-        return "\(totalBalance.totalSpendableSat.formatted()) sats"
+        let spendableAmount = totalBalance?.totalSpendableSat ?? 0
+        return BitcoinFormatter.formatAmount(spendableAmount)
     }
     
-    /// Formatted total balance across all wallets
     var formattedTotalBalance: String {
-        guard let totalBalance = totalBalance else { return "0 sats" }
-        return "\(totalBalance.grandTotalSat.formatted()) sats"
+        let totalAmount = totalBalance?.grandTotalSat ?? 0
+        return BitcoinFormatter.formatAmount(totalAmount)
     }
     
-    /// Formatted Ark spendable balance
     var formattedArkSpendableBalance: String {
-        guard let arkBalance = arkBalance else { return "0 sats" }
-        return "\(arkBalance.spendableSat.formatted()) sats"
+        let arkSpendable = arkBalance?.spendableSat ?? 0
+        return BitcoinFormatter.formatAmount(arkSpendable)
     }
     
-    /// Formatted onchain spendable balance
     var formattedOnchainSpendableBalance: String {
-        guard let onchainBalance = onchainBalance else { return "0 sats" }
-        return "\(onchainBalance.trustedSpendableSat.formatted()) sats"
+        let onchainSpendable = onchainBalance?.trustedSpendableSat ?? 0
+        return BitcoinFormatter.formatAmount(onchainSpendable)
     }
     
-    /// True if there are any pending balances
+    // MARK: - Computed Properties - State Checks
     var hasPendingBalance: Bool {
-        totalBalance?.hasPendingBalance ?? false
+        balanceService?.hasPendingBalance ?? false
     }
     
-    /// True if user has any spendable funds
     var hasSpendableBalance: Bool {
-        totalBalance?.hasSpendableBalance ?? false
+        balanceService?.hasSpendableBalance ?? false
     }
     
-    /// True if this is the initial load (no data loaded yet)
     var isInitialLoading: Bool {
-        isRefreshing && !hasLoadedOnce
+        isRefreshing && !hasLoadedOnce && !(transactionService?.hasLoadedTransactions ?? false)
     }
     
-    /// True if data has been loaded before and is currently refreshing
     var isRefreshingWithData: Bool {
         isRefreshing && hasLoadedOnce
     }
     
-    /// Cached Ark info for UI components
     var arkInfo: ArkInfoModel? {
-        return cachedArkInfo
+        balanceService?.arkInfo
     }
     
-    /// Estimated current block height based on cached data and round interval
     var estimatedBlockHeight: Int? {
-        guard let cachedHeight = cachedBlockHeight,
-              let cacheTime = blockHeightCacheTime,
-              let arkInfo = cachedArkInfo,
-              let roundIntervalSeconds = arkInfo.roundIntervalSeconds else {
-            return cachedBlockHeight // Return cached value if we can't estimate
-        }
-        
-        let secondsElapsed = Date().timeIntervalSince(cacheTime)
-        let roundsElapsed = Int(secondsElapsed) / roundIntervalSeconds
-        
-        return cachedHeight + roundsElapsed
+        balanceService?.estimatedBlockHeight
     }
     
+    // MARK: - Initialization
     init(useMock: Bool = false) {
-        if useMock {
-            wallet = MockBarkWallet()
-        } else {
-            wallet = BarkWallet()
+        setupWallet(useMock: useMock)
+        initializeServices()
+    }
+    
+    private func setupWallet(useMock: Bool) {
+        wallet = useMock ? MockBarkWallet() : BarkWallet()
+    }
+    
+    private func initializeServices() {
+        guard let wallet = wallet else { return }
+        
+        // Initialize all services with shared task manager and cache manager
+        transactionService = TransactionService(wallet: wallet, taskManager: taskManager)
+        balanceService = BalanceService(wallet: wallet, taskManager: taskManager, cacheManager: cacheManager)
+        addressService = AddressService(wallet: wallet, taskManager: taskManager)
+        walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)
+        
+        // Configure post-transaction callback
+        walletOperationsService?.setTransactionCompletedCallback { [weak self] in
+            await self?.balanceService?.refreshAfterTransaction()
         }
     }
     
+    func setModelContext(_ context: ModelContext) {
+        self.modelContext = context
+        transactionService?.setModelContext(context)
+    }
+    
+    // MARK: - Coordination Methods
     func initialize() async {
-        // Deduplicate initialization requests
-        if let existingTask = initializeTask {
-            await existingTask.value
-            return
+        await taskManager.execute(key: "initialize") {
+            await self.performInitialization()
         }
-        
-        let task = Task {
-            await performInitialization()
-        }
-        initializeTask = task
-        await task.value
-        initializeTask = nil
     }
     
     private func performInitialization() async {
@@ -191,7 +168,7 @@ class WalletManager {
             return
         }
         
-        // Check if wallet actually exists by looking for the mnemonic file
+        // Check wallet existence
         let mnemonicFile = wallet.walletDir.appendingPathComponent("mnemonic")
         let walletExists = FileManager.default.fileExists(atPath: mnemonicFile.path)
         
@@ -200,440 +177,255 @@ class WalletManager {
             isInitialized = true
         } else {
             print("⚠️ No mnemonic found - need to create wallet")
-            
-            // If directory exists but no wallet, delete it first
-            if FileManager.default.fileExists(atPath: wallet.walletDir.path) {
-                print("🗑️ Cleaning up empty directory")
-                try? FileManager.default.removeItem(at: wallet.walletDir)
-            }
-            
-            // Now create the wallet
-            do {
-                let wallet = try await wallet.createWallet(network: "signet", asp: asp)
-                print("✅ Wallet created successfully", wallet)
-                isInitialized = true
-            } catch {
-                let errorMsg = "\(error)"
-                print("❌ Failed to create wallet: \(errorMsg)")
-                self.error = "Failed to create wallet: \(errorMsg)"
-                return
-            }
+            await createNewWallet()
         }
         
-        // Load wallet data using centralized refresh
-        await refresh()
+        // Load all wallet data
+        if isInitialized {
+            await refresh()
+        }
     }
     
-    /// Centralized refresh method - coordinates all data fetching
-    func refresh() async {
-        // Deduplicate refresh requests
-        if let existingTask = refreshTask {
-            await existingTask.value
-            return
+    private func createNewWallet() async {
+        guard let wallet = wallet else { return }
+        
+        // Clean up empty directory if it exists
+        if FileManager.default.fileExists(atPath: wallet.walletDir.path) {
+            print("🗑️ Cleaning up empty directory")
+            try? FileManager.default.removeItem(at: wallet.walletDir)
         }
         
-        let task = Task {
-            await performRefresh()
+        do {
+            let newWallet = try await wallet.createWallet(network: "signet", asp: asp)
+            print("✅ Wallet created successfully", newWallet)
+            isInitialized = true
+        } catch {
+            let errorMsg = "\(error)"
+            print("❌ Failed to create wallet: \(errorMsg)")
+            self.error = "Failed to create wallet: \(errorMsg)"
         }
-        refreshTask = task
-        await task.value
-        refreshTask = nil
+    }
+    
+    /// Centralized refresh - orchestrates all services
+    func refresh() async {
+        await taskManager.execute(key: "refresh") {
+            await self.performRefresh()
+        }
     }
     
     private func performRefresh() async {
         isRefreshing = true
-        defer { isRefreshing = false }
+        defer { 
+            isRefreshing = false
+            hasLoadedOnce = true
+        }
         
-        guard let wallet = wallet else { 
+        guard wallet != nil else { 
             error = "Wallet not initialized"
             return 
         }
         
-        do {
-            // First, refresh the wallet state
-            //_ = try await wallet.refreshVTXOs()
+        // Coordinate service refreshes in parallel where possible
+        await withTaskGroup(of: Void.self) { group in
+            // Balance service handles its own coordination
+            group.addTask { await self.balanceService?.refreshAllBalances() }
             
-            // Cache ArkInfo for block height estimation
-            await cacheArkInfoIfNeeded()
+            // Address loading
+            group.addTask { await self.addressService?.loadAddresses() }
             
-            // Then fetch balances in parallel (with deduplication)
-            async let arkBalanceResult = getArkBalanceWithDeduplication()
-            async let onchainBalanceResult = getOnchainBalanceWithDeduplication()
-            
-            // Start address and transaction loading in parallel
-            let addressTask = Task { await loadAddressesWithDeduplication() }
-            let transactionTask = Task { await refreshTransactionsWithDeduplication() }
-            
-            // Wait for both balances to complete
-            let (arkBal, onchainBal) = try await (arkBalanceResult, onchainBalanceResult)
-            
-            // Update UI state
-            self.arkBalance = arkBal
-            self.onchainBalance = onchainBal
-            updateTotalBalance()
-            
-            // Wait for other operations to complete
-            await addressTask.value
-            await transactionTask.value
-            
-            error = nil
-            hasLoadedOnce = true
-            print("✅ All wallet data refreshed successfully")
-            
-        } catch {
-            self.error = "Failed to refresh wallet: \(error)"
-            print("❌ Failed to refresh wallet: \(error)")
+            // Transaction refresh
+            group.addTask { await self.transactionService?.refreshTransactions() }
         }
-    }
-    
-    private func updateTotalBalance() {
-        guard let arkBalance = arkBalance, let onchainBalance = onchainBalance else {
-            print("⚠️ Cannot calculate total balance - missing ark or onchain balance")
+        
+        // Check for errors from services
+        if let addressError = addressService?.error {
+            self.error = addressError
             return
         }
         
-        totalBalance = TotalBalanceModel(arkBalance: arkBalance, onchainBalance: onchainBalance)
-        print("📊 Total balance: \(totalBalance?.grandTotalSat ?? 0) sats (\(totalBalance?.totalSpendableSat ?? 0) spendable)")
-    }
-    
-    // MARK: - Deduplicated Balance Methods
-    
-    private func getArkBalanceWithDeduplication() async throws -> ArkBalanceModel {
-        if let existingTask = arkBalanceTask {
-            return try await existingTask.value
-        }
-        
-        let task = Task {
-            try await wallet!.getArkBalance()
-        }
-        arkBalanceTask = task
-        
-        do {
-            let result = try await task.value
-            arkBalanceTask = nil
-            print("📊 Ark balance: \(result.spendableSat) sats spendable, \(result.totalPendingSat) sats pending")
-            return result
-        } catch {
-            arkBalanceTask = nil
-            throw error
-        }
-    }
-    
-    private func getOnchainBalanceWithDeduplication() async throws -> OnchainBalanceModel {
-        if let existingTask = onchainBalanceTask {
-            return try await existingTask.value
-        }
-        
-        let task = Task {
-            try await wallet!.getOnchainBalance()
-        }
-        onchainBalanceTask = task
-        
-        do {
-            let result = try await task.value
-            onchainBalanceTask = nil
-            print("📊 Onchain balance: \(result.totalSat) sats total, \(result.trustedSpendableSat) sats spendable")
-            return result
-        } catch {
-            onchainBalanceTask = nil
-            throw error
-        }
-    }
-    
-    private func loadAddressesWithDeduplication() async {
-        if let existingTask = addressTask {
-            await existingTask.value
+        if let transactionError = transactionService?.error {
+            self.error = transactionError
             return
         }
         
-        let task = Task {
-            await performLoadAddresses()
-        }
-        addressTask = task
-        await task.value
-        addressTask = nil
-    }
-    
-    private func performLoadAddresses() async {
-        guard let wallet = wallet else { return }
-        
-        do {
-            arkAddress = try await wallet.getArkAddress()
-            print("✅ Ark address: \(arkAddress)")
-        } catch {
-            print("❌ Failed to get Ark address: \(error)")
-            self.error = "Failed to get Ark address: \(error)"
-        }
-        
-        do {
-            onchainAddress = try await wallet.getOnchainAddress()
-            print("✅ Onchain address: \(onchainAddress)")
-        } catch {
-            print("❌ Failed to get onchain address: \(error)")
-        }
-    }
-    
-    private func refreshTransactionsWithDeduplication() async {
-        if let existingTask = transactionsTask {
-            await existingTask.value
+        if let balanceError = balanceService?.error {
+            self.error = balanceError
             return
         }
         
-        let task = Task {
-            await performRefreshTransactions()
-        }
-        transactionsTask = task
-        await task.value
-        transactionsTask = nil
+        error = nil
+        print("✅ All wallet data refreshed successfully")
     }
     
-    private func performRefreshTransactions() async {
-        guard let wallet = wallet else { return }
-        
-        do {
-            let output = try await wallet.getMovements()
-            print("📋 Transactions output: \(output)")
-            transactions = parseTransactions(output)
-        } catch {
-            print("❌ Failed to get transactions: \(error)")
-            self.error = "Failed to get transactions: \(error)"
-        }
-    }
+    // MARK: - Wallet Operations (delegates to WalletOperationsService)
     
     func send(to address: String, amount: Int) async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
         }
-        
-        let result = try await wallet.send(to: address, amount: amount)
-        // After sending, refresh to get updated balances
-        await refresh()
-        
-        return result
+        return try await walletOperationsService.send(to: address, amount: amount)
+    }
+    
+    func sendOnchain(to address: String, amount: Int) async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.sendOnchain(to: address, amount: amount)
+    }
+    
+    func board(amount: Int) async throws {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        try await walletOperationsService.board(amount: amount)
+    }
+    
+    func boardAll() async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.boardAll()
+    }
+    
+    /// Start the exit process for pending VTXOs - checks exit progress and waits
+    func startExit() async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.startExit()
+    }
+    
+    /// Exit a specific VTXO by its ID
+    func exitVTXO(vtxoId: String) async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.exitVTXO(vtxoId: vtxoId)
+    }
+    
+    func getVTXOs() async throws -> [VTXOModel] {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.getVTXOs()
+    }
+    
+    func getUTXOs() async throws -> [UTXOModel] {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.getUTXOs()
+    }
+    
+    func getConfig() async throws -> ArkConfigModel {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.getConfig()
+    }
+    
+    func getArkInfo() async throws -> ArkInfoModel {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.getArkInfo()
+    }
+    
+    /// Refresh VTXOs by calling the wallet's refresh command
+    func refreshVTXOs() async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.refreshVTXOs()
+    }
+    
+    /// Get the wallet's mnemonic phrase
+    func getMnemonic() async throws -> String {
+        guard let walletOperationsService = walletOperationsService else {
+            throw BarkError.commandFailed("Wallet operations service not initialized")
+        }
+        return try await walletOperationsService.getMnemonic()
     }
     
     func getLatestBlockHeight() async throws -> Int {
         return try await getBlockHeightWithDeduplication()
     }
     
-    private func cacheArkInfoIfNeeded() async {
-        // Check if we need to refresh ArkInfo cache
-        if let _ = cachedArkInfo,
-           let cacheTime = arkInfoCacheTime,
-           Date().timeIntervalSince(cacheTime) < arkInfoCacheTimeout {
-            print("📦 Using cached ArkInfo")
-            return
-        }
-        
-        do {
-            let arkInfo = try await getArkInfo()
-            cachedArkInfo = arkInfo
-            arkInfoCacheTime = Date()
-            print("✅ ArkInfo cached - round interval: \(arkInfo.roundInterval)")
-        } catch {
-            print("⚠️ Failed to cache ArkInfo: \(error)")
-            // Don't update error state since this is just for caching
-        }
-    }
-    
     private func getBlockHeightWithDeduplication() async throws -> Int {
         // Check cache first
-        if let cached = cachedBlockHeight,
-           let cacheTime = blockHeightCacheTime,
-           Date().timeIntervalSince(cacheTime) < blockHeightCacheTimeout {
+        if let cached = cacheManager.blockHeight.value {
             print("📦 Using cached block height: \(cached)")
             return cached
         }
         
-        // Check for existing task
-        if let existingTask = blockHeightTask {
-            return try await existingTask.value
-        }
-        
-        let task = Task {
-            guard let wallet = wallet else {
+        return try await taskManager.execute(key: "blockHeight") {
+            guard let wallet = self.wallet else {
                 throw BarkError.commandFailed("Wallet not initialized")
             }
-            return try await wallet.getLatestBlockHeight()
-        }
-        blockHeightTask = task
-        
-        do {
-            let result = try await task.value
-            blockHeightTask = nil
+            let result = try await wallet.getLatestBlockHeight()
             
             // Update cache
-            cachedBlockHeight = result
-            blockHeightCacheTime = Date()
+            self.cacheManager.blockHeight.setValue(result)
             print("🔗 Fetched latest block height: \(result)")
             
             return result
-        } catch {
-            blockHeightTask = nil
-            throw error
         }
-    }
-    
-    func sendOnchain(to address: String, amount: Int) async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        let result = try await wallet.sendOnchain(to: address, amount: amount)
-        // After sending onchain, refresh to get updated balances
-        await refresh()
-        
-        return result
-    }
-    
-    func board(amount: Int) async throws {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        try await wallet.board(amount: amount)
-        // After boarding, refresh to get updated balances
-        await refresh()
-    }
-    
-    func boardAll() async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        let result = try await wallet.boardAll()
-        // After boarding all, refresh to get updated balances
-        await refresh()
-        return result
-    }
-    
-    func getVTXOs() async throws -> [VTXOModel] {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getVTXOs()
-    }
-    
-    func getUTXOs() async throws -> [UTXOModel] {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getUTXOs()
-    }
-    
-    func getConfig() async throws -> ArkConfigModel {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getConfig()
-    }
-    
-    func getArkInfo() async throws -> ArkInfoModel {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getArkInfo()
-    }
-    
-    /// Start the exit process for pending VTXOs - checks exit progress and waits
-    func startExit() async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        let result = try await wallet.startExit()
-        // After starting exit, refresh to get updated balances and transactions
-        await refresh()
-        return result
-    }
-    
-    /// Exit a specific VTXO by its ID
-    func exitVTXO(vtxoId: String) async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        let result = try await wallet.exitVTXO(vtxo_id: vtxoId)
-        // After exiting VTXO, refresh to get updated balances and transactions
-        await refresh()
-        return result
     }
 
-    func refreshTransactions() async {
-        await refreshTransactionsWithDeduplication()
-    }
-    
+
     func getTransactions() async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getMovements()
+        return try await transactionService?.getTransactions() ?? ""
     }
     
-    /// Refresh VTXOs by calling the wallet's refresh command
-    func refreshVTXOs() async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        let result = try await wallet.refreshVTXOs()
-        print("✅ VTXOs refreshed successfully:  \(result)")
-        
-        return result
-    }
-    
-    // MARK: - Direct Balance Access Methods (with deduplication)
-    
-    /// Get the current Ark balance model - now uses deduplication
+    /// Get the current Ark balance model - delegates to balance service
     func getArkBalance() async throws -> ArkBalanceModel {
-        return try await getArkBalanceWithDeduplication()
+        guard let balanceService = balanceService else {
+            throw BarkError.commandFailed("Balance service not initialized")
+        }
+        return try await balanceService.getArkBalance()
     }
     
-    /// Get the current onchain balance model - now uses deduplication
+    /// Get the current onchain balance model - delegates to balance service
     func getCurrentOnchainBalance() async throws -> OnchainBalanceModel {
-        return try await getOnchainBalanceWithDeduplication()
+        guard let balanceService = balanceService else {
+            throw BarkError.commandFailed("Balance service not initialized")
+        }
+        return try await balanceService.getCurrentOnchainBalance()
     }
     
-    // MARK: - Convenience Methods for Individual Refreshes
+    // MARK: - Convenience Methods for Individual Refreshes (delegates to BalanceService)
     
-    /// Refresh just Ark balance (will use centralized refresh if full refresh is better)
+    /// Refresh just Ark balance - delegates to balance service
     func refreshArkBalance() async {
-        do {
-            arkBalance = try await getArkBalanceWithDeduplication()
-            updateTotalBalance()
-            error = nil
-        } catch {
-            self.error = "Failed to get Ark balance: \(error)"
-            print("❌ Failed to get Ark balance: \(error)")
+        await balanceService?.refreshArkBalance()
+        // Update local error state if balance service encountered an error
+        if let balanceError = balanceService?.error {
+            self.error = balanceError
         }
     }
     
-    /// Refresh just onchain balance (will use centralized refresh if full refresh is better)
+    /// Refresh just onchain balance - delegates to balance service
     func refreshOnchainBalance() async {
-        do {
-            onchainBalance = try await getOnchainBalanceWithDeduplication()
-            updateTotalBalance()
-            error = nil
-        } catch {
-            self.error = "Failed to get onchain balance: \(error)"
-            print("❌ Failed to get onchain balance: \(error)")
+        await balanceService?.refreshOnchainBalance()
+        // Update local error state if balance service encountered an error
+        if let balanceError = balanceService?.error {
+            self.error = balanceError
         }
     }
     
     /// Load wallet addresses
     func loadAddresses() async {
-        await loadAddressesWithDeduplication()
+        await addressService?.loadAddresses()
+        // Update local error state if address service encountered an error
+        if let addressError = addressService?.error {
+            self.error = addressError
+        }
     }
     
     /// Get estimated block height, fetching cached data if needed
     func getEstimatedBlockHeight() async -> Int? {
         // Ensure we have both cached block height and ark info
-        if cachedBlockHeight == nil {
+        if cacheManager.blockHeight.value == nil {
             do {
                 _ = try await getLatestBlockHeight()
             } catch {
@@ -641,105 +433,72 @@ class WalletManager {
             }
         }
         
-        if cachedArkInfo == nil {
-            await cacheArkInfoIfNeeded()
+        // Cache ArkInfo if needed using balance service
+        if cacheManager.arkInfo.value == nil {
+            await balanceService?.cacheArkInfoIfNeeded()
         }
         
-        return estimatedBlockHeight
+        return cacheManager.getEstimatedBlockHeight()
     }
     
-    /// Get the wallet's mnemonic phrase
-    func getMnemonic() async throws -> String {
-        guard let wallet = wallet else {
-            throw BarkError.commandFailed("Wallet not initialized")
-        }
-        
-        return try await wallet.getMnemonic()
-    }
+    // MARK: - Data Export
     
-    private func parseTransactions(_ output: String) -> [TransactionModel] {
-        print("🔍 Parsing transactions from: \(output)")
-        
-        guard let jsonData = output.data(using: .utf8) else {
-            print("❌ Failed to convert output to data")
-            return []
-        }
-        
-        do {
-            let movements = try JSONDecoder().decode([MovementData].self, from: jsonData)
-            var transactions: [TransactionModel] = []
-            
-            for movement in movements {
-                // Parse receives (incoming transactions)
-                for receive in movement.receives {
-                    let transaction = TransactionModel(
-                        type: .received,
-                        amount: receive.amountSat,
-                        date: parseDate(movement.createdAt),
-                        status: .confirmed, // Assuming confirmed if it appears in movements
-                        txid: receive.id,
-                        address: nil // Receiving address not provided in this format
-                    )
-                    transactions.append(transaction)
-                }
-                
-                // Parse spends (outgoing transactions)
-                for spend in movement.spends {
-                    // Try to find corresponding recipient address
-                    let recipientAddress = movement.recipients.first?.recipient
-                    
-                    let transaction = TransactionModel(
-                        type: .sent,
-                        amount: spend.amountSat,
-                        date: parseDate(movement.createdAt),
-                        status: .confirmed, // Assuming confirmed if it appears in movements
-                        txid: spend.id,
-                        address: recipientAddress
-                    )
-                    transactions.append(transaction)
-                }
-            }
-            
-            // Sort transactions by date (most recent first)
-            transactions.sort { $0.date > $1.date }
-            
-            print("✅ Parsed \(transactions.count) transactions")
-            return transactions
-            
-        } catch {
-            print("❌ Failed to parse transactions JSON: \(error)")
-            return []
+    /// Export all wallet data as JSON
+    func exportWalletData() async throws -> Data {
+        return try await taskManager.execute(key: "exportData") {
+            try await self.performDataExport()
         }
     }
     
-    private func parseDate(_ dateString: String) -> Date {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+    private func performDataExport() async throws -> Data {
+        // Gather async data first
+        let vtxos = try await getVTXOs()
+        let utxos = try await getUTXOs()
+        let configuration = try await getConfig()
         
-        if let date = formatter.date(from: dateString) {
-            return date
+        // Get arkInfo with fallback
+        let currentArkInfo: ArkInfoModel
+        if let cached = arkInfo {
+            currentArkInfo = cached
+        } else {
+            currentArkInfo = try await getArkInfo()
         }
         
-        // Fallback to current date if parsing fails
-        print("⚠️ Failed to parse date: \(dateString)")
-        return Date()
+        // Get block height with fallback
+        let currentBlockHeight: Int
+        if let cached = estimatedBlockHeight {
+            currentBlockHeight = cached
+        } else {
+            currentBlockHeight = try await getLatestBlockHeight()
+        }
+        
+        // Create export data
+        let exportData = WalletExportData(
+            addresses: WalletExportData.AddressData(
+                arkAddress: arkAddress,
+                onchainAddress: onchainAddress
+            ),
+            balances: WalletExportData.BalanceData(
+                arkBalance: arkBalance,
+                onchainBalance: onchainBalance,
+                totalBalance: totalBalance
+            ),
+            transactions: transactions,
+            vtxos: vtxos,
+            utxos: utxos,
+            configuration: configuration,
+            arkInfo: currentArkInfo,
+            blockHeight: currentBlockHeight,
+            exportTimestamp: Date()
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        
+        return try encoder.encode(exportData)
     }
+
 }
 
-// Helper extension for regex
-extension String {
-    func firstMatch(pattern: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
-        let range = NSRange(self.startIndex..., in: self)
-        guard let match = regex.firstMatch(in: self, range: range) else { return nil }
-        
-        if match.numberOfRanges > 1 {
-            let matchRange = match.range(at: 1)
-            if let range = Range(matchRange, in: self) {
-                return String(self[range])
-            }
-        }
-        return nil
-    }
-}
+

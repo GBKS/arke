@@ -17,7 +17,7 @@ struct SettingsView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
                 // Recovery Phrase Section
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Recovery Phrase")
@@ -104,6 +104,22 @@ struct SettingsView: View {
                 }
                 
                 Spacer()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 20) {
+                // Recovery Phrase Section
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Delete wallet")
+                        .font(.system(size: 24, design: .serif))
+                    
+                    Text("Not implemented yet.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()

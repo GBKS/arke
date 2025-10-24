@@ -41,7 +41,7 @@ struct TransactionListItem: View {
                 
                 Text(transaction.formattedAmount)
                     .font(.body)
-                    .fontWeight(.semibold)
+                    .fontWeight(.medium)
                     .foregroundColor(transaction.type.amountColor)
             }
         }

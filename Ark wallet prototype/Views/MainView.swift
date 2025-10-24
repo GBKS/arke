@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MainView: View {
     @State private var hasWallet: Bool = false
     @State private var isCheckingWallet: Bool = true
     @State private var walletManager = WalletManager()
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         Group {
@@ -33,6 +35,8 @@ struct MainView: View {
             }
         }
         .task {
+            // Set model context first, then check for existing wallet
+            walletManager.setModelContext(modelContext)
             await checkForExistingWallet()
         }
     }

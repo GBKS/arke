@@ -143,12 +143,7 @@ struct AddressDisplayView: View {
 }
 
 #Preview {
-    @Previewable @State var mockManager = {
-        let manager = WalletManager(useMock: true)
-        manager.arkAddress = "ark1qyqszqgpqyqszqgpqyqszqgpqyqs2q8tyyq"
-        manager.onchainAddress = "bc1qxyxsxqgpqyqszqgpqyqszqgpqyqsz2q8tyy"
-        return manager
-    }()
+    @Previewable @State var mockManager = WalletManager(useMock: true)
     
     AddressDisplayView(
         selectedBalance: .payments,
@@ -157,4 +152,8 @@ struct AddressDisplayView: View {
     )
     .environment(mockManager)
     .frame(width: 500, height: 300)
+    .task {
+        // Initialize the mock manager and load addresses
+        await mockManager.initialize()
+    }
 }
