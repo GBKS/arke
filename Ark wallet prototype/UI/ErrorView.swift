@@ -35,7 +35,7 @@ struct ErrorView: View {
             VStack(alignment: .leading, spacing: 6) {
                 
                 HStack(spacing: 8) {
-                    Text("Something went wrong")
+                    Text("Sincere regrets")
                         .font(.headline)
                         .foregroundColor(.red)
                     

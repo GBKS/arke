@@ -153,6 +153,7 @@ class WalletManager {
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
         transactionService?.setModelContext(context)
+        balanceService?.setModelContext(context)
     }
     
     // MARK: - Coordination Methods
