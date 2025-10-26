@@ -246,6 +246,37 @@ class TransactionService {
         }
     }
     
+    /// Clear all persisted transactions from SwiftData
+    func clearPersistedTransactions() async {
+        guard let modelContext = modelContext else {
+            print("⚠️ No model context available for clearing transactions")
+            return
+        }
+        
+        do {
+            // Fetch all persisted transactions
+            let descriptor = FetchDescriptor<PersistedTransaction>()
+            let persistedTransactions = try modelContext.fetch(descriptor)
+            
+            // Delete all transactions
+            for transaction in persistedTransactions {
+                modelContext.delete(transaction)
+            }
+            
+            // Save changes
+            try modelContext.save()
+            
+            // Clear the in-memory transactions as well
+            transactions.removeAll()
+            hasLoadedTransactions = false
+            
+            print("🗑️ Cleared \(persistedTransactions.count) persisted transactions")
+            
+        } catch {
+            print("❌ Failed to clear persisted transactions: \(error)")
+        }
+    }
+    
     // MARK: - State Management
     
     /// Clear error state

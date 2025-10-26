@@ -176,34 +176,11 @@ class WalletManager {
         if walletExists {
             print("✅ Wallet mnemonic found - wallet exists")
             isInitialized = true
-        } else {
-            print("⚠️ No mnemonic found - need to create wallet")
-            await createNewWallet()
-        }
-        
-        // Load all wallet data
-        if isInitialized {
+            // Load all wallet data for existing wallet
             await refresh()
-        }
-    }
-    
-    private func createNewWallet() async {
-        guard let wallet = wallet else { return }
-        
-        // Clean up empty directory if it exists
-        if FileManager.default.fileExists(atPath: wallet.walletDir.path) {
-            print("🗑️ Cleaning up empty directory")
-            try? FileManager.default.removeItem(at: wallet.walletDir)
-        }
-        
-        do {
-            let newWallet = try await wallet.createWallet(network: "signet", asp: asp)
-            print("✅ Wallet created successfully", newWallet)
-            isInitialized = true
-        } catch {
-            let errorMsg = "\(error)"
-            print("❌ Failed to create wallet: \(errorMsg)")
-            self.error = "Failed to create wallet: \(errorMsg)"
+        } else {
+            print("⚠️ No mnemonic found - wallet needs to be created or imported")
+            isInitialized = false
         }
     }
     
@@ -346,6 +323,86 @@ class WalletManager {
             throw BarkError.commandFailed("Wallet operations service not initialized")
         }
         return try await walletOperationsService.getMnemonic()
+    }
+    
+    /// Import an existing wallet using a mnemonic phrase
+    func importWallet(mnemonic: String) async throws -> String {
+        guard let wallet = wallet else {
+            throw BarkError.commandFailed("Wallet not initialized")
+        }
+        
+        let trimmedMnemonic = mnemonic.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedMnemonic.isEmpty else {
+            throw BarkError.commandFailed("Mnemonic phrase cannot be empty")
+        }
+        
+        let result = try await wallet.importWallet(network: "signet", asp: asp, mnemonic: trimmedMnemonic)
+        isInitialized = true
+        return result
+    }
+    
+    /// Create a new wallet
+    func createWallet() async throws -> String {
+        guard let wallet = wallet else {
+            throw BarkError.commandFailed("Wallet not initialized")
+        }
+        
+        // Execute creation through task manager for deduplication
+        return try await taskManager.execute(key: "createWallet") {
+            let result = try await wallet.createWallet(network: "signet", asp: self.asp)
+            self.isInitialized = true
+            print("✅ New wallet created successfully")
+            return result
+        }
+    }
+    
+    /// Delete the current wallet and reset manager state
+    func deleteWallet() async throws -> String {
+        guard let wallet = wallet else {
+            throw BarkError.commandFailed("Wallet not initialized")
+        }
+        
+        // Execute deletion through task manager for deduplication
+        return try await taskManager.execute(key: "deleteWallet") {
+            let result = try await wallet.deleteWallet()
+            
+            // Reset all manager state after successful deletion
+            await self.resetManagerState()
+            
+            print("✅ Wallet deleted and manager state reset")
+            return result
+        }
+    }
+    
+    /// Reset all manager and service state after wallet deletion
+    private func resetManagerState() async {
+        // Reset coordinator state
+        isInitialized = false
+        error = nil
+        isRefreshing = false
+        hasLoadedOnce = false
+        
+        // Reset balance service state
+        balanceService?.arkBalance = nil
+        balanceService?.onchainBalance = nil
+        balanceService?.totalBalance = nil
+        balanceService?.error = nil
+        
+        // Reset transaction service state (clear transactions)
+        transactionService?.transactions.removeAll()
+        transactionService?.error = nil
+        transactionService?.hasLoadedTransactions = false
+        
+        // Reset address service state
+        addressService?.arkAddress = ""
+        addressService?.onchainAddress = ""
+        addressService?.error = nil
+        
+        // Clear persisted balance data
+        balanceService?.resetBalances()
+        await transactionService?.clearPersistedTransactions()
+        
+        print("🔄 All manager and service state reset")
     }
     
     func getLatestBlockHeight() async throws -> Int {

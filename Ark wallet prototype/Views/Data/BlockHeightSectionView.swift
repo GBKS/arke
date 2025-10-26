@@ -72,14 +72,7 @@ struct BlockHeightSectionView: View {
             }
             
             if let error = error {
-                VStack {
-                    Image(systemName: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                    Text("Error: \(error)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
+                ErrorView(errorMessage: error)
             }
         }
         .task {

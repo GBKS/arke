@@ -14,6 +14,11 @@ struct SettingsView: View {
     @State private var showMnemonic = false
     @State private var errorMessage: String?
     @State private var showCopiedFeedback = false
+    @State private var showDeleteConfirmation = false
+    @State private var isDeleting = false
+    @State private var deleteError: String?
+    
+    let onWalletDeleted: (() -> Void)?
     
     var body: some View {
         ScrollView {
@@ -87,11 +92,8 @@ struct SettingsView: View {
                             }
                             .padding(.top, 15)
                         } else if let error = errorMessage {
-                            Text("Error: \(error)")
-                                .font(.body)
-                                .foregroundColor(.red)
-                                .padding()
-                        }                        
+                            ErrorView(errorMessage: error)
+                        }
                     } else {
                         Button("Show Recovery Phrase") {
                             Task {
@@ -116,15 +118,37 @@ struct SettingsView: View {
                     Text("Delete wallet")
                         .font(.system(size: 24, design: .serif))
                     
-                    Text("Not implemented yet.")
+                    Text("This will permanently delete your wallet. Make sure you have your recovery phrase saved.")
                         .font(.body)
                         .foregroundColor(.secondary)
+                    
+                    if let deleteError = deleteError {
+                        ErrorView(errorMessage: deleteError)
+                            .padding(.top, 8)
+                    }
+                    
+                    Button(isDeleting ? "Deleting..." : "Delete Wallet") {
+                        showDeleteConfirmation = true
+                    }
+                    .buttonStyle(ArkeButtonStyle(size: .small))
+                    .disabled(isDeleting)
+                    .padding(.top, 15)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
         }
         .navigationTitle("Settings")
+        .confirmationDialog("Delete Wallet", isPresented: $showDeleteConfirmation) {
+            Button("Delete Wallet", role: .destructive) {
+                Task {
+                    await deleteWallet()
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to delete your wallet? This action cannot be undone. Make sure you have your recovery phrase saved.")
+        }
     }
     
     private func loadMnemonic() async {
@@ -145,9 +169,28 @@ struct SettingsView: View {
             }
         }
     }
+    
+    private func deleteWallet() async {
+        isDeleting = true
+        deleteError = nil
+        
+        do {
+            _ = try await walletManager.deleteWallet()
+            
+            // Call the completion handler to navigate back to onboarding
+            await MainActor.run {
+                onWalletDeleted?()
+            }
+        } catch {
+            await MainActor.run {
+                deleteError = error.localizedDescription
+                isDeleting = false
+            }
+        }
+    }
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(onWalletDeleted: nil)
         .environment(WalletManager(useMock: true))
 }

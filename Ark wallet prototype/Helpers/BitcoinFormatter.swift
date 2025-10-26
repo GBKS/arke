@@ -35,7 +35,7 @@ struct BitcoinFormatter {
             return "+\(baseFormatted)"
         }
         
-        return baseFormatted
+        return "-\(baseFormatted)"
     }
     
     /// Formats a Bitcoin amount in accounting style with consistent symbol placement

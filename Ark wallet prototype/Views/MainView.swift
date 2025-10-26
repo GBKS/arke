@@ -21,11 +21,14 @@ struct MainView: View {
                 LoadingView()
             } else if hasWallet {
                 // Main application UI when wallet exists
-                WalletView()
-                    .environment(walletManager)
+                WalletView(onWalletDeleted: {
+                    // Reset state to show onboarding flow
+                    hasWallet = false
+                })
+                .environment(walletManager)
             } else {
                 // Onboarding sequence when no wallet found
-                FirstUseView(onWalletCreated: {
+                OnboardingFlow(onWalletReady: {
                     Task {
                         // Initialize the wallet after creation
                         await walletManager.initialize()

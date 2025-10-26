@@ -78,6 +78,8 @@ struct WalletView: View {
     @State private var selectedDataItem: DataDetailItem?
     @Environment(WalletManager.self) private var manager
     
+    let onWalletDeleted: (() -> Void)?
+    
     var body: some View {
         if selectedItem == .activity {
             // Three-column layout for activity view
@@ -93,10 +95,15 @@ struct WalletView: View {
                     TransactionDetailView(transaction: transaction)
                         .navigationSplitViewColumnWidth(min: 250, ideal: 250)
                 } else {
-                    ContentUnavailableView(
-                        "Select a transaction",
-                        systemImage: "list.bullet.rectangle"
-                    )
+                    ContentUnavailableView {
+                        VStack(spacing: 15) {
+                            Image(systemName: "list.bullet")
+                                .imageScale(.medium)
+                                .symbolVariant(.none)
+                            Text("Select a transaction")
+                                .font(.system(size: 19, design: .serif))
+                        }
+                    }
                 }
             }
         } else if selectedItem == .data {
@@ -119,10 +126,15 @@ struct WalletView: View {
                             .navigationSplitViewColumnWidth(min: 250, ideal: 250)
                     }
                 } else {
-                    ContentUnavailableView(
-                        "Select a VTXO or UTXO",
-                        systemImage: "doc.text"
-                    )
+                    ContentUnavailableView {
+                        VStack(spacing: 15) {
+                            Image(systemName: "list.bullet")
+                                .imageScale(.medium)
+                                .symbolVariant(.none)
+                            Text("Select a VTXO or UTXO")
+                                .font(.system(size: 19, design: .serif))
+                        }
+                    }
                 }
             }
         } else {
@@ -141,7 +153,7 @@ struct WalletView: View {
                 case .receive:
                     ReceiveView()
                 case .settings:
-                    SettingsView()
+                    SettingsView(onWalletDeleted: onWalletDeleted)
                 case .data:
                     EmptyView() // This case shouldn't be reached now
                 case .activity:
@@ -155,6 +167,6 @@ struct WalletView: View {
 
 
 #Preview {
-    WalletView()
+    WalletView(onWalletDeleted: nil)
         .environment(WalletManager(useMock: true))
 }

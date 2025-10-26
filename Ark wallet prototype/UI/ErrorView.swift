@@ -11,14 +11,14 @@ import AppKit
 struct ErrorView: View {
     let errorMessage: String
     let onRetry: (() -> Void)?
-    let onDismiss: () -> Void
+    let onDismiss: (() -> Void)?
     
     @State private var showCopyConfirmation = false
     
     init(
         errorMessage: String,
         onRetry: (() -> Void)? = nil,
-        onDismiss: @escaping () -> Void
+        onDismiss: (() -> Void)? = nil
     ) {
         self.errorMessage = errorMessage
         self.onRetry = onRetry
@@ -41,12 +41,14 @@ struct ErrorView: View {
                     
                     Spacer()
                     
-                    Button(action: onDismiss) {
-                        Image(systemName: "xmark")
-                            .foregroundColor(.secondary)
+                    if let onDismiss = onDismiss {
+                        Button(action: onDismiss) {
+                            Image(systemName: "xmark")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Dismiss error")
                     }
-                    .buttonStyle(.plain)
-                    .help("Dismiss error")
                 }
                 
                 Text(errorMessage)

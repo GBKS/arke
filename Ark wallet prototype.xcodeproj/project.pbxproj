@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		59BF8E7C2EA206B2002CDFF4 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 59BF8E7B2EA206B2002CDFF4 /* README.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		597585A22EA0F0290042F0E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -34,9 +30,35 @@
 		59BF8E7B2EA206B2002CDFF4 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		598042722EABBA930041370A /* Exceptions for "Ark wallet prototype" folder in "Ark wallet prototype" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Docs/API/intro.md,
+				"Docs/API/model-definitions.md",
+				"Docs/API/service-interfaces.md",
+				"Docs/Architecture/data-flow.md",
+				Docs/Architecture/intro.md,
+				"Docs/Architecture/service-layer.md",
+				"Docs/Architecture/system-overview.md",
+				"Docs/Development/common-tasks.md",
+				Docs/Development/intro.md,
+				Docs/Development/setup.md,
+				"Docs/Development/testing-patterns.md",
+				"Docs/Features/balance-persistence.md",
+				Docs/Features/intro.md,
+				Docs/Intro.md,
+			);
+			target = 597585912EA0F0270042F0E5 /* Ark wallet prototype */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		597585942EA0F0270042F0E5 /* Ark wallet prototype */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				598042722EABBA930041370A /* Exceptions for "Ark wallet prototype" folder in "Ark wallet prototype" target */,
+			);
 			path = "Ark wallet prototype";
 			sourceTree = "<group>";
 		};
@@ -218,7 +240,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				59BF8E7C2EA206B2002CDFF4 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

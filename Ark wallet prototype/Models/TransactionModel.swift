@@ -8,13 +8,23 @@
 import SwiftUI
 
 struct TransactionModel: Identifiable, Hashable, Codable {
-    let id = UUID()
+    let id: UUID
     let type: TransactionTypeEnum
     let amount: Int // in sats
     let date: Date
     let status: TransactionStatusEnum
     let txid: String?
     let address: String?
+    
+    init(type: TransactionTypeEnum, amount: Int, date: Date, status: TransactionStatusEnum, txid: String? = nil, address: String? = nil) {
+        self.id = UUID()
+        self.type = type
+        self.amount = amount
+        self.date = date
+        self.status = status
+        self.txid = txid
+        self.address = address
+    }
     
     var formattedAmount: String {
         return BitcoinFormatter.formatTransactionAmount(amount, transactionType: type)

@@ -43,33 +43,73 @@ struct ArkeButtonStyle: ButtonStyle {
     let size: ArkeButtonSize
     let variant: ArkeButtonVariant
     let color: Color
+    let isLoading: Bool
     
-    init(size: ArkeButtonSize = .medium, variant: ArkeButtonVariant = .filled, color: Color = Color(r: 248, g: 209, b: 117)) {
+    init(size: ArkeButtonSize = .medium, variant: ArkeButtonVariant = .filled, color: Color = .arkeGold, isLoading: Bool = false) {
         self.size = size
         self.variant = variant
         self.color = color
+        self.isLoading = isLoading
     }
     
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(size.font)
-            .fontWeight(.semibold)
-            .padding(.horizontal, 20)
-            .foregroundColor(foregroundColor(for: variant, isPressed: configuration.isPressed))
-            .frame(minWidth: size.dimensions.width, minHeight: size.dimensions.height)
-            .background(
-                RoundedRectangle(cornerRadius: size.cornerRadius)
-                    .fill(backgroundColor(for: variant, isPressed: configuration.isPressed))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: size.cornerRadius)
-                            .stroke(borderColor(for: variant), lineWidth: variant == .outline ? 2 : 0)
-                    )
-                    .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            )
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+        ArkeButtonContent(
+            configuration: configuration,
+            size: size,
+            variant: variant,
+            color: color,
+            isLoading: isLoading
+        )
+    }
+}
+
+private struct ArkeButtonContent: View {
+    let configuration: ButtonStyleConfiguration
+    let size: ArkeButtonSize
+    let variant: ArkeButtonVariant
+    let color: Color
+    let isLoading: Bool
+    
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var rotationAngle: Double = 0
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            if isLoading {
+                Image(systemName: "arrow.2.circlepath")
+                    .font(size.font)
+                    .rotationEffect(.degrees(rotationAngle))
+                    .onAppear {
+                        withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
+                            rotationAngle = 360
+                        }
+                    }
+            }
+            
+            configuration.label
+        }
+        .font(size.font)
+        .fontWeight(.semibold)
+        .padding(.horizontal, 20)
+        .foregroundColor(foregroundColor(for: variant, isPressed: configuration.isPressed, isEnabled: isEnabled && !isLoading))
+        .frame(minWidth: size.dimensions.width, minHeight: size.dimensions.height)
+        .background(
+            RoundedRectangle(cornerRadius: size.cornerRadius)
+                .fill(backgroundColor(for: variant, isPressed: configuration.isPressed, isEnabled: isEnabled && !isLoading))
+                .overlay(
+                    RoundedRectangle(cornerRadius: size.cornerRadius)
+                        .stroke(borderColor(for: variant, isEnabled: isEnabled && !isLoading), lineWidth: variant == .outline ? 2 : 0)
+                )
+                .scaleEffect(configuration.isPressed && isEnabled && !isLoading ? 0.95 : 1.0)
+        )
+        .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
     
-    private func foregroundColor(for variant: ArkeButtonVariant, isPressed: Bool) -> Color {
+    private func foregroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
+        guard isEnabled else {
+            return Color.secondary.opacity(0.5)
+        }
+        
         switch variant {
         case .filled:
             return .black
@@ -80,7 +120,11 @@ struct ArkeButtonStyle: ButtonStyle {
         }
     }
     
-    private func backgroundColor(for variant: ArkeButtonVariant, isPressed: Bool) -> Color {
+    private func backgroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
+        guard isEnabled else {
+            return variant == .filled ? Color.secondary.opacity(0.2) : Color.clear
+        }
+        
         switch variant {
         case .filled:
             return isPressed ? color.opacity(0.8) : color
@@ -91,7 +135,11 @@ struct ArkeButtonStyle: ButtonStyle {
         }
     }
     
-    private func borderColor(for variant: ArkeButtonVariant) -> Color {
+    private func borderColor(for variant: ArkeButtonVariant, isEnabled: Bool) -> Color {
+        guard isEnabled else {
+            return variant == .outline ? Color.secondary.opacity(0.3) : Color.clear
+        }
+        
         switch variant {
         case .filled, .ghost:
             return Color.clear
@@ -104,99 +152,146 @@ struct ArkeButtonStyle: ButtonStyle {
 // MARK: - Convenience Extensions
 
 extension View {
-    func buttonStyle(size: ArkeButtonSize, variant: ArkeButtonVariant = .filled, color: Color = Color(r: 248, g: 209, b: 117)) -> some View {
-        self.buttonStyle(ArkeButtonStyle(size: size, variant: variant, color: color))
+    func buttonStyle(size: ArkeButtonSize, variant: ArkeButtonVariant = .filled, color: Color = .arkeGold, isLoading: Bool = false) -> some View {
+        self.buttonStyle(ArkeButtonStyle(size: size, variant: variant, color: color, isLoading: isLoading))
     }
     
-    func iconButtonStyle(size: ArkeIconButtonSize = .medium, variant: ArkeButtonVariant = .filled, color: Color = Color(r: 248, g: 209, b: 117)) -> some View {
+    func iconButtonStyle(size: ArkeIconButtonSize = .medium, variant: ArkeButtonVariant = .filled, color: Color = .arkeGold) -> some View {
         self.buttonStyle(ArkeIconButtonStyle(size: size, variant: variant, color: color))
     }
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        VStack(spacing: 16) {
-            Text("Button Sizes")
-                .font(.headline)
-            
-            HStack {
-                Button("Small") { }
-                    .buttonStyle(size: .small)
-                Button("Medium") { }
-                    .buttonStyle(size: .medium)
-                Button("Large") { }
-                    .buttonStyle(size: .large)
-            }
-        }
-        
-        VStack(spacing: 16) {
-            Text("Buttons with Icons")
-                .font(.headline)
-            
-            HStack {
-                Button {
-                    // Action
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus")
-                        Text("Add Item")
-                    }
-                }
-                .buttonStyle(size: .medium, variant: .filled)
+    ScrollView {
+        VStack(spacing: 20) {
+            VStack(spacing: 16) {
+                Text("Button Sizes")
+                    .font(.headline)
                 
-                Button {
-                    // Action
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "arrow.right")
-                        Text("Continue")
-                    }
+                HStack {
+                    Button("Small") { }
+                        .buttonStyle(size: .small)
+                    Button("Medium") { }
+                        .buttonStyle(size: .medium)
+                    Button("Large") { }
+                        .buttonStyle(size: .large)
                 }
-                .buttonStyle(size: .medium, variant: .outline)
-                
-                Button {
-                    // Action
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "heart")
-                        Text("Like")
-                    }
-                }
-                .buttonStyle(size: .medium, variant: .ghost)
             }
-        }
-        
-        VStack(spacing: 16) {
-            Text("Button Variants")
-                .font(.headline)
             
-            HStack {
-                Button("Filled Button") { }
+            VStack(spacing: 16) {
+                Text("Buttons with Icons")
+                    .font(.headline)
+                
+                HStack {
+                    Button {
+                        // Action
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus")
+                            Text("Add Item")
+                        }
+                    }
                     .buttonStyle(size: .medium, variant: .filled)
-                
-                Button("Outline Button") { }
+                    
+                    Button {
+                        // Action
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.right")
+                            Text("Continue")
+                        }
+                    }
                     .buttonStyle(size: .medium, variant: .outline)
-                
-                Button("Ghost Button") { }
+                    
+                    Button {
+                        // Action
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "heart")
+                            Text("Like")
+                        }
+                    }
                     .buttonStyle(size: .medium, variant: .ghost)
+                }
             }
-        }
-        
-        VStack(spacing: 16) {
-            Text("Different Colors")
-                .font(.headline)
             
-            HStack {
-                Button("Blue Filled") { }
-                    .buttonStyle(size: .medium, variant: .filled, color: .blue)
+            VStack(spacing: 16) {
+                Text("Button Variants")
+                    .font(.headline)
                 
-                Button("Red Outline") { }
-                    .buttonStyle(size: .medium, variant: .outline, color: .red)
+                HStack {
+                    Button("Filled Button") { }
+                        .buttonStyle(size: .medium, variant: .filled)
+                    
+                    Button("Outline Button") { }
+                        .buttonStyle(size: .medium, variant: .outline)
+                    
+                    Button("Ghost Button") { }
+                        .buttonStyle(size: .medium, variant: .ghost)
+                }
+            }
+            
+            VStack(spacing: 16) {
+                Text("Different Colors")
+                    .font(.headline)
                 
-                Button("Green Ghost") { }
-                    .buttonStyle(size: .medium, variant: .ghost, color: .green)
+                HStack {
+                    Button("Blue Filled") { }
+                        .buttonStyle(size: .medium, variant: .filled, color: .blue)
+                    
+                    Button("Red Outline") { }
+                        .buttonStyle(size: .medium, variant: .outline, color: .red)
+                    
+                    Button("Green Ghost") { }
+                        .buttonStyle(size: .medium, variant: .ghost, color: .green)
+                }
+            }
+            
+            VStack(spacing: 16) {
+                Text("Disabled State")
+                    .font(.headline)
+                
+                HStack {
+                    Button("Disabled Filled") { }
+                        .buttonStyle(size: .medium, variant: .filled)
+                        .disabled(true)
+                    
+                    Button("Disabled Outline") { }
+                        .buttonStyle(size: .medium, variant: .outline)
+                        .disabled(true)
+                    
+                    Button("Disabled Ghost") { }
+                        .buttonStyle(size: .medium, variant: .ghost)
+                        .disabled(true)
+                }
+            }
+            
+            VStack(spacing: 16) {
+                Text("Loading State")
+                    .font(.headline)
+                
+                VStack(spacing: 12) {
+                    HStack {
+                        Button("Loading Filled") { }
+                            .buttonStyle(size: .medium, variant: .filled, isLoading: true)
+                        
+                        Button("Loading Outline") { }
+                            .buttonStyle(size: .medium, variant: .outline, isLoading: true)
+                        
+                        Button("Loading Ghost") { }
+                            .buttonStyle(size: .medium, variant: .ghost, isLoading: true)
+                    }
+                    
+                    HStack {
+                        Button("Small Loading") { }
+                            .buttonStyle(size: .small, variant: .filled, isLoading: true)
+                        
+                        Button("Large Loading") { }
+                            .buttonStyle(size: .large, variant: .filled, color: .blue, isLoading: true)
+                    }
+                }
             }
         }
+        .padding()
     }
-    .padding()
 }

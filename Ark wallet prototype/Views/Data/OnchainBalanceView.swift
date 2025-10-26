@@ -39,14 +39,7 @@ struct OnchainBalanceView: View {
                     cornerRadius: 15
                 )
             } else if let error = error {
-                VStack {
-                    Image(systemName: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                    Text("Error: \(error)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
+                ErrorView(errorMessage: error)
             } else if onchainBalance == nil && !isLoadingOnchainBalance {
                 VStack {
                     Image(systemName: "bitcoinsign.circle")

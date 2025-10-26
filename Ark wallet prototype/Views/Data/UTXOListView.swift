@@ -56,14 +56,7 @@ struct UTXOListView: View {
                 )
                 .padding(.top, 10)
             } else if let error = error {
-                VStack {
-                    Image(systemName: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                    Text("Error: \(error)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
+                ErrorView(errorMessage: error)
             } else if utxos.isEmpty {
                 VStack {
                     Image(systemName: "tray")

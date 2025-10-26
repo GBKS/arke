@@ -137,6 +137,54 @@ class BarkWallet: BarkWalletProtocol {
         return output
     }
     
+    // bark create --signet --ark ark.signet.2nd.dev --esplora esplora.signet.2nd.dev --mnemonic "words here"
+    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String {
+        let esploraEndpoint = "esplora.signet.2nd.dev"
+        let args = [
+            "create",
+            "--\(network)",
+            "--ark", asp,
+            "--esplora", esploraEndpoint,
+            "--mnemonic", mnemonic,
+            "--force"
+        ]
+        let output = try await executeCommand(args)
+        return output
+    }
+    
+    func deleteWallet() async throws -> String {
+        // Handle preview mode
+        if isPreview {
+            print("⚠️ Preview mode - wallet deletion skipped")
+            return "Mock: Wallet deleted (preview mode)"
+        }
+        
+        let fileManager = FileManager.default
+        
+        // Safety check: verify the wallet directory path looks correct
+        guard walletDir.path.contains("bark-data") else {
+            throw BarkError.commandFailed("Invalid wallet directory path: \(walletDir.path)")
+        }
+        
+        // Check if wallet directory exists
+        guard fileManager.fileExists(atPath: walletDir.path) else {
+            print("⚠️ Wallet directory does not exist at: \(walletDir.path)")
+            return "Wallet directory does not exist (already deleted)"
+        }
+        
+        print("🗑️ Deleting wallet directory: \(walletDir.path)")
+        
+        do {
+            // Remove the entire wallet directory and its contents
+            try fileManager.removeItem(at: walletDir)
+            print("✅ Successfully deleted wallet directory")
+            return "Successfully deleted wallet directory at \(walletDir.path)"
+        } catch {
+            print("❌ Failed to delete wallet directory: \(error)")
+            throw BarkError.commandFailed("Failed to delete wallet directory: \(error.localizedDescription)")
+        }
+    }
+    
     /*
      {
        "ark": "https://ark.signet.2nd.dev/",

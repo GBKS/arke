@@ -45,9 +45,11 @@ struct TransactionListItem: View {
                     .foregroundColor(transaction.type.amountColor)
             }
         }
-        .padding(.vertical, 16)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
         .background(selectedTransaction?.id == transaction.id ? Color.accentColor.opacity(0.1) : Color.clear)
         .contentShape(Rectangle())
+        .cornerRadius(15)
         .onTapGesture {
             selectedTransaction = transaction
         }

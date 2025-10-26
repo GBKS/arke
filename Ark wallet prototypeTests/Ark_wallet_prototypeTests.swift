@@ -7,6 +7,7 @@
 
 import Testing
 import SwiftData
+import Foundation
 @testable import Ark_wallet_prototype
 
 struct Ark_wallet_prototypeTests {

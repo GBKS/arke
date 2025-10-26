@@ -27,13 +27,18 @@ struct TransactionList: View {
                 .padding(.vertical, 16)
                 .padding(.horizontal)
             } else if transactions.isEmpty {
-                VStack(spacing: 12) {
-                    Text("Start by sending some bitcoin to your savings balance.")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                VStack {
+                    ContentUnavailableView {
+                        VStack(spacing: 15) {
+                            Image(systemName: "arrow.down")
+                                .imageScale(.medium)
+                                .symbolVariant(.none)
+                            Text("Start by sending bitcoin to your wallet")
+                                .font(.system(size: 19, design: .serif))
+                        }
+                    }
                 }
-                .padding(.vertical, 32)
-                .frame(maxWidth: .infinity)
+                .padding(.top, 60)
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(transactions) { transaction in
@@ -41,13 +46,13 @@ struct TransactionList: View {
                         
                         if transaction.id != transactions.last?.id {
                             Divider()
-                                .padding(.leading, 44) // Align with text content
+                                .padding(.leading, 56) // Align with text content
                         }
                     }
                 }
                 .background(.background)
-                .cornerRadius(12)
-                .padding(.horizontal)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
             }
         }
     }

@@ -68,14 +68,7 @@ struct VTXOListView: View {
                 )
                 .padding(.top, 10)
             } else if let error = error {
-                VStack {
-                    Image(systemName: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                    Text("Error: \(error)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding()
+                ErrorView(errorMessage: error)
             } else if vtxos.isEmpty {
                 VStack {
                     Image(systemName: "tray")

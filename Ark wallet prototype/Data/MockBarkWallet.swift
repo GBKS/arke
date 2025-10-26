@@ -54,6 +54,18 @@ class MockBarkWallet: BarkWalletProtocol {
         return "Wallet created successfully on \(network) network"
     }
     
+    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        let wordCount = mnemonic.split(separator: " ").count
+        return "Wallet imported successfully on \(network) network using \(wordCount)-word mnemonic"
+    }
+    
+    func deleteWallet() async throws -> String {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        print("🗑️ Mock: Wallet deletion simulated")
+        return "Mock: Successfully deleted wallet directory at \(walletDir.path)"
+    }
+    
     func getArkBalance() async throws -> ArkBalanceModel {
         return ArkBalanceModel(
             spendableSat: 50000,

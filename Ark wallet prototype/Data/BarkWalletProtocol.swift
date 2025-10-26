@@ -13,6 +13,8 @@ protocol BarkWalletProtocol {
     
     func executeCommand(_ args: [String]) async throws -> String
     func createWallet(network: String, asp: String) async throws -> String
+    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String
+    func deleteWallet() async throws -> String
     func getArkBalance() async throws -> ArkBalanceModel
     func getArkAddress() async throws -> String
     func getArkInfo() async throws -> ArkInfoModel
