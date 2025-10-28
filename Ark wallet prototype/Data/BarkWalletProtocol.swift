@@ -10,10 +10,13 @@ import Foundation
 // Protocol so both real and mock wallets can be used interchangeably
 protocol BarkWalletProtocol {
     var walletDir: URL { get }
+    var networkConfig: NetworkConfig { get }
+    var isMainnet: Bool { get }
+    var currentNetworkName: String { get }
     
     func executeCommand(_ args: [String]) async throws -> String
-    func createWallet(network: String, asp: String) async throws -> String
-    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String
+    func createWallet(network: String?, asp: String?) async throws -> String
+    func importWallet(network: String?, asp: String?, mnemonic: String) async throws -> String
     func deleteWallet() async throws -> String
     func getArkBalance() async throws -> ArkBalanceModel
     func getArkAddress() async throws -> String
@@ -39,4 +42,10 @@ protocol BarkWalletProtocol {
     func getLightningInvoiceStatus(invoice: String) async throws -> String
     func listLightningInvoices() async throws -> String
     func claimLightningInvoice(invoice: String) async throws -> String
+    
+    // Network safety methods
+    func requiresMainnetWarning() -> Bool
+    func validateMainnetOperation() throws
+    func sendWithSafetyCheck(to address: String, amount: Int) async throws -> String
+    func sendOnchainWithSafetyCheck(to address: String, amount: Int) async throws -> String
 }

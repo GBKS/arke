@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 // MARK: - Network Configuration Models
 
@@ -64,82 +65,5 @@ extension NetworkConfig {
             isMainnet: isMainnet,
             networkType: "custom"
         )
-    }
-}
-
-// MARK: - Network Settings Manager
-
-@MainActor
-class NetworkSettingsManager: ObservableObject {
-    @Published var currentNetwork: NetworkConfig
-    @Published var customNetworks: [NetworkConfig] = []
-    
-    private let userDefaults = UserDefaults.standard
-    private let currentNetworkKey = "currentNetwork"
-    private let customNetworksKey = "customNetworks"
-    
-    init() {
-        // Load current network from UserDefaults, default to signet
-        if let data = userDefaults.data(forKey: currentNetworkKey),
-           let network = try? JSONDecoder().decode(NetworkConfig.self, from: data) {
-            self.currentNetwork = network
-        } else {
-            self.currentNetwork = NetworkConfig.signet
-        }
-        
-        // Load custom networks
-        if let data = userDefaults.data(forKey: customNetworksKey),
-           let networks = try? JSONDecoder().decode([NetworkConfig].self, from: data) {
-            self.customNetworks = networks
-        }
-    }
-    
-    var allNetworks: [NetworkConfig] {
-        NetworkConfig.defaultNetworks + customNetworks
-    }
-    
-    func setCurrentNetwork(_ network: NetworkConfig) {
-        currentNetwork = network
-        saveCurrentNetwork()
-    }
-    
-    func addCustomNetwork(_ network: NetworkConfig) {
-        customNetworks.append(network)
-        saveCustomNetworks()
-    }
-    
-    func removeCustomNetwork(_ network: NetworkConfig) {
-        customNetworks.removeAll { $0.id == network.id }
-        saveCustomNetworks()
-        
-        // If we removed the current network, switch to signet
-        if currentNetwork.id == network.id {
-            setCurrentNetwork(.signet)
-        }
-    }
-    
-    private func saveCurrentNetwork() {
-        if let data = try? JSONEncoder().encode(currentNetwork) {
-            userDefaults.set(data, forKey: currentNetworkKey)
-        }
-    }
-    
-    private func saveCustomNetworks() {
-        if let data = try? JSONEncoder().encode(customNetworks) {
-            userDefaults.set(data, forKey: customNetworksKey)
-        }
-    }
-    
-    // Helper methods for UI
-    func networkDisplayName(_ network: NetworkConfig) -> String {
-        if network.isMainnet {
-            return "🔴 \(network.name)" // Red indicator for mainnet
-        } else {
-            return "🔵 \(network.name)" // Blue indicator for testnet/signet
-        }
-    }
-    
-    func isCurrentNetwork(_ network: NetworkConfig) -> Bool {
-        currentNetwork.id == network.id
     }
 }

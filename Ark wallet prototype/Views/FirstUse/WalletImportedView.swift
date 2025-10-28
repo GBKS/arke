@@ -55,7 +55,6 @@ struct WalletImportedView: View {
         .padding(.top, 60)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .frame(minWidth: 800, minHeight: 600)
         .background(Color.arkeDark)
     }
 }
@@ -65,4 +64,5 @@ struct WalletImportedView: View {
         onContinue: {},
         onBackupReminder: {}
     )
+    .frame(width: 600, height: 700)
 }

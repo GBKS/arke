@@ -13,10 +13,6 @@ struct FirstUseView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            // Left column - Big image
-            LoopingVideoPlayer(videoName: "cover-animation", videoExtension: "mp4")
-                .frame(maxWidth: .infinity)
-                .clipped()
             
             // Right column - Existing content
             VStack(spacing: 30) {
@@ -68,7 +64,6 @@ struct FirstUseView: View {
             .padding(.vertical, 60)
             .frame(maxWidth: .infinity)
         }
-        .frame(minWidth: 800, minHeight: 600)
         .background(Color.arkeDark)
     }
 }
@@ -78,5 +73,5 @@ struct FirstUseView: View {
         onCreateWallet: {},
         onImportWallet: {}
     )
-    .frame(width: 800, height: 600)
+    .frame(width: 600, height: 700)
 }

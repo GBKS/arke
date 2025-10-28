@@ -102,7 +102,6 @@ struct CreateWalletView: View {
         .padding(.top, 20)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .frame(minWidth: 800, minHeight: 600)
         .background(Color.arkeDark)
     }
 }
@@ -113,4 +112,5 @@ struct CreateWalletView: View {
         onWalletCreated: {},
         walletManager: WalletManager(useMock: true)
     )
+    .frame(width: 600, height: 700)
 }

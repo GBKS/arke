@@ -9,10 +9,20 @@ import Foundation
 
 class MockBarkWallet: BarkWalletProtocol {
     let walletDir: URL
+    let networkConfig: NetworkConfig
     
-    init() {
+    var isMainnet: Bool {
+        return networkConfig.isMainnet
+    }
+    
+    var currentNetworkName: String {
+        return networkConfig.name
+    }
+    
+    init(networkConfig: NetworkConfig = .signet) {
         // Mock wallet directory
         self.walletDir = URL(fileURLWithPath: "/tmp/mock-bark-wallet")
+        self.networkConfig = networkConfig
     }
     
     func executeCommand(_ args: [String]) async throws -> String {
@@ -49,15 +59,17 @@ class MockBarkWallet: BarkWalletProtocol {
         return "Mock command executed: \(args.joined(separator: " "))"
     }
     
-    func createWallet(network: String, asp: String) async throws -> String {
+    func createWallet(network: String?, asp: String?) async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
-        return "Wallet created successfully on \(network) network"
+        let networkName = network ?? currentNetworkName
+        return "Wallet created successfully on \(networkName) network"
     }
     
-    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String {
+    func importWallet(network: String?, asp: String?, mnemonic: String) async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
         let wordCount = mnemonic.split(separator: " ").count
-        return "Wallet imported successfully on \(network) network using \(wordCount)-word mnemonic"
+        let networkName = network ?? currentNetworkName
+        return "Wallet imported successfully on \(networkName) network using \(wordCount)-word mnemonic"
     }
     
     func deleteWallet() async throws -> String {
@@ -267,6 +279,29 @@ class MockBarkWallet: BarkWalletProtocol {
     func claimLightningInvoice(invoice: String) async throws -> String {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         return ""
+    }
+    
+    // MARK: - Network Safety Methods
+    
+    func requiresMainnetWarning() -> Bool {
+        return isMainnet
+    }
+    
+    func validateMainnetOperation() throws {
+        // Mock implementation - doesn't actually validate anything
+        if isMainnet {
+            print("⚠️ Mock: Mainnet operation validation (would show warning in real implementation)")
+        }
+    }
+    
+    func sendWithSafetyCheck(to address: String, amount: Int) async throws -> String {
+        try validateMainnetOperation()
+        return try await send(to: address, amount: amount)
+    }
+    
+    func sendOnchainWithSafetyCheck(to address: String, amount: Int) async throws -> String {
+        try validateMainnetOperation()
+        return try await sendOnchain(to: address, amount: amount)
     }
 }
 

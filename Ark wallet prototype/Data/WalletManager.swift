@@ -44,7 +44,6 @@ class WalletManager {
     
     // MARK: - Services
     private var wallet: BarkWalletProtocol?
-    private let asp = "ark.signet.2nd.dev"
     private let taskManager = TaskDeduplicationManager()
     private let cacheManager = WalletCacheManager()
     private var modelContext: ModelContext?
@@ -53,6 +52,19 @@ class WalletManager {
     private var balanceService: BalanceService?
     private var addressService: AddressService?
     private var walletOperationsService: WalletOperationsService?
+    
+    // MARK: - Computed Properties - Network Info
+    var currentNetworkName: String {
+        wallet?.currentNetworkName ?? "Unknown"
+    }
+    
+    var isMainnet: Bool {
+        wallet?.isMainnet ?? false
+    }
+    
+    var networkConfig: NetworkConfig? {
+        wallet?.networkConfig
+    }
     
     // MARK: - Computed Properties - Data Access
     var transactions: [TransactionModel] {
@@ -126,13 +138,26 @@ class WalletManager {
     }
     
     // MARK: - Initialization
-    init(useMock: Bool = false) {
-        setupWallet(useMock: useMock)
+    init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
+        let config = networkConfig ?? NetworkConfig.signet
+        setupWallet(useMock: useMock, networkConfig: config)
         initializeServices()
     }
     
-    private func setupWallet(useMock: Bool) {
-        wallet = useMock ? MockBarkWallet() : BarkWallet()
+    /// Convenience initializer for different networks
+    static func forNetwork(_ networkConfig: NetworkConfig, useMock: Bool = false) -> WalletManager {
+        return WalletManager(useMock: useMock, networkConfig: networkConfig)
+    }
+    
+    private func setupWallet(useMock: Bool, networkConfig: NetworkConfig) {
+        if useMock {
+            wallet = MockBarkWallet()
+        } else {
+            wallet = BarkWallet(networkConfig: networkConfig)
+            if wallet == nil {
+                print("❌ Failed to initialize BarkWallet with network config: \(networkConfig.name)")
+            }
+        }
     }
     
     private func initializeServices() {
@@ -174,12 +199,12 @@ class WalletManager {
         let walletExists = FileManager.default.fileExists(atPath: mnemonicFile.path)
         
         if walletExists {
-            print("✅ Wallet mnemonic found - wallet exists")
+            print("✅ Wallet mnemonic found - wallet exists on \(currentNetworkName)")
             isInitialized = true
             // Load all wallet data for existing wallet
             await refresh()
         } else {
-            print("⚠️ No mnemonic found - wallet needs to be created or imported")
+            print("⚠️ No mnemonic found - wallet needs to be created or imported on \(currentNetworkName)")
             isInitialized = false
         }
     }
@@ -232,7 +257,7 @@ class WalletManager {
         }
         
         error = nil
-        print("✅ All wallet data refreshed successfully")
+        print("✅ All wallet data refreshed successfully on \(currentNetworkName)")
     }
     
     // MARK: - Wallet Operations (delegates to WalletOperationsService)
@@ -336,7 +361,7 @@ class WalletManager {
             throw BarkError.commandFailed("Mnemonic phrase cannot be empty")
         }
         
-        let result = try await wallet.importWallet(network: "signet", asp: asp, mnemonic: trimmedMnemonic)
+        let result = try await wallet.importWallet(network: wallet.networkConfig.networkType, asp: wallet.networkConfig.aspURL, mnemonic: trimmedMnemonic)
         isInitialized = true
         return result
     }
@@ -349,9 +374,9 @@ class WalletManager {
         
         // Execute creation through task manager for deduplication
         return try await taskManager.execute(key: "createWallet") {
-            let result = try await wallet.createWallet(network: "signet", asp: self.asp)
+            let result = try await wallet.createWallet(network: wallet.networkConfig.networkType, asp: wallet.networkConfig.aspURL)
             self.isInitialized = true
-            print("✅ New wallet created successfully")
+            print("✅ New wallet created successfully on \(self.currentNetworkName)")
             return result
         }
     }

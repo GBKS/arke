@@ -106,45 +106,41 @@ private struct ArkeButtonContent: View {
     }
     
     private func foregroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
-        guard isEnabled else {
-            return Color.secondary.opacity(0.5)
-        }
+        //guard isEnabled else {
+            //return Color.secondary.opacity(0.5)
+        //}
         
         switch variant {
         case .filled:
-            return .black
+            return isEnabled ? .black : .black.opacity(0.25)
         case .outline:
-            return isPressed ? .white : color
+            return isEnabled ? (isPressed ? .white : color) : color.opacity(0.25)
         case .ghost:
-            return isPressed ? .primary.opacity(0.6) : .primary
+            return isEnabled ? (isPressed ? .primary.opacity(0.6) : .primary) : .primary.opacity(0.25)
         }
     }
     
     private func backgroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
-        guard isEnabled else {
-            return variant == .filled ? Color.secondary.opacity(0.2) : Color.clear
-        }
-        
         switch variant {
         case .filled:
-            return isPressed ? color.opacity(0.8) : color
+            return isEnabled ? (isPressed ? color.opacity(0.8) : color) : color.opacity(0.25)
         case .outline:
-            return isPressed ? color : Color.clear
+            return isEnabled ? (isPressed ? color : Color.clear) : Color.clear
         case .ghost:
-            return isPressed ? color.opacity(0.1) : Color.clear
+            return isEnabled ? (isPressed ? color.opacity(0.1) : Color.clear) : Color.clear
         }
     }
     
     private func borderColor(for variant: ArkeButtonVariant, isEnabled: Bool) -> Color {
-        guard isEnabled else {
-            return variant == .outline ? Color.secondary.opacity(0.3) : Color.clear
-        }
+        //guard isEnabled else {
+        //    return variant == .outline ? Color.secondary.opacity(0.3) : Color.clear
+        //}
         
         switch variant {
         case .filled, .ghost:
             return Color.clear
         case .outline:
-            return color
+            return isEnabled ? color : color.opacity(0.25)
         }
     }
 }
@@ -294,4 +290,5 @@ extension View {
         }
         .padding()
     }
+    .frame(width: 600, height: 700)
 }

@@ -4,12 +4,16 @@ import Foundation
 import FoundationNetworking
 #endif
 
-class BarkWallet: BarkWalletProtocol {
+class BarkWallet: BarkWalletProtocol, Equatable {
     let barkPath: String
     let walletDir: URL
     let isPreview: Bool
+    let networkConfig: NetworkConfig
     
-    init?() {
+    init?(networkConfig: NetworkConfig = .signet) {
+        // Store the network configuration
+        self.networkConfig = networkConfig
+        
         // Detect if we're in a SwiftUI Preview
         self.isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         
@@ -124,13 +128,16 @@ class BarkWallet: BarkWalletProtocol {
     
     // Wallet commands
     // bark create --signet --ark ark.signet.2nd.dev --esplora esplora.signet.2nd.dev
-    func createWallet(network: String, asp: String) async throws -> String {
-        let esploraEndpoint = "esplora.signet.2nd.dev"
+    func createWallet(network: String? = nil, asp: String? = nil) async throws -> String {
+        let networkType = network ?? networkConfig.networkType
+        let aspURL = asp ?? networkConfig.aspURL
+        let esploraURL = networkConfig.esploraURL
+        
         let args = [
             "create",
-            "--\(network)",
-            "--ark", asp,
-            "--esplora", esploraEndpoint,
+            "--\(networkType)",
+            "--ark", aspURL,
+            "--esplora", esploraURL,
             "--force"
         ]
         let output = try await executeCommand(args)
@@ -138,13 +145,16 @@ class BarkWallet: BarkWalletProtocol {
     }
     
     // bark create --signet --ark ark.signet.2nd.dev --esplora esplora.signet.2nd.dev --mnemonic "words here"
-    func importWallet(network: String, asp: String, mnemonic: String) async throws -> String {
-        let esploraEndpoint = "esplora.signet.2nd.dev"
+    func importWallet(network: String? = nil, asp: String? = nil, mnemonic: String) async throws -> String {
+        let networkType = network ?? networkConfig.networkType
+        let aspURL = asp ?? networkConfig.aspURL
+        let esploraURL = networkConfig.esploraURL
+        
         let args = [
             "create",
-            "--\(network)",
-            "--ark", asp,
-            "--esplora", esploraEndpoint,
+            "--\(networkType)",
+            "--ark", aspURL,
+            "--esplora", esploraURL,
             "--mnemonic", mnemonic,
             "--force"
         ]
@@ -533,7 +543,11 @@ class BarkWallet: BarkWalletProtocol {
     
     // Network API calls
     func getLatestBlockHeight() async throws -> Int {
-        let url = URL(string: "https://esplora.signet.2nd.dev/blocks/tip/height")!
+        let urlString = "\(networkConfig.esploraBaseURL)/blocks/tip/height"
+        guard let url = URL(string: urlString) else {
+            throw BarkError.commandFailed("Invalid esplora URL: \(urlString)")
+        }
+        
         let (data, response) = try await URLSession.shared.data(from: url)
         
         // Check if the response is successful
@@ -549,7 +563,7 @@ class BarkWallet: BarkWalletProtocol {
             throw BarkError.commandFailed("Invalid block height response")
         }
         
-        print("📊 Latest block height: \(height)")
+        print("📊 Latest block height: \(height) from \(networkConfig.name)")
         return height
     }
     
@@ -602,6 +616,59 @@ class BarkWallet: BarkWalletProtocol {
         } catch {
             throw BarkError.commandFailed("Failed to read mnemonic file: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Network Configuration Helpers
+    
+    var currentNetworkName: String {
+        networkConfig.name
+    }
+    
+    var isMainnet: Bool {
+        networkConfig.isMainnet
+    }
+    
+    func requiresMainnetWarning() -> Bool {
+        networkConfig.isMainnet
+    }
+    
+    func validateMainnetOperation() throws {
+        if networkConfig.isMainnet {
+            print("⚠️ MAINNET OPERATION - Real Bitcoin will be used!")
+        }
+    }
+    
+    // MARK: - Enhanced Send Methods with Safety Checks
+    
+    func sendWithSafetyCheck(to address: String, amount: Int) async throws -> String {
+        try validateMainnetOperation()
+        
+        if networkConfig.isMainnet {
+            print("🔴 MAINNET SEND: Sending \(amount) sats to \(address)")
+        } else {
+            print("🔵 \(networkConfig.networkType.uppercased()) SEND: Sending \(amount) sats to \(address)")
+        }
+        
+        return try await send(to: address, amount: amount)
+    }
+    
+    func sendOnchainWithSafetyCheck(to address: String, amount: Int) async throws -> String {
+        try validateMainnetOperation()
+        
+        if networkConfig.isMainnet {
+            print("🔴 MAINNET ONCHAIN SEND: Sending \(amount) sats to \(address)")
+        } else {
+            print("🔵 \(networkConfig.networkType.uppercased()) ONCHAIN SEND: Sending \(amount) sats to \(address)")
+        }
+        
+        return try await sendOnchain(to: address, amount: amount)
+    }
+    
+    // MARK: - Equatable Conformance
+    static func == (lhs: BarkWallet, rhs: BarkWallet) -> Bool {
+        return lhs.networkConfig == rhs.networkConfig &&
+               lhs.walletDir == rhs.walletDir &&
+               lhs.isPreview == rhs.isPreview
     }
 }
 

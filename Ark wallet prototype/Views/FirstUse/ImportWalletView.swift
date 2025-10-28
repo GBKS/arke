@@ -85,7 +85,6 @@ struct ImportWalletView: View {
         .padding(.top, 20)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .frame(minWidth: 800, minHeight: 600)
         .background(Color.arkeDark)
         .alert("Import Error", isPresented: $showingError) {
             Button("OK") { }
@@ -131,4 +130,5 @@ struct ImportWalletView: View {
         onWalletImported: {}
     )
     .environment(WalletManager(useMock: true))
+    .frame(width: 600, height: 700)
 }

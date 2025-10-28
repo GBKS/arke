@@ -28,126 +28,137 @@ struct OnboardingFlow: View {
     
     var body: some View {
         ZStack {
-            Group {
-                switch currentState {
-                case .firstUse:
-                    FirstUseView(
-                        onCreateWallet: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .forward
-                                currentState = .createWallet
-                            }
-                        },
-                        onImportWallet: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .forward
-                                currentState = .importWallet
-                            }
-                        }
-                    )
-                    .transition(.asymmetric(
-                        insertion: navigationDirection == .forward ? 
-                            .move(edge: .leading).combined(with: .opacity) :
-                            .move(edge: .trailing).combined(with: .opacity),
-                        removal: navigationDirection == .forward ? 
-                            .move(edge: .trailing).combined(with: .opacity) :
-                            .move(edge: .leading).combined(with: .opacity)
-                    ))
-                    .tag("firstUse")
-                    
-                case .importWallet:
-                    ImportWalletView(
-                        onBack: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .backward
-                                currentState = .firstUse
-                            }
-                        },
-                        onWalletImported: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .forward
-                                currentState = .walletImported
-                            }
-                        }
-                    )
-                    .transition(.asymmetric(
-                        insertion: navigationDirection == .forward ? 
-                            .move(edge: .trailing).combined(with: .opacity) :
-                            .move(edge: .leading).combined(with: .opacity),
-                        removal: navigationDirection == .forward ? 
-                            .move(edge: .leading).combined(with: .opacity) :
-                            .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                    .tag("importWallet")
-                    
-                case .walletImported:
-                    WalletImportedView(
-                        onContinue: {
-                            onWalletReady()
-                        },
-                        onBackupReminder: {
-                            // TODO: Navigate to backup reminder view
-                            // For now, we'll just continue to the main wallet
-                            onWalletReady()
-                        }
-                    )
-                    .transition(.asymmetric(
-                        insertion: navigationDirection == .forward ? 
-                            .move(edge: .trailing).combined(with: .opacity) :
-                            .move(edge: .leading).combined(with: .opacity),
-                        removal: navigationDirection == .forward ? 
-                            .move(edge: .leading).combined(with: .opacity) :
-                            .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                    .tag("walletImported")
-                    
-                case .createWallet:
-                    CreateWalletView(
-                        onBack: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .backward
-                                currentState = .firstUse
-                            }
-                        },
-                        onWalletCreated: {
-                            withAnimation(.smooth(duration: 0.4)) {
-                                navigationDirection = .forward
-                                currentState = .walletCreated
-                            }
-                        },
-                        walletManager: walletManager
-                    )
-                    .transition(.asymmetric(
-                        insertion: navigationDirection == .forward ? 
-                            .move(edge: .trailing).combined(with: .opacity) :
-                            .move(edge: .leading).combined(with: .opacity),
-                        removal: navigationDirection == .forward ? 
-                            .move(edge: .leading).combined(with: .opacity) :
-                            .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                    .tag("createWallet")
-                    
-                case .walletCreated:
-                    WalletCreatedView(
-                        onContinue: {
-                            onWalletReady()
-                        },
-                        onShowRecoveryPhrase: {
-                            // TODO: Navigate to recovery phrase view
-                            // For now, we'll just continue to the main wallet
-                            onWalletReady()
-                        }
-                    )
-                    .transition(.asymmetric(
-                        insertion: navigationDirection == .forward ? 
-                            .move(edge: .trailing).combined(with: .opacity) :
-                            .move(edge: .leading).combined(with: .opacity),
-                        removal: navigationDirection == .forward ? 
-                            .move(edge: .leading).combined(with: .opacity) :
-                            .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                    .tag("walletCreated")
+            HStack(spacing: 0) {
+                VStack {
+                    // Left column - Big video
+                     LoopingVideoPlayer(videoName: "cover-animation", videoExtension: "mp4")
+                         .frame(maxWidth: .infinity)
+                         .clipped()
                 }
+                .frame(maxWidth: .infinity)
+                VStack {
+                    switch currentState {
+                    case .firstUse:
+                        FirstUseView(
+                            onCreateWallet: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .forward
+                                    currentState = .createWallet
+                                }
+                            },
+                            onImportWallet: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .forward
+                                    currentState = .importWallet
+                                }
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity)
+                        ))
+                        .tag("firstUse")
+                        
+                    case .importWallet:
+                        ImportWalletView(
+                            onBack: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .backward
+                                    currentState = .firstUse
+                                }
+                            },
+                            onWalletImported: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .forward
+                                    currentState = .walletImported
+                                }
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("importWallet")
+                        
+                    case .walletImported:
+                        WalletImportedView(
+                            onContinue: {
+                                onWalletReady()
+                            },
+                            onBackupReminder: {
+                                // TODO: Navigate to backup reminder view
+                                // For now, we'll just continue to the main wallet
+                                onWalletReady()
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("walletImported")
+                        
+                    case .createWallet:
+                        CreateWalletView(
+                            onBack: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .backward
+                                    currentState = .firstUse
+                                }
+                            },
+                            onWalletCreated: {
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    navigationDirection = .forward
+                                    currentState = .walletCreated
+                                }
+                            },
+                            walletManager: walletManager
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("createWallet")
+                        
+                    case .walletCreated:
+                        WalletCreatedView(
+                            onContinue: {
+                                onWalletReady()
+                            },
+                            onShowRecoveryPhrase: {
+                                // TODO: Navigate to recovery phrase view
+                                // For now, we'll just continue to the main wallet
+                                onWalletReady()
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("walletCreated")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .clipped()
             }
         }
         .clipped() // Prevents views from showing outside bounds during transition
@@ -161,4 +172,5 @@ struct OnboardingFlow: View {
         }
     )
     .environment(WalletManager(useMock: true))
+    .frame(width: 600, height: 700)
 }
