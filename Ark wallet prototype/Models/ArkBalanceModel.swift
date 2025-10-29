@@ -21,7 +21,7 @@ import SwiftData
 /// - Built-in cache validity and update methods
 /// - All existing computed properties preserved
 @Model
-class ArkBalanceModel: Codable {
+class ArkBalanceModel: Codable, @unchecked Sendable {
     var id: String
     var spendableSat: Int
     var pendingLightningSendSat: Int

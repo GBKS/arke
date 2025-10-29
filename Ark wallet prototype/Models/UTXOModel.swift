@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct UTXOModel: Codable, Identifiable, Hashable {
+struct UTXOModel: Codable, Identifiable, Hashable, Sendable {
     let outpoint: String
     let amountSat: Int
     let confirmationHeight: Int?

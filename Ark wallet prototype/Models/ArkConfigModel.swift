@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ArkConfigModel: Codable {
+struct ArkConfigModel: Codable, Sendable {
     let ark: String?
     let bitcoind: String?
     let bitcoindCookie: String?

@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class TransactionModel: @unchecked Sendable {
+final class TransactionModel {
     @Attribute(.unique) var txid: String  // Primary stable identifier
     var movementId: Int?  // Server movement ID for grouping (optional for migration compatibility)
     var recipientIndex: Int?  // For tracking multiple recipients in same movement

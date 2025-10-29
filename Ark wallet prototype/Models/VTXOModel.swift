@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum VTXOState: String, Codable, CaseIterable {
+enum VTXOState: String, Codable, CaseIterable, Sendable {
     case unregisteredBoard = "UnregisteredBoard"
     case registeredBoard = "RegisteredBoard"
     case spent = "Spent"
@@ -15,12 +15,12 @@ enum VTXOState: String, Codable, CaseIterable {
     case spendable = "Spendable"
 }
 
-enum PolicyType: String, Codable, CaseIterable {
+enum PolicyType: String, Codable, CaseIterable, Sendable {
     case pubkey = "pubkey"
     case multisig = "multisig"
 }
 
-struct VTXOModel: Codable, Identifiable, Hashable {
+struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
     let id: String // Now uses the outpoint format from JSON
     let amountSat: Int
     let policyType: PolicyType

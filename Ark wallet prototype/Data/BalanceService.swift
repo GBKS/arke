@@ -350,15 +350,15 @@ extension BalanceService {
         }
         
         do {
-            let descriptor = FetchDescriptor<PersistedOnchainBalance>(
-                predicate: #Predicate<PersistedOnchainBalance> { $0.id == "onchain_balance" }
+            let descriptor = FetchDescriptor<OnchainBalanceModel>(
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
             )
             let persistedBalances = try modelContext.fetch(descriptor)
             
             if let persistedBalance = persistedBalances.first {
                 if persistedBalance.isValid {
                     // Use cached balance if still valid
-                    self.onchainBalance = persistedBalance.onchainBalanceModel
+                    self.onchainBalance = persistedBalance
                     updateTotalBalance()
                     print("📱 Loaded valid persisted Onchain balance (spendable: \(persistedBalance.trustedSpendableSat) sats)")
                 } else {
@@ -381,19 +381,18 @@ extension BalanceService {
         
         do {
             // Try to find existing balance record
-            let descriptor = FetchDescriptor<PersistedOnchainBalance>(
-                predicate: #Predicate<PersistedOnchainBalance> { $0.id == "onchain_balance" }
+            let descriptor = FetchDescriptor<OnchainBalanceModel>(
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
             )
             let existingBalances = try modelContext.fetch(descriptor)
             
             if let existingBalance = existingBalances.first {
-                // Update existing record
-                existingBalance.update(with: onchainBalance)
+                // Update existing record with new data
+                existingBalance.update(from: onchainBalance)
                 print("💾 Updated persisted Onchain balance")
             } else {
-                // Create new record
-                let persistedBalance = PersistedOnchainBalance.from(onchainBalance)
-                modelContext.insert(persistedBalance)
+                // Insert the decoded balance directly (it's already a @Model)
+                modelContext.insert(onchainBalance)
                 print("💾 Created new persisted Onchain balance")
             }
             
@@ -413,8 +412,8 @@ extension BalanceService {
         }
         
         do {
-            let descriptor = FetchDescriptor<PersistedOnchainBalance>(
-                predicate: #Predicate<PersistedOnchainBalance> { $0.id == "onchain_balance" }
+            let descriptor = FetchDescriptor<OnchainBalanceModel>(
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
             )
             let existingBalances = try modelContext.fetch(descriptor)
             

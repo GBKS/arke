@@ -270,7 +270,7 @@ class BarkWallet: BarkWalletProtocol, Equatable {
         let output = try await executeCommand(["balance"])
         let jsonString = output.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        print("getBalance: \(output)")
+        print("getArkBalance: \(output)")
         
         guard let jsonData = jsonString.data(using: .utf8) else {
             throw BarkError.commandFailed("Invalid JSON response")

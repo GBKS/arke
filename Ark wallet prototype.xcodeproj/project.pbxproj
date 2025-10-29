@@ -6,11 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		5964A3412EB2BCEC00EF581B /* ARK_BALANCE_MIGRATION.md in Resources */ = {isa = PBXBuildFile; fileRef = 5964A3402EB2BCEC00EF581B /* ARK_BALANCE_MIGRATION.md */; };
-		59F20AB72EB2AB9C00E50C86 /* ARCHITECTURE_MIGRATION.md in Resources */ = {isa = PBXBuildFile; fileRef = 59F20AB62EB2AB9C00E50C86 /* ARCHITECTURE_MIGRATION.md */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		597585A22EA0F0290042F0E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,12 +24,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5964A3402EB2BCEC00EF581B /* ARK_BALANCE_MIGRATION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARK_BALANCE_MIGRATION.md; sourceTree = "<group>"; };
 		597585922EA0F0270042F0E5 /* Ark wallet prototype.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Ark wallet prototype.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		597585A12EA0F0290042F0E5 /* Ark wallet prototypeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Ark wallet prototypeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		597585AB2EA0F0290042F0E5 /* Ark wallet prototypeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Ark wallet prototypeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		59BF8E7B2EA206B2002CDFF4 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		59F20AB62EB2AB9C00E50C86 /* ARCHITECTURE_MIGRATION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ARCHITECTURE_MIGRATION.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -126,8 +119,6 @@
 				597585AE2EA0F0290042F0E5 /* Ark wallet prototypeUITests */,
 				597585932EA0F0270042F0E5 /* Products */,
 				59BF8E7B2EA206B2002CDFF4 /* README.md */,
-				5964A3402EB2BCEC00EF581B /* ARK_BALANCE_MIGRATION.md */,
-				59F20AB62EB2AB9C00E50C86 /* ARCHITECTURE_MIGRATION.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -261,8 +252,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5964A3412EB2BCEC00EF581B /* ARK_BALANCE_MIGRATION.md in Resources */,
-				59F20AB72EB2AB9C00E50C86 /* ARCHITECTURE_MIGRATION.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

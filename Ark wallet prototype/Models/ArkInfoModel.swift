@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ArkInfoModel: Codable {
+struct ArkInfoModel: Codable, Sendable {
     let network: String
     let serverPubkey: String
     let roundInterval: String
