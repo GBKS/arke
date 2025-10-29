@@ -16,11 +16,13 @@ struct OffboardingModalFormView: View {
     let onCancel: () -> Void
     
     var body: some View {
-        HStack(alignment: .top, spacing: 15) {
+        HStack(alignment: .top, spacing: 25) {
             Image("offboard")
                 .resizable()
-                .frame(width: 75, height: 75)
-                .cornerRadius(10)
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: 150, maxHeight: .infinity)
+                .cornerRadius(15)
+                .clipped()
             
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -30,7 +32,7 @@ struct OffboardingModalFormView: View {
                     Text("Move funds to the Bitcoin network for the best security.")
                         .font(.default)
                         .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(.leading)
                 }
                 
                 // VTXO Selection List

@@ -9,34 +9,29 @@ import SwiftUI
 
 struct SendModalSendingView: View {
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        VStack(spacing: 25) {
+            LoopingVideoPlayer.aspectFill(videoName: "coffee", videoExtension: "mp4")
+                .frame(maxWidth: .infinity, minHeight: 250)
             
             VStack(spacing: 24) {
-                // Animated progress indicator
-                ProgressView()
-                    .scaleEffect(2)
-                    .tint(.blue)
-                
                 VStack(spacing: 8) {
                     Text("Sending Payment")
-                        .font(.title)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 24, design: .serif))
                     
-                    Text("Please wait while your transaction is being processed...")
+                    Text("Relax your mind and body.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                        .lineSpacing(6)
                         .padding(.horizontal)
                 }
             }
-            
-            Spacer()
         }
-        .padding()
+        .padding(.bottom, 25)
     }
 }
 
 #Preview("Sending") {
     SendModalView(state: .sending)
+        .frame(width: 400, height: 400)
 }

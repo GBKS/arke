@@ -39,50 +39,68 @@ struct ArkeIconButtonStyle: ButtonStyle {
     }
     
     func makeBody(configuration: Configuration) -> some View {
+        ArkeIconButtonContent(
+            configuration: configuration,
+            size: size,
+            variant: variant,
+            color: color
+        )
+    }
+}
+
+private struct ArkeIconButtonContent: View {
+    let configuration: ButtonStyleConfiguration
+    let size: ArkeIconButtonSize
+    let variant: ArkeButtonVariant
+    let color: Color
+    
+    @Environment(\.isEnabled) private var isEnabled
+    
+    var body: some View {
         configuration.label
             .font(.system(size: size.iconSize, weight: .medium))
-            .foregroundColor(foregroundColor(for: variant, isPressed: configuration.isPressed))
+            .foregroundColor(foregroundColor(for: variant, isPressed: configuration.isPressed, isEnabled: isEnabled))
             .frame(width: size.diameter, height: size.diameter)
             .background(
                 Circle()
-                    .fill(backgroundColor(for: variant, isPressed: configuration.isPressed))
+                    .fill(backgroundColor(for: variant, isPressed: configuration.isPressed, isEnabled: isEnabled))
                     .overlay(
                         Circle()
-                            .stroke(borderColor(for: variant), lineWidth: variant == .outline ? 2 : 0)
+                            .stroke(borderColor(for: variant, isEnabled: isEnabled), lineWidth: variant == .outline ? 2 : 0)
                     )
-                    .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+                    .scaleEffect(configuration.isPressed && isEnabled ? 0.95 : 1.0)
             )
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
     
-    private func foregroundColor(for variant: ArkeButtonVariant, isPressed: Bool) -> Color {
+    private func foregroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
         switch variant {
         case .filled:
-            return .black
+            return isEnabled ? .black : .black.opacity(0.25)
         case .outline:
-            return isPressed ? .white : color
+            return isEnabled ? (isPressed ? .white : color) : color.opacity(0.25)
         case .ghost:
-            return isPressed ? .black.opacity(0.6) : .black
+            return isEnabled ? (isPressed ? .black.opacity(0.6) : .black) : .black.opacity(0.25)
         }
     }
     
-    private func backgroundColor(for variant: ArkeButtonVariant, isPressed: Bool) -> Color {
+    private func backgroundColor(for variant: ArkeButtonVariant, isPressed: Bool, isEnabled: Bool) -> Color {
         switch variant {
         case .filled:
-            return isPressed ? color.opacity(0.8) : color
+            return isEnabled ? (isPressed ? color.opacity(0.8) : color) : color.opacity(0.25)
         case .outline:
-            return isPressed ? color : Color.clear
+            return isEnabled ? (isPressed ? color : Color.clear) : Color.clear
         case .ghost:
-            return isPressed ? color.opacity(0.1) : Color.clear
+            return isEnabled ? (isPressed ? color.opacity(0.1) : Color.clear) : Color.clear
         }
     }
     
-    private func borderColor(for variant: ArkeButtonVariant) -> Color {
+    private func borderColor(for variant: ArkeButtonVariant, isEnabled: Bool) -> Color {
         switch variant {
         case .filled, .ghost:
             return Color.clear
         case .outline:
-            return color
+            return isEnabled ? color : color.opacity(0.25)
         }
     }
 }
@@ -171,6 +189,37 @@ struct ArkeIconButtonStyle: ButtonStyle {
                     Image(systemName: "checkmark")
                 }
                 .iconButtonStyle(variant: .ghost, color: .green)
+            }
+        }
+        
+        VStack(spacing: 16) {
+            Text("Disabled State")
+                .font(.headline)
+            
+            HStack(spacing: 16) {
+                Button {
+                    // Action
+                } label: {
+                    Image(systemName: "star.fill")
+                }
+                .iconButtonStyle(variant: .filled)
+                .disabled(true)
+                
+                Button {
+                    // Action
+                } label: {
+                    Image(systemName: "star.fill")
+                }
+                .iconButtonStyle(variant: .outline)
+                .disabled(true)
+                
+                Button {
+                    // Action
+                } label: {
+                    Image(systemName: "star.fill")
+                }
+                .iconButtonStyle(variant: .ghost)
+                .disabled(true)
             }
         }
         

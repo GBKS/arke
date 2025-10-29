@@ -11,18 +11,16 @@ struct SendModalSuccessView: View {
     let onContinue: () -> Void
     
     var body: some View {
-        VStack(spacing: 25) {
-            
+        VStack(spacing: 25) {            
             LoopingVideoPlayer.aspectFill(videoName: "thumbs-up-animation", videoExtension: "mp4")
                 .frame(maxWidth: .infinity, minHeight: 250)
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
                     Text("Payment Sent")
-                        .font(.title)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 24, design: .serif))
                     
-                    Text("Your payment has been successfully sent and will be confirmed shortly.")
+                    Text("It will be confirmed shortly.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
