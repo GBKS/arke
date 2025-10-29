@@ -14,16 +14,16 @@ struct TransactionListItem: View {
     var body: some View {
         HStack(spacing: 12) {
             // Transaction Icon
-            Image(systemName: transaction.type.iconName)
+            Image(systemName: transaction.transactionType.iconName)
                 .font(.title3)
-                .foregroundColor(transaction.type.iconColor)
+                .foregroundColor(transaction.transactionType.iconColor)
                 .frame(width: 32, height: 32)
-                .background(transaction.type.iconColor.opacity(0.1))
+                .background(transaction.transactionType.iconColor.opacity(0.1))
                 .cornerRadius(8)
             
             // Transaction Details
             VStack(alignment: .leading, spacing: 2) {
-                Text(transaction.type.displayName)
+                Text(transaction.transactionType.displayName)
                     .font(.body)
                     .fontWeight(.medium)
                 
@@ -35,19 +35,19 @@ struct TransactionListItem: View {
             Spacer()
             
             HStack(spacing: 8) {                
-                if transaction.status != .confirmed {
-                    TransactionStatusBadge(status: transaction.status)
+                if transaction.transactionStatus != .confirmed {
+                    TransactionStatusBadge(status: transaction.transactionStatus)
                 }
                 
                 Text(transaction.formattedAmount)
                     .font(.body)
                     .fontWeight(.medium)
-                    .foregroundColor(transaction.type.amountColor)
+                    .foregroundColor(transaction.transactionType.amountColor)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .background(selectedTransaction?.id == transaction.id ? Color.accentColor.opacity(0.1) : Color.clear)
+        .background(selectedTransaction?.txid == transaction.txid ? Color.accentColor.opacity(0.1) : Color.clear)
         .contentShape(Rectangle())
         .cornerRadius(15)
         .onTapGesture {
@@ -61,28 +61,34 @@ struct TransactionListItem: View {
     
     let sampleTransactions = [
         TransactionModel(
+            txid: "movement_1",
+            movementId: 1,
+            recipientIndex: nil,
             type: .received,
             amount: 50000,
             date: Date().addingTimeInterval(-3600), // 1 hour ago
             status: .confirmed,
-            txid: "abc123def456",
-            address: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+            address: nil
         ),
         TransactionModel(
+            txid: "movement_2_recipient_0",
+            movementId: 2,
+            recipientIndex: 0,
             type: .sent,
             amount: 25000,
             date: Date().addingTimeInterval(-86400), // 1 day ago
             status: .pending,
-            txid: "def456ghi789",
             address: "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"
         ),
         TransactionModel(
-            type: .pending,
+            txid: "movement_3",
+            movementId: 3,
+            recipientIndex: nil,
+            type: .received,
             amount: 10000,
             date: Date().addingTimeInterval(-300), // 5 minutes ago
-            status: .failed,
-            txid: nil,
-            address: "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"
+            status: .confirmed,
+            address: nil
         )
     ]
     

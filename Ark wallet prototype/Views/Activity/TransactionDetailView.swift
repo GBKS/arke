@@ -18,15 +18,15 @@ struct TransactionDetailView: View {
                 VStack(spacing: 16) {
                     // Transaction Icon and Type
                     HStack(spacing: 15) {
-                        Image(systemName: transaction.type.iconName)
+                        Image(systemName: transaction.transactionType.iconName)
                             .font(.system(size: 20))
-                            .foregroundColor(transaction.type.iconColor)
+                            .foregroundColor(transaction.transactionType.iconColor)
                             .frame(width: 40, height: 40)
-                            .background(transaction.type.iconColor.opacity(0.1))
+                            .background(transaction.transactionType.iconColor.opacity(0.1))
                             .cornerRadius(8)
                         
                         VStack(alignment: .leading) {
-                            Text(transaction.type.displayName)
+                            Text(transaction.transactionType.displayName)
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
@@ -42,18 +42,18 @@ struct TransactionDetailView: View {
                     Text(transaction.formattedAmount)
                         .font(.largeTitle)
                         .fontWeight(.medium)
-                        .foregroundColor(transaction.type.amountColor)
+                        .foregroundColor(transaction.transactionType.amountColor)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // Status Badge
                     HStack {
-                        Text(transaction.status.displayName)
+                        Text(transaction.transactionStatus.displayName)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(transaction.status.textColor)
+                            .foregroundColor(transaction.transactionStatus.textColor)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
-                            .background(transaction.status.backgroundColor)
+                            .background(transaction.transactionStatus.backgroundColor)
                             .clipShape(Capsule())
                         
                         Spacer()
@@ -70,18 +70,16 @@ struct TransactionDetailView: View {
                     
                     VStack(spacing: 12) {
                         // Transaction ID
-                        if let txid = transaction.txid {
-                            DetailRow(
-                                title: "Transaction ID",
-                                value: txid,
-                                isCopyable: true
-                            )
-                        }
+                        DetailRow(
+                            title: "Transaction ID",
+                            value: transaction.txid,
+                            isCopyable: true
+                        )
                         
                         // Address
                         if let address = transaction.address {
                             DetailRow(
-                                title: transaction.type == .received ? "From Address" : "To Address",
+                                title: transaction.transactionType == .received ? "From Address" : "To Address",
                                 value: address,
                                 isCopyable: true
                             )
@@ -148,11 +146,13 @@ struct DetailRow: View {
     NavigationStack {
         TransactionDetailView(
             transaction: TransactionModel(
+                txid: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
+                movementId: nil,
+                recipientIndex: nil,
                 type: .received,
                 amount: 50000,
                 date: Date().addingTimeInterval(-3600),
                 status: .confirmed,
-                txid: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
                 address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
             )
         )

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TransactionModel: Identifiable, Hashable, Codable {
+struct TransactionModel_Old: Identifiable, Hashable, Codable {
     let id: UUID
     let type: TransactionTypeEnum
     let amount: Int // in sats

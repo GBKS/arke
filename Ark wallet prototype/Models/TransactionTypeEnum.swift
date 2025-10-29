@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum TransactionTypeEnum: Codable {
+enum TransactionTypeEnum: Codable, Equatable {
     case sent
     case received
     case pending

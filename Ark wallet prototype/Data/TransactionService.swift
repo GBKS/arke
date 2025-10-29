@@ -65,13 +65,31 @@ struct TransactionOutput: Codable {
 @MainActor
 @Observable
 class TransactionService {
-    var transactions: [TransactionModel] = []
     var error: String?
+    var isRefreshing: Bool = false
     var hasLoadedTransactions: Bool = false
     
     private let wallet: BarkWalletProtocol
     private let taskManager: TaskDeduplicationManager
     private var modelContext: ModelContext?
+    
+    // MARK: - Computed Properties
+    
+    /// Get all transactions from SwiftData
+    var transactions: [TransactionModel] {
+        guard let modelContext = modelContext else {
+            return []
+        }
+        
+        do {
+            let descriptor = FetchDescriptor<TransactionModel>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+            let TransactionModels = try modelContext.fetch(descriptor)
+            return TransactionModels
+        } catch {
+            print("❌ Failed to fetch transactions: \(error)")
+            return []
+        }
+    }
     
     init(wallet: BarkWalletProtocol, taskManager: TaskDeduplicationManager) {
         self.wallet = wallet
@@ -81,13 +99,9 @@ class TransactionService {
     /// Set the model context for SwiftData operations
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
-        // Load persisted transactions immediately
-        Task {
-            await loadPersistedTransactions()
-        }
     }
     
-    /// Refresh transactions with deduplication
+    /// Refresh transactions with deduplication using upsert strategy
     func refreshTransactions() async {
         await taskManager.execute(key: "transactions") {
             await self.performRefreshTransactions()
@@ -95,10 +109,13 @@ class TransactionService {
     }
     
     private func performRefreshTransactions() async {
+        isRefreshing = true
+        defer { isRefreshing = false }
+        
         do {
             let output = try await wallet.getMovements()
             print("📋 Transactions output: \(output)")
-            transactions = await parseTransactions(output)
+            await upsertTransactionsFromServerData(output)
             hasLoadedTransactions = true
         } catch {
             print("❌ Failed to get transactions: \(error)")
@@ -111,77 +128,146 @@ class TransactionService {
         return try await wallet.getMovements()
     }
     
-    // MARK: - JSON Parsing
+    // MARK: - Upsert Strategy (Insert or Update)
     
-    private func parseTransactions(_ output: String) async -> [TransactionModel] {
-        print("🔍 Parsing transactions from: \(output)")
+    private func upsertTransactionsFromServerData(_ output: String) async {
+        guard let modelContext = modelContext else {
+            print("🚨 No model context available for upserting transactions")
+            return
+        }
         
         guard let jsonData = output.data(using: .utf8) else {
             print("❌ Failed to convert output to data")
-            return []
+            return
         }
         
         do {
             let movements = try JSONDecoder().decode([MovementData].self, from: jsonData)
-            var transactions: [TransactionModel] = []
+            
+            // Get existing transactions to check for updates/new ones
+            let existingDescriptor = FetchDescriptor<TransactionModel>()
+            let existingTransactions = try modelContext.fetch(existingDescriptor)
+            let existingTransactionDict = Dictionary(uniqueKeysWithValues: existingTransactions.map { ($0.txid, $0) })
+            
+            var upsertedCount = 0
+            var updatedCount = 0
             
             for movement in movements {
-                // Analyze the movement to determine the transaction type and create transactions
-                let totalSpent = movement.spends.reduce(0) { $0 + $1.amountSat }
-                let totalReceived = movement.receives.reduce(0) { $0 + $1.amountSat }
-                let totalSentToRecipients = movement.recipients.reduce(0) { $0 + $1.amountSat }
+                let movementTransactions = await parseMovementToTransactions(movement)
                 
-                if !movement.recipients.isEmpty {
-                    // This is a send transaction (user sent to others)
-                    // Create separate transactions for each recipient to preserve detail
-                    for (index, recipient) in movement.recipients.enumerated() {
-                        let transaction = TransactionModel(
-                            type: TransactionTypeEnum.sent,
-                            amount: recipient.amountSat,
-                            date: parseDate(movement.createdAt),
-                            status: TransactionStatusEnum.confirmed,
-                            txid: "movement_\(movement.id)_recipient_\(index)", // Unique ID per recipient
-                            address: recipient.recipient
+                for transactionData in movementTransactions {
+                    if let existingTransaction = existingTransactionDict[transactionData.txid] {
+                        // Update existing transaction if data has changed
+                        var hasChanges = false
+                        
+                        if existingTransaction.amount != transactionData.amount {
+                            existingTransaction.amount = transactionData.amount
+                            hasChanges = true
+                        }
+                        
+                        if existingTransaction.transactionStatus != transactionData.status {
+                            existingTransaction.status = Self.stringValue(for: transactionData.status)
+                            hasChanges = true
+                        }
+                        
+                        if existingTransaction.address != transactionData.address {
+                            existingTransaction.address = transactionData.address
+                            hasChanges = true
+                        }
+                        
+                        if hasChanges {
+                            updatedCount += 1
+                        }
+                    } else {
+                        // Insert new transaction
+                        let newTransaction = TransactionModel(
+                            txid: transactionData.txid,
+                            movementId: transactionData.movementId,
+                            recipientIndex: transactionData.recipientIndex,
+                            type: transactionData.type,
+                            amount: transactionData.amount,
+                            date: transactionData.date,
+                            status: transactionData.status,
+                            address: transactionData.address
                         )
-                        transactions.append(transaction)
+                        modelContext.insert(newTransaction)
+                        upsertedCount += 1
                     }
-                } else if totalReceived > 0 && totalSpent == 0 {
-                    // This is a receive transaction (user received from others)
-                    let transaction = TransactionModel(
-                        type: TransactionTypeEnum.received,
-                        amount: totalReceived,
-                        date: parseDate(movement.createdAt),
-                        status: TransactionStatusEnum.confirmed,
-                        txid: "movement_\(movement.id)",
-                        address: nil // Sender address not available in current data structure
-                    )
-                    transactions.append(transaction)
-                } else if totalSpent > 0 && totalReceived > 0 && movement.recipients.isEmpty {
-                    // This is an internal transaction (VTXO consolidation/splitting)
-                    // We could choose to show this as a self-transaction or skip it entirely
-                    // For now, let's skip internal transactions as they don't represent economic transfers
-                    continue
-                } else {
-                    // Fallback for unexpected cases - log and skip
-                    print("⚠️ Unexpected movement pattern: spends=\(totalSpent), receives=\(totalReceived), recipients=\(totalSentToRecipients)")
-                    continue
                 }
             }
             
-            // Sort transactions by date (most recent first)
-            transactions.sort { $0.date > $1.date }
+            // Save changes
+            try modelContext.save()
             
-            print("✅ Parsed \(transactions.count) transactions")
-            
-            // Save to SwiftData and update UI
-            await saveTransactionsToSwiftData(transactions)
-            
-            return transactions
+            print("💾 Successfully saved \(upsertedCount) new, \(updatedCount) updated transactions")
             
         } catch {
-            print("❌ Failed to parse transactions JSON: \(error)")
-            return []
+            print("❌ Failed to upsert transactions: \(error)")
+            self.error = "Failed to process transactions: \(error)"
         }
+    }
+    
+    // MARK: - Transaction Parsing
+    
+    private struct TransactionData {
+        let txid: String
+        let movementId: Int
+        let recipientIndex: Int?
+        let type: TransactionTypeEnum
+        let amount: Int
+        let date: Date
+        let status: TransactionStatusEnum
+        let address: String?
+    }
+    
+    private func parseMovementToTransactions(_ movement: MovementData) async -> [TransactionData] {
+        var transactions: [TransactionData] = []
+        let parsedDate = parseDate(movement.createdAt)
+        
+        // Analyze the movement to determine transaction types
+        let totalSpent = movement.spends.reduce(0) { $0 + $1.amountSat }
+        let totalReceived = movement.receives.reduce(0) { $0 + $1.amountSat }
+        let totalSentToRecipients = movement.recipients.reduce(0) { $0 + $1.amountSat }
+        
+        if !movement.recipients.isEmpty {
+            // This is a send transaction (user sent to others)
+            // Create separate transactions for each recipient to preserve detail
+            for (index, recipient) in movement.recipients.enumerated() {
+                let transaction = TransactionData(
+                    txid: "movement_\(movement.id)_recipient_\(index)",
+                    movementId: movement.id,
+                    recipientIndex: index,
+                    type: .sent,
+                    amount: recipient.amountSat,
+                    date: parsedDate,
+                    status: .confirmed,
+                    address: recipient.recipient
+                )
+                transactions.append(transaction)
+            }
+        } else if totalReceived > 0 && totalSpent == 0 {
+            // This is a receive transaction (user received from others)
+            let transaction = TransactionData(
+                txid: "movement_\(movement.id)",
+                movementId: movement.id,
+                recipientIndex: nil,
+                type: .received,
+                amount: totalReceived,
+                date: parsedDate,
+                status: .confirmed,
+                address: nil
+            )
+            transactions.append(transaction)
+        } else if totalSpent > 0 && totalReceived > 0 && movement.recipients.isEmpty {
+            // This is an internal transaction (VTXO consolidation/splitting)
+            // Skip internal transactions as they don't represent economic transfers
+            print("🔄 Skipping internal transaction for movement \(movement.id)")
+        } else {
+            // Fallback for unexpected cases - log and skip
+            print("⚠️ Unexpected movement pattern: spends=\(totalSpent), receives=\(totalReceived), recipients=\(totalSentToRecipients)")
+        }
+        
+        return transactions
     }
     
     private func parseDate(_ dateString: String) -> Date {
@@ -198,68 +284,30 @@ class TransactionService {
         return Date()
     }
     
-    // MARK: - SwiftData Persistence
+    // MARK: - Helper Methods
     
-    /// Load persisted transactions from SwiftData immediately for instant UI
-    private func loadPersistedTransactions() async {
-        guard let modelContext = modelContext else {
-            print("⚠️ No model context available for loading transactions")
-            return
-        }
-        
-        do {
-            let descriptor = FetchDescriptor<PersistedTransaction>(
-                sortBy: [SortDescriptor(\.date, order: .reverse)]
-            )
-            let persistedTransactions = try modelContext.fetch(descriptor)
-            
-            // Convert to UI models
-            self.transactions = persistedTransactions.map { $0.transactionModel }
-            hasLoadedTransactions = true
-            
-            print("📱 Loaded \(transactions.count) persisted transactions")
-        } catch {
-            print("❌ Failed to load persisted transactions: \(error)")
+    /// Convert TransactionStatusEnum to String representation
+    private static func stringValue(for status: TransactionStatusEnum) -> String {
+        switch status {
+        case .confirmed: return "confirmed"
+        case .pending: return "pending"
+        case .failed: return "failed"
         }
     }
     
-    /// Save transactions to SwiftData, avoiding duplicates
-    private func saveTransactionsToSwiftData(_ newTransactions: [TransactionModel]) async {
-        guard let modelContext = modelContext else {
-            print("⚠️ No model context available for saving transactions")
-            return
-        }
-        
-        do {
-            // Get existing transaction IDs to avoid duplicates
-            let existingDescriptor = FetchDescriptor<PersistedTransaction>()
-            let existingTransactions = try modelContext.fetch(existingDescriptor)
-            let existingIds = Set(existingTransactions.map { $0.id })
-            
-            // Filter out transactions that already exist
-            let transactionsToSave = newTransactions.filter { transaction in
-                guard let txid = transaction.txid else { return true } // Include transactions with no txid
-                return !existingIds.contains(txid)
-            }
-            
-            // Create and insert new persisted transactions
-            for transaction in transactionsToSave {
-                let persistedTransaction = PersistedTransaction.from(transaction)
-                modelContext.insert(persistedTransaction)
-            }
-            
-            // Save changes
-            try modelContext.save()
-            
-            print("💾 Saved \(transactionsToSave.count) new transactions to SwiftData")
-            
-        } catch {
-            print("❌ Failed to save transactions to SwiftData: \(error)")
+    /// Convert TransactionTypeEnum to String representation
+    private static func stringValue(for type: TransactionTypeEnum) -> String {
+        switch type {
+        case .sent: return "sent"
+        case .received: return "received"
+        case .pending: return "pending"
         }
     }
+    
+    // MARK: - Utility Methods
     
     /// Clear all persisted transactions from SwiftData
-    func clearPersistedTransactions() async {
+    func clearTransactionModels() async {
         guard let modelContext = modelContext else {
             print("⚠️ No model context available for clearing transactions")
             return
@@ -267,22 +315,21 @@ class TransactionService {
         
         do {
             // Fetch all persisted transactions
-            let descriptor = FetchDescriptor<PersistedTransaction>()
-            let persistedTransactions = try modelContext.fetch(descriptor)
+            let descriptor = FetchDescriptor<TransactionModel>()
+            let TransactionModels = try modelContext.fetch(descriptor)
             
             // Delete all transactions
-            for transaction in persistedTransactions {
+            for transaction in TransactionModels {
                 modelContext.delete(transaction)
             }
             
             // Save changes
             try modelContext.save()
             
-            // Clear the in-memory transactions as well
-            transactions.removeAll()
+            // Reset loaded state
             hasLoadedTransactions = false
             
-            print("🗑️ Cleared \(persistedTransactions.count) persisted transactions")
+            print("🗑️ Cleared \(TransactionModels.count) persisted transactions")
             
         } catch {
             print("❌ Failed to clear persisted transactions: \(error)")

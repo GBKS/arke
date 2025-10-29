@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 enum NavigationItem: String, CaseIterable {
     case balance = "Balancé"
@@ -169,4 +170,5 @@ struct WalletView: View {
 #Preview {
     WalletView(onWalletDeleted: nil)
         .environment(WalletManager(useMock: true))
+        .modelContainer(for: TransactionModel.self, inMemory: true)
 }

@@ -6,16 +6,20 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TransactionList: View {
-    let transactions: [TransactionModel]
+    @Query(sort: \TransactionModel.date, order: .reverse)
+    private var transactions: [TransactionModel]
+    
     @Binding var selectedTransaction: TransactionModel?
-    let isInitialLoading: Bool
+    @Environment(TransactionService.self) private var transactionService
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {            
             // Transaction List
-            if isInitialLoading {
+            if transactionService.isRefreshing && transactions.isEmpty {
                 VStack(spacing: 16) {
                     SkeletonLoader(
                         itemCount: 6,
@@ -44,7 +48,7 @@ struct TransactionList: View {
                     ForEach(transactions) { transaction in
                         TransactionListItem(transaction: transaction, selectedTransaction: $selectedTransaction)
                         
-                        if transaction.id != transactions.last?.id {
+                        if transaction.txid != transactions.last?.txid {
                             Divider()
                                 .padding(.leading, 56) // Align with text content
                         }
@@ -55,60 +59,80 @@ struct TransactionList: View {
                 .padding(.horizontal, 12)
             }
         }
+        .overlay(alignment: .top) {
+            if transactionService.isRefreshing && !transactions.isEmpty {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .scaleEffect(0.8)
+                    .padding(.top, 8)
+            }
+        }
     }
 }
 
-// MARK: - Preview Data
+// MARK: - Mock Data for Previews
 extension TransactionModel {
+    @MainActor
     static var mockData: [TransactionModel] {
         [
             TransactionModel(
+                txid: "movement_1_recipient_0",
+                movementId: 1,
+                recipientIndex: 0,
                 type: .received,
                 amount: 50000,
-                date: Date().addingTimeInterval(-3600), // 1 hour ago
+                date: Date().addingTimeInterval(-3600),
                 status: .confirmed,
-                txid: "abc123...",
-                address: "bc1q..."
+                address: nil
             ),
             TransactionModel(
+                txid: "movement_2_recipient_0",
+                movementId: 2,
+                recipientIndex: 0,
                 type: .sent,
                 amount: 25000,
-                date: Date().addingTimeInterval(-7200), // 2 hours ago
+                date: Date().addingTimeInterval(-7200),
                 status: .confirmed,
-                txid: "def456...",
-                address: "bc1q..."
+                address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
             ),
             TransactionModel(
-                type: .pending,
-                amount: 10000,
-                date: Date().addingTimeInterval(-1800), // 30 minutes ago
-                status: .pending,
-                txid: nil,
-                address: "bc1q..."
-            ),
-            TransactionModel(
+                txid: "movement_3",
+                movementId: 3,
+                recipientIndex: nil,
                 type: .received,
                 amount: 75000,
-                date: Date().addingTimeInterval(-86400), // 1 day ago
+                date: Date().addingTimeInterval(-86400),
                 status: .confirmed,
-                txid: "ghi789...",
-                address: "bc1q..."
+                address: nil
             )
         ]
     }
 }
 
 #Preview("With Transactions") {
-    TransactionList(transactions: TransactionModel.mockData, selectedTransaction: .constant(nil), isInitialLoading: false)
-        .padding()
+    @Previewable @State var selectedTransaction: TransactionModel? = nil
+    @Previewable @State var transactionService = TransactionService(
+        wallet: MockBarkWallet(), 
+        taskManager: TaskDeduplicationManager()
+    )
+    
+    NavigationView {
+        TransactionList(selectedTransaction: $selectedTransaction)
+            .environment(transactionService)
+    }
+    .modelContainer(for: TransactionModel.self, inMemory: true)
 }
 
 #Preview("Empty State") {
-    TransactionList(transactions: [], selectedTransaction: .constant(nil), isInitialLoading: false)
-        .padding()
-}
-
-#Preview("Loading State") {
-    TransactionList(transactions: [], selectedTransaction: .constant(nil), isInitialLoading: true)
-        .padding()
+    @Previewable @State var selectedTransaction: TransactionModel? = nil
+    @Previewable @State var transactionService = TransactionService(
+        wallet: MockBarkWallet(), 
+        taskManager: TaskDeduplicationManager()
+    )
+    
+    NavigationView {
+        TransactionList(selectedTransaction: $selectedTransaction)
+            .environment(transactionService)
+    }
+    .modelContainer(for: TransactionModel.self, inMemory: true)
 }

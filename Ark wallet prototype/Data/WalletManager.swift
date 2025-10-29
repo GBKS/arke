@@ -13,7 +13,7 @@ import SwiftData
 struct WalletExportData: Codable {
     let addresses: AddressData
     let balances: BalanceData
-    let transactions: [TransactionModel]
+    let transactions: [ExportTransactionData]
     let vtxos: [VTXOModel]
     let utxos: [UTXOModel]
     let configuration: ArkConfigModel
@@ -30,6 +30,28 @@ struct WalletExportData: Codable {
         let arkBalance: ArkBalanceModel?
         let onchainBalance: OnchainBalanceModel?
         let totalBalance: TotalBalanceModel?
+    }
+    
+    struct ExportTransactionData: Codable {
+        let txid: String
+        let movementId: Int?
+        let recipientIndex: Int?
+        let type: String
+        let amount: Int
+        let date: Date
+        let status: String
+        let address: String?
+        
+        init(from TransactionModel: TransactionModel) {
+            self.txid = TransactionModel.txid
+            self.movementId = TransactionModel.movementId
+            self.recipientIndex = TransactionModel.recipientIndex
+            self.type = TransactionModel.type
+            self.amount = TransactionModel.amount
+            self.date = TransactionModel.date
+            self.status = TransactionModel.status
+            self.address = TransactionModel.address
+        }
     }
 }
 
@@ -137,6 +159,10 @@ class WalletManager {
         balanceService?.estimatedBlockHeight
     }
     
+    var transactionServiceInstance: TransactionService? {
+        transactionService
+    }
+    
     // MARK: - Initialization
     init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
         let config = networkConfig ?? NetworkConfig.signet
@@ -231,13 +257,19 @@ class WalletManager {
         // Coordinate service refreshes in parallel where possible
         await withTaskGroup(of: Void.self) { group in
             // Balance service handles its own coordination
-            group.addTask { await self.balanceService?.refreshAllBalances() }
+            group.addTask { 
+                await self.balanceService?.refreshAllBalances() 
+            }
             
             // Address loading
-            group.addTask { await self.addressService?.loadAddresses() }
+            group.addTask { 
+                await self.addressService?.loadAddresses() 
+            }
             
             // Transaction refresh
-            group.addTask { await self.transactionService?.refreshTransactions() }
+            group.addTask { 
+                await self.transactionService?.refreshTransactions() 
+            }
         }
         
         // Check for errors from services
@@ -414,7 +446,7 @@ class WalletManager {
         balanceService?.error = nil
         
         // Reset transaction service state (clear transactions)
-        transactionService?.transactions.removeAll()
+        await transactionService?.clearTransactionModels()
         transactionService?.error = nil
         transactionService?.hasLoadedTransactions = false
         
@@ -425,7 +457,6 @@ class WalletManager {
         
         // Clear persisted balance data
         balanceService?.resetBalances()
-        await transactionService?.clearPersistedTransactions()
         
         print("🔄 All manager and service state reset")
     }
@@ -566,7 +597,7 @@ class WalletManager {
                 onchainBalance: onchainBalance,
                 totalBalance: totalBalance
             ),
-            transactions: transactions,
+            transactions: transactions.map { WalletExportData.ExportTransactionData(from: $0) },
             vtxos: vtxos,
             utxos: utxos,
             configuration: configuration,
