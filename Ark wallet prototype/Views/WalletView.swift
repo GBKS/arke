@@ -170,5 +170,5 @@ struct WalletView: View {
 #Preview {
     WalletView(onWalletDeleted: nil)
         .environment(WalletManager(useMock: true))
-        .modelContainer(for: TransactionModel.self, inMemory: true)
+        .modelContainer(for: [TransactionModel.self, ArkBalanceModel.self], inMemory: true)
 }

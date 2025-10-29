@@ -256,15 +256,15 @@ extension BalanceService {
         }
         
         do {
-            let descriptor = FetchDescriptor<PersistedArkBalance>(
-                predicate: #Predicate<PersistedArkBalance> { $0.id == "ark_balance" }
+            let descriptor = FetchDescriptor<ArkBalanceModel>(
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
             )
             let persistedBalances = try modelContext.fetch(descriptor)
             
             if let persistedBalance = persistedBalances.first {
                 if persistedBalance.isValid {
                     // Use cached balance if still valid
-                    self.arkBalance = persistedBalance.arkBalanceModel
+                    self.arkBalance = persistedBalance
                     updateTotalBalance()
                     print("📱 Loaded valid persisted Ark balance (spendable: \(persistedBalance.spendableSat) sats)")
                 } else {
@@ -279,7 +279,7 @@ extension BalanceService {
     }
     
     /// Save Ark balance to SwiftData
-    private func saveArkBalanceToSwiftData(_ arkBalance: ArkBalanceModel) async {
+    private func saveArkBalanceToSwiftData(_ apiBalance: ArkBalanceModel) async {
         guard let modelContext = modelContext else {
             print("⚠️ No model context available for saving Ark balance")
             return
@@ -287,19 +287,25 @@ extension BalanceService {
         
         do {
             // Try to find existing balance record
-            let descriptor = FetchDescriptor<PersistedArkBalance>(
-                predicate: #Predicate<PersistedArkBalance> { $0.id == "ark_balance" }
+            let descriptor = FetchDescriptor<ArkBalanceModel>(
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
             )
             let existingBalances = try modelContext.fetch(descriptor)
             
             if let existingBalance = existingBalances.first {
-                // Update existing record
-                existingBalance.update(with: arkBalance)
+                // Update existing record with new data from API
+                existingBalance.update(from: apiBalance)
                 print("💾 Updated persisted Ark balance")
             } else {
-                // Create new record
-                let persistedBalance = PersistedArkBalance.from(arkBalance)
-                modelContext.insert(persistedBalance)
+                // Create new record with the API data
+                let newBalance = ArkBalanceModel(
+                    spendableSat: apiBalance.spendableSat,
+                    pendingLightningSendSat: apiBalance.pendingLightningSendSat,
+                    pendingInRoundSat: apiBalance.pendingInRoundSat,
+                    pendingExitSat: apiBalance.pendingExitSat,
+                    pendingBoardSat: apiBalance.pendingBoardSat
+                )
+                modelContext.insert(newBalance)
                 print("💾 Created new persisted Ark balance")
             }
             
@@ -319,8 +325,8 @@ extension BalanceService {
         }
         
         do {
-            let descriptor = FetchDescriptor<PersistedArkBalance>(
-                predicate: #Predicate<PersistedArkBalance> { $0.id == "ark_balance" }
+            let descriptor = FetchDescriptor<ArkBalanceModel>(
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
             )
             let existingBalances = try modelContext.fetch(descriptor)
             

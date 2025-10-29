@@ -18,13 +18,13 @@ struct Ark_wallet_prototypeTests {
 
 }
 
-@Suite("ArkBalance Persistence Tests")
+@Suite("ArkBalance Unified Model Tests")
 struct ArkBalancePersistenceTests {
     
-    @Test("PersistedArkBalance creation and conversion")
-    func persistedArkBalanceConversion() async throws {
-        // Create sample ArkBalanceModel
-        let originalBalance = ArkBalanceModel(
+    @Test("ArkBalanceModel unified model functionality")
+    func arkBalanceModelUnifiedFunctionality() async throws {
+        // Create ArkBalanceModel (now unified for both API and persistence)
+        let arkBalance = ArkBalanceModel(
             spendableSat: 100000,
             pendingLightningSendSat: 5000,
             pendingInRoundSat: 10000,
@@ -32,36 +32,32 @@ struct ArkBalancePersistenceTests {
             pendingBoardSat: 3000
         )
         
-        // Convert to persisted model
-        let persistedBalance = PersistedArkBalance.from(originalBalance)
-        
-        // Verify conversion
-        #expect(persistedBalance.spendableSat == 100000)
-        #expect(persistedBalance.pendingLightningSendSat == 5000)
-        #expect(persistedBalance.pendingInRoundSat == 10000)
-        #expect(persistedBalance.pendingExitSat == 2000)
-        #expect(persistedBalance.pendingBoardSat == 3000)
-        #expect(persistedBalance.id == "ark_balance")
-        
-        // Convert back to model
-        let convertedBalance = persistedBalance.arkBalanceModel
-        
-        // Verify round-trip conversion
-        #expect(convertedBalance.spendableSat == originalBalance.spendableSat)
-        #expect(convertedBalance.pendingLightningSendSat == originalBalance.pendingLightningSendSat)
-        #expect(convertedBalance.pendingInRoundSat == originalBalance.pendingInRoundSat)
-        #expect(convertedBalance.pendingExitSat == originalBalance.pendingExitSat)
-        #expect(convertedBalance.pendingBoardSat == originalBalance.pendingBoardSat)
+        // Verify basic properties
+        #expect(arkBalance.spendableSat == 100000)
+        #expect(arkBalance.pendingLightningSendSat == 5000)
+        #expect(arkBalance.pendingInRoundSat == 10000)
+        #expect(arkBalance.pendingExitSat == 2000)
+        #expect(arkBalance.pendingBoardSat == 3000)
+        #expect(arkBalance.id == "ark_balance")
         
         // Verify computed properties work
-        #expect(convertedBalance.totalPendingSat == 20000)
-        #expect(convertedBalance.totalSat == 120000)
+        #expect(arkBalance.totalPendingSat == 20000)
+        #expect(arkBalance.totalSat == 120000)
+        #expect(arkBalance.spendableBTC == 0.001)
+        #expect(arkBalance.totalBTC == 0.0012)
+        
+        // Verify BTC conversions for individual pending amounts
+        #expect(arkBalance.pendingLightningSendBTC == 0.00005)
+        #expect(arkBalance.pendingInRoundBTC == 0.0001)
+        #expect(arkBalance.pendingExitBTC == 0.00002)
+        #expect(arkBalance.pendingBoardBTC == 0.00003)
+        #expect(arkBalance.totalPendingBTC == 0.0002)
     }
     
-    @Test("PersistedArkBalance cache validity")
-    func persistedArkBalanceCacheValidity() async throws {
+    @Test("ArkBalanceModel cache validity")
+    func arkBalanceModelCacheValidity() async throws {
         // Create fresh balance
-        let freshBalance = PersistedArkBalance(
+        let freshBalance = ArkBalanceModel(
             spendableSat: 100000,
             pendingLightningSendSat: 5000,
             pendingInRoundSat: 10000,
@@ -74,7 +70,7 @@ struct ArkBalancePersistenceTests {
         
         // Create old balance (6 minutes ago)
         let oldDate = Date().addingTimeInterval(-6 * 60)
-        let oldBalance = PersistedArkBalance(
+        let oldBalance = ArkBalanceModel(
             spendableSat: 100000,
             pendingLightningSendSat: 5000,
             pendingInRoundSat: 10000,
@@ -87,10 +83,10 @@ struct ArkBalancePersistenceTests {
         #expect(oldBalance.isValid == false)
     }
     
-    @Test("PersistedArkBalance update functionality")
-    func persistedArkBalanceUpdate() async throws {
+    @Test("ArkBalanceModel update functionality")
+    func arkBalanceModelUpdate() async throws {
         // Create initial balance
-        let persistedBalance = PersistedArkBalance(
+        let arkBalance = ArkBalanceModel(
             spendableSat: 100000,
             pendingLightningSendSat: 5000,
             pendingInRoundSat: 10000,
@@ -98,7 +94,7 @@ struct ArkBalancePersistenceTests {
             pendingBoardSat: 3000
         )
         
-        let initialDate = persistedBalance.lastUpdated
+        let initialDate = arkBalance.lastUpdated
         
         // Wait a tiny bit to ensure timestamp changes
         try await Task.sleep(nanoseconds: 1_000_000) // 1 millisecond
@@ -112,16 +108,52 @@ struct ArkBalancePersistenceTests {
             pendingBoardSat: 6000
         )
         
-        // Update persisted balance
-        persistedBalance.update(with: newBalance)
+        // Update balance
+        arkBalance.update(from: newBalance)
         
         // Verify update
-        #expect(persistedBalance.spendableSat == 200000)
-        #expect(persistedBalance.pendingLightningSendSat == 10000)
-        #expect(persistedBalance.pendingInRoundSat == 20000)
-        #expect(persistedBalance.pendingExitSat == 4000)
-        #expect(persistedBalance.pendingBoardSat == 6000)
-        #expect(persistedBalance.lastUpdated > initialDate)
+        #expect(arkBalance.spendableSat == 200000)
+        #expect(arkBalance.pendingLightningSendSat == 10000)
+        #expect(arkBalance.pendingInRoundSat == 20000)
+        #expect(arkBalance.pendingExitSat == 4000)
+        #expect(arkBalance.pendingBoardSat == 6000)
+        #expect(arkBalance.lastUpdated > initialDate)
+    }
+    
+    @Test("ArkBalanceModel Codable functionality")
+    func arkBalanceModelCodable() async throws {
+        // Test JSON decoding (simulating API response)
+        let jsonData = """
+        {
+            "spendable_sat": 150000,
+            "pending_lightning_send_sat": 8000,
+            "pending_in_round_sat": 12000,
+            "pending_exit_sat": 3000,
+            "pending_board_sat": 4500
+        }
+        """.data(using: .utf8)!
+        
+        let decodedBalance = try JSONDecoder().decode(ArkBalanceModel.self, from: jsonData)
+        
+        // Verify decoded values
+        #expect(decodedBalance.spendableSat == 150000)
+        #expect(decodedBalance.pendingLightningSendSat == 8000)
+        #expect(decodedBalance.pendingInRoundSat == 12000)
+        #expect(decodedBalance.pendingExitSat == 3000)
+        #expect(decodedBalance.pendingBoardSat == 4500)
+        #expect(decodedBalance.id == "ark_balance")
+        #expect(decodedBalance.totalSat == 177500)
+        
+        // Test encoding back to JSON
+        let encodedData = try JSONEncoder().encode(decodedBalance)
+        let reDecodedBalance = try JSONDecoder().decode(ArkBalanceModel.self, from: encodedData)
+        
+        // Verify round-trip encoding/decoding
+        #expect(reDecodedBalance.spendableSat == decodedBalance.spendableSat)
+        #expect(reDecodedBalance.pendingLightningSendSat == decodedBalance.pendingLightningSendSat)
+        #expect(reDecodedBalance.pendingInRoundSat == decodedBalance.pendingInRoundSat)
+        #expect(reDecodedBalance.pendingExitSat == decodedBalance.pendingExitSat)
+        #expect(reDecodedBalance.pendingBoardSat == decodedBalance.pendingBoardSat)
     }
 }
 
