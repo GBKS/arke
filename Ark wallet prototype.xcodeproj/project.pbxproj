@@ -41,6 +41,7 @@
 				Docs/Architecture/intro.md,
 				"Docs/Architecture/service-layer.md",
 				"Docs/Architecture/system-overview.md",
+				"Docs/Data samples/movements.json",
 				"Docs/Development/common-tasks.md",
 				Docs/Development/intro.md,
 				Docs/Development/setup.md,
@@ -53,11 +54,22 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		59F20AB32EB25AE100E50C86 /* Exceptions for "Ark wallet prototype" folder in "Compile Sources" phase from "Ark wallet prototype" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 5975858E2EA0F0270042F0E5 /* Sources */;
+			membershipExceptions = (
+				"Docs/Data samples/movements.json",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		597585942EA0F0270042F0E5 /* Ark wallet prototype */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				598042722EABBA930041370A /* Exceptions for "Ark wallet prototype" folder in "Ark wallet prototype" target */,
+				59F20AB32EB25AE100E50C86 /* Exceptions for "Ark wallet prototype" folder in "Compile Sources" phase from "Ark wallet prototype" target */,
 			);
 			path = "Ark wallet prototype";
 			sourceTree = "<group>";

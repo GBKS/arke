@@ -126,33 +126,45 @@ class TransactionService {
             var transactions: [TransactionModel] = []
             
             for movement in movements {
-                // Parse receives (incoming transactions)
-                for receive in movement.receives {
+                // Analyze the movement to determine the transaction type and create transactions
+                let totalSpent = movement.spends.reduce(0) { $0 + $1.amountSat }
+                let totalReceived = movement.receives.reduce(0) { $0 + $1.amountSat }
+                let totalSentToRecipients = movement.recipients.reduce(0) { $0 + $1.amountSat }
+                
+                if !movement.recipients.isEmpty {
+                    // This is a send transaction (user sent to others)
+                    // Create separate transactions for each recipient to preserve detail
+                    for (index, recipient) in movement.recipients.enumerated() {
+                        let transaction = TransactionModel(
+                            type: TransactionTypeEnum.sent,
+                            amount: recipient.amountSat,
+                            date: parseDate(movement.createdAt),
+                            status: TransactionStatusEnum.confirmed,
+                            txid: "movement_\(movement.id)_recipient_\(index)", // Unique ID per recipient
+                            address: recipient.recipient
+                        )
+                        transactions.append(transaction)
+                    }
+                } else if totalReceived > 0 && totalSpent == 0 {
+                    // This is a receive transaction (user received from others)
                     let transaction = TransactionModel(
                         type: TransactionTypeEnum.received,
-                        amount: receive.amountSat,
+                        amount: totalReceived,
                         date: parseDate(movement.createdAt),
-                        status: TransactionStatusEnum.confirmed, // Assuming confirmed if it appears in movements
-                        txid: receive.id,
-                        address: nil as String? // Receiving address not provided in this format
+                        status: TransactionStatusEnum.confirmed,
+                        txid: "movement_\(movement.id)",
+                        address: nil // Sender address not available in current data structure
                     )
                     transactions.append(transaction)
-                }
-                
-                // Parse spends (outgoing transactions)
-                for spend in movement.spends {
-                    // Try to find corresponding recipient address
-                    let recipientAddress = movement.recipients.first?.recipient
-                    
-                    let transaction = TransactionModel(
-                        type: TransactionTypeEnum.sent,
-                        amount: spend.amountSat,
-                        date: parseDate(movement.createdAt),
-                        status: TransactionStatusEnum.confirmed, // Assuming confirmed if it appears in movements
-                        txid: spend.id,
-                        address: recipientAddress
-                    )
-                    transactions.append(transaction)
+                } else if totalSpent > 0 && totalReceived > 0 && movement.recipients.isEmpty {
+                    // This is an internal transaction (VTXO consolidation/splitting)
+                    // We could choose to show this as a self-transaction or skip it entirely
+                    // For now, let's skip internal transactions as they don't represent economic transfers
+                    continue
+                } else {
+                    // Fallback for unexpected cases - log and skip
+                    print("⚠️ Unexpected movement pattern: spends=\(totalSpent), receives=\(totalReceived), recipients=\(totalSentToRecipients)")
+                    continue
                 }
             }
             

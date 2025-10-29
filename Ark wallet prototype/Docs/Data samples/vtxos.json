@@ -1,0 +1,80 @@
+[
+  {
+    "id": "8cb275efa56eeb5c4d16e8a8d539bad43693a8478de0eb92c9aa47659b435b0e:1",
+    "amount_sat": 3456,
+    "policy_type": "pubkey",
+    "user_pubkey": "024d6cf6baf725413d5b198a44ed5231d8056e9af6a0af392fe6df1775fdfa14d3",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 274843,
+    "exit_delta": 12,
+    "chain_anchor": "6564e23d8359fb768dd1552abaa6c2834426da02d9560b1c73abfbe152c683b3:0",
+    "exit_depth": 5,
+    "arkoor_depth": 4,
+    "state": "Spendable"
+  },
+  {
+    "id": "46569f69ae1a9bd7c70b0ca9260582f56e25baf941ff1531fd7e75e992edda5b:1",
+    "amount_sat": 9388,
+    "policy_type": "pubkey",
+    "user_pubkey": "02657646bde9fbab62f64af1c49e3482620ba05adf6c0af656725bd4911c7cd9e7",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 275714,
+    "exit_delta": 12,
+    "chain_anchor": "94bf748945ed1c53cf23d4b1b92d0249cd1aee50708619f4b7ac76255e47bd23:0",
+    "exit_depth": 3,
+    "arkoor_depth": 2,
+    "state": "Spendable"
+  },
+  {
+    "id": "c02630dd75c7d11b863791231974d07f3d8279457e903b85a784e717fec1e1bb:0",
+    "amount_sat": 500,
+    "policy_type": "pubkey",
+    "user_pubkey": "03984c76b31f3e21dcc5bdec3e8f0cda21e4e0547103357348a222b09171208493",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 275714,
+    "exit_delta": 12,
+    "chain_anchor": "94bf748945ed1c53cf23d4b1b92d0249cd1aee50708619f4b7ac76255e47bd23:0",
+    "exit_depth": 4,
+    "arkoor_depth": 3,
+    "state": "Spendable"
+  },
+  {
+    "id": "6d45db552b533ed4dfc11a83c842409d76285a290bbc7ffbd77b8d64827c91fb:0",
+    "amount_sat": 500,
+    "policy_type": "pubkey",
+    "user_pubkey": "022b8a7a4c4971c7c67d7f4f540e100158b7297847d7a369ec30f6b9175ba7815a",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 275806,
+    "exit_delta": 12,
+    "chain_anchor": "15a93f8b4036ebee4de70da18575b29f7dfadf0ab1d3a251030cd019b80ab369:0",
+    "exit_depth": 2,
+    "arkoor_depth": 1,
+    "state": "Spendable"
+  },
+  {
+    "id": "4876715e70ba1dae4434dcce3da5316d55d517b9128a27284095da1d065997d6:0",
+    "amount_sat": 4888,
+    "policy_type": "pubkey",
+    "user_pubkey": "02bf4886dc2b56067bc806c8e9b0ec9313b709c4ef4953d3d02b61ddfabbad4b62",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 275853,
+    "exit_delta": 12,
+    "chain_anchor": "2fe9fc464b1e9c2a334067b0b526d1098ecf1719523e12c9180c2a9b48282b03:0",
+    "exit_depth": 2,
+    "arkoor_depth": 1,
+    "state": "Spendable"
+  },
+  {
+    "id": "ceac5041c42f22e041602df3ebe9c0365ee925636802e1d832ca171ca1504b6f:0",
+    "amount_sat": 500,
+    "policy_type": "pubkey",
+    "user_pubkey": "033086f507ca57c3868f57e7895c2f55ac4f21e08dbb36b83898962bae4907c0d2",
+    "server_pubkey": "02f0f358c1b6173ddecec1ad06b42d3762f193e6ff98a3e112292aec21129f9f6b",
+    "expiry_height": 276121,
+    "exit_delta": 12,
+    "chain_anchor": "f8b26199305afe8a41c4e4277c94057eb3b4462c6c8a6aa8e9c757ea7983e387:0",
+    "exit_depth": 3,
+    "arkoor_depth": 2,
+    "state": "Spendable"
+  }
+]
