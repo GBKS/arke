@@ -77,7 +77,7 @@ class BalanceService {
     }
     
     /// Get onchain balance with task deduplication
-    func getOnchainBalanceWithDeduplication() async throws -> OnchainBalanceModel {
+    func getOnchainBalanceWithDeduplication() async throws -> OnchainBalanceResponse {
         return try await taskManager.execute(key: "onchainBalance") {
             let result = try await self.wallet.getOnchainBalance()
             print("📊 Onchain balance: \(result.totalSat) sats total, \(result.trustedSpendableSat) sats spendable")
@@ -95,14 +95,13 @@ class BalanceService {
             async let onchainBalanceResult = getOnchainBalanceWithDeduplication()
             
             // Wait for both balances to complete
-            let (arkResponse, onchainBal) = try await (arkBalanceResult, onchainBalanceResult)
+            let (arkResponse, onchainResponse) = try await (arkBalanceResult, onchainBalanceResult)
             
             // Update Ark balance (both UI state and persistence)
             await updateArkBalanceFromResponse(arkResponse)
             
-            // Update onchain balance 
-            self.onchainBalance = onchainBal
-            await saveOnchainBalanceToSwiftData(onchainBal)
+            // Update onchain balance (both UI state and persistence)
+            await updateOnchainBalanceFromResponse(onchainResponse)
             
             updateTotalBalance()
             
@@ -134,13 +133,11 @@ class BalanceService {
     /// Refresh just onchain balance
     func refreshOnchainBalance() async {
         do {
-            onchainBalance = try await getOnchainBalanceWithDeduplication()
-            updateTotalBalance()
+            let apiResponse = try await getOnchainBalanceWithDeduplication()
             
-            // Save to persistence
-            if let balance = onchainBalance {
-                await saveOnchainBalanceToSwiftData(balance)
-            }
+            // Update or load the SwiftData model for UI
+            await updateOnchainBalanceFromResponse(apiResponse)
+            updateTotalBalance()
             
             error = nil
         } catch {
@@ -156,8 +153,8 @@ class BalanceService {
         return try await getArkBalanceWithDeduplication()
     }
     
-    /// Get the current onchain balance model
-    func getCurrentOnchainBalance() async throws -> OnchainBalanceModel {
+    /// Get the current onchain balance response  
+    func getOnchainBalance() async throws -> OnchainBalanceResponse {
         return try await getOnchainBalanceWithDeduplication()
     }
     
@@ -366,8 +363,8 @@ extension BalanceService {
         }
     }
     
-    /// Save Onchain balance to SwiftData
-    private func saveOnchainBalanceToSwiftData(_ onchainBalance: OnchainBalanceModel) async {
+    /// Update Onchain balance from API response (handles both UI state and persistence)
+    private func updateOnchainBalanceFromResponse(_ apiResponse: OnchainBalanceResponse) async {
         guard let modelContext = modelContext else {
             print("⚠️ No model context available for saving Onchain balance")
             return
@@ -381,12 +378,15 @@ extension BalanceService {
             let existingBalances = try modelContext.fetch(descriptor)
             
             if let existingBalance = existingBalances.first {
-                // Update existing record with new data
-                existingBalance.update(from: onchainBalance)
+                // Update existing record with new data from API
+                existingBalance.update(from: apiResponse)
+                self.onchainBalance = existingBalance
                 print("💾 Updated persisted Onchain balance")
             } else {
-                // Insert the decoded balance directly (it's already a @Model)
-                modelContext.insert(onchainBalance)
+                // Create new record with the API data
+                let newBalance = OnchainBalanceModel(from: apiResponse)
+                modelContext.insert(newBalance)
+                self.onchainBalance = newBalance
                 print("💾 Created new persisted Onchain balance")
             }
             

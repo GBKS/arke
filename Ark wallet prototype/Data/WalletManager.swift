@@ -28,7 +28,7 @@ struct WalletExportData: Codable {
     
     struct BalanceData: Codable {
         let arkBalance: ArkBalanceResponse?
-        let onchainBalance: OnchainBalanceModel?
+        let onchainBalance: OnchainBalanceResponse?
         // Note: TotalBalanceModel is computed from the above, not stored
     }
     
@@ -594,12 +594,12 @@ class WalletManager {
         return try await balanceService.getArkBalance()
     }
     
-    /// Get the current onchain balance model - delegates to balance service
-    func getCurrentOnchainBalance() async throws -> OnchainBalanceModel {
+    /// Get the current onchain balance response - delegates to balance service
+    func getOnchainBalance() async throws -> OnchainBalanceResponse {
         guard let balanceService = balanceService else {
             throw BarkError.commandFailed("Balance service not initialized")
         }
-        return try await balanceService.getCurrentOnchainBalance()
+        return try await balanceService.getOnchainBalance()
     }
     
     // MARK: - Convenience Methods for Individual Refreshes (delegates to BalanceService)
@@ -697,7 +697,16 @@ class WalletManager {
                         pendingBoardSat: model.pendingBoardSat
                     )
                 },
-                onchainBalance: onchainBalance
+                onchainBalance: onchainBalance.map { model in
+                    OnchainBalanceResponse(
+                        totalSat: model.totalSat,
+                        trustedSpendableSat: model.trustedSpendableSat,
+                        immatureSat: model.immatureSat,
+                        trustedPendingSat: model.trustedPendingSat,
+                        untrustedPendingSat: model.untrustedPendingSat,
+                        confirmedSat: model.confirmedSat
+                    )
+                }
             ),
             transactions: transactions.map { WalletExportData.ExportTransactionData(from: $0) },
             vtxos: vtxos,

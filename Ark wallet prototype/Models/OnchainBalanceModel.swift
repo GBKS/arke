@@ -9,27 +9,17 @@
 import Foundation
 import SwiftData
 
-/// Unified Onchain balance model that serves both API decoding and SwiftData persistence
-/// 
-/// This model combines what was previously OnchainBalanceModel (API) and PersistedOnchainBalance (persistence)
-/// into a single class following the transaction architecture migration pattern.
+/// Pure API response struct for Onchain balance data
 ///
-/// Key features:
-/// - SwiftData @Model for direct UI observation and persistence
-/// - Codable for API response decoding (id and lastUpdated excluded from API)
-/// - Singleton pattern with id = "onchain_balance"
-/// - Built-in cache validity and update methods
-/// - All existing computed properties preserved
-@Model
-class OnchainBalanceModel: Codable, @unchecked Sendable {
-    var id: String
-    var totalSat: Int
-    var trustedSpendableSat: Int
-    var immatureSat: Int
-    var trustedPendingSat: Int
-    var untrustedPendingSat: Int
-    var confirmedSat: Int
-    var lastUpdated: Date
+/// This struct is used for decoding API responses and passing data between actors.
+/// It's naturally Sendable and contains all the computed properties for convenience.
+struct OnchainBalanceResponse: Codable, Sendable {
+    let totalSat: Int
+    let trustedSpendableSat: Int
+    let immatureSat: Int
+    let trustedPendingSat: Int
+    let untrustedPendingSat: Int
+    let confirmedSat: Int
     
     enum CodingKeys: String, CodingKey {
         case totalSat = "total_sat"
@@ -38,8 +28,46 @@ class OnchainBalanceModel: Codable, @unchecked Sendable {
         case trustedPendingSat = "trusted_pending_sat"
         case untrustedPendingSat = "untrusted_pending_sat"
         case confirmedSat = "confirmed_sat"
-        // Note: id and lastUpdated are not part of API response
     }
+    
+    // MARK: - Computed Properties (mirrored from OnchainBalanceModel)
+    
+    /// Total balance in BTC
+    var totalBTC: Double {
+        Double(totalSat) / 100_000_000
+    }
+    
+    /// Trusted spendable balance in BTC
+    var trustedSpendableBTC: Double {
+        Double(trustedSpendableSat) / 100_000_000
+    }
+    
+    /// Confirmed balance in BTC
+    var confirmedBTC: Double {
+        Double(confirmedSat) / 100_000_000
+    }
+}
+
+/// SwiftData persistence model for Onchain balance
+/// 
+/// This model is now focused purely on persistence and UI observation.
+/// API decoding is handled by OnchainBalanceResponse struct.
+///
+/// Key features:
+/// - SwiftData @Model for direct UI observation and persistence
+/// - Singleton pattern with id = "onchain_balance"
+/// - Built-in cache validity and update methods
+/// - All existing computed properties preserved
+@Model
+class OnchainBalanceModel {
+    var id: String
+    var totalSat: Int
+    var trustedSpendableSat: Int
+    var immatureSat: Int
+    var trustedPendingSat: Int
+    var untrustedPendingSat: Int
+    var confirmedSat: Int
+    var lastUpdated: Date
     
     // MARK: - Initialization
     
@@ -62,29 +90,19 @@ class OnchainBalanceModel: Codable, @unchecked Sendable {
         self.lastUpdated = lastUpdated
     }
     
-    // MARK: - Codable Implementation
+    // MARK: - Convenience Methods
     
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = "onchain_balance"
-        self.totalSat = try container.decode(Int.self, forKey: .totalSat)
-        self.trustedSpendableSat = try container.decode(Int.self, forKey: .trustedSpendableSat)
-        self.immatureSat = try container.decode(Int.self, forKey: .immatureSat)
-        self.trustedPendingSat = try container.decode(Int.self, forKey: .trustedPendingSat)
-        self.untrustedPendingSat = try container.decode(Int.self, forKey: .untrustedPendingSat)
-        self.confirmedSat = try container.decode(Int.self, forKey: .confirmedSat)
-        self.lastUpdated = Date()
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(totalSat, forKey: .totalSat)
-        try container.encode(trustedSpendableSat, forKey: .trustedSpendableSat)
-        try container.encode(immatureSat, forKey: .immatureSat)
-        try container.encode(trustedPendingSat, forKey: .trustedPendingSat)
-        try container.encode(untrustedPendingSat, forKey: .untrustedPendingSat)
-        try container.encode(confirmedSat, forKey: .confirmedSat)
-        // Note: id and lastUpdated are not encoded for API
+    /// Create from API response
+    convenience init(from response: OnchainBalanceResponse) {
+        self.init(
+            totalSat: response.totalSat,
+            trustedSpendableSat: response.trustedSpendableSat,
+            immatureSat: response.immatureSat,
+            trustedPendingSat: response.trustedPendingSat,
+            untrustedPendingSat: response.untrustedPendingSat,
+            confirmedSat: response.confirmedSat,
+            lastUpdated: Date()
+        )
     }
     
     // MARK: - Persistence Methods
@@ -96,17 +114,17 @@ class OnchainBalanceModel: Codable, @unchecked Sendable {
     }
     
     /// Update with new balance data from API response
-    func update(from decodedBalance: OnchainBalanceModel) {
-        self.totalSat = decodedBalance.totalSat
-        self.trustedSpendableSat = decodedBalance.trustedSpendableSat
-        self.immatureSat = decodedBalance.immatureSat
-        self.trustedPendingSat = decodedBalance.trustedPendingSat
-        self.untrustedPendingSat = decodedBalance.untrustedPendingSat
-        self.confirmedSat = decodedBalance.confirmedSat
+    func update(from response: OnchainBalanceResponse) {
+        self.totalSat = response.totalSat
+        self.trustedSpendableSat = response.trustedSpendableSat
+        self.immatureSat = response.immatureSat
+        self.trustedPendingSat = response.trustedPendingSat
+        self.untrustedPendingSat = response.untrustedPendingSat
+        self.confirmedSat = response.confirmedSat
         self.lastUpdated = Date()
     }
     
-    // MARK: - Computed Properties
+    // MARK: - Computed Properties (mirrored in OnchainBalanceResponse)
     
     /// Total balance in BTC
     var totalBTC: Double {

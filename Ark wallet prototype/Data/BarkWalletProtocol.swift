@@ -22,7 +22,7 @@ protocol BarkWalletProtocol {
     func getArkAddress() async throws -> String
     func getArkInfo() async throws -> ArkInfoModel
     func getOnchainAddress() async throws -> String
-    func getOnchainBalance() async throws -> OnchainBalanceModel
+    func getOnchainBalance() async throws -> OnchainBalanceResponse
     func getVTXOs() async throws -> [VTXOModel]
     func getUTXOs() async throws -> [UTXOModel]
     func getMovements() async throws -> String

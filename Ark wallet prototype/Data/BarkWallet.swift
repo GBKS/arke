@@ -321,7 +321,7 @@ class BarkWallet: BarkWalletProtocol, Equatable {
        "confirmed_sat": 501197
      }
      */
-    func getOnchainBalance() async throws -> OnchainBalanceModel {
+    func getOnchainBalance() async throws -> OnchainBalanceResponse {
         let output = try await executeCommand(["onchain", "balance"])
         let jsonString = output.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -332,7 +332,7 @@ class BarkWallet: BarkWalletProtocol, Equatable {
         }
         
         do {
-            let balance = try JSONDecoder().decode(OnchainBalanceModel.self, from: jsonData)
+            let balance = try JSONDecoder().decode(OnchainBalanceResponse.self, from: jsonData)
             return balance
         } catch {
             throw BarkError.commandFailed("Could not parse balance data: \(error.localizedDescription)")

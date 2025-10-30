@@ -111,8 +111,8 @@ class MockBarkWallet: BarkWalletProtocol {
         return "tb1qmockaddress789xyz"
     }
     
-    func getOnchainBalance() async throws -> OnchainBalanceModel {
-        return OnchainBalanceModel(
+    func getOnchainBalance() async throws -> OnchainBalanceResponse {
+        return OnchainBalanceResponse(
             totalSat: 501197,
             trustedSpendableSat: 501197,
             immatureSat: 0,
