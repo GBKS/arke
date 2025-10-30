@@ -19,6 +19,12 @@ struct Ark_wallet_prototypeApp: App {
         }
         .defaultSize(width: 800, height: 600)
         .windowResizability(.contentMinSize)
-        .modelContainer(for: [TransactionModel.self, ArkBalanceModel.self, OnchainBalanceModel.self])
+        .modelContainer(for: [
+            TransactionModel.self, 
+            ArkBalanceModel.self, 
+            OnchainBalanceModel.self,
+            PersistentTag.self,
+            TransactionTagAssignment.self
+        ])
     }
 }

@@ -19,8 +19,9 @@ final class TransactionModel {
     var status: String  // "confirmed", "pending", etc.
     var address: String?  // Recipient address for sends, nil for receives
     
-    // Future: Tags relationship (ready for when we implement tagging)
-    // @Relationship(deleteRule: .cascade) var tags: [PersistentTag] = []
+    // Tag assignments relationship (many-to-many through junction table)
+    @Relationship(deleteRule: .cascade, inverse: \TransactionTagAssignment.transaction)
+    var tagAssignments: [TransactionTagAssignment] = []
     
     init(txid: String, movementId: Int?, recipientIndex: Int? = nil, type: TransactionTypeEnum, 
          amount: Int, date: Date, status: TransactionStatusEnum, address: String?) {
@@ -64,6 +65,28 @@ final class TransactionModel {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+    
+    // MARK: - Tag Convenience Methods
+    
+    /// Get all tags associated with this transaction
+    var associatedTags: [PersistentTag] {
+        tagAssignments.compactMap { $0.tag }
+    }
+    
+    /// Get count of tags on this transaction
+    var tagCount: Int {
+        tagAssignments.count
+    }
+    
+    /// Check if transaction has a specific tag
+    func hasTag(_ tag: PersistentTag) -> Bool {
+        tagAssignments.contains { $0.tag?.id == tag.id }
+    }
+    
+    /// Check if transaction has any tags
+    var hasTags: Bool {
+        !tagAssignments.isEmpty
     }
     
     // MARK: - Legacy Compatibility
