@@ -1,22 +1,28 @@
 # Model Definitions Reference
 
-This document provides comprehensive reference information for all data models used throughout the application.
+This document provides comprehensive reference information for all data models used throughout the application, reflecting the current unified architecture after all migrations.
 
-## UI Models
+## Core SwiftData Models
 
 ### Balance Models
 
-#### ArkBalanceModel
-Represents Ark protocol balance information with computed properties for display.
+#### ArkBalanceModel (@Model class)
+Unified model for Ark protocol balance information with SwiftData persistence and API compatibility.
 
 **Properties**:
 ```swift
-struct ArkBalanceModel {
-    let spendableSat: Int
-    let pendingLightningSendSat: Int
-    let pendingInRoundSat: Int
-    let pendingExitSat: Int
-    let pendingBoardSat: Int
+@Model
+class ArkBalanceModel {
+    // Core balance properties (from API)
+    var spendableSat: Int
+    var pendingLightningSendSat: Int
+    var pendingInRoundSat: Int
+    var pendingExitSat: Int
+    var pendingBoardSat: Int
+    
+    // SwiftData persistence properties
+    var id: String = "ark_balance"
+    var lastUpdated: Date
     
     // Computed Properties
     var totalPendingSat: Int { ... }
@@ -24,31 +30,60 @@ struct ArkBalanceModel {
     var spendableFormatted: String { ... }
     var totalPendingFormatted: String { ... }
     var totalBalanceFormatted: String { ... }
+    
+    // Persistence Methods
+    var isValid: Bool { ... }
+    func update(from other: ArkBalanceModel) { ... }
 }
 ```
 
-#### OnchainBalanceModel
-Represents Bitcoin onchain balance information.
+**Key Features:**
+- Implements `Codable` with custom encoding (excludes persistence properties)
+- Singleton pattern using fixed ID for caching
+- 5-minute cache validity window
+- Direct SwiftData observation support
+
+#### OnchainBalanceModel (@Model class)  
+Unified model for Bitcoin onchain balance information with SwiftData persistence and API compatibility.
 
 **Properties**:
 ```swift
-struct OnchainBalanceModel {
-    let totalSat: Int
-    let trustedSpendableSat: Int
-    let immatureSat: Int
-    let trustedPendingSat: Int
-    let untrustedPendingSat: Int
-    let confirmedSat: Int
+@Model
+class OnchainBalanceModel {
+    // Core balance properties (from API)
+    var totalSat: Int
+    var trustedSpendableSat: Int
+    var immatureSat: Int
+    var trustedPendingSat: Int
+    var untrustedPendingSat: Int
+    var confirmedSat: Int
+    
+    // SwiftData persistence properties
+    var id: String = "onchain_balance"
+    var lastUpdated: Date
     
     // Computed Properties
     var totalFormatted: String { ... }
     var trustedSpendableFormatted: String { ... }
     var confirmedFormatted: String { ... }
+    var totalBTC: Double { ... }
+    var trustedSpendableBTC: Double { ... }
+    var confirmedBTC: Double { ... }
+    
+    // Persistence Methods
+    var isValid: Bool { ... }
+    func update(from other: OnchainBalanceModel) { ... }
 }
 ```
 
-#### TotalBalanceModel
-Aggregates Ark and onchain balances for unified display.
+**Key Features:**
+- Implements `Codable` with custom encoding (excludes persistence properties)
+- Singleton pattern using fixed ID for caching
+- 5-minute cache validity window
+- BTC conversion computed properties
+
+#### TotalBalanceModel (UI Helper)
+Aggregates Ark and onchain balances for unified display. This remains a struct for UI convenience.
 
 **Properties**:
 ```swift
@@ -66,51 +101,154 @@ struct TotalBalanceModel {
 
 ### Transaction Models
 
-#### TransactionModel
-Represents a wallet transaction or movement.
+#### TransactionModel (@Model class)
+Primary model for wallet transactions with SwiftData persistence and tag relationship support.
 
 **Properties**:
 ```swift
-struct TransactionModel: Identifiable {
-    let id: String
-    let type: TransactionType
-    let amount: Int
-    let direction: TransactionDirection
-    let timestamp: Date
-    let status: TransactionStatus
-    let description: String?
+@Model
+class TransactionModel {
+    // Core transaction properties (from server)
+    var txid: String  // Primary identifier (server-derived, stable)
+    var amount: Int
+    var transactionType: TransactionType
+    var transactionStatus: TransactionStatus
+    var direction: TransactionDirection
+    var date: Date
+    var round: Int?
+    var boardTxid: String?
+    
+    // SwiftData persistence properties
+    var lastUpdated: Date
+    
+    // Tag relationships (junction table approach)
+    @Relationship(deleteRule: .cascade)
+    var tagAssignments: [TransactionTagAssignment] = []
     
     // Computed Properties
-    var amountFormatted: String { ... }
+    var formattedAmount: String { ... }
+    var formattedDate: String { ... }
     var displayDescription: String { ... }
+    
+    // Tag convenience methods
+    var associatedTags: [PersistentTag] { ... }
+    var tagCount: Int { ... }
+    var hasTags: Bool { ... }
+    func hasTag(_ tag: PersistentTag) -> Bool { ... }
 }
 ```
+
+**Key Features:**
+- Stable `txid` from server (no random UUIDs)
+- Direct SwiftData observation support
+- Junction table relationship with tags
+- Automatic UI updates via @Observable services
 
 **Enums**:
 ```swift
-enum TransactionType {
-    case ark
-    case onchain
-    case lightning
-    case board
-    case offboard
+enum TransactionType: String, CaseIterable, Codable {
+    case ark = "ark"
+    case onchain = "onchain"
+    case lightning = "lightning"
+    case board = "board"
+    case offboard = "offboard"
 }
 
-enum TransactionDirection {
-    case incoming
-    case outgoing
+enum TransactionDirection: String, CaseIterable, Codable {
+    case incoming = "incoming"
+    case outgoing = "outgoing"
 }
 
-enum TransactionStatus {
-    case pending
-    case confirmed
-    case failed
+enum TransactionStatus: String, CaseIterable, Codable {
+    case pending = "pending"
+    case confirmed = "confirmed"
+    case failed = "failed"
 }
 ```
 
+### Tag System Models
+
+#### PersistentTag (@Model class)
+SwiftData model for tag storage with relationship management.
+
+**Properties**:
+```swift
+@Model
+class PersistentTag {
+    // Core tag properties
+    var id: UUID
+    var name: String
+    var colorHex: String
+    var emoji: String
+    var isActive: Bool
+    var createdAt: Date
+    
+    // Relationships (junction table approach)
+    @Relationship(deleteRule: .cascade, inverse: \TransactionTagAssignment.tag)
+    var assignments: [TransactionTagAssignment] = []
+    
+    // Computed Properties
+    var color: Color { ... }
+    var displayName: String { ... }
+    var transactionCount: Int { ... }
+    
+    // Convenience Methods
+    func getAssociatedTransactions() -> [TransactionModel] { ... }
+    func toTagModel() -> TagModel { ... }
+}
+```
+
+#### TransactionTagAssignment (@Model class)
+Junction table for many-to-many tag-transaction relationships.
+
+**Properties**:
+```swift
+@Model
+class TransactionTagAssignment {
+    // Relationships
+    var tag: PersistentTag?
+    var transaction: TransactionModel?
+    
+    // Metadata (extensible for future features)
+    var assignedAt: Date
+    var id: UUID
+}
+```
+
+**Key Benefits:**
+- Better control over relationship lifecycle
+- Easier preservation during server refreshes
+- Extensible for future metadata (notes, user who assigned, etc.)
+- Proper cascade deletion behavior
+
+#### TagModel (UI struct)
+UI-friendly struct for tag display and API serialization.
+
+**Properties**:
+```swift
+struct TagModel: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    var colorHex: String  
+    var emoji: String
+    var isActive: Bool = true
+    let createdAt: Date
+    
+    // Computed Properties
+    var color: Color { ... }
+    var displayName: String { ... }
+    
+    // Conversion Methods
+    func toPersistentTag() -> PersistentTag { ... }
+    static func fromPersistentTag(_ persistent: PersistentTag) -> TagModel { ... }
+}
+```
+
+## Supporting Models
+
 ### VTXO and UTXO Models
 
-#### VTXOModel
+#### VTXOModel (UI struct)
 Represents Ark protocol Virtual Transaction Outputs.
 
 **Properties**:
@@ -128,7 +266,7 @@ struct VTXOModel: Identifiable {
 }
 ```
 
-#### UTXOModel
+#### UTXOModel (UI struct)
 Represents Bitcoin Unspent Transaction Outputs.
 
 **Properties**:
@@ -146,56 +284,9 @@ struct UTXOModel: Identifiable {
 }
 ```
 
-## Persistence Models
+### Intermediate Data Models
 
-### PersistedArkBalance
-SwiftData model for caching Ark balance information.
-
-**Properties**:
-```swift
-@Model
-class PersistedArkBalance {
-    var id: String = "ark_balance"
-    var spendableSat: Int
-    var pendingLightningSendSat: Int
-    var pendingInRoundSat: Int
-    var pendingExitSat: Int
-    var pendingBoardSat: Int
-    var lastUpdated: Date
-    
-    // Methods
-    func toArkBalanceModel() -> ArkBalanceModel
-    func update(from model: ArkBalanceModel)
-    var isValid: Bool { ... }
-}
-```
-
-### PersistedOnchainBalance
-SwiftData model for caching onchain balance information.
-
-**Properties**:
-```swift
-@Model
-class PersistedOnchainBalance {
-    var id: String = "onchain_balance"
-    var totalSat: Int
-    var trustedSpendableSat: Int
-    var immatureSat: Int
-    var trustedPendingSat: Int
-    var untrustedPendingSat: Int
-    var confirmedSat: Int
-    var lastUpdated: Date
-    
-    // Methods
-    func toOnchainBalanceModel() -> OnchainBalanceModel
-    func update(from model: OnchainBalanceModel)
-    var isValid: Bool { ... }
-}
-```
-
-## Intermediate Data Models
-
-### MovementData
+#### MovementData
 Raw data structure from wallet for transaction parsing.
 
 **Properties**:
@@ -210,7 +301,7 @@ struct MovementData {
 }
 ```
 
-### ArkInfoModel
+#### ArkInfoModel
 Information about the connected Ark server.
 
 **Properties**:
@@ -228,73 +319,107 @@ struct ArkInfoModel {
 }
 ```
 
-## Model Relationships
+## Current Architecture Patterns
 
-### Data Flow Transformations
+### Unified Model Strategy
+After architectural migrations, all core data models follow the **unified pattern**:
+- **Single @Model class** serves both API and persistence needs
+- **Custom Codable implementation** excludes SwiftData properties from API
+- **Direct SwiftData observation** enables automatic UI updates
+- **Computed properties** provide formatted display values
+
+### Junction Table Relationships
+Tag system uses **junction table pattern** for better relationship control:
 ```
-Raw Wallet Data → Intermediate Models → UI Models → Persistence Models
-                                    ↓
-                              SwiftUI Display
+PersistentTag ←→ TransactionTagAssignment ←→ TransactionModel
+     ↑                    ↑                        ↑
+   1:many             junction table            1:many
 ```
 
-### Conversion Patterns
+**Benefits:**
+- Explicit relationship lifecycle management
+- Easier preservation during server refreshes  
+- Extensible metadata support
+- Proper cascade deletion behavior
 
-#### UI Model ↔ Persistence Model
-All UI models have corresponding persistence models with bidirectional conversion:
+## Model Relationships and Data Flow
+
+### Core Data Flow
+```
+Server API Response → @Model Class (unified) → SwiftUI Display
+                   ↓
+            SwiftData Persistence → Automatic UI Updates
+```
+
+### Tag Assignment Flow
+```
+UI Action → TagService → PersistentTag + TransactionTagAssignment
+                    ↓
+               SwiftData → @Observable → UI Auto-Update
+```
+
+### Cache Strategy
+Balance models implement **intelligent caching**:
+- **Singleton pattern**: Fixed IDs for single records per type
+- **5-minute validity**: Fresh data prioritized, stale data triggers refresh
+- **Graceful degradation**: App works offline with cached data
+
+## Model Container Configuration
+
+All SwiftData models must be included in the app's ModelContainer:
+
 ```swift
-// UI to Persistence
-let persisted = PersistedArkBalance(from: arkBalanceModel)
-
-// Persistence to UI  
-let uiModel = persistedBalance.toArkBalanceModel()
+// Required for current architecture:
+.modelContainer(for: [
+    TransactionModel.self,
+    ArkBalanceModel.self,
+    OnchainBalanceModel.self,
+    PersistentTag.self,
+    TransactionTagAssignment.self
+])
 ```
 
-#### Raw Data → UI Model
-Raw wallet responses are transformed into UI-friendly models:
-```swift
-// Example transformation
-func parseMovements(_ rawData: [MovementData]) -> [TransactionModel] {
-    return rawData.map { movement in
-        TransactionModel(
-            id: movement.txid,
-            type: parseTransactionType(movement.kind),
-            amount: movement.amount,
-            // ... additional transformations
-        )
-    }
-}
-```
-
-## Model Validation
+## Model Validation and Best Practices
 
 ### Required Properties
-All models include validation for required properties:
-- Amount values must be non-negative
-- Dates must be valid and reasonable
-- IDs must be non-empty strings
+All models include validation for:
+- **Amount values**: Must be non-negative integers (satoshis)
+- **Dates**: Must be valid and reasonable timestamps
+- **IDs**: Must be non-empty strings or valid UUIDs
+- **Relationships**: Proper cascade rules and nullability
 
 ### Computed Property Patterns
-Models use consistent patterns for computed properties:
-- Formatted strings use appropriate formatters (BitcoinFormatter, DateFormatter)
-- Boolean flags provide clear semantic meaning
-- Aggregated values are calculated from base properties
+Models use consistent patterns:
+- **Formatted strings**: Use BitcoinFormatter, DateFormatter
+- **Boolean flags**: Provide clear semantic meaning (`hasTags`, `isValid`)
+- **Aggregated values**: Calculated from base properties (`totalBalance`)
+- **UI convenience**: Color from hex, display names with emoji
 
-## Extension Points
+### Evolution Strategy
+Models support safe evolution through:
+- **Optional properties**: For backward compatibility
+- **Custom Codable**: Exclude internal properties from API
+- **Migration helpers**: SwiftData schema evolution support
+- **Versioning**: Clear migration paths for breaking changes
+
+## Extension Guidelines
 
 ### Adding New Models
-When adding new models, follow these patterns:
-1. Define core properties with appropriate types
-2. Add computed properties for display formatting
-3. Implement persistence model if caching is needed
-4. Add bidirectional conversion methods
-5. Include validation logic
+When extending the data layer:
+1. **Choose pattern**: Unified @Model or UI struct based on persistence needs
+2. **Define relationships**: Use junction tables for many-to-many
+3. **Implement Codable**: Custom encoding for API compatibility
+4. **Add computed properties**: Consistent formatting patterns
+5. **Include validation**: Data integrity and business logic
+6. **Update container**: Add to ModelContainer configuration
 
-### Model Evolution
-Models support evolution through:
-- Optional properties for backward compatibility
-- Migration helpers for persistence models
-- Versioning for breaking changes
+### Tag System Extension
+The tag system is designed for extension:
+- **TransactionTagAssignment metadata**: Add notes, user info, timestamps
+- **Tag categories**: Hierarchical tag organization
+- **Bulk operations**: Tag multiple transactions simultaneously
+- **Tag templates**: Predefined tag sets for common workflows
 
 ---
 
-*Note: This reference should be updated whenever model structures change.*
+*This reference reflects the current unified architecture. Updated: October 30, 2025*

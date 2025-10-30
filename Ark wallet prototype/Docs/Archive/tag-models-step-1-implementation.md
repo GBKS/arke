@@ -72,3 +72,6 @@ Now that the data models are established, the next step will be:
 - `TransactionModel.swift`: Added tag relationship and convenience methods
 
 The foundation for tag persistence is now complete and ready for service layer implementation!
+
+---
+*Archived: October 30, 2025*

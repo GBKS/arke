@@ -128,3 +128,6 @@ Use the new mock data helpers:
         .modelContainer(for: TransactionModel.self, inMemory: true)
 }
 ```
+
+---
+*Archived: October 30, 2025*
