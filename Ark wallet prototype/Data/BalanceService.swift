@@ -68,7 +68,7 @@ class BalanceService {
     // MARK: - Balance Fetching (with Deduplication)
     
     /// Get Ark balance with task deduplication
-    func getArkBalanceWithDeduplication() async throws -> ArkBalanceModel {
+    func getArkBalanceWithDeduplication() async throws -> ArkBalanceResponse {
         return try await taskManager.execute(key: "arkBalance") {
             let result = try await self.wallet.getArkBalance()
             print("📊 Ark balance: \(result.spendableSat) sats spendable, \(result.totalPendingSat) sats pending")
@@ -95,16 +95,16 @@ class BalanceService {
             async let onchainBalanceResult = getOnchainBalanceWithDeduplication()
             
             // Wait for both balances to complete
-            let (arkBal, onchainBal) = try await (arkBalanceResult, onchainBalanceResult)
+            let (arkResponse, onchainBal) = try await (arkBalanceResult, onchainBalanceResult)
             
-            // Update UI state
-            self.arkBalance = arkBal
+            // Update Ark balance (both UI state and persistence)
+            await updateArkBalanceFromResponse(arkResponse)
+            
+            // Update onchain balance 
             self.onchainBalance = onchainBal
-            updateTotalBalance()
-            
-            // Save both balances to persistence
-            await saveArkBalanceToSwiftData(arkBal)
             await saveOnchainBalanceToSwiftData(onchainBal)
+            
+            updateTotalBalance()
             
             error = nil
             print("✅ All balances refreshed successfully")
@@ -118,13 +118,11 @@ class BalanceService {
     /// Refresh just Ark balance
     func refreshArkBalance() async {
         do {
-            arkBalance = try await getArkBalanceWithDeduplication()
-            updateTotalBalance()
+            let apiResponse = try await getArkBalanceWithDeduplication()
             
-            // Save to persistence
-            if let balance = arkBalance {
-                await saveArkBalanceToSwiftData(balance)
-            }
+            // Update or load the SwiftData model for UI
+            await updateArkBalanceFromResponse(apiResponse)
+            updateTotalBalance()
             
             error = nil
         } catch {
@@ -153,8 +151,8 @@ class BalanceService {
     
     // MARK: - Direct Balance Access Methods
     
-    /// Get the current Ark balance model
-    func getArkBalance() async throws -> ArkBalanceModel {
+    /// Get the current Ark balance response
+    func getArkBalance() async throws -> ArkBalanceResponse {
         return try await getArkBalanceWithDeduplication()
     }
     
@@ -278,8 +276,8 @@ extension BalanceService {
         }
     }
     
-    /// Save Ark balance to SwiftData
-    private func saveArkBalanceToSwiftData(_ apiBalance: ArkBalanceModel) async {
+    /// Update Ark balance from API response (handles both UI state and persistence)
+    private func updateArkBalanceFromResponse(_ apiResponse: ArkBalanceResponse) async {
         guard let modelContext = modelContext else {
             print("⚠️ No model context available for saving Ark balance")
             return
@@ -294,18 +292,14 @@ extension BalanceService {
             
             if let existingBalance = existingBalances.first {
                 // Update existing record with new data from API
-                existingBalance.update(from: apiBalance)
+                existingBalance.update(from: apiResponse)
+                self.arkBalance = existingBalance
                 print("💾 Updated persisted Ark balance")
             } else {
                 // Create new record with the API data
-                let newBalance = ArkBalanceModel(
-                    spendableSat: apiBalance.spendableSat,
-                    pendingLightningSendSat: apiBalance.pendingLightningSendSat,
-                    pendingInRoundSat: apiBalance.pendingInRoundSat,
-                    pendingExitSat: apiBalance.pendingExitSat,
-                    pendingBoardSat: apiBalance.pendingBoardSat
-                )
+                let newBalance = ArkBalanceModel(from: apiResponse)
                 modelContext.insert(newBalance)
+                self.arkBalance = newBalance
                 print("💾 Created new persisted Ark balance")
             }
             

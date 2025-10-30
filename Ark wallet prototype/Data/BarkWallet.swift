@@ -266,7 +266,7 @@ class BarkWallet: BarkWalletProtocol, Equatable {
        "pending_board_sat": 0
      }
      */
-    func getArkBalance() async throws -> ArkBalanceModel {
+    func getArkBalance() async throws -> ArkBalanceResponse {
         let output = try await executeCommand(["balance"])
         let jsonString = output.trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -277,7 +277,7 @@ class BarkWallet: BarkWalletProtocol, Equatable {
         }
         
         do {
-            let balance = try JSONDecoder().decode(ArkBalanceModel.self, from: jsonData)
+            let balance = try JSONDecoder().decode(ArkBalanceResponse.self, from: jsonData)
             return balance
         } catch {
             throw BarkError.commandFailed("Could not parse balance data: \(error.localizedDescription)")

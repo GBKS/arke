@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ArkBalanceView: View {
     @Environment(WalletManager.self) private var walletManager
-    @State private var arkBalance: ArkBalanceModel?
+    @Query(filter: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" })
+    private var balances: [ArkBalanceModel]
     @State private var isLoadingArkBalance = false
     @State private var error: String?
+    
+    private var arkBalance: ArkBalanceModel? {
+        balances.first
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -115,12 +121,12 @@ struct ArkBalanceView: View {
         
         print("loadArkBalance")
         
-        do {
-            arkBalance = try await walletManager.getArkBalance()
-        } catch {
-            self.error = error.localizedDescription
-            arkBalance = nil
-            print("Error loading ark balance: \(error)")
+        // Trigger refresh through wallet manager (this updates SwiftData)
+        await walletManager.refreshArkBalance()
+        
+        // Check if wallet manager has any errors
+        if let walletError = walletManager.error {
+            self.error = walletError
         }
         
         isLoadingArkBalance = false
@@ -134,4 +140,5 @@ struct ArkBalanceView: View {
             .padding(.vertical, 40)
             .padding(.horizontal, 20)
     }
+    .modelContainer(for: [ArkBalanceModel.self], inMemory: true)
 }

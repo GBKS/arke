@@ -5,14 +5,9 @@
 //  Created by Christoph on 10/17/25.
 //
 
-struct TotalBalanceModel: Codable {
+struct TotalBalanceModel {
     let arkBalance: ArkBalanceModel
     let onchainBalance: OnchainBalanceModel
-    
-    enum CodingKeys: String, CodingKey {
-        case arkBalance = "ark_balance"
-        case onchainBalance = "onchain_balance"
-    }
     
     // MARK: - Combined Spendable Balance
     

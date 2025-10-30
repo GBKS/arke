@@ -27,9 +27,9 @@ struct WalletExportData: Codable {
     }
     
     struct BalanceData: Codable {
-        let arkBalance: ArkBalanceModel?
+        let arkBalance: ArkBalanceResponse?
         let onchainBalance: OnchainBalanceModel?
-        let totalBalance: TotalBalanceModel?
+        // Note: TotalBalanceModel is computed from the above, not stored
     }
     
     struct ExportTransactionData: Codable {
@@ -586,8 +586,8 @@ class WalletManager {
         return try await transactionService?.getTransactions() ?? ""
     }
     
-    /// Get the current Ark balance model - delegates to balance service
-    func getArkBalance() async throws -> ArkBalanceModel {
+    /// Get the current Ark balance response - delegates to balance service
+    func getArkBalance() async throws -> ArkBalanceResponse {
         guard let balanceService = balanceService else {
             throw BarkError.commandFailed("Balance service not initialized")
         }
@@ -688,9 +688,16 @@ class WalletManager {
                 onchainAddress: onchainAddress
             ),
             balances: WalletExportData.BalanceData(
-                arkBalance: arkBalance,
-                onchainBalance: onchainBalance,
-                totalBalance: totalBalance
+                arkBalance: arkBalance.map { model in
+                    ArkBalanceResponse(
+                        spendableSat: model.spendableSat,
+                        pendingLightningSendSat: model.pendingLightningSendSat,
+                        pendingInRoundSat: model.pendingInRoundSat,
+                        pendingExitSat: model.pendingExitSat,
+                        pendingBoardSat: model.pendingBoardSat
+                    )
+                },
+                onchainBalance: onchainBalance
             ),
             transactions: transactions.map { WalletExportData.ExportTransactionData(from: $0) },
             vtxos: vtxos,

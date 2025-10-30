@@ -78,8 +78,8 @@ class MockBarkWallet: BarkWalletProtocol {
         return "Mock: Successfully deleted wallet directory at \(walletDir.path)"
     }
     
-    func getArkBalance() async throws -> ArkBalanceModel {
-        return ArkBalanceModel(
+    func getArkBalance() async throws -> ArkBalanceResponse {
+        return ArkBalanceResponse(
             spendableSat: 50000,
             pendingLightningSendSat: 0,
             pendingInRoundSat: 10000,

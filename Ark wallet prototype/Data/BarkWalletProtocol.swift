@@ -18,7 +18,7 @@ protocol BarkWalletProtocol {
     func createWallet(network: String?, asp: String?) async throws -> String
     func importWallet(network: String?, asp: String?, mnemonic: String) async throws -> String
     func deleteWallet() async throws -> String
-    func getArkBalance() async throws -> ArkBalanceModel
+    func getArkBalance() async throws -> ArkBalanceResponse
     func getArkAddress() async throws -> String
     func getArkInfo() async throws -> ArkInfoModel
     func getOnchainAddress() async throws -> String
