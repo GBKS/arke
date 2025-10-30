@@ -149,8 +149,12 @@ class TransactionService {
             let existingTransactions = try modelContext.fetch(existingDescriptor)
             let existingTransactionDict = Dictionary(uniqueKeysWithValues: existingTransactions.map { ($0.txid, $0) })
             
+            // Cache existing tag assignments for preservation during updates
+            // let tagAssignmentCache = await cacheExistingTagAssignments(from: existingTransactions)
+            
             var upsertedCount = 0
             var updatedCount = 0
+            var preservedTagCount = 0
             
             for movement in movements {
                 let movementTransactions = await parseMovementToTransactions(movement)
@@ -175,6 +179,13 @@ class TransactionService {
                             hasChanges = true
                         }
                         
+                        // Preserve existing tag assignments - they survive server updates
+                        // No need to explicitly restore them as they're already attached to the existing transaction
+                        // The SwiftData relationship will maintain the connections automatically
+                        if !existingTransaction.tagAssignments.isEmpty {
+                            preservedTagCount += existingTransaction.tagAssignments.count
+                        }
+                        
                         if hasChanges {
                             updatedCount += 1
                         }
@@ -196,15 +207,57 @@ class TransactionService {
                 }
             }
             
+            // Handle orphaned transactions (exist locally but not in server data)
+            let serverTxids = Set(await movements.asyncFlatMap { movement in
+                await parseMovementToTransactions(movement).map { $0.txid }
+            })
+            
+            let orphanedTransactions = existingTransactions.filter { !serverTxids.contains($0.txid) }
+            var orphanedTagCount = 0
+            
+            for orphanedTransaction in orphanedTransactions {
+                if !orphanedTransaction.tagAssignments.isEmpty {
+                    orphanedTagCount += orphanedTransaction.tagAssignments.count
+                    print("⚠️ Transaction \(orphanedTransaction.txid) no longer exists on server but has \(orphanedTransaction.tagAssignments.count) tag(s)")
+                }
+                // Note: We could choose to preserve orphaned tagged transactions or delete them
+                // For now, we'll let them remain to preserve user tags until explicit cleanup
+            }
+            
             // Save changes
             try modelContext.save()
             
             print("💾 Successfully saved \(upsertedCount) new, \(updatedCount) updated transactions")
+            print("🏷️ Preserved \(preservedTagCount) tag assignments across updates")
+            if orphanedTagCount > 0 {
+                print("🏷️ Found \(orphanedTagCount) tag assignments on \(orphanedTransactions.count) orphaned transactions")
+            }
             
         } catch {
             print("❌ Failed to upsert transactions: \(error)")
             self.error = "Failed to process transactions: \(error)"
         }
+    }
+    
+    // MARK: - Tag Assignment Preservation
+    
+    /// Cache existing tag assignments for preservation during updates
+    /// This method is primarily for logging and verification - SwiftData relationships handle preservation automatically
+    private func cacheExistingTagAssignments(from transactions: [TransactionModel]) async -> [String: [TransactionTagAssignment]] {
+        var cache: [String: [TransactionTagAssignment]] = [:]
+        
+        for transaction in transactions {
+            if !transaction.tagAssignments.isEmpty {
+                cache[transaction.txid] = transaction.tagAssignments
+            }
+        }
+        
+        let totalTagAssignments = cache.values.flatMap { $0 }.count
+        if totalTagAssignments > 0 {
+            print("🏷️ Found \(totalTagAssignments) existing tag assignments across \(cache.count) transactions")
+        }
+        
+        return cache
     }
     
     // MARK: - Transaction Parsing
@@ -318,7 +371,11 @@ class TransactionService {
             let descriptor = FetchDescriptor<TransactionModel>()
             let TransactionModels = try modelContext.fetch(descriptor)
             
-            // Delete all transactions
+            // Count tagged transactions before deletion
+            let taggedTransactionsCount = TransactionModels.filter { !$0.tagAssignments.isEmpty }.count
+            let totalTagAssignments = TransactionModels.flatMap { $0.tagAssignments }.count
+            
+            // Delete all transactions (cascade will handle tag assignments)
             for transaction in TransactionModels {
                 modelContext.delete(transaction)
             }
@@ -330,9 +387,78 @@ class TransactionService {
             hasLoadedTransactions = false
             
             print("🗑️ Cleared \(TransactionModels.count) persisted transactions")
+            if totalTagAssignments > 0 {
+                print("🏷️ Also cleared \(totalTagAssignments) tag assignments from \(taggedTransactionsCount) tagged transactions")
+            }
             
         } catch {
             print("❌ Failed to clear persisted transactions: \(error)")
+        }
+    }
+    
+    /// Clean up orphaned transactions that no longer exist on the server but have been locally tagged
+    /// This is a manual cleanup method that can be called when needed
+    func cleanupOrphanedTaggedTransactions() async {
+        guard let modelContext = modelContext else {
+            print("⚠️ No model context available for cleaning orphaned transactions")
+            return
+        }
+        
+        do {
+            // Get all transactions with tags
+            let taggedDescriptor = FetchDescriptor<TransactionModel>(
+                predicate: #Predicate { transaction in
+                    !transaction.tagAssignments.isEmpty
+                }
+            )
+            let taggedTransactions = try modelContext.fetch(taggedDescriptor)
+            
+            if !taggedTransactions.isEmpty {
+                print("🏷️ Found \(taggedTransactions.count) tagged transactions")
+                
+                // Refresh from server to identify which ones still exist
+                let serverOutput = try await wallet.getMovements()
+                let serverTxids = await getServerTransactionIds(from: serverOutput)
+                
+                let orphanedTaggedTransactions = taggedTransactions.filter { !serverTxids.contains($0.txid) }
+                
+                if !orphanedTaggedTransactions.isEmpty {
+                    let totalOrphanedTags = orphanedTaggedTransactions.flatMap { $0.tagAssignments }.count
+                    
+                    print("🚨 Found \(orphanedTaggedTransactions.count) orphaned tagged transactions with \(totalOrphanedTags) total tag assignments")
+                    print("🚨 These transactions no longer exist on the server but have local tags")
+                    
+                    // Log details for manual review
+                    for transaction in orphanedTaggedTransactions {
+                        let tagNames = transaction.associatedTags.map { $0.displayName }.joined(separator: ", ")
+                        print("   • \(transaction.txid): \(transaction.formattedAmount) [\(tagNames)]")
+                    }
+                    
+                    // Note: We don't automatically delete these - that's a policy decision for the app
+                    // The user might want to keep them for historical tracking
+                }
+            }
+            
+        } catch {
+            print("❌ Failed to cleanup orphaned tagged transactions: \(error)")
+        }
+    }
+    
+    /// Extract transaction IDs from server data for comparison
+    private func getServerTransactionIds(from output: String) async -> Set<String> {
+        guard let jsonData = output.data(using: .utf8) else {
+            return Set()
+        }
+        
+        do {
+            let movements = try JSONDecoder().decode([MovementData].self, from: jsonData)
+            let transactionDataList = await movements.asyncFlatMap { movement in
+                await parseMovementToTransactions(movement)
+            }
+            return Set(transactionDataList.map { $0.txid })
+        } catch {
+            print("❌ Failed to parse server transaction IDs: \(error)")
+            return Set()
         }
     }
     
@@ -341,5 +467,19 @@ class TransactionService {
     /// Clear error state
     func clearError() {
         error = nil
+    }
+}
+
+// MARK: - Collection Extension for Async Operations
+
+extension Collection {
+    /// Async version of flatMap for collections
+    func asyncFlatMap<T>(_ transform: (Element) async throws -> [T]) async rethrows -> [T] {
+        var result: [T] = []
+        for element in self {
+            let transformed = try await transform(element)
+            result.append(contentsOf: transformed)
+        }
+        return result
     }
 }
