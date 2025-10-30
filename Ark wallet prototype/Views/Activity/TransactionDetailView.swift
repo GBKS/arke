@@ -93,6 +93,11 @@ struct TransactionDetailView: View {
                     }
                 }
                 
+                Divider()
+                
+                // Tags Section
+                TransactionTagView(transaction: transaction)
+                
                 Spacer()
             }
             .padding()
@@ -149,10 +154,10 @@ struct DetailRow: View {
                 txid: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z",
                 movementId: nil,
                 recipientIndex: nil,
-                type: .received,
+                type: TransactionTypeEnum.received,
                 amount: 50000,
                 date: Date().addingTimeInterval(-3600),
-                status: .confirmed,
+                status: TransactionStatusEnum.confirmed,
                 address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
             )
         )

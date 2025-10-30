@@ -13,13 +13,13 @@ struct TransactionList: View {
     private var transactions: [TransactionModel]
     
     @Binding var selectedTransaction: TransactionModel?
-    @Environment(TransactionService.self) private var transactionService
+    @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {            
             // Transaction List
-            if transactionService.isRefreshing && transactions.isEmpty {
+            if walletManager.isRefreshing && transactions.isEmpty {
                 VStack(spacing: 16) {
                     SkeletonLoader(
                         itemCount: 6,
@@ -60,7 +60,7 @@ struct TransactionList: View {
             }
         }
         .overlay(alignment: .top) {
-            if transactionService.isRefreshing && !transactions.isEmpty {
+            if walletManager.isRefreshing && !transactions.isEmpty {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
                     .scaleEffect(0.8)
@@ -111,28 +111,22 @@ extension TransactionModel {
 
 #Preview("With Transactions") {
     @Previewable @State var selectedTransaction: TransactionModel? = nil
-    @Previewable @State var transactionService = TransactionService(
-        wallet: MockBarkWallet(), 
-        taskManager: TaskDeduplicationManager()
-    )
+    @Previewable @State var walletManager = WalletManager(useMock: true)
     
     NavigationView {
         TransactionList(selectedTransaction: $selectedTransaction)
-            .environment(transactionService)
+            .environment(walletManager)
     }
     .modelContainer(for: TransactionModel.self, inMemory: true)
 }
 
 #Preview("Empty State") {
     @Previewable @State var selectedTransaction: TransactionModel? = nil
-    @Previewable @State var transactionService = TransactionService(
-        wallet: MockBarkWallet(), 
-        taskManager: TaskDeduplicationManager()
-    )
+    @Previewable @State var walletManager = WalletManager(useMock: true)
     
     NavigationView {
         TransactionList(selectedTransaction: $selectedTransaction)
-            .environment(transactionService)
+            .environment(walletManager)
     }
     .modelContainer(for: TransactionModel.self, inMemory: true)
 }

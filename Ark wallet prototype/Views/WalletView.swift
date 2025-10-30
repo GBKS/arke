@@ -13,6 +13,7 @@ enum NavigationItem: String, CaseIterable {
     case activity = "Activité"
     case send = "Sénd"
     case receive = "Réceive"
+    case tags = "Tags"
     case settings = "Séttings"
     case data = "X-Ráy"
     
@@ -22,6 +23,7 @@ enum NavigationItem: String, CaseIterable {
         case .activity: return "list.bullet"
         case .send: return "arrow.up.circle.fill"
         case .receive: return "arrow.down.circle.fill"
+        case .tags: return "arrow.down.circle.fill"
         case .settings: return "gearshape.fill"
         case .data: return "doc.text.fill"
         }
@@ -153,6 +155,8 @@ struct WalletView: View {
                     SendView()
                 case .receive:
                     ReceiveView()
+                case .tags:
+                    TagsView()
                 case .settings:
                     SettingsView(onWalletDeleted: onWalletDeleted)
                 case .data:

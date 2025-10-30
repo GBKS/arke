@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct Ark_wallet_prototypeApp: App {
+struct Ark: App {
     @State private var walletManager = WalletManager()
 
     var body: some Scene {

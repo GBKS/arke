@@ -440,6 +440,29 @@ class TagService {
         }
     }
     
+    /// Get all tags assigned to a specific transaction
+    func getTagsForTransaction(_ transactionId: String) async throws -> [TagModel] {
+        guard let modelContext = modelContext else {
+            throw TagServiceError.noModelContext
+        }
+        
+        do {
+            // Find tag assignments for this transaction
+            let assignmentDescriptor = FetchDescriptor<TransactionTagAssignment>(
+                predicate: #Predicate<TransactionTagAssignment> { $0.transaction?.txid == transactionId }
+            )
+            let assignments = try modelContext.fetch(assignmentDescriptor)
+            
+            // Extract tags and convert to UI models
+            let persistentTags = assignments.compactMap { $0.tag }
+            return persistentTags.map { TagModel(from: $0) }
+            
+        } catch {
+            print("❌ Failed to get tags for transaction: \(error)")
+            throw error
+        }
+    }
+    
     /// Get tag usage statistics
     func getTagStatistics() async throws -> [TagStatistic] {
         guard let modelContext = modelContext else {

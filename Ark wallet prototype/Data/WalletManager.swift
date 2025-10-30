@@ -74,7 +74,7 @@ class WalletManager {
     private var balanceService: BalanceService?
     private var addressService: AddressService?
     private var walletOperationsService: WalletOperationsService?
-    private var tagService: TagService?
+    private let tagService: TagService
     
     // MARK: - Computed Properties - Network Info
     var currentNetworkName: String {
@@ -116,23 +116,27 @@ class WalletManager {
     
     // MARK: - Tag Properties
     var tags: [TagModel] {
-        tagService?.tags ?? []
+        tagService.tags
     }
     
     var activeTags: [TagModel] {
-        tagService?.activeTags ?? []
+        tagService.activeTags
     }
     
-    var hasTagsAvailable: Bool {
-        tagService?.hasTags ?? false
+    var activeTagCount: Int {
+        tagService.activeTagCount
+    }
+    
+    var hasTags: Bool {
+        tagService.hasTags
     }
     
     var tagServiceError: String? {
-        tagService?.error
+        tagService.error
     }
     
     /// Access to TagService for SwiftUI environment injection
-    var tagServiceForEnvironment: TagService? {
+    var tagServiceForEnvironment: TagService {
         tagService
     }
     
@@ -189,6 +193,8 @@ class WalletManager {
     // MARK: - Initialization
     init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
         let config = networkConfig ?? NetworkConfig.signet
+        // Initialize TagService first since it doesn't depend on wallet
+        self.tagService = TagService(taskManager: taskManager)
         setupWallet(useMock: useMock, networkConfig: config)
         initializeServices()
     }
@@ -217,7 +223,7 @@ class WalletManager {
         balanceService = BalanceService(wallet: wallet, taskManager: taskManager, cacheManager: cacheManager)
         addressService = AddressService(wallet: wallet, taskManager: taskManager)
         walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)
-        tagService = TagService(taskManager: taskManager)
+        // TagService is now initialized in init(), not here
         
         // Configure post-transaction callback
         walletOperationsService?.setTransactionCompletedCallback { [weak self] in
@@ -229,7 +235,7 @@ class WalletManager {
         self.modelContext = context
         transactionService?.setModelContext(context)
         balanceService?.setModelContext(context)
-        tagService?.setModelContext(context)
+        tagService.setModelContext(context)
     }
     
     // MARK: - Coordination Methods
@@ -323,68 +329,58 @@ class WalletManager {
     
     /// Create a new tag
     func createTag(_ tagModel: TagModel) async throws -> TagModel {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         return try await tagService.createTag(tagModel)
     }
     
     /// Update an existing tag
     func updateTag(_ tagModel: TagModel) async throws {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         try await tagService.updateTag(tagModel)
     }
     
     /// Delete a tag (soft delete)
     func deleteTag(_ tagId: UUID) async throws {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         try await tagService.deleteTag(tagId)
     }
     
     /// Assign a tag to a transaction
     func assignTag(_ tagId: UUID, to transactionTxid: String) async throws {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         try await tagService.assignTag(tagId, to: transactionTxid)
     }
     
     /// Remove a tag assignment from a transaction
     func unassignTag(_ tagId: UUID, from transactionTxid: String) async throws {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         try await tagService.unassignTag(tagId, from: transactionTxid)
     }
     
     /// Get all transactions with a specific tag
     func getTransactionsWithTag(_ tagId: UUID) async throws -> [TransactionModel] {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         return try await tagService.getTransactionsWithTag(tagId)
     }
     
     /// Create default tags if needed
     func createDefaultTagsIfNeeded() async {
-        await tagService?.createDefaultTagsIfNeeded()
+        await tagService.createDefaultTagsIfNeeded()
     }
     
     /// Get tag usage statistics
     func getTagStatistics() async throws -> [TagStatistic] {
-        guard let tagService = tagService else {
-            throw BarkError.commandFailed("Tag service not initialized")
-        }
         return try await tagService.getTagStatistics()
+    }
+    
+    /// Get all tags assigned to a specific transaction
+    func getTransactionTags(_ transactionId: String) async throws -> [TagModel] {
+        return try await tagService.getTagsForTransaction(transactionId)
+    }
+    
+    /// Check if a transaction has any tags
+    func transactionHasTags(_ transactionId: String) async throws -> Bool {
+        let tags = try await getTransactionTags(transactionId)
+        return !tags.isEmpty
     }
     
     /// Clear tag service errors
     func clearTagError() {
-        tagService?.clearError()
+        tagService.clearError()
     }
     
     // MARK: - Wallet Operations (delegates to WalletOperationsService)
