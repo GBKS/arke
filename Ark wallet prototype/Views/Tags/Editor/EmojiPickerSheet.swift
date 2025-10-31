@@ -24,7 +24,7 @@ struct EmojiPickerSheet: View {
     ]
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(emojiCategories, id: \.0) { category in
@@ -66,4 +66,10 @@ struct EmojiPickerSheet: View {
             }
         }
     }
+}
+
+#Preview {
+    @Previewable @State var selectedEmoji = "📱"
+    
+    EmojiPickerSheet(selectedEmoji: $selectedEmoji)
 }

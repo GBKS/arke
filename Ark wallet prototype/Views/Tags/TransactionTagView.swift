@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TransactionTagView: View {
     let transaction: TransactionModel
@@ -24,7 +25,7 @@ struct TransactionTagView: View {
                 
                 Spacer()
                 
-                Button("Manage Tags") {
+                Button("Edit Tags") {
                     showingTagSelector = true
                 }
                 .buttonStyle(.bordered)
@@ -58,10 +59,7 @@ struct TransactionTagView: View {
             }
             
             if let error = error {
-                Text("Error: \(error)")
-                    .font(.caption)
-                    .foregroundColor(.red)
-                    .padding(.vertical, 4)
+                ErrorView(errorMessage: error)
             }
         }
         .padding()
@@ -162,7 +160,7 @@ struct TransactionTagView: View {
     }
 }
 
-#Preview("macOS Transaction Tags") {
+#Preview {
     TransactionTagView(
         transaction: TransactionModel(
             txid: "sample-123", 

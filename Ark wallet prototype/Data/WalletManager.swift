@@ -383,6 +383,12 @@ class WalletManager {
         tagService.clearError()
     }
     
+    // MARK: - Preview Support (Remove when no longer needed)
+    /// Set model context for preview environments
+    func setPreviewContext(_ context: ModelContext) {
+        tagService.setModelContext(context)
+    }
+    
     // MARK: - Wallet Operations (delegates to WalletOperationsService)
     
     func send(to address: String, amount: Int) async throws -> String {

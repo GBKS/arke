@@ -23,7 +23,7 @@ struct ColorPickerSheet: View {
     @State private var showingCustomColorPicker = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Predefined Colors
@@ -103,4 +103,8 @@ struct ColorPickerSheet: View {
             }
         }
     }
+}
+
+#Preview {
+    ColorPickerSheet(selectedColorHex: .constant("#FF6B35"))
 }

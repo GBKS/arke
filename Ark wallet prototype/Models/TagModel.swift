@@ -51,6 +51,27 @@ final class PersistentTag {
     var transactionCount: Int {
         tagAssignments.count
     }
+    
+    // Total amount (net: received - sent)
+    var totalTransactionAmount: Int {
+        let sent = sentAmount
+        let received = receivedAmount
+        return received - sent
+    }
+    
+    // Sum of sent transaction amounts
+    var sentAmount: Int {
+        associatedTransactions
+            .filter { $0.transactionType == .sent }
+            .reduce(0) { $0 + $1.amount }
+    }
+    
+    // Sum of received transaction amounts
+    var receivedAmount: Int {
+        associatedTransactions
+            .filter { $0.transactionType == .received }
+            .reduce(0) { $0 + $1.amount }
+    }
 }
 
 // MARK: - Transaction Tag Assignment (Junction Table)

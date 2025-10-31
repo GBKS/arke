@@ -478,6 +478,9 @@ class TagService {
                     tagId: tag.id,
                     tagName: tag.displayName,
                     transactionCount: tag.transactionCount,
+                    totalAmount: tag.totalTransactionAmount,
+                    sentAmount: tag.sentAmount,
+                    receivedAmount: tag.receivedAmount,
                     isActive: tag.isActive
                 )
             }
@@ -537,5 +540,21 @@ struct TagStatistic {
     let tagId: UUID
     let tagName: String
     let transactionCount: Int
+    let totalAmount: Int        // Net total (received - sent)
+    let sentAmount: Int         // Sum of sent transactions
+    let receivedAmount: Int     // Sum of received transactions
     let isActive: Bool
+    
+    // Computed properties for display
+    var formattedTotalAmount: String {
+        BitcoinFormatter.formatAccountingAmount(totalAmount, transactionType: totalAmount >= 0 ? .received : .sent)
+    }
+    
+    var formattedSentAmount: String {
+        BitcoinFormatter.formatAccountingAmount(sentAmount, transactionType: .sent)
+    }
+    
+    var formattedReceivedAmount: String {
+        BitcoinFormatter.formatAccountingAmount(receivedAmount, transactionType: .received)
+    }
 }
