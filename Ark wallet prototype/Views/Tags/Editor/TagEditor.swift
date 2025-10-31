@@ -77,6 +77,7 @@ struct TagEditor: View {
     // MARK: - Initialization
     
     init(editingTag: TagModel? = nil, onSave: @escaping (TagModel) -> Void, onCancel: @escaping () -> Void) {
+        print("🔧 TagEditor: Initializing with editingTag: \(editingTag?.name ?? "nil") (ID: \(editingTag?.id.uuidString ?? "nil"))")
         self.editingTag = editingTag
         self.onSave = onSave
         self.onCancel = onCancel
@@ -123,6 +124,7 @@ struct TagEditor: View {
             }
         }
         .onAppear {
+            print("🔧 TagEditor: onAppear called")
             setupInitialValues()
         }
         .disabled(isLoading)
@@ -207,17 +209,21 @@ struct TagEditor: View {
     // MARK: - Actions
     
     private func setupInitialValues() {
+        print("🔧 TagEditor: setupInitialValues called with editingTag: \(editingTag?.name ?? "nil") (ID: \(editingTag?.id.uuidString ?? "nil"))")
+        
         if let tag = editingTag {
             name = tag.name
             selectedColorHex = tag.colorHex
             selectedEmoji = tag.emoji
             isActive = tag.isActive
+            print("🔧 TagEditor: Set form values - name: '\(name)', color: '\(selectedColorHex)', emoji: '\(selectedEmoji)', active: \(isActive)")
         } else {
             // Set up defaults for new tag
             name = ""
             selectedColorHex = suggestRandomColor()
             selectedEmoji = ""
             isActive = true
+            print("🔧 TagEditor: Set default values - name: '\(name)', color: '\(selectedColorHex)', emoji: '\(selectedEmoji)', active: \(isActive)")
         }
         
         errorMessage = nil

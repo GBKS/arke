@@ -89,7 +89,7 @@ struct ErrorView: View {
                 .padding(.top, 5)
             }
         }
-        .padding(16)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.red.opacity(0.05))

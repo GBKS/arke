@@ -14,7 +14,6 @@ struct TagsView: View {
     
     @State private var showingNewTagEditor = false
     @State private var editingTag: TagModel?
-    @State private var showingEditTagEditor = false
     @State private var tagStatistics: [TagStatistic] = []
     
     var body: some View {
@@ -58,23 +57,29 @@ struct TagsView: View {
             .environment(walletManager.tagServiceForEnvironment)
             .frame(width: 500, height: 600)
         }
-        // Sheet presentation for editing tag
-        .sheet(isPresented: $showingEditTagEditor) {
-            TagEditor(
-                editingTag: editingTag,
-                onSave: { tag in
+        // Sheet presentation for editing tag using item-based approach
+        .sheet(item: $editingTag) { tag in
+            print("🔧 TagsView: Creating TagEditor sheet with tag: \(tag.name) (ID: \(tag.id))")
+            return TagEditor(
+                editingTag: tag,
+                onSave: { updatedTag in
+                    print("🔧 TagsView: TagEditor onSave called with tag: \(updatedTag.name) (ID: \(updatedTag.id))")
                     Task {
-                        await updateTag(tag)
+                        await updateTag(updatedTag)
                     }
-                    showingEditTagEditor = false
+                    editingTag = nil
                 },
                 onCancel: {
-                    showingEditTagEditor = false
+                    print("🔧 TagsView: TagEditor onCancel called")
+                    editingTag = nil
                 }
             )
             .environment(walletManager)
             .environment(walletManager.tagServiceForEnvironment)
             .frame(width: 500, height: 600)
+            .onAppear {
+                print("🔧 TagsView: TagEditor sheet appeared with tag: \(tag.name) (ID: \(tag.id))")
+            }
         }
         .task {
             // Create default tags if needed and load statistics
@@ -100,8 +105,9 @@ struct TagsView: View {
                         tag: tag,
                         tagStatistic: statistic,
                         onEdit: {
+                            print("🔧 TagsView: Edit button pressed for tag: \(tag.name) (ID: \(tag.id))")
                             editingTag = tag
-                            showingEditTagEditor = true
+                            print("🔧 TagsView: Set editingTag to: \(editingTag?.name ?? "nil") (ID: \(editingTag?.id.uuidString ?? "nil"))")
                         },
                         onDelete: {
                             Task {

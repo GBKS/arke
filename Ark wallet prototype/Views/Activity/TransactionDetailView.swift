@@ -62,6 +62,10 @@ struct TransactionDetailView: View {
                 
                 Divider()
                 
+                TransactionTagView(transaction: transaction)
+                
+                Divider()
+                
                 // Details Section
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Transaction Details")
@@ -92,11 +96,6 @@ struct TransactionDetailView: View {
                         )
                     }
                 }
-                
-                Divider()
-                
-                // Tags Section
-                TransactionTagView(transaction: transaction)
                 
                 Spacer()
             }

@@ -18,43 +18,54 @@ struct TransactionTagView: View {
     @State private var error: String?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Tags")
-                    .font(.headline)
-                
-                Spacer()
-                
-                Button("Edit Tags") {
-                    showingTagSelector = true
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoading)
-            }
-            
+        VStack(alignment: .leading, spacing: 12) {            
             if isLoading {
                 ProgressView()
                     .controlSize(.small)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if assignedTags.isEmpty {
-                Text("No tags assigned")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 4)
-            } else {
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 8) {
-                    ForEach(assignedTags) { tag in
-                        TagChip_Removable(tag: tag) {
-                            Task {
-                                await removeTag(tag.id)
-                            }
-                        }
+                FlowLayout(alignment: .leading, spacing: 8) {
+                    // Edit tags button styled like a TagChip
+                    Button("Add tags") {
+                        showingTagSelector = true
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.2))
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .buttonStyle(PlainButtonStyle())
+                    .disabled(isLoading)
+                }
+            } else {
+                FlowLayout(alignment: .leading, spacing: 8) {
+                    ForEach(assignedTags) { tag in
+                        TagChip(tag: tag)
+                    }
+                    
+                    // Edit tags button styled like a TagChip
+                    Button("Edit tags") {
+                        showingTagSelector = true
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray.opacity(0.2))
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .buttonStyle(PlainButtonStyle())
+                    .disabled(isLoading)
                 }
             }
             
@@ -62,9 +73,6 @@ struct TransactionTagView: View {
                 ErrorView(errorMessage: error)
             }
         }
-        .padding()
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
         .task(id: transaction.txid) {
             await loadAssignedTags()
         }
@@ -156,6 +164,69 @@ struct TransactionTagView: View {
                 self.error = error.localizedDescription
             }
             print("❌ Failed to create and assign tag: \(error)")
+        }
+    }
+}
+
+struct FlowLayout: Layout {
+    var alignment: Alignment
+    var spacing: CGFloat
+    
+    init(alignment: Alignment = .leading, spacing: CGFloat = 8) {
+        self.alignment = alignment
+        self.spacing = spacing
+    }
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(
+            in: proposal.replacingUnspecifiedDimensions().width,
+            subviews: subviews,
+            alignment: alignment,
+            spacing: spacing
+        )
+        return result.bounds
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(
+            in: bounds.width,
+            subviews: subviews,
+            alignment: alignment,
+            spacing: spacing
+        )
+        for index in subviews.indices {
+            subviews[index].place(at: CGPoint(x: bounds.minX + result.frames[index].minX, y: bounds.minY + result.frames[index].minY), proposal: .unspecified)
+        }
+    }
+    
+    struct FlowResult {
+        var bounds = CGSize.zero
+        var frames: [CGRect] = []
+        
+        init(in maxWidth: CGFloat, subviews: Subviews, alignment: Alignment, spacing: CGFloat) {
+            var currentX: CGFloat = 0
+            var currentY: CGFloat = 0
+            var lineHeight: CGFloat = 0
+            var maxX: CGFloat = 0
+            
+            for subview in subviews {
+                let subviewSize = subview.sizeThatFits(.unspecified)
+                
+                if currentX + subviewSize.width > maxWidth && currentX > 0 {
+                    // Move to next line
+                    currentY += lineHeight + spacing
+                    currentX = 0
+                    lineHeight = 0
+                }
+                
+                frames.append(CGRect(origin: CGPoint(x: currentX, y: currentY), size: subviewSize))
+                
+                currentX += subviewSize.width + spacing
+                lineHeight = max(lineHeight, subviewSize.height)
+                maxX = max(maxX, currentX - spacing)
+            }
+            
+            bounds = CGSize(width: maxX, height: currentY + lineHeight)
         }
     }
 }

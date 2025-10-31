@@ -37,10 +37,8 @@ struct ActivityView: View {
                 
                 // Error Display
                 if let error = manager.error {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.caption)
-                        .padding()
+                    ErrorView(errorMessage: error)
+                        .padding(.horizontal, 12)
                 }
             }
         }
