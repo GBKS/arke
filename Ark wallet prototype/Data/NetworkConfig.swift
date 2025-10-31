@@ -1,6 +1,49 @@
 import Foundation
 import Combine
 
+// MARK: - Bitcoin Network Types
+
+enum BitcoinNetwork: String, CaseIterable {
+    case mainnet = "mainnet"
+    case testnet = "testnet"
+    case signet = "signet"
+    case regtest = "regtest"
+    
+    var displayName: String {
+        switch self {
+        case .mainnet:
+            return "Bitcoin Mainnet"
+        case .testnet:
+            return "Bitcoin Testnet"
+        case .signet:
+            return "Bitcoin Signet"
+        case .regtest:
+            return "Bitcoin Regtest"
+        }
+    }
+    
+    /// Initialize from NetworkConfig networkType string
+    init?(networkType: String) {
+        switch networkType.lowercased() {
+        case "mainnet":
+            self = .mainnet
+        case "testnet":
+            self = .testnet
+        case "signet":
+            self = .signet
+        case "regtest":
+            self = .regtest
+        default:
+            return nil
+        }
+    }
+    
+    /// Check if this network matches a NetworkConfig
+    func matches(_ networkConfig: NetworkConfig) -> Bool {
+        return self.rawValue == networkConfig.networkType.lowercased()
+    }
+}
+
 // MARK: - Network Configuration Models
 
 struct NetworkConfig: Codable, Equatable {
@@ -65,5 +108,24 @@ extension NetworkConfig {
             isMainnet: isMainnet,
             networkType: "custom"
         )
+    }
+}
+
+// MARK: - Address Validation Integration
+
+extension NetworkConfig {
+    /// Get the corresponding BitcoinNetwork for address validation
+    var bitcoinNetwork: BitcoinNetwork? {
+        return BitcoinNetwork(networkType: networkType)
+    }
+    
+    /// Validate an address against this network configuration
+    func isValidAddress(_ address: String) -> Bool {
+        return AddressValidator.isValidAddress(address, for: self)
+    }
+    
+    /// Parse an address ensuring it matches this network
+    func parseAddress(_ address: String) -> ParsedAddress? {
+        return AddressValidator.parseAddress(address, expectedNetwork: self)
     }
 }

@@ -53,11 +53,3 @@ struct TagValidation {
         return colors.randomElement() ?? "#4A90E2"
     }
 }
-
-// MARK: - Color Extension
-
-extension Color {
-    static var secondary: Color {
-        Color(NSColor.secondaryLabelColor)
-    }
-}

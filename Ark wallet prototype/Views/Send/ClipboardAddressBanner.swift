@@ -20,7 +20,7 @@ struct ClipboardAddressBanner: View {
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text("\(parsedAddress.type.displayName)")
+                    Text(parsedAddress.network?.displayName ?? "Unknown Network")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .fontWeight(.medium)
@@ -31,7 +31,7 @@ struct ClipboardAddressBanner: View {
                         .lineLimit(2)
                     
                     // Show additional info for BIP-21 URIs
-                    if parsedAddress.type == .bip21 {
+                    if parsedAddress.format == .bip21 {
                         VStack(alignment: .leading, spacing: 2) {
                             if let amount = parsedAddress.amount {
                                 Text("Amount: \(amount) sats")
