@@ -75,7 +75,8 @@ func performInitialSync(stopGap: UInt64 = 10, parallelRequests: UInt64 = 3) asyn
 **Solution**: 
 - Added `currentHeight` parameter to `ConfirmationTime`
 - Proper confirmation calculation: `currentHeight - txHeight + 1`
-- Added `getCurrentBlockHeight()` method (returns nil for now, ready for future implementation)
+- Added `getCurrentBlockHeight()` method
+- **Update (2026-03-02)**: `getCurrentBlockHeight()` now calls `EsploraClient.getHeight()` with fallback to `wallet.latestCheckpoint().height`
 - Updated `listTransactions()` to accept optional `currentHeight` parameter
 
 **Before**:
@@ -236,7 +237,7 @@ init(mnemonic: String, network: Bark.Network, esploraURL: String, dataDir: URL, 
 
 ### New Methods
 - `performInitialSync(stopGap:parallelRequests:)` - Async initial sync
-- `getCurrentBlockHeight()` - Get current blockchain height (placeholder)
+- `getCurrentBlockHeight()` - Get current blockchain tip height (Esplora with checkpoint fallback)
 - `broadcastTransaction(txHex:)` - Broadcast raw transaction
 - `listUnspentOutputs()` - Get raw UTXOs
 - `getUTXODetails()` - Get formatted UTXO details
@@ -404,12 +405,11 @@ _ = try await bdkWallet.sync()
 ## Remaining Optional Enhancements
 
 ### Low Priority (Future Work)
-1. Implement `getCurrentBlockHeight()` with actual Esplora query
-2. Add coin control for transaction building
-3. Add progress callbacks for long syncs
-4. Implement full CPFP support if needed by Bark
-5. Add database migration support
-6. Add wallet backup/restore functionality
+1. Add coin control for transaction building
+2. Add progress callbacks for long syncs
+3. Implement full CPFP support if needed by Bark
+4. Add database migration support
+5. Add wallet backup/restore functionality
 
 ---
 
