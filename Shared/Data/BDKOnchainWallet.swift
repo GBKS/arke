@@ -619,13 +619,14 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
     
     /// Get current blockchain tip height (for confirmation calculations)
     func getCurrentBlockHeight() async -> UInt32? {
-        // Get the tip block hash from Esplora
-        // Note: This requires a network call, so it's async
+        // Query Esplora for current tip height.
+        // If network query fails, fall back to wallet's latest checkpoint height.
         return await Task {
-            // BDK doesn't expose a direct way to get current height from EsploraClient
-            // We need to use the wallet's last sync checkpoint or make a separate call
-            // For now, return nil and calculate confirmations in UI with block height from elsewhere
-            return nil
+            do {
+                return try self.esploraClient.getHeight()
+            } catch {
+                return self.wallet.latestCheckpoint().height
+            }
         }.value
     }
     

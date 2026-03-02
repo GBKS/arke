@@ -1437,9 +1437,13 @@ class BarkWalletFFI: BarkWalletProtocol {
         do {
             // Sync wallet first to get latest transactions
             _ = try await bdkWallet.sync()
+            let currentHeight = await bdkWallet.getCurrentBlockHeight()
             
             // Get all transactions from BDK (already returns OnchainTransactionModel)
-            let transactions = try bdkWallet.listTransactions(includeRaw: false)
+            let transactions = try bdkWallet.listTransactions(
+                includeRaw: false,
+                currentHeight: currentHeight
+            )
             
             print("✅ Retrieved \(transactions.count) onchain transactions")
             
