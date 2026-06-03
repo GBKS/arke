@@ -4,8 +4,8 @@
 //
 //  Generates a shareable debug log file from the app's unified log so users
 //  can send diagnostics to the dev team. Reads back the current process's
-//  OSLog/Logger entries (filtered to the app subsystem) via OSLogStore — no
-//  changes to existing log call sites are required.
+//  OSLog/Logger entries (app subsystem + bark's bridged Rust logs) via
+//  OSLogStore — no changes to existing log call sites are required.
 //
 
 import Foundation
@@ -32,10 +32,11 @@ nonisolated enum DebugLogExporter {
         }
     }
 
-    /// The subsystem the app logs under (matches the `Logger` convention used
-    /// throughout the codebase: `Bundle.main.bundleIdentifier ?? "com.arke"`).
-    private static var subsystem: String {
-        Bundle.main.bundleIdentifier ?? "com.arke"
+    /// The subsystems included in the export:
+    /// - the app's own logs (`Logger` convention: `Bundle.main.bundleIdentifier ?? "com.arke"`)
+    /// - bark's internal Rust logs, bridged via `barkAttachOSLogger()` in BarkWalletFFI
+    private static var subsystems: [String] {
+        [Bundle.main.bundleIdentifier ?? "com.arke", "tech.second.bark"]
     }
 
     /// Generates a `.log` file in the temporary directory and returns its URL.
@@ -75,7 +76,7 @@ nonisolated enum DebugLogExporter {
         }
 
         let since = store.position(date: Date().addingTimeInterval(-Double(hours) * 3600))
-        let predicate = NSPredicate(format: "subsystem == %@", subsystem)
+        let predicate = NSPredicate(format: "subsystem IN %@", subsystems)
         let entries = try store.getEntries(at: since, matching: predicate)
 
         let formatter = ISO8601DateFormatter()
