@@ -1,6 +1,36 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "debug_logs_error_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Export Logs"
+          }
+        }
+      }
+    },
+    "debug_logs_generating" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating…"
+          }
+        }
+      }
+    },
+    "debug_logs_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Debug Logs"
+          }
+        }
+      }
+    },
     "" : {
 
     },

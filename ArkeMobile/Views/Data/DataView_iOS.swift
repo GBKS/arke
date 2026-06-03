@@ -38,9 +38,11 @@ struct DataView_iOS: View {
                 ConfigurationSectionView()
                 
                 ArkInfoSectionView()
-                
+
                 BlockHeightSectionView()
-                
+
+                DebugLogExportButton_iOS()
+
                 /*
                 VStack {
                     Button(action: {
