@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension WalletManager {
     
@@ -66,6 +67,6 @@ extension WalletManager {
         }
         try await transactionService.updateNotes(for: txid, notes: notes)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after notes update")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after notes update")
     }
 }

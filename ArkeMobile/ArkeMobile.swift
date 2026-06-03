@@ -7,9 +7,13 @@
 
 import SwiftUI
 import SwiftData
+import OSLog
 
 @main
 struct Arke_mobile: App {
+    /// Logger for app lifecycle events
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "App")
+
     /// AppDelegate for handling APNs and notifications
     @UIApplicationDelegateAdaptor(AppDelegate_iOS.self) var appDelegate
     
@@ -60,21 +64,21 @@ struct Arke_mobile: App {
         self.initialWalletDetected = hasWallet
         
         // Create WalletManager once during init
-        print("🔧 [App] Creating WalletManager (init)")
+        Self.logger.debug("Creating WalletManager (init)")
         self._walletManager = State(initialValue: WalletManager())
-        
+
         if hasWallet {
-            print("✅ [App Init] Wallet detected - services will be activated")
+            Self.logger.info("Wallet detected - services will be activated")
             serviceContainer.setActive(true)
         } else {
-            print("⏭️ [App Init] No wallet detected - services will remain passive")
+            Self.logger.info("No wallet detected - services will remain passive")
             serviceContainer.setActive(false)
         }
-        
+
         // Set up push notification observers early (before onAppear)
         // This ensures they're ready even if the app is launched by tapping a notification
         if hasWallet {
-            print("📮 [App Init] Setting up push notification observers...")
+            Self.logger.debug("Setting up push notification observers...")
             self.setupPushNotificationObserversEarly()
         }
     }
@@ -84,7 +88,7 @@ struct Arke_mobile: App {
     private func setupPushNotificationObserversEarly() {
         // The mailbox notification observer will be set up by WalletManager
         // when it's initialized. This ensures proper lifecycle management.
-        print("📮 [App Init] Mailbox observer will be set up by WalletManager")
+        Self.logger.debug("Mailbox observer will be set up by WalletManager")
     }
 
     var body: some Scene {
@@ -97,25 +101,25 @@ struct Arke_mobile: App {
                     // Start CloudKit sync if wallet exists
                     // This happens when app launches with an existing wallet
                     if initialWalletDetected {
-                        print("📱 [iOS App] Starting CloudKit sync (wallet exists)...")
+                        Self.logger.info("Starting CloudKit sync (wallet exists)...")
                         serviceContainer.startCloudKitSync(modelContainer: modelContainer)
-                        
+
                         // Set up push notification observers
                         setupPushNotificationObservers()
                     } else {
-                        print("⏭️ [iOS App] Skipping CloudKit sync (no wallet yet)")
+                        Self.logger.info("Skipping CloudKit sync (no wallet yet)")
                     }
                 }
                 .task {
                     // Only register for CloudKit notifications if a wallet exists
                     if initialWalletDetected {
-                        print("📱 [iOS App] Registering for remote notifications...")
+                        Self.logger.info("Registering for remote notifications...")
                         await registerForCloudKitNotifications()
-                        
+
                         // Register for push notifications with relay
                         await registerForPushNotifications()
                     } else {
-                        print("⏭️ [iOS App] Skipping remote notification registration (no wallet yet)")
+                        Self.logger.info("Skipping remote notification registration (no wallet yet)")
                     }
                 }
                 .onDisappear {
@@ -148,7 +152,7 @@ struct Arke_mobile: App {
     private func registerForCloudKitNotifications() async {
         await MainActor.run {
             UIApplication.shared.registerForRemoteNotifications()
-            print("🔔 [CloudKit] Registered for remote notifications (iOS)")
+            Self.logger.info("Registered for remote notifications (iOS)")
         }
     }
     
@@ -166,14 +170,14 @@ struct Arke_mobile: App {
         let manager = walletManager
         
         // Observer for when APNs token is received or changed
-        print("📮 [iOS App] Setting up APNs token observer...")
+        Self.logger.debug("Setting up APNs token observer...")
         NotificationCenter.default.addObserver(
             forName: .apnsTokenReceived,
             object: nil,
             queue: .main
         ) { _ in
             Task { @MainActor in
-                print("🔄 [iOS App] APNs token received, registering with relay...")
+                Self.logger.info("APNs token received, registering with relay...")
                 await manager.registerForPushNotifications()
             }
         }

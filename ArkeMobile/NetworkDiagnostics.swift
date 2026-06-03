@@ -5,10 +5,15 @@
 //  Created by Christoph on 12/1/25.
 //
 
+import Foundation
+import OSLog
+
 class NetworkDiagnostics {
-    
+
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "NetworkDiagnostics")
+
     func runAllTests() {
-        print("\n=== Starting Network Diagnostics ===\n")
+        Self.logger.debug("=== Starting Network Diagnostics ===")
         
         /*
         // Test 1: Enable detailed logging
