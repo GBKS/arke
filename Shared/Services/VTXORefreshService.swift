@@ -214,11 +214,17 @@ class VTXORefreshService {
                 return
             }
             
-            // Step 4: Trigger the refresh with VTXO IDs
+            // Step 4: Trigger the delegated refresh with VTXO IDs
+            // Using delegated refresh so the app doesn't need to stay online until the round starts
             let vtxoIds = eligibleVTXOs.map { $0.id }
-            Self.logger.info("Triggering automatic refresh for \(vtxoIds.count) VTXO(s)...")
-            _ = try await wallet.refreshVTXOs(vtxo_ids: vtxoIds)
-            Self.logger.info("Refresh completed successfully")
+            Self.logger.info("Scheduling automatic delegated refresh for \(vtxoIds.count) VTXO(s)...")
+            let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
+            
+            if let roundState = roundState {
+                Self.logger.info("Delegated refresh scheduled, Round ID: \(roundState.id)")
+            } else {
+                Self.logger.info("No refresh scheduled (VTXOs may not need refresh yet)")
+            }
             
             // Step 5: Refresh balances and transactions
             await walletManager?.refreshAfterRoundCompletion()
@@ -287,6 +293,7 @@ class VTXORefreshService {
     
     /// Manually refresh VTXOs (exposed for UI triggers)
     /// This bypasses the auto-refresh logic and always refreshes all VTXOs that need it
+    /// Uses delegated refresh so the app doesn't need to stay online until the round starts
     func refreshManually() async throws {
         Self.logger.info("Manual refresh requested")
         
@@ -295,9 +302,15 @@ class VTXORefreshService {
         
         if !vtxos.isEmpty {
             let vtxoIds = vtxos.map { $0.id }
-            _ = try await wallet.refreshVTXOs(vtxo_ids: vtxoIds)
+            let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
+            
+            if let roundState = roundState {
+                Self.logger.info("Manual delegated refresh scheduled for \(vtxoIds.count) VTXO(s), Round ID: \(roundState.id)")
+            } else {
+                Self.logger.info("No refresh scheduled for \(vtxoIds.count) VTXO(s)")
+            }
+            
             await walletManager?.refreshAfterRoundCompletion()
-            Self.logger.info("Manual refresh completed for \(vtxoIds.count) VTXO(s)")
         } else {
             Self.logger.debug("No VTXOs need refreshing")
         }

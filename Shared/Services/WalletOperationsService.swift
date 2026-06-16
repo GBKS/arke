@@ -129,22 +129,37 @@ class WalletOperationsService {
     
     // MARK: - Refresh Operations
     
-    /// Refresh VTXOs by calling the wallet's refresh command
+    /// Refresh VTXOs using delegated refresh (non-blocking)
+    /// Schedules the refresh without requiring the app to stay online until round starts
     func refreshVTXOs(vtxo_ids: [String]) async throws -> String {
         return try await taskManager.execute(key: "refreshVTXOs") {
-            let result = try await self.wallet.refreshVTXOs(vtxo_ids: vtxo_ids)
-            print("✅ VTXOs refreshed successfully: \(result)")
-            await self.onTransactionCompleted?()
-            return result
+            let roundState = try await self.wallet.refreshVtxosDelegated(vtxoIds: vtxo_ids)
+            
+            if let roundState = roundState {
+                print("✅ VTXOs refresh scheduled successfully, Round ID: \(roundState.id)")
+                await self.onTransactionCompleted?()
+                return "Refresh scheduled for round \(roundState.id)"
+            } else {
+                print("ℹ️ No refresh scheduled (VTXOs may not need refresh yet)")
+                return "No refresh needed"
+            }
         }
     }
     
+    /// Refresh a single VTXO using delegated refresh (non-blocking)
+    /// Schedules the refresh without requiring the app to stay online until round starts
     func refreshVTXO(vtxo_id: String) async throws -> String {
         return try await taskManager.execute(key: "refreshVTXO-\(vtxo_id)") {
-            let result = try await self.wallet.refreshVTXO(vtxo_id: vtxo_id)
-            print("✅ VTXO refreshed successfully: \(result)")
-            await self.onTransactionCompleted?()
-            return result
+            let roundState = try await self.wallet.refreshVtxosDelegated(vtxoIds: [vtxo_id])
+            
+            if let roundState = roundState {
+                print("✅ VTXO refresh scheduled successfully, Round ID: \(roundState.id)")
+                await self.onTransactionCompleted?()
+                return "Refresh scheduled for round \(roundState.id)"
+            } else {
+                print("ℹ️ No refresh scheduled (VTXO may not need refresh yet)")
+                return "No refresh needed"
+            }
         }
     }
     
