@@ -389,12 +389,3 @@ extension QRCodeScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
         }
     }
 }
-
-#Preview {
-    LinkWalletView_iOS(
-        onBack: {},
-        onWalletLinked: {}
-    )
-    .environment(WalletManager(useMock: true))
-    .frame(width: 600, height: 700)
-}

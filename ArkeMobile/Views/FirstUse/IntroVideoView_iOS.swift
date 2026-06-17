@@ -22,6 +22,7 @@ struct IntroVideoView_iOS: View {
     let onSkip: (() -> Void)?
     let isMainnet: Bool
     
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showPlaylist = false
     @State private var currentVideoIndex = 0
     @State private var isMuted = false
@@ -183,6 +184,9 @@ struct IntroVideoView_iOS: View {
             )
             .id(currentVideoIndex) // Force recreation when video changes
             .ignoresSafeArea()
+            .accessibilityLabel(String(format: String(localized: "accessibility_video_player"), videos[currentVideoIndex].title))
+            .accessibilityAddTraits(.playsSound)
+            .accessibilityHint(String(localized: "accessibility_video_has_captions"))
             
             // Top toolbar overlay
             VStack {
@@ -217,6 +221,14 @@ struct IntroVideoView_iOS: View {
                     
                     Button {
                         isMuted.toggle()
+                        
+                        // Announce mute state change
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            let announcement = isMuted ? 
+                                String(localized: "accessibility_audio_muted") : 
+                                String(localized: "accessibility_audio_unmuted")
+                            UIAccessibility.post(notification: .announcement, argument: announcement)
+                        }
                     } label: {
                         Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                             .font(.system(size: 20))
@@ -289,13 +301,13 @@ struct IntroVideoView_iOS: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, safeAreaInsets.top + 60)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .transition(.move(edge: .leading).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
             }
         }
         .colorScheme(.dark)
         .background(Color.Arke.gold3)
         .ignoresSafeArea()
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showPlaylist)
+        .animation(reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.8), value: showPlaylist)
         .onChange(of: showPlaylist) { _, newValue in
             isPaused = newValue
         }
@@ -344,13 +356,14 @@ struct VideoListItem: View {
                 // Title
                 VStack(alignment: .leading, spacing: 4) {
                     Text(video.title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body)
+                        .fontWeight(.semibold)
                         .foregroundStyle(.white)
                         .lineLimit(2)
                     
                     if isCurrentlyPlaying {
                         Text("label_now_playing")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundStyle(Color.Arke.gold)
                     }
                 }
@@ -364,14 +377,11 @@ struct VideoListItem: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(isCurrentlyPlaying ? 
+            String(format: String(localized: "accessibility_video_now_playing"), video.title) :
+            String(format: String(localized: "accessibility_video_item"), index + 1, video.title))
+        .accessibilityHint(String(localized: "accessibility_play_video_hint"))
+        .accessibilityAddTraits(isCurrentlyPlaying ? [.isButton, .isSelected] : .isButton)
     }
-}
-
-#Preview {
-    IntroVideoView_iOS(
-        onBack: {},
-        onContinue: {},
-        onSkip: nil,
-        isMainnet: false
-    )
 }

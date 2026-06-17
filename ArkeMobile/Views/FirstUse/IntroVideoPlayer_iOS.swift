@@ -287,19 +287,3 @@ private struct IntroVideoPlayerView: UIViewRepresentable {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    IntroVideoPlayer_iOS(
-        videoName: "coffee",
-        subtitles: [
-            VideoSubtitle(startTime: 0.0, endTime: 2.5, text: "Welcome to the future of finance"),
-            VideoSubtitle(startTime: 2.5, endTime: 5.0, text: "Secure, simple, and elegant"),
-            VideoSubtitle(startTime: 5.0, endTime: 7.5, text: "Your journey begins now")
-        ],
-        onVideoEnded: {
-            print("Video completed!")
-        }
-    )
-}

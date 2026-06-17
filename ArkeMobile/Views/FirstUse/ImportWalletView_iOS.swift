@@ -24,6 +24,7 @@ struct ImportWalletView_iOS: View {
     let onWalletImported: () -> Void
     
     @Environment(WalletManager.self) private var walletManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var mnemonicPhrase: String = ""
     @State private var backupFileURL: URL?
     @State private var backupFileName: String?
@@ -54,13 +55,14 @@ struct ImportWalletView_iOS: View {
                     
                     VStack(spacing: 8) {
                         Text("onboarding_import_title")
-                            .font(.system(size: 36, design: .serif))
+                            .font(.system(.largeTitle, design: .serif))
                             .foregroundStyle(Color.Arke.gold)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityAddTraits(.isHeader)
                         
                         Text("onboarding_restore_wallet")
-                            .font(.system(size: 21))
+                            .font(.system(.title2))
                             .lineSpacing(4)
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.leading)
@@ -71,7 +73,7 @@ struct ImportWalletView_iOS: View {
                         .padding(15)
                         .background(Color.primary.opacity(0.05))
                         .foregroundStyle(.white)
-                        .font(.system(size: 19))
+                        .font(.system(.title3))
                         .lineSpacing(4)
                         .lineLimit(3...5)
                         .cornerRadius(8)
@@ -79,6 +81,8 @@ struct ImportWalletView_iOS: View {
                         .autocorrectionDisabled(true)
                         .keyboardType(.asciiCapable)
                         .submitLabel(.done)
+                        .accessibilityLabel(String(localized: "accessibility_recovery_phrase_field"))
+                        .accessibilityHint(String(localized: "accessibility_recovery_phrase_hint"))
                         .onChange(of: mnemonicPhrase) { oldValue, newValue in
                             // If user presses return/enter, dismiss keyboard
                             if newValue.contains("\n") || newValue.contains("\r") {
@@ -110,6 +114,14 @@ struct ImportWalletView_iOS: View {
                         
                         Button {
                             showingFilePicker = true
+                            
+                            // Announce when file picker is opened for VoiceOver users
+                            if UIAccessibility.isVoiceOverRunning {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    UIAccessibility.post(notification: .announcement, 
+                                        argument: String(localized: "accessibility_file_picker_opened"))
+                                }
+                            }
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: backupFileURL == nil ? "doc.badge.plus" : "checkmark.circle.fill")
@@ -118,15 +130,17 @@ struct ImportWalletView_iOS: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     if let fileName = backupFileName {
                                         Text(fileName)
-                                            .font(.system(size: 15, weight: .medium))
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
                                         Text("backup_file_selected")
-                                            .font(.system(size: 13))
+                                            .font(.footnote)
                                             .opacity(0.8)
                                     } else {
                                         Text("button_select_backup_file")
-                                            .font(.system(size: 15, weight: .medium))
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
                                         Text("backup_file_not_selected")
-                                            .font(.system(size: 13))
+                                            .font(.footnote)
                                             .opacity(0.8)
                                     }
                                 }
@@ -157,7 +171,7 @@ struct ImportWalletView_iOS: View {
                         }
                     } label: {
                         Text(isImporting ? "status_importing" : "button_import_wallet")
-                            .font(.system(size: 21, weight: .semibold))
+                            .font(.system(.title2, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold3)
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
@@ -192,6 +206,12 @@ struct ImportWalletView_iOS: View {
                 if let url = urls.first {
                     backupFileURL = url
                     backupFileName = url.lastPathComponent
+                    
+                    // Announce file selection for VoiceOver users
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        UIAccessibility.post(notification: .announcement, 
+                            argument: String(format: String(localized: "accessibility_backup_file_selected"), url.lastPathComponent))
+                    }
                 }
             case .failure(let error):
                 showError(String(format: NSLocalizedString("error_file_picker", comment: ""), error.localizedDescription))
@@ -250,14 +270,4 @@ struct ImportWalletView_iOS: View {
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
-}
-
-#Preview {
-    ImportWalletView_iOS(
-        isMainnet: false,
-        onBack: {},
-        onWalletImported: {}
-    )
-    .environment(WalletManager(useMock: true))
-    .frame(width: 600, height: 700)
 }

@@ -17,6 +17,7 @@ struct FirstUseView_iOS: View {
     let onDeleteWallet: () -> Void
     
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showingDeleteConfirmation = false
     
     var body: some View {
@@ -27,19 +28,33 @@ struct FirstUseView_iOS: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .ignoresSafeArea()
+                .accessibilityHidden(true)
             
             VStack {
                 HStack {
                     // Mainnet toggle in top-left corner
                     Button {
-                        withAnimation {
+                        if reduceMotion {
                             isMainnet.toggle()
+                        } else {
+                            withAnimation {
+                                isMainnet.toggle()
+                            }
+                        }
+                        
+                        // Announce network change for VoiceOver users
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            let announcement = isMainnet ? 
+                                String(localized: "accessibility_switched_mainnet") : 
+                                String(localized: "accessibility_switched_testnet")
+                            UIAccessibility.post(notification: .announcement, argument: announcement)
                         }
                     } label: {
                         Image(systemName: "testtube.2")
                             .frame(width: 24, height: 24)
                     }
-                    .accessibilityLabel("Switch nets")
+                    .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet") : String(localized: "accessibility_switch_to_mainnet"))
+                    .accessibilityHint(String(localized: "accessibility_network_toggle_hint"))
                     .buttonStyle(.glass)
                     .controlSize(.regular)
                     .tint(.Arke.gold)
@@ -57,6 +72,7 @@ struct FirstUseView_iOS: View {
                                 .frame(width: 24, height: 24)
                         }
                         .accessibilityLabel("action_delete_existing_wallet")
+                        .accessibilityHint(String(localized: "accessibility_delete_wallet_hint"))
                         .buttonStyle(.glass)
                         .controlSize(.regular)
                         .tint(.Arke.red)
@@ -67,7 +83,7 @@ struct FirstUseView_iOS: View {
                 
                 Spacer()
             }
-            .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.8)))
              
             // Content overlaid at bottom
             VStack(spacing: 30) {
@@ -87,12 +103,13 @@ struct FirstUseView_iOS: View {
                     */
                     
                     if !isMainnet {
-                        Text("You will create a test wallet.")
-                            .font(.system(.title2, weight: .semibold))
+                        Text("onboarding_test_wallet_notice")
+                            .font(.title2)
+                            .fontWeight(.semibold)
                             .foregroundStyle(Color.white)
                             .multilineTextAlignment(.center)
                             .shadow(color: .black, radius: 4, x: 0, y: 2)
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .bottom)))
                     }
                 }
                 .animation(.smooth(duration: 0.5), value: isMainnet)
@@ -115,14 +132,14 @@ struct FirstUseView_iOS: View {
                             onImportWallet()
                         } label: {
                             Text("action_import_wallet")
-                                .font(.system(size: 21, weight: .semibold))
+                                .font(.system(.title2, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 20)
                         }
                         .buttonStyle(.glass)
                         .controlSize(.large)
                         //.tint(Color.Arke.gold)
-                        .transition(.asymmetric(
+                        .transition(reduceMotion ? .opacity : .asymmetric(
                             insertion: .move(edge: .trailing).combined(with: .opacity),
                             removal: .move(edge: .leading).combined(with: .opacity)
                         ))
@@ -132,7 +149,8 @@ struct FirstUseView_iOS: View {
                             onCreateWallet()
                         } label: {
                             Text("button_create_wallet")
-                                .font(.system(size: 21, weight: .semibold))
+                                .font(.system(.title2, weight: .semibold))
+                                .fontWeight(.semibold)
                                 .foregroundStyle(Color.Arke.gold3)
                                 .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 20)
@@ -140,7 +158,7 @@ struct FirstUseView_iOS: View {
                         .buttonStyle(.glassProminent)
                         .controlSize(.large)
                         .tint(Color.Arke.gold)
-                        .transition(.asymmetric(
+                        .transition(reduceMotion ? .opacity : .asymmetric(
                             insertion: .move(edge: .trailing).combined(with: .opacity),
                             removal: .move(edge: .leading).combined(with: .opacity)
                         ))
@@ -149,14 +167,14 @@ struct FirstUseView_iOS: View {
                             onImportWallet()
                         } label: {
                             Text("button_import_wallet")
-                                .font(.system(size: 21, weight: .semibold))
+                                .font(.system(.title2, weight: .semibold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 20)
                         }
                         .buttonStyle(.glass)
                         .controlSize(.large)
                         //.tint(Color.Arke.gold)
-                        .transition(.asymmetric(
+                        .transition(reduceMotion ? .opacity : .asymmetric(
                             insertion: .move(edge: .trailing).combined(with: .opacity),
                             removal: .move(edge: .leading).combined(with: .opacity)
                         ))
@@ -184,18 +202,4 @@ struct FirstUseView_iOS: View {
             Text("alert_delete_wallet_permanently")
         }
     }
-}
-
-#Preview {
-    @Previewable @State var isMainnet = false
-    
-    FirstUseView_iOS(
-        walletState: .noWallet,
-        isMainnet: $isMainnet,
-        onCreateWallet: {},
-        onImportWallet: {},
-        onLinkWallet: {},
-        onDeleteWallet: {}
-    )
-    .frame(width: 600, height: 700)
 }

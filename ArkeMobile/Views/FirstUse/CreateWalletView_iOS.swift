@@ -31,6 +31,9 @@ struct CreateWalletView_iOS: View {
     @State private var showImage = false
     @State private var hasNavigated = false
     
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AccessibilityFocusState private var isGetStartedFocused: Bool
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -45,8 +48,12 @@ struct CreateWalletView_iOS: View {
                     onCompletion: {
                         videoComplete = true
                         // Fade in the image after video completes
-                        withAnimation(.easeIn(duration: 0.2)) {
+                        if reduceMotion {
                             showImage = true
+                        } else {
+                            withAnimation(.easeIn(duration: 0.2)) {
+                                showImage = true
+                            }
                         }
                     }
                 )
@@ -75,8 +82,9 @@ struct CreateWalletView_iOS: View {
                         // Get Started button
                         VStack(spacing: 30) {
                             Text("onboarding_wallet_awaits")
-                                .font(.system(size: 30, design: .serif))
+                                .font(.system(.title, design: .serif))
                                 .foregroundStyle(Color.Arke.gold3)
+                                .accessibilityAddTraits(.isHeader)
                             
                             Button {
                                 guard !hasNavigated else { return }
@@ -84,7 +92,7 @@ struct CreateWalletView_iOS: View {
                                 onWalletCreated()
                             } label: {
                                 Text("onboarding_step_in")
-                                    .font(.system(size: 21, weight: .semibold))
+                                    .font(.system(.title2, weight: .semibold))
                                     .foregroundStyle(Color.Arke.gold3)
                                     .frame(maxWidth: .infinity)
                             }
@@ -94,9 +102,11 @@ struct CreateWalletView_iOS: View {
                             .disabled(hasNavigated)
                             .accessibilityLabel("button_get_started")
                             .accessibilityHint(Text("accessibility_continue_new_wallet"))
+                            .accessibilityFocused($isGetStartedFocused)
                         }
+                        .accessibilityElement(children: .contain)
                         .padding(.horizontal, 20)
-                        .transition(.asymmetric(
+                        .transition(reduceMotion ? .opacity : .asymmetric(
                             insertion: .move(edge: .bottom).combined(with: .opacity),
                             removal: .move(edge: .bottom).combined(with: .opacity)
                         ))
@@ -109,11 +119,14 @@ struct CreateWalletView_iOS: View {
                                 .scaleEffect(1.5)
                             
                             Text("onboarding_creating_wallet")
-                                .font(.system(size: 17, weight: .medium))
+                                .font(.system(.headline, weight: .medium))
                                 .foregroundStyle(Color.Arke.gold3)
                         }
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("onboarding_creating_wallet")
+                        .accessibilityAddTraits(.updatesFrequently)
                         .padding(.horizontal, 20)
-                        .transition(.opacity)
+                        .transition(reduceMotion ? .identity : .opacity)
                     }
                 }
                 .padding(.bottom, geometry.safeAreaInsets.bottom + 80)
@@ -123,6 +136,11 @@ struct CreateWalletView_iOS: View {
         }
         .ignoresSafeArea()
         .task {
+            // Announce wallet creation start for VoiceOver users
+            if UIAccessibility.isVoiceOverRunning {
+                UIAccessibility.post(notification: .announcement, argument: String(localized: "accessibility_wallet_creation_started"))
+            }
+            
             // Start wallet creation immediately in parallel with video playback
             Task {
                 await startWalletCreation()
@@ -131,16 +149,41 @@ struct CreateWalletView_iOS: View {
         .onChange(of: walletCreationComplete) { _, isComplete in
             // Show button when both video AND wallet creation are complete
             if isComplete && videoComplete {
-                withAnimation(.easeInOut(duration: 0.35)) {
+                if reduceMotion {
                     showGetStartedButton = true
+                    isGetStartedFocused = true
+                    // Announce completion for VoiceOver users
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        UIAccessibility.post(notification: .announcement, argument: String(localized: "accessibility_wallet_ready"))
+                    }
+                } else {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        showGetStartedButton = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isGetStartedFocused = true
+                        UIAccessibility.post(notification: .announcement, argument: String(localized: "accessibility_wallet_ready"))
+                    }
                 }
             }
         }
         .onChange(of: videoComplete) { _, isComplete in
             // Show button when both video AND wallet creation are complete
             if isComplete && walletCreationComplete {
-                withAnimation(.easeInOut(duration: 0.35)) {
+                if reduceMotion {
                     showGetStartedButton = true
+                    isGetStartedFocused = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        UIAccessibility.post(notification: .announcement, argument: String(localized: "accessibility_wallet_ready"))
+                    }
+                } else {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        showGetStartedButton = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isGetStartedFocused = true
+                        UIAccessibility.post(notification: .announcement, argument: String(localized: "accessibility_wallet_ready"))
+                    }
                 }
             }
         }
@@ -264,29 +307,4 @@ struct CreateWalletView_iOS: View {
             }
         }
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    CreateWalletView_iOS(
-        isMainnet: false,
-        onWalletCreated: {
-            print("Wallet created")
-        },
-        onBack: {
-            print("Back pressed")
-        },
-        walletManager: WalletManager(useMock: true)
-    )
-}
-
-#Preview("Dark Mode") {
-    CreateWalletView_iOS(
-        isMainnet: false,
-        onWalletCreated: {},
-        onBack: {},
-        walletManager: WalletManager(useMock: true)
-    )
-    .environment(\.colorScheme, .dark)
 }

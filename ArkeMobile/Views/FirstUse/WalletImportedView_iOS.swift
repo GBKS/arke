@@ -27,16 +27,19 @@ struct WalletImportedView_iOS: View {
                             .font(.system(size: 40, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold)
                     }
+                    .accessibilityHidden(true)
                     
                     VStack(spacing: 8) {
                         Text("status_wallet_imported")
-                            .font(.system(size: 36, design: .serif))
+                            .font(.largeTitle)
+                            .fontDesign(.serif)
                             .foregroundStyle(Color.Arke.gold)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityAddTraits(.isHeader)
                         
                         Text(String(localized: "onboarding_import_success"))
-                            .font(.system(size: 24))
+                            .font(.title2)
                             .lineSpacing(4)
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.leading)
@@ -63,7 +66,8 @@ struct WalletImportedView_iOS: View {
                 .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .tint(Color.Arke.gold)
-                .accessibilityLabel("button_next")
+                .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
+                .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
             }
@@ -74,12 +78,4 @@ struct WalletImportedView_iOS: View {
         .background(Color.Arke.gold3)
         .ignoresSafeArea()
     }
-}
-
-#Preview {
-    WalletImportedView_iOS(
-        onContinue: {},
-        onBackupReminder: {}
-    )
-    .frame(width: 600, height: 700)
 }

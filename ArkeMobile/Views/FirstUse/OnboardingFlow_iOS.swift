@@ -373,17 +373,3 @@ struct OnboardingFlow_iOS: View {
         }
     }
 }
-
-#Preview {
-    OnboardingFlow_iOS(
-        walletState: .noWallet,
-        onWalletReady: {
-            // Preview completion action
-        },
-        onWalletDeleted: {
-            // Preview deletion action
-        }
-    )
-    .environment(WalletManager(useMock: true))
-}
-

@@ -257,12 +257,42 @@
         }
       }
     },
+    "accessibility_audio_muted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio muted"
+          }
+        }
+      }
+    },
+    "accessibility_audio_unmuted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio unmuted"
+          }
+        }
+      }
+    },
     "accessibility_average_fee_percentage" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Average fee as percentage of volume: %@"
+          }
+        }
+      }
+    },
+    "accessibility_backup_file_selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected backup file: %@"
           }
         }
       }
@@ -388,7 +418,34 @@
       }
     },
     "accessibility_continue_new_wallet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue to your new wallet"
+          }
+        }
+      }
+    },
+    "accessibility_continue_to_wallet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue to wallet"
+          }
+        }
+      }
+    },
+    "accessibility_delete_wallet_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanently deletes the existing wallet without recovery phrase"
+          }
+        }
+      }
     },
     "accessibility_faucet_hint" : {
       "localizations" : {
@@ -406,6 +463,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Test Faucet"
+          }
+        }
+      }
+    },
+    "accessibility_file_picker_opened" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File picker opened. Select your backup file."
           }
         }
       }
@@ -461,12 +528,52 @@
         }
       }
     },
+    "accessibility_network_toggle_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle between mainnet and testnet"
+          }
+        }
+      }
+    },
     "accessibility_payment_qr" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Payment QR code"
+          }
+        }
+      }
+    },
+    "accessibility_play_video_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to play this video"
+          }
+        }
+      }
+    },
+    "accessibility_recovery_phrase_field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery phrase"
+          }
+        }
+      }
+    },
+    "accessibility_recovery_phrase_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter your 12 or 24 word recovery phrase"
           }
         }
       }
@@ -573,6 +680,46 @@
         }
       }
     },
+    "accessibility_switch_to_mainnet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to mainnet"
+          }
+        }
+      }
+    },
+    "accessibility_switch_to_testnet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to testnet"
+          }
+        }
+      }
+    },
+    "accessibility_switched_mainnet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switched to mainnet. You will create a real wallet."
+          }
+        }
+      }
+    },
+    "accessibility_switched_testnet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switched to testnet. You will create a test wallet."
+          }
+        }
+      }
+    },
     "accessibility_tab_activity" : {
       "localizations" : {
         "en" : {
@@ -619,6 +766,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tags"
+          }
+        }
+      }
+    },
+    "accessibility_video_has_captions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video includes captions"
+          }
+        }
+      }
+    },
+    "accessibility_video_item" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video %lld: %@"
+          }
+        }
+      }
+    },
+    "accessibility_video_now_playing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now playing: %@"
+          }
+        }
+      }
+    },
+    "accessibility_video_player" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video: %@"
+          }
+        }
+      }
+    },
+    "accessibility_wallet_creation_started" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creating your wallet"
+          }
+        }
+      }
+    },
+    "accessibility_wallet_ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your wallet is ready"
+          }
+        }
+      }
+    },
+    "accessibility_wallet_ready_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens your new wallet"
           }
         }
       }
@@ -2809,6 +3026,7 @@
       }
     },
     "button_next" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5844,6 +6062,16 @@
         }
       }
     },
+    "onboarding_test_wallet_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will create a test wallet."
+          }
+        }
+      }
+    },
     "onboarding_tester_welcome" : {
       "localizations" : {
         "en" : {
@@ -7691,9 +7919,6 @@
         }
       }
     },
-    "Switch nets" : {
-
-    },
     "symbol_bitcoin" : {
       "localizations" : {
         "en" : {
@@ -8017,9 +8242,6 @@
 
     },
     "We will use this in the next step to optimize your expected fees." : {
-
-    },
-    "You will create a test wallet." : {
 
     },
     "Your wallet is currently active on **%@**. Only one device can be active at a time." : {

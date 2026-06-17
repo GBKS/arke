@@ -71,11 +71,3 @@ struct WalletActiveElsewhereView_iOS: View {
         .safeAreaPadding([.top, .bottom])
     }
 }
-
-#Preview {
-    WalletActiveElsewhereView_iOS(
-        primaryDeviceName: "Christoph's iPhone",
-        onMigrateToThisDevice: {}
-    )
-    .frame(width: 600, height: 700)
-}
