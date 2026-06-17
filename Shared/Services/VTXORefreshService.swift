@@ -187,7 +187,8 @@ class VTXORefreshService {
                 vtxos: vtxos,
                 currentBlockHeight: currentBlockHeight,
                 vtxoLifespan: arkInfo.vtxoExpiryDelta,
-                feeSchedule: feeSchedule
+                feeSchedule: feeSchedule,
+                network: arkInfo.network
             )
             
             if eligibleVTXOs.isEmpty {
@@ -257,7 +258,7 @@ class VTXORefreshService {
     /// 
     /// Returns VTXOs where:
     /// 1. Refresh is completely free according to the fee schedule, AND
-    /// 2. VTXO is in its last 10% of lifespan
+    /// 2. VTXO is in its last 10% of lifespan (signet only - prevents refresh loops)
     /// 
     /// The percentage constraint prevents continuous refresh loops when server fee schedules
     /// have free refresh windows longer than the VTXO lifespan (e.g., signet with 1-day VTXOs
@@ -268,12 +269,14 @@ class VTXORefreshService {
     ///   - currentBlockHeight: Current blockchain height
     ///   - vtxoLifespan: Total VTXO lifespan in blocks (for fee calculation)
     ///   - feeSchedule: Server fee schedule
+    ///   - network: Network name (mainnet, signet, etc.)
     /// - Returns: VTXOs where refresh is free and VTXO is near expiry
     private func findVTXOsForAutoRefresh(
         vtxos: [Vtxo],
         currentBlockHeight: Int,
         vtxoLifespan: Int,
-        feeSchedule: FeeSchedule
+        feeSchedule: FeeSchedule,
+        network: String
     ) -> [Vtxo] {
         return vtxos.filter { vtxo in
             let blocksUntilExpiry = Int(vtxo.expiryHeight) - currentBlockHeight
@@ -283,10 +286,104 @@ class VTXORefreshService {
                 return false
             }
             
-            // Constraint 2: VTXO must be in its last 10% of lifespan
-            let percentOfLifeRemaining = Double(blocksUntilExpiry) / Double(vtxoLifespan)
-            return percentOfLifeRemaining <= maxLifespanPercentForAutoRefresh
+            // Constraint 2: For signet only, VTXO must be in its last 10% of lifespan
+            // This prevents refresh loops when the fee schedule's free window is longer than VTXO lifespan
+            if network.lowercased() == "signet" {
+                let percentOfLifeRemaining = Double(blocksUntilExpiry) / Double(vtxoLifespan)
+                return percentOfLifeRemaining <= maxLifespanPercentForAutoRefresh
+            }
+            
+            // For mainnet: If it's free, refresh it
+            return true
         }
+    }
+    
+    /// Calculate when the next VTXO will enter the free refresh window
+    /// 
+    /// This finds the block height when the first VTXO will become eligible for free refresh
+    /// based on the fee schedule's ppm expiry table. For signet, applies the 10% lifespan
+    /// constraint to prevent refresh loops caused by misconfigured fee schedules.
+    /// 
+    /// The fee schedule works with thresholds:
+    /// - Table sorted ascending: [(0, ppm: 0), (288, ppm: 2000), ...]
+    /// - When blocksUntilExpiry >= 288 → uses threshold 288 (NOT FREE)
+    /// - When blocksUntilExpiry < 288 → uses threshold 0 (FREE if ppm: 0)
+    /// - So free window is when blocksUntilExpiry < nextHigherThreshold
+    /// 
+    /// - Parameters:
+    ///   - vtxos: All spendable VTXOs
+    ///   - currentBlockHeight: Current blockchain height
+    ///   - vtxoLifespan: Total VTXO lifespan in blocks
+    ///   - feeSchedule: Server fee schedule
+    ///   - network: Network name (mainnet, signet, etc.)
+    /// - Returns: Block height when free refresh window opens, or nil if no free window exists
+    private func calculateNextFreeRefreshHeight(
+        vtxos: [Vtxo],
+        currentBlockHeight: Int,
+        vtxoLifespan: Int,
+        feeSchedule: FeeSchedule,
+        network: String
+    ) -> Int? {
+        // Find the threshold where ppm is 0
+        let sortedTable = feeSchedule.refresh.ppmExpiryTable
+            .sorted { $0.expiryBlocksThreshold < $1.expiryBlocksThreshold }
+        
+        guard let freeEntryIndex = sortedTable.firstIndex(where: { $0.ppm == 0 }) else {
+            Self.logger.debug("No free refresh window in fee schedule")
+            return nil
+        }
+        
+        let freeEntry = sortedTable[freeEntryIndex]
+        
+        // Find the next higher threshold (when it stops being free)
+        // Free window is: freeEntry.threshold <= blocksUntilExpiry < nextThreshold
+        let nextThreshold: Int
+        if freeEntryIndex + 1 < sortedTable.count {
+            nextThreshold = sortedTable[freeEntryIndex + 1].expiryBlocksThreshold
+        } else {
+            // No higher threshold, free window extends indefinitely upward
+            // This shouldn't happen in practice, but handle it
+            Self.logger.debug("Free refresh window has no upper bound")
+            return nil
+        }
+        
+        Self.logger.debug("Free refresh window: \(freeEntry.expiryBlocksThreshold) to \(nextThreshold - 1) blocks before expiry")
+        
+        // Find the earliest VTXO that will enter the free refresh window
+        let nextHeights = vtxos.compactMap { vtxo -> Int? in
+            let expiryHeight = Int(vtxo.expiryHeight)
+            
+            // VTXO enters free window when: blocksUntilExpiry < nextThreshold
+            // Which happens when: (expiryHeight - currentHeight) < nextThreshold
+            // Rearranging: currentHeight > expiryHeight - nextThreshold
+            // So free window starts when currentHeight reaches: expiryHeight - (nextThreshold - 1)
+            // (at that point, blocksUntilExpiry = nextThreshold - 1, which is < nextThreshold)
+            let freeWindowStartHeight = expiryHeight - (nextThreshold - 1)
+            
+            // For signet: also apply the 10% lifespan constraint to prevent refresh loops
+            // For mainnet: use the free window start directly
+            if network.lowercased() == "signet" {
+                let tenPercentBeforeExpiry = expiryHeight - Int(Double(vtxoLifespan) * maxLifespanPercentForAutoRefresh)
+                // Use whichever comes later (more conservative)
+                return max(freeWindowStartHeight, tenPercentBeforeExpiry)
+            } else {
+                return freeWindowStartHeight
+            }
+        }
+        
+        // Return the earliest height among all VTXOs (when the first one enters the window)
+        guard let earliestHeight = nextHeights.min() else {
+            Self.logger.debug("No VTXOs found for free refresh calculation")
+            return nil
+        }
+        
+        // Only return if it's in the future
+        guard earliestHeight > currentBlockHeight else {
+            Self.logger.debug("Free refresh window already open (height \(earliestHeight) <= current \(currentBlockHeight))")
+            return nil
+        }
+        
+        return earliestHeight
     }
     
     // MARK: - Manual Refresh (for UI triggers)
@@ -326,33 +423,55 @@ class VTXORefreshService {
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
             scheduledNotificationDate = nil
             
-            // Get next required refresh block height from SDK
-            guard let nextRefreshHeight = try await wallet.getNextRequiredRefreshBlockheight(),
-                  let currentHeight = walletManager?.estimatedBlockHeight,
-                  let arkInfo = walletManager?.arkInfo else {
+            // Get required data
+            guard let currentHeight = walletManager?.estimatedBlockHeight,
+                  let arkInfo = walletManager?.arkInfo,
+                  let feeSchedule = arkInfo.feeSchedule else {
                 Self.logger.debug("Cannot schedule notification - missing data")
                 return
             }
             
-            // Calculate blocks until refresh needed
-            let blocksUntilRefresh = Int(nextRefreshHeight) - currentHeight
+            // Get all spendable VTXOs to find the next one needing refresh
+            let vtxos = try await wallet.spendableVtxos()
+            guard !vtxos.isEmpty else {
+                Self.logger.debug("No spendable VTXOs - not scheduling notification")
+                return
+            }
             
-            // Don't schedule if already past or very soon (< 10 blocks ~1.5 hours on mainnet, ~25 min on signet)
+            // Find the VTXO that will enter the free refresh window first
+            guard let nextFreeRefreshHeight = calculateNextFreeRefreshHeight(
+                vtxos: vtxos,
+                currentBlockHeight: currentHeight,
+                vtxoLifespan: arkInfo.vtxoExpiryDelta,
+                feeSchedule: feeSchedule,
+                network: arkInfo.network
+            ) else {
+                Self.logger.debug("No free refresh window found - not scheduling notification")
+                return
+            }
+            
+            // Calculate blocks until free refresh window
+            let blocksUntilRefresh = nextFreeRefreshHeight - currentHeight
+            
+            Self.logger.debug("Blocks until free refresh: \(blocksUntilRefresh), current: \(currentHeight), target: \(nextFreeRefreshHeight)")
+            
+            // Don't schedule if already in the window or very soon (< 10 blocks ~1.5 hours on mainnet, ~25 min on signet)
             guard blocksUntilRefresh > 10 else {
-                Self.logger.debug("Refresh needed very soon (\(blocksUntilRefresh) blocks), not scheduling notification")
+                Self.logger.debug("Free refresh window starts very soon (\(blocksUntilRefresh) blocks), not scheduling notification")
                 return
             }
             
             // Convert to time based on network
-            // Mainnet: ~10 min/block, Signet: ~2.5 min/block
-            let secondsPerBlock: Int = arkInfo.network == "mainnet" ? 600 : 150
+            // Mainnet/Bitcoin: ~10 min/block, Signet: ~2.5 min/block
+            let secondsPerBlock: Int = (arkInfo.network.lowercased() == "mainnet" || arkInfo.network.lowercased() == "bitcoin") ? 600 : 150
             let secondsUntilRefresh = blocksUntilRefresh * secondsPerBlock
             
-            // Notify exactly when SDK says refresh should happen
-            // (SDK already accounts for urgency buffer in its calculation)
+            Self.logger.debug("Network: '\(arkInfo.network)', secondsPerBlock: \(secondsPerBlock), secondsUntilRefresh: \(secondsUntilRefresh)")
+            
+            // Notify when the free refresh window opens
             let notificationDate = Date().addingTimeInterval(TimeInterval(secondsUntilRefresh))
             
-            Self.logger.info("Scheduling refresh notification for \(notificationDate) (\(secondsUntilRefresh)s from now)")
+            Self.logger.info("Scheduling refresh notification for \(notificationDate) (\(secondsUntilRefresh)s from now, block \(nextFreeRefreshHeight))")
             
             // Request notification authorization
             let center = UNUserNotificationCenter.current()

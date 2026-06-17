@@ -146,7 +146,8 @@ class BalanceRefreshStatusViewModel {
     
     /// Format blocks into human-readable time
     func formatBlocks(_ blocks: Int) -> String {
-        let secondsPerBlock = walletManager.arkInfo?.network == "mainnet" ? 600 : 150
+        let network = walletManager.arkInfo?.network.lowercased() ?? "bitcoin"
+        let secondsPerBlock = (network == "mainnet" || network == "bitcoin") ? 600 : 150
         let seconds = blocks * secondsPerBlock
         
         let formatter = DateComponentsFormatter()
