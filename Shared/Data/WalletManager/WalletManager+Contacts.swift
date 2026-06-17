@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftData
+import OSLog
 
 extension WalletManager {
     
@@ -63,7 +64,7 @@ extension WalletManager {
     func assignContact(_ contactId: UUID, to transactionTxid: String) async throws {
         try await contactService.assignContact(contactId, to: transactionTxid)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after contact assignment")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after contact assignment")
     }
     
     /// Assign a contact to a transaction with address learning and bulk assignment
@@ -81,11 +82,11 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Model context not available")
         }
         
-        print("🔗 Starting contact assignment with address learning for transaction: \(transactionTxid)")
-        
+        Self.logger.debug("Starting contact assignment with address learning for transaction: \(transactionTxid)")
+
         // First, assign the contact to the transaction
         try await contactService.assignContact(contactId, to: transactionTxid)
-        print("✅ Created basic contact assignment")
+        Self.logger.debug("Created basic contact assignment")
         
         // Try to get the transaction and its address
         let transactionDescriptor = FetchDescriptor<PersistentTransaction>(
@@ -97,7 +98,7 @@ extension WalletManager {
               let address = transaction.address,
               !address.isEmpty else {
             // Transaction has no address, just return after basic assignment
-            print("ℹ️ Transaction \(transactionTxid) has no address, skipping address learning")
+            Self.logger.debug("Transaction \(transactionTxid) has no address, skipping address learning")
             return 0
         }
         
@@ -108,7 +109,7 @@ extension WalletManager {
         let contacts = try modelContext.fetch(contactDescriptor)
         
         guard let contact = contacts.first else {
-            print("⚠️ Contact \(contactId) not found for address learning")
+            Self.logger.warning("Contact \(contactId) not found for address learning")
             return 0
         }
         
@@ -118,10 +119,10 @@ extension WalletManager {
         // Detect payment method type and skip single-use identifiers
         let paymentMethod = PaymentMethod.detect(from: address)
         if paymentMethod.isSingleUse {
-            print("ℹ️ Skipping address learning for single-use payment type: \(paymentMethod.displayType)")
-            print("📊 Contact assignment complete - No auto-assignment for single-use payments")
+            Self.logger.debug("Skipping address learning for single-use payment type: \(paymentMethod.displayType)")
+            Self.logger.debug("Contact assignment complete - No auto-assignment for single-use payments")
             dataVersion += 1
-            print("📊 DataVersion incremented to \(dataVersion) after contact assignment")
+            Self.logger.debug("DataVersion incremented to \(self.dataVersion) after contact assignment")
             return 0
         }
         
@@ -143,13 +144,13 @@ extension WalletManager {
                     isPrimary: isPrimary
                 )
                 
-                print("✅ Added address to contact '\(contact.cachedName)': \(newAddress.shortAddress)")
+                Self.logger.info("Added address to contact '\(contact.cachedName)': \(newAddress.shortAddress)")
             } catch {
                 // Don't fail the whole operation if address creation fails
-                print("⚠️ Failed to add address to contact: \(error)")
+                Self.logger.warning("Failed to add address to contact: \(error)")
             }
         } else {
-            print("ℹ️ Contact '\(contact.cachedName)' already has address \(address)")
+            Self.logger.debug("Contact '\(contact.cachedName)' already has address \(address)")
         }
         
         // Step 2: Find all other transactions with the same address
@@ -187,20 +188,20 @@ extension WalletManager {
             do {
                 contact.touch() // Update contact's timestamp
                 try modelContext.save()
-                print("✅ Auto-assigned contact '\(contact.cachedName)' to \(autoAssignedCount) additional transaction(s) with address \(address)")
+                Self.logger.info("Auto-assigned contact '\(contact.cachedName)' to \(autoAssignedCount) additional transaction(s) with address \(address)")
             } catch {
-                print("⚠️ Failed to save auto-assignments: \(error)")
+                Self.logger.warning("Failed to save auto-assignments: \(error)")
                 // Don't throw - the main assignment already succeeded
             }
         } else {
-            print("ℹ️ No additional transactions to auto-assign (all transactions with this address already have contacts)")
+            Self.logger.debug("No additional transactions to auto-assign (all transactions with this address already have contacts)")
         }
-        
+
         // Final summary
-        print("📊 Contact assignment complete - Total auto-assigned: \(autoAssignedCount)")
+        Self.logger.debug("Contact assignment complete - Total auto-assigned: \(autoAssignedCount)")
         
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after contact assignment with address learning")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after contact assignment with address learning")
         
         return autoAssignedCount
     }
@@ -209,14 +210,14 @@ extension WalletManager {
     func unassignContact(_ contactId: UUID, from transactionTxid: String) async throws {
         try await contactService.unassignContact(contactId, from: transactionTxid)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after contact unassignment")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after contact unassignment")
     }
     
     /// Remove all contact assignments from a transaction
     func removeContactAssignment(from transactionId: String) async throws {
         try await contactService.removeAllContactsFromTransaction(transactionId)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after removing all contact assignments")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after removing all contact assignments")
     }
     
     /// Get all transactions with a specific contact

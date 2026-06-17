@@ -865,32 +865,32 @@ class WalletManager {
         Self.logger.info("🔄 [WalletManager] Closing wallet for migration...")
         
         // Step 1: Reset manager state (lightweight - preserves SwiftData)
-        print("   Step 1: Resetting manager state (preserving SwiftData)...")
+        Self.logger.info("Step 1: Resetting manager state (preserving SwiftData)...")
         await resetManagerStateForMigration()
-        
+
         // Step 2: Switch to read-only mode immediately
-        print("   Step 2: Switching to read-only mode...")
+        Self.logger.info("Step 2: Switching to read-only mode...")
         isReadOnlyMode = true
         processStateService?.updateReadOnlyMode(isReadOnly: true)
         Self.logger.info("🔒 [WalletManager] Device switched to read-only mode")
         
         // Step 3: Unregister from push notifications
         #if os(iOS)
-        print("   Step 3: Unregistering from push notifications...")
+        Self.logger.info("Step 3: Unregistering from push notifications...")
         await unregisterFromPushNotifications()
         #endif
-        
+
         // Step 4: Give services time to settle
-        print("   Step 4: Waiting for services to settle...")
+        Self.logger.info("Step 4: Waiting for services to settle...")
         try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
-        
+
         // Step 5: Shutdown wallet (FFI cleanup, backup, resource release)
-        print("   Step 5: Shutting down wallet FFI...")
+        Self.logger.info("Step 5: Shutting down wallet FFI...")
         if let ffiWallet = wallet as? BarkWalletFFI {
             await ffiWallet.shutdownWallet()
         } else {
             // Mock wallet - just clear the reference
-            print("   Mock wallet detected - skipping FFI shutdown")
+            Self.logger.debug("Mock wallet detected - skipping FFI shutdown")
         }
         
         // Clear service references

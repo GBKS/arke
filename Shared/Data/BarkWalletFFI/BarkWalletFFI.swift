@@ -57,6 +57,22 @@ class BarkWalletFFI: BarkWalletProtocol {
     
     /// Logger for BarkWalletFFI operations
     nonisolated static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "BarkWalletFFI")
+
+    /// Bridges bark's internal Rust logs (round streams, mailbox subscription,
+    /// esplora calls) into the unified logging system under the
+    /// "tech.second.bark" subsystem, so they appear in debug log exports.
+    /// The FFI bridge can only be installed once per process, hence the
+    /// lazily-evaluated static.
+    private static let barkRustLoggerInstalled: Bool = {
+        do {
+            try barkAttachOSLogger(maxLevel: .debug)
+            logger.info("Bark Rust logger attached (subsystem: tech.second.bark)")
+            return true
+        } catch {
+            logger.warning("Could not attach bark Rust logger: \(error)")
+            return false
+        }
+    }()
     
     // MARK: - Properties
     
@@ -96,6 +112,9 @@ class BarkWalletFFI: BarkWalletProtocol {
         self.networkConfig = networkConfig
         self.isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         self.securityService = securityService
+
+        // Route bark's internal Rust logs into the unified log (once per process)
+        _ = Self.barkRustLoggerInstalled
         
         // Set up wallet directory
         self.walletDir = Self.getWalletDirectory()

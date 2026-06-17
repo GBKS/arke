@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension WalletManager {
     
@@ -50,14 +51,14 @@ extension WalletManager {
     func assignTag(_ tagId: UUID, to transactionTxid: String) async throws {
         try await tagService.assignTag(tagId, to: transactionTxid)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after tag assignment")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after tag assignment")
     }
     
     /// Remove a tag assignment from a transaction
     func unassignTag(_ tagId: UUID, from transactionTxid: String) async throws {
         try await tagService.unassignTag(tagId, from: transactionTxid)
         dataVersion += 1
-        print("📊 DataVersion incremented to \(dataVersion) after tag unassignment")
+        Self.logger.debug("DataVersion incremented to \(self.dataVersion) after tag unassignment")
     }
     
     /// Get all transactions with a specific tag

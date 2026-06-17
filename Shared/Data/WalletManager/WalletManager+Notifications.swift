@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 #if os(iOS)
 extension WalletManager {
@@ -19,28 +20,27 @@ extension WalletManager {
     func registerForPushNotifications() async {
         guard let wallet = wallet,
               let relayService = relayRegistrationService else {
-            print("⚠️ [WalletManager] Cannot register for push - wallet or relay service not available")
+            Self.logger.warning("Cannot register for push - wallet or relay service not available")
             return
         }
         
         // Ensure wallet is initialized before attempting registration
         guard isInitialized else {
-            print("⚠️ [WalletManager] Cannot register for push - wallet not yet initialized")
-            print("   This is normal during app startup. Registration will be retried after initialization.")
+            Self.logger.warning("Cannot register for push - wallet not yet initialized (normal during app startup; registration will be retried after initialization)")
             return
         }
         
         // Check if user has enabled notifications in settings
         let notificationsEnabled = UserDefaults.standard.bool(forKey: "notifications_enabled")
         guard notificationsEnabled else {
-            print("⚠️ [WalletManager] Notifications disabled in settings")
+            Self.logger.warning("Notifications disabled in settings")
             return
         }
         
         // Get APNs token from UserDefaults (set by AppDelegate)
         guard let deviceToken = UserDefaults.standard.string(forKey: "apns_device_token"),
               !deviceToken.isEmpty else {
-            print("⚠️ [WalletManager] No APNs device token available")
+            Self.logger.warning("No APNs device token available")
             return
         }
         
@@ -53,7 +53,7 @@ extension WalletManager {
             let config = try await wallet.getConfig()
             let arkAddr = config.ark
             guard !arkAddr.isEmpty else {
-                print("❌ [WalletManager] No Ark server URL in config")
+                Self.logger.error("No Ark server URL in config")
                 return
             }
             
@@ -61,12 +61,7 @@ extension WalletManager {
             let apnsTopic = Bundle.main.bundleIdentifier ?? "com.arke.wallet"
             
             // Debug: Log registration parameters (redact sensitive auth)
-            print("📋 [WalletManager] Registration params:")
-            print("  - mailboxId: \(mailboxId.prefix(8))... (len: \(mailboxId.count))")
-            print("  - authorizationHex: \(authorizationHex.prefix(8))... (len: \(authorizationHex.count))")
-            print("  - arkAddr: \(arkAddr)")
-            print("  - deviceToken: \(deviceToken.prefix(8))... (len: \(deviceToken.count))")
-            print("  - apnsTopic: \(apnsTopic)")
+            Self.logger.debug("Registration params: mailboxId: \(mailboxId.prefix(8))... (len: \(mailboxId.count)), authorizationHex: \(authorizationHex.prefix(8))... (len: \(authorizationHex.count)), arkAddr: \(arkAddr), deviceToken: \(deviceToken.prefix(8))... (len: \(deviceToken.count)), apnsTopic: \(apnsTopic)")
             
             // Register with relay
             try await relayService.registerDevice(
@@ -77,9 +72,9 @@ extension WalletManager {
                 apnsTopic: apnsTopic
             )
             
-            print("✅ [WalletManager] Successfully registered for push notifications")
+            Self.logger.info("Successfully registered for push notifications")
         } catch {
-            print("❌ [WalletManager] Failed to register for push: \(error.localizedDescription)")
+            Self.logger.error("Failed to register for push: \(error.localizedDescription)")
         }
     }
     
@@ -104,9 +99,9 @@ extension WalletManager {
                 deviceToken: deviceToken
             )
             
-            print("✅ [WalletManager] Successfully unregistered from push notifications")
+            Self.logger.info("Successfully unregistered from push notifications")
         } catch {
-            print("❌ [WalletManager] Failed to unregister from push: \(error.localizedDescription)")
+            Self.logger.error("Failed to unregister from push: \(error.localizedDescription)")
         }
     }
     
@@ -116,7 +111,7 @@ extension WalletManager {
     /// Called automatically during WalletManager initialization
     /// Triggers wallet refresh when mailbox updates are received
     func setupMailboxNotificationObserver() {
-        print("📮 [WalletManager] Setting up mailbox update observer...")
+        Self.logger.debug("Setting up mailbox update observer...")
         NotificationCenter.default.addObserver(
             forName: .mailboxUpdateReceived,
             object: nil,
@@ -124,10 +119,9 @@ extension WalletManager {
         ) { [weak self] _ in
             guard let self = self else { return }
             Task { @MainActor in
-                print("📮 [WalletManager] Mailbox update notification received, refreshing...")
-                print("📮 [WalletManager] Current dataVersion: \(self.dataVersion)")
+                Self.logger.info("Mailbox update notification received, refreshing... (dataVersion: \(self.dataVersion))")
                 await self.refresh()
-                print("📮 [WalletManager] Refresh complete. New dataVersion: \(self.dataVersion)")
+                Self.logger.info("Mailbox refresh complete. New dataVersion: \(self.dataVersion)")
             }
         }
     }

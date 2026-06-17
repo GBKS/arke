@@ -9,6 +9,7 @@
 
 import Foundation
 import Bark
+import OSLog
 
 extension WalletManager {
     
@@ -17,14 +18,14 @@ extension WalletManager {
     /// Refresh connection to the ASP server
     func refreshServer() async {
         guard let wallet = wallet else {
-            print("⚠️ Cannot refresh server: wallet not initialized")
+            Self.logger.warning("Cannot refresh server: wallet not initialized")
             return
         }
         
         do {
             try await wallet.refreshServer()
         } catch {
-            print("⚠️ Failed to refresh server: \(error)")
+            Self.logger.error("Failed to refresh server: \(error)")
             self.error = "Failed to refresh server connection: \(error.localizedDescription)"
         }
     }
@@ -78,7 +79,7 @@ extension WalletManager {
             do {
                 _ = try await getLatestBlockHeight()
             } catch {
-                print("⚠️ Failed to fetch block height for estimation: \(error)")
+                Self.logger.warning("Failed to fetch block height for estimation: \(error)")
             }
         }
         

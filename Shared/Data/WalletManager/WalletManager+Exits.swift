@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import Bark
+import OSLog
 
 extension WalletManager {
     
@@ -54,7 +55,7 @@ extension WalletManager {
     /// full data from Bark. Instead, we just verify cache exists and mark it as stale.
     func loadExitCacheFromDisk() async {
         guard let context = modelContext else {
-            print("⚠️ [Exit Cache] Cannot load from disk - no model context")
+            Self.logger.warning("[Exit Cache] Cannot load from disk - no model context")
             return
         }
         
@@ -64,25 +65,25 @@ extension WalletManager {
         
         do {
             let persistedExits = try context.fetch(descriptor)
-            
+
             if !persistedExits.isEmpty {
-                print("📦 [Exit Cache] Found \(persistedExits.count) exit(s) in persistent storage")
-                
+                Self.logger.info("[Exit Cache] Found \(persistedExits.count) exit(s) in persistent storage")
+
                 // Check age of cache
                 if let lastRefresh = persistedExits.first?.lastRefreshedAt {
                     let ageSeconds = Date().timeIntervalSince(lastRefresh)
-                    print("   📅 Cache age: \(String(format: "%.1f", ageSeconds))s")
-                    
+                    Self.logger.debug("[Exit Cache] Cache age: \(String(format: "%.1f", ageSeconds))s")
+
                     // Set cache time to trigger refresh, but don't populate empty objects
                     // The fresh data will be loaded during wallet initialization
                     exitVtxosCacheTime = lastRefresh
                 }
             } else {
-                print("📦 [Exit Cache] No persistent cache found (first launch or after migration)")
+                Self.logger.info("[Exit Cache] No persistent cache found (first launch or after migration)")
             }
-            
+
         } catch {
-            print("⚠️ [Exit Cache] Failed to load from disk: \(error)")
+            Self.logger.warning("[Exit Cache] Failed to load from disk: \(error)")
         }
     }
     
@@ -115,10 +116,10 @@ extension WalletManager {
             }
             
             try context.save()
-            print("💾 [Exit Cache] Saved \(cachedExitVtxos.count) exit(s) to persistent storage")
-            
+            Self.logger.info("[Exit Cache] Saved \(self.cachedExitVtxos.count) exit(s) to persistent storage")
+
         } catch {
-            print("⚠️ [Exit Cache] Failed to save to disk: \(error)")
+            Self.logger.warning("[Exit Cache] Failed to save to disk: \(error)")
         }
     }
     
@@ -127,28 +128,28 @@ extension WalletManager {
     func refreshExitCache() async {
         // Guard: Only refresh if wallet is initialized
         guard isInitialized else {
-            print("⚠️ [Exit Cache] Cannot refresh - wallet not initialized")
+            Self.logger.warning("[Exit Cache] Cannot refresh - wallet not initialized")
             return
         }
-        
+
         // Use task deduplication to prevent concurrent refreshes
         do {
             try await taskManager.execute(key: "exit-cache-refresh") {
                 try await self._performExitCacheRefresh()
             }
         } catch {
-            print("⚠️ [Exit Cache] Refresh failed: \(error)")
+            Self.logger.warning("[Exit Cache] Refresh failed: \(error)")
         }
     }
     
     /// Internal method that performs the actual cache refresh
     /// Separated for task deduplication
     private func _performExitCacheRefresh() async throws {
-        print("🔄 [Exit Cache] Refreshing exit cache...")
-        
+        Self.logger.debug("[Exit Cache] Refreshing exit cache...")
+
         cachedExitVtxos = try await getExitVtxos()
         exitVtxosCacheTime = Date()
-        print("   ✅ Fetched \(cachedExitVtxos.count) exit VTXO(s)")
+        Self.logger.info("[Exit Cache] Fetched \(self.cachedExitVtxos.count) exit VTXO(s)")
         
         // Save to persistent storage for next app launch
         await saveExitCacheToDisk()
@@ -170,18 +171,18 @@ extension WalletManager {
                 // Log txids extracted from this status
                 let txids = ExitStatusParser.extractAllTransactionIds(from: status)
                 if !txids.isEmpty {
-                    print("      📋 VTXO \(exitVtxo.vtxoId.prefix(16))... has \(txids.count) txid(s)")
+                    Self.logger.debug("[Exit Cache] VTXO \(exitVtxo.vtxoId.prefix(16))... has \(txids.count) txid(s)")
                     totalTxids += txids.count
                 }
             }
         }
         cachedExitStatuses = newExitStatuses
         exitStatusesCacheTime = Date()
-        
-        print("   ✅ Cached \(statusCount) exit status(es) with \(totalTxids) total txid(s)")
-        
+
+        Self.logger.info("[Exit Cache] Cached \(statusCount) exit status(es) with \(totalTxids) total txid(s)")
+
         // Trigger re-linking after cache is refreshed
-        print("   🔗 Triggering exit transaction re-linking...")
+        Self.logger.debug("[Exit Cache] Triggering exit transaction re-linking...")
         await relinkExitTransactions()
     }
     

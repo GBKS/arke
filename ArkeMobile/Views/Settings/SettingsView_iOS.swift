@@ -306,7 +306,7 @@ struct SettingsView_iOS: View {
                         Image(systemName: "play.circle.fill")
                             .foregroundColor(.Arke.purple)
                             .frame(width: 24, height: 24)
-                        
+
                         VStack(alignment: .leading, spacing: 2) {
                             Text("onboarding_intro_video")
                                 .font(.system(size: 16))

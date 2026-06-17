@@ -32,7 +32,7 @@ class WalletNotificationService {
 
     // MARK: - Logging
 
-    private let logger = Logger(subsystem: "com.arke.wallet", category: "WalletNotifications")
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "WalletNotifications")
 
     // MARK: - Configuration
 

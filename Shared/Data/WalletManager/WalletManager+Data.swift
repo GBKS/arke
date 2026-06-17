@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension WalletManager {
     
@@ -21,7 +22,7 @@ extension WalletManager {
     private func getBlockHeightWithDeduplication() async throws -> Int {
         // Check cache first
         if let cached = cacheManager.blockHeight.value {
-            print("📦 Using cached block height: \(cached)")
+            Self.logger.debug("Using cached block height: \(cached)")
             return cached
         }
         
@@ -33,7 +34,7 @@ extension WalletManager {
             
             // Update cache
             self.cacheManager.blockHeight.setValue(result)
-            print("🔗 Fetched latest block height: \(result)")
+            Self.logger.info("Fetched latest block height: \(result)")
             
             return result
         }

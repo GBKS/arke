@@ -314,6 +314,7 @@
 				"Services/ContactService/ContactService+StateManagement.swift",
 				Services/ContactService/ContactServiceError.swift,
 				Services/ContactService/ContactStatistic.swift,
+				Services/DebugLogExporter.swift,
 				Services/DeviceRegistrationService.swift,
 				Services/ExitProgressionNotifications.swift,
 				Services/ExitProgressionService.swift,
