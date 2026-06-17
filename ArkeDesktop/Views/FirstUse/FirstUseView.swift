@@ -12,7 +12,6 @@ struct FirstUseView: View {
     let walletState: WalletState
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
-    let onLinkWallet: () -> Void
     let onDeleteWallet: () -> Void
     
     var body: some View {
@@ -61,16 +60,6 @@ struct FirstUseView: View {
                 
                 VStack(spacing: 16) {
                     if walletState == .walletWithoutSeed {
-                        // Show link wallet option when wallet exists on another device
-                        Button("button_link_existing_wallet") {
-                            onLinkWallet()
-                        }
-                        .buttonStyle(ArkeButtonStyle(size: .large))
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                        
                         Button("button_delete_wallet_data") {
                             onDeleteWallet()
                         }
@@ -116,7 +105,6 @@ struct FirstUseView: View {
         walletState: .noWallet,
         onCreateWallet: {},
         onImportWallet: {},
-        onLinkWallet: {},
         onDeleteWallet: {}
     )
     .frame(width: 600, height: 700)

@@ -3,6 +3,8 @@
 **Date:** March 3, 2026
 **Task:** Replace old English text localization keys with new semantic keys
 
+> ⚠️ **NOTE**: This document includes references to wallet linking localization keys (`button_link_existing_wallet`, `button_link_wallet`, `error_link_wallet`, `firstuse_link_wallet_detected`) which are now obsolete. LinkWalletView was removed in June 2026. These strings remain in the localization file but are unused.
+
 ---
 
 ## Overview

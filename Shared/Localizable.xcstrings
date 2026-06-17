@@ -2590,6 +2590,7 @@
       }
     },
     "button_continue" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2833,6 +2834,7 @@
       }
     },
     "button_enable_camera" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2960,6 +2962,7 @@
       }
     },
     "button_link_existing_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2970,6 +2973,7 @@
       }
     },
     "button_link_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2980,6 +2984,7 @@
       }
     },
     "button_linking" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3137,6 +3142,7 @@
       }
     },
     "button_scan_recovery_qr" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4227,6 +4233,7 @@
       }
     },
     "error_invalid_recovery_phrase" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4237,6 +4244,7 @@
       }
     },
     "error_link" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4247,6 +4255,7 @@
       }
     },
     "error_link_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4280,6 +4289,7 @@
       }
     },
     "error_no_recovery_phrase" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4615,6 +4625,7 @@
       }
     },
     "firstuse_link_wallet_detected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5533,9 +5544,6 @@
     "Make Secondary" : {
 
     },
-    "Make This Device Active" : {
-
-    },
     "Make This Device Primary?" : {
 
     },
@@ -5559,6 +5567,7 @@
       }
     },
     "message_camera_access_qr" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5902,6 +5911,7 @@
       }
     },
     "onboarding_connect_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5912,6 +5922,7 @@
       }
     },
     "onboarding_continue_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7176,6 +7187,7 @@
       }
     },
     "settings_wallet_linked" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7675,6 +7687,7 @@
       }
     },
     "status_recovery_phrase_detected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7855,6 +7868,7 @@
       }
     },
     "status_wallet_connected" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8081,9 +8095,6 @@
     "This will cancel round %u and release the locked VTXOs." : {
 
     },
-    "This will deactivate your wallet on %@" : {
-
-    },
     "Tip Height" : {
 
     },
@@ -8238,13 +8249,7 @@
     "VTXO ID" : {
 
     },
-    "Wallet Active on Another Device" : {
-
-    },
     "We will use this in the next step to optimize your expected fees." : {
-
-    },
-    "Your wallet is currently active on **%@**. Only one device can be active at a time." : {
 
     }
   },

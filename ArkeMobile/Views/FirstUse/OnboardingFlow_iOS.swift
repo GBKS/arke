@@ -17,11 +17,6 @@ Import wallet sequence
 1. firstUse
 2. importWallet
 3. walletImported
-
-Link wallet sequence
-1. firstUse
-2. linkWallet
-3. walletLinked
  
  */
 
@@ -33,13 +28,11 @@ enum OnboardingState {
     case firstUse
     case introVideos
     case importWallet
-    case linkWallet
     case walletImported
     case usagePattern
     case selectServer
     case createWallet
     case walletCreated
-    case walletLinked
 }
 
 enum NavigationDirection {
@@ -77,12 +70,6 @@ struct OnboardingFlow_iOS: View {
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .importWallet
-                                }
-                            },
-                            onLinkWallet: {
-                                navigationDirection = .forward
-                                withAnimation(.smooth(duration: 0.4)) {
-                                    currentState = .linkWallet
                                 }
                             },
                             onDeleteWallet: {
@@ -158,31 +145,6 @@ struct OnboardingFlow_iOS: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("importWallet")
-                        
-                    case .linkWallet:
-                        LinkWalletView_iOS(
-                            onBack: {
-                                navigationDirection = .backward
-                                withAnimation(.smooth(duration: 0.4)) {
-                                    currentState = .firstUse
-                                }
-                            },
-                            onWalletLinked: {
-                                navigationDirection = .forward
-                                withAnimation(.smooth(duration: 0.4)) {
-                                    currentState = .walletLinked
-                                }
-                            }
-                        )
-                        .transition(.asymmetric(
-                            insertion: navigationDirection == .forward ?
-                                .move(edge: .trailing).combined(with: .opacity) :
-                                    .move(edge: .leading).combined(with: .opacity),
-                            removal: navigationDirection == .forward ?
-                                .move(edge: .leading).combined(with: .opacity) :
-                                    .move(edge: .trailing).combined(with: .opacity)
-                        ))
-                        .tag("linkWallet")
                         
                     case .walletImported:
                         WalletImportedView_iOS(
@@ -312,22 +274,6 @@ struct OnboardingFlow_iOS: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("walletCreated")
-                        
-                    case .walletLinked:
-                        WalletLinkedView_iOS(
-                            onContinue: {
-                                onWalletReady()
-                            }
-                        )
-                        .transition(.asymmetric(
-                            insertion: navigationDirection == .forward ?
-                                .move(edge: .trailing).combined(with: .opacity) :
-                                    .move(edge: .leading).combined(with: .opacity),
-                            removal: navigationDirection == .forward ?
-                                .move(edge: .leading).combined(with: .opacity) :
-                                    .move(edge: .trailing).combined(with: .opacity)
-                        ))
-                        .tag("walletLinked")
                     }
                 }
                 .frame(maxWidth: .infinity)

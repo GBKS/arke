@@ -1,5 +1,7 @@
 # Testing Checklist: Security/Device Separation
 
+> ⚠️ **DEPRECATION NOTICE**: This document references `LinkWalletView` test cases which are no longer applicable. LinkWalletView was removed in June 2026 in favor of automatic iCloud Keychain sync. Device linking test cases should focus on the Device Registry system instead.
+
 ## Quick Test Guide
 
 After implementing the separation of security operations from device management, follow this checklist to verify everything works correctly.

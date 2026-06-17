@@ -13,7 +13,6 @@ struct FirstUseView_iOS: View {
     @Binding var isMainnet: Bool
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
-    let onLinkWallet: () -> Void
     let onDeleteWallet: () -> Void
     
     @Environment(\.openURL) private var openURL
@@ -116,18 +115,6 @@ struct FirstUseView_iOS: View {
                 
                 VStack(spacing: 16) {
                     if walletState == .walletWithoutSeed {
-                        /*
-                        // Show link wallet option when wallet exists on another device
-                        Button("Link existing wallet") {
-                            onLinkWallet()
-                        }
-                        .buttonStyle(ArkeButtonStyle(size: .large))
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                        */
-                        
                         Button {
                             onImportWallet()
                         } label: {

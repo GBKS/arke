@@ -1,5 +1,7 @@
 # Arké Mobile - Initialization Flow Documentation
 
+> ⚠️ **DEPRECATION NOTICE**: This document references `LinkWalletView` which was removed in June 2026. Wallet linking via QR code scanning is no longer supported. Wallet synchronization now happens automatically via iCloud Keychain sync. See the [Device Registry documentation](../DEVICE_REGISTRY_QUICK_REFERENCE.md) for current multi-device support.
+
 ## Executive Summary
 
 This document provides a comprehensive analysis of Arké Mobile's initialization architecture, covering three primary user flows: new wallet creation, device linking, and existing wallet launch. The analysis reveals a well-designed system with excellent performance characteristics, particularly for returning users (< 300ms to UI).
