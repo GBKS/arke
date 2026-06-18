@@ -31,6 +31,7 @@ struct LinkedDevicesView_iOS: View {
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
+                .accessibilityAddTraits(.isStaticText)
             
             Section {
                 // Current device section
@@ -72,7 +73,11 @@ struct LinkedDevicesView_iOS: View {
                     } icon: {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
+                            .accessibilityHidden(true)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(NSLocalizedString("accessibility_no_primary_device_alert", comment: ""))
+                    .accessibilityAddTraits(.isStaticText)
                 }
             }
             
@@ -85,6 +90,7 @@ struct LinkedDevicesView_iOS: View {
                             Label("button_make_device_secondary", systemImage: "arrow.down.circle")
                                 .foregroundStyle(Color.Arke.blue)
                         }
+                        .accessibilityHint(NSLocalizedString("accessibility_make_secondary_hint", comment: ""))
                     }
                     
                     // Show "Make This Device Primary" if this is secondary and no primary exists
@@ -93,6 +99,7 @@ struct LinkedDevicesView_iOS: View {
                             Label("button_make_device_primary", systemImage: "arrow.up.circle")
                                 .foregroundStyle(Color.Arke.green)
                         }
+                        .accessibilityHint(NSLocalizedString("accessibility_make_primary_hint", comment: ""))
                     }
                 } header: {
                     Text("section_device_role")
@@ -105,6 +112,7 @@ struct LinkedDevicesView_iOS: View {
                     Text(errorMessage)
                         .foregroundColor(.Arke.red)
                         .font(.system(size: 14))
+                        .accessibilityAddTraits(.isStaticText)
                 }
             }
         }
@@ -191,6 +199,9 @@ struct LinkedDevicesView_iOS: View {
             await MainActor.run {
                 errorMessage = String(format: NSLocalizedString("error_unlink_device", comment: ""), error.localizedDescription)
                 
+                // Announce error to VoiceOver users
+                UIAccessibility.post(notification: .announcement, argument: errorMessage)
+                
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)
             }
@@ -246,6 +257,7 @@ struct DeviceRow_iOS: View {
             // Platform icon
             Text(device.platformIcon)
                 .font(.system(size: 32))
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 4) {
                 // Device name
@@ -326,6 +338,40 @@ struct DeviceRow_iOS: View {
             */
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(deviceAccessibilityLabel)
+        .accessibilityHint(isCurrent ? NSLocalizedString("accessibility_current_device_hint", comment: "") : NSLocalizedString("accessibility_other_device_hint", comment: ""))
+    }
+    
+    private var deviceAccessibilityLabel: String {
+        var parts: [String] = []
+        
+        // Device name and current status
+        if isCurrent {
+            parts.append("\(device.deviceName), \(NSLocalizedString("settings_this_device_parentheses", comment: ""))")
+        } else {
+            parts.append(device.deviceName)
+        }
+        
+        // Platform
+        parts.append(device.platformDisplayName)
+        
+        // Last seen
+        parts.append(NSLocalizedString("accessibility_last_seen", comment: "") + " \(device.lastSeenRelative)")
+        
+        // Primary/Secondary status
+        if device.isPrimaryDevice {
+            parts.append(NSLocalizedString("status_full_wallet", comment: ""))
+        } else {
+            parts.append(NSLocalizedString("status_metadata_only", comment: ""))
+        }
+        
+        // Stale warning
+        if device.isStale {
+            parts.append(NSLocalizedString("accessibility_device_stale_warning", comment: ""))
+        }
+        
+        return parts.joined(separator: ", ")
     }
 }
 

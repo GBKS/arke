@@ -6728,7 +6728,14 @@
 
     },
     "section_device_role" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Role"
+          }
+        }
+      }
     },
     "Select a contact" : {
 
@@ -8323,6 +8330,76 @@
     },
     "We will use this in the next step to optimize your expected fees." : {
 
+    },
+    "accessibility_current_device_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to view options for this device"
+          }
+        }
+      }
+    },
+    "accessibility_other_device_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to view options for this device"
+          }
+        }
+      }
+    },
+    "accessibility_last_seen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "last seen"
+          }
+        }
+      }
+    },
+    "accessibility_device_stale_warning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning: not seen recently"
+          }
+        }
+      }
+    },
+    "accessibility_no_primary_device_alert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning: No active wallet. Make this device your primary wallet to send and receive."
+          }
+        }
+      }
+    },
+    "accessibility_make_secondary_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converts this device to view-only mode. You won't be able to spend from this device."
+          }
+        }
+      }
+    },
+    "accessibility_make_primary_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enables spending on this device. This device will have full wallet access."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
