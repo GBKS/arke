@@ -158,7 +158,7 @@ class RoundProgressionService {
             print("   ✅ Synced pending boards")
             
             // Step 4: Refresh balances and transactions after round completion
-            await walletManager?.refreshAfterRoundCompletion()
+            await walletManager?.refreshAfterVTXOChange()
             print("   ✅ Refreshed balances and transactions")
             
             // Success
@@ -193,7 +193,7 @@ class RoundProgressionService {
         
         try await wallet.progressPendingRounds()
         try await wallet.syncPendingBoards()
-        await walletManager?.refreshAfterRoundCompletion()
+        await walletManager?.refreshAfterVTXOChange()
         
         print("   ✅ Manually progressed \(pendingRounds.count) round(s)")
     }

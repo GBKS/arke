@@ -228,7 +228,7 @@ class VTXORefreshService {
             }
             
             // Step 5: Refresh balances and transactions
-            await walletManager?.refreshAfterRoundCompletion()
+            await walletManager?.refreshAfterVTXOChange()
             Self.logger.debug("Refreshed balances and transactions")
             
             // Step 6: Schedule notification for next refresh
@@ -407,7 +407,7 @@ class VTXORefreshService {
                 Self.logger.info("No refresh scheduled for \(vtxoIds.count) VTXO(s)")
             }
             
-            await walletManager?.refreshAfterRoundCompletion()
+            await walletManager?.refreshAfterVTXOChange()
         } else {
             Self.logger.debug("No VTXOs need refreshing")
         }

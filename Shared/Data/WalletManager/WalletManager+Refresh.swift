@@ -93,20 +93,15 @@ extension WalletManager {
     
     // MARK: - Event-Driven Refresh
     
-    /// Refresh balances and transactions after a round completes
-    /// Called by RoundProgressionService and VTXORefreshService
-    func refreshAfterRoundCompletion() async {
+    /// Refresh balances and transactions after VTXOs change
+    /// Called whenever the VTXO set changes (send/receive/refresh/exit/claim/round completion)
+    /// Also reschedules VTXO refresh notifications based on the new VTXO set
+    func refreshAfterVTXOChange() async {
         await balanceService?.refreshAfterTransaction()
         await transactionService?.refreshTransactions()
         transactionVersion += 1
         
-        // Notify refresh service that VTXOs changed (for notification scheduling)
-        await vtxosDidChange()
-    }
-    
-    /// Called whenever the VTXO set changes (send/receive/refresh/exit/claim)
-    /// Triggers notification rescheduling in VTXORefreshService
-    private func vtxosDidChange() async {
+        // Reschedule VTXO refresh notification based on new VTXO set
         await vtxoRefreshService?.scheduleNextRefreshNotification()
     }
     

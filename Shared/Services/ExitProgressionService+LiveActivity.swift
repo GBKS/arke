@@ -224,7 +224,7 @@ extension ExitProgressionService {
         await checkAndProgressExits()
         
         // Refresh balances and transactions to show latest exit state
-        await walletManager?.refreshAfterRoundCompletion()
+        await walletManager?.refreshAfterVTXOChange()
         
         // Update all Live Activities to "fresh" state
         await updateAllLiveActivitiesAfterCheckIn()

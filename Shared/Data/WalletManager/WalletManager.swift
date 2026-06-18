@@ -348,12 +348,10 @@ class WalletManager {
         
         // Configure post-transaction callback
         walletOperationsService?.setTransactionCompletedCallback { [weak self] in
-            await self?.balanceService?.refreshAfterTransaction()
-            await self?.transactionService?.refreshTransactions()
+            // Refresh balances and reschedule VTXO notifications after transaction
+            await self?.refreshAfterVTXOChange()
             // Increment backup transaction count after each transaction
             self?.processStateService?.incrementBackupTransactionCount()
-            // Increment dataVersion to notify UI that transaction data has changed
-            self?.dataVersion += 1
             Self.logger.info("📊 DataVersion incremented to \(self?.dataVersion ?? 0) after transaction")
         }
     }
