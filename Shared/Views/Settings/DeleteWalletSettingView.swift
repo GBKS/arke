@@ -209,6 +209,8 @@ struct DeleteWalletSettingView: View {
             // Call the completion handler to navigate back to onboarding
             await MainActor.run {
                 onWalletDeleted?()
+                // Dismiss the confirmation sheet so onboarding flow is visible
+                showingDeletionConfirmation = false
             }
         } catch {
             await MainActor.run {
