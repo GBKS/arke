@@ -1,36 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "debug_logs_error_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't Export Logs"
-          }
-        }
-      }
-    },
-    "debug_logs_generating" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generating…"
-          }
-        }
-      }
-    },
-    "debug_logs_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export Debug Logs"
-          }
-        }
-      }
-    },
     "" : {
 
     },
@@ -3025,10 +2995,24 @@
       }
     },
     "button_make_device_primary" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Device Primary"
+          }
+        }
+      }
     },
     "button_make_device_secondary" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Device Secondary"
+          }
+        }
+      }
     },
     "button_manual_backup" : {
       "localizations" : {
@@ -4071,6 +4055,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "X-Ray"
+          }
+        }
+      }
+    },
+    "debug_logs_error_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Export Logs"
+          }
+        }
+      }
+    },
+    "debug_logs_generating" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating…"
+          }
+        }
+      }
+    },
+    "debug_logs_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Debug Logs"
           }
         }
       }
@@ -5474,16 +5488,44 @@
 
     },
     "linked_devices_multiple_devices_description" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your primary device can spend. Secondary devices can view balance and history."
+          }
+        }
+      }
     },
     "linked_devices_no_active_wallet" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Active Wallet"
+          }
+        }
+      }
     },
     "linked_devices_no_active_wallet_description" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make this device your primary wallet to send and receive."
+          }
+        }
+      }
     },
     "linked_devices_single_device_description" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're using Arké on one device. Install Arké on another iPhone or iPad signed in to the same iCloud, and it'll appear here automatically. View-only at first, ready to take over if you need it."
+          }
+        }
+      }
     },
     "Loading..." : {
 
