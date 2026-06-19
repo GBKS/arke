@@ -10,38 +10,26 @@ import ArkeUI
 
 struct FeeSummaryView_iOS: View {
     @Environment(WalletManager.self) private var walletManager
-    @State private var viewModel: FeeSummaryViewModel?
+    @State private var statistics: FeeStatistics = .empty
     
     var body: some View {
-        Group {
-            if let viewModel {
-                if viewModel.isLoading {
-                    loadingView
-                } else if let errorMessage = viewModel.errorMessage {
-                    errorView(message: errorMessage)
-                } else if let statistics = viewModel.statistics {
-                    if statistics.hasTransactions {
-                        statisticsView(statistics: statistics)
-                    } else {
-                        emptyStateView
-                    }
-                } else {
-                    emptyStateView
-                }
-            } else {
-                ProgressView()
-                    .accessibilityLabel(String(localized: "status_loading_fee_stats"))
-                    .task {
-                        viewModel = FeeSummaryViewModel(walletManager: walletManager)
-                        await viewModel?.loadStatistics()
-                    }
+        statisticsView(statistics: statistics)
+            .task(id: walletManager.transactions.count) {
+                loadStatistics()
             }
-        }
-        //.navigationTitle("activity_fee_summary")
-        .navigationBarTitleDisplayMode(.inline)
-        .refreshable {
-            await viewModel?.loadStatistics()
-        }
+            //.navigationTitle("activity_fee_summary")
+            .navigationBarTitleDisplayMode(.inline)
+            .refreshable {
+                loadStatistics()
+            }
+    }
+    
+    private func loadStatistics() {
+        let viewModel = FeeSummaryViewModel(walletManager: walletManager)
+        statistics = viewModel.calculateStatistics(
+            from: walletManager.transactions,
+            modelContext: walletManager.modelContext
+        )
     }
     
     // MARK: - Statistics View
@@ -80,22 +68,32 @@ struct FeeSummaryView_iOS: View {
         .padding(.vertical, 8)
     }
     
+    // MARK: - Helper Methods
+    
+    private func formatAmountOrDash(_ amount: Int, hasData: Bool) -> String {
+        guard hasData else { return "—" }
+        return BitcoinFormatter.shared.formatAmount(amount)
+    }
+    
     // MARK: - Send Fee Summary Card
     
     private func sendFeeSummaryCard(statistics: FeeStatistics) -> some View {
         let sendStats = statistics.sendStatistics
+        let hasData = statistics.hasTransactions
         let percentageString: String
         
-        if let feePercentage = sendStats.feeAsPercentOfVolume {
+        if !hasData {
+            percentageString = "—"
+        } else if let feePercentage = sendStats.feeAsPercentOfVolume {
             percentageString = String(format: "%.2f%%", feePercentage)
         } else {
-            percentageString = "0%"
+            percentageString = "—"
         }
         
         let keyMetrics: [FeeDetailCardView_iOS.KeyMetric] = [
             .init(label: String(localized: "fee_transactions"), value: "\(sendStats.count)"),
-            .init(label: String(localized: "activity_fees_paid"), value: BitcoinFormatter.shared.formatAmount(sendStats.totalFees)),
-            .init(label: String(localized: "fee_amount_sent"), value: BitcoinFormatter.shared.formatAmount(sendStats.volume))
+            .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(sendStats.totalFees, hasData: hasData)),
+            .init(label: String(localized: "fee_amount_sent"), value: formatAmountOrDash(sendStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = sendStats.networkBreakdown
@@ -106,19 +104,19 @@ struct FeeSummaryView_iOS: View {
                     label: networkBreakdown.arkCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_ark"), networkBreakdown.arkCount)
                         : String(localized: "network_ark"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.arkFees)
+                    value: formatAmountOrDash(networkBreakdown.arkFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.lightningCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_lightning"), networkBreakdown.lightningCount)
                         : String(localized: "network_lightning"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.lightningFees)
+                    value: formatAmountOrDash(networkBreakdown.lightningFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.bitcoinCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_bitcoin"), networkBreakdown.bitcoinCount)
                         : String(localized: "network_bitcoin"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.bitcoinFees)
+                    value: formatAmountOrDash(networkBreakdown.bitcoinFees, hasData: hasData)
                 )
             ]
         )
@@ -140,6 +138,7 @@ struct FeeSummaryView_iOS: View {
     private func maintenanceFeesCard(statistics: FeeStatistics) -> some View {
         let internalStats = statistics.internalStatistics
         let categoryBreakdown = internalStats.categoryBreakdown
+        let hasData = statistics.hasTransactions
         
         // Extract specific categories for maintenance
         let refreshStats = categoryBreakdown[.refresh]
@@ -164,32 +163,32 @@ struct FeeSummaryView_iOS: View {
                 label: refreshStats?.count ?? 0 > 0 
                     ? String(format: String(localized: "maintenance_refresh_with_count"), refreshStats!.count)
                     : String(localized: "maintenance_refresh"),
-                value: BitcoinFormatter.shared.formatAmount(refreshStats?.fees ?? 0)
+                value: formatAmountOrDash(refreshStats?.fees ?? 0, hasData: hasData)
             ),
             .init(
                 label: boardingStats?.count ?? 0 > 0 
                     ? String(format: String(localized: "maintenance_boarding_with_count"), boardingStats!.count)
                     : String(localized: "maintenance_boarding"),
-                value: BitcoinFormatter.shared.formatAmount(boardingStats?.fees ?? 0)
+                value: formatAmountOrDash(boardingStats?.fees ?? 0, hasData: hasData)
             ),
             .init(
                 label: combinedOffboardingCount > 0 
                     ? String(format: String(localized: "maintenance_offboarding_with_count"), combinedOffboardingCount)
                     : String(localized: "maintenance_offboarding"),
-                value: BitcoinFormatter.shared.formatAmount(combinedOffboardingFees)
+                value: formatAmountOrDash(combinedOffboardingFees, hasData: hasData)
             ),
             .init(
                 label: recoveryCount > 0 
                     ? String(format: String(localized: "maintenance_exit_with_count"), recoveryCount)
                     : String(localized: "maintenance_exit"),
-                value: BitcoinFormatter.shared.formatAmount(recoveryFees)
+                value: formatAmountOrDash(recoveryFees, hasData: hasData)
             )
         ]
         
         return FeeDetailCardView_iOS(
             title: String(localized: "fee_maintenance"),
             subtitle: String(localized: "fee_maintenance_subtitle"),
-            prominentMetric: BitcoinFormatter.shared.formatAmount(internalStats.totalFees),
+            prominentMetric: formatAmountOrDash(internalStats.totalFees, hasData: hasData),
             prominentMetricAccessibilityLabel: nil,
             keyMetrics: keyMetrics,
             sections: [],
@@ -202,9 +201,12 @@ struct FeeSummaryView_iOS: View {
     
     private func receiveFeesCard(statistics: FeeStatistics) -> some View {
         let receiveStats = statistics.receiveStatistics
+        let hasData = statistics.hasTransactions
         let percentageString: String
         
-        if let feePercentage = receiveStats.feeAsPercentOfVolume {
+        if !hasData {
+            percentageString = "—"
+        } else if let feePercentage = receiveStats.feeAsPercentOfVolume {
             percentageString = String(format: "%.2f%%", feePercentage)
         } else {
             percentageString = "—"
@@ -212,8 +214,8 @@ struct FeeSummaryView_iOS: View {
         
         let keyMetrics: [FeeDetailCardView_iOS.KeyMetric] = [
             .init(label: String(localized: "fee_transactions"), value: "\(receiveStats.count)"),
-            .init(label: String(localized: "activity_fees_paid"), value: BitcoinFormatter.shared.formatAmount(receiveStats.totalFees)),
-            .init(label: String(localized: "fee_amount_received"), value: BitcoinFormatter.shared.formatAmount(receiveStats.volume))
+            .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(receiveStats.totalFees, hasData: hasData)),
+            .init(label: String(localized: "fee_amount_received"), value: formatAmountOrDash(receiveStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = receiveStats.networkBreakdown
@@ -224,19 +226,19 @@ struct FeeSummaryView_iOS: View {
                     label: networkBreakdown.arkCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_ark"), networkBreakdown.arkCount)
                         : String(localized: "network_ark"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.arkFees)
+                    value: formatAmountOrDash(networkBreakdown.arkFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.lightningCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_lightning"), networkBreakdown.lightningCount)
                         : String(localized: "network_lightning"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.lightningFees)
+                    value: formatAmountOrDash(networkBreakdown.lightningFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.bitcoinCount > 0 
                         ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_bitcoin"), networkBreakdown.bitcoinCount)
                         : String(localized: "network_bitcoin"),
-                    value: BitcoinFormatter.shared.formatAmount(networkBreakdown.bitcoinFees)
+                    value: formatAmountOrDash(networkBreakdown.bitcoinFees, hasData: hasData)
                 )
             ]
         )
@@ -284,9 +286,7 @@ struct FeeSummaryView_iOS: View {
             Text(message)
         } actions: {
             Button("button_try_again") {
-                Task {
-                    await viewModel?.loadStatistics()
-                }
+                loadStatistics()
             }
         }
     }

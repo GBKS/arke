@@ -31,6 +31,7 @@ final class FeeSummaryViewModel {
         
         let transactions = walletManager.transactions
         let modelContext = walletManager.modelContext
+        
         statistics = calculateStatistics(from: transactions, modelContext: modelContext)
         
         isLoading = false
@@ -38,7 +39,7 @@ final class FeeSummaryViewModel {
     
     // MARK: - Calculation
     
-    private func calculateStatistics(from transactions: [TransactionModel], modelContext: ModelContext?) -> FeeStatistics {
+    func calculateStatistics(from transactions: [TransactionModel], modelContext: ModelContext?) -> FeeStatistics {
         guard !transactions.isEmpty else {
             return .empty
         }
