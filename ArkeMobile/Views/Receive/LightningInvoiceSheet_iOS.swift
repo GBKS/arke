@@ -231,12 +231,13 @@ struct LightningInvoiceSheet_iOS: View {
                 } label: {
                     Text("Done")
                         .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.white)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glass)
                 .controlSize(.large)
                 .tint(Color.Arke.gold)
+                .foregroundStyle(.white)
+                .environment(\.colorScheme, .dark)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 60)
