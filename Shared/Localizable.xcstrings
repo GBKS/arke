@@ -437,12 +437,32 @@
         }
       }
     },
+    "accessibility_current_device_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to view options for this device"
+          }
+        }
+      }
+    },
     "accessibility_delete_wallet_hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Permanently deletes the existing wallet without recovery phrase"
+          }
+        }
+      }
+    },
+    "accessibility_device_stale_warning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning: not seen recently"
           }
         }
       }
@@ -473,6 +493,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "File picker opened. Select your backup file."
+          }
+        }
+      }
+    },
+    "accessibility_last_seen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "last seen"
           }
         }
       }
@@ -528,12 +558,52 @@
         }
       }
     },
+    "accessibility_make_primary_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enables spending on this device. This device will have full wallet access."
+          }
+        }
+      }
+    },
+    "accessibility_make_secondary_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Converts this device to view-only mode. You won't be able to spend from this device."
+          }
+        }
+      }
+    },
     "accessibility_network_toggle_hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toggle between mainnet and testnet"
+          }
+        }
+      }
+    },
+    "accessibility_no_primary_device_alert" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warning: No active wallet. Make this device your primary wallet to send and receive."
+          }
+        }
+      }
+    },
+    "accessibility_other_device_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Double tap to view options for this device"
           }
         }
       }
@@ -6715,9 +6785,6 @@
     "Review address" : {
 
     },
-    "Review Address" : {
-
-    },
     "Round %u" : {
 
     },
@@ -8330,76 +8397,6 @@
     },
     "We will use this in the next step to optimize your expected fees." : {
 
-    },
-    "accessibility_current_device_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double tap to view options for this device"
-          }
-        }
-      }
-    },
-    "accessibility_other_device_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double tap to view options for this device"
-          }
-        }
-      }
-    },
-    "accessibility_last_seen" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "last seen"
-          }
-        }
-      }
-    },
-    "accessibility_device_stale_warning" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warning: not seen recently"
-          }
-        }
-      }
-    },
-    "accessibility_no_primary_device_alert" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warning: No active wallet. Make this device your primary wallet to send and receive."
-          }
-        }
-      }
-    },
-    "accessibility_make_secondary_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Converts this device to view-only mode. You won't be able to spend from this device."
-          }
-        }
-      }
-    },
-    "accessibility_make_primary_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enables spending on this device. This device will have full wallet access."
-          }
-        }
-      }
     }
   },
   "version" : "1.1"

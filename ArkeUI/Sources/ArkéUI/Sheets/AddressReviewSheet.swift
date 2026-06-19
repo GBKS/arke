@@ -23,7 +23,7 @@ public struct AddressReviewSheet: View {
         VStack(spacing: 25) {
             HStack(spacing: 12) {
                 if showAddressIcons {
-                    AddressPattern(address: address)
+                    AddressPattern(address: address, bordered: true)
                         .frame(width: 40)
                 }
 

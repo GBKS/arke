@@ -11,60 +11,103 @@ import ArkeUI
 struct AddressCard: View {
     let address: String
     let shareContent: String?
-    @State private var showingCopied = false
-    @State private var fontSize: CGFloat = 14
+    let label: String?
+    let onTap: () -> Void
     
-    init(address: String, shareContent: String? = nil) {
+    @State private var showingCopied = false
+    @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
+    
+    init(address: String, shareContent: String? = nil, label: String? = nil, onTap: @escaping () -> Void) {
         self.address = address
         self.shareContent = shareContent
+        self.label = label
+        self.onTap = onTap
     }
     
-    private func formattedAddress() -> some View {
+    private var fontSize: CGFloat {
+        #if os(macOS)
+        14
+        #else
+        17
+        #endif
+    }
+    
+    private func collapsedAddress() -> some View {
         let chunks = address.chunked(into: 4)
-        let indexedChunks = chunks.enumerated().map { IndexedChunk(index: $0.offset, chunk: $0.element) }
-        let spacing = fontSize * 0.3 // Proportional to font size
+        let spacing = fontSize * 0.3
         
-        return FlexWrapView(data: indexedChunks, spacing: spacing) { indexedChunk in
-            let isFirstOrLast = indexedChunk.index < 2 || indexedChunk.index >= chunks.count - 2
-            let textColor: Color = isFirstOrLast ? .primary : .secondary
-            let textWeight: Font.Weight = isFirstOrLast ? .semibold : .regular
+        return HStack(spacing: spacing) {
+            ForEach(0..<min(2, chunks.count), id: \.self) { index in
+                Text(chunks[index])
+                    .foregroundStyle(.primary)
+                    .fontWeight(.regular)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
             
-            Text(indexedChunk.chunk)
-                .foregroundStyle(textColor)
-                .fontWeight(textWeight)
-                .lineLimit(1)
-                .fixedSize()
+            if chunks.count > 4 {
+                Text(String(localized: "symbol_ellipsis"))
+                    .foregroundStyle(.primary)
+                    .fontWeight(.regular)
+            }
+            
+            ForEach(max(2, chunks.count - 2)..<chunks.count, id: \.self) { index in
+                Text(chunks[index])
+                    .foregroundStyle(.primary)
+                    .fontWeight(.regular)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
         }
+        .font(.system(size: fontSize, design: .monospaced))
     }
     
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                formattedAddress()
-                    .font(.system(size: fontSize, design: .monospaced))
-                    .animation(.easeInOut(duration: 0.3), value: fontSize)
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            fontSize = fontSize == 14 ? 20 : 14
-                        }
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
+                if let label {
+                    HStack {
+                        Text(label)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                        Spacer()
                     }
+                }
                 
-                Spacer()
-    
-                Button {
-                    copyToClipboard(address)
+                collapsedAddress()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+            
+            Spacer()
+            
+            Button {
+                copyToClipboard(address)
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                     showingCopied = true
-                    
-                    Task {
-                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                }
+                
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    withAnimation {
                         showingCopied = false
                     }
-                } label: {
-                    Image(systemName: showingCopied ? "checkmark" : "doc.on.doc")
                 }
-                .buttonStyle(.borderless)
-                .help("action_copy_address")
+            } label: {
+                Image(systemName: showingCopied ? "checkmark" : "doc.on.doc.fill")
+                    .foregroundStyle(showingCopied ? Color.Arke.green : Color.Arke.gold)
+                    .frame(width: 14, height: 14)
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 4)
+                    .contentTransition(.symbolEffect(.replace))
+                    .scaleEffect(showingCopied ? 1.1 : 1.0)
             }
+            .buttonStyle(.bordered)
+            .tint(showingCopied ? .Arke.green : .Arke.gold)
+            .help("action_copy_address")
         }
     }
 }
@@ -72,7 +115,9 @@ struct AddressCard: View {
 #Preview {
     AddressCard(
         address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-        shareContent: "bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+        shareContent: "bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+        label: "Savings Address",
+        onTap: { print("Address tapped") }
     )
     .padding()
 }

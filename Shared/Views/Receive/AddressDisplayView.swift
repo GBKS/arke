@@ -14,15 +14,33 @@ struct AddressDisplayView: View {
     let amount: String
     let note: String
     @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
+    @State private var selectedAddressInfo: AddressInfo?
+    
+    struct AddressInfo: Identifiable {
+        let id = UUID()
+        let address: String
+        let label: String
+    }
     
     var body: some View {
         VStack(spacing: 20) {
             addressContentView
+            /*
                 .id(selectedBalance)
                 .transition(.asymmetric(
                     insertion: .opacity.combined(with: .scale(scale: 0.9).combined(with: .offset(y: 50))),
                     removal: .opacity.combined(with: .scale(scale: 1.1))
                 ))
+             */
+        }
+        .sheet(item: $selectedAddressInfo) { info in
+            AddressReviewSheet(
+                address: info.address,
+                title: info.label,
+                showAddressIcons: showAddressIcons
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
     
@@ -44,7 +62,7 @@ struct AddressDisplayView: View {
     private var paymentsAddressView: some View {
         if !manager.arkAddress.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                AddressCardExpandable(
+                AddressCard(
                     address: manager.arkAddress,
                     shareContent: BIP21URIHelper.createBIP21URI(
                         arkAddress: manager.arkAddress,
@@ -52,7 +70,13 @@ struct AddressDisplayView: View {
                         label: nil,
                         message: note.isEmpty ? nil : note
                     ),
-                    label: "Payments Address"
+                    label: "Payments Address",
+                    onTap: {
+                        selectedAddressInfo = AddressInfo(
+                            address: manager.arkAddress,
+                            label: "Payments Address"
+                        )
+                    }
                 )
             }
             .padding(.horizontal, 25)
@@ -68,7 +92,7 @@ struct AddressDisplayView: View {
     private var savingsAddressView: some View {
         if !manager.onchainAddress.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                AddressCardExpandable(
+                AddressCard(
                     address: manager.onchainAddress,
                     shareContent: BIP21URIHelper.createBIP21URI(
                         onchainAddress: manager.onchainAddress,
@@ -76,7 +100,13 @@ struct AddressDisplayView: View {
                         label: nil,
                         message: note.isEmpty ? nil : note
                     ),
-                    label: "Savings Address"
+                    label: "Savings Address",
+                    onTap: {
+                        selectedAddressInfo = AddressInfo(
+                            address: manager.onchainAddress,
+                            label: "Savings Address"
+                        )
+                    }
                 )
             }
             .padding(.horizontal, 25)
@@ -91,6 +121,7 @@ struct AddressDisplayView: View {
         VStack(spacing: 20) {
             if !manager.arkAddress.isEmpty {
                 HStack(spacing: 12) {
+                    /*
                     if showAddressIcons {
                         AddressPattern(address: manager.arkAddress)
                             .frame(width: 26)
@@ -100,8 +131,9 @@ struct AddressDisplayView: View {
                             .cornerRadius(8)
                         //AddressIcon(address: manager.arkAddress, size: 24)
                     }
+                    */
                     
-                    AddressCardExpandable(
+                    AddressCard(
                         address: manager.arkAddress,
                         shareContent: BIP21URIHelper.createBIP21URI(
                             arkAddress: manager.arkAddress,
@@ -109,7 +141,13 @@ struct AddressDisplayView: View {
                             label: nil,
                             message: note.isEmpty ? nil : note
                         ),
-                        label: "Payments Address"
+                        label: "Payments Address",
+                        onTap: {
+                            selectedAddressInfo = AddressInfo(
+                                address: manager.arkAddress,
+                                label: "Payments Address"
+                            )
+                        }
                     )
                 }
             } else {
@@ -120,6 +158,7 @@ struct AddressDisplayView: View {
             
             if !manager.onchainAddress.isEmpty {
                 HStack(spacing: 12) {
+                    /*
                     if showAddressIcons {
                         AddressPattern(address: manager.onchainAddress)
                             .frame(width: 26)
@@ -128,8 +167,9 @@ struct AddressDisplayView: View {
                             .cornerRadius(8)
                         //AddressIcon(address: manager.onchainAddress, size: 24)
                     }
+                     */
                     
-                    AddressCardExpandable(
+                    AddressCard(
                         address: manager.onchainAddress,
                         shareContent: BIP21URIHelper.createBIP21URI(
                             onchainAddress: manager.onchainAddress,
@@ -137,7 +177,13 @@ struct AddressDisplayView: View {
                             label: nil,
                             message: note.isEmpty ? nil : note
                         ),
-                        label: "Savings Address (fallback)"
+                        label: "Savings Address (fallback)",
+                        onTap: {
+                            selectedAddressInfo = AddressInfo(
+                                address: manager.onchainAddress,
+                                label: "Savings Address (fallback)"
+                            )
+                        }
                     )
                 }
             } else {

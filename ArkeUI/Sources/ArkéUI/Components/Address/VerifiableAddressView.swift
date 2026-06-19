@@ -33,7 +33,7 @@ public struct VerifiableAddressView: View {
         FlexWrapView(data: indexedChunks, spacing: spacing) { indexedChunk in
             let isVerified = verifiedChunks.contains(indexedChunk.index)
             let isFirstOrLast = indexedChunk.index < 2 || indexedChunk.index >= chunks.count - 2
-            let textColor: Color = isVerified ? .white : (isFirstOrLast ? .primary : .secondary)
+            let textColor: Color = isFirstOrLast ? .primary : .secondary
             
             Text(indexedChunk.chunk)
                 .foregroundStyle(textColor)
@@ -44,7 +44,11 @@ public struct VerifiableAddressView: View {
                 .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isVerified ? Color.green : Color.clear)
+                        .fill(isVerified ? Color.green.opacity(0.1) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.green.opacity(0.3), lineWidth: isVerified ? 1.5 : 0)
                 )
                 .onTapGesture {
                     withAnimation(.easeInOut(duration: 0.2)) {
