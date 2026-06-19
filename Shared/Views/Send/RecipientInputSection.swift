@@ -19,6 +19,7 @@ struct RecipientInputSection: View {
     
     @State private var debounceTask: Task<Void, Never>?
     @State private var showingAddressReview = false
+    @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -82,9 +83,12 @@ struct RecipientInputSection: View {
                 .strokeBorder(Color.arkeSeparatorColor.opacity(0.5), lineWidth: 1)
         )
         .sheet(isPresented: $showingAddressReview) {
-            AddressReviewSheet(address: input.trimmingCharacters(in: .whitespacesAndNewlines))
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+            AddressReviewSheet(
+                address: input.trimmingCharacters(in: .whitespacesAndNewlines),
+                showAddressIcons: showAddressIcons
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
     
@@ -131,97 +135,4 @@ struct RecipientInputSection: View {
             }
         }
     }
-}
-
-struct AddressReviewSheet: View {
-    let address: String
-    @Environment(\.dismiss) private var dismiss
-    @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
-    
-    var body: some View {
-        VStack(spacing: 25) {
-            HStack(spacing: 12) {
-                if showAddressIcons {
-                    AddressPattern(address: address)
-                        .frame(width: 26)
-                }
-                
-                Text("Review Address")
-                    .font(.system(size: 24, design: .serif))
-            }
-            .multilineTextAlignment(.center)
-            .padding(.horizontal)
-            .padding(.top, 30)
-            
-            VerifiableAddressView(address: address)
-                .padding(.horizontal)
-            
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-}
-
-#Preview {
-    struct PreviewWrapper: View {
-        @State private var idleInput = ""
-        @State private var idleState: RecipientState = .idle
-        @State private var idleDestination: PaymentDestination?
-        
-        @State private var validInput = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-        @State private var validState: RecipientState = .idle
-        @State private var validDestination: PaymentDestination?
-        
-        @State private var invalidInput = "invalid_address_xyz"
-        @State private var invalidState: RecipientState = .idle
-        @State private var invalidDestination: PaymentDestination?
-        
-        @FocusState private var isFocused: Bool
-        
-        var body: some View {
-            VStack(spacing: 40) {
-                // Idle state
-                RecipientInputSection(
-                    input: $idleInput,
-                    state: $idleState,
-                    destination: $idleDestination,
-                    onShowAddressFormats: { print("Show formats") },
-                    onPaymentRequestParsed: nil,
-                    isRecipientFieldFocused: $isFocused
-                )
-                
-                // Valid state
-                RecipientInputSection(
-                    input: $validInput,
-                    state: $validState,
-                    destination: $validDestination,
-                    onShowAddressFormats: { print("Show formats") },
-                    onPaymentRequestParsed: nil,
-                    isRecipientFieldFocused: $isFocused
-                )
-                
-                // Invalid state
-                RecipientInputSection(
-                    input: $invalidInput,
-                    state: $invalidState,
-                    destination: $invalidDestination,
-                    onShowAddressFormats: { print("Show formats") },
-                    onPaymentRequestParsed: nil,
-                    isRecipientFieldFocused: $isFocused
-                )
-            }
-            .padding()
-            .frame(width: 600)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("button_done") {
-                        isFocused = false
-                    }
-                }
-            }
-        }
-    }
-    
-    return PreviewWrapper()
 }

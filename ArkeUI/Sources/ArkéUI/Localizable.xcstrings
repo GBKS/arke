@@ -36,6 +36,17 @@
     "Address identicon" : {
 
     },
+    "address_review_sheet_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Address"
+          }
+        }
+      }
+    },
     "Ark Server" : {
 
     },
@@ -538,7 +549,15 @@
       }
     },
     "symbol_ellipsis" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "…"
+          }
+        }
+      }
     },
     "Test Network" : {
 
