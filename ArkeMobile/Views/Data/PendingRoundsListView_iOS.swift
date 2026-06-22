@@ -50,12 +50,11 @@ struct PendingRoundsListView_iOS: View {
                 
                 Spacer()
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal)
             
             Divider()
                 .padding(.top, 12)
-                .padding(.leading, 30)
-                .padding(.trailing, 30)
+                .padding(.horizontal)
             
             // Round List
             if isLoadingRounds {
@@ -66,12 +65,12 @@ struct PendingRoundsListView_iOS: View {
                     cornerRadius: 15
                 )
                 .padding(.top, 10)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else if let error = error {
                 ErrorBox(errorMessage: error)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal)
             } else if rounds.isEmpty {
-                VStack {
+                HStack(spacing: 10) {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
                     Text("data_no_pending_rounds")
@@ -79,7 +78,7 @@ struct PendingRoundsListView_iOS: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 20)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else {
                 LazyVStack(spacing: 0) {
                     // Ongoing rounds section
@@ -119,7 +118,7 @@ struct PendingRoundsListView_iOS: View {
                         }
                     }
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal)
             }
         }
         .task(id: reloadTrigger) {
@@ -175,7 +174,7 @@ private struct RoundRowView: View {
             ZStack {
                 Circle()
                     .fill(round.ongoing ? Color.Arke.green.opacity(0.2) : Color.orange.opacity(0.2))
-                    .frame(width: 40, height: 40)
+                    .frame(width: 32, height: 32)
                 
                 Image(systemName: round.ongoing ? "arrow.triangle.2.circlepath" : "pause.circle")
                     .foregroundStyle(round.ongoing ? Color.Arke.green : .orange)
@@ -246,7 +245,6 @@ private struct RoundRowView: View {
             */
         }
         .padding(.vertical, 12)
-        .padding(.horizontal, 12)
         .alert("Cancel Round?", isPresented: $showCancelConfirmation) {
             Button("Cancel Round", role: .destructive) {
                 Task {
@@ -271,24 +269,4 @@ private struct RoundRowView: View {
             print("Failed to cancel round \(round.id): \(error)")
         }
     }
-}
-
-// MARK: - Previews
-
-#Preview("With Rounds") {
-    NavigationStack {
-        PendingRoundsListView_iOS()
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400, height: 600)
-}
-
-#Preview("Empty State") {
-    NavigationStack {
-        PendingRoundsListView_iOS()
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400, height: 600)
 }

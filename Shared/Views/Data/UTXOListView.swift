@@ -52,12 +52,11 @@ struct UTXOListView: View {
                 .controlSize(.small)
                 .disabled(isLoadingUTXOs)
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal)
             
             Divider()
                 .padding(.top, 12)
-                .padding(.leading, 30)
-                .padding(.trailing, 30)
+                .padding(.horizontal)
             
             if isLoadingUTXOs {
                 SkeletonLoader(
@@ -67,7 +66,7 @@ struct UTXOListView: View {
                     cornerRadius: 15
                 )
                 .padding(.top, 10)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else if let error = error {
                 ErrorBox(errorMessage: error)
             } else if utxos.isEmpty {
@@ -79,7 +78,7 @@ struct UTXOListView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 20)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(utxos.enumerated()), id: \.element.id) { index, utxo in
@@ -101,7 +100,7 @@ struct UTXOListView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal)
             }
         }
         .task {

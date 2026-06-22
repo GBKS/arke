@@ -23,8 +23,16 @@ struct VTXOListView_iOS: View {
     @State private var updateTimer: Timer?
     @State private var refreshFeeEstimate: FeeEstimate?
     
+    private var spendableVTXOs: [VTXOModel] {
+        vtxos.filter { $0.state != .locked && $0.state != .spent }
+    }
+    
     private var totalVTXOAmount: Int {
         vtxos.reduce(into: 0) { $0 += $1.amountSat }
+    }
+    
+    private var totalSpendableVTXOAmount: Int {
+        spendableVTXOs.reduce(into: 0) { $0 += $1.amountSat }
     }
     
     var body: some View {
@@ -43,7 +51,7 @@ struct VTXOListView_iOS: View {
                 
                 Spacer()
                 
-                if !vtxos.isEmpty && totalVTXOAmount >= minimumRefreshAmountSats {
+                if !spendableVTXOs.isEmpty && totalSpendableVTXOAmount >= minimumRefreshAmountSats {
                     Button {
                         Task {
                             await refreshVTXOs()
@@ -66,12 +74,11 @@ struct VTXOListView_iOS: View {
                     .disabled(isLoadingVTXOs)
                 }
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal)
             
             Divider()
                 .padding(.top, 12)
-                .padding(.leading, 30)
-                .padding(.trailing, 30)
+                .padding(.horizontal)
             
             if isLoadingVTXOs {
                 SkeletonLoader(
@@ -81,10 +88,10 @@ struct VTXOListView_iOS: View {
                     cornerRadius: 15
                 )
                 .padding(.top, 10)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else if let error = error {
                 ErrorBox(errorMessage: error)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal)
             } else if vtxos.isEmpty {
                 VStack {
                     Image(systemName: "tray")
@@ -94,7 +101,7 @@ struct VTXOListView_iOS: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 20)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(vtxos.enumerated()), id: \.element.id) { index, vtxo in
@@ -111,11 +118,10 @@ struct VTXOListView_iOS: View {
                         
                         if index < vtxos.count - 1 {
                             Divider()
-                                .padding(.horizontal, 12)
                         }
                     }
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal)
             }
         }
         .task(id: reloadTrigger) {
@@ -157,11 +163,16 @@ struct VTXOListView_iOS: View {
             print("vtxos: \(vtxos)")
             print("latestBlockHeight: \(latestBlockHeight ?? -1)")
             
-            // Calculate refresh fee estimate for ALL VTXOs (developer option)
+            // Calculate refresh fee estimate for spendable VTXOs only (developer option)
             if !vtxos.isEmpty {
-                let vtxoIds = vtxos.map { $0.id }
-                refreshFeeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: vtxoIds)
-                print("Refresh fee estimate: \(refreshFeeEstimate?.feeSats ?? 0) sats for ALL \(vtxos.count) VTXO(s)")
+                let spendableIds = spendableVTXOs.map { $0.id }
+                if !spendableIds.isEmpty {
+                    refreshFeeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: spendableIds)
+                    print("Refresh fee estimate: \(refreshFeeEstimate?.feeSats ?? 0) sats for \(spendableIds.count) spendable VTXO(s)")
+                } else {
+                    refreshFeeEstimate = nil
+                    print("No spendable VTXOs to refresh")
+                }
             } else {
                 refreshFeeEstimate = nil
                 print("No VTXOs to refresh")
@@ -177,29 +188,29 @@ struct VTXOListView_iOS: View {
         isLoadingVTXOs = true
         error = nil
         
-        print("refreshVTXOs - Force refreshing ALL VTXOs (developer option)...")
+        print("refreshVTXOs - Force refreshing spendable VTXOs (developer option)...")
         
         do {
-            // Step 1: Get ALL VTXOs (not just those needing refresh)
-            let allVtxos = vtxos
+            // Step 1: Get spendable VTXOs only (exclude locked and spent)
+            let vtxosToRefresh = spendableVTXOs
             
-            if allVtxos.isEmpty {
-                print("refreshVTXOs - No VTXOs to refresh")
+            if vtxosToRefresh.isEmpty {
+                print("refreshVTXOs - No spendable VTXOs to refresh")
                 isLoadingVTXOs = false
                 await loadVTXOs()
                 return
             }
             
-            print("refreshVTXOs - Force refreshing \(allVtxos.count) VTXO(s)")
+            print("refreshVTXOs - Force refreshing \(vtxosToRefresh.count) spendable VTXO(s)")
             
-            // Step 2: Get VTXO IDs from all VTXOs
-            let vtxoIds = allVtxos.map { $0.id }
+            // Step 2: Get VTXO IDs from spendable VTXOs
+            let vtxoIds = vtxosToRefresh.map { $0.id }
             
             // Step 3: Estimate refresh fee using the wallet's built-in method
             let feeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: vtxoIds)
             
             print("refreshVTXOs - Fee estimate:")
-            print("  VTXOs to refresh: \(allVtxos.count)")
+            print("  VTXOs to refresh: \(vtxosToRefresh.count)")
             print("  Gross amount: \(feeEstimate.grossAmountSats) sats")
             print("  Refresh fee: \(feeEstimate.feeSats) sats")
             print("  Net amount: \(feeEstimate.netAmountSats) sats")

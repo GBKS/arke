@@ -5556,6 +5556,7 @@
       }
     },
     "label_vtxo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

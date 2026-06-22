@@ -68,7 +68,7 @@ struct BlockHeightSectionView: View {
                 ErrorBox(errorMessage: error)
             }
         }
-        .padding(.horizontal, 30)
+        .padding(.horizontal)
         .task(id: reloadTrigger) {
             await loadBlockHeightData()
         }

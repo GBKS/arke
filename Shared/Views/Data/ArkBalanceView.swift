@@ -103,7 +103,7 @@ struct ArkBalanceView: View {
                 }
             }
         }
-        .padding(.horizontal, 30)
+        .padding(.horizontal)
         .task(id: reloadTrigger) {
             await loadArkBalance()
         }

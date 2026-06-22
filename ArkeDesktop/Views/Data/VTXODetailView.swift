@@ -28,42 +28,22 @@ struct VTXODetailView: View {
             VStack(alignment: .leading, spacing: 24) {
                 // Header Section
                 VStack(spacing: 16) {
-                    // VTXO Icon and Type
                     HStack {
                         Image(systemName: currentVtxo.state.iconName)
-                            .font(.system(size: 40))
+                            .font(.system(size: 50))
                             .foregroundColor(currentVtxo.state.iconColor)
                         
                         VStack(alignment: .leading) {
-                            Text("label_vtxo")
-                                .font(.title2)
-                                .fontWeight(.semibold)
+                            Text(currentVtxo.formattedAmount)
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             
                             Text(currentVtxo.state.displayName)
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(currentVtxo.state.iconColor)
                         }
-                        
-                        Spacer()
-                    }
-                    
-                    // Amount
-                    Text(currentVtxo.formattedAmount)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    // State Badge
-                    HStack {
-                        Text(currentVtxo.state.displayName)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(currentVtxo.state.textColor)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(currentVtxo.state.backgroundColor)
-                            .clipShape(Capsule())
                         
                         Spacer()
                     }
@@ -91,9 +71,11 @@ struct VTXODetailView: View {
                 
                 // Details Section
                 VStack(alignment: .leading, spacing: 16) {
+                    /*
                     Text("balance_vtxo_details")
                         .font(.headline)
                         .fontWeight(.semibold)
+                    */
                     
                     VStack(spacing: 12) {
                         // Outpoint (ID)

@@ -64,12 +64,11 @@ struct VTXOListView: View {
                 .controlSize(.small)
                 .disabled(isLoadingVTXOs)
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal)
             
             Divider()
                 .padding(.top, 12)
-                .padding(.leading, 30)
-                .padding(.trailing, 30)
+                .padding(.horizontal)
             
             if isLoadingVTXOs {
                 SkeletonLoader(
@@ -79,10 +78,10 @@ struct VTXOListView: View {
                     cornerRadius: 15
                 )
                 .padding(.top, 10)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else if let error = error {
                 ErrorBox(errorMessage: error)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal)
             } else if vtxos.isEmpty {
                 VStack {
                     Image(systemName: "tray")
@@ -92,7 +91,7 @@ struct VTXOListView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 20)
-                .padding(.horizontal, 30)
+                .padding(.horizontal)
             } else {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(vtxos.enumerated()), id: \.element.id) { index, vtxo in
@@ -115,7 +114,7 @@ struct VTXOListView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal)
             }
         }
         .task {
