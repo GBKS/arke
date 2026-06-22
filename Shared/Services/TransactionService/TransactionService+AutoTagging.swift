@@ -41,7 +41,7 @@ extension TransactionService {
         // Create new "Balance" system tag
         let balanceTag = PersistentTag(
             name: "Balance",
-            colorHex: "#20​B2​AA",
+            colorHex: "#20B2AA",
             emoji: "👜",
             createdDate: Date(),
             isSystemTag: true

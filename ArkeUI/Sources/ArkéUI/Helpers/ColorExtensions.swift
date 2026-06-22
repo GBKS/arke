@@ -48,7 +48,8 @@ extension Color {
     /// Initialize Color from hex string
     /// Supports 3, 6, and 8 character hex strings (RGB, RRGGBB, AARRGGBB)
     public init?(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        // Filter to only valid hex characters (0-9, A-F, a-f)
+        let hex = hex.filter { "0123456789ABCDEFabcdef".contains($0) }
         var int: UInt64 = 0
         Scanner(string: hex).scanHexInt64(&int)
         let a, r, g, b: UInt64
