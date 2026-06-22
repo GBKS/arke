@@ -11,23 +11,25 @@ import ArkeUI
 struct DataView_iOS: View {
     @Environment(WalletManager.self) private var manager
     var onNavigateToDetail: ((DataDetailItem_iOS) -> Void)? = nil
+    @State private var reloadTrigger = 0
+    @State private var isReloading = false
     
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
-                ArkBalanceView()
+                ArkBalanceView(reloadTrigger: reloadTrigger)
                 
-                OnchainBalanceView()
+                OnchainBalanceView(reloadTrigger: reloadTrigger)
                 
-                VTXOListView_iOS(onSelectItem: { vtxo in
+                VTXOListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { vtxo in
                     onNavigateToDetail?(.vtxo(vtxo))
                 })
                 
-                UnilateralExitListView_iOS(onSelectItem: { exitVtxo in
+                UnilateralExitListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { exitVtxo in
                     onNavigateToDetail?(.exitVtxo(exitVtxo))
                 })
                 
-                PendingRoundsListView_iOS()
+                PendingRoundsListView_iOS(reloadTrigger: reloadTrigger)
                 
                 /*
                 UTXOListView_iOS(onSelectItem: { utxo in
@@ -35,11 +37,11 @@ struct DataView_iOS: View {
                 })
                 */
                 
-                ConfigurationSectionView()
+                ConfigurationSectionView(reloadTrigger: reloadTrigger)
                 
-                ArkInfoSectionView()
+                ArkInfoSectionView(reloadTrigger: reloadTrigger)
 
-                BlockHeightSectionView()
+                BlockHeightSectionView(reloadTrigger: reloadTrigger)
 
                 DebugLogExportButton_iOS()
 
@@ -83,5 +85,34 @@ struct DataView_iOS: View {
         }
         .navigationTitle("data_xray_title")
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Task {
+                        await reloadAllData()
+                    }
+                } label: {
+                    if isReloading {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+                .accessibilityLabel("accessibility_reload_all_data")
+                .accessibilityHint("accessibility_reload_all_data_hint")
+                .disabled(isReloading)
+            }
+        }
+    }
+    
+    private func reloadAllData() async {
+        isReloading = true
+        reloadTrigger += 1
+        
+        // Wait a brief moment to allow all child views to complete their reload
+        try? await Task.sleep(for: .seconds(0.5))
+        
+        isReloading = false
     }
 }
