@@ -311,11 +311,3 @@ struct VTXODeveloperActionsView: View {
         }
     }
 }
-
-#Preview {
-    HStack {
-        VTXODeveloperActionsView(vtxo: VTXOModel.mockVTXOs()[0])
-    }
-    .padding()
-    .environment(WalletManager(useMock: true))
-}

@@ -10,6 +10,7 @@ import SwiftData
 import ArkeUI
 
 struct ArkBalanceView: View {
+    var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
     @Query(filter: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" })
     private var balances: [ArkBalanceModel]
@@ -27,22 +28,6 @@ struct ArkBalanceView: View {
                     .font(.system(size: 24, design: .serif))
                 
                 Spacer()
-                
-                Button {
-                    Task {
-                        await loadArkBalance()
-                    }
-                } label: {
-                    if isLoadingArkBalance {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingArkBalance)
             }
             
             if isLoadingArkBalance {
@@ -119,7 +104,7 @@ struct ArkBalanceView: View {
             }
         }
         .padding(.horizontal, 30)
-        .task {
+        .task(id: reloadTrigger) {
             await loadArkBalance()
         }
     }
@@ -142,26 +127,4 @@ struct ArkBalanceView: View {
         
         isLoadingArkBalance = false
     }
-}
-
-#Preview("With Balance") {
-    NavigationStack {
-        ArkBalanceView()
-            .environment(WalletManager(useMock: true))
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
-    }
-    .modelContainer(for: [ArkBalanceModel.self], inMemory: true)
-}
-
-#Preview("Empty State") {
-    @Previewable @State var mockManager = WalletManager(useMock: true)
-    
-    NavigationStack {
-        ArkBalanceView()
-            .environment(mockManager)
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
-    }
-    .modelContainer(for: [ArkBalanceModel.self], inMemory: true)
 }

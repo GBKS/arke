@@ -13,31 +13,13 @@ struct ArkInfoSectionView: View {
     @State private var arkInfoData: ArkInfoModel?
     @State private var isLoadingArkInfo = false
     @State private var error: String?
+    var reloadTrigger: Int = 0
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            HStack {
-                Text("data_ark_info")
-                    .font(.system(size: 24, design: .serif))
-                
-                Spacer()
-                
-                Button {
-                    Task {
-                        await loadArkInfoData()
-                    }
-                } label: {
-                    if isLoadingArkInfo {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingArkInfo)
-            }
+            Text("data_ark_info")
+                .font(.system(size: 24, design: .serif))
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             if isLoadingArkInfo {
                 SkeletonLoader(
@@ -86,7 +68,7 @@ struct ArkInfoSectionView: View {
             }
         }
         .padding(.horizontal, 30)
-        .task {
+        .task(id: reloadTrigger) {
             await loadArkInfoData()
         }
     }
@@ -106,15 +88,5 @@ struct ArkInfoSectionView: View {
         }
         
         isLoadingArkInfo = false
-    }
-}
-
-#Preview {
-    NavigationStack {
-        ArkInfoSectionView()
-            .environment(WalletManager(useMock: true))
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
-            .frame(width: 350, height: 350)
     }
 }

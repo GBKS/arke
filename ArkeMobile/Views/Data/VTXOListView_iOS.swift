@@ -8,8 +8,10 @@
 import SwiftUI
 import Foundation
 import ArkeUI
+import Bark
 
 struct VTXOListView_iOS: View {
+    var reloadTrigger: Int = 0
     var onSelectItem: ((VTXOModel) -> Void)? = nil
     @Environment(WalletManager.self) private var walletManager
     @State private var vtxos: [VTXOModel] = []
@@ -17,6 +19,7 @@ struct VTXOListView_iOS: View {
     @State private var error: String?
     @State private var latestBlockHeight: Int?
     @State private var updateTimer: Timer?
+    @State private var refreshFeeEstimate: FeeEstimate?
     
     private var totalVTXOAmount: Int {
         vtxos.reduce(into: 0) { $0 += $1.amountSat }
@@ -38,30 +41,28 @@ struct VTXOListView_iOS: View {
                 
                 Spacer()
                 
-                Button {
-                    Task {
-                        await loadVTXOs()
+                if !vtxos.isEmpty {
+                    Button {
+                        Task {
+                            await refreshVTXOs()
+                        }
+                    } label: {
+                        if let feeEstimate = refreshFeeEstimate {
+                            if feeEstimate.feeSats == 0 {
+                                let freeText = String(localized: "Free")
+                                Text("action_get_new_ones_with_fee \(freeText)")
+                            } else {
+                                let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
+                                Text("action_get_new_ones_with_fee \(formattedFee)")
+                            }
+                        } else {
+                            Text("action_get_new_ones")
+                        }
                     }
-                } label: {
-                    if isLoadingVTXOs {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(isLoadingVTXOs)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingVTXOs)
-                
-                Button("action_get_new_ones") {
-                    Task {
-                        await refreshVTXOs()
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingVTXOs)
             }
             .padding(.horizontal, 30)
             
@@ -115,7 +116,7 @@ struct VTXOListView_iOS: View {
                 .padding(.horizontal, 18)
             }
         }
-        .task {
+        .task(id: reloadTrigger) {
             await loadVTXOs()
         }
         .onAppear {
@@ -153,6 +154,16 @@ struct VTXOListView_iOS: View {
             
             print("vtxos: \(vtxos)")
             print("latestBlockHeight: \(latestBlockHeight ?? -1)")
+            
+            // Calculate refresh fee estimate for ALL VTXOs (developer option)
+            if !vtxos.isEmpty {
+                let vtxoIds = vtxos.map { $0.id }
+                refreshFeeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: vtxoIds)
+                print("Refresh fee estimate: \(refreshFeeEstimate?.feeSats ?? 0) sats for ALL \(vtxos.count) VTXO(s)")
+            } else {
+                refreshFeeEstimate = nil
+                print("No VTXOs to refresh")
+            }
         } catch {
             self.error = error.localizedDescription
         }
@@ -164,28 +175,56 @@ struct VTXOListView_iOS: View {
         isLoadingVTXOs = true
         error = nil
         
-        print("refreshVTXOs")
+        print("refreshVTXOs - Force refreshing ALL VTXOs (developer option)...")
         
-        do {            
-            // Call refreshVTXOs on the wallet manager to get new VTXOs
-            let refreshResult = try await walletManager.maybeScheduleMaintenanceRefresh()
+        do {
+            // Step 1: Get ALL VTXOs (not just those needing refresh)
+            let allVtxos = vtxos
             
-            print("refreshVTXOs: \(String(describing: refreshResult))")
+            if allVtxos.isEmpty {
+                print("refreshVTXOs - No VTXOs to refresh")
+                isLoadingVTXOs = false
+                await loadVTXOs()
+                return
+            }
             
-            // After refreshing, reload the VTXOs to update the UI
+            print("refreshVTXOs - Force refreshing \(allVtxos.count) VTXO(s)")
+            
+            // Step 2: Get VTXO IDs from all VTXOs
+            let vtxoIds = allVtxos.map { $0.id }
+            
+            // Step 3: Estimate refresh fee using the wallet's built-in method
+            let feeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: vtxoIds)
+            
+            print("refreshVTXOs - Fee estimate:")
+            print("  VTXOs to refresh: \(allVtxos.count)")
+            print("  Gross amount: \(feeEstimate.grossAmountSats) sats")
+            print("  Refresh fee: \(feeEstimate.feeSats) sats")
+            print("  Net amount: \(feeEstimate.netAmountSats) sats")
+            print("  VTXOs spent: \(feeEstimate.vtxosSpent.count)")
+            
+            let isFree = feeEstimate.feeSats == 0
+            if isFree {
+                print("  → Refresh is FREE!")
+            }
+            
+            // Step 4: Perform delegated refresh
+            print("refreshVTXOs - Scheduling delegated refresh for \(vtxoIds.count) VTXO(s)...")
+            
+            let roundState = try await walletManager.refreshVtxosDelegated(vtxoIds: vtxoIds)
+            
+            if let roundState = roundState {
+                print("refreshVTXOs - Delegated refresh scheduled successfully, Round ID: \(roundState.id)")
+            } else {
+                print("refreshVTXOs - No refresh scheduled (VTXOs may not need refresh yet)")
+            }
+            
+            // Step 5: Reload VTXOs to update the UI
             await loadVTXOs()
         } catch {
+            print("refreshVTXOs - Error: \(error.localizedDescription)")
             self.error = error.localizedDescription
             isLoadingVTXOs = false
         }
     }
-}
-
-#Preview {
-    NavigationStack {
-        VTXOListView_iOS()
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400, height: 600)
 }

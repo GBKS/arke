@@ -183,12 +183,3 @@ struct VTXOListView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        VTXOListView(selectedDataItem: .constant(nil))
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400, height: 600)
-}

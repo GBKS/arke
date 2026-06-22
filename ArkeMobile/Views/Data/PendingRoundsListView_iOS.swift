@@ -10,6 +10,7 @@ import ArkeUI
 import Bark
 
 struct PendingRoundsListView_iOS: View {
+    var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
     @State private var rounds: [RoundState] = []
     @State private var lockedVtxos: [Vtxo] = []
@@ -48,23 +49,6 @@ struct PendingRoundsListView_iOS: View {
                 }
                 
                 Spacer()
-                
-                // Refresh button
-                Button {
-                    Task {
-                        await loadRounds()
-                    }
-                } label: {
-                    if isLoadingRounds {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingRounds)
             }
             .padding(.horizontal, 30)
             
@@ -138,7 +122,7 @@ struct PendingRoundsListView_iOS: View {
                 .padding(.horizontal, 18)
             }
         }
-        .task {
+        .task(id: reloadTrigger) {
             await loadRounds()
         }
     }

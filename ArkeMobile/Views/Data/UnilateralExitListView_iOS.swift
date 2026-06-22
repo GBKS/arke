@@ -10,6 +10,7 @@ import ArkeUI
 import Bark
 
 struct UnilateralExitListView_iOS: View {
+    var reloadTrigger: Int = 0
     var onSelectItem: ((ExitVtxo) -> Void)? = nil
     @Environment(WalletManager.self) private var walletManager
     @State private var exits: [ExitVtxo] = []
@@ -54,23 +55,6 @@ struct UnilateralExitListView_iOS: View {
                 }
                 
                 Spacer()
-                
-                // Sync, progress, and refresh exits
-                Button {
-                    Task {
-                        await syncAndProgressExits()
-                    }
-                } label: {
-                    if isLoadingExits || isProcessing {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingExits || isProcessing)
             }
             .padding(.horizontal, 30)
             
@@ -143,8 +127,9 @@ struct UnilateralExitListView_iOS: View {
                 }
             }
         }
-        .task {
+        .task(id: reloadTrigger) {
             await loadExits()
+            await syncAndProgressExits()
         }
         .onAppear {
             startBlockHeightUpdater()

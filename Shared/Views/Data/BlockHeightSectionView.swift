@@ -9,6 +9,7 @@ import SwiftUI
 import ArkeUI
 
 struct BlockHeightSectionView: View {
+    var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
     @State private var lastLoadedBlockHeight: Int?
     @State private var estimatedBlockHeight: Int?
@@ -22,22 +23,6 @@ struct BlockHeightSectionView: View {
                     .font(.system(size: 24, design: .serif))
                 
                 Spacer()
-                
-                Button {
-                    Task {
-                        await loadBlockHeightData()
-                    }
-                } label: {
-                    if isLoadingBlockHeight {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingBlockHeight)
             }
             
             if isLoadingBlockHeight {
@@ -84,7 +69,7 @@ struct BlockHeightSectionView: View {
             }
         }
         .padding(.horizontal, 30)
-        .task {
+        .task(id: reloadTrigger) {
             await loadBlockHeightData()
         }
         .onChange(of: walletManager.hasLoadedOnce) {
@@ -119,14 +104,5 @@ struct BlockHeightSectionView: View {
         }
         
         isLoadingBlockHeight = false
-    }
-}
-
-#Preview {
-    NavigationStack {
-        BlockHeightSectionView()
-            .environment(WalletManager(useMock: true))
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
     }
 }

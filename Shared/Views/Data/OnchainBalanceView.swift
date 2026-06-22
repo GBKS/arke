@@ -10,6 +10,7 @@ import SwiftData
 import ArkeUI
 
 struct OnchainBalanceView: View {
+    var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
     @Query(filter: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }) 
     private var persistedOnchainBalances: [OnchainBalanceModel]
@@ -31,22 +32,6 @@ struct OnchainBalanceView: View {
                     .font(.system(size: 24, design: .serif))
                 
                 Spacer()
-                
-                Button {
-                    Task {
-                        await loadOnchainBalance()
-                    }
-                } label: {
-                    if isLoadingOnchainBalance {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingOnchainBalance)
             }
             
             if isLoadingOnchainBalance {
@@ -104,7 +89,7 @@ struct OnchainBalanceView: View {
             }
         }
         .padding(.horizontal, 30)
-        .task {
+        .task(id: reloadTrigger) {
             await loadOnchainBalance()
         }
     }
@@ -127,26 +112,4 @@ struct OnchainBalanceView: View {
         
         isLoadingOnchainBalance = false
     }
-}
-
-#Preview("With Balance") {
-    NavigationStack {
-        OnchainBalanceView()
-            .environment(WalletManager(useMock: true))
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
-    }
-    .modelContainer(for: [OnchainBalanceModel.self], inMemory: true)
-}
-
-#Preview("Empty State") {
-    @Previewable @State var mockManager = WalletManager(useMock: true)
-    
-    NavigationStack {
-        OnchainBalanceView()
-            .environment(mockManager)
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
-    }
-    .modelContainer(for: [OnchainBalanceModel.self], inMemory: true)
 }

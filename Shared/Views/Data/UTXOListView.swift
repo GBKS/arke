@@ -125,12 +125,3 @@ struct UTXOListView: View {
         isLoadingUTXOs = false
     }
 }
-
-#Preview("Default") {
-    NavigationStack {
-        UTXOListView(selectedDataItem: .constant(nil))
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400)
-}

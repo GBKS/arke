@@ -13,31 +13,13 @@ struct ConfigurationSectionView: View {
     @State private var configData: ArkConfigModel?
     @State private var isLoadingConfig = false
     @State private var error: String?
+    var reloadTrigger: Int = 0
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("data_configuration")
-                    .font(.system(size: 24, design: .serif))
-                
-                Spacer()
-                
-                Button {
-                    Task {
-                        await loadConfigData()
-                    }
-                } label: {
-                    if isLoadingConfig {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .disabled(isLoadingConfig)
-            }
+            Text("data_configuration")
+                .font(.system(size: 24, design: .serif))
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             if isLoadingConfig {
                 SkeletonLoader(
@@ -63,7 +45,7 @@ struct ConfigurationSectionView: View {
             }
         }
         .padding(.horizontal, 30)
-        .task {
+        .task(id: reloadTrigger) {
             await loadConfigData()
         }
     }
@@ -83,14 +65,5 @@ struct ConfigurationSectionView: View {
         }
         
         isLoadingConfig = false
-    }
-}
-
-#Preview {
-    NavigationStack {
-        ConfigurationSectionView()
-            .environment(WalletManager(useMock: true))
-            .padding(.vertical, 40)
-            .padding(.horizontal, 20)
     }
 }
