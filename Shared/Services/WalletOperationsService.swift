@@ -131,7 +131,7 @@ class WalletOperationsService {
     
     /// Refresh VTXOs using delegated refresh (non-blocking)
     /// Schedules the refresh without requiring the app to stay online until round starts
-    func refreshVTXOs(vtxo_ids: [String]) async throws -> String {
+    func refreshVtxosDelegated(vtxo_ids: [String]) async throws -> String {
         return try await taskManager.execute(key: "refreshVTXOs") {
             let roundState = try await self.wallet.refreshVtxosDelegated(vtxoIds: vtxo_ids)
             
@@ -148,7 +148,7 @@ class WalletOperationsService {
     
     /// Refresh a single VTXO using delegated refresh (non-blocking)
     /// Schedules the refresh without requiring the app to stay online until round starts
-    func refreshVTXO(vtxo_id: String) async throws -> String {
+    func refreshVtxoDelegated(vtxo_id: String) async throws -> String {
         return try await taskManager.execute(key: "refreshVTXO-\(vtxo_id)") {
             let roundState = try await self.wallet.refreshVtxosDelegated(vtxoIds: [vtxo_id])
             

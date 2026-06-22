@@ -648,6 +648,26 @@
         }
       }
     },
+    "accessibility_reload_all_data" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload all data"
+          }
+        }
+      }
+    },
+    "accessibility_reload_all_data_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes all sections including balances, VTXOs, exits, and configuration"
+          }
+        }
+      }
+    },
     "accessibility_section_collapse" : {
       "localizations" : {
         "en" : {
@@ -906,26 +926,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Opens your new wallet"
-          }
-        }
-      }
-    },
-    "accessibility_reload_all_data" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reload all data"
-          }
-        }
-      }
-    },
-    "accessibility_reload_all_data_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refreshes all sections including balances, VTXOs, exits, and configuration"
           }
         }
       }
@@ -1242,6 +1242,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refresh payments balance"
+          }
+        }
+      }
+    },
+    "action_refresh_with_fee %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh (%@)"
           }
         }
       }
@@ -4069,7 +4079,6 @@
         }
       }
     },
-
     "data_round_interval" : {
       "localizations" : {
         "en" : {
@@ -6781,6 +6790,16 @@
     },
     "Recipient" : {
 
+    },
+    "Refresh is disabled because the amount (%@) is smaller than the minimum required (%@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refresh is disabled because the amount (%1$@) is smaller than the minimum required (%2$@)."
+          }
+        }
+      }
     },
     "Refresh now" : {
 

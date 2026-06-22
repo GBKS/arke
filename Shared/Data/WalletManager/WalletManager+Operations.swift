@@ -289,11 +289,11 @@ extension WalletManager {
     
     /// Refresh multiple VTXOs to extend their expiry
     /// VTXOs must be refreshed periodically to remain valid
-    func refreshVTXOs(vtxo_ids: [String]) async throws -> String {
+    func refreshVtxosDelegated(vtxo_ids: [String]) async throws -> String {
         guard let walletOperationsService = walletOperationsService else {
             throw BarkErrorArke.commandFailed("Wallet operations service not initialized")
         }
-        return try await walletOperationsService.refreshVTXOs(vtxo_ids: vtxo_ids)
+        return try await walletOperationsService.refreshVtxosDelegated(vtxo_ids: vtxo_ids)
     }
     
     /// Check if maintenance refresh is needed and schedule it
@@ -331,11 +331,11 @@ extension WalletManager {
         return try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
     }
     
-    func refreshVTXO(vtxo_id: String) async throws -> String {
+    func refreshVtxoDelegated(vtxo_id: String) async throws -> String {
         guard let walletOperationsService = walletOperationsService else {
             throw BarkErrorArke.commandFailed("Wallet operations service not initialized")
         }
-        return try await walletOperationsService.refreshVTXO(vtxo_id: vtxo_id)
+        return try await walletOperationsService.refreshVtxoDelegated(vtxo_id: vtxo_id)
     }
     
     /// Import a serialized VTXO into the wallet

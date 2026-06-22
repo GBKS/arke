@@ -13,6 +13,8 @@ import Bark
 struct VTXOListView_iOS: View {
     var reloadTrigger: Int = 0
     var onSelectItem: ((VTXOModel) -> Void)? = nil
+    var onRefreshComplete: (() async -> Void)? = nil
+    var minimumRefreshAmountSats: UInt64 = 330
     @Environment(WalletManager.self) private var walletManager
     @State private var vtxos: [VTXOModel] = []
     @State private var isLoadingVTXOs = false
@@ -41,7 +43,7 @@ struct VTXOListView_iOS: View {
                 
                 Spacer()
                 
-                if !vtxos.isEmpty {
+                if !vtxos.isEmpty && totalVTXOAmount >= minimumRefreshAmountSats {
                     Button {
                         Task {
                             await refreshVTXOs()
@@ -219,8 +221,8 @@ struct VTXOListView_iOS: View {
                 print("refreshVTXOs - No refresh scheduled (VTXOs may not need refresh yet)")
             }
             
-            // Step 5: Reload VTXOs to update the UI
-            await loadVTXOs()
+            // Step 5: Trigger full reload in parent view
+            await onRefreshComplete?()
         } catch {
             print("refreshVTXOs - Error: \(error.localizedDescription)")
             self.error = error.localizedDescription

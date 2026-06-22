@@ -7,9 +7,12 @@
 
 import SwiftUI
 import ArkeUI
+import Bark
 
 struct VTXODeveloperActionsView: View {
     let vtxo: VTXOModel
+    let minimumRefreshAmountSats: UInt64
+    var onActionComplete: (() async -> Void)? = nil
     
     @Environment(WalletManager.self) private var walletManager
     
@@ -22,43 +25,39 @@ struct VTXODeveloperActionsView: View {
     @State private var exitError: String?
     @State private var offboardResult: String?
     @State private var offboardError: String?
+    @State private var refreshFeeEstimate: FeeEstimate?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 15) {
-                // Refresh Button
-                Button {
-                    Task {
-                        await handleRefresh()
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        if isRefreshing {
-                            ProgressView()
-                                .controlSize(.small)
+                // Refresh Button - only show if VTXO amount is large enough
+                if vtxo.amountSat > minimumRefreshAmountSats {
+                    Button {
+                        Task {
+                            await handleRefresh()
                         }
-                        Text("button_refresh")
-                    }
-                }
-                .buttonStyle(.bordered)
-                .disabled(isRefreshing || isExiting || isOffboarding)
-                
-                // Exit Button
-                Button {
-                    Task {
-                        await handleExit()
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        if isExiting {
-                            ProgressView()
-                                .controlSize(.small)
+                    } label: {
+                        HStack(spacing: 6) {
+                            if isRefreshing {
+                                ProgressView()
+                                    .controlSize(.small)
+                            }
+                            if let feeEstimate = refreshFeeEstimate {
+                                if feeEstimate.feeSats == 0 {
+                                    let freeText = String(localized: "Free")
+                                    Text("action_refresh_with_fee \(freeText)")
+                                } else {
+                                    let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
+                                    Text("action_refresh_with_fee \(formattedFee)")
+                                }
+                            } else {
+                                Text("button_refresh")
+                            }
                         }
-                        Text("button_exit")
                     }
+                    .buttonStyle(.bordered)
+                    .disabled(isRefreshing || isExiting || isOffboarding || vtxo.state == .locked)
                 }
-                .buttonStyle(.bordered)
-                .disabled(isRefreshing || isExiting || isOffboarding)
                 
                 // Offboard Button
                 Button {
@@ -72,6 +71,23 @@ struct VTXODeveloperActionsView: View {
                                 .controlSize(.small)
                         }
                         Text("button_offboard")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(isRefreshing || isExiting || isOffboarding || vtxo.state == .locked)
+                
+                // Exit Button
+                Button {
+                    Task {
+                        await handleExit()
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        if isExiting {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                        Text("button_exit")
                     }
                 }
                 .buttonStyle(.bordered)
@@ -249,6 +265,21 @@ struct VTXODeveloperActionsView: View {
                 )
             }
         }
+        .task {
+            await loadFeeEstimate()
+        }
+    }
+    
+    // MARK: - Fee Estimation
+    
+    private func loadFeeEstimate() async {
+        do {
+            refreshFeeEstimate = try await walletManager.estimateRefreshFee(vtxoIds: [vtxo.id])
+            print("Refresh fee estimate for VTXO \(vtxo.id): \(refreshFeeEstimate?.feeSats ?? 0) sats")
+        } catch {
+            print("Failed to estimate refresh fee: \(error.localizedDescription)")
+            refreshFeeEstimate = nil
+        }
     }
     
     // MARK: - Action Handlers
@@ -262,10 +293,13 @@ struct VTXODeveloperActionsView: View {
         defer { isRefreshing = false }
         
         do {
-            let result = try await walletManager.refreshVTXO(vtxo_id: vtxo.id)
+            let result = try await walletManager.refreshVtxoDelegated(vtxo_id: vtxo.id)
             print("✅ Successfully refreshed VTXO: \(vtxo.id)")
             print("   Result: \(result)")
             refreshResult = "\(result)"
+            
+            // Trigger parent refresh
+            await onActionComplete?()
         } catch {
             print("❌ Failed to refresh VTXO: \(error)")
             refreshError = "Failed to refresh VTXO: \(error.localizedDescription)"
@@ -286,6 +320,9 @@ struct VTXODeveloperActionsView: View {
             print("✅ Successfully exited VTXO: \(vtxo.id)")
             print("   Result: \(result)")
             exitResult = "\(result)"
+            
+            // Trigger parent refresh
+            await onActionComplete?()
         } catch {
             print("❌ Failed to exit VTXO: \(error)")
             exitError = "Failed to exit VTXO: \(error.localizedDescription)"
@@ -305,6 +342,9 @@ struct VTXODeveloperActionsView: View {
             print("✅ Successfully offboarded VTXO: \(vtxo.id)")
             print("   Result: \(result)")
             offboardResult = "\(result)"
+            
+            // Trigger parent refresh
+            await onActionComplete?()
         } catch {
             print("❌ Failed to offboard VTXO: \(error)")
             offboardError = "Failed to offboard VTXO: \(error.localizedDescription)"

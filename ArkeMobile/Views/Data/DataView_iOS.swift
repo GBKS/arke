@@ -14,6 +14,9 @@ struct DataView_iOS: View {
     @State private var reloadTrigger = 0
     @State private var isReloading = false
     
+    // Minimum amount of sats required for a refresh operation
+    private let minimumRefreshAmountSats: UInt64 = 330
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
@@ -21,9 +24,16 @@ struct DataView_iOS: View {
                 
                 OnchainBalanceView(reloadTrigger: reloadTrigger)
                 
-                VTXOListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { vtxo in
-                    onNavigateToDetail?(.vtxo(vtxo))
-                })
+                VTXOListView_iOS(
+                    reloadTrigger: reloadTrigger,
+                    onSelectItem: { vtxo in
+                        onNavigateToDetail?(.vtxo(vtxo))
+                    },
+                    onRefreshComplete: {
+                        await reloadAllData()
+                    },
+                    minimumRefreshAmountSats: minimumRefreshAmountSats
+                )
                 
                 UnilateralExitListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { exitVtxo in
                     onNavigateToDetail?(.exitVtxo(exitVtxo))

@@ -6,9 +6,22 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 struct VTXODetailView: View {
     let vtxo: VTXOModel
+    
+    @Environment(WalletManager.self) private var walletManager
+    @State private var currentVtxo: VTXOModel
+    @State private var reloadTrigger = 0
+    
+    // Minimum amount of sats required for a refresh operation
+    private let minimumRefreshAmountSats: UInt64 = 330
+    
+    init(vtxo: VTXOModel) {
+        self.vtxo = vtxo
+        self._currentVtxo = State(initialValue: vtxo)
+    }
     
     var body: some View {
         ScrollView {
@@ -17,16 +30,16 @@ struct VTXODetailView: View {
                 VStack(spacing: 16) {
                     // VTXO Icon and Type
                     HStack {
-                        Image(systemName: vtxo.state.iconName)
+                        Image(systemName: currentVtxo.state.iconName)
                             .font(.system(size: 40))
-                            .foregroundColor(vtxo.state.iconColor)
+                            .foregroundColor(currentVtxo.state.iconColor)
                         
                         VStack(alignment: .leading) {
                             Text("label_vtxo")
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
-                            Text(vtxo.state.displayName)
+                            Text(currentVtxo.state.displayName)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -35,7 +48,7 @@ struct VTXODetailView: View {
                     }
                     
                     // Amount
-                    Text(vtxo.formattedAmount)
+                    Text(currentVtxo.formattedAmount)
                         .font(.largeTitle)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
@@ -43,13 +56,13 @@ struct VTXODetailView: View {
                     
                     // State Badge
                     HStack {
-                        Text(vtxo.state.displayName)
+                        Text(currentVtxo.state.displayName)
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(vtxo.state.textColor)
+                            .foregroundColor(currentVtxo.state.textColor)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
-                            .background(vtxo.state.backgroundColor)
+                            .background(currentVtxo.state.backgroundColor)
                             .clipShape(Capsule())
                         
                         Spacer()
@@ -59,7 +72,20 @@ struct VTXODetailView: View {
                 Divider()
                 
                 // Developer Actions Section
-                VTXODeveloperActionsView(vtxo: vtxo)
+                VTXODeveloperActionsView(
+                    vtxo: currentVtxo,
+                    minimumRefreshAmountSats: minimumRefreshAmountSats
+                ) {
+                    await refreshVTXO()
+                }
+                
+                // Show message if refresh is disabled due to amount being too small
+                if currentVtxo.amountSat <= minimumRefreshAmountSats {
+                    Text("Refresh is disabled because the amount (\(currentVtxo.formattedAmount)) is smaller than the minimum required (\(BitcoinFormatter.shared.formatAmount(Int(minimumRefreshAmountSats)))).")
+                        .font(.body)
+                        .lineSpacing(6)
+                        .foregroundColor(.secondary)
+                }
                 
                 Divider()
                 
@@ -73,40 +99,40 @@ struct VTXODetailView: View {
                         // Outpoint (ID)
                         DetailRow(
                             title: "Outpoint",
-                            value: vtxo.outpoint,
+                            value: currentVtxo.outpoint,
                             isCopyable: true
                         )
                         
                         // Transaction ID
                         DetailRow(
                             title: "Transaction ID",
-                            value: vtxo.txid,
+                            value: currentVtxo.txid,
                             isCopyable: true
                         )
                         
                         // Output Index
                         DetailRow(
                             title: "Output Index",
-                            value: String(vtxo.vout)
+                            value: String(currentVtxo.vout)
                         )
                         
                         // VTXO Kind
                         DetailRow(
                             title: "VTXO Kind",
-                            value: vtxo.kind.displayName
+                            value: currentVtxo.kind.displayName
                         )
                         
                         // State
                         DetailRow(
                             title: "State",
-                            value: vtxo.state.displayName
+                            value: currentVtxo.state.displayName
                         )
                         
                         // Expiry Height
-                        if vtxo.expiryHeight > 0 {
+                        if currentVtxo.expiryHeight > 0 {
                             DetailRow(
                                 title: "Expiry Height",
-                                value: vtxo.expiryHeight.formatted()
+                                value: currentVtxo.expiryHeight.formatted()
                             )
                         }
                     }
@@ -122,6 +148,29 @@ struct VTXODetailView: View {
         #else
         .background(Color(.systemBackground))
         #endif
+        .task(id: reloadTrigger) {
+            await loadVTXO()
+        }
+    }
+    
+    // MARK: - Data Loading
+    
+    private func loadVTXO() async {
+        do {
+            let vtxos = try await walletManager.getVTXOs()
+            if let updatedVtxo = vtxos.first(where: { $0.id == vtxo.id }) {
+                currentVtxo = updatedVtxo
+                print("✅ Refreshed VTXO data: \(updatedVtxo.id)")
+            } else {
+                print("⚠️ VTXO no longer exists: \(vtxo.id)")
+            }
+        } catch {
+            print("❌ Failed to load VTXO: \(error)")
+        }
+    }
+    
+    private func refreshVTXO() async {
+        reloadTrigger += 1
     }
 }
 

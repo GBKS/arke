@@ -251,6 +251,8 @@ class MockBarkWallet: BarkWalletProtocol {
         return result
     }
     
+    // Disabling since we always want delegated refreshes in the app
+    /*
     func refreshVTXOs() async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
         return """
@@ -260,7 +262,10 @@ class MockBarkWallet: BarkWalletProtocol {
         }
         """
     }
+     */
     
+    // Disabling since we always want delegated refreshes in the app
+    /*
     func refreshVTXOs(vtxo_ids: [String]) async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
         print("🔄 Mock: Refreshing \(vtxo_ids.count) VTXOs")
@@ -271,7 +276,10 @@ class MockBarkWallet: BarkWalletProtocol {
         }
         """
     }
+     */
     
+    // Disabling since we always want delegated refreshes in the app
+    /*
     func refreshVTXO(vtxo_id: String) async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
         return """
@@ -281,6 +289,7 @@ class MockBarkWallet: BarkWalletProtocol {
         }
         """
     }
+    */
     
     func getConfig() async throws -> ArkConfigModel {
         return ArkConfigModel(

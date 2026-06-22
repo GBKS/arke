@@ -119,6 +119,8 @@ extension BarkWalletFFI {
         }
     }
     
+    /*
+    // Disabling since we always want delegated refreshes in the app
     func refreshVTXOs(vtxo_ids: [String]) async throws -> String {
         // Refresh all VTXOs using maintenance
         
@@ -151,9 +153,11 @@ extension BarkWalletFFI {
             throw error
         }
     }
+    */
     
     // MARK: - VTXO Refresh
-    
+    // Disabling since we always want delegated refreshes in the app
+    /*
     func refreshVTXO(vtxo_id: String) async throws -> String {
         // Refresh a specific VTXO
         
@@ -188,6 +192,7 @@ extension BarkWalletFFI {
             throw error
         }
     }
+    */
     
     // MARK: - Boarding (Onchain to Ark)
     
