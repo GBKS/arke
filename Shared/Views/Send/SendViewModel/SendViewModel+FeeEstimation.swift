@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import OSLog
 
 extension SendViewModel {
     
@@ -18,17 +19,17 @@ extension SendViewModel {
     @MainActor
     func estimateOnchainFee() async {
         guard let destination = selectedDestination else {
-            print("⚠️ [FeeEstimation] No destination selected")
+            logger.warning("No destination selected")
             return
         }
         
         guard isOnchainDestination else {
-            print("⚠️ [FeeEstimation] Not an onchain destination")
+            logger.warning("Not an onchain destination")
             return
         }
         
         guard let amountInt = Int(amount), amountInt > 0 else {
-            print("⚠️ [FeeEstimation] Invalid amount: \(amount)")
+            logger.warning("Invalid amount: \(self.amount)")
             cachedOnchainFee = nil
             cachedOnchainFeeAmount = nil
             cachedOnchainFeePriority = nil
@@ -39,11 +40,11 @@ extension SendViewModel {
         if let cached = cachedOnchainFee,
            cachedOnchainFeeAmount == amountInt,
            cachedOnchainFeePriority == selectedFeePriority {
-            print("✅ [FeeEstimation] Using cached fee: \(cached) sats")
+            logger.debug("Using cached fee: \(cached) sats")
             return
         }
         
-        print("🔄 [FeeEstimation] Calculating fee for \(amountInt) sats at \(selectedFeePriority) priority")
+        logger.info("Calculating fee for \(amountInt) sats at \(self.selectedFeePriority.rawValue) priority")
         
         do {
             let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
@@ -58,10 +59,10 @@ extension SendViewModel {
             cachedOnchainFee = Int(fee)
             cachedOnchainFeeAmount = amountInt
             cachedOnchainFeePriority = selectedFeePriority
-            print("✅ [FeeEstimation] Fee calculated: \(fee) sats (cached)")
+            logger.info("Fee calculated: \(fee) sats (cached)")
             
         } catch {
-            print("❌ [FeeEstimation] Failed to estimate fee: \(error)")
+            logger.error("Failed to estimate fee: \(error)")
             // Keep any existing cache on error
         }
     }
@@ -73,7 +74,7 @@ extension SendViewModel {
         cachedOnchainFee = nil
         cachedOnchainFeeAmount = nil
         cachedOnchainFeePriority = nil
-        print("🔄 [FeeEstimation] Cache invalidated")
+        logger.debug("Cache invalidated")
     }
     
     /// Updates the onchain fee estimate with debouncing

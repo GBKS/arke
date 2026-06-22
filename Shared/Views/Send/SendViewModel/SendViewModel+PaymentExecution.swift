@@ -11,6 +11,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 extension SendViewModel {
     
@@ -44,17 +45,17 @@ extension SendViewModel {
         request.timeoutInterval = 30  // Increased to 30 seconds for slow LNURL servers
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
-        print("   → Requesting invoice from: \(url.absoluteString)")
+        logger.debug("   → Requesting invoice from: \(url.absoluteString)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
-        print("   → Received response (\(data.count) bytes)")
+        logger.debug("   → Received response (\(data.count) bytes)")
         
         // Check HTTP status
         if let httpResponse = response as? HTTPURLResponse {
             guard (200...299).contains(httpResponse.statusCode) else {
                 let body = String(data: data, encoding: .utf8) ?? "(no body)"
-                print("   ❌ HTTP \(httpResponse.statusCode): \(body)")
+                logger.error("   HTTP \(httpResponse.statusCode): \(body)")
                 throw SendError.invalidFormat("LNURL-pay callback returned HTTP \(httpResponse.statusCode)")
             }
         }
@@ -62,11 +63,11 @@ extension SendViewModel {
         // Parse JSON response
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             let body = String(data: data, encoding: .utf8) ?? "(binary data)"
-            print("   ❌ Invalid JSON response: \(body)")
+            logger.error("   Invalid JSON response: \(body)")
             throw SendError.invalidFormat("Invalid JSON response from LNURL-pay callback")
         }
         
-        print("   → Response JSON: \(json)")
+        logger.debug("   → Response JSON: \(json)")
         
         // Check for error response
         if let status = json["status"] as? String, status == "ERROR" {
@@ -86,22 +87,22 @@ extension SendViewModel {
     
     /// Executes the payment using the current send state
     func executeSend(paymentRequest: PaymentRequest? = nil, destinationId: UUID? = nil, amount: String? = nil) async throws {
-        print("💸 [SendViewModel] executeSend() called")
-        print("   → paymentRequest provided: \(paymentRequest != nil)")
-        print("   → destinationId provided: \(destinationId?.uuidString ?? "nil")")
-        print("   → amount provided: \(amount ?? "nil")")
+        logger.info("executeSend() called")
+        logger.debug("   → paymentRequest provided: \(paymentRequest != nil)")
+        logger.debug("   → destinationId provided: \(destinationId?.uuidString ?? "nil")")
+        logger.debug("   → amount provided: \(amount ?? "nil")")
         
         // Compute ranked destinations from payment request if provided, otherwise use state
         let rankedDestinations: [PaymentDestinationSelector.RankedDestination]
         if let request = paymentRequest {
             rankedDestinations = request.rankedDestinations(context: paymentContext)
-            print("   → Using payment request with \(request.destinations.count) destination(s)")
+            logger.debug("   → Using payment request with \(request.destinations.count) destination(s)")
             for (index, dest) in request.destinations.enumerated() {
-                print("      [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
+                logger.debug("      [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
             }
         } else {
             rankedDestinations = self.rankedDestinations
-            print("   → Using state rankedDestinations: \(rankedDestinations.count)")
+            logger.debug("   → Using state rankedDestinations: \(rankedDestinations.count)")
         }
         
         // Determine the destination to use
@@ -109,21 +110,21 @@ extension SendViewModel {
         if let destId = destinationId,
            let found = rankedDestinations.first(where: { $0.destination.id == destId })?.destination {
             destination = found
-            print("   → Selected destination by ID: \(destination.format.rawValue)")
+            logger.debug("   → Selected destination by ID: \(destination.format.rawValue)")
         } else if let selected = selectedDestination {
             destination = selected
-            print("   → Using selectedDestination: \(destination.format.rawValue)")
+            logger.debug("   → Using selectedDestination: \(destination.format.rawValue)")
         } else if let firstViable = rankedDestinations.first(where: { $0.viable })?.destination {
             destination = firstViable
-            print("   → Using first viable destination: \(destination.format.rawValue)")
+            logger.debug("   → Using first viable destination: \(destination.format.rawValue)")
         } else {
-            print("   ❌ No viable destination found!")
+            logger.error("   No viable destination found!")
             throw SendError.noDestinationSelected
         }
         
-        print("   → Final destination format: \(destination.format.rawValue)")
-        print("   → Final destination address: \(destination.address)")
-        print("   → Final destination network: \(destination.network?.displayName ?? "N/A")")
+        logger.debug("   → Final destination format: \(destination.format.rawValue)")
+        logger.debug("   → Final destination address: \(destination.address)")
+        logger.debug("   → Final destination network: \(destination.network?.displayName ?? "N/A")")
         
         // Check if amount is locked (Lightning invoice with embedded amount)
         let amountLocked: Bool
@@ -142,11 +143,11 @@ extension SendViewModel {
             // Log payment status for debugging
             switch status {
             case .paid(let paymentHash, let preimage):
-                print("   ✅ Payment settled immediately, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+                logger.info("   Payment settled immediately, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
-                print("   ⏳ Payment in progress, fee: \(send.feeSats) sats")
+                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
             case .unknown:
-                print("   ⚠️ Payment status unknown")
+                logger.warning("   Payment status unknown")
             }
             return
         }
@@ -184,20 +185,20 @@ extension SendViewModel {
         error = nil
         
         // Route to the appropriate payment method based on destination format
-        print("   → Routing payment to format: \(destination.format.rawValue)")
+        logger.debug("   → Routing payment to format: \(destination.format.rawValue)")
         
         switch destination.format {
         case .bitcoin, .silentPayments:
-            print("   → Sending onchain to: \(destination.address)")
+            logger.info("   → Sending onchain to: \(destination.address)")
             let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
-            print("   → Using fee rate: \(feeRate) sat/vB (priority: \(selectedFeePriority))")
+            logger.debug("   → Using fee rate: \(feeRate) sat/vB (priority: \(self.selectedFeePriority.rawValue))")
             _ = try await walletManager.sendOnchain(to: destination.address, amount: amountInt, feeRateSatPerVb: feeRate)
             
         case .lightningInvoice:
             // Check if the invoice already has an embedded amount
             let invoiceHasAmount = paymentRequest?.amount != nil || currentPaymentRequest?.amount != nil
-            print("   → Paying Lightning invoice: \(destination.shortAddress)")
-            print("   → Invoice has embedded amount: \(invoiceHasAmount)")
+            logger.info("   → Paying Lightning invoice: \(destination.shortAddress)")
+            logger.debug("   → Invoice has embedded amount: \(invoiceHasAmount)")
             let status: LightningSendStatus
             if invoiceHasAmount {
                 status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: nil)
@@ -207,16 +208,16 @@ extension SendViewModel {
             // Log payment status
             switch status {
             case .paid(let paymentHash, let preimage):
-                print("   ✅ Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+                logger.info("   Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
-                print("   ⏳ Payment in progress, fee: \(send.feeSats) sats")
+                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
             case .unknown:
-                print("   ⚠️ Payment status unknown")
+                logger.warning("   Payment status unknown")
             }
             
         case .lightning:
             // Lightning address - use the direct FFI method
-            print("   → Paying Lightning address: \(destination.address)")
+            logger.info("   → Paying Lightning address: \(destination.address)")
             let status = try await walletManager.payLightningAddress(
                 lightningAddress: destination.address,
                 amountSats: UInt64(amountInt),
@@ -225,20 +226,20 @@ extension SendViewModel {
             // Log payment status
             switch status {
             case .paid(let paymentHash, let preimage):
-                print("   ✅ Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+                logger.info("   Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
-                print("   ⏳ Payment in progress, fee: \(send.feeSats) sats")
+                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
             case .unknown:
-                print("   ⚠️ Payment status unknown")
+                logger.warning("   Payment status unknown")
             }
             
         case .lnurl:
-            print("   → Paying LNURL: \(destination.address)")
+            logger.info("   → Paying LNURL: \(destination.address)")
             
             // Get resolved LNURL data (should be cached from clipboard/QR resolution)
             if resolvedLNURL == nil {
                 // Fallback: resolve now if not cached
-                print("   → LNURL not cached, resolving now...")
+                logger.debug("   → LNURL not cached, resolving now...")
                 resolvedLNURL = try await LNURLResolver.resolve(destination.address)
             }
             
@@ -252,7 +253,7 @@ extension SendViewModel {
             }
             
             // Request invoice from LNURL callback
-            print("   → Requesting invoice from LNURL callback...")
+            logger.debug("   → Requesting invoice from LNURL callback...")
             let amountMillisats = amountInt * 1000
             let invoice = try await requestLightningInvoice(
                 callback: lnurlData.callback,
@@ -260,7 +261,7 @@ extension SendViewModel {
                 comment: nil  // No comment support in v1
             )
             
-            print("   → Got invoice: \(invoice)")
+            logger.debug("   → Got invoice: \(invoice)")
             
             // Verify invoice amount matches requested amount
             if let parsedInvoice = try? LightningInvoiceParser.parse(invoice),
@@ -270,7 +271,7 @@ extension SendViewModel {
             }
             
             // Pay the invoice via Bark (existing flow)
-            print("   → Paying invoice via Bark...")
+            logger.debug("   → Paying invoice via Bark...")
             let status = try await walletManager.payLightningInvoice(
                 invoice: invoice,
                 amountSats: nil  // Amount is embedded in invoice
@@ -278,43 +279,43 @@ extension SendViewModel {
             // Log payment status
             switch status {
             case .paid(let paymentHash, let preimage):
-                print("   ✅ LNURL payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+                logger.info("   LNURL payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
-                print("   ⏳ LNURL payment in progress, fee: \(send.feeSats) sats")
+                logger.info("   LNURL payment in progress, fee: \(send.feeSats) sats")
             case .unknown:
-                print("   ⚠️ LNURL payment status unknown")
+                logger.warning("   LNURL payment status unknown")
             }
             
         case .bolt12:
             // BOLT12 offers require explicit amount and use dedicated payment method
             // The offer is resolved into an invoice internally by the wallet
-            print("   → Paying BOLT12 offer: \(destination.shortAddress)")
+            logger.info("   → Paying BOLT12 offer: \(destination.shortAddress)")
             let status = try await walletManager.payLightningOffer(offer: destination.address, amountSats: UInt64(amountInt))
             // Log payment status
             switch status {
             case .paid(let paymentHash, let preimage):
-                print("   ✅ BOLT12 payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+                logger.info("   BOLT12 payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
-                print("   ⏳ BOLT12 payment in progress, fee: \(send.feeSats) sats")
+                logger.info("   BOLT12 payment in progress, fee: \(send.feeSats) sats")
             case .unknown:
-                print("   ⚠️ BOLT12 payment status unknown")
+                logger.warning("   BOLT12 payment status unknown")
             }
             
         case .ark:
-            print("   → Sending Ark to: \(destination.address)")
+            logger.info("   → Sending Ark to: \(destination.address)")
             _ = try await walletManager.send(to: destination.address, amount: amountInt)
             
         case .bip353:
             // BIP-353 should have been resolved to another format by now
             // This is a fallback - try to send as Ark
-            print("   ⚠️ WARNING: BIP-353 destination reached executeSend without resolution!")
-            print("   → BIP-353 address: \(destination.address)")
-            print("   → Attempting to send as Ark (this will likely fail)")
+            logger.warning("   WARNING: BIP-353 destination reached executeSend without resolution!")
+            logger.warning("   → BIP-353 address: \(destination.address)")
+            logger.warning("   → Attempting to send as Ark (this will likely fail)")
             _ = try await walletManager.send(to: destination.address, amount: amountInt)
             
         case .bip21:
             // BIP-21 should never be a final destination format
-            print("   ❌ ERROR: BIP-21 destination reached executeSend!")
+            logger.error("   ERROR: BIP-21 destination reached executeSend!")
             throw SendError.invalidFormat("BIP-21 is a wrapper format and should be resolved before sending")
         }
     }

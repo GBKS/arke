@@ -11,6 +11,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 extension SendViewModel {
     
@@ -21,25 +22,25 @@ extension SendViewModel {
     func handleInitialSetup(prefilledRecipient: String?, prefilledContact: ContactModel?) async {
         // Check for pre-filled contact first (highest priority)
         if let contact = prefilledContact, let recipient = prefilledRecipient {
-            print("📝 [SendViewModel] Pre-filling contact: \(contact.cachedName)")
-            print("   → Recipient address: \(recipient)")
+            logger.info("Pre-filling contact: \(contact.cachedName)")
+            logger.debug("   → Recipient address: \(recipient)")
             
             // Check if this is a BIP-353 address that needs resolution
             if BIP353Resolver.isBIP353Format(recipient) {
-                print("   → Detected BIP-353 address in contact")
+                logger.debug("   → Detected BIP-353 address in contact")
                 
                 do {
                     let resolved = try await BIP353Resolver.resolve(recipient)
-                    print("   ✅ BIP-353 resolved successfully!")
-                    print("      → Original: \(resolved.originalAddress)")
-                    print("      → Resolved URI: \(resolved.bip21URI)")
+                    logger.info("   BIP-353 resolved successfully!")
+                    logger.debug("      → Original: \(resolved.originalAddress)")
+                    logger.debug("      → Resolved URI: \(resolved.bip21URI)")
                     
                     // Parse the resolved BIP-21 URI instead of the original BIP-353 address
                     if var paymentRequest = AddressValidator.parsePaymentRequest(resolved.bip21URI) {
-                        print("   → Parsed resolved URI into payment request")
-                        print("      → Destinations: \(paymentRequest.destinations.count)")
+                        logger.debug("   → Parsed resolved URI into payment request")
+                        logger.debug("      → Destinations: \(paymentRequest.destinations.count)")
                         for (index, dest) in paymentRequest.destinations.enumerated() {
-                            print("         [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
+                            logger.debug("         [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
                         }
                         
                         // Preserve the BIP-353 address as the display string
@@ -57,7 +58,7 @@ extension SendViewModel {
                         
                         if let optimal = rankedDestinations.first(where: { $0.viable }) {
                             selectedDestination = optimal.destination
-                            print("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
+                            logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             error = nil
                         } else {
                             error = "Cannot send to this contact - no viable payment methods"
@@ -65,7 +66,7 @@ extension SendViewModel {
                         
                         // Pre-fill amount if embedded in the payment request
                         if let requestAmount = paymentRequest.amount {
-                            print("   → Pre-filling amount: \(requestAmount) sats")
+                            logger.debug("   → Pre-filling amount: \(requestAmount) sats")
                             amount = "\(requestAmount)"
                         }
                         
@@ -78,14 +79,14 @@ extension SendViewModel {
                         return
                     }
                 } catch {
-                    print("   ❌ BIP-353 resolution failed: \(error.localizedDescription)")
+                    logger.warning("   BIP-353 resolution failed: \(error.localizedDescription)")
                     
                     // Try Lightning Address as fallback
                     do {
                         let lightningResolved = try await LightningAddressResolver.resolve(recipient)
-                        print("   ✅ Lightning Address resolved successfully!")
-                        print("      → Address: \(lightningResolved.originalAddress)")
-                        print("      → Min: \(lightningResolved.minSendableSats) sats, Max: \(lightningResolved.maxSendableSats) sats")
+                        logger.info("   Lightning Address resolved successfully!")
+                        logger.debug("      → Address: \(lightningResolved.originalAddress)")
+                        logger.debug("      → Min: \(lightningResolved.minSendableSats) sats, Max: \(lightningResolved.maxSendableSats) sats")
                         
                         // Create Lightning destination
                         let lightningDestination = PaymentDestination(
@@ -107,7 +108,7 @@ extension SendViewModel {
                         
                         if let optimal = rankedDestinations.first(where: { $0.viable }) {
                             selectedDestination = optimal.destination
-                            print("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
+                            logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             self.error = nil
                         } else {
                             self.error = "Cannot send to this contact - no viable payment methods"
@@ -120,7 +121,7 @@ extension SendViewModel {
                         return
                         
                     } catch let lightningError {
-                        print("   ❌ Lightning Address resolution also failed: \(lightningError.localizedDescription)")
+                        logger.warning("   Lightning Address resolution also failed: \(lightningError.localizedDescription)")
                         self.error = "Could not resolve address. BIP-353: \(error.localizedDescription), Lightning: \(lightningError.localizedDescription)"
                         sendMode = .manual
                         return
@@ -130,10 +131,10 @@ extension SendViewModel {
             
             // Parse the recipient address (non-BIP-353 or fallback)
             if let paymentRequest = AddressValidator.parsePaymentRequest(recipient) {
-                print("   → Parsed payment request")
-                print("      → Destinations: \(paymentRequest.destinations.count)")
+                logger.debug("   → Parsed payment request")
+                logger.debug("      → Destinations: \(paymentRequest.destinations.count)")
                 for (index, dest) in paymentRequest.destinations.enumerated() {
-                    print("         [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
+                    logger.debug("         [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
                 }
                 
                 // Lock in the payment request (ranks destinations, selects optimal, pre-fills amount)
@@ -142,7 +143,7 @@ extension SendViewModel {
                 
                 if let optimal = rankedDestinations.first(where: { $0.viable }) {
                     selectedDestination = optimal.destination
-                    print("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
+                    logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                     error = nil
                 } else {
                     error = "Cannot send to this contact - no viable payment methods"
@@ -150,7 +151,7 @@ extension SendViewModel {
                 
                 // Pre-fill amount if embedded in the payment request
                 if let requestAmount = paymentRequest.amount {
-                    print("   → Pre-filling amount: \(requestAmount) sats")
+                    logger.debug("   → Pre-filling amount: \(requestAmount) sats")
                     amount = "\(requestAmount)"
                 }
                 
@@ -169,7 +170,7 @@ extension SendViewModel {
         
         // Check for pre-filled recipient (second priority)
         if let recipient = prefilledRecipient {
-            print("📝 [SendViewModel] Pre-filling recipient: \(recipient)")
+            logger.info("Pre-filling recipient: \(recipient)")
             
             // Parse the pre-filled recipient
             if let paymentRequest = AddressValidator.parsePaymentRequest(recipient) {

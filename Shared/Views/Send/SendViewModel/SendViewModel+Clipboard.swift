@@ -11,6 +11,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 extension SendViewModel {
     
@@ -21,7 +22,7 @@ extension SendViewModel {
     /// On macOS, this freely checks the clipboard
     func checkClipboardAvailability() {
         hasClipboardContent = clipboardService.hasStrings()
-        print("🔍 [SendViewModel] Clipboard availability check: \(hasClipboardContent)")
+        logger.debug("Clipboard availability check: \(self.hasClipboardContent)")
     }
     
     // MARK: - Clipboard Payment Detection
@@ -33,18 +34,18 @@ extension SendViewModel {
         // Only check if we're in manual entry mode
         /*
         guard case .manual = sendMode else {
-            print("🔍 [SendViewModel] Not in manual mode, skipping clipboard check")
+            logger.debug("Not in manual mode, skipping clipboard check")
             return false
         }
         */
         
         guard let clipboardString = clipboardService.getCurrentString() else {
-            print("🔍 [SendViewModel] No clipboard content found")
+            logger.debug("No clipboard content found")
             return false
         }
         
         let trimmedString = clipboardString.trimmingCharacters(in: .whitespacesAndNewlines)
-        print("🔍 [SendViewModel] Checking clipboard content: \(trimmedString)")
+        logger.debug("Checking clipboard content: \(trimmedString)")
         
         // Don't clear state yet - only clear after confirming valid payment data
         // This prevents losing user's partial input if clipboard has invalid data
@@ -55,8 +56,8 @@ extension SendViewModel {
         
         if isUserAtDomainFormat && !trimmedString.hasPrefix("₿") {
             // Ambiguous format - try both BIP-353 and Lightning Address in parallel
-            print("🔍 [SendViewModel] Detected ambiguous user@domain format: \(trimmedString)")
-            print("   → Trying BIP-353 and Lightning Address in parallel...")
+            logger.debug("Detected ambiguous user@domain format: \(trimmedString)")
+            logger.debug("   → Trying BIP-353 and Lightning Address in parallel...")
             
             return await tryParallelResolution(trimmedString)
         }
@@ -71,20 +72,20 @@ extension SendViewModel {
         
         // Check for LNURL format
         if LNURLResolver.isLNURL(actualLNURL) {
-            print("🔍 [SendViewModel] Detected LNURL: \(actualLNURL)")
+            logger.debug("Detected LNURL: \(actualLNURL)")
             if actualLNURL != trimmedString {
-                print("   → Original had lightning: prefix")
+                logger.debug("   → Original had lightning: prefix")
             }
             
             do {
                 let resolved = try await LNURLResolver.resolve(actualLNURL)
-                print("✅ [SendViewModel] LNURL resolved successfully!")
-                print("   → Min: \(resolved.minSendableSats) sats, Max: \(resolved.maxSendableSats) sats")
-                print("   → Callback: \(resolved.callback)")
+                logger.info("LNURL resolved successfully!")
+                logger.debug("   → Min: \(resolved.minSendableSats) sats, Max: \(resolved.maxSendableSats) sats")
+                logger.debug("   → Callback: \(resolved.callback)")
                 
                 // Check if this is a fixed-amount request (point-of-sale scenario)
                 if resolved.isFixedAmount {
-                    print("   💰 Fixed amount detected: \(resolved.fixedAmountSats!) sats (POS mode)")
+                    logger.debug("   Fixed amount detected: \(resolved.fixedAmountSats!) sats (POS mode)")
                 }
                 
                 // Store resolved LNURL for later use during payment
@@ -100,7 +101,7 @@ extension SendViewModel {
                 
                 // If this is a fixed-amount LNURL, pre-fill the amount
                 if let fixedAmount = resolved.fixedAmountSats {
-                    print("   → Pre-filling fixed amount into payment request")
+                    logger.debug("   → Pre-filling fixed amount into payment request")
                     paymentRequest = PaymentRequest(
                         destinations: paymentRequest.destinations,
                         amount: fixedAmount,
@@ -113,7 +114,7 @@ extension SendViewModel {
                 // Process the payment request with the amount pre-filled
                 return await processClipboardPaymentRequest(paymentRequest)
             } catch {
-                print("❌ [SendViewModel] LNURL resolution failed: \(error.localizedDescription)")
+                logger.error("LNURL resolution failed: \(error.localizedDescription)")
                 self.error = "Failed to resolve LNURL: \(error.localizedDescription)"
                 return false
             }
@@ -121,23 +122,23 @@ extension SendViewModel {
         
         // Unambiguous BIP-353 (has ₿ prefix)
         if trimmedString.hasPrefix("₿") && BIP353Resolver.isBIP353Format(trimmedString) {
-            print("🔍 [SendViewModel] Detected unambiguous BIP-353 address: \(trimmedString)")
+            logger.debug("Detected unambiguous BIP-353 address: \(trimmedString)")
             
             do {
                 let resolved = try await BIP353Resolver.resolve(trimmedString)
-                print("✅ [SendViewModel] BIP-353 resolved successfully!")
-                print("   → Original BIP-353: \(resolved.originalAddress)")
-                print("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
-                print("   → DNSSEC verified: \(resolved.dnssecVerified)")
+                logger.info("BIP-353 resolved successfully!")
+                logger.debug("   → Original BIP-353: \(resolved.originalAddress)")
+                logger.debug("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
+                logger.debug("   → DNSSEC verified: \(resolved.dnssecVerified)")
                 
                 if !resolved.dnssecVerified {
-                    print("⚠️ [SendViewModel] Warning: DNSSEC validation failed for \(trimmedString)")
+                    logger.warning("Warning: DNSSEC validation failed for \(trimmedString)")
                     // For v1, just log - future: show security warning to user
                 }
                 
                 return await processClipboardPaymentRequest(resolved.bip21URI, originalBIP353Address: resolved.originalAddress)
             } catch {
-                print("❌ [SendViewModel] BIP-353 resolution failed: \(error.localizedDescription)")
+                logger.error("BIP-353 resolution failed: \(error.localizedDescription)")
                 return false
             }
         }
@@ -154,32 +155,32 @@ extension SendViewModel {
         // Race both resolution methods - whichever succeeds first wins
         await withTaskGroup(of: ResolutionResult.self) { group in
             // Launch BIP-353 resolution
-            group.addTask {
+            group.addTask { [self] in
                 do {
                     let resolved = try await BIP353Resolver.resolve(address)
-                    print("✅ [SendViewModel] BIP-353 resolution won the race!")
-                    print("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
-                    print("   → DNSSEC verified: \(resolved.dnssecVerified)")
+                    self.logger.info("BIP-353 resolution won the race!")
+                    self.logger.debug("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
+                    self.logger.debug("   → DNSSEC verified: \(resolved.dnssecVerified)")
                     
                     if !resolved.dnssecVerified {
-                        print("⚠️ [SendViewModel] Warning: DNSSEC validation failed for \(address)")
+                        self.logger.warning("Warning: DNSSEC validation failed for \(address)")
                     }
                     
                     return .bip353Success(resolved)
                 } catch {
-                    print("❌ [SendViewModel] BIP-353 resolution failed: \(error.localizedDescription)")
+                    self.logger.error("BIP-353 resolution failed: \(error.localizedDescription)")
                     return .bip353Failure
                 }
             }
             
             // Launch Lightning Address resolution
-            group.addTask {
+            group.addTask { [self] in
                 do {
                     let resolved = try await LightningAddressResolver.resolve(address)
-                    print("✅ [SendViewModel] Lightning Address resolution won the race!")
+                    self.logger.info("Lightning Address resolution won the race!")
                     return .lightningSuccess(resolved)
                 } catch {
-                    print("❌ [SendViewModel] Lightning Address resolution failed: \(error.localizedDescription)")
+                    self.logger.error("Lightning Address resolution failed: \(error.localizedDescription)")
                     return .lightningFailure
                 }
             }
@@ -209,11 +210,11 @@ extension SendViewModel {
                 
                 // If both have failed, give up
                 if bip353Failed && lightningFailed {
-                    print("❌ [SendViewModel] Both BIP-353 and Lightning Address resolution failed")
+                    logger.error("Both BIP-353 and Lightning Address resolution failed")
                     
                     // Final fallback: Try parsing as a regular address without validation
                     if AddressValidator.parsePaymentRequest(address) != nil {
-                        print("🔄 [SendViewModel] Falling back to parsing as unvalidated address")
+                        logger.debug("Falling back to parsing as unvalidated address")
                         return await processClipboardPaymentRequest(address)
                     }
                     
@@ -238,20 +239,20 @@ extension SendViewModel {
     private func tryLightningAddressFallback(_ address: String) async -> Bool {
         do {
             let resolved = try await LightningAddressResolver.resolve(address)
-            print("✅ [SendViewModel] Lightning Address validated: \(resolved.originalAddress)")
-            print("   → Min: \(resolved.minSendableSats) sats, Max: \(resolved.maxSendableSats) sats")
+            logger.info("Lightning Address validated: \(resolved.originalAddress)")
+            logger.debug("   → Min: \(resolved.minSendableSats) sats, Max: \(resolved.maxSendableSats) sats")
             
             // Lightning Address is valid, process it
             return await processClipboardPaymentRequest(address)
         } catch {
-            print("❌ [SendViewModel] Lightning Address resolution failed: \(error.localizedDescription)")
+            logger.error("Lightning Address resolution failed: \(error.localizedDescription)")
             
             // Final fallback: Try parsing as a regular address without validation
             if AddressValidator.parsePaymentRequest(address) != nil {
-                print("🔄 [SendViewModel] Falling back to parsing as unvalidated Lightning Address")
+                logger.debug("Falling back to parsing as unvalidated Lightning Address")
                 return await processClipboardPaymentRequest(address)
             } else {
-                print("🔍 [SendViewModel] Address is not a valid payment request")
+                logger.debug("Address is not a valid payment request")
                 return false
             }
         }
@@ -263,20 +264,20 @@ extension SendViewModel {
     ///   - originalBIP353Address: The original BIP-353 address if this was resolved from one
     /// - Returns: true if payment request was successfully processed
     private func processClipboardPaymentRequest(_ paymentString: String, originalBIP353Address: String? = nil) async -> Bool {
-        print("📋 [SendViewModel] processClipboardPaymentRequest()")
-        print("   → paymentString: \(paymentString)")
-        print("   → originalBIP353Address: \(originalBIP353Address ?? "nil")")
+        logger.debug("processClipboardPaymentRequest()")
+        logger.debug("   → paymentString: \(paymentString)")
+        logger.debug("   → originalBIP353Address: \(originalBIP353Address ?? "nil")")
         
         // Check if clipboard contains a valid payment request
         guard var paymentRequest = AddressValidator.parsePaymentRequest(paymentString) else {
-            print("   ❌ Clipboard content is not a valid payment request")
+            logger.error("   Clipboard content is not a valid payment request")
             return false
         }
         
-        print("   ✅ Payment request parsed successfully")
+        logger.info("   Payment request parsed successfully")
         
         // Now that we have valid payment data, clear existing state
-        print("🧹 [SendViewModel] Clearing existing state before applying clipboard data")
+        logger.debug("Clearing existing state before applying clipboard data")
         manualInput = ""
         amount = ""
         error = nil
@@ -284,14 +285,14 @@ extension SendViewModel {
         rankedDestinations = []
         currentPaymentRequest = nil
         recipientState = .idle
-        print("   → Initial destinations count: \(paymentRequest.destinations.count)")
+        logger.debug("   → Initial destinations count: \(paymentRequest.destinations.count)")
         for (index, dest) in paymentRequest.destinations.enumerated() {
-            print("      [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
+            logger.debug("      [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
         }
         
         // If this was resolved from a BIP-353 address, preserve that as the original string
         if let bip353Address = originalBIP353Address {
-            print("   → Preserving BIP-353 address as originalString: \(bip353Address)")
+            logger.debug("   → Preserving BIP-353 address as originalString: \(bip353Address)")
             paymentRequest = PaymentRequest(
                 destinations: paymentRequest.destinations,
                 amount: paymentRequest.amount,
@@ -302,31 +303,31 @@ extension SendViewModel {
         }
         
         // Debug log all payment request details from clipboard
-        print("   📦 Final payment request details:")
+        logger.debug("   Final payment request details:")
         if let bip353 = originalBIP353Address {
-            print("      Resolved from BIP-353: \(bip353)")
+            logger.debug("      Resolved from BIP-353: \(bip353)")
         }
-        print("      Destinations: \(paymentRequest.destinations.count)")
+        logger.debug("      Destinations: \(paymentRequest.destinations.count)")
         if let primary = paymentRequest.primaryDestination {
-            print("      Primary format: \(primary.format.rawValue) (\(primary.format.displayName))")
-            print("      Primary network: \(primary.network?.displayName ?? "N/A")")
-            print("      Primary address: \(primary.address)")
+            logger.debug("      Primary format: \(primary.format.rawValue) (\(primary.format.displayName))")
+            logger.debug("      Primary network: \(primary.network?.displayName ?? "N/A")")
+            logger.debug("      Primary address: \(primary.address)")
         }
-        print("      Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
-        print("      Label: \(paymentRequest.label ?? "N/A")")
-        print("      Message: \(paymentRequest.message ?? "N/A")")
-        print("      Has alternatives: \(paymentRequest.hasAlternatives)")
+        logger.debug("      Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
+        logger.debug("      Label: \(paymentRequest.label ?? "N/A")")
+        logger.debug("      Message: \(paymentRequest.message ?? "N/A")")
+        logger.debug("      Has alternatives: \(paymentRequest.hasAlternatives)")
         
         if paymentRequest.hasAlternatives {
-            print("      Alternative destinations:")
+            logger.debug("      Alternative destinations:")
             for (index, dest) in paymentRequest.alternativeDestinations.enumerated() {
-                print("         [\(index + 1)] \(dest.format.displayName): \(dest.shortAddress)")
+                logger.debug("         [\(index + 1)] \(dest.format.displayName): \(dest.shortAddress)")
             }
         }
         
         // Always use quick mode for clipboard paste to match QR scanner behavior
         // This provides consistency: automatic input (scan/paste) → quick mode
-        print("   → Using quick mode (clipboard paste)")
+        logger.debug("   → Using quick mode (clipboard paste)")
         await enterQuickMode(paymentRequest: paymentRequest, source: .clipboard)
         
         return true
@@ -338,12 +339,12 @@ extension SendViewModel {
     /// - Parameter paymentRequest: The pre-parsed and potentially modified payment request
     /// - Returns: true if payment request was successfully processed
     private func processClipboardPaymentRequest(_ paymentRequest: PaymentRequest) async -> Bool {
-        print("📋 [SendViewModel] processClipboardPaymentRequest() [PaymentRequest overload]")
-        print("   → Destinations: \(paymentRequest.destinations.count)")
-        print("   → Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
+        logger.debug("processClipboardPaymentRequest() [PaymentRequest overload]")
+        logger.debug("   → Destinations: \(paymentRequest.destinations.count)")
+        logger.debug("   → Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
         
         // Clear existing state
-        print("🧹 [SendViewModel] Clearing existing state before applying clipboard data")
+        logger.debug("Clearing existing state before applying clipboard data")
         manualInput = ""
         amount = ""
         error = nil
@@ -353,27 +354,27 @@ extension SendViewModel {
         recipientState = .idle
         
         // Debug log all payment request details
-        print("   📦 Payment request details:")
-        print("      Destinations: \(paymentRequest.destinations.count)")
+        logger.debug("   Payment request details:")
+        logger.debug("      Destinations: \(paymentRequest.destinations.count)")
         if let primary = paymentRequest.primaryDestination {
-            print("      Primary format: \(primary.format.rawValue) (\(primary.format.displayName))")
-            print("      Primary network: \(primary.network?.displayName ?? "N/A")")
-            print("      Primary address: \(primary.address)")
+            logger.debug("      Primary format: \(primary.format.rawValue) (\(primary.format.displayName))")
+            logger.debug("      Primary network: \(primary.network?.displayName ?? "N/A")")
+            logger.debug("      Primary address: \(primary.address)")
         }
-        print("      Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
-        print("      Label: \(paymentRequest.label ?? "N/A")")
-        print("      Message: \(paymentRequest.message ?? "N/A")")
-        print("      Has alternatives: \(paymentRequest.hasAlternatives)")
+        logger.debug("      Amount: \(paymentRequest.amount?.description ?? "N/A") sats")
+        logger.debug("      Label: \(paymentRequest.label ?? "N/A")")
+        logger.debug("      Message: \(paymentRequest.message ?? "N/A")")
+        logger.debug("      Has alternatives: \(paymentRequest.hasAlternatives)")
         
         if paymentRequest.hasAlternatives {
-            print("      Alternative destinations:")
+            logger.debug("      Alternative destinations:")
             for (index, dest) in paymentRequest.alternativeDestinations.enumerated() {
-                print("         [\(index + 1)] \(dest.format.displayName): \(dest.shortAddress)")
+                logger.debug("         [\(index + 1)] \(dest.format.displayName): \(dest.shortAddress)")
             }
         }
         
         // Always use quick mode for clipboard paste to match QR scanner behavior
-        print("   → Using quick mode (clipboard paste)")
+        logger.debug("   → Using quick mode (clipboard paste)")
         await enterQuickMode(paymentRequest: paymentRequest, source: .clipboard)
         
         return true

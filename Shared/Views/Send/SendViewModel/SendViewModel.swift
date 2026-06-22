@@ -15,11 +15,15 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 /// Shared view model for Send flow across macOS and iOS
 @Observable
 @MainActor
 final class SendViewModel {
+    
+    // MARK: - Logger
+    let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "SendViewModel")
     
     // MARK: - Send Mode
     enum SendMode {

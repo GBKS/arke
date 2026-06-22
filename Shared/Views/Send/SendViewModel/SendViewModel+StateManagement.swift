@@ -11,6 +11,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 extension SendViewModel {
     
@@ -18,7 +19,7 @@ extension SendViewModel {
     
     /// Locks in a payment request and switches to manual confirmed mode
     func lockInPaymentRequest(_ paymentRequest: PaymentRequest) {
-        print("🔒 [SendViewModel] Locking in payment request with \(paymentRequest.destinations.count) destination(s)")
+        logger.info("Locking in payment request with \(paymentRequest.destinations.count) destination(s)")
         
         // Store the payment request
         currentPaymentRequest = paymentRequest
@@ -26,25 +27,25 @@ extension SendViewModel {
         // Rank destinations using the selector
         rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
         
-        print("🎯 [SendViewModel] Ranked destinations:")
+        logger.debug("Ranked destinations:")
         for (index, ranked) in rankedDestinations.enumerated() {
             let viableIcon = ranked.viable ? "✓" : "✗"
-            print("   \(viableIcon) [\(index + 1)] \(ranked.destination.format.displayName)")
-            print("      Balance: \(ranked.balanceSource.displayName)")
-            print("      Available: \(ranked.availableBalance?.description ?? "N/A") sats")
-            print("      Fee: ~\(ranked.estimatedFee?.description ?? "N/A") sats")
-            print("      Reason: \(ranked.reason)")
+            logger.debug("   \(viableIcon) [\(index + 1)] \(ranked.destination.format.displayName)")
+            logger.debug("      Balance: \(ranked.balanceSource.displayName)")
+            logger.debug("      Available: \(ranked.availableBalance?.description ?? "N/A") sats")
+            logger.debug("      Fee: ~\(ranked.estimatedFee?.description ?? "N/A") sats")
+            logger.debug("      Reason: \(ranked.reason)")
         }
         
         // Select the optimal (first viable) destination
         if let optimal = rankedDestinations.first(where: { $0.viable }) {
             selectedDestination = optimal.destination
-            print("✨ [SendViewModel] Auto-selected optimal destination: \(optimal.destination.format.displayName)")
+            logger.info("Auto-selected optimal destination: \(optimal.destination.format.displayName)")
             
             // Populate manualInput with the address so it shows in the UI
             let addressToDisplay = paymentRequest.originalString
             manualInput = addressToDisplay
-            print("   → Set manualInput to: \(addressToDisplay)")
+            logger.debug("   → Set manualInput to: \(addressToDisplay)")
             
             // Clear any previous errors
             error = nil
@@ -64,13 +65,13 @@ extension SendViewModel {
             // Show error explaining why no destinations are viable
             let reasons = rankedDestinations.map { "\($0.destination.format.displayName): \($0.reason)" }
             error = "Cannot send payment. " + reasons.joined(separator: "; ")
-            print("⚠️ [SendViewModel] No viable destinations found")
+            logger.warning("No viable destinations found")
             return
         }
         
         // Pre-fill amount for payment requests with embedded amounts
         if let requestAmount = paymentRequest.amount {
-            print("   → Pre-filling amount: \(requestAmount) sats")
+            logger.debug("   → Pre-filling amount: \(requestAmount) sats")
             amount = "\(requestAmount)"
         }
     }
@@ -80,7 +81,7 @@ extension SendViewModel {
     /// Ranks a single destination for manual entry mode
     /// This ensures fee calculation and viability checking work when typing addresses manually
     func rankManualDestination(_ destination: PaymentDestination) {
-        print("🔍 [SendViewModel] Ranking manual destination: \(destination.format.displayName)")
+        logger.debug("Ranking manual destination: \(destination.format.displayName)")
         
         // Create a minimal payment request with just this destination
         let paymentRequest = PaymentRequest(
@@ -94,10 +95,10 @@ extension SendViewModel {
         // Rank the destination
         rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
         
-        print("   → Ranked with fee: \(rankedDestinations.first?.estimatedFee?.description ?? "N/A") sats")
-        print("   → Viable: \(rankedDestinations.first?.viable ?? false)")
-        if let reason = rankedDestinations.first?.reason {
-            print("   → Reason: \(reason)")
+        logger.debug("   → Ranked with fee: \(self.rankedDestinations.first?.estimatedFee?.description ?? "N/A") sats")
+        logger.debug("   → Viable: \(self.rankedDestinations.first?.viable ?? false)")
+        if let reason = self.rankedDestinations.first?.reason {
+            logger.debug("   → Reason: \(reason)")
         }
     }
     
@@ -105,7 +106,7 @@ extension SendViewModel {
     
     /// Clears all state and returns to manual entry mode
     func clearAll() {
-        print("🔄 [SendViewModel] Clearing all state, returning to manual entry")
+        logger.debug("Clearing all state, returning to manual entry")
         sendMode = .manual
         manualInput = ""
         amount = ""

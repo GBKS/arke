@@ -11,6 +11,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import OSLog
 
 extension SendViewModel {
     
@@ -19,12 +20,12 @@ extension SendViewModel {
     /// Calculates Ark payment fee for the current amount and destination
     /// Caches the result to avoid repeated API calls for the same amount
     func calculateArkFee() async {
-        print("🏛️ [SendViewModel] calculateArkFee() called")
-        print("   → isArkDestination: \(isArkDestination)")
-        print("   → selectedDestination: \(selectedDestination?.format.rawValue ?? "nil")")
+        logger.debug("calculateArkFee() called")
+        logger.debug("   → isArkDestination: \(self.isArkDestination)")
+        logger.debug("   → selectedDestination: \(self.selectedDestination?.format.rawValue ?? "nil")")
         
         guard isArkDestination else {
-            print("   → Not an Ark destination, clearing cache")
+            logger.debug("   → Not an Ark destination, clearing cache")
             cachedArkFee = nil
             cachedArkFeeAmount = nil
             return
@@ -34,15 +35,15 @@ extension SendViewModel {
         let amountToEstimate: Int
         if let paymentAmount = currentPaymentRequest?.amount {
             // Use embedded payment request amount
-            print("   → Using payment request amount: \(paymentAmount) sats")
+            logger.debug("   → Using payment request amount: \(paymentAmount) sats")
             amountToEstimate = paymentAmount
         } else if let enteredAmount = Int(amount), enteredAmount > 0 {
             // Use manually entered amount
-            print("   → Using entered amount: \(enteredAmount) sats")
+            logger.debug("   → Using entered amount: \(enteredAmount) sats")
             amountToEstimate = enteredAmount
         } else {
             // No amount available, clear cache and return
-            print("   → No amount available (paymentRequest: \(currentPaymentRequest?.amount?.description ?? "nil"), entered: '\(amount)')")
+            logger.debug("   → No amount available (paymentRequest: \(self.currentPaymentRequest?.amount?.description ?? "nil"), entered: '\(self.amount)')")
             cachedArkFee = nil
             cachedArkFeeAmount = nil
             return
@@ -50,18 +51,18 @@ extension SendViewModel {
         
         // Check if we already have a cached fee for this amount
         if cachedArkFee != nil, cachedArkFeeAmount == amountToEstimate {
-            print("   → Using cached fee: \(cachedArkFee!) sats")
+            logger.debug("   → Using cached fee: \(self.cachedArkFee!) sats")
             return
         }
         
-        print("   → Calling walletManager.estimateArkoorPaymentFee(amountSats: \(amountToEstimate))")
+        logger.debug("   → Calling walletManager.estimateArkoorPaymentFee(amountSats: \(amountToEstimate))")
         do {
             let feeEstimate = try await walletManager.estimateArkoorPaymentFee(amountSats: UInt64(amountToEstimate))
             cachedArkFee = Int(feeEstimate.feeSats)
             cachedArkFeeAmount = amountToEstimate
-            print("   ✅ Ark fee estimated: \(feeEstimate.feeSats) sats for \(amountToEstimate) sats")
+            logger.info("   Ark fee estimated: \(feeEstimate.feeSats) sats for \(amountToEstimate) sats")
         } catch {
-            print("   ❌ Failed to estimate Ark fee: \(error)")
+            logger.error("   Failed to estimate Ark fee: \(error)")
             // Fall back to zero fee on error (Ark payments typically have no fee)
             cachedArkFee = nil
             cachedArkFeeAmount = nil
@@ -73,12 +74,12 @@ extension SendViewModel {
     /// Calculates Lightning send fee for the current amount and destination
     /// Caches the result to avoid repeated API calls for the same amount
     func calculateLightningFee() async {
-        print("⚡️ [SendViewModel] calculateLightningFee() called")
-        print("   → isLightningDestination: \(isLightningDestination)")
-        print("   → selectedDestination: \(selectedDestination?.format.rawValue ?? "nil")")
+        logger.debug("calculateLightningFee() called")
+        logger.debug("   → isLightningDestination: \(self.isLightningDestination)")
+        logger.debug("   → selectedDestination: \(self.selectedDestination?.format.rawValue ?? "nil")")
         
         guard isLightningDestination else {
-            print("   → Not a Lightning destination, clearing cache")
+            logger.debug("   → Not a Lightning destination, clearing cache")
             cachedLightningFee = nil
             cachedLightningFeeAmount = nil
             return
@@ -88,15 +89,15 @@ extension SendViewModel {
         let amountToEstimate: Int
         if let paymentAmount = currentPaymentRequest?.amount {
             // Use embedded payment request amount (e.g., Lightning invoice)
-            print("   → Using payment request amount: \(paymentAmount) sats")
+            logger.debug("   → Using payment request amount: \(paymentAmount) sats")
             amountToEstimate = paymentAmount
         } else if let enteredAmount = Int(amount), enteredAmount > 0 {
             // Use manually entered amount
-            print("   → Using entered amount: \(enteredAmount) sats")
+            logger.debug("   → Using entered amount: \(enteredAmount) sats")
             amountToEstimate = enteredAmount
         } else {
             // No amount available, clear cache and return
-            print("   → No amount available (paymentRequest: \(currentPaymentRequest?.amount?.description ?? "nil"), entered: '\(amount)')")
+            logger.debug("   → No amount available (paymentRequest: \(self.currentPaymentRequest?.amount?.description ?? "nil"), entered: '\(self.amount)')")
             cachedLightningFee = nil
             cachedLightningFeeAmount = nil
             return
@@ -104,18 +105,18 @@ extension SendViewModel {
         
         // Check if we already have a cached fee for this amount
         if cachedLightningFee != nil, cachedLightningFeeAmount == amountToEstimate {
-            print("   → Using cached fee: \(cachedLightningFee!) sats")
+            logger.debug("   → Using cached fee: \(self.cachedLightningFee!) sats")
             return
         }
         
-        print("   → Calling walletManager.estimateLightningSendFee(amountSats: \(amountToEstimate))")
+        logger.debug("   → Calling walletManager.estimateLightningSendFee(amountSats: \(amountToEstimate))")
         do {
             let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(amountToEstimate))
             cachedLightningFee = Int(feeEstimate.feeSats)
             cachedLightningFeeAmount = amountToEstimate
-            print("   ✅ Lightning fee estimated: \(feeEstimate) sats for \(amountToEstimate) sats")
+            logger.info("   Lightning fee estimated: \(feeEstimate.feeSats) sats for \(amountToEstimate) sats")
         } catch {
-            print("   ❌ Failed to estimate Lightning fee: \(error)")
+            logger.error("   Failed to estimate Lightning fee: \(error)")
             // Fall back to static estimate on error
             cachedLightningFee = nil
             cachedLightningFeeAmount = nil
