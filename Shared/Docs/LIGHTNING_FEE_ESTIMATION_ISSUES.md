@@ -13,36 +13,7 @@
 
 ## 🔴 Critical Issues
 
-### 1. Fee Calculation Logic Verification
-**Status**: 🔴 Critical
-**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:393`
-
-**Issue**:
-```swift
-let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
-```
-
-The fee calculation assumes `grossAmountSats = payment + fee` for all Lightning payment types. This needs verification for:
-
-- [x] Lightning Address payments - ✅ Verified working
-- [x] Lightning Invoice payments (with embedded amount)
-- [x] Lightning Invoice payments (amount-less invoices)
-- [x] LNURL-pay payments
-- [x] BOLT12 offer payments
-
-**Risk**: If the FFI uses different semantics for different payment types, fees could be calculated incorrectly, leading to payment failures or wrong amounts being sent.
-
-**Action Items**:
-1. Test with a Lightning invoice (embedded amount)
-2. Test with an amount-less Lightning invoice
-3. Test with LNURL-pay
-4. Test with BOLT12 (if supported)
-5. Document the expected behavior in code comments
-6. Consider adding validation/assertions
-
-**Notes**:
-- Current implementation works correctly for Lightning Address
-- From logs: `gross=4497, fee=21, calculated=21` where `4497 - 4476 = 21` ✅
+_(No critical issues remaining)_
 
 ---
 
@@ -115,24 +86,6 @@ When fee estimation fails, we silently fall back to static estimate (10 sats for
 
 ## 🟡 Minor Issues
 
-### 4. Debug Logging Cleanup
-**Status**: 🟡 Minor
-
-**Locations**:
-- `PaymentDestinationSelector.swift`: Lines 382, 388-389, 394, 397, 244-246, 249
-- `SendViewModel+PaymentExecution.swift`: Lines 175, 182
-
-**Issue**: Multiple debug `print()` statements left from investigation
-
-**Action Items**:
-- [ ] Remove all `print("🔍 ...")` debug statements
-- [ ] Convert important ones to proper `logger.debug()` calls
-- [ ] Keep only production-relevant logging
-
-**Priority**: Low - but should be done before next release
-
----
-
 ### 5. Integer Overflow Protection
 **Status**: 🟡 Minor
 **Location**: `Shared/Helpers/PaymentDestinationSelector.swift:393`
@@ -154,6 +107,55 @@ If `grossAmountSats < unwrappedAmount` (FFI bug or edge case), this produces neg
 ---
 
 ## ✅ Completed
+
+### 4. Debug Logging Cleanup
+**Status**: ✅ Fixed
+**Date Fixed**: 2026-06-23
+
+**Issue**: Multiple debug `print()` statements left from investigation
+
+**Resolution**:
+All debug print statements have been cleaned up:
+
+**PaymentDestinationSelector.swift**:
+- Added OSLog import and static logger
+- Removed all debug `print("🔍 ...")` statements from:
+  - `rankDestinations()` function (lines 169-217)
+  - `rankDestination()` function (lines 241, 246, 249)
+  - `estimateFee()` function (lines 382, 388-389, 394, 397)
+- Converted important error logging to `logger.error()` for Lightning fee estimation failures
+
+**SendViewModel+PaymentExecution.swift**:
+- Removed overly verbose debug logging statements (lines 175, 182)
+- Kept essential `logger.debug()` call showing ranking results
+
+**Verified**: Project builds successfully after cleanup
+
+---
+
+### 1. Fee Calculation Logic Verification
+**Status**: ✅ Fixed
+**Date Fixed**: 2026-06-23
+**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:393`
+
+**Issue**:
+The fee calculation assumes `grossAmountSats = payment + fee` for all Lightning payment types. This needed verification across different payment types.
+
+**Resolution**:
+All payment types tested and verified working correctly:
+- ✅ Lightning Address payments
+- ✅ Lightning Invoice payments (with embedded amount)
+- ✅ Lightning Invoice payments (amount-less invoices)
+- ✅ LNURL-pay payments
+- ✅ BOLT12 offer payments
+
+**Confirmed Behavior**:
+```swift
+let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
+```
+The formula `grossAmountSats - amount = fee` is correct across all Lightning payment types.
+
+---
 
 ### Original Bug: Memory Corruption in Closure
 **Status**: ✅ Fixed

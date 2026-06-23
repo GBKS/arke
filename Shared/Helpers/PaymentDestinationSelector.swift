@@ -7,9 +7,12 @@
 
 import Foundation
 import Bark
+import OSLog
 
 /// Selects the optimal payment destination based on balances, fees, and user preferences
 class PaymentDestinationSelector {
+    
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "PaymentDestinationSelector")
     
     // MARK: - Context
     
@@ -166,40 +169,18 @@ class PaymentDestinationSelector {
         from paymentRequest: PaymentRequest,
         context: PaymentContext
     ) async -> [RankedDestination] {
-        print("🔍 [PaymentDestinationSelector] Starting rankDestinations")
-        print("   Total destinations in request: \(paymentRequest.destinations.count)")
-        for (index, dest) in paymentRequest.destinations.enumerated() {
-            print("   [\(index)] \(dest.format.displayName) - \(dest.shortAddress)")
-        }
-        
         // Filter destinations to match network
         let networkCompatibleDestinations = paymentRequest.destinations.filter { destination in
-            let isCompatible = destination.isCompatible(with: context.networkConfig)
-            print("   🔍 Checking compatibility for \(destination.format.displayName):")
-            print("      Destination network: \(destination.network?.displayName ?? "nil")")
-            print("      Config network: \(context.networkConfig.networkType)")
-            print("      Compatible: \(isCompatible)")
-            return isCompatible
-        }
-        
-        print("   Network compatible destinations: \(networkCompatibleDestinations.count)")
-        for (index, dest) in networkCompatibleDestinations.enumerated() {
-            print("   [\(index)] \(dest.format.displayName) - \(dest.shortAddress)")
+            destination.isCompatible(with: context.networkConfig)
         }
         
         // Rank each destination (using async fee estimation)
         var rankedDestinations: [RankedDestination] = []
         for destination in networkCompatibleDestinations {
-            print("   🔄 Ranking: \(destination.format.displayName)")
             if let ranked = await rankDestination(destination, amount: paymentRequest.amount, context: context) {
-                print("      ✅ Ranked: viable=\(ranked.viable), priority=\(ranked.priority), reason=\(ranked.reason)")
                 rankedDestinations.append(ranked)
-            } else {
-                print("      ❌ Ranking returned nil")
             }
         }
-        
-        print("   Ranked destinations before sort: \(rankedDestinations.count)")
         
         // Sort by priority (viable first, then by priority number)
         rankedDestinations.sort { lhs, rhs in
@@ -207,12 +188,6 @@ class PaymentDestinationSelector {
                 return lhs.viable // Viable destinations first
             }
             return lhs.priority < rhs.priority // Lower priority number = higher priority
-        }
-        
-        print("   Ranked destinations after sort: \(rankedDestinations.count)")
-        print("   Final order:")
-        for (index, dest) in rankedDestinations.enumerated() {
-            print("   [\(index)] \(dest.destination.format.displayName) - viable=\(dest.viable), priority=\(dest.priority)")
         }
         
         return rankedDestinations
@@ -238,15 +213,12 @@ class PaymentDestinationSelector {
         amount: Int?,
         context: PaymentContext
     ) async -> RankedDestination? {
-        print("🔍 [rankDestination] Called with amount: \(amount?.description ?? "nil")")
         let balanceSource = balanceSource(for: destination)
         let availableBalance = availableBalance(for: destination, context: context)
         let priority = priorityScore(for: destination.format, preferences: context.userPreferences)
         
-        print("🔍 [rankDestination] About to call estimateFee with amount: \(amount?.description ?? "nil")")
         // Get fee estimate - try real estimation first, fall back to static estimate
         let estimatedFee = await estimateFee(for: destination, amount: amount, context: context)
-        print("🔍 [rankDestination] estimateFee returned: \(estimatedFee)")
         
         // Check viability
         let viabilityCheck = checkViability(
@@ -379,22 +351,18 @@ class PaymentDestinationSelector {
         amount: Int?,
         context: PaymentContext
     ) async -> Int {
-        print("🔍 [estimateFee] Called with amount: \(amount?.description ?? "nil"), format: \(destination.format)")
         // For Lightning payments, try to use real fee estimation if available
         if let unwrappedAmount = amount,
            let walletManager = context.walletManager,
            (destination.format == .lightning || destination.format == .lightningInvoice || 
             destination.format == .lnurl || destination.format == .bolt12) {
-            print("🔍 [estimateFee] Unwrapped amount: \(unwrappedAmount), type: \(type(of: unwrappedAmount))")
-            print("🔍 [estimateFee] Calling WalletManager.estimateLightningSendFee with: \(unwrappedAmount)")
             do {
                 let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(unwrappedAmount))
                 // Calculate actual fee as difference between gross and payment amount
                 let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
-                print("🔍 [estimateFee] Fee estimate: gross=\(feeEstimate.grossAmountSats), fee=\(feeEstimate.feeSats), calculated=\(actualFee)")
                 return actualFee
             } catch {
-                print("🔍 [estimateFee] Fee estimation failed: \(error)")
+                logger.error("Lightning fee estimation failed: \(error.localizedDescription)")
                 // Fall through to static estimate
             }
         }

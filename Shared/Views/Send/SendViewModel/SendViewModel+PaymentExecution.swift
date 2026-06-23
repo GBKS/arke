@@ -171,15 +171,11 @@ extension SendViewModel {
         
         // Validate amount against viability using FRESH balance data and REAL fee estimates
         // The ranking now includes real Lightning fee estimation via the paymentContext
-        logger.debug("   → Re-ranking destination with fresh balance data and real fee estimates...")
-        logger.debug("   → About to call rankDestination with amount: \(amountInt)")
-        
         let freshRanking = await PaymentDestinationSelector.rankDestination(
             destination,
             amount: amountInt,
             context: paymentContext  // This reads CURRENT balance from walletManager and estimates fees
         )
-        logger.debug("   → rankDestination returned")
         logger.debug("   → Fresh ranking: viable=\(freshRanking?.viable ?? false), reason=\(freshRanking?.reason ?? "nil")")
         
         // Use fresh ranking, or fall back to cached ranking if fresh ranking failed
