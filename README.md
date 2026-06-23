@@ -4,7 +4,7 @@ A native Bitcoin wallet for iPhone that integrates the Ark protocol ([second.tec
 
 **Try it now**: Sign up for TestFlight at [arke.cash](https://arke.cash/)
 
-> ⚠️ **Signet Only**: Arké currently operates on Bitcoin signet. Mainnet support will be added when the Ark protocol implementation is ready for production use.
+> ⚠️ **Beta Software**: Arké now runs on Bitcoin mainnet by default. Signet is available from the cover screen for testing. This software has not undergone a formal security audit — use with caution and only amounts you are comfortable risking.
 
 ## Platform Requirements
 
@@ -63,7 +63,8 @@ The current focus is on delivering an excellent iOS experience first. A future m
   - Backup reminders and device registry
 
 ### Network Support
-- **Signet**: Bitcoin signet for testing (default)
+- **Mainnet**: Live Bitcoin network (default)
+- **Signet**: Bitcoin signet for testing (available from the cover screen)
 
 Note: Only one Ark server is currently available. Additional server options will become available as the Ark ecosystem grows.
 
@@ -115,7 +116,7 @@ The easiest way to try Arké is through TestFlight:
 1. Visit [arke.cash](https://arke.cash/) and sign up for TestFlight access
 2. Install the app on your iPhone (iOS 26.0 or later required)
 3. Create a new wallet or import an existing one
-4. Start receiving and sending Bitcoin on signet
+4. Start receiving and sending Bitcoin on mainnet (or switch to signet from the cover screen for testing)
 
 ### For Developers
 
@@ -145,7 +146,7 @@ The easiest way to try Arké is through TestFlight:
 2. **Import Wallet**: Restore from existing 12 or 24-word seed phrase
 3. **Backup**: Securely store your recovery phrase
 
-Note: Wallet linking across devices is currently disabled but planned for a future release.
+All devices signed into the same iCloud account automatically share the same wallet. One device acts as the primary — maintaining the active connection to the Ark server — while other devices are read-only.
 
 ## What is Ark?
 
@@ -176,8 +177,8 @@ Current status:
 - ✅ Lightning Network integration
 - ✅ Localization and accessibility
 - ✅ Performance optimizations
+- ✅ Mainnet support
 - ⏳ Broader beta testing with non-technical users
-- ⏳ Mainnet support (pending Ark protocol readiness)
 
 ## Contributing
 
@@ -193,8 +194,11 @@ Arké uses CloudKit to sync the following data across your devices:
 - Device registry
 
 **What is NOT synced:**
-- Your wallet's private keys or seed phrase (always stored locally in Keychain)
 - Raw transaction data from the blockchain
+
+**Security:**
+- Your seed phrase syncs across devices via iCloud Keychain with end-to-end encryption
+- Transaction metadata and wallet configuration sync via CloudKit; enabling [Advanced Data Protection](https://support.apple.com/en-us/108756) in iPhone Settings extends end-to-end encryption to this data as well
 
 You can disable iCloud sync in System Settings if preferred, though this will limit multi-device functionality.
 
@@ -228,13 +232,13 @@ Please ensure compliance with local regulations regarding cryptocurrency softwar
 
 ## Disclaimer
 
-**Signet Only - Educational Use:** Arké currently operates exclusively on Bitcoin signet:
+**Beta Software — Use With Caution:** Arké now defaults to Bitcoin mainnet:
 
-- This software is for testing and development purposes only
-- Do not use with real Bitcoin — mainnet support is not yet enabled
+- This software is in beta and has not undergone a formal security audit
+- Only use amounts you are comfortable risking
 - Always maintain secure backups of your recovery phrase
-- The Ark protocol is an emerging technology — understand the trade-offs
-- This software has not undergone formal security audits
+- The Ark protocol is an emerging technology — understand the trade-offs before use
+- Signet is available from the cover screen for risk-free testing
 - The developers assume no responsibility for any losses incurred through use of this software
 
 **Remember**: Not your keys, not your Bitcoin. Always maintain control of your seed phrase and understand how to recover your funds.
