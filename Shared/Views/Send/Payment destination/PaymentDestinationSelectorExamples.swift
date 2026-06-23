@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Example 1: Basic Payment Selection
 
-func exampleBasicSelection() {
+func exampleBasicSelection() async {
     // User scans a BIP-21 QR code with multiple payment options
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001&ark=tark1qxyzexample&lightning=lntb100n1example"
     
@@ -34,7 +34,7 @@ func exampleBasicSelection() {
     )
     
     // Select optimal destination
-    if let optimal = paymentRequest.selectOptimalDestination(context: context) {
+    if let optimal = await paymentRequest.selectOptimalDestination(context: context) {
         print("\nOptimal payment method: \(optimal.format.displayName)")
         print("Address: \(optimal.shortAddress)")
         
@@ -47,7 +47,7 @@ func exampleBasicSelection() {
 
 // MARK: - Example 2: Showing All Options to User
 
-func exampleShowAllOptions() {
+func exampleShowAllOptions() async {
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001&ark=tark1qxyzexample"
     
     guard let paymentRequest = AddressValidator.parsePaymentRequest(bip21URI) else {
@@ -61,7 +61,7 @@ func exampleShowAllOptions() {
     )
     
     // Get all destinations ranked by preference
-    let ranked = paymentRequest.rankedDestinations(context: context)
+    let ranked = await paymentRequest.rankedDestinations(context: context)
     
     print("Payment options (ranked):")
     for (index, option) in ranked.enumerated() {
@@ -80,7 +80,7 @@ func exampleShowAllOptions() {
 
 // MARK: - Example 3: Handling Insufficient Ark Balance
 
-func exampleInsufficientArkBalance() {
+func exampleInsufficientArkBalance() async {
     // Large payment that exceeds Ark balance
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.008&ark=tark1qxyzexample&lightning=lntb800000n1example"
     
@@ -98,7 +98,7 @@ func exampleInsufficientArkBalance() {
     print("Ark balance: 300,000 sats (insufficient)")
     print("Bitcoin balance: 1,000,000 sats (sufficient)")
     
-    if let optimal = paymentRequest.selectOptimalDestination(context: context) {
+    if let optimal = await paymentRequest.selectOptimalDestination(context: context) {
         print("\nAutomatic fallback to: \(optimal.format.displayName)")
         print("This will use your Bitcoin on-chain balance")
     }
@@ -106,7 +106,7 @@ func exampleInsufficientArkBalance() {
 
 // MARK: - Example 4: Server Connectivity Issues
 
-func exampleServerOffline() {
+func exampleServerOffline() async {
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001&lightning=lntb100n1example"
     
     guard let paymentRequest = AddressValidator.parsePaymentRequest(bip21URI) else {
@@ -121,7 +121,7 @@ func exampleServerOffline() {
         arkServerConnected: false // Server offline!
     )
     
-    let ranked = paymentRequest.rankedDestinations(context: context)
+    let ranked = await paymentRequest.rankedDestinations(context: context)
     
     print("Ark server is offline")
     print("\nPayment options:")
@@ -136,7 +136,7 @@ func exampleServerOffline() {
 
 // MARK: - Example 5: Custom User Preferences
 
-func exampleCustomPreferences() {
+func exampleCustomPreferences() async {
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.001&ark=tark1qxyzexample"
     
     guard let paymentRequest = AddressValidator.parsePaymentRequest(bip21URI) else {
@@ -158,14 +158,14 @@ func exampleCustomPreferences() {
         userPreferences: customPreferences
     )
     
-    if let optimal = paymentRequest.selectOptimalDestination(context: context) {
+    if let optimal = await paymentRequest.selectOptimalDestination(context: context) {
         print("With custom preferences, selected: \(optimal.format.displayName)")
     }
 }
 
 // MARK: - Example 6: Large Payment Optimization
 
-func exampleLargePayment() {
+func exampleLargePayment() async {
     // Very large payment
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.02&ark=tark1qxyzexample"
     
@@ -189,7 +189,7 @@ func exampleLargePayment() {
     print("Payment amount: \(paymentRequest.amount ?? 0) sats (large payment)")
     print("Large amount threshold: 1,000,000 sats")
     
-    if let optimal = paymentRequest.selectOptimalDestination(context: context) {
+    if let optimal = await paymentRequest.selectOptimalDestination(context: context) {
         print("\nSelected: \(optimal.format.displayName)")
         print("Reason: For large amounts, on-chain settlement provides better security")
     }
@@ -197,7 +197,7 @@ func exampleLargePayment() {
 
 // MARK: - Example 7: Viability Report for Debugging
 
-func exampleViabilityReport() {
+func exampleViabilityReport() async {
     let bip21URI = "bitcoin:tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx?amount=0.006&ark=tark1qxyzexample&lightning=lntb600000n1example"
     
     guard let paymentRequest = AddressValidator.parsePaymentRequest(bip21URI) else {
@@ -211,7 +211,7 @@ func exampleViabilityReport() {
     )
     
     // Get detailed viability report
-    let report = PaymentDestinationSelector.viabilityReport(from: paymentRequest, context: context)
+    let report = await PaymentDestinationSelector.viabilityReport(from: paymentRequest, context: context)
     print(report)
     
     // This would output something like:
@@ -235,10 +235,10 @@ func exampleViabilityReport() {
 
 // MARK: - Example 8: Integration with SendView
 
-func exampleIntegrationWithSendView() {
+func exampleIntegrationWithSendView() async {
     // This would be called when user pastes/scans an address in SendView
     
-    func handleScannedPaymentRequest(_ input: String, walletManager: WalletManager) {
+    func handleScannedPaymentRequest(_ input: String, walletManager: WalletManager) async {
         guard let paymentRequest = AddressValidator.parsePaymentRequest(input) else {
             // Show error: Invalid address
             return
@@ -252,7 +252,7 @@ func exampleIntegrationWithSendView() {
         )
         
         // Check if payment is possible
-        let (feasible, _) = PaymentDestinationSelector.canFulfillPayment(
+        let (feasible, _) = await PaymentDestinationSelector.canFulfillPayment(
             paymentRequest,
             with: context
         )
@@ -263,7 +263,7 @@ func exampleIntegrationWithSendView() {
         }
         
         // Get all viable options
-        let ranked = paymentRequest.rankedDestinations(context: context)
+        let ranked = await paymentRequest.rankedDestinations(context: context)
         let viableOptions = ranked.filter { $0.viable }
         
         if viableOptions.count == 1 {
@@ -282,7 +282,7 @@ func exampleIntegrationWithSendView() {
 
 // MARK: - Example 9: Checking Individual Destination Viability
 
-func exampleCheckIndividualViability() {
+func exampleCheckIndividualViability() async {
     let arkDestination = PaymentDestination(
         format: .ark,
         network: .signet,
@@ -296,7 +296,7 @@ func exampleCheckIndividualViability() {
     )
     
     // Check if this specific destination is viable for 600k sats
-    let isViable = PaymentDestinationSelector.isViable(
+    let isViable = await PaymentDestinationSelector.isViable(
         destination: arkDestination,
         amount: 600_000,
         context: context
@@ -311,7 +311,7 @@ func exampleCheckIndividualViability() {
 
 // MARK: - Example 10: Reserve Balance Protection
 
-func exampleReserveProtection() {
+func exampleReserveProtection() async {
     let paymentRequest = PaymentRequest(
         destinations: [
             PaymentDestination(format: .ark, network: .signet, address: "tark1qxyz"),
@@ -333,7 +333,7 @@ func exampleReserveProtection() {
         userPreferences: preferences
     )
     
-    if let optimal = paymentRequest.selectOptimalDestination(context: context) {
+    if let optimal = await paymentRequest.selectOptimalDestination(context: context) {
         print("Selected: \(optimal.format.displayName)")
         
         if optimal.format == .bitcoin {

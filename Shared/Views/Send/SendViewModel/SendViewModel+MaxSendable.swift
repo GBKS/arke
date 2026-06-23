@@ -18,12 +18,17 @@ extension SendViewModel {
     
     /// Calculates the maximum sendable amount for the selected destination, accounting for fees
     /// Uses iterative fee estimation to converge on the exact amount that can be sent
+    /// Sets the isSendingMax flag to enable retry logic for Lightning payments
     /// - Returns: Maximum sendable amount in satoshis, or nil if calculation fails
     func calculateMaxSendable() async -> Int? {
         guard let destination = selectedDestination else {
             logger.error("No destination selected")
             return nil
         }
+        
+        // Set flag to indicate this is a "send max" operation
+        // This enables retry logic for Lightning payments with dynamic routing fees
+        isSendingMax = true
         
         let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
         
@@ -79,10 +84,10 @@ extension SendViewModel {
         logger.info("Lightning: Starting iterative fee estimation")
         
         var currentAmount = balance
-        var previousFee = 0
+        var previousGross = 0
         
-        // Iterate up to 3 times to converge on the correct amount
-        for iteration in 1...3 {
+        // Iterate up to 5 times to converge on the correct amount
+        for iteration in 1...5 {
             logger.debug("   Iteration \(iteration): Testing amount \(currentAmount) sats")
             
             do {
@@ -90,24 +95,47 @@ extension SendViewModel {
                     amountSats: UInt64(currentAmount)
                 )
                 
+                let grossAmount = Int(feeEstimate.grossAmountSats)
                 let fee = Int(feeEstimate.feeSats)
-                logger.debug("   → Fee estimate: \(fee) sats")
-                
-                // Check if we've converged (fee didn't change)
-                if fee == previousFee && iteration > 1 {
-                    logger.info("Lightning: Converged after \(iteration) iterations")
-                    logger.debug("   Final amount: \(currentAmount) sats, Fee: \(fee) sats")
-                    return currentAmount
+                let netAmount = Int(feeEstimate.netAmountSats)
+                logger.debug("   → Fee estimate details:")
+                logger.debug("      grossAmountSats: \(grossAmount)")
+                logger.debug("      feeSats: \(fee)")
+                logger.debug("      netAmountSats: \(netAmount)")
+                logger.debug("      vtxosSpent count: \(feeEstimate.vtxosSpent.count)")
+                if !feeEstimate.vtxosSpent.isEmpty {
+                    logger.debug("      vtxosSpent IDs: \(feeEstimate.vtxosSpent.joined(separator: ", "))")
                 }
                 
-                // Adjust amount for next iteration
-                previousFee = fee
-                currentAmount = balance - fee
-                
-                // Sanity check: ensure amount is positive
-                if currentAmount <= 0 {
-                    logger.error("Lightning: Fee exceeds balance")
-                    return nil
+                // Check if gross amount fits in balance
+                if grossAmount <= balance {
+                    // Check if we've converged (gross didn't change)
+                    if grossAmount == previousGross && iteration > 1 {
+                        logger.info("Lightning: Converged after \(iteration) iterations")
+                        logger.debug("   Final amount: \(currentAmount) sats, Fee: \(fee) sats, Gross: \(grossAmount) sats")
+                        return currentAmount
+                    }
+                    
+                    // Try to increase amount since we have room
+                    previousGross = grossAmount
+                    let remainingBalance = balance - grossAmount
+                    if remainingBalance > 0 {
+                        currentAmount = currentAmount + remainingBalance
+                    } else {
+                        // Perfect fit
+                        return currentAmount
+                    }
+                } else {
+                    // Gross exceeds balance, reduce amount
+                    previousGross = grossAmount
+                    let excess = grossAmount - balance
+                    currentAmount = currentAmount - excess
+                    
+                    // Sanity check: ensure amount is positive
+                    if currentAmount <= 0 {
+                        logger.error("Lightning: Cannot send - fee exceeds balance")
+                        return nil
+                    }
                 }
                 
             } catch {
@@ -119,8 +147,8 @@ extension SendViewModel {
             }
         }
         
-        // After 3 iterations, use the last calculated amount
-        logger.info("Lightning: Completed 3 iterations, final amount: \(currentAmount) sats")
+        // After 5 iterations, use the last calculated amount
+        logger.info("Lightning: Completed 5 iterations, final amount: \(currentAmount) sats")
         return currentAmount
     }
     
@@ -175,10 +203,10 @@ extension SendViewModel {
         logger.info("Offboarding: Starting iterative fee estimation")
         
         var currentAmount = balance
-        var previousFee = 0
+        var previousGross = 0
         
-        // Iterate up to 3 times to converge on the correct amount
-        for iteration in 1...3 {
+        // Iterate up to 5 times to converge on the correct amount
+        for iteration in 1...5 {
             logger.debug("   Iteration \(iteration): Testing amount \(currentAmount) sats")
             
             do {
@@ -187,24 +215,39 @@ extension SendViewModel {
                     amountSats: UInt64(currentAmount)
                 )
                 
+                let grossAmount = Int(feeEstimate.grossAmountSats)
                 let fee = Int(feeEstimate.feeSats)
-                logger.debug("   → Fee estimate: \(fee) sats")
+                logger.debug("   → Fee: \(fee) sats, Gross: \(grossAmount) sats")
                 
-                // Check if we've converged (fee didn't change)
-                if fee == previousFee && iteration > 1 {
-                    logger.info("Offboarding: Converged after \(iteration) iterations")
-                    logger.debug("   Final amount: \(currentAmount) sats, Fee: \(fee) sats")
-                    return currentAmount
-                }
-                
-                // Adjust amount for next iteration
-                previousFee = fee
-                currentAmount = balance - fee
-                
-                // Sanity check: ensure amount is positive
-                if currentAmount <= 0 {
-                    logger.error("Offboarding: Fee exceeds balance")
-                    return nil
+                // Check if gross amount fits in balance
+                if grossAmount <= balance {
+                    // Check if we've converged (gross didn't change)
+                    if grossAmount == previousGross && iteration > 1 {
+                        logger.info("Offboarding: Converged after \(iteration) iterations")
+                        logger.debug("   Final amount: \(currentAmount) sats, Fee: \(fee) sats, Gross: \(grossAmount) sats")
+                        return currentAmount
+                    }
+                    
+                    // Try to increase amount since we have room
+                    previousGross = grossAmount
+                    let remainingBalance = balance - grossAmount
+                    if remainingBalance > 0 {
+                        currentAmount = currentAmount + remainingBalance
+                    } else {
+                        // Perfect fit
+                        return currentAmount
+                    }
+                } else {
+                    // Gross exceeds balance, reduce amount
+                    previousGross = grossAmount
+                    let excess = grossAmount - balance
+                    currentAmount = currentAmount - excess
+                    
+                    // Sanity check: ensure amount is positive
+                    if currentAmount <= 0 {
+                        logger.error("Offboarding: Cannot send - fee exceeds balance")
+                        return nil
+                    }
                 }
                 
             } catch {
@@ -216,8 +259,8 @@ extension SendViewModel {
             }
         }
         
-        // After 3 iterations, use the last calculated amount
-        logger.info("Offboarding: Completed 3 iterations, final amount: \(currentAmount) sats")
+        // After 5 iterations, use the last calculated amount
+        logger.info("Offboarding: Completed 5 iterations, final amount: \(currentAmount) sats")
         return currentAmount
     }
 }

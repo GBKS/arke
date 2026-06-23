@@ -89,6 +89,11 @@ final class SendViewModel {
     /// Resolved LNURL-pay data (cached from resolution for payment execution)
     var resolvedLNURL: LNURLResolver.ResolvedLNURL?
     
+    // MARK: - Send Max State
+    /// Tracks whether the user initiated a "send max" operation
+    /// Used to enable retry logic for Lightning payments with dynamic routing fees
+    var isSendingMax: Bool = false
+    
     /// Callback to dismiss the view after successful payment
     var onDismiss: (() -> Void)?
     

@@ -185,7 +185,7 @@ struct ContactPaymentView: View {
             
             // Rank destinations using payment context
             if let context = paymentContext {
-                rankedDestinations = modifiedRequest.rankedDestinations(context: context)
+                rankedDestinations = await modifiedRequest.rankedDestinations(context: context)
                 
                 // Auto-select optimal destination
                 if selectedDestination == nil,
@@ -218,7 +218,7 @@ struct ContactPaymentView: View {
                 resolvedPaymentRequest = paymentRequest
                 
                 if let context = paymentContext {
-                    rankedDestinations = paymentRequest.rankedDestinations(context: context)
+                    rankedDestinations = await paymentRequest.rankedDestinations(context: context)
                     
                     if selectedDestination == nil,
                        let optimal = rankedDestinations.first(where: { $0.viable }) {

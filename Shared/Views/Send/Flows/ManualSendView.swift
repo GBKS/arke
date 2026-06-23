@@ -87,17 +87,20 @@ struct ManualSendView: View {
     private var allDisplayDestinations: [DisplayDestination] {
         guard let paymentRequest = resolvedPaymentRequest else { return [] }
         
-        let rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
-        
-        return rankedDestinations.map { ranked in
-            DisplayDestination(
-                destination: ranked.destination,
-                estimatedFee: ranked.estimatedFee,
-                balanceSourceName: ranked.balanceSource.displayName,
-                matchedContact: contactLookup?(ranked.destination.address),
-                viable: ranked.viable,
-                viabilityReason: ranked.reason,
-                availableBalance: ranked.availableBalance
+        // Note: This is a synchronous computed property, so we can't call async ranking here.
+        // The destinations are displayed with static info; fees are calculated when selected
+        return paymentRequest.destinations.map { destination in
+            let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
+            let availableBalance = PaymentDestinationSelector.availableBalance(for: destination, context: paymentContext)
+            
+            return DisplayDestination(
+                destination: destination,
+                estimatedFee: nil,  // Will be calculated async when user selects
+                balanceSourceName: balanceSource.displayName,
+                matchedContact: contactLookup?(destination.address),
+                viable: true,  // Assume viable for display; will validate on selection
+                viabilityReason: "Tap to select",
+                availableBalance: availableBalance
             )
         }
     }
@@ -345,7 +348,7 @@ struct ManualSendView: View {
             originalBIP353Address = resolved.originalAddress
             
             // Rank destinations and select optimal
-            let ranked = paymentRequest.rankedDestinations(context: paymentContext)
+            let ranked = await paymentRequest.rankedDestinations(context: paymentContext)
             if let optimal = ranked.first(where: { $0.viable }) {
                 selectedDestination = optimal.destination
                 selectedDestinationId = optimal.destination.id

@@ -54,7 +54,7 @@ extension SendViewModel {
                         
                         // Lock in the payment request (ranks destinations, selects optimal, pre-fills amount)
                         currentPaymentRequest = paymentRequest
-                        rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+                        rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                         
                         if let optimal = rankedDestinations.first(where: { $0.viable }) {
                             selectedDestination = optimal.destination
@@ -104,7 +104,7 @@ extension SendViewModel {
                         )
                         
                         currentPaymentRequest = paymentRequest
-                        rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+                        rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                         
                         if let optimal = rankedDestinations.first(where: { $0.viable }) {
                             selectedDestination = optimal.destination
@@ -139,7 +139,7 @@ extension SendViewModel {
                 
                 // Lock in the payment request (ranks destinations, selects optimal, pre-fills amount)
                 currentPaymentRequest = paymentRequest
-                rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+                rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                 
                 if let optimal = rankedDestinations.first(where: { $0.viable }) {
                     selectedDestination = optimal.destination
@@ -178,7 +178,7 @@ extension SendViewModel {
                 // Rich payment request with metadata - use quick mode for better UX
                 // Pre-filled recipients are treated as manual source since they could come from various places
                 if isSimplePaymentRequest(paymentRequest) {
-                    lockInPaymentRequest(paymentRequest)
+                    await lockInPaymentRequest(paymentRequest)
                 } else {
                     await enterQuickMode(paymentRequest: paymentRequest, source: .manual)
                 }

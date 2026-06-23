@@ -67,7 +67,7 @@ extension SendViewModel {
         }
     }
     
-    /// Creates payment context for destination selection
+    /// Creates payment context for destination selection with real Lightning fee estimation
     var paymentContext: PaymentDestinationSelector.PaymentContext {
         PaymentDestinationSelector.PaymentContext(
             arkBalance: walletManager.arkBalance?.spendableSat,
@@ -75,7 +75,8 @@ extension SendViewModel {
             networkConfig: currentNetworkConfig,
             userPreferences: .default,
             arkServerConnected: true, // TODO: Get from manager
-            hasLightningCapability: true // TODO: Get from manager
+            hasLightningCapability: true, // TODO: Get from manager
+            walletManager: walletManager
         )
     }
     

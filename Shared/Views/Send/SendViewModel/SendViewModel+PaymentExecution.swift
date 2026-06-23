@@ -95,7 +95,7 @@ extension SendViewModel {
         // Compute ranked destinations from payment request if provided, otherwise use state
         let rankedDestinations: [PaymentDestinationSelector.RankedDestination]
         if let request = paymentRequest {
-            rankedDestinations = request.rankedDestinations(context: paymentContext)
+            rankedDestinations = await request.rankedDestinations(context: paymentContext)
             logger.debug("   → Using payment request with \(request.destinations.count) destination(s)")
             for (index, dest) in request.destinations.enumerated() {
                 logger.debug("      [\(index)] format: \(dest.format.rawValue), address: \(dest.shortAddress)")
@@ -130,12 +130,18 @@ extension SendViewModel {
         let amountLocked: Bool
         if let request = paymentRequest {
             amountLocked = destination.format == .lightningInvoice && request.amount != nil
+            logger.debug("   → amountLocked computed from paymentRequest: \(amountLocked) (format: \(destination.format.rawValue), request.amount: \(request.amount ?? 0))")
         } else {
             amountLocked = isAmountLocked
+            logger.debug("   → amountLocked from state: \(amountLocked)")
         }
+        
+        logger.debug("   → Final amountLocked: \(amountLocked)")
         
         // For Lightning invoices with embedded amounts, we don't need to validate the amount field
         if amountLocked {
+            logger.debug("   → Taking amountLocked early return path (line 152)")
+            logger.debug("   → Will call payLightningInvoice with nil amount")
             error = nil
             
             // Pay the Lightning invoice without passing an amount
@@ -154,38 +160,53 @@ extension SendViewModel {
         
         // Determine the amount to use (parameter override or state)
         let amountString = amount ?? self.amount
+        logger.debug("   → Amount string to parse: '\(amountString)'")
         
         // For all other cases, validate the amount field
         guard let amountInt = Int(amountString) else {
+            logger.error("   ❌ Failed to parse amount as Int: '\(amountString)'")
             throw SendError.invalidAmount
         }
+        logger.debug("   → Parsed amount: \(amountInt) sats")
         
-        // Validate amount against viability using FRESH balance data
-        // CRITICAL FIX: Don't use cached rankedDestinations - balance may have changed since they were calculated!
-        // Always re-rank with current balance to avoid "available balance (0 sats)" errors when balance loads late
-        let freshRanking = PaymentDestinationSelector.rankDestination(
+        // Validate amount against viability using FRESH balance data and REAL fee estimates
+        // The ranking now includes real Lightning fee estimation via the paymentContext
+        logger.debug("   → Re-ranking destination with fresh balance data and real fee estimates...")
+        logger.debug("   → About to call rankDestination with amount: \(amountInt)")
+        
+        let freshRanking = await PaymentDestinationSelector.rankDestination(
             destination,
             amount: amountInt,
-            context: paymentContext  // This reads CURRENT balance from walletManager
+            context: paymentContext  // This reads CURRENT balance from walletManager and estimates fees
         )
+        logger.debug("   → rankDestination returned")
+        logger.debug("   → Fresh ranking: viable=\(freshRanking?.viable ?? false), reason=\(freshRanking?.reason ?? "nil")")
         
         // Use fresh ranking, or fall back to cached ranking if fresh ranking failed
         if let ranked = freshRanking ?? rankedDestinations.first(where: { $0.destination.id == destination.id }) {
+            logger.debug("   → Using ranking: viable=\(ranked.viable), availableBalance=\(ranked.availableBalance ?? -1), estimatedFee=\(ranked.estimatedFee ?? -1)")
+            
             if !ranked.viable {
+                logger.error("   ❌ Destination not viable: \(ranked.reason)")
                 throw SendError.destinationNotViable(ranked.reason)
             }
             
             // Check if amount + fee exceeds available balance
             let totalRequired = amountInt + (ranked.estimatedFee ?? 0)
             if let availableBalance = ranked.availableBalance, totalRequired > availableBalance {
+                logger.error("   ❌ Insufficient balance: need \(totalRequired) sats, have \(availableBalance) sats")
                 throw SendError.insufficientBalance(required: totalRequired, available: availableBalance)
             }
+            logger.debug("   ✅ Balance check passed: totalRequired=\(totalRequired), availableBalance=\(ranked.availableBalance ?? -1)")
+        } else {
+            logger.warning("   ⚠️ No ranking available (fresh or cached) - skipping viability check")
         }
         
         error = nil
         
         // Route to the appropriate payment method based on destination format
-        logger.debug("   → Routing payment to format: \(destination.format.rawValue)")
+        logger.info("   → ROUTING payment to format: \(destination.format.rawValue)")
+        logger.debug("   → About to enter switch statement for payment routing")
         
         switch destination.format {
         case .bitcoin, .silentPayments:
@@ -199,38 +220,46 @@ extension SendViewModel {
             let invoiceHasAmount = paymentRequest?.amount != nil || currentPaymentRequest?.amount != nil
             logger.info("   → Paying Lightning invoice: \(destination.shortAddress)")
             logger.debug("   → Invoice has embedded amount: \(invoiceHasAmount)")
-            let status: LightningSendStatus
-            if invoiceHasAmount {
-                status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: nil)
+            
+            // For send-max operations with no embedded amount, implement retry logic
+            if isSendingMax && !invoiceHasAmount {
+                logger.debug("   → Send-max mode: enabling retry logic")
+                try await executeWithRetry(
+                    destination: destination,
+                    initialAmount: amountInt,
+                    maxRetries: 3
+                )
             } else {
-                status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: UInt64(amountInt))
-            }
-            // Log payment status
-            switch status {
-            case .paid(let paymentHash, let preimage):
-                logger.info("   Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
-            case .inProgress(let send):
-                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
-            case .unknown:
-                logger.warning("   Payment status unknown")
+                // Normal payment - no retry
+                let status: LightningSendStatus
+                if invoiceHasAmount {
+                    status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: nil)
+                } else {
+                    status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: UInt64(amountInt))
+                }
+                logLightningPaymentStatus(status, label: "Lightning invoice payment")
             }
             
         case .lightning:
             // Lightning address - use the direct FFI method
             logger.info("   → Paying Lightning address: \(destination.address)")
-            let status = try await walletManager.payLightningAddress(
-                lightningAddress: destination.address,
-                amountSats: UInt64(amountInt),
-                comment: nil
-            )
-            // Log payment status
-            switch status {
-            case .paid(let paymentHash, let preimage):
-                logger.info("   Payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
-            case .inProgress(let send):
-                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
-            case .unknown:
-                logger.warning("   Payment status unknown")
+            
+            // For send-max operations, implement retry logic with fee adjustment
+            if isSendingMax {
+                logger.debug("   → Send-max mode: enabling retry logic")
+                try await executeWithRetry(
+                    destination: destination,
+                    initialAmount: amountInt,
+                    maxRetries: 3
+                )
+            } else {
+                // Normal payment - no retry
+                let status = try await walletManager.payLightningAddress(
+                    lightningAddress: destination.address,
+                    amountSats: UInt64(amountInt),
+                    comment: nil
+                )
+                logLightningPaymentStatus(status, label: "Lightning address payment")
             }
             
         case .lnurl:
@@ -290,15 +319,19 @@ extension SendViewModel {
             // BOLT12 offers require explicit amount and use dedicated payment method
             // The offer is resolved into an invoice internally by the wallet
             logger.info("   → Paying BOLT12 offer: \(destination.shortAddress)")
-            let status = try await walletManager.payLightningOffer(offer: destination.address, amountSats: UInt64(amountInt))
-            // Log payment status
-            switch status {
-            case .paid(let paymentHash, let preimage):
-                logger.info("   BOLT12 payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
-            case .inProgress(let send):
-                logger.info("   BOLT12 payment in progress, fee: \(send.feeSats) sats")
-            case .unknown:
-                logger.warning("   BOLT12 payment status unknown")
+            
+            // For send-max operations, implement retry logic
+            if isSendingMax {
+                logger.debug("   → Send-max mode: enabling retry logic")
+                try await executeWithRetry(
+                    destination: destination,
+                    initialAmount: amountInt,
+                    maxRetries: 3
+                )
+            } else {
+                // Normal payment - no retry
+                let status = try await walletManager.payLightningOffer(offer: destination.address, amountSats: UInt64(amountInt))
+                logLightningPaymentStatus(status, label: "BOLT12 payment")
             }
             
         case .ark:
@@ -317,6 +350,93 @@ extension SendViewModel {
             // BIP-21 should never be a final destination format
             logger.error("   ERROR: BIP-21 destination reached executeSend!")
             throw SendError.invalidFormat("BIP-21 is a wrapper format and should be resolved before sending")
+        }
+    }
+    
+    // MARK: - Retry Logic for Send-Max
+    
+    /// Executes a Lightning payment with retry logic for send-max operations
+    /// Automatically adjusts amount downward if payment fails due to routing fee differences
+    private func executeWithRetry(
+        destination: PaymentDestination,
+        initialAmount: Int,
+        maxRetries: Int
+    ) async throws {
+        var currentAmount = initialAmount
+        var attemptNumber = 1
+        
+        while attemptNumber <= maxRetries {
+            logger.info("   → Attempt \(attemptNumber)/\(maxRetries): Trying amount \(currentAmount) sats")
+            
+            do {
+                let status: LightningSendStatus
+                
+                switch destination.format {
+                case .lightning:
+                    status = try await walletManager.payLightningAddress(
+                        lightningAddress: destination.address,
+                        amountSats: UInt64(currentAmount),
+                        comment: nil
+                    )
+                case .lightningInvoice:
+                    status = try await walletManager.payLightningInvoice(
+                        invoice: destination.address,
+                        amountSats: UInt64(currentAmount)
+                    )
+                case .bolt12:
+                    status = try await walletManager.payLightningOffer(
+                        offer: destination.address,
+                        amountSats: UInt64(currentAmount)
+                    )
+                default:
+                    throw SendError.invalidFormat("Unsupported format for retry logic")
+                }
+                
+                // Payment succeeded
+                logLightningPaymentStatus(status, label: "Send-max payment (attempt \(attemptNumber))")
+                logger.info("   ✅ Send-max payment succeeded on attempt \(attemptNumber)")
+                return
+                
+            } catch {
+                logger.warning("   ⚠️ Attempt \(attemptNumber) failed: \(error)")
+                
+                // Check if this looks like an insufficient balance error
+                let errorString = error.localizedDescription.lowercased()
+                if errorString.contains("insufficient") || errorString.contains("balance") {
+                    // Reduce amount and retry
+                    if attemptNumber < maxRetries {
+                        // Reduce by 10 sats each retry (conservative adjustment for routing fee variance)
+                        currentAmount -= 10
+                        
+                        if currentAmount <= 0 {
+                            logger.error("   ❌ Amount reduced to zero or below, cannot retry")
+                            throw error
+                        }
+                        
+                        logger.info("   → Reducing amount to \(currentAmount) sats and retrying...")
+                        attemptNumber += 1
+                    } else {
+                        logger.error("   ❌ Max retries reached, payment failed")
+                        throw error
+                    }
+                } else {
+                    // Different error type, don't retry
+                    logger.error("   ❌ Non-balance error, not retrying: \(error)")
+                    throw error
+                }
+            }
+        }
+    }
+    
+    /// Helper to log Lightning payment status consistently
+    private func logLightningPaymentStatus(_ status: LightningSendStatus, label: String) {
+        switch status {
+        case .paid(let paymentHash, let preimage):
+            logger.info("   \(label) settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
+        case .inProgress(let send):
+            logger.info("   \(label) in progress, fee: \(send.feeSats) sats")
+        case .unknown:
+            logger.warning("   \(label) status unknown")
         }
     }
     

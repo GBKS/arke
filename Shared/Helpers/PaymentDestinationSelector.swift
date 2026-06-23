@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Bark
 
 /// Selects the optimal payment destination based on balances, fees, and user preferences
 class PaymentDestinationSelector {
@@ -32,13 +33,17 @@ class PaymentDestinationSelector {
         /// Whether the Ark server supports Lightning payments for this user
         let hasLightningCapability: Bool
         
+        /// Optional WalletManager for real-time fee estimation
+        weak var walletManager: WalletManager?
+        
         init(
             arkBalance: Int?,
             bitcoinBalance: Int?,
             networkConfig: NetworkConfig,
             userPreferences: PaymentPreferences = .default,
             arkServerConnected: Bool = true,
-            hasLightningCapability: Bool = true
+            hasLightningCapability: Bool = true,
+            walletManager: WalletManager? = nil
         ) {
             self.arkBalance = arkBalance
             self.bitcoinBalance = bitcoinBalance
@@ -46,6 +51,7 @@ class PaymentDestinationSelector {
             self.userPreferences = userPreferences
             self.arkServerConnected = arkServerConnected
             self.hasLightningCapability = hasLightningCapability
+            self.walletManager = walletManager
         }
     }
     
@@ -148,17 +154,18 @@ class PaymentDestinationSelector {
     static func selectOptimalDestination(
         from paymentRequest: PaymentRequest,
         context: PaymentContext
-    ) -> PaymentDestination? {
-        let ranked = rankDestinations(from: paymentRequest, context: context)
+    ) async -> PaymentDestination? {
+        let ranked = await rankDestinations(from: paymentRequest, context: context)
         return ranked.first(where: { $0.viable })?.destination
     }
     
     /// Ranks all destinations in a payment request by preference and viability
     /// Returns array ordered by priority (best first)
+    /// Uses real fee estimates when available for accurate ranking
     static func rankDestinations(
         from paymentRequest: PaymentRequest,
         context: PaymentContext
-    ) -> [RankedDestination] {
+    ) async -> [RankedDestination] {
         print("🔍 [PaymentDestinationSelector] Starting rankDestinations")
         print("   Total destinations in request: \(paymentRequest.destinations.count)")
         for (index, dest) in paymentRequest.destinations.enumerated() {
@@ -180,16 +187,16 @@ class PaymentDestinationSelector {
             print("   [\(index)] \(dest.format.displayName) - \(dest.shortAddress)")
         }
         
-        // Rank each destination
-        var rankedDestinations = networkCompatibleDestinations.compactMap { destination -> RankedDestination? in
+        // Rank each destination (using async fee estimation)
+        var rankedDestinations: [RankedDestination] = []
+        for destination in networkCompatibleDestinations {
             print("   🔄 Ranking: \(destination.format.displayName)")
-            let ranked = rankDestination(destination, amount: paymentRequest.amount, context: context)
-            if let ranked = ranked {
+            if let ranked = await rankDestination(destination, amount: paymentRequest.amount, context: context) {
                 print("      ✅ Ranked: viable=\(ranked.viable), priority=\(ranked.priority), reason=\(ranked.reason)")
+                rankedDestinations.append(ranked)
             } else {
                 print("      ❌ Ranking returned nil")
             }
-            return ranked
         }
         
         print("   Ranked destinations before sort: \(rankedDestinations.count)")
@@ -215,8 +222,8 @@ class PaymentDestinationSelector {
     static func canFulfillPayment(
         _ paymentRequest: PaymentRequest,
         with context: PaymentContext
-    ) -> (feasible: Bool, suggestedDestination: PaymentDestination?) {
-        if let optimal = selectOptimalDestination(from: paymentRequest, context: context) {
+    ) async -> (feasible: Bool, suggestedDestination: PaymentDestination?) {
+        if let optimal = await selectOptimalDestination(from: paymentRequest, context: context) {
             return (feasible: true, suggestedDestination: optimal)
         }
         return (feasible: false, suggestedDestination: nil)
@@ -225,21 +232,28 @@ class PaymentDestinationSelector {
     // MARK: - Destination Analysis
     
     /// Ranks a single destination with viability and priority information
+    /// Uses real fee estimates when available for accurate ranking
     static func rankDestination(
         _ destination: PaymentDestination,
         amount: Int?,
         context: PaymentContext
-    ) -> RankedDestination? {
+    ) async -> RankedDestination? {
+        print("🔍 [rankDestination] Called with amount: \(amount?.description ?? "nil")")
         let balanceSource = balanceSource(for: destination)
         let availableBalance = availableBalance(for: destination, context: context)
-        let estimatedFee = estimateFee(for: destination)
         let priority = priorityScore(for: destination.format, preferences: context.userPreferences)
+        
+        print("🔍 [rankDestination] About to call estimateFee with amount: \(amount?.description ?? "nil")")
+        // Get fee estimate - try real estimation first, fall back to static estimate
+        let estimatedFee = await estimateFee(for: destination, amount: amount, context: context)
+        print("🔍 [rankDestination] estimateFee returned: \(estimatedFee)")
         
         // Check viability
         let viabilityCheck = checkViability(
             destination: destination,
             amount: amount,
             availableBalance: availableBalance,
+            estimatedFee: estimatedFee,
             balanceSource: balanceSource,
             context: context
         )
@@ -260,6 +274,7 @@ class PaymentDestinationSelector {
         destination: PaymentDestination,
         amount: Int?,
         availableBalance: Int?,
+        estimatedFee: Int,
         balanceSource: BalanceSource,
         context: PaymentContext
     ) -> (viable: Bool, reason: String) {
@@ -283,7 +298,6 @@ class PaymentDestinationSelector {
         }
         
         // Check if balance is sufficient
-        let estimatedFee = estimateFee(for: destination)
         let totalRequired = amount + estimatedFee
         
         // Special handling for Ark balance with reserve
@@ -358,13 +372,43 @@ class PaymentDestinationSelector {
     
     // MARK: - Fee Estimation
     
-    /// Estimates fee for a destination (simplified, could be made more sophisticated)
-    private static func estimateFee(for destination: PaymentDestination) -> Int {
+    /// Estimates fee for a destination using real fee estimation when available
+    /// Falls back to conservative static estimates if real estimation unavailable or fails
+    private static func estimateFee(
+        for destination: PaymentDestination,
+        amount: Int?,
+        context: PaymentContext
+    ) async -> Int {
+        print("🔍 [estimateFee] Called with amount: \(amount?.description ?? "nil"), format: \(destination.format)")
+        // For Lightning payments, try to use real fee estimation if available
+        if let unwrappedAmount = amount,
+           let walletManager = context.walletManager,
+           (destination.format == .lightning || destination.format == .lightningInvoice || 
+            destination.format == .lnurl || destination.format == .bolt12) {
+            print("🔍 [estimateFee] Unwrapped amount: \(unwrappedAmount), type: \(type(of: unwrappedAmount))")
+            print("🔍 [estimateFee] Calling WalletManager.estimateLightningSendFee with: \(unwrappedAmount)")
+            do {
+                let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(unwrappedAmount))
+                // Calculate actual fee as difference between gross and payment amount
+                let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
+                print("🔍 [estimateFee] Fee estimate: gross=\(feeEstimate.grossAmountSats), fee=\(feeEstimate.feeSats), calculated=\(actualFee)")
+                return actualFee
+            } catch {
+                print("🔍 [estimateFee] Fee estimation failed: \(error)")
+                // Fall through to static estimate
+            }
+        }
+        
+        return estimateFeeFallback(for: destination)
+    }
+    
+    /// Static fallback fee estimates (synchronous version for cases that don't support async)
+    private static func estimateFeeFallback(for destination: PaymentDestination) -> Int {
         switch destination.format {
         case .ark:
             return 0 // Typically free for same-server transfers
         case .lightning, .lightningInvoice, .lnurl, .bolt12:
-            return 100 // Small Lightning routing fee estimate (1 sat base + ppm)
+            return 10 // Conservative fallback estimate
         case .bitcoin:
             return 500 // Rough on-chain fee estimate (could be dynamic based on mempool)
         case .silentPayments:
@@ -386,7 +430,8 @@ class PaymentDestinationSelector {
         feeRate: UInt64
     ) -> Int {
         guard destination.format == .bitcoin || destination.format == .silentPayments else {
-            return estimateFee(for: destination)
+            // For non-onchain, use static fallback estimate
+            return estimateFeeFallback(for: destination)
         }
         
         // Estimate transaction size in vBytes
@@ -412,8 +457,8 @@ class PaymentDestinationSelector {
     static func viableDestinations(
         from paymentRequest: PaymentRequest,
         context: PaymentContext
-    ) -> [PaymentDestination] {
-        return rankDestinations(from: paymentRequest, context: context)
+    ) async -> [PaymentDestination] {
+        return await rankDestinations(from: paymentRequest, context: context)
             .filter { $0.viable }
             .map { $0.destination }
     }
@@ -423,8 +468,8 @@ class PaymentDestinationSelector {
         destination: PaymentDestination,
         amount: Int?,
         context: PaymentContext
-    ) -> Bool {
-        guard let ranked = rankDestination(destination, amount: amount, context: context) else {
+    ) async -> Bool {
+        guard let ranked = await rankDestination(destination, amount: amount, context: context) else {
             return false
         }
         return ranked.viable
@@ -434,8 +479,8 @@ class PaymentDestinationSelector {
     static func viabilityReport(
         from paymentRequest: PaymentRequest,
         context: PaymentContext
-    ) -> String {
-        let ranked = rankDestinations(from: paymentRequest, context: context)
+    ) async -> String {
+        let ranked = await rankDestinations(from: paymentRequest, context: context)
         var report = "Payment Destination Analysis:\n"
         report += "Amount: \(paymentRequest.amount.map { "\($0) sats" } ?? "Not specified")\n"
         report += "Ark Balance: \(context.arkBalance.map { "\($0) sats" } ?? "N/A")\n"
@@ -461,17 +506,17 @@ class PaymentDestinationSelector {
 
 extension PaymentRequest {
     /// Convenience method to select optimal destination
-    func selectOptimalDestination(context: PaymentDestinationSelector.PaymentContext) -> PaymentDestination? {
-        return PaymentDestinationSelector.selectOptimalDestination(from: self, context: context)
+    func selectOptimalDestination(context: PaymentDestinationSelector.PaymentContext) async -> PaymentDestination? {
+        return await PaymentDestinationSelector.selectOptimalDestination(from: self, context: context)
     }
     
     /// Convenience method to get ranked destinations
-    func rankedDestinations(context: PaymentDestinationSelector.PaymentContext) -> [PaymentDestinationSelector.RankedDestination] {
-        return PaymentDestinationSelector.rankDestinations(from: self, context: context)
+    func rankedDestinations(context: PaymentDestinationSelector.PaymentContext) async -> [PaymentDestinationSelector.RankedDestination] {
+        return await PaymentDestinationSelector.rankDestinations(from: self, context: context)
     }
     
     /// Convenience method to check viability
-    func canFulfill(with context: PaymentDestinationSelector.PaymentContext) -> Bool {
-        return PaymentDestinationSelector.canFulfillPayment(self, with: context).feasible
+    func canFulfill(with context: PaymentDestinationSelector.PaymentContext) async -> Bool {
+        return await PaymentDestinationSelector.canFulfillPayment(self, with: context).feasible
     }
 }

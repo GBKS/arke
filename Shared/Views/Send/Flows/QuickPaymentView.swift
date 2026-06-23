@@ -549,8 +549,10 @@ struct QuickPaymentView: View {
         .onAppear {
             // Calculate ranked destinations once when view appears (if context provided)
             if let context = paymentContext {
-                rankedDestinations = paymentRequest.rankedDestinations(context: context)
-                print("🎯 [QuickPaymentView] Ranked \(rankedDestinations.count) destinations on appear")
+                Task {
+                    rankedDestinations = await paymentRequest.rankedDestinations(context: context)
+                    print("🎯 [QuickPaymentView] Ranked \(rankedDestinations.count) destinations on appear")
+                }
             }
             
             // Auto-select the optimal destination when the view appears
@@ -566,8 +568,10 @@ struct QuickPaymentView: View {
         .onChange(of: paymentRequest.id) {
             // Recalculate ranked destinations when payment request changes
             if let context = paymentContext {
-                rankedDestinations = paymentRequest.rankedDestinations(context: context)
-                print("🎯 [QuickPaymentView] Recalculated \(rankedDestinations.count) destinations")
+                Task {
+                    rankedDestinations = await paymentRequest.rankedDestinations(context: context)
+                    print("🎯 [QuickPaymentView] Recalculated \(rankedDestinations.count) destinations")
+                }
             }
             
             // Reset selection when payment request changes

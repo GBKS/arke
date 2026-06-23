@@ -22,7 +22,8 @@ extension WalletManager {
             networkConfig: networkConfig ?? NetworkConfig.mainnet,
             userPreferences: preferences ?? .default,
             arkServerConnected: true, // TODO: Add actual server connectivity check
-            hasLightningCapability: true // TODO: Add actual Lightning capability check
+            hasLightningCapability: true, // TODO: Add actual Lightning capability check
+            walletManager: self
         )
     }
 }

@@ -18,14 +18,14 @@ extension SendViewModel {
     // MARK: - Payment Request Locking
     
     /// Locks in a payment request and switches to manual confirmed mode
-    func lockInPaymentRequest(_ paymentRequest: PaymentRequest) {
+    func lockInPaymentRequest(_ paymentRequest: PaymentRequest) async {
         logger.info("Locking in payment request with \(paymentRequest.destinations.count) destination(s)")
         
         // Store the payment request
         currentPaymentRequest = paymentRequest
         
-        // Rank destinations using the selector
-        rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+        // Rank destinations using the selector (with real fee estimation)
+        rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
         
         logger.debug("Ranked destinations:")
         for (index, ranked) in rankedDestinations.enumerated() {
@@ -80,7 +80,7 @@ extension SendViewModel {
     
     /// Ranks a single destination for manual entry mode
     /// This ensures fee calculation and viability checking work when typing addresses manually
-    func rankManualDestination(_ destination: PaymentDestination) {
+    func rankManualDestination(_ destination: PaymentDestination) async {
         logger.debug("Ranking manual destination: \(destination.format.displayName)")
         
         // Create a minimal payment request with just this destination
@@ -92,8 +92,8 @@ extension SendViewModel {
             originalString: destination.address
         )
         
-        // Rank the destination
-        rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+        // Rank the destination (with real fee estimation)
+        rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
         
         logger.debug("   → Ranked with fee: \(self.rankedDestinations.first?.estimatedFee?.description ?? "N/A") sats")
         logger.debug("   → Viable: \(self.rankedDestinations.first?.viable ?? false)")
@@ -121,6 +121,7 @@ extension SendViewModel {
         cachedArkFee = nil
         cachedArkFeeAmount = nil
         resolvedLNURL = nil
+        isSendingMax = false
     }
     
     // MARK: - Amount & Mode Updates
@@ -129,6 +130,9 @@ extension SendViewModel {
     /// Should be called when the user changes the amount in the UI
     func updateAmount(_ newAmount: String) async {
         amount = newAmount
+        
+        // Clear the "send max" flag since user manually changed the amount
+        isSendingMax = false
         
         // Recalculate fees based on destination type
         if isLightningDestination {
@@ -144,8 +148,8 @@ extension SendViewModel {
         // Store the payment request
         currentPaymentRequest = paymentRequest
         
-        // Rank destinations
-        rankedDestinations = paymentRequest.rankedDestinations(context: paymentContext)
+        // Rank destinations (with real fee estimation)
+        rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
         
         // Select the optimal destination
         if let optimal = rankedDestinations.first(where: { $0.viable }) {
