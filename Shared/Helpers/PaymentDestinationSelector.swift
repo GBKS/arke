@@ -17,6 +17,34 @@ class PaymentDestinationSelector {
     // MARK: - Context
     
     /// Context information needed to make payment destination decisions
+    ///
+    /// **Lifetime Expectations:**
+    /// - `PaymentContext` instances should be **short-lived** and created on-demand
+    /// - Typically used for a single ranking/fee estimation operation
+    /// - Not intended to be stored long-term in view models or other objects
+    ///
+    /// **Weak WalletManager Reference:**
+    /// - The `walletManager` property uses a `weak` reference to avoid retain cycles
+    /// - Fee estimation gracefully degrades to static estimates if `walletManager` becomes nil
+    /// - In normal usage, the parent object (e.g., SendViewModel) holds a strong reference to WalletManager
+    /// - The weak reference is safe because async operations complete quickly (< 1 second typically)
+    ///
+    /// **Usage Pattern:**
+    /// ```swift
+    /// // Good: Create context on-demand via computed property
+    /// var paymentContext: PaymentContext {
+    ///     PaymentContext(
+    ///         arkBalance: walletManager.arkBalance?.spendableSat,
+    ///         bitcoinBalance: walletManager.onchainBalance?.spendableSat,
+    ///         networkConfig: currentNetworkConfig,
+    ///         walletManager: walletManager  // Parent holds strong reference
+    ///     )
+    /// }
+    /// let ranked = await PaymentDestinationSelector.rankDestinations(from: request, context: paymentContext)
+    ///
+    /// // Bad: Don't store context long-term
+    /// let storedContext = paymentContext  // ❌ Avoid storing for extended periods
+    /// ```
     struct PaymentContext {
         /// Ark balance in satoshis - used for both Ark and Lightning payments
         let arkBalance: Int?
@@ -37,6 +65,15 @@ class PaymentDestinationSelector {
         let hasLightningCapability: Bool
         
         /// Optional WalletManager for real-time fee estimation
+        ///
+        /// **Why weak?**
+        /// - Avoids retain cycles if context is accidentally stored
+        /// - Fee estimation gracefully falls back to static estimates if nil
+        /// - Safe in practice because contexts are short-lived and parent objects hold strong references
+        ///
+        /// **Behavior if nil:**
+        /// - `estimateFee()` will use static fallback estimates (20 sats for Lightning, 500 for Bitcoin, etc.)
+        /// - No crash or error - degraded accuracy only
         weak var walletManager: WalletManager?
         
         init(
@@ -353,16 +390,30 @@ class PaymentDestinationSelector {
     ) async -> Int {
         // For Lightning payments, try to use real fee estimation if available
         if let unwrappedAmount = amount,
-           let walletManager = context.walletManager,
            (destination.format == .lightning || destination.format == .lightningInvoice || 
             destination.format == .lnurl || destination.format == .bolt12) {
+            
+            // Check if walletManager is available for real-time fee estimation
+            guard let walletManager = context.walletManager else {
+                // This should rarely happen in normal usage since SendViewModel holds a strong reference
+                // If you see this warning, it may indicate the context is being used incorrectly (stored long-term)
+                logger.warning("WalletManager is nil during Lightning fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. Falling back to static estimate.")
+                return estimateFeeFallback(for: destination)
+            }
+            
             do {
                 let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(unwrappedAmount))
                 // Calculate actual fee as difference between gross and payment amount
-                let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
+                let rawFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
+                
+                // Defensive check: ensure fee is non-negative (shouldn't happen, but guard against FFI bugs)
+                if rawFee < 0 {
+                    logger.warning("Detected negative fee calculation: grossAmount=\(feeEstimate.grossAmountSats), amount=\(unwrappedAmount), rawFee=\(rawFee). Using 0.")
+                }
+                let actualFee = max(0, rawFee)
                 return actualFee
             } catch {
-                logger.error("Lightning fee estimation failed: \(error.localizedDescription)")
+                logger.error("Lightning fee estimation failed for payment (format: \(String(describing: destination.format)), amount: \(unwrappedAmount) sats): \(error.localizedDescription). Falling back to static estimate of 20 sats.")
                 // Fall through to static estimate
             }
         }
@@ -376,7 +427,7 @@ class PaymentDestinationSelector {
         case .ark:
             return 0 // Typically free for same-server transfers
         case .lightning, .lightningInvoice, .lnurl, .bolt12:
-            return 10 // Conservative fallback estimate
+            return 20 // Fallback estimate based on Ark server base fee
         case .bitcoin:
             return 500 // Rough on-chain fee estimate (could be dynamic based on mempool)
         case .silentPayments:

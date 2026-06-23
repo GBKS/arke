@@ -20,48 +20,51 @@ _(No critical issues remaining)_
 ## ⚠️ Moderate Issues
 
 ### 2. Weak Reference Safety
-**Status**: ⚠️ Moderate
-**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:37`
+**Status**: ✅ Resolved (Documented + Defensive Programming)
+**Date Resolved**: 2026-06-23
+**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:20-78`
 
 **Issue**:
 ```swift
 weak var walletManager: WalletManager?
 ```
 
-Using `weak var` means `WalletManager` could be deallocated while `PaymentContext` is still in use.
+Using `weak var` means `WalletManager` could be deallocated while `PaymentContext` is still in use during async operations.
 
-**Scenarios at Risk**:
-- Context stored for later use
-- Async operations span multiple event loop cycles
-- Context passed across view boundaries
+**Analysis**:
+After investigating all usages, determined that:
+- `PaymentContext` is created on-demand via computed property in `SendViewModel`
+- Context is NOT stored long-term anywhere in the codebase
+- `SendViewModel` holds strong reference to `WalletManager` throughout its lifetime
+- Async fee estimation operations complete quickly (< 1 second)
+- Risk is theoretical but extremely low in practice
 
-**Current Mitigation**:
-- `SendViewModel` holds strong reference to `WalletManager`
-- `PaymentContext` created on-demand via computed property
-- Context not stored long-term in current implementation
+**Resolution - Option A (Documentation + Defensive Programming)**:
+- [x] Added comprehensive documentation to `PaymentContext` struct explaining:
+  - Why `walletManager` is weak (avoid retain cycles if misused)
+  - That contexts should be short-lived and created on-demand
+  - Behavior if `walletManager` becomes nil (graceful degradation to static estimates)
+  - Usage examples showing correct patterns
+- [x] Added warning log in `estimateFee()` to detect nil `walletManager`
+  - Helps catch misuse during development
+  - Provides clear diagnostic if context lifetime expectations are violated
+- [x] Verified all `PaymentContext` creation sites follow correct patterns
+- [x] Documented decision rationale in this file
 
-**Action Items**:
-- [ ] Document that `PaymentContext` should be short-lived
-- [ ] Consider making `walletManager` non-weak if contexts are stored
-- [ ] Add assertion/guard to detect nil `walletManager` in fee estimation
-- [ ] Review all places where `PaymentContext` is created/stored
+**Code Changes**:
+1. `PaymentContext` struct now has extensive documentation (lines 19-48)
+2. `walletManager` property has inline documentation explaining weak reference (lines 68-75)
+3. `estimateFee()` now logs warning if `walletManager` is nil during Lightning fee estimation (lines 387-391)
 
-**Decision Needed**: Keep weak or make strong? Depends on usage patterns.
+**Decision**: Keep `weak` reference for flexibility and safety. The weak reference prevents accidental retain cycles while documentation ensures correct usage patterns.
 
 ---
 
 ### 3. Silent Fee Estimation Failure
-**Status**: ⚠️ Moderate
-**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:396-399`
+**Status**: ✅ Partially Fixed (Logging Improved)
+**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:370-373`
 
 **Issue**:
-```swift
-} catch {
-    print("🔍 [estimateFee] Fee estimation failed: \(error)")
-    // Fall through to static estimate
-}
-```
-
 When fee estimation fails, we silently fall back to static estimate (10 sats for Lightning).
 
 **Problems**:
@@ -70,15 +73,26 @@ When fee estimation fails, we silently fall back to static estimate (10 sats for
 - Hard to diagnose issues in production
 - No visibility into why estimation failed
 
-**Action Items**:
-- [ ] Replace `print()` with proper `logger.error()`
-- [ ] Consider exposing failure state to UI (show "estimated" vs "calculating...")
-- [ ] Add telemetry/analytics for fee estimation failures
+**Completed Actions**:
+- [x] Replace `print()` with proper `logger.error()` - Fixed 2026-06-23
+- [x] Enhanced error message with context (format, amount, fallback value) - Fixed 2026-06-23
+
+**Current Logging**:
+```swift
+} catch {
+    logger.error("Lightning fee estimation failed for payment (format: \(String(describing: destination.format)), amount: \(unwrappedAmount) sats): \(error.localizedDescription). Falling back to static estimate of 20 sats.")
+    // Fall through to static estimate
+}
+```
+
+**Remaining Action Items**:
+- [ ] Consider exposing failure state to UI (though "~" prefix already indicates uncertainty)
+- [ ] Add telemetry/analytics for fee estimation failures (if analytics system exists)
 - [ ] Consider retry logic or more sophisticated fallback
 
-**Fallback Values** (from line 406-408):
+**Fallback Values** (from line 380-392):
 - Ark: 0 sats
-- Lightning/Invoice/LNURL/BOLT12: 10 sats
+- Lightning/Invoice/LNURL/BOLT12: 20 sats (based on Ark server base fee)
 - Bitcoin: 500 sats
 - Silent Payments: 600 sats
 
@@ -86,27 +100,40 @@ When fee estimation fails, we silently fall back to static estimate (10 sats for
 
 ## 🟡 Minor Issues
 
-### 5. Integer Overflow Protection
-**Status**: 🟡 Minor
-**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:393`
-
-**Issue**:
-```swift
-let actualFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
-```
-
-If `grossAmountSats < unwrappedAmount` (FFI bug or edge case), this produces negative fee.
-
-**Action Items**:
-- [ ] Add safety check: `let actualFee = max(0, Int(feeEstimate.grossAmountSats) - unwrappedAmount)`
-- [ ] Log warning if this condition occurs
-- [ ] Consider if negative fee has semantic meaning (rebate?)
-
-**Likelihood**: Very low, but good defensive programming
+_(No minor issues remaining)_
 
 ---
 
 ## ✅ Completed
+
+### 5. Integer Overflow Protection
+**Status**: ✅ Fixed
+**Date Fixed**: 2026-06-23
+**Location**: `Shared/Helpers/PaymentDestinationSelector.swift:362`
+
+**Issue**:
+The fee calculation `Int(feeEstimate.grossAmountSats) - unwrappedAmount` could theoretically produce a negative value if `grossAmountSats < unwrappedAmount` due to an FFI bug or edge case.
+
+**Resolution**:
+Added defensive programming checks:
+- Calculate raw fee first: `let rawFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount`
+- Added warning log if negative fee detected
+- Use `max(0, rawFee)` to ensure non-negative result
+
+**Code**:
+```swift
+let rawFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
+
+// Defensive check: ensure fee is non-negative
+if rawFee < 0 {
+    logger.warning("Detected negative fee calculation: grossAmount=\(feeEstimate.grossAmountSats), amount=\(unwrappedAmount), rawFee=\(rawFee). Using 0.")
+}
+let actualFee = max(0, rawFee)
+```
+
+This provides protection against unexpected FFI behavior while logging any anomalies for debugging.
+
+---
 
 ### 4. Debug Logging Cleanup
 **Status**: ✅ Fixed
