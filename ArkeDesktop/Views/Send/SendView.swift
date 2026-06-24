@@ -30,6 +30,7 @@ struct SendView: View {
     
     @Environment(WalletManager.self) private var manager
     @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var modelContext
     
     // MARK: - State
     @State private var viewModel: SendViewModel?
@@ -51,7 +52,8 @@ struct SendView: View {
                     .task {
                         viewModel = SendViewModel(
                             walletManager: manager,
-                            clipboardService: ClipboardService_macOS()
+                            clipboardService: ClipboardService_macOS(),
+                            modelContext: modelContext
                         )
                         viewModel?.onDismiss = { dismiss() }
                         await viewModel?.handleInitialSetup(
@@ -99,12 +101,17 @@ struct SendView: View {
     
     @ViewBuilder
     private func sendModalSheet(operation: SendOperation_macOS) -> some View {
-        SendModalView(
-            onDismissEntireView: {
-                viewModel?.onDismiss?()
-            },
-            performSend: operation.performSend
-        )
+        if let viewModel = viewModel {
+            @Bindable var viewModel = viewModel
+            
+            SendModalView(
+                onDismissEntireView: {
+                    viewModel.onDismiss?()
+                },
+                performSend: operation.performSend,
+                pendingMetadata: $viewModel.pendingMetadata
+            )
+        }
     }
     
     @ViewBuilder

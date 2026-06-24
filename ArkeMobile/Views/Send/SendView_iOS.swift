@@ -40,6 +40,7 @@ struct SendView_iOS: View {
     
     @Environment(WalletManager.self) private var manager
     @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var modelContext
     
     // MARK: - State
     @State private var viewModel: SendViewModel?
@@ -67,7 +68,8 @@ struct SendView_iOS: View {
                     .task {
                         viewModel = SendViewModel(
                             walletManager: manager,
-                            clipboardService: ClipboardService_iOS()
+                            clipboardService: ClipboardService_iOS(),
+                            modelContext: modelContext
                         )
                         viewModel?.onDismiss = { [weak viewModel] in
                             logger.debug("🧹 Clearing form after successful send")
@@ -378,16 +380,21 @@ struct SendView_iOS: View {
     
     @ViewBuilder
     private func sendModalSheet(operation: SendOperation_iOS) -> some View {
-        NavigationStack {
-            SendModalView(
-                onDismissEntireView: {
-                    logger.debug("👋 Dismissing entire SendView")
-                    viewModel?.onDismiss?()
-                },
-                performSend: operation.performSend
-            )
+        if let viewModel = viewModel {
+            @Bindable var viewModel = viewModel
+            
+            NavigationStack {
+                SendModalView(
+                    onDismissEntireView: {
+                        logger.debug("👋 Dismissing entire SendView")
+                        viewModel.onDismiss?()
+                    },
+                    performSend: operation.performSend,
+                    pendingMetadata: $viewModel.pendingMetadata
+                )
+            }
+            .presentationDetents([.medium, .large])
         }
-        .presentationDetents([.medium, .large])
     }
     
     @ViewBuilder

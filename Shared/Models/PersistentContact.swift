@@ -31,6 +31,10 @@ final class PersistentContact {
     @Relationship(deleteRule: .cascade)
     var addresses: [PersistentContactAddress]? = []
     
+    // Relationship to pending payment metadata - MUST be optional for CloudKit
+    @Relationship(deleteRule: .cascade)
+    var pendingPaymentMetadata: [PendingPaymentMetadata]? = []
+    
     init(id: UUID = UUID(), cachedName: String, notes: String? = nil, avatarData: Data? = nil, createdAt: Date = Date(), updatedAt: Date = Date(), contactType: ContactType = .standard, nativeContactID: String? = nil, lastSyncedFromNative: Date? = nil) {
         self.id = id
         self.cachedName = cachedName

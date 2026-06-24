@@ -35,17 +35,3 @@ struct SendModalSendingView: View {
         .padding(.bottom, 25)
     }
 }
-
-#Preview("Sending") {
-    SendModalView(
-        onDismissEntireView: {
-            print("Preview: onDismissEntireView called")
-        },
-        performSend: {
-            print("Preview: Sending...")
-            // Simulate a long-running send to keep it in "sending" state
-            try? await Task.sleep(for: .seconds(10))
-        }
-    )
-    .frame(width: 400, height: 400)
-}

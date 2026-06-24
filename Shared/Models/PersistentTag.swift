@@ -23,6 +23,10 @@ final class PersistentTag {
     @Relationship(deleteRule: .cascade, inverse: \TransactionTagAssignment.tag)
     var tagAssignments: [TransactionTagAssignment]? = []
     
+    // Relationship to pending tag assignments - MUST be optional for CloudKit
+    @Relationship(deleteRule: .cascade, inverse: \PendingTagAssignment.tag)
+    var pendingTagAssignments: [PendingTagAssignment]? = []
+    
     init(id: UUID = UUID(), name: String, colorHex: String, emoji: String, createdDate: Date = Date(), isSystemTag: Bool = false) {
         self.id = id
         self.name = name

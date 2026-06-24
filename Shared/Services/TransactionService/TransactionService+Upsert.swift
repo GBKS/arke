@@ -35,6 +35,9 @@ extension TransactionService {
             return
         }
         
+        // Cleanup old unmatched pending metadata (Phase 0: Send Metadata Enhancement)
+        cleanupOldPendingMetadata()
+        
         guard let jsonData = output.data(using: .utf8) else {
             Self.logger.error("❌ Failed to convert output to data")
             return
@@ -75,6 +78,10 @@ extension TransactionService {
                             with: transactionData
                         )
                         
+                        // Re-apply pending metadata for recently matched transactions
+                        // This catches metadata changes made after the initial match
+                        applyPendingMetadata(to: existingTransaction)
+                        
                         // Preserve existing tag assignments - they survive server updates
                         // No need to explicitly restore them as they're already attached to the existing transaction
                         // The SwiftData relationship will maintain the connections automatically
@@ -89,6 +96,9 @@ extension TransactionService {
                         // Insert new transaction
                         let newTransaction = createPersistentTransaction(from: transactionData)
                         modelContext.insert(newTransaction)
+                        
+                        // Apply pending metadata if available (Phase 0: Send Metadata Enhancement)
+                        applyPendingMetadata(to: newTransaction)
                         
                         // Link transaction to address
                         await linkTransactionToAddress(newTransaction)

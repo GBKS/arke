@@ -48,6 +48,8 @@ struct Arke_mobile: App {
                  PersistentAddress.self,  // 📍 Address history for gap limit & internal transfers
                  UserProfile.self,  // 👤 User profile for personalization features
                  PersistentExitCache.self,  // 🚪 Exit cache for fast UI rendering
+                 PendingPaymentMetadata.self,  // 📤 Pending metadata for send flow
+                 PendingTagAssignment.self,  // 🏷️ Pending tag assignments for send flow
             cloudKitEnabled: true,  // 🌥️ CloudKit sync enabled for alpha
             cloudKitContainerIdentifier: "iCloud.gbks.sigma"  // Explicit container ID
         )

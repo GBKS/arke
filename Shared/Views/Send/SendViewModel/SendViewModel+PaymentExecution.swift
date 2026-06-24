@@ -192,6 +192,19 @@ extension SendViewModel {
         
         error = nil
         
+        // PHASE 1: Create pending metadata before payment execution
+        // This captures payment context for later matching when server movement arrives
+        let paymentTypeString = paymentType(for: destination.format)
+        createPendingMetadata(
+            paymentHash: nil,  // Will be updated after Lightning payments
+            destination: destination.address,
+            amount: amountInt,
+            paymentType: paymentTypeString
+        )
+        
+        // PHASE 3b: Pre-populate note from payment request if available
+        prepopulateNoteIfNeeded()
+        
         // Route to the appropriate payment method based on destination format
         logger.info("   → ROUTING payment to format: \(destination.format.rawValue)")
         logger.debug("   → About to enter switch statement for payment routing")
@@ -203,6 +216,7 @@ extension SendViewModel {
             logger.debug("   → Using fee rate: \(feeRate) sat/vB (priority: \(self.selectedFeePriority.rawValue))")
             let result = try await walletManager.sendOnchain(to: destination.address, amount: amountInt, feeRateSatPerVb: feeRate)
             logger.info("   Onchain send result: \(result)")
+            // Note: No payment hash for onchain payments, will match via timestamp + amount + address
             
         case .lightningInvoice:
             // Check if the invoice already has an embedded amount
@@ -227,6 +241,11 @@ extension SendViewModel {
                     status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: UInt64(amountInt))
                 }
                 logLightningPaymentStatus(status, label: "Lightning invoice payment")
+                
+                // PHASE 1: Extract and store payment hash for Lightning payments
+                if let paymentHash = extractPaymentHash(from: status) {
+                    updatePendingMetadataWithPaymentHash(paymentHash)
+                }
             }
             
         case .lightning:
@@ -249,6 +268,11 @@ extension SendViewModel {
                     comment: nil
                 )
                 logLightningPaymentStatus(status, label: "Lightning address payment")
+                
+                // PHASE 1: Extract and store payment hash for Lightning payments
+                if let paymentHash = extractPaymentHash(from: status) {
+                    updatePendingMetadataWithPaymentHash(paymentHash)
+                }
             }
             
         case .lnurl:
@@ -296,6 +320,11 @@ extension SendViewModel {
             )
             logLightningPaymentStatus(status, label: "LNURL payment")
             
+            // PHASE 1: Extract and store payment hash for Lightning payments
+            if let paymentHash = extractPaymentHash(from: status) {
+                updatePendingMetadataWithPaymentHash(paymentHash)
+            }
+            
         case .bolt12:
             // BOLT12 offers require explicit amount and use dedicated payment method
             // The offer is resolved into an invoice internally by the wallet
@@ -313,6 +342,11 @@ extension SendViewModel {
                 // Normal payment - no retry
                 let status = try await walletManager.payLightningOffer(offer: destination.address, amountSats: UInt64(amountInt))
                 logLightningPaymentStatus(status, label: "BOLT12 payment")
+                
+                // PHASE 1: Extract and store payment hash for Lightning payments
+                if let paymentHash = extractPaymentHash(from: status) {
+                    updatePendingMetadataWithPaymentHash(paymentHash)
+                }
             }
             
         case .ark:
@@ -321,6 +355,7 @@ extension SendViewModel {
             
             // Example result: "Successfully sent 25 sats to ark1pu6h30w3zqqplz3k36yy32cxh38dkam3pz5lne46pdd0h5ry2h4u8ws9l7q5gt4ezqypkrl3mx4tchhhn2e8cw75u6nwycf8er960yxghhunjsnyzugkjcpqdgadry. Round ID: cd1d3e3ef7eac68dee6ce8c2e69cc41e77d078c38b88f1c9fac71cbeb68f0069"
             logger.info("   Ark send result: \(result)")
+            // Note: No payment hash for Ark payments, will match via timestamp + amount + address
             
         case .bip353:
             // BIP-353 should have been resolved to another format by now
@@ -380,6 +415,12 @@ extension SendViewModel {
                 // Payment succeeded
                 logLightningPaymentStatus(status, label: "Send-max payment (attempt \(attemptNumber))")
                 logger.info("   ✅ Send-max payment succeeded on attempt \(attemptNumber)")
+                
+                // PHASE 1: Extract and store payment hash for Lightning payments
+                if let paymentHash = extractPaymentHash(from: status) {
+                    updatePendingMetadataWithPaymentHash(paymentHash)
+                }
+                
                 return
                 
             } catch {

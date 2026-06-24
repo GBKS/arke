@@ -1697,6 +1697,12 @@
     "Ark address, Lightning invoice, or Lightning address" : {
 
     },
+    "Assign Contact" : {
+
+    },
+    "Assign Tags" : {
+
+    },
     "Assigned to this transaction" : {
 
     },
@@ -3792,6 +3798,12 @@
 
     },
     "Count" : {
+
+    },
+    "Create a contact first to assign it to this payment" : {
+
+    },
+    "Create a tag first to assign it to this payment" : {
 
     },
     "Create multiple Lightning invoices and copy to clipboard" : {
@@ -6018,6 +6030,9 @@
     "Next round" : {
 
     },
+    "No Contacts" : {
+
+    },
     "No Contacts Yet" : {
 
     },
@@ -6027,10 +6042,16 @@
     "No refresh needed" : {
 
     },
+    "No Tags" : {
+
+    },
     "No Transaction Data" : {
 
     },
     "NORMAL" : {
+
+    },
+    "Note" : {
 
     },
     "Notes" : {
@@ -8184,6 +8205,9 @@
 
     },
     "Tag Transaction Amounts" : {
+
+    },
+    "Tags" : {
 
     },
     "tags_confirm_delete" : {

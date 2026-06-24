@@ -13,6 +13,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import ArkeUI
 import Bark
 import OSLog
@@ -47,6 +48,7 @@ final class SendViewModel {
     // Only use internally by extensions.
     let walletManager: WalletManager
     let clipboardService: ClipboardServiceProtocol
+    let modelContext: ModelContext
     
     /// Cached Lightning fee estimate in satoshis
     var cachedLightningFee: Int?
@@ -97,8 +99,14 @@ final class SendViewModel {
     /// Callback to dismiss the view after successful payment
     var onDismiss: (() -> Void)?
     
-    init(walletManager: WalletManager, clipboardService: ClipboardServiceProtocol) {
+    // MARK: - Pending Metadata (Phase 1)
+    /// Pending metadata for the current send operation
+    /// Created when payment starts, matched to transaction when movement arrives
+    var pendingMetadata: PendingPaymentMetadata?
+    
+    init(walletManager: WalletManager, clipboardService: ClipboardServiceProtocol, modelContext: ModelContext) {
         self.walletManager = walletManager
         self.clipboardService = clipboardService
+        self.modelContext = modelContext
     }
 }

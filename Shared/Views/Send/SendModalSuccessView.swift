@@ -49,10 +49,3 @@ struct SendModalSuccessView: View {
         .padding(.bottom, 25)
     }
 }
-
-#Preview {
-    SendModalSuccessView {
-        print("Done tapped")
-    }
-    .frame(width: 400, height: 400)
-}
