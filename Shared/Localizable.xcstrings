@@ -497,6 +497,36 @@
         }
       }
     },
+    "accessibility_hint_assign_contact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens contact selector"
+          }
+        }
+      }
+    },
+    "accessibility_hint_assign_note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens note editor"
+          }
+        }
+      }
+    },
+    "accessibility_hint_assign_tags" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens tag selector"
+          }
+        }
+      }
+    },
     "accessibility_last_seen" : {
       "localizations" : {
         "en" : {
@@ -860,6 +890,16 @@
         }
       }
     },
+    "accessibility_value_note_present" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note added"
+          }
+        }
+      }
+    },
     "accessibility_video_has_captions" : {
       "localizations" : {
         "en" : {
@@ -930,6 +970,36 @@
         }
       }
     },
+    "action_assign_contact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign contact"
+          }
+        }
+      }
+    },
+    "action_assign_note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign note"
+          }
+        }
+      }
+    },
+    "action_assign_tags" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign tags"
+          }
+        }
+      }
+    },
     "action_cancel" : {
 
     },
@@ -959,6 +1029,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Change emoji"
+          }
+        }
+      }
+    },
+    "action_change_note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change note"
           }
         }
       }
@@ -1698,19 +1778,47 @@
 
     },
     "Assign contact" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign contact"
+          }
+        }
+      }
     },
     "Assign Contact" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign Contact"
+          }
+        }
+      }
     },
     "Assign note" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign note"
+          }
+        }
+      }
     },
     "Assign tags" : {
-
-    },
-    "Assign Tags" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assign tags"
+          }
+        }
+      }
     },
     "Assigned to this transaction" : {
 
@@ -3532,14 +3640,36 @@
     "Cancel Round?" : {
 
     },
-    "Change contact" : {
-
-    },
     "Change note" : {
-
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change note"
+          }
+        }
+      }
     },
-    "Change tags" : {
-
+    "Change tags: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change tags: %@"
+          }
+        }
+      }
+    },
+    "Change tags: %lld tags selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change tags: %lld tags selected"
+          }
+        }
+      }
     },
     "Checking for wallet..." : {
 
@@ -3816,12 +3946,6 @@
 
     },
     "Count" : {
-
-    },
-    "Create a contact first to assign it to this payment" : {
-
-    },
-    "Create a tag first to assign it to this payment" : {
 
     },
     "Create multiple Lightning invoices and copy to clipboard" : {
@@ -6048,9 +6172,6 @@
     "Next round" : {
 
     },
-    "No Contacts" : {
-
-    },
     "No Contacts Yet" : {
 
     },
@@ -6058,9 +6179,6 @@
 
     },
     "No refresh needed" : {
-
-    },
-    "No Tags" : {
 
     },
     "No Transaction Data" : {

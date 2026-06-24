@@ -47,7 +47,8 @@ public struct SendMetadataSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(pendingMetadata?.hasContact ?? false ? "Change contact" : "Assign contact")
+            .accessibilityLabel(pendingMetadata?.hasContact ?? false ? LocalizedStringKey("action_change_contact") : LocalizedStringKey("action_assign_contact"))
+            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_contact"))
             
             // Tags button
             Button {
@@ -75,7 +76,8 @@ public struct SendMetadataSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(pendingMetadata?.hasTags ?? false ? "Change tags" : "Assign tags")
+            .accessibilityLabel(tagsAccessibilityLabel)
+            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_tags"))
             
             // Note button
             Button {
@@ -95,16 +97,24 @@ public struct SendMetadataSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? "Change note" : "Assign note")
+            .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? LocalizedStringKey("action_change_note") : LocalizedStringKey("action_assign_note"))
+            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_note"))
+            .accessibilityValue((pendingMetadata?.hasNotes ?? false) ? LocalizedStringKey("accessibility_value_note_present") : "")
         }
         .padding(.vertical, 12)
         .sheet(isPresented: $showContactSelector) {
             NavigationStack {
-                contactSelectorContent
-                    .navigationTitle("Assign Contact")
-                    #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
+                ContactSelectorSheet(
+                    selectedContactId: $selectedContactId,
+                    transactionId: nil,
+                    onAssignContact: { contact in
+                        await applyContactSelectionAsync(contact)
+                    }
+                )
+                .navigationTitle(LocalizedStringKey("Assign Contact"))
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
             }
             #if os(macOS)
             .frame(width: 500, height: 600)
@@ -112,15 +122,19 @@ public struct SendMetadataSection: View {
         }
         .sheet(isPresented: $showTagSelector) {
             NavigationStack {
-                tagSelectorContent
-                    .navigationTitle("Assign Tags")
-                    #if os(iOS)
-                    .navigationBarTitleDisplayMode(.inline)
-                    #endif
+                TagSelectorSheet(
+                    selectedTagIds: $selectedTagIds,
+                    onCreateNewTag: { newTag in
+                        await createNewTag(newTag)
+                    }
+                )
             }
             #if os(macOS)
             .frame(width: 500, height: 600)
             #endif
+            .onDisappear {
+                applyTagSelection()
+            }
         }
         .sheet(isPresented: $showNoteEditor) {
             SendNoteEditorSheet(
@@ -153,121 +167,20 @@ public struct SendMetadataSection: View {
             .symbolRenderingMode(isFilled ? .multicolor : .monochrome)
     }
     
-    // MARK: - Contact Selector Content
+    // MARK: - Accessibility Helpers
     
-    @ViewBuilder
-    private var contactSelectorContent: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                if walletManager.hasContacts {
-                    ForEach(Array(walletManager.alphabeticalContacts.enumerated()), id: \.element.id) { index, contact in
-                        VStack(spacing: 0) {
-                            ContactChip_Selectable(
-                                avatarData: contact.avatarData,
-                                displayName: contact.displayName,
-                                notes: contact.notes,
-                                isSelected: Binding(
-                                    get: { selectedContactId == contact.id },
-                                    set: { isSelected in
-                                        if isSelected {
-                                            selectedContactId = contact.id
-                                        } else {
-                                            selectedContactId = nil
-                                        }
-                                    }
-                                )
-                            )
-                            .padding(.horizontal)
-                            
-                            if index < walletManager.alphabeticalContacts.count - 1 {
-                                Divider()
-                                    .padding(.leading, 25)
-                                    .padding(.trailing, 25)
-                            }
-                        }
-                    }
-                } else {
-                    ContentUnavailableView(
-                        "No Contacts",
-                        systemImage: "person.2.slash",
-                        description: Text("Create a contact first to assign it to this payment")
-                    )
-                    .padding()
-                }
-            }
+    private var tagsAccessibilityLabel: String {
+        guard let metadata = pendingMetadata else {
+            return String(localized: "action_assign_tags")
         }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button {
-                    showContactSelector = false
-                } label: {
-                    Text("Cancel")
-                }
-            }
-            
-            ToolbarItem(placement: .confirmationAction) {
-                Button {
-                    applyContactSelection()
-                    showContactSelector = false
-                } label: {
-                    Text("Done")
-                }
-            }
-        }
-    }
-    
-    // MARK: - Tag Selector Content
-    
-    @ViewBuilder
-    private var tagSelectorContent: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                if walletManager.hasTags {
-                    LazyVStack(alignment: .leading, spacing: 12) {
-                        ForEach(walletManager.tags) { tag in
-                            TagChip_Selectable(
-                                tag: tag.appearance,
-                                isSelected: Binding(
-                                    get: { selectedTagIds.contains(tag.id) },
-                                    set: { isSelected in
-                                        if isSelected {
-                                            selectedTagIds.insert(tag.id)
-                                        } else {
-                                            selectedTagIds.remove(tag.id)
-                                        }
-                                    }
-                                )
-                            )
-                        }
-                    }
-                    .padding(.horizontal)
-                } else {
-                    ContentUnavailableView(
-                        "No Tags",
-                        systemImage: "tag.slash",
-                        description: Text("Create a tag first to assign it to this payment")
-                    )
-                    .padding()
-                }
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button {
-                    showTagSelector = false
-                } label: {
-                    Text("Cancel")
-                }
-            }
-            
-            ToolbarItem(placement: .confirmationAction) {
-                Button {
-                    applyTagSelection()
-                    showTagSelector = false
-                } label: {
-                    Text("Done")
-                }
-            }
+        
+        let tags = metadata.associatedTags
+        if tags.isEmpty {
+            return String(localized: "action_assign_tags")
+        } else if tags.count == 1 {
+            return String(localized: "Change tags: \(tags[0].name)")
+        } else {
+            return String(localized: "Change tags: \(tags.count) tags selected")
         }
     }
     
@@ -295,6 +208,10 @@ public struct SendMetadataSection: View {
         )
         
         return try? modelContext.fetch(descriptor).first
+    }
+    
+    private func applyContactSelectionAsync(_ contact: ContactModel?) async {
+        applyContactSelection()
     }
     
     private func applyContactSelection() {
@@ -338,6 +255,16 @@ public struct SendMetadataSection: View {
         
         // Save changes
         try? modelContext.save()
+    }
+    
+    private func createNewTag(_ newTag: TagModel) async {
+        do {
+            let createdTag = try await walletManager.tagServiceForEnvironment.createTag(newTag)
+            // Automatically select the newly created tag
+            selectedTagIds.insert(createdTag.id)
+        } catch {
+            print("Failed to create tag: \(error)")
+        }
     }
     
     private func applyTagSelection() {

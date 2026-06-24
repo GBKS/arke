@@ -10,8 +10,8 @@ import ArkeUI
 
 struct ContactSelectorSheet: View {
     @Binding var selectedContactId: UUID?
-    let transactionId: String
-    let onAssignContact: (ContactModel?) async -> Void
+    let transactionId: String?
+    let onAssignContact: ((ContactModel?) async -> Void)?
     
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.dismiss) private var dismiss
@@ -162,6 +162,11 @@ struct ContactSelectorSheet: View {
     // MARK: - Private Methods
     
     private func updatePreview(for contact: ContactModel) async {
+        // Only show preview if we have a transaction ID
+        guard let transactionId = transactionId else {
+            return
+        }
+        
         // Get the transaction to find its address and count matches
         let allTransactions = walletManager.transactions
         if let transaction = allTransactions.first(where: { $0.txid == transactionId }),
@@ -191,10 +196,22 @@ struct ContactSelectorSheet: View {
     }
     
     private func applyChanges() async {
-        if let pending = pendingContact {
-            await assignContact(pending)
-        } else if currentAssignedContact != nil {
-            await removeAssignment()
+        // If we have a transaction ID, use the full assignment logic
+        if transactionId != nil {
+            if let pending = pendingContact {
+                await assignContact(pending)
+            } else if currentAssignedContact != nil {
+                await removeAssignment()
+            }
+        } else {
+            // Simple mode: just update the binding and call the callback
+            if let pending = pendingContact {
+                selectedContactId = pending.id
+                await onAssignContact?(pending)
+            } else {
+                selectedContactId = nil
+                await onAssignContact?(nil)
+            }
         }
         
         // Dismiss after successful application (or error shown)
@@ -207,6 +224,24 @@ struct ContactSelectorSheet: View {
     
 
     private func loadCurrentAssignment() async {
+        // Only load from transaction if we have a transaction ID
+        guard let transactionId = transactionId else {
+            // Simple mode: just use the bound contact ID
+            if let contactId = selectedContactId {
+                let contact = walletManager.contacts.first { $0.id == contactId }
+                await MainActor.run {
+                    currentAssignedContact = contact
+                    pendingContact = contact
+                    isLoading = false
+                }
+            } else {
+                await MainActor.run {
+                    isLoading = false
+                }
+            }
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
@@ -232,6 +267,8 @@ struct ContactSelectorSheet: View {
     }
     
     private func assignContact(_ contact: ContactModel) async {
+        guard let transactionId = transactionId else { return }
+        
         isLoading = true
         errorMessage = nil
         
@@ -250,7 +287,7 @@ struct ContactSelectorSheet: View {
                 isLoading = false
             }
             
-            await onAssignContact(contact)
+            await onAssignContact?(contact)
         } catch {
             await MainActor.run {
                 errorMessage = "Failed to assign contact: \(error.localizedDescription)"
@@ -262,6 +299,8 @@ struct ContactSelectorSheet: View {
     }
     
     private func removeAssignment() async {
+        guard let transactionId = transactionId else { return }
+        
         isLoading = true
         errorMessage = nil
         
@@ -278,7 +317,7 @@ struct ContactSelectorSheet: View {
                 isLoading = false
             }
             
-            await onAssignContact(nil)
+            await onAssignContact?(nil)
         } catch {
             await MainActor.run {
                 errorMessage = "Failed to remove assignment: \(error.localizedDescription)"
@@ -294,13 +333,16 @@ struct ContactSelectorSheet: View {
         do {
             let createdContact = try await walletManager.createContact(contact)
             
-            // Remove existing assignment first if there is one
-            if currentAssignedContact != nil {
-                try await walletManager.removeContactAssignment(from: transactionId)
+            // If we have a transaction ID, do full assignment logic
+            if let transactionId = transactionId {
+                // Remove existing assignment first if there is one
+                if currentAssignedContact != nil {
+                    try await walletManager.removeContactAssignment(from: transactionId)
+                }
+                
+                // Assign new contact with address learning and bulk assignment
+                _ = try await walletManager.assignContactWithAddressLearning(createdContact.id, to: transactionId)
             }
-            
-            // Assign new contact with address learning and bulk assignment
-            _ = try await walletManager.assignContactWithAddressLearning(createdContact.id, to: transactionId)
             
             await MainActor.run {
                 currentAssignedContact = createdContact
@@ -309,7 +351,7 @@ struct ContactSelectorSheet: View {
                 isLoading = false
             }
             
-            await onAssignContact(createdContact)
+            await onAssignContact?(createdContact)
             
             // Auto-dismiss after creating and assigning new contact
             await MainActor.run {
