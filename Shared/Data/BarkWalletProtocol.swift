@@ -128,7 +128,7 @@ protocol BarkWalletProtocol {
     
     // MARK: - Send Operations
     
-    func send(to address: String, amount: Int) async throws -> String
+    func send(to address: String, amount: Int) async throws -> String // Ark-to-ark payment
     func sendToOnchain(to address: String, amount: Int) async throws -> String // From Ark balance to onchain balance
     func sendOnchain(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String // From onchain balance to onchain balance
     

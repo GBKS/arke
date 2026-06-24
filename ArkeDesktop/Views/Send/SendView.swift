@@ -187,7 +187,9 @@ struct SendView: View {
                let destination = newDestination,
                oldDestination?.id != newDestination?.id {
                 print("🔄 [SendView] Manual destination changed, ranking for fees")
-                viewModel.rankManualDestination(destination)
+                Task {
+                    await viewModel.rankManualDestination(destination)
+                }
             }
         }
         .popover(isPresented: $viewModel.showAddressFormatsPopover) {

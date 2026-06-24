@@ -146,15 +146,7 @@ extension SendViewModel {
             
             // Pay the Lightning invoice without passing an amount
             let status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: nil)
-            // Log payment status for debugging
-            switch status {
-            case .paid(let paymentHash, let preimage):
-                logger.info("   Payment settled immediately, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
-            case .inProgress(let send):
-                logger.info("   Payment in progress, fee: \(send.feeSats) sats")
-            case .unknown:
-                logger.warning("   Payment status unknown")
-            }
+            logLightningPaymentStatus(status, label: "Lightning invoice payment (amount locked)")
             return
         }
         
@@ -209,7 +201,8 @@ extension SendViewModel {
             logger.info("   → Sending onchain to: \(destination.address)")
             let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
             logger.debug("   → Using fee rate: \(feeRate) sat/vB (priority: \(self.selectedFeePriority.rawValue))")
-            _ = try await walletManager.sendOnchain(to: destination.address, amount: amountInt, feeRateSatPerVb: feeRate)
+            let result = try await walletManager.sendOnchain(to: destination.address, amount: amountInt, feeRateSatPerVb: feeRate)
+            logger.info("   Onchain send result: \(result)")
             
         case .lightningInvoice:
             // Check if the invoice already has an embedded amount
@@ -301,15 +294,7 @@ extension SendViewModel {
                 invoice: invoice,
                 amountSats: nil  // Amount is embedded in invoice
             )
-            // Log payment status
-            switch status {
-            case .paid(let paymentHash, let preimage):
-                logger.info("   LNURL payment settled, hash: \(String(paymentHash.prefix(16)))..., preimage: \(String(preimage.prefix(16)))...")
-            case .inProgress(let send):
-                logger.info("   LNURL payment in progress, fee: \(send.feeSats) sats")
-            case .unknown:
-                logger.warning("   LNURL payment status unknown")
-            }
+            logLightningPaymentStatus(status, label: "LNURL payment")
             
         case .bolt12:
             // BOLT12 offers require explicit amount and use dedicated payment method
@@ -332,7 +317,10 @@ extension SendViewModel {
             
         case .ark:
             logger.info("   → Sending Ark to: \(destination.address)")
-            _ = try await walletManager.send(to: destination.address, amount: amountInt)
+            let result = try await walletManager.send(to: destination.address, amount: amountInt)
+            
+            // Example result: "Successfully sent 25 sats to ark1pu6h30w3zqqplz3k36yy32cxh38dkam3pz5lne46pdd0h5ry2h4u8ws9l7q5gt4ezqypkrl3mx4tchhhn2e8cw75u6nwycf8er960yxghhunjsnyzugkjcpqdgadry. Round ID: cd1d3e3ef7eac68dee6ce8c2e69cc41e77d078c38b88f1c9fac71cbeb68f0069"
+            logger.info("   Ark send result: \(result)")
             
         case .bip353:
             // BIP-353 should have been resolved to another format by now
@@ -340,7 +328,8 @@ extension SendViewModel {
             logger.warning("   WARNING: BIP-353 destination reached executeSend without resolution!")
             logger.warning("   → BIP-353 address: \(destination.address)")
             logger.warning("   → Attempting to send as Ark (this will likely fail)")
-            _ = try await walletManager.send(to: destination.address, amount: amountInt)
+            let result = try await walletManager.send(to: destination.address, amount: amountInt)
+            logger.info("   Ark send result: \(result)")
             
         case .bip21:
             // BIP-21 should never be a final destination format

@@ -612,6 +612,7 @@
 				Docs/ExitTransactionStatus_State.md,
 				"Docs/Features/balance-persistence.md",
 				Docs/Features/intro.md,
+				"Docs/Features/send-metadata-enhancement.md",
 				"Docs/Features/tag-system.md",
 				"Docs/Features/theme-system-implementation.md",
 				"Docs/FFI initial integration/FINAL_COMPLETE.md",
