@@ -144,9 +144,34 @@ extension SendViewModel {
             logger.debug("   → Will call payLightningInvoice with nil amount")
             error = nil
             
+            // Extract the amount from the payment request (guaranteed to exist when amountLocked is true)
+            guard let amountInt = paymentRequest?.amount else {
+                logger.error("   ❌ amountLocked is true but paymentRequest.amount is nil!")
+                throw SendError.invalidAmount
+            }
+            logger.debug("   → Extracted amount from payment request: \(amountInt) sats")
+            
+            // PHASE 1: Create pending metadata before payment execution
+            let paymentTypeString = paymentType(for: destination.format)
+            createPendingMetadata(
+                paymentHash: nil,  // Will be updated after Lightning payment
+                destination: destination.address,
+                amount: amountInt,
+                paymentType: paymentTypeString
+            )
+            
+            // PHASE 3b: Pre-populate note from payment request if available
+            prepopulateNoteIfNeeded()
+            
             // Pay the Lightning invoice without passing an amount
             let status = try await walletManager.payLightningInvoice(invoice: destination.address, amountSats: nil)
             logLightningPaymentStatus(status, label: "Lightning invoice payment (amount locked)")
+            
+            // PHASE 1: Extract and store payment hash for Lightning payments
+            if let paymentHash = extractPaymentHash(from: status) {
+                updatePendingMetadataWithPaymentHash(paymentHash)
+            }
+            
             return
         }
         
