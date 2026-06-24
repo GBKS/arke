@@ -1697,7 +1697,16 @@
     "Ark address, Lightning invoice, or Lightning address" : {
 
     },
+    "Assign contact" : {
+
+    },
     "Assign Contact" : {
+
+    },
+    "Assign note" : {
+
+    },
+    "Assign tags" : {
 
     },
     "Assign Tags" : {
@@ -3521,6 +3530,15 @@
 
     },
     "Cancel Round?" : {
+
+    },
+    "Change contact" : {
+
+    },
+    "Change note" : {
+
+    },
+    "Change tags" : {
 
     },
     "Checking for wallet..." : {
@@ -6051,9 +6069,6 @@
     "NORMAL" : {
 
     },
-    "Note" : {
-
-    },
     "Notes" : {
 
     },
@@ -8205,9 +8220,6 @@
 
     },
     "Tag Transaction Amounts" : {
-
-    },
-    "Tags" : {
 
     },
     "tags_confirm_delete" : {

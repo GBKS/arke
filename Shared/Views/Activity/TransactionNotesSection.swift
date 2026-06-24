@@ -8,28 +8,6 @@
 import SwiftUI
 import ArkeUI
 
-// MARK: - Cross-platform Color Extensions
-
-private extension Color {
-    #if os(macOS)
-    static var systemControlBackground: Color {
-        Color(NSColor.controlBackgroundColor)
-    }
-    
-    static var systemSeparator: Color {
-        Color(NSColor.separatorColor)
-    }
-    #else
-    static var systemControlBackground: Color {
-        Color(UIColor.secondarySystemBackground)
-    }
-    
-    static var systemSeparator: Color {
-        Color(UIColor.separator)
-    }
-    #endif
-}
-
 struct TransactionNotesSection: View {
     let transaction: TransactionModel
     

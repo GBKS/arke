@@ -30,49 +30,72 @@ public struct SendMetadataSection: View {
             Button {
                 showContactSelector = true
             } label: {
-                VStack(spacing: 4) {
-                    iconView(
-                        systemName: "person.circle.fill",
-                        isFilled: pendingMetadata?.hasContact ?? false
+                if let contact = pendingMetadata?.contact {
+                    ContactAvatarView(
+                        avatarData: contact.avatarData,
+                        size: 60,
+                        height: 44,
+                        fallbackText: contact.displayName
                     )
-                    Text("Contact")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                } else {
+                    Image(systemName: "person.fill")
+                        .font(.title2)
+                        .foregroundStyle(.primary)
+                        .frame(width: 60, height: 44)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(22)
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(pendingMetadata?.hasContact ?? false ? "Change contact" : "Assign contact")
             
             // Tags button
             Button {
                 showTagSelector = true
             } label: {
-                VStack(spacing: 4) {
-                    iconView(
-                        systemName: "tag.circle.fill",
-                        isFilled: pendingMetadata?.hasTags ?? false
-                    )
-                    Text("Tags")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                if let firstTag = pendingMetadata?.associatedTags.first {
+                    // Show the first selected tag's emoji and color
+                    Text(firstTag.emoji)
+                        .font(.title2)
+                        .frame(width: 60, height: 44)
+                        .background(firstTag.color.opacity(0.15))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 22)
+                                .stroke(firstTag.color.opacity(0.75), lineWidth: 1)
+                        )
+                        .cornerRadius(22)
+                } else {
+                    // Default empty state
+                    Image(systemName: "tag.fill")
+                        .font(.title2)
+                        .foregroundStyle(.primary)
+                        .frame(width: 60, height: 44)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(22)
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(pendingMetadata?.hasTags ?? false ? "Change tags" : "Assign tags")
             
             // Note button
             Button {
                 showNoteEditor = true
             } label: {
                 VStack(spacing: 4) {
-                    iconView(
-                        systemName: "note.text",
-                        isFilled: pendingMetadata?.hasNotes ?? false
-                    )
-                    Text("Note")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    Image(systemName: "text.quote")
+                        .font(.title2)
+                        .frame(width: 60, height: 44)
+                        .foregroundStyle((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green : .primary)
+                        .background((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green.opacity(0.15) : Color(.systemGray5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 22)
+                                .stroke((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green : Color.clear, lineWidth: 1)
+                        )
+                        .cornerRadius(22)
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? "Change note" : "Assign note")
         }
         .padding(.vertical, 12)
         .sheet(isPresented: $showContactSelector) {

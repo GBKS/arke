@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 public struct SendNoteEditorSheet: View {
     @Binding var note: String
@@ -14,7 +15,7 @@ public struct SendNoteEditorSheet: View {
 
     @FocusState private var isFocused: Bool
 
-    private let maxCharacters = 1000
+    private let maxCharacters = 500
 
     public init(note: Binding<String>, onDismiss: @escaping () -> Void) {
         self._note = note
@@ -22,65 +23,48 @@ public struct SendNoteEditorSheet: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 12) {
-                // Character count
-                HStack {
-                    Spacer()
-                    Text("\(note.count) / \(maxCharacters)")
-                        .font(.caption)
-                        .foregroundColor(note.count > maxCharacters ? .red : .secondary)
-                }
-                .padding(.horizontal)
-                
-                // Text editor
-                #if os(iOS)
-                TextEditor(text: $note)
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with title and cancel button
+            HStack(spacing: 10) {
+                // Text field
+                TextField("Add a note...", text: $note, axis: .vertical)
                     .focused($isFocused)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(8)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                    .padding(.horizontal)
-                #else
-                TextEditor(text: $note)
-                    .focused($isFocused)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(8)
+                    .textFieldStyle(.plain)
+                    .font(.title3)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 10)
+                    #if os(iOS)
+                    .background(Color(.systemGray5))
+                    #else
                     .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(8)
-                    .padding(.horizontal)
-                #endif
+                    #endif
+                    .cornerRadius(15)
+                    .lineLimit(1...5)
                 
-                Spacer()
+                // Done button
+                Button {
+                    onDismiss()
+                } label: {
+                    Image(systemName: "checkmark")
+                        .font(.title2)
+                        .foregroundStyle(Color.Arke.gold3)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 6)
+                }
+                .accessibilityLabel("button_done")
+                .buttonStyle(.glassProminent)
             }
-            .navigationTitle("Add Note")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        onDismiss()
-                    } label: {
-                        Text("Cancel")
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        onDismiss()
-                    } label: {
-                        Text("Done")
-                    }
-                    .disabled(note.count > maxCharacters)
-                }
-            }
-            .onAppear {
-                // Auto-focus the text editor when sheet appears
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    isFocused = true
-                }
+        }
+        .padding(.horizontal)
+        .padding(.vertical)
+        #if os(iOS)
+        .presentationDetents([.height(150)])
+        .presentationDragIndicator(.visible)
+        #endif
+        .onAppear {
+            // Auto-focus the text field when sheet appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isFocused = true
             }
         }
     }

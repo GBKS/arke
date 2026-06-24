@@ -22,21 +22,22 @@ struct SendModalContentView: View {
                 .frame(maxWidth: .infinity, minHeight: 250)
             
             // Content based on state
-            VStack(spacing: stateSpacing) {
-                // Title and message section
-                VStack(spacing: 8) {
-                    Text(stateTitle)
-                        .font(.system(size: 24, design: .serif))
-                    
-                    if let message = stateMessage {
-                        Text(message)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(6)
-                            .padding(.horizontal)
-                    }
+            VStack(spacing: 15) {
+                // Title
+                Text(stateTitle)
+                    .font(.system(size: 27, design: .serif))
+                
+                /*
+                // Message
+                if let message = stateMessage {
+                    Text(message)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(6)
+                        .padding(.horizontal)
                 }
+                 */
                 
                 // Error message (only for error state)
                 if case .error(let errorMessage) = state {
@@ -48,8 +49,15 @@ struct SendModalContentView: View {
                         .padding(.horizontal)
                 }
                 
-                // Action button (only for success state)
-                if case .success = state {
+                // Metadata section
+                if pendingMetadata != nil {
+                    SendMetadataSection(pendingMetadata: $pendingMetadata)
+                }
+                
+                // Action button (always visible unless error state)
+                if case .error = state {
+                    // Don't show the success button in error state
+                } else {
                     Button {
                         onDismiss()
                         onDismissEntireView?()
@@ -62,6 +70,7 @@ struct SendModalContentView: View {
                     .buttonStyle(.glassProminent)
                     .controlSize(.large)
                     .tint(.Arke.gold)
+                    .disabled(!(state == .success))
                 }
                 
                 // Dismiss button (only for error state)
@@ -72,22 +81,15 @@ struct SendModalContentView: View {
                         Text("button_cancel")
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold3)
-                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.glassProminent)
                     .controlSize(.large)
-                    .tint(Color.Arke.gold)
-                    .padding(.horizontal, 30)
-                }
-                
-                // Metadata section (Phase 3b)
-                if pendingMetadata != nil {
-                    SendMetadataSection(pendingMetadata: $pendingMetadata)
-                        .padding(.top, 8)
+                    .tint(.Arke.gold)
                 }
             }
         }
-        .padding(.bottom, 25)
+        .padding(.bottom, 40)
     }
     
     // MARK: - State-based helpers
@@ -139,17 +141,6 @@ struct SendModalContentView: View {
             return "message_confirm_shortly"
         case .error:
             return nil // Error message comes from the error itself
-        }
-    }
-    
-    private var stateSpacing: CGFloat {
-        switch state {
-        case .sending:
-            return 24
-        case .success:
-            return 15
-        case .error:
-            return 20
         }
     }
 }

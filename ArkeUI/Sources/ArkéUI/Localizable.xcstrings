@@ -14,16 +14,6 @@
         }
       }
     },
-    "%lld / %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld"
-          }
-        }
-      }
-    },
     "A forced move is meant for emergencies." : {
 
     },
@@ -43,7 +33,7 @@
     "action_start_forced_move" : {
 
     },
-    "Add Note" : {
+    "Add a note..." : {
 
     },
     "Address identicon" : {
@@ -107,6 +97,9 @@
         }
       }
     },
+    "button_done" : {
+
+    },
     "button_finalize" : {
       "localizations" : {
         "en" : {
@@ -156,9 +149,6 @@
           }
         }
       }
-    },
-    "Cancel" : {
-
     },
     "Connection Status" : {
 

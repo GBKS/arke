@@ -124,3 +124,23 @@ extension Color {
         #endif
     }
 }
+
+extension Color {
+    #if os(macOS)
+    public static var systemControlBackground: Color {
+        Color(NSColor.controlBackgroundColor)
+    }
+    
+    public static var systemSeparator: Color {
+        Color(NSColor.separatorColor)
+    }
+    #else
+    public static var systemControlBackground: Color {
+        Color(UIColor.secondarySystemBackground)
+    }
+    
+    public static var systemSeparator: Color {
+        Color(UIColor.separator)
+    }
+    #endif
+}
