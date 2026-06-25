@@ -9,8 +9,6 @@ import SwiftUI
 import ArkeUI
 import Bark
 
-
-
 /// Banner displayed when a unilateral exit transaction is in progress.
 /// Shows automatic exit progression through transaction-based steps.
 struct TransactionClaimExitBanner: View {

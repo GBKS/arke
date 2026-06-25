@@ -77,13 +77,14 @@ public struct BalanceRefreshStatus: View {
     }
 
     private func formatTimeInterval(_ seconds: Int) -> String {
-        if seconds < 60 { return "< 1m" }
+        let lessThanMinute = String(localized: "format_less_than_minute", defaultValue: "< 1m", bundle: .module)
+        if seconds < 60 { return lessThanMinute }
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.day, .hour, .minute]
         formatter.maximumUnitCount = 2
         formatter.unitsStyle = .abbreviated
         formatter.zeroFormattingBehavior = .dropAll
-        return formatter.string(from: TimeInterval(seconds)) ?? "< 1m"
+        return formatter.string(from: TimeInterval(seconds)) ?? lessThanMinute
     }
 
     public var body: some View {
@@ -97,6 +98,14 @@ public struct BalanceRefreshStatus: View {
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
             currentTime = Date()
         }
+        // Announce when a refresh starts so VoiceOver users hear it without refocusing.
+        .onChange(of: data.hasActiveRefresh) { _, isRefreshing in
+            if isRefreshing {
+                AccessibilityNotification.Announcement(
+                    String(localized: "status_refreshing", bundle: .module)
+                ).post()
+            }
+        }
     }
     
     @ViewBuilder
@@ -108,7 +117,8 @@ public struct BalanceRefreshStatus: View {
                 .frame(width: 32, height: 32)
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(8)
-            
+                .accessibilityHidden(true)
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(String(localized: "label_payments_balance_refresh", bundle: .module))
                     .font(.body)
@@ -118,14 +128,16 @@ public struct BalanceRefreshStatus: View {
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
             ProgressView().controlSize(.small)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 15)
         .background(.gray.opacity(0.1))
         .cornerRadius(15)
+        .accessibilityElement(children: .combine)
     }
     
     @ViewBuilder
@@ -138,17 +150,19 @@ public struct BalanceRefreshStatus: View {
                     .frame(width: 32, height: 32)
                     .background(data.urgencyForegroundColor)
                     .cornerRadius(8)
-                
+                    .accessibilityHidden(true)
+
                 Text(String(localized: "label_payments_balance_refresh", bundle: .module))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(.primary)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 15)
             .padding(.top, 15)
             .padding(.bottom, 15)
+            .accessibilityElement(children: .combine)
             
             if data.hasActiveRefresh {
                 refreshingContent
@@ -181,12 +195,13 @@ public struct BalanceRefreshStatus: View {
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
         }
         .padding(.horizontal, 15)
         .padding(.bottom, 15)
     }
-    
+
     @ViewBuilder
     private var emptyStateContent: some View {
         Text(String(localized: "message_not_needed_empty_balance", bundle: .module))
@@ -218,6 +233,7 @@ public struct BalanceRefreshStatus: View {
                 .controlSize(.regular)
                 .buttonStyle(.glassProminent)
                 .tint(.Arke.gold)
+                .accessibilityHint(String(localized: "accessibility_hint_start_refresh", bundle: .module))
                 .padding(.top, 10)
             }
         }
@@ -234,6 +250,7 @@ public struct BalanceRefreshStatus: View {
                 Text(data.statusMessage).font(.body).fontWeight(.medium)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
 
             if let amount = data.totalAmountToRefresh {
                 HStack(alignment: .center, spacing: 4) {
@@ -242,6 +259,7 @@ public struct BalanceRefreshStatus: View {
                     Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
 
             if let ago = data.expiredAgoString {
@@ -251,6 +269,7 @@ public struct BalanceRefreshStatus: View {
                     Text(String(localized: "format_time_ago", defaultValue: "\(ago) ago", bundle: .module)).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
 
             if let nextRound = timeUntilNextRound {
@@ -260,6 +279,7 @@ public struct BalanceRefreshStatus: View {
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -274,6 +294,7 @@ public struct BalanceRefreshStatus: View {
                 Text(data.statusMessage).font(.body).fontWeight(.medium)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
 
             if let amount = data.totalAmountToRefresh {
                 HStack(alignment: .center, spacing: 4) {
@@ -282,6 +303,7 @@ public struct BalanceRefreshStatus: View {
                     Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
 
             if let expiry = data.timeUntilExpiry {
@@ -291,6 +313,7 @@ public struct BalanceRefreshStatus: View {
                     Text(expiry).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
 
             if let nextRound = timeUntilNextRound {
@@ -300,6 +323,7 @@ public struct BalanceRefreshStatus: View {
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
             }
         }
     }

@@ -23,12 +23,43 @@
     "A forced move is meant for emergencies." : {
 
     },
+    "accessibility_hint_copy_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the value to the clipboard"
+          }
+        }
+      }
+    },
+    "accessibility_hint_finalize_claim" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a confirmation to withdraw to your savings balance"
+          }
+        }
+      }
+    },
     "accessibility_hint_select_destination" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selects this payment destination"
+          }
+        }
+      }
+    },
+    "accessibility_hint_start_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes your balance now"
           }
         }
       }
@@ -47,6 +78,16 @@
     },
     "action_copy_address" : {
 
+    },
+    "action_copy_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy value"
+          }
+        }
+      }
     },
     "action_dismiss_error" : {
       "localizations" : {
@@ -88,6 +129,7 @@
 
     },
     "balance_confirm_withdraw" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -141,6 +183,7 @@
 
     },
     "button_finalize" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -151,6 +194,7 @@
       }
     },
     "button_finalize_claim" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -161,6 +205,7 @@
       }
     },
     "button_finalize_withdrawal" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -295,6 +340,16 @@
         }
       }
     },
+    "format_less_than_minute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "< 1m"
+          }
+        }
+      }
+    },
     "format_time_ago" : {
       "localizations" : {
         "en" : {
@@ -355,6 +410,7 @@
       }
     },
     "label_amount_colon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -411,6 +467,7 @@
       }
     },
     "label_fee_colon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -613,6 +670,7 @@
       }
     },
     "status_calculating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -633,7 +691,14 @@
       }
     },
     "status_copied_exclaim" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied!"
+          }
+        }
+      }
     },
     "status_expired" : {
       "localizations" : {
@@ -646,6 +711,7 @@
       }
     },
     "status_finalizing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -680,6 +746,7 @@
       }
     },
     "status_ready_finalize" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -700,6 +767,7 @@
       }
     },
     "status_withdrawal_complete" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -710,6 +778,7 @@
       }
     },
     "status_withdrawal_progress" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -741,16 +810,6 @@
     },
     "Troubleshooting" : {
 
-    },
-    "Withdraw %@ to your savings balance?\n\nFee: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Withdraw %1$@ to your savings balance?\n\nFee: %2$@"
-          }
-        }
-      }
     },
     "You are connected to %@, a test network for development and experimentation." : {
 

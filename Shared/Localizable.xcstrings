@@ -1609,6 +1609,16 @@
     "Add to Contacts" : {
 
     },
+    "Added" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added"
+          }
+        }
+      }
+    },
     "Adding..." : {
 
     },
@@ -1982,6 +1992,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Backup file"
+          }
+        }
+      }
+    },
+    "Balance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balance"
           }
         }
       }
@@ -3689,6 +3709,16 @@
     "Clear Results" : {
 
     },
+    "Confirmation Height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmation Height"
+          }
+        }
+      }
+    },
     "Confirmations" : {
 
     },
@@ -3755,6 +3785,26 @@
     },
     "Contact '%@' assigned" : {
 
+    },
+    "Contact ID" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact ID"
+          }
+        }
+      }
+    },
+    "Contact Type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Type"
+          }
+        }
+      }
     },
     "contacts_add_addresses_help" : {
       "localizations" : {
@@ -4318,6 +4368,16 @@
         }
       }
     },
+    "Date" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
     "debug_logs_error_title" : {
       "localizations" : {
         "en" : {
@@ -4690,6 +4750,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to unlink devices: %@"
+          }
+        }
+      }
+    },
+    "Expiry Height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expiry Height"
           }
         }
       }
@@ -5164,6 +5234,16 @@
     },
     "From %@" : {
 
+    },
+    "From Address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From Address"
+          }
+        }
+      }
     },
     "Generate Invoices" : {
 
@@ -5736,6 +5816,16 @@
     "Last synced %@" : {
 
     },
+    "Last Updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Updated"
+          }
+        }
+      }
+    },
     "Let's go!" : {
 
     },
@@ -6211,6 +6301,16 @@
     "Number of payments to send" : {
 
     },
+    "Offchain Fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offchain Fee"
+          }
+        }
+      }
+    },
     "OK" : {
 
     },
@@ -6450,8 +6550,38 @@
     "Once you have some funds in it, make sure to do a proper backup. You're in control of this wallet, and also responsible for it." : {
 
     },
+    "Onchain Fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onchain Fee"
+          }
+        }
+      }
+    },
     "Onchain Transactions" : {
 
+    },
+    "Outpoint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outpoint"
+          }
+        }
+      }
+    },
+    "Output Index" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output Index"
+          }
+        }
+      }
     },
     "Parsed State" : {
 
@@ -7556,6 +7686,16 @@
     "Share your Request" : {
 
     },
+    "Short Reference" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short Reference"
+          }
+        }
+      }
+    },
     "Show Recovery Phrase" : {
 
     },
@@ -7576,6 +7716,17 @@
     },
     "State" : {
 
+    },
+    "Status" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        }
+      }
     },
     "status_added" : {
       "localizations" : {
@@ -8445,14 +8596,44 @@
     "Tip Height" : {
 
     },
+    "To Address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To Address"
+          }
+        }
+      }
+    },
     "Toggle between Lightning and Payments and Savings" : {
 
     },
     "Total Amount" : {
 
     },
+    "Total Fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Fee"
+          }
+        }
+      }
+    },
     "Transaction Chain" : {
 
+    },
+    "Transaction Hash" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction Hash"
+          }
+        }
+      }
     },
     "Transaction ID" : {
 
@@ -8595,6 +8776,16 @@
     },
     "VTXO ID" : {
 
+    },
+    "VTXO Kind" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VTXO Kind"
+          }
+        }
+      }
     },
     "We will use this in the next step to optimize your expected fees." : {
 

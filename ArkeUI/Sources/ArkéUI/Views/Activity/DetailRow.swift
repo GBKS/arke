@@ -8,32 +8,34 @@
 import SwiftUI
 
 public struct DetailRow: View {
-    let title: String
+    let title: LocalizedStringKey
     let value: String
     let isCopyable: Bool
     let onCopy: ((String) -> Void)?
-    
-    public init(title: String, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
+
+    public init(title: LocalizedStringKey, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
         self.title = title
         self.value = value
         self.isCopyable = isCopyable
         self.onCopy = onCopy
     }
-    
+
     public var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.body)
                     .foregroundColor(.secondary)
-                
+
                 Text(value)
                     .font(.body.monospaced())
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+            // Read the title and full (untruncated) value as a single VoiceOver element.
+            .accessibilityElement(children: .combine)
+
             if isCopyable {
                 Button {
                     copyToClipboard(value)
@@ -43,14 +45,16 @@ public struct DetailRow: View {
                         .foregroundColor(.Arke.blue)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(localized: "action_copy_value", bundle: .module))
+                .accessibilityHint(String(localized: "accessibility_hint_copy_value", bundle: .module))
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 4)
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func copyToClipboard(_ text: String) {
         #if os(macOS)
         NSPasteboard.general.clearContents()
@@ -58,7 +62,12 @@ public struct DetailRow: View {
         #else
         UIPasteboard.general.string = text
         #endif
-        
+
+        // Announce the copy to VoiceOver so success isn't a silent action.
+        AccessibilityNotification.Announcement(
+            String(localized: "status_copied_exclaim", bundle: .module)
+        ).post()
+
         // Call the optional callback if provided (for showing copy success feedback)
         onCopy?(text)
     }

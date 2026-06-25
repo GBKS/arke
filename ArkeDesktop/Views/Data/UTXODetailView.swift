@@ -89,7 +89,7 @@ struct UTXODetailView: View {
                         // Confirmation Height
                         DetailRow(
                             title: "Confirmation Height",
-                            value: utxo.confirmationHeight.map(String.init) ?? "Unconfirmed"
+                            value: utxo.confirmationHeight.map(String.init) ?? String(localized: "Unconfirmed")
                         )
                         
                         // Short Outpoint for Reference
