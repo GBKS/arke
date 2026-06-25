@@ -112,31 +112,3 @@ struct TransactionListEmptyState: View {
         }
     }
 }
-
-#Preview("No Filter") {
-    TransactionListEmptyState(onShowFaucet: {
-        print("Show faucet tapped")
-    })
-}
-
-#Preview("Tag Filter") {
-    TransactionListEmptyState(
-        filterTag: PersistentTag(
-            id: UUID(),
-            name: "Mining",
-            colorHex: "#FF5733",
-            emoji: "⛏️"
-        ),
-        onShowFaucet: nil
-    )
-}
-
-#Preview("Contact Filter") {
-    TransactionListEmptyState(
-        filterContact: PersistentContact(
-            id: UUID(),
-            cachedName: "Alice"
-        ),
-        onShowFaucet: nil
-    )
-}

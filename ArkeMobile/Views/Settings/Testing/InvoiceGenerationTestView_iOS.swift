@@ -201,10 +201,3 @@ struct InvoiceGenerationTestView_iOS: View {
         Self.logger.debug("Results cleared")
     }
 }
-
-#Preview {
-    NavigationStack {
-        InvoiceGenerationTestView_iOS()
-            .environment(WalletManager(useMock: true))
-    }
-}

@@ -133,30 +133,3 @@ struct RefreshModalView: View {
         }
     }
 }
-
-#Preview("Form") {
-    RefreshModalView(manager: WalletManager(useMock: true))
-}
-
-#Preview("Refreshing") {
-    RefreshModalRefreshingView()
-}
-
-#Preview("Success") {
-    RefreshModalSuccessView {
-        print("Done tapped")
-    }
-}
-
-#Preview("Error") {
-    LargeErrorView(
-        title: "error_refresh_failed",
-        errorMessage: "Network connection failed. Please check your internet connection and try again.",
-        image: nil,
-        systemImage: "exclamationmark.triangle.fill",
-        systemImageColor: .orange,
-        onDismiss: {
-            print("Dismiss tapped")
-        }
-    )
-}

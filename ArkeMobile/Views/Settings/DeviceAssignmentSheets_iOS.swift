@@ -214,11 +214,3 @@ struct PromoteDeviceSheet: View {
         }
     }
 }
-
-#Preview("Demote Sheet") {
-    DemoteDeviceSheet(isPresented: .constant(true), onSuccess: nil)
-}
-
-#Preview("Promote Sheet") {
-    PromoteDeviceSheet(isPresented: .constant(true), onSuccess: nil)
-}

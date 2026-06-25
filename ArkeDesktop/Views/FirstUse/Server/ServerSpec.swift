@@ -25,13 +25,3 @@ struct ServerSpec: View {
         }
     }
 }
-
-#Preview {
-    VStack(spacing: 8) {
-        ServerSpec(label: "CPU", value: "2.4 GHz")
-        ServerSpec(label: "Memory", value: "16 GB")
-        ServerSpec(label: "Storage", value: "512 GB SSD")
-    }
-    .padding()
-    .background(.black)
-}

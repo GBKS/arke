@@ -334,30 +334,3 @@ extension View {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview("New Tag") {
-    TagEditor(
-        onSave: { tag in
-            print("Saved tag: \(tag)")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(TagService(taskManager: TaskDeduplicationManager()))
-}
-
-#Preview("Edit Tag") {
-    TagEditor(
-        editingTag: TagModel(name: "Coffee", colorHex: "#8B4513", emoji: "☕"),
-        onSave: { tag in
-            print("Updated tag: \(tag)")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(TagService(taskManager: TaskDeduplicationManager()))
-}

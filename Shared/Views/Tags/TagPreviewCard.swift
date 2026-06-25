@@ -44,18 +44,3 @@ struct TagPreviewCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
-
-#Preview {
-    VStack(spacing: 20) {
-        TagPreviewCard(
-            tag: TagModel(name: "Coffee", colorHex: "#8B4513", emoji: "☕"),
-            isEmpty: false
-        )
-        
-        TagPreviewCard(
-            tag: TagModel(name: "", colorHex: "#4A90E2", emoji: ""),
-            isEmpty: true
-        )
-    }
-    .padding()
-}

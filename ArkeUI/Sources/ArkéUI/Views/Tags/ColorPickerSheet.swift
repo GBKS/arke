@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct ColorPickerSheet: View {
+public struct ColorPickerSheet: View {
     @Binding var selectedColorHex: String
     @Environment(\.dismiss) private var dismiss
     
@@ -22,8 +21,12 @@ struct ColorPickerSheet: View {
     
     @State private var customColor: Color = .Arke.blue
     @State private var showingCustomColorPicker = false
-    
-    var body: some View {
+
+    public init(selectedColorHex: Binding<String>) {
+        self._selectedColorHex = selectedColorHex
+    }
+
+    public var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {

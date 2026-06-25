@@ -67,11 +67,3 @@ struct WalletCreatedView: View {
         .background(Color.Arke.gold3)
     }
 }
-
-#Preview {
-    WalletCreatedView(
-        onContinue: {},
-        onShowRecoveryPhrase: {}
-    )
-    .frame(width: 600, height: 700)
-}

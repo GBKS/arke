@@ -77,8 +77,3 @@ struct DebugLogExportButton_iOS: View {
         return lines
     }
 }
-
-#Preview {
-    DebugLogExportButton_iOS()
-        .environment(WalletManager(useMock: true))
-}

@@ -490,16 +490,3 @@ private struct StateDetailRow: View {
         }
     }
 }
-
-#Preview("Exit Detail") {
-    ExitStatusDetailView_iOS(
-        exitVtxo: ExitVtxo(
-            vtxoId: "abc123def456789xyz0123456789",
-            amountSats: 250000,
-            state: "broadcasting",
-            isClaimable: false
-        )
-    )
-    .environment(WalletManager(useMock: true))
-}
-

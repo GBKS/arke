@@ -237,13 +237,3 @@ struct DeletionItemRow: View {
         }
     }
 }
-
-#Preview {
-    DeletePermanentlyConfirmationView(
-        deletionStrategy: .promptForCloudData,
-        onConfirm: {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-        },
-        onBack: {}
-    )
-}

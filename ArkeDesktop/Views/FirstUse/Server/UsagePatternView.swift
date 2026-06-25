@@ -383,18 +383,3 @@ extension ServerUsageProfile {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    UsagePatternView(
-        onBack: {},
-        onContinue: { profile in
-            print("Balance: \(profile.averageBalance)")
-            print("Transactions: \(profile.onArkPayments + profile.lightningPayments)")
-            print("Volume: \(profile.monthlyVolume)")
-        },
-        usagePattern: .casual
-    )
-    .frame(width: 600, height: 900)
-}

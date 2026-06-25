@@ -312,14 +312,3 @@ struct ContactAddressEditor: View {
         isLoading = false
     }
 }
-
-#Preview {
-    ContactAddressEditor(
-        contact: ContactModel(
-            cachedName: "John Doe"
-        ),
-        onSave: {},
-        onCancel: {}
-    )
-    .environment(WalletManager(useMock: true))
-}

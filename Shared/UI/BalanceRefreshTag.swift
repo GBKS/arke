@@ -121,7 +121,3 @@ private struct BalanceRefreshTagPreview: View {
         .frame(width: 200)
     }
 }
-
-#Preview("Refresh Now") {
-    BalanceRefreshTagPreview()
-}

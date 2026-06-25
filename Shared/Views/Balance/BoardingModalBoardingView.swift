@@ -38,8 +38,3 @@ struct BoardingModalBoardingView: View {
         .padding()
     }
 }
-
-#Preview {
-    BoardingModalBoardingView()
-        .frame(width: 400, height: 400)
-}

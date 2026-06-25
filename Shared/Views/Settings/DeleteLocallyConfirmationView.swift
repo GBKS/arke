@@ -188,13 +188,3 @@ struct DeleteLocallyConfirmationView: View {
         }
     }
 }
-
-#Preview {
-    DeleteLocallyConfirmationView(
-        deletionStrategy: .promptForCloudData,
-        onConfirm: {
-            try await Task.sleep(nanoseconds: 2_000_000_000)
-        },
-        onBack: {}
-    )
-}

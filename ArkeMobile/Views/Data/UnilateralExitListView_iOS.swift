@@ -271,14 +271,3 @@ struct UnilateralExitListView_iOS: View {
         isLoadingExits = false
     }
 }
-
-// MARK: - Previews
-
-#Preview("Exit List") {
-    NavigationStack {
-        UnilateralExitListView_iOS()
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400, height: 600)
-}

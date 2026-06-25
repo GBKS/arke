@@ -52,16 +52,3 @@ struct ContactTransactionSummaryView: View {
         }
     }
 }
-
-#Preview {
-    ContactTransactionSummaryView(
-        contact: ContactModel(
-            cachedName: "John Doe",
-            transactionCount: 5,
-            sentAmount: 25000,
-            receivedAmount: 75000
-        ),
-        onViewActivity: { print("View activity tapped") }
-    )
-    .padding()
-}

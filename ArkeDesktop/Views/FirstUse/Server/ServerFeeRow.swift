@@ -31,13 +31,3 @@ struct ServerFeeRow: View {
         .animation(.smooth(duration: 0.4), value: amount)
     }
 }
-
-#Preview {
-    VStack(spacing: 8) {
-        ServerFeeRow(label: "Input", count: 2, amount: 294)
-        ServerFeeRow(label: "Output", count: 1, amount: 147)
-        ServerFeeRow(label: "Relay Fee", count: 5, amount: 1000)
-    }
-    .padding()
-    .background(Color.black)
-}

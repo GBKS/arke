@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct TagFormFields: View {
+public struct TagFormFields: View {
     @Binding var name: String
     @Binding var selectedEmoji: String
     @Binding var selectedColorHex: String
@@ -17,10 +16,28 @@ struct TagFormFields: View {
     
     let nameExists: Bool
     let onSubmit: () -> Void
-    
+
+    public init(
+        name: Binding<String>,
+        selectedEmoji: Binding<String>,
+        selectedColorHex: Binding<String>,
+        showingEmojiPicker: Binding<Bool>,
+        showingColorPicker: Binding<Bool>,
+        nameExists: Bool,
+        onSubmit: @escaping () -> Void
+    ) {
+        self._name = name
+        self._selectedEmoji = selectedEmoji
+        self._selectedColorHex = selectedColorHex
+        self._showingEmojiPicker = showingEmojiPicker
+        self._showingColorPicker = showingColorPicker
+        self.nameExists = nameExists
+        self.onSubmit = onSubmit
+    }
+
     @FocusState private var isNameFieldFocused: Bool
-    
-    var body: some View {
+
+    public var body: some View {
         VStack(spacing: 20) {
             // Name Field
             nameField

@@ -72,8 +72,3 @@ struct SettingsView: View {
         }
     }
 }
-
-#Preview {
-    SettingsView(onWalletDeleted: nil)
-        .environment(WalletManager(useMock: true))
-}

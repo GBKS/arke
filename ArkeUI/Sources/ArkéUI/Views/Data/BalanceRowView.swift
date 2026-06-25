@@ -6,13 +6,17 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct BalanceRowView: View {
+public struct BalanceRowView: View {
     let label: String
     let amount: Int
-    
-    var body: some View {
+
+    public init(label: String, amount: Int) {
+        self.label = label
+        self.amount = amount
+    }
+
+    public var body: some View {
         HStack {
             Text(label)
                 .font(.caption)

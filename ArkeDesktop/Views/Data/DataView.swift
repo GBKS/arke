@@ -143,14 +143,6 @@ struct DataView: View {
     }
 }
 
-#Preview {
-    NavigationStack {
-        DataView(selectedDataItem: .constant(nil))
-            .environment(WalletManager(useMock: true))
-    }
-    .frame(width: 400, height: 800)
-}
-
 // MARK: - Extensions
 extension DateFormatter {
     static let filenameDateFormatter: DateFormatter = {

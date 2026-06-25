@@ -6,16 +6,15 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 /// A reusable view component that displays transaction fee information
 /// with optional disclosure indicator for interactive fee selection
-struct FeeDisplayView: View {
+public struct FeeDisplayView: View {
     let fee: Int?
     let showDisclosure: Bool
     let onTap: (() -> Void)?
     
-    init(
+    public init(
         fee: Int?,
         showDisclosure: Bool = false,
         onTap: (() -> Void)? = nil
@@ -25,7 +24,7 @@ struct FeeDisplayView: View {
         self.onTap = onTap
     }
     
-    var body: some View {
+    public var body: some View {
         Group {
             if showDisclosure && onTap != nil {
                 Button(action: onTap ?? {}) {

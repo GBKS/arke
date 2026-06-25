@@ -193,9 +193,3 @@ private struct ExecutingIndicator: View {
         .padding(.horizontal)
     }
 }
-
-#Preview {
-    ConsoleView()
-        .environment(WalletManager(useMock: true))
-        .frame(width: 600, height: 400)
-}

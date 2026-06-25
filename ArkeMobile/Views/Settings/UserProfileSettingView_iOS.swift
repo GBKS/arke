@@ -119,23 +119,3 @@ struct UserProfileSettingView_iOS: View {
         return name != profile.name || avatarData != profile.avatarData
     }
 }
-
-// MARK: - Preview
-
-#Preview("Empty Profile") {
-    NavigationStack {
-        UserProfileSettingView_iOS()
-            .modelContainer(for: UserProfile.self, inMemory: true)
-    }
-}
-
-#Preview("Existing Profile") {
-    let container = try! ModelContainer(for: UserProfile.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    let profile = UserProfile(name: "Alice", avatarData: nil)
-    container.mainContext.insert(profile)
-    
-    return NavigationStack {
-        UserProfileSettingView_iOS()
-            .modelContainer(container)
-    }
-}

@@ -365,25 +365,3 @@ struct ContactSelectorSheet: View {
         }
     }
 }
-
-#Preview {
-    // Create a mock wallet manager for the preview
-    @Previewable @State var selectedContactId: UUID? = nil
-    
-    // Mock WalletManager for preview
-    let mockWalletManager = WalletManager()
-    
-    ContactSelectorSheet(
-        selectedContactId: $selectedContactId,
-        transactionId: "sample_transaction_id",
-        onAssignContact: { contact in
-            if let contact = contact {
-                print("Assigned contact: \(contact.displayName)")
-            } else {
-                print("Removed contact assignment")
-            }
-        }
-    )
-    .environment(mockWalletManager)
-    .frame(width: 600, height: 700)
-}

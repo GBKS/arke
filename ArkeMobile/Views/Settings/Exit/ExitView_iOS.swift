@@ -525,26 +525,3 @@ struct ExitView_iOS: View {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview("No Exit") {
-    NavigationStack {
-        ExitView_iOS()
-            .environment(WalletManager())
-    }
-}
-
-#Preview("Exit In Progress") {
-    NavigationStack {
-        ExitView_iOS()
-            .environment(WalletManager())
-    }
-}
-
-#Preview("Exit Claimable") {
-    NavigationStack {
-        ExitView_iOS()
-            .environment(WalletManager())
-    }
-}

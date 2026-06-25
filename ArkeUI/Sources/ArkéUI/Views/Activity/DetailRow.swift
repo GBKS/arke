@@ -6,22 +6,21 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct DetailRow: View {
+public struct DetailRow: View {
     let title: String
     let value: String
     let isCopyable: Bool
     let onCopy: ((String) -> Void)?
     
-    init(title: String, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
+    public init(title: String, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
         self.title = title
         self.value = value
         self.isCopyable = isCopyable
         self.onCopy = onCopy
     }
     
-    var body: some View {
+    public var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

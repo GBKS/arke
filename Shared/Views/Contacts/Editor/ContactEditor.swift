@@ -492,33 +492,3 @@ extension View {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview("New Contact") {
-    ContactEditor(
-        onSave: { contact in
-            print("Saved contact: \(contact)")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(ContactService(taskManager: TaskDeduplicationManager()))
-}
-
-#Preview(String(localized: "button_edit_contact")) {
-    ContactEditor(
-        editingContact: ContactModel(
-            cachedName: "John Doe", 
-            notes: "Coffee shop owner downtown. Always has great recommendations for new blends."
-        ),
-        onSave: { contact in
-            print("Updated contact: \(contact)")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(ContactService(taskManager: TaskDeduplicationManager()))
-}

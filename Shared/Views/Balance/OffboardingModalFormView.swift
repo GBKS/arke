@@ -145,31 +145,3 @@ struct OffboardingModalFormView: View {
         }
     }
 }
-
-#Preview {
-    OffboardingModalFormView(
-        onchainAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-        maximumAmount: 100000,
-        onConfirm: { amount in
-            print("Offboarding \(amount) sats")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(WalletManager(useMock: true))
-}
-
-#Preview("No Balance") {
-    OffboardingModalFormView(
-        onchainAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-        maximumAmount: nil,
-        onConfirm: { amount in
-            print("Offboarding \(amount) sats")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(WalletManager(useMock: true))
-}

@@ -192,17 +192,3 @@ struct ContactAddressesSection: View {
         }
     }
 }
-
-#Preview {
-    ContactAddressesSection(
-        contact: ContactModel(
-            cachedName: "John Doe",
-            notes: "My Bitcoin contact"
-        ),
-        onSendToAddress: { address in
-            print("Send to: \(address.address)")
-        }
-    )
-    .environment(WalletManager(useMock: true))
-    .padding()
-}

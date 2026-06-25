@@ -165,25 +165,3 @@ struct ProfilePhotoPickerView: View {
         return resizedImage.jpegData(compressionQuality: 0.8)
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    VStack(spacing: 40) {
-        ProfilePhotoPickerView(
-            avatarData: .constant(nil),
-            size: 120
-        )
-        
-        ProfilePhotoPickerView(
-            avatarData: .constant(UIImage(systemName: "person.fill")?.pngData()),
-            size: 100
-        )
-        
-        ProfilePhotoPickerView(
-            avatarData: .constant(nil),
-            size: 80
-        )
-    }
-    .padding()
-}

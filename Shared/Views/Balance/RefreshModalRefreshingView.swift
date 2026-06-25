@@ -55,8 +55,3 @@ struct RefreshModalRefreshingView: View {
         .padding()
     }
 }
-
-#Preview {
-    RefreshModalRefreshingView()
-        .frame(width: 400, height: 400)
-}

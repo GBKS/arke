@@ -76,10 +76,3 @@ struct TransactionTestingView_iOS: View {
         .navigationBarTitleDisplayMode(.large)
     }
 }
-
-#Preview {
-    NavigationStack {
-        TransactionTestingView_iOS()
-            .environment(WalletManager(useMock: true))
-    }
-}

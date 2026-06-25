@@ -45,10 +45,3 @@ struct BoardingModalErrorView: View {
         .padding()
     }
 }
-
-#Preview {
-    BoardingModalErrorView(errorMessage: "Network connection failed. Please check your internet connection and try again.") {
-        print("Retry tapped")
-    }
-    .frame(width: 400, height: 400)
-}

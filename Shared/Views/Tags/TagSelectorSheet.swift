@@ -83,20 +83,3 @@ struct TagSelectorSheet: View {
         }
     }
 }
-
-#Preview {
-    // Create a mock wallet manager for the preview
-    @Previewable @State var selectedTagIds: Set<UUID> = []
-    
-    // Mock WalletManager for preview
-    let mockWalletManager = WalletManager()
-    
-    TagSelectorSheet(
-        selectedTagIds: $selectedTagIds,
-        onCreateNewTag: { tag in
-            print("Created new tag: \(tag.name)")
-        }
-    )
-    .environment(mockWalletManager)
-    .frame(width: 600, height: 700)
-}

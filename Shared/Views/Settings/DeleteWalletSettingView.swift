@@ -220,9 +220,3 @@ struct DeleteWalletSettingView: View {
         }
     }
 }
-
-#Preview {
-    DeleteWalletSettingView(onWalletDeleted: nil)
-        .environment(WalletManager(useMock: true))
-        .padding()
-}

@@ -129,8 +129,3 @@ struct BalanceView: View {
         }
     }
 }
-
-#Preview {
-    BalanceView()
-        .environment(WalletManager(useMock: true))
-}

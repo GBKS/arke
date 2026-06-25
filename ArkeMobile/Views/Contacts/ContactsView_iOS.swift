@@ -308,34 +308,3 @@ extension ContactsView_iOS {
         )
     }
 }
-
-// MARK: - Preview
-
-#Preview("With Contacts") {
-    @Previewable @State var walletManager = WalletManager(useMock: true)
-    
-    ContactsView_iOS(
-        onSelectContact: { contact, address in
-            print("Selected: \(contact.displayName) - \(address.address)")
-        },
-        onNavigateToActivity: { contact in
-            print("Navigate to activity for: \(contact?.displayName ?? "all")")
-        }
-    )
-    .environment(walletManager)
-}
-
-#Preview("Empty State") {
-    @Previewable @State var walletManager = WalletManager(useMock: false)
-    
-    ContactsView_iOS(
-        onSelectContact: { contact, address in
-            print("Selected: \(contact.displayName) - \(address.address)")
-        },
-        onNavigateToActivity: { contact in
-            print("Navigate to activity for: \(contact?.displayName ?? "all")")
-        }
-    )
-    .environment(walletManager)
-}
-

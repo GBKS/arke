@@ -29,13 +29,3 @@ struct ContactHeaderView: View {
         }
     }
 }
-
-#Preview {
-    ContactHeaderView(
-        contact: ContactModel(
-            cachedName: "John Doe",
-            notes: "My Bitcoin contact"
-        )
-    )
-    .padding()
-}

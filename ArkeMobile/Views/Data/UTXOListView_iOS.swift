@@ -121,12 +121,3 @@ struct UTXOListView_iOS: View {
         isLoadingUTXOs = false
     }
 }
-
-#Preview("Default") {
-    NavigationStack {
-        UTXOListView_iOS()
-            .environment(WalletManager(useMock: true))
-            .padding()
-    }
-    .frame(width: 400)
-}

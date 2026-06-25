@@ -85,8 +85,3 @@ struct BitcoinFormatSettingView_iOS: View {
             .stroke(selectedFormat == format ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1)
     }
 }
-
-#Preview {
-    BitcoinFormatSettingView_iOS()
-        .padding()
-}

@@ -283,12 +283,3 @@ struct AddressHistoryRowView: View {
         }
     }
 }
-
-// MARK: - Previews
-
-#Preview {
-    NavigationStack {
-        AddressHistoryView_iOS()
-    }
-    .modelContainer(for: [PersistentAddress.self], inMemory: true)
-}

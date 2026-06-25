@@ -86,30 +86,3 @@ struct BoardingModalView: View {
         }
     }
 }
-
-#Preview("Form") {
-    BoardingModalView(manager: WalletManager(useMock: true))
-}
-
-#Preview("Boarding") {
-    BoardingModalBoardingView()
-}
-
-#Preview("Success") {
-    BoardingModalSuccessView {
-        print("Done tapped")
-    }
-}
-
-#Preview("Error") {
-    LargeErrorView(
-        title: "error_boarding_failed",
-        errorMessage: "Network connection failed. Please check your internet connection and try again.",
-        image: nil,
-        systemImage: "xmark.circle.fill",
-        systemImageColor: .Arke.red,
-        onRetry: {
-            print("Retry tapped")
-        }
-    )
-}

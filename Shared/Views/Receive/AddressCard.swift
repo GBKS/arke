@@ -111,13 +111,3 @@ struct AddressCard: View {
         }
     }
 }
-
-#Preview {
-    AddressCard(
-        address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-        shareContent: "bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-        label: "Savings Address",
-        onTap: { print("Address tapped") }
-    )
-    .padding()
-}

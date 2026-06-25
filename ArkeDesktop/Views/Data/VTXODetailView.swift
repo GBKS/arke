@@ -155,12 +155,3 @@ struct VTXODetailView: View {
         reloadTrigger += 1
     }
 }
-
-#Preview {
-    NavigationStack {
-        VTXODetailView(
-            vtxo: VTXOModel.mockVTXOs()[0]
-        )
-    }
-    .environment(WalletManager(useMock: true))
-}

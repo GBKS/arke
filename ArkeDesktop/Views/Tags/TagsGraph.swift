@@ -124,17 +124,3 @@ struct TagsGraph: View {
         return amount >= 0 ? baseColor : baseColor.opacity(0.7)
     }
 }
-
-// MARK: - Preview
-
-#Preview("Tags Graph with Data") {
-    TagsGraph()
-        .environment(WalletManager(useMock: true))
-        .frame(width: 600, height: 400)
-}
-
-#Preview("Tags Graph Empty") {
-    TagsGraph()
-        .environment(WalletManager(useMock: false))
-        .frame(width: 600, height: 400)
-}

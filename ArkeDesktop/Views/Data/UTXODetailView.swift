@@ -112,17 +112,3 @@ struct UTXODetailView: View {
         #endif
     }
 }
-
-
-
-#Preview {
-    NavigationStack {
-        UTXODetailView(
-            utxo: UTXOModel(
-                outpoint: "1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z:0",
-                amountSat: 50000,
-                confirmationHeight: 850123
-            )
-        )
-    }
-}

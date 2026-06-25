@@ -156,33 +156,3 @@ struct BalanceDetailCard: View {
         }
     }
 }
-
-#Preview {
-    VStack(spacing: 16) {
-        BalanceDetailCard(
-            title: "Payments balance",
-            description: "Fast & low fees · Ark network",
-            spendable: 150000,
-            pending: 25000,
-            total: 175000,
-            color: .Arke.orange,
-            imageName: "wallet",
-            pendingItems: [
-                (label: "Unconfirmed", amount: 15000),
-                (label: "Pending settlement", amount: 10000)
-            ]
-        )
-        
-        BalanceDetailCard(
-            title: "Savings balance",
-            description: "Best security · Bitcoin network",
-            spendable: 75000,
-            pending: 0,
-            total: 75000,
-            color: .Arke.blue,
-            imageName: "safe",
-            pendingItems: nil
-        )
-    }
-    .padding()
-}

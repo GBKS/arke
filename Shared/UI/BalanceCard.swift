@@ -137,39 +137,3 @@ struct BalanceCard: View {
         .cornerRadius(15)
     }
 }
-
-#Preview {
-    @Previewable @State var balance = TotalBalanceModel.empty
-    @Previewable @State var isHidden = false
-    
-    VStack(spacing: 20) {
-        BalanceCard(totalBalance: balance, isHidden: $isHidden)
-            .frame(width: 250, height: 160)
-        
-        Button("Animate Balance") {
-            let randomAmount = Int.random(in: 10000...9999999)
-            balance = TotalBalanceModel(
-                arkBalance: ArkBalanceModel(
-                    spendableSat: randomAmount,
-                    pendingLightningSendSat: 0,
-                    pendingInRoundSat: 0,
-                    pendingExitSat: 0,
-                    pendingBoardSat: 0
-                ),
-                onchainBalance: OnchainBalanceModel(
-                    totalSat: 0,
-                    confirmedSat: 0,
-                    pendingSat: 0
-                )
-            )
-        }
-        .buttonStyle(.borderedProminent)
-        
-        Button("Toggle Privacy") {
-            isHidden.toggle()
-        }
-        .buttonStyle(.borderedProminent)
-    }
-    .environment(WalletManager(useMock: true))
-    .padding(20)
-}

@@ -15,6 +15,7 @@
 import SwiftUI
 import AppKit
 import ArkeUI
+import SwiftData
 
 struct SendOperation_macOS: Identifiable {
     let id = UUID()
@@ -320,130 +321,5 @@ struct SendView: View {
             }
         )
         .frame(maxWidth: 400)
-    }
-}
-
-#Preview("Empty State - Manual Entry") {
-    NavigationStack {
-        SendView()
-            .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("Pre-filled Bitcoin Address") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
-            prefilledContact: nil
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("Pre-filled Contact") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "ark1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
-            prefilledContact: ContactModel(
-                cachedName: "Alice Johnson",
-                notes: "Friend from work"
-            )
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-21 with Label and Message") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh?amount=0.001&label=Coffee%20Shop&message=Order%20%2342"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-21 with Label Only") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh?label=Alice"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-21 Multi-Destination") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "bitcoin:tb1pxks6xl9e05xc3atcewg2tyyzgqm5n6mj6aduss3f0pau27206stsax872h?amount=0.001&label=Multi-Payment&ark=tark1pm6sr0fpzqqpu4k5llkn6wdswx48fwjjujgu4gm679lqwudrzghz7a2rx7wuup9cpqq6ssw20"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("Ark Address (No Label)") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "tark1pm6sr0fpzqqpu4k5llkn6wdswx48fwjjujgu4gm679lqwudrzghz7a2rx7wuup9cpqq6ssw20"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("Lightning Invoice") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "lnbc1000n1pj9x7zmpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdq5xysxxatsyp3k7enxv4jsxqzpu"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BOLT12 Lightning Offer") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0q2uumyll60x70znjle4vhrg496pmj4csnrnnxk7tkmf8fjx44zy4sqsrqtk7wvd7uqdv6yfrkpfgqplwggwfh8hnzsc8wzs8e79vphc6kugqqvuu3nm57har2dc73p40jz4xczrvjxdxyksueekymnzlvyytgy5fn8v4hjfxwrszhzkrgvd4hd"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-21 with BOLT12 Offer") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "bitcoin:?lno=lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0q2uumyll60x70znjle4vhrg496pmj4csnrnnxk7tkmf8fjx44zy4sqsrqtk7wvd7uqdv6yfrkpfgqplwggwfh8hnzsc8wzs8e79vphc6kugqqvuu3nm57har2dc73p40jz4xczrvjxdxyksueekymnzlvyytgy5fn8v4hjfxwrszhzkrgvd4hd"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("Silent Payment Address") {
-    NavigationStack {
-        SendView(
-            prefilledRecipient: "sp1qqgste7k9hx0qftg6qmwlkqtwuy6cycyavzmzj85c6qdfhjdpdjtdgqjuexzk6murw56suy3e0rd2cgqvycxttddwsvgxe2usfpxumr70xc9pkqwv"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-353") {
-    NavigationStack {
-        // Note: This will attempt DNS resolution for ₿alice@example.com
-        // In preview mode, it will likely fail and show nothing
-        // Real testing requires actual DNS records
-        SendView(
-            prefilledRecipient: "₿chri@sto.ph"
-        )
-        .environment(WalletManager(useMock: true))
-    }
-}
-
-#Preview("BIP-353 2") {
-    NavigationStack {
-        // Note: This will attempt DNS resolution first
-        // If DNS fails, falls back to Lightning Address parsing
-        SendView(
-            prefilledRecipient: "chri@sto.ph"
-        )
-        .environment(WalletManager(useMock: true))
     }
 }

@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct LightningAmountInputSection: View {
+public struct LightningAmountInputSection: View {
     @Binding var amount: String
     @Binding var note: String
     let lightningInvoice: String?
@@ -17,8 +16,28 @@ struct LightningAmountInputSection: View {
     let onNoteChange: () -> Void
     let onInvoiceTap: () -> Void
     let showCopySuccess: Bool
-    
-    var body: some View {
+
+    public init(
+        amount: Binding<String>,
+        note: Binding<String>,
+        lightningInvoice: String?,
+        invoiceError: String?,
+        onAmountChange: @escaping () -> Void,
+        onNoteChange: @escaping () -> Void,
+        onInvoiceTap: @escaping () -> Void,
+        showCopySuccess: Bool
+    ) {
+        self._amount = amount
+        self._note = note
+        self.lightningInvoice = lightningInvoice
+        self.invoiceError = invoiceError
+        self.onAmountChange = onAmountChange
+        self.onNoteChange = onNoteChange
+        self.onInvoiceTap = onInvoiceTap
+        self.showCopySuccess = showCopySuccess
+    }
+
+    public var body: some View {
         VStack(spacing: 12) {
             if lightningInvoice == nil {
                 VStack(spacing: 0) {

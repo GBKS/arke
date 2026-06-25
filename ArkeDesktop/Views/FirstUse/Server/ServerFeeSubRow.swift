@@ -27,13 +27,3 @@ struct ServerFeeSubRow: View {
         .padding(.leading, 16)
     }
 }
-
-#Preview {
-    VStack(spacing: 8) {
-        ServerFeeSubRow(label: "Base Fee", amount: 100)
-        ServerFeeSubRow(label: "Variable Fee", amount: 47)
-        ServerFeeSubRow(label: "Priority Fee", amount: 250)
-    }
-    .padding()
-    .background(Color.black)
-}

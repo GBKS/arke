@@ -6,16 +6,27 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 /// Badge indicating a contact is linked to native macOS Contacts
-struct NativeContactLinkBadge: View {
+public struct NativeContactLinkBadge: View {
     let isLinked: Bool
     let lastSynced: Date?
     var size: BadgeSize = .medium
     var showLabel: Bool = true
-    
-    var body: some View {
+
+    public init(
+        isLinked: Bool,
+        lastSynced: Date?,
+        size: BadgeSize = .medium,
+        showLabel: Bool = true
+    ) {
+        self.isLinked = isLinked
+        self.lastSynced = lastSynced
+        self.size = size
+        self.showLabel = showLabel
+    }
+
+    public var body: some View {
         if isLinked {
             HStack(spacing: 4) {
                 Image(systemName: "link.circle.fill")
@@ -31,11 +42,11 @@ struct NativeContactLinkBadge: View {
         }
     }
     
-    enum BadgeSize {
+    public enum BadgeSize {
         case small
         case medium
         case large
-        
+
         var iconFont: Font {
             switch self {
             case .small: return .caption

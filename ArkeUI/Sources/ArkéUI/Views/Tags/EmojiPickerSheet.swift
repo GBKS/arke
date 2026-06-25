@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct EmojiPickerSheet: View {
+public struct EmojiPickerSheet: View {
     @Binding var selectedEmoji: String
     @Environment(\.dismiss) private var dismiss
-    
+
+    public init(selectedEmoji: Binding<String>) {
+        self._selectedEmoji = selectedEmoji
+    }
+
     // Common emoji categories for tags
     private let emojiCategories = [
         ("Recent", ["☕", "🍕", "🚗", "🛒", "📄", "💰", "📈", "🎁"]),
@@ -24,7 +27,7 @@ struct EmojiPickerSheet: View {
         ("Symbols", ["⭐", "❤️", "✅", "❌", "⚠️", "🔥", "💯", "✨", "🎯", "📍"])
     ]
     
-    var body: some View {
+    public var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {

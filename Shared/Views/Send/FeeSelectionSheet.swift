@@ -72,32 +72,3 @@ struct FeeSelectionSheet: View {
         .frame(maxWidth: 450)
     }
 }
-
-#Preview("Fee Selection Sheet") {
-    @Previewable @State var selectedPriority: FeePriority = .medium
-    
-    FeeSelectionSheet(
-        selectedPriority: $selectedPriority,
-        feeRates: OnchainFeeRates(fast: 10, medium: 5, slow: 2),
-        onDismiss: { print("Dismissed") }
-    )
-    .frame(height: 500)
-    .padding()
-}
-
-#Preview("All Priorities") {
-    @Previewable @State var selectedPriority: FeePriority = .medium
-    
-    VStack(spacing: 20) {
-        ForEach(FeePriority.allCases) { priority in
-            FeeOptionRow(
-                priority: priority,
-                feeRate: OnchainFeeRates.default.rate(for: priority),
-                isSelected: selectedPriority == priority,
-                onSelect: { selectedPriority = priority }
-            )
-        }
-    }
-    .padding()
-    .frame(width: 400)
-}

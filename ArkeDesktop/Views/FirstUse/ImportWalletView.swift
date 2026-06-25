@@ -129,12 +129,3 @@ struct ImportWalletView: View {
         showingError = true
     }
 }
-
-#Preview {
-    ImportWalletView(
-        onBack: {},
-        onWalletImported: {}
-    )
-    .environment(WalletManager(useMock: true))
-    .frame(width: 600, height: 700)
-}

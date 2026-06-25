@@ -59,11 +59,3 @@ struct WalletImportedView: View {
         .background(Color.Arke.gold3)
     }
 }
-
-#Preview {
-    WalletImportedView(
-        onContinue: {},
-        onBackupReminder: {}
-    )
-    .frame(width: 600, height: 700)
-}

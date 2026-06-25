@@ -54,10 +54,3 @@ struct OffboardingModalSuccessView: View {
         .padding()
     }
 }
-
-#Preview {
-    OffboardingModalSuccessView {
-        print("Continue tapped")
-    }
-    .frame(width: 400, height: 400)
-}

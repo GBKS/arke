@@ -83,19 +83,3 @@ extension FilterChipView {
         )
     }
 }
-
-#Preview("Tag Filter") {
-    let sampleTag = PersistentTag(name: "Coffee", colorHex: "#FF6B35", emoji: "☕️")
-    
-    FilterChipView(tag: sampleTag) {
-        print("Clear tapped")
-    }
-}
-
-#Preview("Contact Filter") {
-    let sampleContact = PersistentContact(cachedName: "Alice Smith")
-    
-    FilterChipView(contact: sampleContact) {
-        print("Clear tapped")
-    }
-}

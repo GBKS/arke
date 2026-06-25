@@ -292,11 +292,3 @@ struct WalletView: View {
         }
     }
 }
-
-
-
-#Preview {
-    WalletView(onWalletDeleted: nil)
-        .environment(WalletManager(useMock: true))
-        .modelContainer(for: ArkBalanceModel.self, inMemory: true)
-}

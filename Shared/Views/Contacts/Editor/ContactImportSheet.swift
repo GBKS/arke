@@ -390,31 +390,3 @@ private enum PermissionState: Equatable {
     case denied
     case limited
 }
-
-// MARK: - Preview
-
-#Preview("With Permission") {
-    ContactImportSheet(
-        onSelect: { data in
-            print("Selected: \(data.fullName)")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-}
-
-#Preview("Permission Denied") {
-    struct PreviewWrapper: View {
-        @State private var permissionState: PermissionState = .denied
-        
-        var body: some View {
-            ContactImportSheet(
-                onSelect: { _ in },
-                onCancel: { }
-            )
-        }
-    }
-    
-    return PreviewWrapper()
-}

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AmountAndNoteInputView: View {
+public struct AmountAndNoteInputView: View {
     @Binding var amount: String
     @Binding var note: String
     @Binding var showingAmountAndNote: Bool
@@ -27,8 +27,52 @@ struct AmountAndNoteInputView: View {
         case amount
         case note
     }
-    
-    var body: some View {
+
+    #if os(iOS)
+    public init(
+        amount: Binding<String>,
+        note: Binding<String>,
+        showingAmountAndNote: Binding<Bool>,
+        amountPlaceholder: String = "Add amount (optional)",
+        notePlaceholder: String = String(localized: "placeholder_note_optional"),
+        unitLabel: String? = nil,
+        isDisabled: Bool = false,
+        allowDecimal: Bool = true,
+        keyboardType: UIKeyboardType = .decimalPad
+    ) {
+        self._amount = amount
+        self._note = note
+        self._showingAmountAndNote = showingAmountAndNote
+        self.amountPlaceholder = amountPlaceholder
+        self.notePlaceholder = notePlaceholder
+        self.unitLabel = unitLabel
+        self.isDisabled = isDisabled
+        self.allowDecimal = allowDecimal
+        self.keyboardType = keyboardType
+    }
+    #else
+    public init(
+        amount: Binding<String>,
+        note: Binding<String>,
+        showingAmountAndNote: Binding<Bool>,
+        amountPlaceholder: String = "Add amount (optional)",
+        notePlaceholder: String = String(localized: "placeholder_note_optional"),
+        unitLabel: String? = nil,
+        isDisabled: Bool = false,
+        allowDecimal: Bool = true
+    ) {
+        self._amount = amount
+        self._note = note
+        self._showingAmountAndNote = showingAmountAndNote
+        self.amountPlaceholder = amountPlaceholder
+        self.notePlaceholder = notePlaceholder
+        self.unitLabel = unitLabel
+        self.isDisabled = isDisabled
+        self.allowDecimal = allowDecimal
+    }
+    #endif
+
+    public var body: some View {
         VStack(spacing: 12) {
             amountAndNoteInputView
             /*

@@ -170,9 +170,6 @@
         }
       }
     },
-    "%lld/30" : {
-
-    },
     "%lld/50" : {
 
     },
@@ -991,6 +988,7 @@
 
     },
     "action_change_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1011,6 +1009,7 @@
       }
     },
     "action_change_emoji" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1062,6 +1061,7 @@
       }
     },
     "action_choose_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1072,6 +1072,7 @@
       }
     },
     "action_choose_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1082,6 +1083,7 @@
       }
     },
     "action_choose_custom_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1092,6 +1094,7 @@
       }
     },
     "action_choose_emoji" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1427,6 +1430,7 @@
       }
     },
     "action_tap_copy" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2749,6 +2753,7 @@
       }
     },
     "button_choose_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2759,6 +2764,7 @@
       }
     },
     "button_choose_emoji" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3568,6 +3574,7 @@
       }
     },
     "button_use_custom_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4130,6 +4137,7 @@
       }
     },
     "data_network_support_note" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4635,6 +4643,7 @@
       }
     },
     "error_tag_already_exists" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4883,18 +4892,6 @@
           }
         }
       }
-    },
-    "Fee: " : {
-
-    },
-    "Fee: —" : {
-
-    },
-    "Fee: ~%@" : {
-
-    },
-    "Fee: Not available" : {
-
     },
     "Fees are charged by the Ark server and are separate from Bitcoin network fees." : {
 
@@ -5301,6 +5298,7 @@
       }
     },
     "label_avatar_optional" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5351,6 +5349,7 @@
       }
     },
     "label_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5391,6 +5390,7 @@
       }
     },
     "label_emoji_optional" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5496,6 +5496,7 @@
       }
     },
     "label_label_colon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5526,6 +5527,7 @@
       }
     },
     "label_message_colon" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5738,9 +5740,6 @@
 
     },
     "Lightning" : {
-
-    },
-    "Linked to Contacts" : {
 
     },
     "linked_devices_multiple_devices_description" : {
@@ -6037,9 +6036,6 @@
           }
         }
       }
-    },
-    "Minimum" : {
-
     },
     "nav_title_activity" : {
       "localizations" : {
@@ -6507,6 +6503,7 @@
       }
     },
     "placeholder_amount_required" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6607,6 +6604,7 @@
       }
     },
     "placeholder_tag_name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6772,6 +6770,7 @@
 
     },
     "receive_add_amount_note" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6782,6 +6781,7 @@
       }
     },
     "receive_address_formats" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7042,6 +7042,7 @@
       }
     },
     "send_amount_fixed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7052,6 +7053,7 @@
       }
     },
     "send_amount_to_pay" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7789,6 +7791,7 @@
       }
     },
     "status_invoice_generated" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8280,6 +8283,7 @@
       }
     },
     "symbol_bitcoin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

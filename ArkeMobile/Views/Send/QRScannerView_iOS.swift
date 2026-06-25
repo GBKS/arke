@@ -303,11 +303,3 @@ extension CameraManager: AVCaptureMetadataOutputObjectsDelegate {
         }
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    QRScannerView_iOS(onCodeScanned: { code in
-        log(.info, "Scanned: \(code)")
-    }, resetTrigger: 0)
-}

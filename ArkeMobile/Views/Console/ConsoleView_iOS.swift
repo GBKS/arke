@@ -223,10 +223,3 @@ private struct ExecutingIndicator: View {
         .padding(.horizontal)
     }
 }
-#Preview {
-    NavigationStack {
-        ConsoleView_iOS()
-            .environment(WalletManager(useMock: true))
-    }
-}
-

@@ -106,12 +106,3 @@ struct CreateWalletView: View {
         .background(Color.Arke.gold3)
     }
 }
-
-#Preview {
-    CreateWalletView(
-        onBack: {},
-        onWalletCreated: {},
-        walletManager: WalletManager(useMock: true)
-    )
-    .frame(width: 600, height: 700)
-}

@@ -196,21 +196,3 @@ private struct FaucetInstructionRow: View {
         }
     }
 }
-
-// MARK: - Preview
-#Preview {
-    @Previewable @State var walletManager = WalletManager(useMock: true)
-    
-    FaucetModalView_iOS()
-        .environment(walletManager)
-        .task {
-            await walletManager.initialize()
-        }
-}
-
-#Preview("No Address") {
-    @Previewable @State var walletManager = WalletManager(useMock: false)
-    
-    FaucetModalView_iOS()
-        .environment(walletManager)
-}

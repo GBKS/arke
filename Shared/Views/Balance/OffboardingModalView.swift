@@ -96,31 +96,3 @@ struct OffboardingModalView: View {
         }
     }
 }
-
-
-#Preview("Form") {
-    OffboardingModalView(manager: WalletManager(useMock: true))
-}
-
-#Preview("Offboarding") {
-    OffboardingModalOffboardingView()
-}
-
-#Preview("Success") {
-    OffboardingModalSuccessView {
-        print("Continue tapped")
-    }
-}
-
-#Preview("Error") {
-    LargeErrorView(
-        title: "error_transfer_failed",
-        errorMessage: "Network connection failed. Please check your internet connection and try again.",
-        image: nil,
-        systemImage: "xmark.circle.fill",
-        systemImageColor: .Arke.red,
-        onRetry: {
-            print("Retry tapped")
-        }
-    )
-}

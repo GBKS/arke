@@ -96,11 +96,3 @@ struct BalanceTypePicker: View {
         .buttonStyle(.plain)
     }
 }
-
-#Preview {
-    @Previewable @State var selectedBalance: ReceiveBalanceType = .payments
-    
-    BalanceTypePicker(selectedBalance: $selectedBalance)
-        .padding()
-        .frame(width: 400, height: 200)
-}

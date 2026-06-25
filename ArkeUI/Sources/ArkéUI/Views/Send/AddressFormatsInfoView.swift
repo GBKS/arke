@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-struct AddressFormatsInfoView: View {
+public struct AddressFormatsInfoView: View {
     @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
+
+    public init() {}
+
+    public var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {

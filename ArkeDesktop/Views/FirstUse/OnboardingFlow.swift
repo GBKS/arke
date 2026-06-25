@@ -230,14 +230,3 @@ struct OnboardingFlow: View {
         .clipped() // Prevents views from showing outside bounds during transition
     }
 }
-
-#Preview {
-    OnboardingFlow(
-        walletState: .noWallet,
-        onWalletReady: {
-            // Preview completion action
-        }
-    )
-    .environment(WalletManager(useMock: true))
-    .frame(width: 600, height: 700)
-}

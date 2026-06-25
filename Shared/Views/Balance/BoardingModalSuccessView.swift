@@ -54,10 +54,3 @@ struct BoardingModalSuccessView: View {
         .padding()
     }
 }
-
-#Preview {
-    BoardingModalSuccessView {
-        print("Done tapped")
-    }
-    .frame(width: 400, height: 400)
-}

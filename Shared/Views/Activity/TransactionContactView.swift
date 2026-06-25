@@ -190,21 +190,3 @@ struct TransactionContactView: View {
         }
     }
 }
-
-#Preview {
-    TransactionContactView(
-        transaction: TransactionModel(
-            txid: "sample-123",
-            movementId: nil,
-            recipientIndex: nil,
-            type: .received,
-            amount: 50000,
-            date: Date(),
-            status: .confirmed,
-            address: nil
-        ),
-        onNavigateToContact: nil
-    )
-    .environment(WalletManager(useMock: true))
-    .frame(width: 400, height: 200)
-}

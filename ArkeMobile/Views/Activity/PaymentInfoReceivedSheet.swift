@@ -409,18 +409,3 @@ extension BIP21URIHelper {
         return ParsedBIP21URI(address: address, arkAddress: arkAddress, label: label, amount: amount, message: message)
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    PaymentInfoReceivedSheet(
-        receivedInfo: ReceivedPaymentInfo(
-            bip21URI: "bitcoin:tb1prnskpsl46vmp6twzw34gfg79w2el8fs7j9s7fm3fqkyf7casglaqlmatu6?ark=tark1pem36wcfzqqpuah6pxtgr7qwcrywd8xtcjxx6djtaht7907juc8pvs0jqqdx0rc3zqyp204tn8cf6cxg7m6k73vjj6d85350r8wfhdlmza8qce5ye4hd9kxg4zwtph&label=Christoph",
-            avatarData: nil
-        ),
-        onPay: { _ in },
-        onNavigateToContact: { _ in },
-        onDismiss: { }
-    )
-    .environment(WalletManager(useMock: true))
-}

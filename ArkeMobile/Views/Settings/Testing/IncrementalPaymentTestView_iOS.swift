@@ -200,10 +200,3 @@ struct IncrementalPaymentTestView_iOS: View {
         print("⏹️ Test stopped by user")
     }
 }
-
-#Preview {
-    NavigationStack {
-        IncrementalPaymentTestView_iOS()
-            .environment(WalletManager(useMock: true))
-    }
-}

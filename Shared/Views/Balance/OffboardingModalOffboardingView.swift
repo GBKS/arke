@@ -39,8 +39,3 @@ struct OffboardingModalOffboardingView: View {
         .padding()
     }
 }
-
-#Preview {
-    OffboardingModalOffboardingView()
-        .frame(width: 400, height: 400)
-}

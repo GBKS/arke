@@ -50,8 +50,3 @@ struct BitcoinFormatSettingView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
-#Preview {
-    BitcoinFormatSettingView()
-        .padding()
-}

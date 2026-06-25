@@ -47,36 +47,3 @@ struct ContactPreviewCard: View {
         }
     }
 }
-
-#Preview("With Avatar") {
-    ContactPreviewCard(
-        contact: ContactModel(
-            cachedName: "John Doe",
-            notes: "Coffee shop owner downtown. Always has great recommendations for new blends."
-        ),
-        isEmpty: false
-    )
-    .padding()
-}
-
-#Preview("Without Avatar") {
-    ContactPreviewCard(
-        contact: ContactModel(
-            cachedName: "Jane Smith",
-            notes: nil
-        ),
-        isEmpty: false
-    )
-    .padding()
-}
-
-#Preview("Empty") {
-    ContactPreviewCard(
-        contact: ContactModel(
-            cachedName: "Sample Contact",
-            notes: nil
-        ),
-        isEmpty: true
-    )
-    .padding()
-}

@@ -6,14 +6,19 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct PaymentRequestMetadataView: View {
+public struct PaymentRequestMetadataView: View {
     let label: String?
     let message: String?
     let amount: Int?
-    
-    var body: some View {
+
+    public init(label: String?, message: String?, amount: Int?) {
+        self.label = label
+        self.message = message
+        self.amount = amount
+    }
+
+    public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let label = label, !label.isEmpty {
                 HStack(alignment: .top, spacing: 10) {

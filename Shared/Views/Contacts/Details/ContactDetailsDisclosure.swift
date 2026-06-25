@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 struct ContactDetailsDisclosure: View {
     let contact: ContactModel
@@ -55,44 +56,4 @@ struct ContactDetailsDisclosure: View {
                 .fontWeight(.semibold)
         }
     }
-}
-
-#Preview("Standard Contact") {
-    ContactDetailsDisclosure(
-        contact: ContactModel(
-            cachedName: "John Doe",
-            notes: "My Bitcoin contact"
-        ),
-        onRefreshFromNativeContact: {
-            print("Refresh from native contact")
-        },
-        onUnlinkNativeContact: {
-            print("Unlink native contact")
-        },
-        onLinkNativeContact: {
-            print("Link native contact")
-        }
-    )
-    .padding()
-}
-
-#Preview("Linked to Native Contact") {
-    ContactDetailsDisclosure(
-        contact: ContactModel(
-            cachedName: "Jane Smith",
-            notes: "Linked to Contacts.app",
-            nativeContactID: "12345",
-            lastSyncedFromNative: Date().addingTimeInterval(-3600)
-        ),
-        onRefreshFromNativeContact: {
-            print("Refresh from native contact")
-        },
-        onUnlinkNativeContact: {
-            print("Unlink native contact")
-        },
-        onLinkNativeContact: {
-            print("Link native contact")
-        }
-    )
-    .padding()
 }

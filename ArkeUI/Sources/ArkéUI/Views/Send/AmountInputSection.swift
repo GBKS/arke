@@ -8,7 +8,7 @@
 import SwiftUI
 import ArkeUI
 
-struct AmountInputSection: View {
+public struct AmountInputSection: View {
     @Binding var amount: String
     let maxSpendableAmount: Int
     let availableBalanceText: String
@@ -21,7 +21,33 @@ struct AmountInputSection: View {
     let onCalculateMaxSendable: (() async -> Int?)?
     
     @FocusState.Binding var isAmountFieldFocused: Bool
-    
+
+    public init(
+        amount: Binding<String>,
+        maxSpendableAmount: Int,
+        availableBalanceText: String,
+        availableBalanceName: String,
+        availableBalanceAmount: String,
+        feeText: String,
+        isAmountLocked: Bool,
+        lockedAmountReason: String?,
+        minimumSendAmount: Int,
+        onCalculateMaxSendable: (() async -> Int?)?,
+        isAmountFieldFocused: FocusState<Bool>.Binding
+    ) {
+        self._amount = amount
+        self.maxSpendableAmount = maxSpendableAmount
+        self.availableBalanceText = availableBalanceText
+        self.availableBalanceName = availableBalanceName
+        self.availableBalanceAmount = availableBalanceAmount
+        self.feeText = feeText
+        self.isAmountLocked = isAmountLocked
+        self.lockedAmountReason = lockedAmountReason
+        self.minimumSendAmount = minimumSendAmount
+        self.onCalculateMaxSendable = onCalculateMaxSendable
+        self._isAmountFieldFocused = isAmountFieldFocused
+    }
+
     private var exceedsBalance: Bool {
         guard let enteredAmount = Int(amount) else { return false }
         return enteredAmount > maxSpendableAmount
@@ -53,7 +79,7 @@ struct AmountInputSection: View {
         }
     }
     
-    var body: some View {
+    public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("placeholder_enter_amount")

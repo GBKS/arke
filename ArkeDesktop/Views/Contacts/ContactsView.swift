@@ -183,13 +183,3 @@ struct ContactsView: View {
         .frame(maxHeight: .infinity)
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    ContactsView(selectedContact: .constant(nil))
-        .environment(WalletManager(useMock: true))
-        .frame(width: 800, height: 600)
-}
-
-

@@ -389,10 +389,3 @@ struct StatusBadge_iOS: View {
             .cornerRadius(4)
     }
 }
-
-#Preview {
-    NavigationStack {
-        LinkedDevicesView_iOS(onNavigateToActivity: nil)
-            .environment(\.deviceRegistrationService, ServiceContainer.shared.deviceRegistrationService)
-    }
-}

@@ -54,9 +54,3 @@ struct RefreshModalSuccessView: View {
         .padding()
     }
 }
-
-#Preview {
-    RefreshModalSuccessView {
-        print("Done tapped")
-    }
-}

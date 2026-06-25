@@ -321,7 +321,3 @@ struct AvatarPickerSheet: View {
         #endif
     }
 }
-
-#Preview {
-    AvatarPickerSheet(selectedAvatarData: .constant(nil))
-}

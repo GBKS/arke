@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import ArkeUI
+import SwiftData
 
 struct ReceiveView: View {
     @Environment(WalletManager.self) private var walletManager
@@ -219,22 +220,4 @@ struct ReceiveView: View {
             .frame(minWidth: 300, minHeight: 300)
         }
     }
-}
-
-#Preview("Loading State") {
-    ReceiveView()
-        .environment(WalletManager(useMock: true))
-        .frame(width: 600, height: 600)
-}
-
-#Preview("Loaded State") {
-    @Previewable @State var mockManager = WalletManager(useMock: true)
-    
-    ReceiveView()
-        .environment(mockManager)
-        .frame(width: 600, height: 600)
-        .task {
-            // Initialize the mock manager to load mock addresses
-            await mockManager.initialize()
-        }
 }

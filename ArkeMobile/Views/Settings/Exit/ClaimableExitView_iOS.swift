@@ -72,17 +72,3 @@ struct ClaimableExitView_iOS: View {
         }
     }
 }
-
-#Preview {
-    ClaimableExitView_iOS(
-        exit: ExitVtxo(
-            vtxoId: "abc123def456789xyz0123456789",
-            amountSats: 100000,
-            state: "Claimable",
-            isClaimable: true
-        ),
-        isProcessing: false,
-        onClaim: {}
-    )
-    .padding()
-}

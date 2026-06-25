@@ -298,9 +298,3 @@ struct StatusBadge: View {
             .cornerRadius(4)
     }
 }
-
-#Preview {
-    LinkedDevicesView()
-        .environment(\.deviceRegistrationService, ServiceContainer.shared.deviceRegistrationService)
-        .frame(width: 700, height: 500)
-}

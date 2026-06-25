@@ -4,6 +4,9 @@
     "." : {
 
     },
+    "(%@)" : {
+
+    },
     "%@ – %@" : {
       "localizations" : {
         "en" : {
@@ -13,6 +16,9 @@
           }
         }
       }
+    },
+    "%lld/30" : {
+
     },
     "A forced move is meant for emergencies." : {
 
@@ -26,6 +32,18 @@
           }
         }
       }
+    },
+    "action_change_emoji" : {
+
+    },
+    "action_choose_color" : {
+
+    },
+    "action_choose_custom_color" : {
+
+    },
+    "action_choose_emoji" : {
+
     },
     "action_copy_address" : {
 
@@ -41,6 +59,9 @@
       }
     },
     "action_start_forced_move" : {
+
+    },
+    "action_tap_copy" : {
 
     },
     "Add a note..." : {
@@ -95,6 +116,15 @@
           }
         }
       }
+    },
+    "button_choose_color" : {
+
+    },
+    "button_choose_emoji" : {
+
+    },
+    "button_clear" : {
+
     },
     "button_close" : {
       "extractionState" : "manual",
@@ -160,6 +190,9 @@
         }
       }
     },
+    "button_use_custom_color" : {
+
+    },
     "Cannot use: %@" : {
       "localizations" : {
         "en" : {
@@ -171,6 +204,9 @@
       }
     },
     "Connection Status" : {
+
+    },
+    "data_network_support_note" : {
 
     },
     "description_bitcoin_formatter_demo" : {
@@ -218,7 +254,25 @@
         }
       }
     },
+    "error_tag_already_exists" : {
+
+    },
     "Estimated fee" : {
+
+    },
+    "Fee" : {
+
+    },
+    "Fee: " : {
+
+    },
+    "Fee: —" : {
+
+    },
+    "Fee: ~%@" : {
+
+    },
+    "Fee: Not available" : {
 
     },
     "format_accounting_style" : {
@@ -330,6 +384,9 @@
         }
       }
     },
+    "label_color" : {
+
+    },
     "label_current_format" : {
       "localizations" : {
         "en" : {
@@ -339,6 +396,9 @@
           }
         }
       }
+    },
+    "label_emoji_optional" : {
+
     },
     "label_fee" : {
       "localizations" : {
@@ -379,6 +439,15 @@
           }
         }
       }
+    },
+    "label_label_colon" : {
+
+    },
+    "label_message_colon" : {
+
+    },
+    "label_name" : {
+
     },
     "label_next_round" : {
       "localizations" : {
@@ -460,6 +529,9 @@
         }
       }
     },
+    "Linked to Contacts" : {
+
+    },
     "message_cannot_cancel" : {
 
     },
@@ -477,6 +549,9 @@
       }
     },
     "message_takes_24_hours" : {
+
+    },
+    "Minimum" : {
 
     },
     "nav_title_bitcoin_formatter_examples" : {
@@ -500,7 +575,31 @@
         }
       }
     },
+    "placeholder_amount_required" : {
+
+    },
+    "placeholder_enter_amount" : {
+
+    },
+    "placeholder_note_optional" : {
+
+    },
+    "placeholder_tag_name" : {
+
+    },
     "Read-Only Mode" : {
+
+    },
+    "receive_add_amount_note" : {
+
+    },
+    "receive_address_formats" : {
+
+    },
+    "send_amount_fixed" : {
+
+    },
+    "send_amount_to_pay" : {
 
     },
     "status_available" : {
@@ -533,6 +632,9 @@
         }
       }
     },
+    "status_copied_exclaim" : {
+
+    },
     "status_expired" : {
       "localizations" : {
         "en" : {
@@ -552,6 +654,9 @@
           }
         }
       }
+    },
+    "status_invoice_generated" : {
+
     },
     "status_last_synced" : {
       "extractionState" : "extracted_with_value",
@@ -613,6 +718,9 @@
           }
         }
       }
+    },
+    "symbol_bitcoin" : {
+
     },
     "symbol_ellipsis" : {
       "extractionState" : "manual",

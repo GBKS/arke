@@ -475,10 +475,6 @@ struct MainView_iOS: View {
     }
 }
 
-#Preview {
-    MainView_iOS()
-}
-
 struct LoadingView_iOS: View {
     private let randomWallpaper = "wallpaper-\(Int.random(in: 1...8))"
     @State private var shouldShow: Bool = false

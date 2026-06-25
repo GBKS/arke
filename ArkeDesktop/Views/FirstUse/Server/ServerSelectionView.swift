@@ -150,32 +150,3 @@ struct ServerSelectionView: View {
         )
     }
 }
-
-// MARK: - Preview
-
-#Preview("Default") {
-    ServerSelectionView(
-        onBack: { _ in },
-        onServerSelected: {},
-        usagePattern: nil
-    )
-    .frame(width: 600, height: 700)
-}
-
-#Preview("With Custom Pattern") {
-    let customPattern = ServerUsageProfile(
-        averageBalance: 750_000,
-        monthlyVolume: 300_000,
-        onArkPayments: 12,
-        lightningPayments: 8,
-        refreshesPerMonth: 3,
-        vtxoCount: 4
-    )
-    
-    ServerSelectionView(
-        onBack: { _ in },
-        onServerSelected: {},
-        usagePattern: customPattern
-    )
-    .frame(width: 600, height: 700)
-}

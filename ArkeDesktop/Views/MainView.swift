@@ -298,7 +298,3 @@ struct MainView: View {
         print("🔍 [MainView] Wallet check complete at \(Date())")
     }
 }
-
-#Preview {
-    MainView()
-}

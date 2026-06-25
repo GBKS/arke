@@ -121,38 +121,3 @@ struct AddressListItem: View {
         }
     }
 }
-
-#Preview {
-    VStack(spacing: 12) {
-        AddressListItem(
-            address: ContactAddressModel(
-                address: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
-                normalizedAddress: "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
-                format: .bitcoin,
-                label: "My Bitcoin Address",
-                isPrimary: true,
-                contactId: UUID()
-            ),
-            isEditable: true,
-            onEdit: {},
-            onSetPrimary: {},
-            onSendTo: {}
-        )
-        
-        AddressListItem(
-            address: ContactAddressModel(
-                address: "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-                normalizedAddress: "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-                format: .bitcoin,
-                label: nil,
-                isPrimary: false,
-                contactId: UUID()
-            ),
-            isEditable: true,
-            onEdit: {},
-            onSetPrimary: {},
-            onSendTo: {}
-        )
-    }
-    .padding()
-}

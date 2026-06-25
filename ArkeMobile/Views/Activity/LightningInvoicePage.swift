@@ -288,18 +288,3 @@ struct LightningInvoicePage: View {
         impact.impactOccurred()
     }
 }
-
-// MARK: - Preview
-
-#Preview {
-    ZStack {
-        Image("tuscan-villa-portrait")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .ignoresSafeArea()
-        
-        LightningInvoicePage(screenWidth: 400, walletManager: nil, onClose: {})
-            .rotationEffect(Angle.degrees(180))
-    }
-    .modelContainer(for: [UserProfile.self], inMemory: true)
-}

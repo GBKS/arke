@@ -99,13 +99,3 @@ struct FirstUseView: View {
         .background(Color.Arke.gold3)
     }
 }
-
-#Preview {
-    FirstUseView(
-        walletState: .noWallet,
-        onCreateWallet: {},
-        onImportWallet: {},
-        onDeleteWallet: {}
-    )
-    .frame(width: 600, height: 700)
-}

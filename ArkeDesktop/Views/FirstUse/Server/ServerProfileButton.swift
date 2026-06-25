@@ -28,21 +28,3 @@ struct ServerProfileButton: View {
         .buttonStyle(.plain)
     }
 }
-
-#Preview {
-    VStack(spacing: 12) {
-        ServerProfileButton(title: "Default", isSelected: true) {
-            print("Default tapped")
-        }
-        
-        ServerProfileButton(title: "High Priority", isSelected: false) {
-            print("High Priority tapped")
-        }
-        
-        ServerProfileButton(title: "Economy", isSelected: false) {
-            print("Economy tapped")
-        }
-    }
-    .padding()
-    .background(Color.black)
-}

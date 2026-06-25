@@ -146,16 +146,3 @@ struct BoardingModalFormView: View {
         }
     }
 }
-
-#Preview {
-    BoardingModalFormView(
-        minimumAmount: 50000,
-        onConfirm: { amount in
-            print("Boarding \(amount) sats")
-        },
-        onCancel: {
-            print("Cancelled")
-        }
-    )
-    .environment(WalletManager(useMock: true))
-}

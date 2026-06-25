@@ -83,23 +83,3 @@ struct ValidationFeedbackView: View {
         .animation(.easeInOut(duration: 0.75), value: state)
     }
 }
-
-#Preview("Idle") {
-    ValidationFeedbackView(state: .idle)
-        .padding()
-}
-
-#Preview("Typing") {
-    ValidationFeedbackView(state: .typing)
-        .padding()
-}
-
-#Preview("Valid") {
-    ValidationFeedbackView(state: .valid)
-        .padding()
-}
-
-#Preview("Invalid") {
-    ValidationFeedbackView(state: .invalid("Invalid address format"))
-        .padding()
-}

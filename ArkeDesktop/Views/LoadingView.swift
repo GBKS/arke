@@ -21,7 +21,3 @@ struct LoadingView: View {
         .background(.regularMaterial)
     }
 }
-
-#Preview {
-    MainView()
-}

@@ -356,9 +356,3 @@ struct ShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 #endif
-
-#Preview {
-    RecoveryPhraseSettingView()
-        .environment(WalletManager(useMock: true))
-        .padding()
-}

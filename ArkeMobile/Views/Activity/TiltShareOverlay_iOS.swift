@@ -403,46 +403,4 @@ struct TiltShareOverlay_iOS: View {
             }
         }
     }
-    
-
-}
-
-// MARK: - Preview
-
-#Preview("Visible") {
-    @Previewable @State var isLocked = false
-    
-    ZStack {
-        Color.gray.opacity(0.3)
-            .ignoresSafeArea()
-        
-        TiltShareOverlay_iOS(
-            arkAddress: "ark1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-            onchainAddress: "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-            isVisible: true,
-            isLocked: $isLocked,
-            onNavigateToSend: { _ in },
-            onNavigateToContactEditor: { _, _ in },
-            onPaymentInfoReceived: { _ in }
-        )
-    }
-}
-
-#Preview("Hidden") {
-    @Previewable @State var isLocked = false
-    
-    ZStack {
-        Color.gray.opacity(0.3)
-            .ignoresSafeArea()
-        
-        TiltShareOverlay_iOS(
-            arkAddress: "ark1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-            onchainAddress: "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx",
-            isVisible: false,
-            isLocked: $isLocked,
-            onNavigateToSend: { _ in },
-            onNavigateToContactEditor: { _, _ in },
-            onPaymentInfoReceived: { _ in }
-        )
-    }
 }

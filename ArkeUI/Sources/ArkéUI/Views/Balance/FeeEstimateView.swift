@@ -6,13 +6,12 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 /// A reusable view that displays fee estimates with debounced async loading
 /// - Parameter Input: The type of input used to estimate the fee (e.g., UInt64 for amount, [String] for vtxoIds)
-struct FeeEstimateView<Input: Equatable>: View {
+public struct FeeEstimateView<Input: Equatable & Sendable>: View {
     let input: Input?
-    let estimateFee: (Input) async throws -> UInt64
+    let estimateFee: @Sendable (Input) async throws -> UInt64
     
     @State private var estimatedFee: UInt64?
     @State private var isLoading: Bool = false
@@ -20,8 +19,13 @@ struct FeeEstimateView<Input: Equatable>: View {
     @State private var estimateTask: Task<Void, Never>?
     
     private let debounceDelay: TimeInterval = 0.5
-    
-    var body: some View {
+
+    public init(input: Input?, estimateFee: @escaping @Sendable (Input) async throws -> UInt64) {
+        self.input = input
+        self.estimateFee = estimateFee
+    }
+
+    public var body: some View {
         VStack {
             if isLoading {
                 HStack(spacing: 6) {

@@ -149,29 +149,3 @@ extension TransactionModel {
         ]
     }
 }
-
-#Preview("With Transactions") {
-    @Previewable @State var selectedTransaction: TransactionModel? = nil
-    @Previewable @State var walletManager = WalletManager(useMock: true)
-    
-    NavigationView {
-        TransactionList(selectedTransaction: $selectedTransaction, onShowFaucet: {
-            print("Show faucet tapped")
-        })
-            .environment(walletManager)
-    }
-    .modelContainer(for: PersistentTransaction.self, inMemory: true)
-}
-
-#Preview("Empty State") {
-    @Previewable @State var selectedTransaction: TransactionModel? = nil
-    @Previewable @State var walletManager = WalletManager(useMock: true)
-    
-    NavigationView {
-        TransactionList(selectedTransaction: $selectedTransaction, onShowFaucet: {
-            print("Show faucet tapped")
-        })
-            .environment(walletManager)
-    }
-    .modelContainer(for: PersistentTransaction.self, inMemory: true)
-}
