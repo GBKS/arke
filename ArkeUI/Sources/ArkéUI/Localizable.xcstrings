@@ -23,6 +23,36 @@
     "A forced move is meant for emergencies." : {
 
     },
+    "accessibility_amount_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount"
+          }
+        }
+      }
+    },
+    "accessibility_amount_label_with_unit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount in %@"
+          }
+        }
+      }
+    },
+    "accessibility_fee_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee"
+          }
+        }
+      }
+    },
     "accessibility_hint_copy_value" : {
       "localizations" : {
         "en" : {
@@ -60,6 +90,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refreshes your balance now"
+          }
+        }
+      }
+    },
+    "accessibility_note_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
+          }
+        }
+      }
+    },
+    "accessibility_value_fee_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not yet estimated"
+          }
+        }
+      }
+    },
+    "accessibility_value_fee_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not available"
           }
         }
       }
@@ -308,18 +368,6 @@
     "Fee" : {
 
     },
-    "Fee: " : {
-
-    },
-    "Fee: —" : {
-
-    },
-    "Fee: ~%@" : {
-
-    },
-    "Fee: Not available" : {
-
-    },
     "format_accounting_style" : {
       "localizations" : {
         "en" : {
@@ -336,6 +384,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Example: %@"
+          }
+        }
+      }
+    },
+    "format_fee_approximate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approximately %@"
+          }
+        }
+      }
+    },
+    "format_fee_estimate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: ~%@"
           }
         }
       }
@@ -477,6 +545,16 @@
         }
       }
     },
+    "label_fee_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: —"
+          }
+        }
+      }
+    },
     "label_free" : {
       "localizations" : {
         "en" : {
@@ -586,6 +664,16 @@
         }
       }
     },
+    "label_linked_to_contacts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linked to Contacts"
+          }
+        }
+      }
+    },
     "Linked to Contacts" : {
 
     },
@@ -628,6 +716,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sincere regrets"
+          }
+        }
+      }
+    },
+    "placeholder_amount_optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add amount (optional)"
           }
         }
       }
@@ -706,6 +804,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Expired"
+          }
+        }
+      }
+    },
+    "status_fee_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: Not available"
           }
         }
       }

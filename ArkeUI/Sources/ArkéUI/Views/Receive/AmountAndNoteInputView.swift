@@ -12,7 +12,7 @@ public struct AmountAndNoteInputView: View {
     @Binding var note: String
     @Binding var showingAmountAndNote: Bool
     
-    var amountPlaceholder: String = "Add amount (optional)"
+    var amountPlaceholder: String = String(localized: "placeholder_amount_optional")
     var notePlaceholder: String = String(localized: "placeholder_note_optional")
     var unitLabel: String? = nil
     var isDisabled: Bool = false
@@ -28,12 +28,21 @@ public struct AmountAndNoteInputView: View {
         case note
     }
 
+    /// VoiceOver label for the amount field, including the unit when present.
+    private var amountAccessibilityLabel: String {
+        if let unit = unitLabel {
+            return String(localized: "accessibility_amount_label_with_unit \(unit)")
+        } else {
+            return String(localized: "accessibility_amount_label")
+        }
+    }
+
     #if os(iOS)
     public init(
         amount: Binding<String>,
         note: Binding<String>,
         showingAmountAndNote: Binding<Bool>,
-        amountPlaceholder: String = "Add amount (optional)",
+        amountPlaceholder: String = String(localized: "placeholder_amount_optional"),
         notePlaceholder: String = String(localized: "placeholder_note_optional"),
         unitLabel: String? = nil,
         isDisabled: Bool = false,
@@ -55,7 +64,7 @@ public struct AmountAndNoteInputView: View {
         amount: Binding<String>,
         note: Binding<String>,
         showingAmountAndNote: Binding<Bool>,
-        amountPlaceholder: String = "Add amount (optional)",
+        amountPlaceholder: String = String(localized: "placeholder_amount_optional"),
         notePlaceholder: String = String(localized: "placeholder_note_optional"),
         unitLabel: String? = nil,
         isDisabled: Bool = false,
@@ -136,6 +145,7 @@ public struct AmountAndNoteInputView: View {
                 .focused($focusedField, equals: .amount)
                 .disabled(isDisabled)
                 .opacity(isDisabled ? 0.6 : 1.0)
+                .accessibilityLabel(amountAccessibilityLabel)
                 #if os(iOS)
                 .keyboardType(keyboardType)
                 #endif
@@ -164,6 +174,7 @@ public struct AmountAndNoteInputView: View {
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(isDisabled ? .secondary : .primary)
                     .padding(.trailing, 25)
+                    .accessibilityHidden(true)
             } else {
                 Spacer()
             }
@@ -181,6 +192,7 @@ public struct AmountAndNoteInputView: View {
                 .focused($focusedField, equals: .note)
                 .disabled(isDisabled)
                 .opacity(isDisabled ? 0.6 : 1.0)
+                .accessibilityLabel(Text("accessibility_note_label"))
         }
     }
 }

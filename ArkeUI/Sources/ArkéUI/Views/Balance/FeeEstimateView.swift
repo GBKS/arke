@@ -29,26 +29,31 @@ public struct FeeEstimateView<Input: Equatable & Sendable>: View {
         VStack {
             if isLoading {
                 HStack(spacing: 6) {
-                    Text("Fee: ")
+                    Text(String(localized: "label_fee", bundle: .module))
                     ProgressView()
                         .controlSize(.small)
                 }
                 .font(.body)
                 .foregroundColor(.secondary)
             } else if hasError {
-                Text("Fee: Not available")
+                Text(String(localized: "status_fee_unavailable", bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             } else if let fee = estimatedFee {
-                Text("Fee: ~\(BitcoinFormatter.shared.formatAmount(Int(fee)))")
+                Text(String(localized: "format_fee_estimate",
+                            defaultValue: "Fee: ~\(BitcoinFormatter.shared.formatAmount(Int(fee)))",
+                            bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             } else {
-                Text("Fee: —")
+                Text(String(localized: "label_fee_pending", bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(localized: "accessibility_fee_label", bundle: .module))
+        .accessibilityValue(accessibilityValueText)
         .onChange(of: input) { oldValue, newValue in
             handleInputChange(newValue)
         }
@@ -60,6 +65,21 @@ public struct FeeEstimateView<Input: Equatable & Sendable>: View {
         }
     }
     
+    /// Spoken value announced by VoiceOver, reflecting the current fee state.
+    private var accessibilityValueText: String {
+        if isLoading {
+            return String(localized: "status_loading", bundle: .module)
+        } else if hasError {
+            return String(localized: "accessibility_value_fee_unavailable", bundle: .module)
+        } else if let fee = estimatedFee {
+            return String(localized: "format_fee_approximate",
+                          defaultValue: "approximately \(BitcoinFormatter.shared.formatAmount(Int(fee)))",
+                          bundle: .module)
+        } else {
+            return String(localized: "accessibility_value_fee_pending", bundle: .module)
+        }
+    }
+
     private func handleInputChange(_ input: Input?) {
         // Cancel any existing task
         estimateTask?.cancel()

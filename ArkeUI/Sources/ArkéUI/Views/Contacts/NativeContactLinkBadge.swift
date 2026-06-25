@@ -32,13 +32,15 @@ public struct NativeContactLinkBadge: View {
                 Image(systemName: "link.circle.fill")
                     .font(size.iconFont)
                     .foregroundStyle(Color.Arke.blue)
-                
+
                 if showLabel {
-                    Text("Linked to Contacts")
+                    Text(String(localized: "label_linked_to_contacts", bundle: .module))
                         .font(size.textFont)
                         .foregroundColor(.secondary)
                 }
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(String(localized: "label_linked_to_contacts", bundle: .module))
         }
     }
     

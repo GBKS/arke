@@ -29,6 +29,9 @@ public struct BalanceRowView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(amount > 0 ? .primary : .secondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(BitcoinFormatter.shared.formatAmount(amount))
     }
 }
 
