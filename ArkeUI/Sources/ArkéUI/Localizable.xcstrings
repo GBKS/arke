@@ -17,6 +17,16 @@
     "A forced move is meant for emergencies." : {
 
     },
+    "accessibility_hint_select_destination" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selects this payment destination"
+          }
+        }
+      }
+    },
     "action_copy_address" : {
 
     },
@@ -146,6 +156,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start"
+          }
+        }
+      }
+    },
+    "Cannot use: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot use: %@"
           }
         }
       }
@@ -320,12 +340,42 @@
         }
       }
     },
+    "label_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee"
+          }
+        }
+      }
+    },
     "label_fee_colon" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fee:"
+          }
+        }
+      }
+    },
+    "label_free" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        }
+      }
+    },
+    "label_known_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Known address"
           }
         }
       }
@@ -452,6 +502,16 @@
     },
     "Read-Only Mode" : {
 
+    },
+    "status_available" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available"
+          }
+        }
+      }
     },
     "status_calculating" : {
       "localizations" : {

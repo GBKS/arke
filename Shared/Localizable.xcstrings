@@ -97,16 +97,6 @@
         }
       }
     },
-    "%lld option%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld option%2$@"
-          }
-        }
-      }
-    },
     "%lld other transaction%@ with this address will remain assigned" : {
       "localizations" : {
         "en" : {
@@ -5414,6 +5404,7 @@
       }
     },
     "label_fee" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5445,6 +5436,7 @@
       }
     },
     "label_free" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5496,6 +5488,7 @@
       }
     },
     "label_known_address" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

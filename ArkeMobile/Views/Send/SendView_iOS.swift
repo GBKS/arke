@@ -16,6 +16,7 @@ import SwiftUI
 import ArkeUI
 import CoreNFC
 import os
+import SwiftData
 
 fileprivate let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "SendView_iOS")
 

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents an onchain Bitcoin transaction with full details
-struct OnchainTransactionModel: Identifiable, Codable, Hashable {
+nonisolated struct OnchainTransactionModel: Identifiable, Codable, Hashable {
     let txid: String
     let received: UInt64
     let sent: UInt64
@@ -56,7 +56,7 @@ struct OnchainTransactionModel: Identifiable, Codable, Hashable {
 }
 
 /// Confirmation details for a transaction
-struct ConfirmationTime: Codable, Hashable {
+nonisolated struct ConfirmationTime: Codable, Hashable {
     let height: UInt32
     let timestamp: UInt64
     let blockHash: String?

@@ -8,6 +8,7 @@
 import Foundation
 import Bark
 import OSLog
+import ArkeUI
 
 /// Selects the optimal payment destination based on balances, fees, and user preferences
 class PaymentDestinationSelector {
@@ -320,7 +321,8 @@ class PaymentDestinationSelector {
         */
         
         if balance < totalRequired {
-            return (false, "Insufficient balance (\(balance) < \(totalRequired) sats)")
+            let shortfall = totalRequired - balance
+            return (false, "Need \(BitcoinFormatter.shared.formatAmount(shortfall)) more")
         }
         
         // Check large amount preference

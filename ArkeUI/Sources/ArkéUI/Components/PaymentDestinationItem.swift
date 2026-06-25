@@ -6,9 +6,8 @@
 //
 
 import SwiftUI
-import ArkeUI
 
-struct PaymentDestinationItem: View {
+public struct PaymentDestinationItem: View {
     let formatName: String
     let shortAddress: String
     let estimatedFee: Int?
@@ -21,7 +20,7 @@ struct PaymentDestinationItem: View {
     let viabilityReason: String
     let showMatchedContact: Bool
     
-    init(
+    public init(
         formatName: String,
         shortAddress: String,
         estimatedFee: Int?,
@@ -31,7 +30,7 @@ struct PaymentDestinationItem: View {
         contactName: String? = nil,
         contactAvatar: Data? = nil,
         viable: Bool = true,
-        viabilityReason: String = "Available",
+        viabilityReason: String? = nil,
         showMatchedContact: Bool = true
     ) {
         self.formatName = formatName
@@ -43,11 +42,11 @@ struct PaymentDestinationItem: View {
         self.contactName = contactName
         self.contactAvatar = contactAvatar
         self.viable = viable
-        self.viabilityReason = viabilityReason
+        self.viabilityReason = viabilityReason ?? String(localized: "status_available", bundle: .module)
         self.showMatchedContact = showMatchedContact
     }
     
-    var body: some View {
+    public var body: some View {
         Group {
             if isSelectable && viable {
                 Button {
@@ -57,23 +56,28 @@ struct PaymentDestinationItem: View {
                 }
                 .buttonStyle(.plain)
                 .help(viabilityReason)
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(Text("accessibility_hint_select_destination", bundle: .module))
+                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             } else {
                 rowContent
-                    .help(viable ? viabilityReason : "Cannot use: \(viabilityReason)")
+                    .help(viable ? viabilityReason : String(localized: "Cannot use: \(viabilityReason)", bundle: .module))
+                    .accessibilityElement(children: .combine)
             }
         }
     }
     
     private var rowContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if showMatchedContact, let contactName = contactName, let avatarData = contactAvatar {
+            if showMatchedContact, let contactName = contactName {
                 HStack {
                     // Contact avatar
-                    ContactAvatarView(avatarData: avatarData, size: 40)
+                    ContactAvatarView(avatarData: contactAvatar, size: 40, fallbackText: contactName)
                         //.opacity(viable ? 1.0 : 0.5)
+                        .accessibilityHidden(true)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("label_known_address")
+                        Text(String(localized: "label_known_address", bundle: .module))
                             .font(.body)
                             .foregroundColor(.arkeSecondary)
                         Text(contactName)
@@ -94,13 +98,16 @@ struct PaymentDestinationItem: View {
                     
                     Text(shortAddress)
                         .font(.body)
+                        .foregroundColor(isSelectable && viable ? .primary : .secondary)
                     
                     // Show viability reason for non-viable destinations
                     if !viable {
                         HStack(spacing: 5) {
+                            /*
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.body)
                                 .foregroundColor(.orange)
+                            */
                             
                             Text(viabilityReason)
                                 .font(.body)
@@ -114,11 +121,12 @@ struct PaymentDestinationItem: View {
                 
                 if let fee = estimatedFee {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("label_fee")
+                        Text(String(localized: "label_fee", bundle: .module))
                             .foregroundColor(.secondary)
                         
-                        Text(fee > 0 ? "~\(BitcoinFormatter.shared.formatAmount(fee))" : String(localized: "label_free"))
+                        Text(fee > 0 ? "~\(BitcoinFormatter.shared.formatAmount(fee))" : String(localized: "label_free", bundle: .module))
                             .font(.body)
+                            .foregroundColor(isSelectable && viable ? .primary : .secondary)
                     }
                 }
             }
@@ -223,7 +231,8 @@ struct PaymentDestinationItem: View {
         isSelected: isSelected,
         onTap: { isSelected.toggle() },
         contactName: "Alice Smith",
-        contactAvatar: nil  // ContactAvatarView will show its built-in placeholder
+        contactAvatar: nil,  // ContactAvatarView will show its built-in placeholder
+        showMatchedContact: true
     )
     .padding()
 }
@@ -239,7 +248,7 @@ struct PaymentDestinationItem: View {
         isSelected: isSelected,
         onTap: { isSelected.toggle() },
         viable: false,
-        viabilityReason: "Insufficient balance (5,000 < 10,000 sats)"
+        viabilityReason: "Need 300 ₿ more"
     )
     .padding()
 }
@@ -255,7 +264,7 @@ struct PaymentDestinationItem: View {
         isSelected: isSelected,
         onTap: { isSelected.toggle() },
         viable: false,
-        viabilityReason: "Ark server not connected"
+        viabilityReason: "No connection"
     )
     .padding()
 }

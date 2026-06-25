@@ -118,7 +118,7 @@ struct ContactPaymentView: View {
         matchedContactAddress?.format == .bip353
     }
     
-    /// Convert ranked destinations to DisplayDestination for UnifiedDestinationDisplayView
+    /// Convert ranked destinations to DisplayDestination for the destination display
     private var displayDestinations: [DisplayDestination] {
         rankedDestinations.map { ranked in
             DisplayDestination(

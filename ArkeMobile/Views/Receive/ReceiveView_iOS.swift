@@ -8,6 +8,7 @@
 import SwiftUI
 import ArkeUI
 import CoreImage.CIFilterBuiltins
+import SwiftData
 
 struct ReceiveView_iOS: View {
     // MARK: - Initialization Parameters

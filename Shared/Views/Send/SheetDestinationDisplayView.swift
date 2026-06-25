@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 struct SheetDestinationDisplayView: View {
     let primaryDisplayDestination: DisplayDestination?
@@ -139,98 +140,4 @@ private struct DestinationSelectionSheet: View {
             }
         }
     }
-}
-
-#Preview("Single Destination") {
-    @Previewable @State var selectedId: UUID? = UUID()
-    
-    let destination = PaymentDestination(
-        format: .bitcoin,
-        network: .signet,
-        address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-    )
-    
-    let displayDest = DisplayDestination(
-        destination: destination,
-        estimatedFee: 250,
-        balanceSourceName: "Bitcoin",
-        matchedContact: nil,
-        viable: true,
-        viabilityReason: "Available",
-        availableBalance: nil
-    )
-    
-    SheetDestinationDisplayView(
-        primaryDisplayDestination: displayDest,
-        alternativeDisplayDestinations: [],
-        primaryDestinationLabel: "Address",
-        isSimpleAddress: true,
-        showMatchedContact: true,
-        formatNameOverride: nil,
-        selectedDestinationId: $selectedId
-    )
-    .padding()
-}
-
-#Preview("Multiple Destinations") {
-    @Previewable @State var selectedId: UUID? = UUID()
-    
-    let primary = PaymentDestination(
-        format: .bitcoin,
-        network: .signet,
-        address: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-    )
-    
-    let alt1 = PaymentDestination(
-        format: .ark,
-        network: .signet,
-        address: "tark1pm6sr0fpzqqpu4k5llkn6wdswx48fwjjujgu4gm679lqwudrzghz7a2rx7wuup9cpqq6ssw20"
-    )
-    
-    let alt2 = PaymentDestination(
-        format: .lightningInvoice,
-        network: .signet,
-        address: "lnbc10u1p3pj257pp5yztkwjcz5ftl5laxkav23zmzekaw37zk6kmv80pk4xaev5qhtz7qdqqcqzpgxqyz5vqsp5usyc4lk9chsfp53kvcnvq456szcrzt6aedw3njzdmy0xdkk2lryfrsq9qyyssqd93t9qn7gm3r9uj4k7t9kqvwk7l0v4r"
-    )
-    
-    let primaryDisplay = DisplayDestination(
-        destination: primary,
-        estimatedFee: 250,
-        balanceSourceName: "Bitcoin",
-        matchedContact: nil,
-        viable: true,
-        viabilityReason: "Available",
-        availableBalance: 100000
-    )
-    
-    let alt1Display = DisplayDestination(
-        destination: alt1,
-        estimatedFee: 0,
-        balanceSourceName: "Ark",
-        matchedContact: nil,
-        viable: true,
-        viabilityReason: "Available",
-        availableBalance: 50000
-    )
-    
-    let alt2Display = DisplayDestination(
-        destination: alt2,
-        estimatedFee: 50,
-        balanceSourceName: "Lightning",
-        matchedContact: nil,
-        viable: false,
-        viabilityReason: "Ark server not connected",
-        availableBalance: nil
-    )
-    
-    SheetDestinationDisplayView(
-        primaryDisplayDestination: primaryDisplay,
-        alternativeDisplayDestinations: [alt1Display, alt2Display],
-        primaryDestinationLabel: "Address",
-        isSimpleAddress: false,
-        showMatchedContact: true,
-        formatNameOverride: nil,
-        selectedDestinationId: $selectedId
-    )
-    .padding()
 }

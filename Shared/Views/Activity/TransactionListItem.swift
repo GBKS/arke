@@ -8,6 +8,7 @@
 import SwiftUI
 import ArkeUI
 import Bark
+import SwiftData
 
 struct TransactionListItem: View {
     let transaction: TransactionModel
