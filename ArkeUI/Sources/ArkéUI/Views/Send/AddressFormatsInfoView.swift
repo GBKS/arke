@@ -16,22 +16,23 @@ public struct AddressFormatsInfoView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("receive_address_formats")
+                    Text("receive_address_formats", bundle: .module)
                         .font(.system(size: 28, design: .serif))
-                    
+                        .accessibilityAddTraits(.isHeader)
+
                     VStack(alignment: .leading, spacing: 12) {
                         AddressFormatRow(
-                            title: "Ark Address",
+                            title: "address_format_ark_title",
                             examples: ["ark1q...", "tark1q..."],
-                            description: "Ark protocol addresses for off-chain payments"
+                            description: "address_format_ark_description"
                         )
-                        
+
                         AddressFormatRow(
-                            title: "Bitcoin Address",
+                            title: "address_format_bitcoin_title",
                             examples: ["bc1q...", "1...", "3...", "tb1q..."],
-                            description: "Standard Bitcoin addresses (P2PKH, P2SH, Bech32)"
+                            description: "address_format_bitcoin_description"
                         )
-                        
+
                         /*
                          AddressFormatRow(
                          title: "Silent Payments (BIP-352)",
@@ -39,33 +40,33 @@ public struct AddressFormatsInfoView: View {
                          description: "Privacy-enhanced reusable Bitcoin addresses"
                          )
                          */
-                        
+
                         AddressFormatRow(
-                            title: "BIP-353 Address",
+                            title: "address_format_bip353_title",
                             examples: ["₿user.domain.com"],
-                            description: "Human-readable Bitcoin addresses using DNS"
+                            description: "address_format_bip353_description"
                         )
-                        
+
                         AddressFormatRow(
-                            title: "Lightning Address",
+                            title: "address_format_lightning_address_title",
                             examples: ["user@domain.com"],
-                            description: "Human-readable Lightning payment addresses"
+                            description: "address_format_lightning_address_description"
                         )
-                        
+
                         AddressFormatRow(
-                            title: "Lightning Invoice",
+                            title: "address_format_lightning_invoice_title",
                             examples: ["lnbc...", "lntb..."],
-                            description: "Lightning network payment requests"
+                            description: "address_format_lightning_invoice_description"
                         )
-                        
+
                         AddressFormatRow(
-                            title: "BIP-21 Payment URI",
+                            title: "address_format_bip21_title",
                             examples: ["bitcoin:bc1q...?amount=0.001"],
-                            description: "Bitcoin URIs with embedded payment details"
+                            description: "address_format_bip21_description"
                         )
                     }
                     
-                    Text(String(localized: "data_network_support_note"))
+                    Text("data_network_support_note", bundle: .module)
                         .font(.body)
                         .foregroundColor(.secondary)
                         .padding(.top, 4)
@@ -81,6 +82,7 @@ public struct AddressFormatsInfoView: View {
                             .font(.system(size: 15))
                             .foregroundStyle(.primary)
                     }
+                    .accessibilityLabel(Text("button_close", bundle: .module))
                 }
             }
         }
@@ -90,22 +92,22 @@ public struct AddressFormatsInfoView: View {
 }
 
 struct AddressFormatRow: View {
-    let title: String
+    let title: LocalizedStringKey
     let examples: [String]
-    let description: String
-    
+    let description: LocalizedStringKey
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title)
+                Text(title, bundle: .module)
                     .font(.body)
                     .fontWeight(.semibold)
-                
-                Text(description)
+
+                Text(description, bundle: .module)
                     .font(.body)
                     .foregroundColor(.secondary)
             }
-            
+
             HStack(spacing: 6) {
                 ForEach(examples, id: \.self) { example in
                     Text(example)
@@ -118,6 +120,10 @@ struct AddressFormatRow: View {
             }
         }
         .padding(.vertical, 4)
+        // Combine title, description, and example chips into a single
+        // VoiceOver element so the row reads coherently instead of
+        // announcing each example token character by character.
+        .accessibilityElement(children: .combine)
     }
 }
 

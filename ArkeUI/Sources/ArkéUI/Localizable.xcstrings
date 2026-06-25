@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "." : {
 
     },
@@ -23,6 +26,16 @@
     "A forced move is meant for emergencies." : {
 
     },
+    "accessibility_amount_field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send amount"
+          }
+        }
+      }
+    },
     "accessibility_amount_label" : {
       "localizations" : {
         "en" : {
@@ -34,6 +47,7 @@
       }
     },
     "accessibility_amount_label_with_unit" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -43,12 +57,25 @@
         }
       }
     },
+    "accessibility_amount_label_with_unit %@" : {
+
+    },
     "accessibility_fee_label" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fee"
+          }
+        }
+      }
+    },
+    "accessibility_hint_copy_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the Lightning invoice to the clipboard"
           }
         }
       }
@@ -84,6 +111,16 @@
         }
       }
     },
+    "accessibility_hint_set_max" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets the amount to your maximum spendable balance. Activate again to clear."
+          }
+        }
+      }
+    },
     "accessibility_hint_start_refresh" : {
       "localizations" : {
         "en" : {
@@ -100,6 +137,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Note"
+          }
+        }
+      }
+    },
+    "accessibility_value_exceeds_balance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exceeds available balance"
           }
         }
       }
@@ -139,6 +186,16 @@
     "action_copy_address" : {
 
     },
+    "action_copy_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy invoice"
+          }
+        }
+      }
+    },
     "action_copy_value" : {
       "localizations" : {
         "en" : {
@@ -163,13 +220,140 @@
 
     },
     "action_tap_copy" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to copy"
+          }
+        }
+      }
     },
     "Add a note..." : {
 
     },
     "Address identicon" : {
 
+    },
+    "address_format_ark_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark protocol addresses for off-chain payments"
+          }
+        }
+      }
+    },
+    "address_format_ark_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark Address"
+          }
+        }
+      }
+    },
+    "address_format_bip21_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin URIs with embedded payment details"
+          }
+        }
+      }
+    },
+    "address_format_bip21_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BIP-21 Payment URI"
+          }
+        }
+      }
+    },
+    "address_format_bip353_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Human-readable Bitcoin addresses using DNS"
+          }
+        }
+      }
+    },
+    "address_format_bip353_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BIP-353 Address"
+          }
+        }
+      }
+    },
+    "address_format_bitcoin_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard Bitcoin addresses (P2PKH, P2SH, Bech32)"
+          }
+        }
+      }
+    },
+    "address_format_bitcoin_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Address"
+          }
+        }
+      }
+    },
+    "address_format_lightning_address_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Human-readable Lightning payment addresses"
+          }
+        }
+      }
+    },
+    "address_format_lightning_address_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning Address"
+          }
+        }
+      }
+    },
+    "address_format_lightning_invoice_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning network payment requests"
+          }
+        }
+      }
+    },
+    "address_format_lightning_invoice_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning Invoice"
+          }
+        }
+      }
     },
     "address_review_sheet_title" : {
       "extractionState" : "manual",
@@ -578,8 +762,28 @@
     "label_label_colon" : {
 
     },
+    "label_linked_to_contacts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linked to Contacts"
+          }
+        }
+      }
+    },
     "label_message_colon" : {
 
+    },
+    "label_minimum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum"
+          }
+        }
+      }
     },
     "label_name" : {
 
@@ -664,19 +868,6 @@
         }
       }
     },
-    "label_linked_to_contacts" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linked to Contacts"
-          }
-        }
-      }
-    },
-    "Linked to Contacts" : {
-
-    },
     "message_cannot_cancel" : {
 
     },
@@ -694,9 +885,6 @@
       }
     },
     "message_takes_24_hours" : {
-
-    },
-    "Minimum" : {
 
     },
     "nav_title_bitcoin_formatter_examples" : {
@@ -731,13 +919,34 @@
       }
     },
     "placeholder_amount_required" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount (required)"
+          }
+        }
+      }
     },
     "placeholder_enter_amount" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter amount"
+          }
+        }
+      }
     },
     "placeholder_note_optional" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note (optional)"
+          }
+        }
+      }
     },
     "placeholder_tag_name" : {
 
@@ -749,10 +958,24 @@
 
     },
     "receive_address_formats" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address formats"
+          }
+        }
+      }
     },
     "send_amount_fixed" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount is fixed"
+          }
+        }
+      }
     },
     "send_amount_to_pay" : {
 
@@ -830,7 +1053,14 @@
       }
     },
     "status_invoice_generated" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice generated"
+          }
+        }
+      }
     },
     "status_last_synced" : {
       "extractionState" : "extracted_with_value",
@@ -897,7 +1127,14 @@
       }
     },
     "symbol_bitcoin" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "₿"
+          }
+        }
+      }
     },
     "symbol_ellipsis" : {
       "extractionState" : "manual",

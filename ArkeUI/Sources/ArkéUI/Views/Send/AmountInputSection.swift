@@ -82,7 +82,7 @@ public struct AmountInputSection: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("placeholder_enter_amount")
+                Text("placeholder_enter_amount", bundle: .module)
                     .font(.body)
                     .fontWeight(.medium)
                 
@@ -93,7 +93,7 @@ public struct AmountInputSection: View {
                 }
             }
             
-            TextField(String(localized: "format_zero"), text: $amount)
+            TextField(String(localized: "format_zero", bundle: .module), text: $amount)
                 .textFieldStyle(.plain)
                 .font(.title)
                 .foregroundColor(exceedsBalance ? .orange : .primary)
@@ -111,6 +111,10 @@ public struct AmountInputSection: View {
                         amount = String(newValue.prefix(20))
                     }
                 }
+                .accessibilityLabel(Text("accessibility_amount_field", bundle: .module))
+                .accessibilityValue(exceedsBalance
+                    ? Text("accessibility_value_exceeds_balance", bundle: .module)
+                    : Text(""))
             
             Divider()
             
@@ -133,24 +137,27 @@ public struct AmountInputSection: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(maxSpendableAmount == 0)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityHint(Text("accessibility_hint_set_max", bundle: .module))
                     }
                 } else {
-                    Text("send_amount_fixed")
+                    Text("send_amount_fixed", bundle: .module)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 if minimumSendAmount > 0 {
                     HStack(spacing: 8) {
-                        Text("Minimum")
+                        Text("label_minimum", bundle: .module)
                             .font(.body)
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
-                        
+
                         Text(BitcoinFormatter.shared.formatAmount(minimumSendAmount))
                             .font(.body)
                     }
+                    .accessibilityElement(children: .combine)
                 }
                 
                 /*
