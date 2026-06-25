@@ -77,7 +77,6 @@ final class SendViewModel {
     var recipientState: RecipientState = .idle
     var sendMode: SendMode = .manual
     var showAddressFormatsPopover = false
-    var showDestinationPicker = false
     var sendModalState: SendModalState?
     var showFeeSelectionSheet = false
     var selectedFeePriority: FeePriority = .medium

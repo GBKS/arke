@@ -201,9 +201,6 @@
     "~%@" : {
 
     },
-    "~%lld sats" : {
-
-    },
     "⚠️ Insufficient onchain balance\n\nRequired: %@\nAvailable: %@\nNeed to board: %@\n\nPlease board more Bitcoin to your savings balance before starting." : {
       "localizations" : {
         "en" : {
@@ -5620,6 +5617,7 @@
       }
     },
     "label_recommended" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7064,6 +7062,7 @@
       }
     },
     "send_choose_method" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7124,6 +7123,7 @@
       }
     },
     "send_payment_methods" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7164,6 +7164,7 @@
       }
     },
     "send_recommended_method_help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8192,6 +8193,7 @@
       }
     },
     "status_unavailable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

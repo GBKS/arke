@@ -101,9 +101,6 @@ struct SendView_iOS: View {
             .sheet(item: $sendOperation) { operation in
                 sendModalSheet(operation: operation)
             }
-            .sheet(isPresented: $viewModel.showDestinationPicker) {
-                destinationPickerSheet(viewModel: viewModel)
-            }
             .sheet(isPresented: $showContactPicker) {
                 contactPickerSheet()
             }
@@ -396,18 +393,6 @@ struct SendView_iOS: View {
             }
             .presentationDetents([.medium, .large])
         }
-    }
-    
-    @ViewBuilder
-    private func destinationPickerSheet(viewModel: SendViewModel) -> some View {
-        @Bindable var viewModel = viewModel
-        
-        NavigationStack {
-            PaymentDestinationPickerView(rankedDestinations: viewModel.rankedDestinations) { destination in
-                viewModel.selectedDestination = destination
-            }
-        }
-        .presentationDetents([.medium, .large])
     }
     
     @ViewBuilder

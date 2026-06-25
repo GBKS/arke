@@ -89,9 +89,6 @@ struct SendView: View {
         .sheet(item: $sendOperation) { operation in
             sendModalSheet(operation: operation)
         }
-        .sheet(isPresented: $viewModel.showDestinationPicker) {
-            destinationPickerSheet(viewModel: viewModel)
-        }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
             Task {
                 await viewModel.checkClipboardForAddress()
@@ -111,13 +108,6 @@ struct SendView: View {
                 performSend: operation.performSend,
                 pendingMetadata: $viewModel.pendingMetadata
             )
-        }
-    }
-    
-    @ViewBuilder
-    private func destinationPickerSheet(viewModel: SendViewModel) -> some View {
-        PaymentDestinationPickerView(rankedDestinations: viewModel.rankedDestinations) { destination in
-            viewModel.selectedDestination = destination
         }
     }
     

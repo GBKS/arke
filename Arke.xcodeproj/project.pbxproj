@@ -436,8 +436,6 @@
 				Views/Send/Flows/ManualSendView.swift,
 				Views/Send/Flows/QuickPaymentView.swift,
 				Views/Send/LightningAddressResolver.swift,
-				"Views/Send/Payment destination/PaymentDestinationPickerView.swift",
-				"Views/Send/Payment destination/PaymentDestinationRow.swift",
 				"Views/Send/Payment destination/PaymentDestinationSelectorExamples.swift",
 				Views/Send/PaymentRequestInfoBanner.swift,
 				Views/Send/PaymentRequestMetadataView.swift,
