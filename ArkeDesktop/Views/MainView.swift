@@ -69,7 +69,12 @@ struct MainView: View {
             
             // Subscribe to NSUbiquitousKeyValueStore changes
             subscribeToUbiquitousStoreChanges()
-            
+
+            // Reconcile the network config with iCloud in the background (off the launch path)
+            Task.detached(priority: .utility) {
+                await NetworkConfigPersistence.syncFromiCloud()
+            }
+
             // Set model context first - fast operation
             print("🔍 [MainView] Setting model context...")
             walletManager.setModelContext(modelContext)

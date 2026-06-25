@@ -952,11 +952,16 @@ class WalletManager {
             return true
         }
         
-        // Layer 2: Check iCloud KV store (fast, ~1-5ms, local cache)
-        let kvStore = NSUbiquitousKeyValueStore.default
-        let isPrimaryInKVStore = kvStore.bool(forKey: "device_\(deviceId)_isPrimary")
-        // Check if key exists (bool returns false for both "false" and "doesn't exist")
-        if kvStore.object(forKey: "device_\(deviceId)_isPrimary") != nil && !isPrimaryInKVStore {
+        // Layer 2: Check iCloud KV store (local cache).
+        // Access off the main actor — the first touch of NSUbiquitousKeyValueStore.default
+        // can block on I/O, which on the launch path can trip the watchdog (SIGKILL 0xdead10cc).
+        let kvIndicatesDemotion = await Task.detached(priority: .utility) { () -> Bool in
+            let kvStore = NSUbiquitousKeyValueStore.default
+            let isPrimaryInKVStore = kvStore.bool(forKey: "device_\(deviceId)_isPrimary")
+            // Check if key exists (bool returns false for both "false" and "doesn't exist")
+            return kvStore.object(forKey: "device_\(deviceId)_isPrimary") != nil && !isPrimaryInKVStore
+        }.value
+        if kvIndicatesDemotion {
             Self.logger.info("🛑 [WalletManager] Blocked: iCloud KV store indicates demotion")
             return true
         }

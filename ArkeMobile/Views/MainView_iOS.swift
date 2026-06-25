@@ -156,7 +156,12 @@ struct MainView_iOS: View {
             
             // Subscribe to NSUbiquitousKeyValueStore changes
             subscribeToUbiquitousStoreChanges()
-            
+
+            // Reconcile the network config with iCloud in the background (off the launch path)
+            Task.detached(priority: .utility) {
+                await NetworkConfigPersistence.syncFromiCloud()
+            }
+
             // Subscribe to foreground notifications for heartbeat updates
             subscribeToForegroundNotifications()
             
