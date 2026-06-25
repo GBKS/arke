@@ -21,6 +21,14 @@ extension UserDefaults {
     /// Key for storing proximity sharing permission
     static let proximityPermissionKey = "hasGrantedProximityPermission"
     
+    /// Key for storing the archived MCPeerID used for proximity exchange.
+    /// Persisting one peer ID per device avoids ghost peers and torn sessions.
+    static let proximityPeerIDKey = "com.arke.proximity.peerID"
+    
+    /// Display name the persisted MCPeerID was created with, so we can
+    /// regenerate it if the device name later changes.
+    static let proximityPeerIDNameKey = "com.arke.proximity.peerIDName"
+    
     /// Key for storing address icons display preference
     static let showAddressIconsKey = "showAddressIcons"
 }

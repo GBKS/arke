@@ -50,15 +50,22 @@ struct ProximityStatusIndicator: View {
                 }
             }
             
-            // Status text - only visible when toggled
+            // Status text - only visible when toggled. Kept hidden at rest so the
+            // indicator stays minimal for this secondary feature. On error, tapping the
+            // revealed text opens Settings (e.g. to grant Local Network access).
             if showText {
                 Text(statusText)
                     .font(.callout)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.white)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .onTapGesture {
+                        if case .error = proximityManager.state {
+                            proximityManager.openAppSettings()
+                        }
+                    }
             }
         }
     }
@@ -121,7 +128,9 @@ struct ProximityStatusIndicator: View {
         case .awaitingPermission:
             return "Awaiting Permission"
         case .discovering:
-            return "Looking for nearby devices..."
+            // Surface a radio-environment hint here when one applies, otherwise the
+            // normal searching message.
+            return proximityManager.environmentWarning ?? "Looking for nearby devices..."
         case .peerFound(let peerName):
             return "Found: \(peerName)"
         case .proximityMet:
@@ -131,7 +140,8 @@ struct ProximityStatusIndicator: View {
         case .complete(_, let peerName):
             return "Received from \(peerName)"
         case .error(let message):
-            return "Error: \(message)"
+            // The exclamation icon already conveys the error; show the guidance directly.
+            return message
         }
     }
 }

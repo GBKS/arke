@@ -60,6 +60,10 @@ class ProximityExchangeManager: NSObject, ObservableObject {
     @Published private(set) var discoveredPeers: Set<String> = []
     @Published private(set) var isAdvertising: Bool = false
     @Published private(set) var isBrowsing: Bool = false
+
+    /// Non-blocking hint shown while discovering when the radio environment is likely to
+    /// prevent peer-to-peer Wi-Fi (AWDL) discovery — e.g. Wi-Fi off or Low Power Mode.
+    @Published private(set) var environmentWarning: String?
     
     // MARK: - Private Properties
     
@@ -90,13 +94,41 @@ class ProximityExchangeManager: NSObject, ObservableObject {
     
     // Distance threshold for proximity detection (in meters)
     private let proximityThreshold: Float = 1.5
+
+    // Radio environment monitoring. MultipeerConnectivity relies on peer-to-peer Wi-Fi
+    // (AWDL), which collapses when Wi-Fi is off or Low Power Mode throttles the radio —
+    // the common reason discovery works on a desk but fails out in the wild.
+    private let pathMonitor = NWPathMonitor()
+    private let pathMonitorQueue = DispatchQueue(label: "com.arke.proximity.path")
+    private var isWiFiAvailable = true
     
     // MARK: - Initialization
     
     override init() {
-        // Create a unique peer ID based on device name
-        self.myPeerID = MCPeerID(displayName: UIDevice.current.name)
+        // Reuse a persisted peer ID across launches. Minting a fresh one each launch
+        // causes ghost peers and failed sessions on the remote device.
+        self.myPeerID = Self.loadOrCreatePeerID()
         super.init()
+    }
+    
+    /// Loads the archived `MCPeerID` from `UserDefaults`, or creates and persists a new
+    /// one. Regenerates if the device's display name has changed since it was stored.
+    private static func loadOrCreatePeerID() -> MCPeerID {
+        let defaults = UserDefaults.standard
+        let displayName = UIDevice.current.name
+        
+        if let data = defaults.data(forKey: UserDefaults.proximityPeerIDKey),
+           defaults.string(forKey: UserDefaults.proximityPeerIDNameKey) == displayName,
+           let peerID = try? NSKeyedUnarchiver.unarchivedObject(ofClass: MCPeerID.self, from: data) {
+            return peerID
+        }
+        
+        let peerID = MCPeerID(displayName: displayName)
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: peerID, requiringSecureCoding: true) {
+            defaults.set(data, forKey: UserDefaults.proximityPeerIDKey)
+            defaults.set(displayName, forKey: UserDefaults.proximityPeerIDNameKey)
+        }
+        return peerID
     }
     
     // MARK: - Public Methods
@@ -119,6 +151,7 @@ class ProximityExchangeManager: NSObject, ObservableObject {
         hasExchangedInCurrentSession = false
         receivedPaymentInfo = nil
         
+        startRadioMonitoring()
         setupSession()
         startAdvertising()
         startBrowsing()
@@ -141,6 +174,8 @@ class ProximityExchangeManager: NSObject, ObservableObject {
         
         invitationRetryTimer?.invalidate()
         invitationRetryTimer = nil
+        
+        stopRadioMonitoring()
         
         advertiser?.stopAdvertisingPeer()
         advertiser = nil
@@ -174,6 +209,14 @@ class ProximityExchangeManager: NSObject, ObservableObject {
         receivedPaymentInfo = nil
     }
     
+    /// Opens the app's settings page so the user can grant Local Network / Bluetooth
+    /// access. There is no public API to read Local Network authorization status, so we
+    /// surface this route from the failure path rather than detecting denial directly.
+    func openAppSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+    
     // MARK: - Private Setup Methods
     
     private func setupSession() {
@@ -189,7 +232,22 @@ class ProximityExchangeManager: NSObject, ObservableObject {
                 // Only timeout if we're still in discovering state
                 if case .discovering = self.state {
                     Self.logger.warning("Connection timeout - no peers found or connected")
-                    self.state = .error("No nearby devices found. Make sure both devices have Bluetooth and Wi-Fi enabled.")
+                    
+                    // Tailor the guidance to whatever we actually detected, rather than a
+                    // generic message. Low Power Mode and Wi-Fi being off are the usual
+                    // culprits for discovery failing away from a known network.
+                    let lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+                    let detail: String
+                    if !self.isWiFiAvailable {
+                        detail = "Wi-Fi appears to be off. Enable Wi-Fi on both devices — you don't need to be on a network."
+                    } else if lowPower {
+                        detail = "Low Power Mode can block nearby discovery. Turn it off on both devices and try again."
+                    } else {
+                        // Radio looks fine — denied Local Network permission is the most
+                        // likely remaining cause, and it fails silently with no callback.
+                        detail = "Check that Local Network access is enabled for Arké in Settings, and that both devices have Bluetooth on and are unlocked."
+                    }
+                    self.state = .error("No nearby devices found. \(detail)")
                     self.triggerErrorHaptic()
                 }
             }
@@ -199,6 +257,57 @@ class ProximityExchangeManager: NSObject, ObservableObject {
     private func cancelConnectionTimeout() {
         connectionTimeoutTimer?.invalidate()
         connectionTimeoutTimer = nil
+    }
+    
+    // MARK: - Radio Environment Monitoring
+    
+    private func startRadioMonitoring() {
+        // Optimistic until the first path update arrives.
+        isWiFiAvailable = true
+        
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            // `availableInterfaces` lists a Wi-Fi interface when the radio is on, even
+            // when not joined to a network. There is no public API to read the Wi-Fi
+            // toggle directly, so this is a best-effort proxy, not a hard gate.
+            let wifi = path.availableInterfaces.contains { $0.type == .wifi }
+            guard let self = self else { return }
+            Task { @MainActor in
+                self.isWiFiAvailable = wifi
+                self.updateEnvironmentWarning()
+            }
+        }
+        pathMonitor.start(queue: pathMonitorQueue)
+        
+        NotificationCenter.default.addObserver(
+            forName: .NSProcessInfoPowerStateDidChange, object: nil, queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            Task { @MainActor in self.updateEnvironmentWarning() }
+        }
+        
+        updateEnvironmentWarning()
+    }
+    
+    private func stopRadioMonitoring() {
+        pathMonitor.cancel()
+        pathMonitor.pathUpdateHandler = nil
+        NotificationCenter.default.removeObserver(self, name: .NSProcessInfoPowerStateDidChange, object: nil)
+        environmentWarning = nil
+    }
+    
+    /// Recomputes the non-blocking discovery hint from the current radio state.
+    private func updateEnvironmentWarning() {
+        let lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+        var issues: [String] = []
+        if !isWiFiAvailable { issues.append("turn on Wi-Fi (you don't need to join a network)") }
+        if lowPower { issues.append("turn off Low Power Mode") }
+        
+        if issues.isEmpty {
+            environmentWarning = nil
+        } else {
+            environmentWarning = "For best results, both devices should " + issues.joined(separator: " and ") + "."
+            Self.logger.warning("Radio environment suboptimal: wifi=\(self.isWiFiAvailable), lowPower=\(lowPower)")
+        }
     }
     
     private func scheduleRetryIfNeeded() {
