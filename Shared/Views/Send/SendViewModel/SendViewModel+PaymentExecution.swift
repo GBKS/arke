@@ -308,8 +308,12 @@ extension SendViewModel {
                 // Fallback: resolve now if not cached
                 logger.debug("   → LNURL not cached, resolving now...")
                 resolvedLNURL = try await LNURLResolver.resolve(destination.address)
+
+                // Note pre-population ran before resolution; retry now that
+                // LNURL metadata (and its description) is available.
+                prepopulateNoteIfNeeded()
             }
-            
+
             guard let lnurlData = resolvedLNURL else {
                 throw SendError.invalidFormat("LNURL resolution failed")
             }

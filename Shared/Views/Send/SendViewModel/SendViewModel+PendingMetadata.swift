@@ -111,23 +111,42 @@ extension SendViewModel {
     
     // MARK: - Note Pre-population
     
-    /// Extracts descriptive text from payment request to pre-populate note field
-    /// Returns combined text from Lightning invoice description and BIP-21 label/message
+    /// Extracts descriptive text from the payment request to pre-populate the note field.
+    /// Draws from (in priority order) BIP-21 label/message, the BOLT-11 invoice description,
+    /// and the LNURL-pay metadata description.
     func extractPaymentNote() -> String? {
         switch sendMode {
         case .quick(let request, _):
+            // 1. BIP-21 label/message (joined, as before)
             var parts: [String] = []
-            
-            // BIP-21 with label/message
             if let label = request.label, !label.isEmpty {
                 parts.append(label)
             }
             if let message = request.message, !message.isEmpty {
                 parts.append(message)
             }
-            
-            return parts.isEmpty ? nil : parts.joined(separator: " - ")
-            
+            if !parts.isEmpty {
+                return parts.joined(separator: " - ")
+            }
+
+            // 2. BOLT-11 Lightning invoice description
+            if request.primaryFormat == .lightningInvoice,
+               let invoice = request.primaryDestination?.address {
+                let (_, description) = LightningInvoiceParser.extractAmountAndDescription(
+                    fromInvoice: invoice
+                )
+                if let description = description, !description.isEmpty {
+                    return description
+                }
+            }
+
+            // 3. LNURL-pay metadata description (only if already resolved)
+            if let descriptionText = resolvedLNURL?.descriptionText, !descriptionText.isEmpty {
+                return descriptionText
+            }
+
+            return nil
+
         default:
             return nil
         }

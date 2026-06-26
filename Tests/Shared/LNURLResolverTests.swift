@@ -217,6 +217,59 @@ struct LNURLResolverTests {
         }
     }
     
+    // MARK: - Metadata Description Tests
+
+    @Test("Extracts short text/plain description from metadata")
+    func testMetadataShortDescription() {
+        let metadata = #"[["text/plain","Coffee at Satoshi's"]]"#
+        #expect(LNURLResolver.extractDescription(fromMetadata: metadata) == "Coffee at Satoshi's")
+    }
+
+    @Test("Prefers text/plain over text/long-desc")
+    func testMetadataPrefersShort() {
+        let metadata = #"[["text/long-desc","A very long description here"],["text/plain","Short"]]"#
+        #expect(LNURLResolver.extractDescription(fromMetadata: metadata) == "Short")
+    }
+
+    @Test("Falls back to text/long-desc when short is empty")
+    func testMetadataLongFallback() {
+        let metadata = #"[["text/plain","   "],["text/long-desc","The long one"]]"#
+        #expect(LNURLResolver.extractDescription(fromMetadata: metadata) == "The long one")
+    }
+
+    @Test("Ignores image entries")
+    func testMetadataIgnoresImages() {
+        let metadata = #"[["image/png;base64","iVBORw0KGgo="],["text/plain","Tip jar"]]"#
+        #expect(LNURLResolver.extractDescription(fromMetadata: metadata) == "Tip jar")
+    }
+
+    @Test("Returns nil when only images are present")
+    func testMetadataImagesOnly() {
+        let metadata = #"[["image/jpeg;base64","/9j/4AAQ=="]]"#
+        #expect(LNURLResolver.extractDescription(fromMetadata: metadata) == nil)
+    }
+
+    @Test("Returns nil for malformed metadata JSON")
+    func testMetadataMalformed() {
+        #expect(LNURLResolver.extractDescription(fromMetadata: "not json") == nil)
+        #expect(LNURLResolver.extractDescription(fromMetadata: "") == nil)
+    }
+
+    @Test("descriptionText convenience reads from metadata")
+    func testDescriptionTextConvenience() {
+        let resolved = LNURLResolver.ResolvedLNURL(
+            originalLNURL: "lnurl1...",
+            callback: "https://example.com/callback",
+            minSendable: 1000,
+            maxSendable: 1000,
+            metadata: #"[["text/plain","Donation"]]"#,
+            commentAllowed: nil,
+            tag: "payRequest",
+            resolvedAt: Date()
+        )
+        #expect(resolved.descriptionText == "Donation")
+    }
+
     // MARK: - Cache Tests
     
     @Test("Cache clears correctly")

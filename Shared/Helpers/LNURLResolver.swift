@@ -42,6 +42,13 @@ class LNURLResolver {
         var fixedAmountSats: Int? {
             isFixedAmount ? minSendableSats : nil
         }
+
+        /// Human-readable description parsed from the LUD-06 metadata, if any.
+        /// Prefers the short `text/plain` description, falling back to `text/long-desc`.
+        var descriptionText: String? {
+            guard let metadata = metadata else { return nil }
+            return LNURLResolver.extractDescription(fromMetadata: metadata)
+        }
     }
     
     enum LNURLError: LocalizedError {
@@ -170,6 +177,37 @@ class LNURLResolver {
         return resolved
     }
     
+    // MARK: - Metadata Parsing
+
+    /// Extracts a human-readable description from LUD-06 metadata JSON.
+    ///
+    /// The metadata is a JSON-encoded array of `[type, content]` pairs, e.g.
+    /// `[["text/plain", "Coffee"], ["text/long-desc", "..."], ["image/png;base64", "..."]]`.
+    /// Prefers the short `text/plain` entry; falls back to `text/long-desc` if the short
+    /// description is missing or empty. Images are ignored.
+    ///
+    /// - Parameter metadata: The raw metadata JSON string from an LNURL-pay response.
+    /// - Returns: A trimmed description string, or nil if none is usable.
+    static func extractDescription(fromMetadata metadata: String) -> String? {
+        guard let data = metadata.data(using: .utf8),
+              let entries = try? JSONSerialization.jsonObject(with: data) as? [[Any]] else {
+            return nil
+        }
+
+        func firstContent(forType type: String) -> String? {
+            for entry in entries where entry.count >= 2 {
+                if let entryType = entry[0] as? String, entryType == type,
+                   let content = entry[1] as? String {
+                    let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty { return trimmed }
+                }
+            }
+            return nil
+        }
+
+        return firstContent(forType: "text/plain") ?? firstContent(forType: "text/long-desc")
+    }
+
     // MARK: - Bech32 Decoding (from LightningInvoiceParser)
     
     private static let bech32Charset = Array("qpzry9x8gf2tvdw0s3jn54khce6mua7l")
