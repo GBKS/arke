@@ -45,7 +45,7 @@ public struct EmojiPickerSheet: View {
                                         dismiss()
                                     }) {
                                         Text(emoji)
-                                            .font(.title2)
+                                            .font(.title)
                                             .frame(width: 44, height: 44)
                                             .background(
                                                 selectedEmoji == emoji ? Color.Arke.blue.opacity(0.2) : Color.clear

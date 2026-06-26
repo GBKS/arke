@@ -29,6 +29,7 @@ public enum TagChipSize {
     case small
     case medium
     case large
+    case huge
 
     var fontSize: Font {
         switch self {
@@ -38,6 +39,8 @@ public enum TagChipSize {
             return .subheadline
         case .large:
             return .body
+        case .huge:
+            return .title3
         }
     }
 
@@ -49,6 +52,8 @@ public enum TagChipSize {
             return .caption2
         case .large:
             return .caption
+        case .huge:
+            return .body
         }
     }
 
@@ -60,6 +65,8 @@ public enum TagChipSize {
             return 8
         case .large:
             return 12
+        case .huge:
+            return 14
         }
     }
 
@@ -71,6 +78,8 @@ public enum TagChipSize {
             return 4
         case .large:
             return 6
+        case .huge:
+            return 8
         }
     }
 
@@ -82,6 +91,8 @@ public enum TagChipSize {
             return 12
         case .large:
             return 16
+        case .huge:
+            return 20
         }
     }
 
@@ -92,6 +103,8 @@ public enum TagChipSize {
         case .medium:
             return 4
         case .large:
+            return 6
+        case .huge:
             return 6
         }
     }
@@ -192,12 +205,6 @@ public struct TagChip_Selectable: View {
                 Text(tag.name)
                     .font(size.fontSize)
                     .fontWeight(.medium)
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(size.emojiSize)
-                        .foregroundColor(tag.color)
-                }
             }
             .padding(.horizontal, size.horizontalPadding)
             .padding(.vertical, size.verticalPadding)
@@ -211,6 +218,19 @@ public struct TagChip_Selectable: View {
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: size.cornerRadius))
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(size.emojiSize)
+                        .foregroundColor(tag.color)
+                        .background(
+                            Circle()
+                                .fill(.background)
+                                .padding(1)
+                        )
+                        .offset(x: 2, y: -2)
+                }
+            }
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.95 : 1.0)
@@ -302,6 +322,17 @@ public struct TagChip_Removable: View {
                 }
             }
 
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Huge Size")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                HStack {
+                    TagChip(tag: TagAppearance(name: "Coffee", color: Color(hex: "#8B4513") ?? .brown, emoji: "☕"), size: .huge)
+                    TagChip(tag: TagAppearance(name: "Food", color: Color(hex: "#FF6B35") ?? .orange, emoji: "🍕"), size: .huge)
+                    TagChip(tag: TagAppearance(name: "Transport", color: Color(hex: "#4A90E2") ?? .blue, emoji: "🚗"), size: .huge)
+                }
+            }
+
             Divider()
 
             // Clickable chips with different sizes
@@ -330,6 +361,17 @@ public struct TagChip_Removable: View {
                 }
             }
 
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Clickable - Huge")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                HStack {
+                    TagChip(tag: TagAppearance(name: "Income", color: Color(hex: "#32CD32") ?? .green, emoji: "💰"), size: .huge) {
+                        print("Income tapped")
+                    }
+                }
+            }
+
             Divider()
 
             // Selectable chips with different sizes
@@ -346,6 +388,11 @@ public struct TagChip_Removable: View {
                     TagChip_Selectable(
                         tag: TagAppearance(name: "Gift", color: Color(hex: "#FF69B4") ?? .pink, emoji: "🎁"),
                         size: .large,
+                        isSelected: .constant(true)
+                    )
+                    TagChip_Selectable(
+                        tag: TagAppearance(name: "Savings", color: Color(hex: "#20B2AA") ?? .teal, emoji: "🏦"),
+                        size: .huge,
                         isSelected: .constant(true)
                     )
                 }
@@ -368,6 +415,12 @@ public struct TagChip_Removable: View {
                         size: .large
                     ) {
                         print("Remove premium tag")
+                    }
+                    TagChip_Removable(
+                        tag: TagAppearance(name: "Featured", color: Color(hex: "#DB7093") ?? .pink, emoji: "🌟"),
+                        size: .huge
+                    ) {
+                        print("Remove featured tag")
                     }
                 }
             }

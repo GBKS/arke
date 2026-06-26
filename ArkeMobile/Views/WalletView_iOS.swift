@@ -258,6 +258,9 @@ struct WalletView_iOS: View {
                             activityNavPath.removeLast()
                         }
                         .navigationTitle("tags_title")
+                        #if os(iOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                        #endif
                     case .data:
                         // Only show data view in primary mode (requires ASP connection)
                         if !manager.isReadOnlyMode {

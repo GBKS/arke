@@ -42,7 +42,11 @@ public struct SendMetadataSection: View {
                         .font(.title2)
                         .foregroundStyle(.primary)
                         .frame(width: 60, height: 44)
+                        #if os(iOS)
                         .background(Color(.systemGray5))
+                        #else
+                        .background(Color(nsColor: .secondaryLabelColor))
+                        #endif
                         .cornerRadius(22)
                 }
             }
@@ -71,7 +75,11 @@ public struct SendMetadataSection: View {
                         .font(.title2)
                         .foregroundStyle(.primary)
                         .frame(width: 60, height: 44)
+                        #if os(iOS)
                         .background(Color(.systemGray5))
+                        #else
+                        .background(Color(nsColor: .secondaryLabelColor))
+                        #endif
                         .cornerRadius(22)
                 }
             }
@@ -88,7 +96,11 @@ public struct SendMetadataSection: View {
                         .font(.title2)
                         .frame(width: 60, height: 44)
                         .foregroundStyle((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green : .primary)
+                        #if os(iOS)
                         .background((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green.opacity(0.15) : Color(.systemGray5))
+                        #else
+                        .background((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green.opacity(0.15) : Color(nsColor: .secondaryLabelColor))
+                        #endif
                         .overlay(
                             RoundedRectangle(cornerRadius: 22)
                                 .stroke((pendingMetadata?.hasNotes ?? false) ? Color.Arke.green : Color.clear, lineWidth: 1)

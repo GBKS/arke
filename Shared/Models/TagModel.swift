@@ -54,15 +54,15 @@ struct TagModel: Identifiable, Hashable, Codable {
     // For creating common tags
     static func createDefaultTags() -> [TagModel] {
         return [
-            TagModel(name: "Savings", colorHex: "#8B4513", emoji: "💰"),
-            TagModel(name: "Food", colorHex: "#FF6B35", emoji: "🍕"),
-            TagModel(name: "Transport", colorHex: "#4A90E2", emoji: "🚗"),
-            TagModel(name: "Shopping", colorHex: "#7B68EE", emoji: "🛒"),
-            TagModel(name: "Bills", colorHex: "#FF4444", emoji: "📄"),
-            TagModel(name: "Income", colorHex: "#32CD32", emoji: "💰"),
-            TagModel(name: "Investment", colorHex: "#FFD700", emoji: "📈"),
-            TagModel(name: "Gift", colorHex: "#FF69B4", emoji: "🎁"),
-            TagModel(name: "Balance", colorHex: "#20B2AA", emoji: "👜", isSystemTag: true)
+            TagModel(name: "Savings", colorHex: "#DC8228", emoji: "💰"),
+            TagModel(name: "Food", colorHex: "#D2AF1E", emoji: "🍕"),
+            TagModel(name: "Transport", colorHex: "#2FA854", emoji: "🚗"),
+            TagModel(name: "Shopping", colorHex: "#288C82", emoji: "🛒"),
+            TagModel(name: "Bills", colorHex: "#2A7FAF", emoji: "📄"),
+            TagModel(name: "Income", colorHex: "#4B50A0", emoji: "💰"),
+            TagModel(name: "Investment", colorHex: "#6E468C", emoji: "📈"),
+            TagModel(name: "Gift", colorHex: "#BE5069", emoji: "🎁"),
+            TagModel(name: "Balance", colorHex: "#C33C2D", emoji: "👜", isSystemTag: true)
         ]
     }
     

@@ -16,17 +16,23 @@ struct TagSelectorSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var showingTagEditor = false
-    
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 12, alignment: .leading),
+        GridItem(.flexible(), spacing: 12, alignment: .leading)
+    ]
+
     var body: some View {
         VStack(spacing: 0) {
             // Content
             ScrollView {
                 // Existing Tags Section
                 if walletManager.hasTags {
-                    LazyVStack(alignment: .leading, spacing: 12) {
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: 20) {
                         ForEach(walletManager.tags) { tag in
                             TagChip_Selectable(
                                 tag: tag.appearance,
+                                size: .large,
                                 isSelected: Binding(
                                     get: { selectedTagIds.contains(tag.id) },
                                     set: { isSelected in
@@ -40,6 +46,7 @@ struct TagSelectorSheet: View {
                             )
                         }
                     }
+                    .padding(.top)
                     .padding(.horizontal)
                 }
                 

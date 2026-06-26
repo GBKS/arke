@@ -42,6 +42,9 @@ struct TagsView_iOS: View {
             }
         }
         .navigationTitle("tags_title")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -133,63 +136,66 @@ struct TagsView_iOS: View {
                 Text(String(localized: "status_please_wait"))
             }
         } else {
-            ForEach(items, id: \.tag.id) { item in
-                Button {
-                    onNavigateToActivity(item.tag)
-                } label: {
-                    TagRow(
-                        tag: item.tag,
-                        statistic: item.statistic
-                    )
-                }
-                .buttonStyle(.plain)
-                .listRowSeparator(.hidden)
-                .listRowSpacing(0)
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if !item.tag.isSystemTag {
-                        Button(role: .destructive) {
-                            viewModel.showDeleteConfirmation(for: item.tag)
-                        } label: {
-                            Label("button_delete", systemImage: "trash")
+            Section {
+                ForEach(items, id: \.tag.id) { item in
+                    Button {
+                        onNavigateToActivity(item.tag)
+                    } label: {
+                        TagRow(
+                            tag: item.tag,
+                            statistic: item.statistic
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .listRowSeparator(.hidden)
+                    .listRowSpacing(0)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        if !item.tag.isSystemTag {
+                            Button(role: .destructive) {
+                                viewModel.showDeleteConfirmation(for: item.tag)
+                            } label: {
+                                Label("button_delete", systemImage: "trash")
+                            }
+                            
+                            Button {
+                                viewModel.showEditTagEditor(for: item.tag)
+                            } label: {
+                                Label("button_edit", systemImage: "pencil")
+                            }
+                            .tint(.Arke.blue)
+                        }
+                    }
+                    .contextMenu {
+                        if !item.tag.isSystemTag {
+                            Button {
+                                viewModel.showEditTagEditor(for: item.tag)
+                            } label: {
+                                Label("button_edit", systemImage: "pencil")
+                            }
                         }
                         
-                        Button {
-                            viewModel.showEditTagEditor(for: item.tag)
-                        } label: {
-                            Label("button_edit", systemImage: "pencil")
+                        if item.statistic.transactionCount > 0 {
+                            Button {
+                                onNavigateToActivity(item.tag)
+                            } label: {
+                                Label("button_view_transactions", systemImage: "list.bullet")
+                            }
                         }
-                        .tint(.Arke.blue)
-                    }
-                }
-                .contextMenu {
-                    if !item.tag.isSystemTag {
-                        Button {
-                            viewModel.showEditTagEditor(for: item.tag)
-                        } label: {
-                            Label("button_edit", systemImage: "pencil")
-                        }
-                    }
-                    
-                    if item.statistic.transactionCount > 0 {
-                        Button {
-                            onNavigateToActivity(item.tag)
-                        } label: {
-                            Label("button_view_transactions", systemImage: "list.bullet")
-                        }
-                    }
-                    
-                    if !item.tag.isSystemTag {
-                        Divider()
                         
-                        Button(role: .destructive) {
-                            viewModel.showDeleteConfirmation(for: item.tag)
-                        } label: {
-                            Label("button_delete", systemImage: "trash")
+                        if !item.tag.isSystemTag {
+                            Divider()
+                            
+                            Button(role: .destructive) {
+                                viewModel.showDeleteConfirmation(for: item.tag)
+                            } label: {
+                                Label("button_delete", systemImage: "trash")
+                            }
                         }
                     }
                 }
             }
+            .listRowBackground(Color.clear)
         }
     }
     
@@ -230,36 +236,39 @@ private struct TagRow: View {
             // Tag chip
             TagChip(tag: tag.appearance, size: .large)
             
-            Spacer()
             
             // Statistics
-            VStack(alignment: .trailing, spacing: 4) {
-                if statistic.transactionCount > 0 {
-                    // For system tags (Balance tag for internal transfers), only show fees
-                    if tag.isSystemTag {
-                        Text(statistic.formattedTotalFees)
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.Arke.red)
-                        
-                        Text("activity_fees_paid")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text(statistic.formattedTotalAmountIncludingFees)
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(statistic.totalAmountIncludingFees >= 0 ? .Arke.green : .Arke.red)
-                        
-                        Text(String(localized: "tags_transaction_count", defaultValue: "^[\(statistic.transactionCount) transaction](inflect: true)"))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                } else {
-                    Text("activity_no_transactions")
-                        .font(.subheadline)
+            if statistic.transactionCount > 0 {
+                // For system tags (Balance tag for internal transfers), only show fees
+                if tag.isSystemTag {
+                    Spacer()
+                    
+                    Text("activity_fees_paid")
+                        .font(.body)
                         .foregroundColor(.secondary)
+                    
+                    Text(statistic.formattedTotalFees)
+                        .font(.body)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.Arke.red)
+                } else {
+                    Text(String(localized: "tags_transaction_count", defaultValue: "^[\(statistic.transactionCount) transaction](inflect: true)"))
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Text(statistic.formattedTotalAmountIncludingFees)
+                        .font(.body)
+                        .fontWeight(.semibold)
+                        .foregroundColor(statistic.totalAmountIncludingFees >= 0 ? .Arke.green : .Arke.red)
                 }
+            } else {
+                Spacer()
+                
+                Text("—")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
         }
         .padding(.vertical, 4)

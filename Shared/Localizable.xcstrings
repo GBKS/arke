@@ -1571,6 +1571,7 @@
       }
     },
     "activity_no_transactions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2737,7 +2738,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Assign Tags"
+            "value" : "Choose Tags"
           }
         }
       }
@@ -8558,13 +8559,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld transaction"
+                  "value" : "%lldx"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld transactions"
+                  "value" : "%lldx"
                 }
               }
             }
