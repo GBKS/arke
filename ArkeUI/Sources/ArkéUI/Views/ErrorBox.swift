@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 
 public struct ErrorBox: View {
     let errorMessage: String
@@ -31,6 +30,7 @@ public struct ErrorBox: View {
                 .resizable()
                 .frame(width: 50, height: 50)
                 .cornerRadius(10)
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -47,6 +47,7 @@ public struct ErrorBox: View {
                         }
                         .buttonStyle(.plain)
                         .help(String(localized: "action_dismiss_error", bundle: .module))
+                        .accessibilityLabel(Text("action_dismiss_error", bundle: .module))
                     }
                 }
                 
@@ -78,6 +79,7 @@ public struct ErrorBox: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(.Arke.green)
                                 .font(.caption)
+                                .accessibilityHidden(true)
                             Text(String(localized: "status_copied", bundle: .module))
                                 .font(.caption)
                                 .foregroundColor(.Arke.green)

@@ -8,6 +8,13 @@
 import SwiftUI
 
 public struct LargeErrorView: View {
+    /// The title shown above the error message.
+    ///
+    /// - Note: A `LocalizedStringKey` is resolved against the caller's bundle
+    ///   context (effectively `Bundle.main`), not this package's `.module`
+    ///   bundle. Pass keys defined in the app's catalog, or an already-localized
+    ///   value. Package-defined string keys will not resolve here — if that's
+    ///   needed, change this API to accept a resolved `Text`/`String` plus a bundle.
     let title: LocalizedStringKey
     let errorMessage: String
     let image: String?
@@ -46,12 +53,14 @@ public struct LargeErrorView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80, height: 80)
                         .foregroundStyle(systemImageColor ?? Color.Arke.gold)
+                        .accessibilityHidden(true)
                 } else if let image = image {
                     Image(image, bundle: .module)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 80, height: 80)
                         .cornerRadius(10)
+                        .accessibilityHidden(true)
                 }
                 
                 VStack(spacing: 8) {
@@ -81,6 +90,7 @@ public struct LargeErrorView: View {
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                                     .multilineTextAlignment(.trailing)
                             }
+                            .accessibilityElement(children: .combine)
                         }
                     }
                     .padding(.top, 8)
@@ -91,7 +101,7 @@ public struct LargeErrorView: View {
             VStack(spacing: 20) {
                 if let onDismiss = onDismiss {
                     Button(action: onDismiss) {
-                        Text("button_cancel")
+                        Text("button_cancel", bundle: .module)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold3)
                             .frame(maxWidth: .infinity)
@@ -103,7 +113,7 @@ public struct LargeErrorView: View {
                 
                 if let onRetry = onRetry {
                     Button(action: onRetry) {
-                        Text("button_retry")
+                        Text("button_retry", bundle: .module)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold3)
                             .frame(maxWidth: .infinity)

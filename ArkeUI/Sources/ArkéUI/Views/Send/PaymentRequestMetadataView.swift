@@ -22,41 +22,44 @@ public struct PaymentRequestMetadataView: View {
         VStack(alignment: .leading, spacing: 10) {
             if let label = label, !label.isEmpty {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("label_label_colon")
+                    Text("label_label_colon", bundle: .module)
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(label)
                         .font(.body)
                     Spacer()
                 }
-                
+                .accessibilityElement(children: .combine)
+
                 if (message != nil && !message!.isEmpty) || amount != nil {
                     Divider()
                 }
             }
             if let message = message, !message.isEmpty {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("label_message_colon")
+                    Text("label_message_colon", bundle: .module)
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(message)
                         .font(.body)
                     Spacer()
                 }
-                
+                .accessibilityElement(children: .combine)
+
                 if amount != nil {
                     Divider()
                 }
             }
             if let amount = amount {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("send_amount_to_pay")
+                    Text("send_amount_to_pay", bundle: .module)
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(BitcoinFormatter.shared.formatAmount(amount))
                         .font(.body)
                     Spacer()
                 }
+                .accessibilityElement(children: .combine)
             }
         }
         .padding(.horizontal, 20)

@@ -15,16 +15,17 @@ public struct EmojiPickerSheet: View {
         self._selectedEmoji = selectedEmoji
     }
 
-    // Common emoji categories for tags
+    // Common emoji categories for tags. The first tuple element is a
+    // localization key resolved against the package bundle.
     private let emojiCategories = [
-        ("Recent", ["☕", "🍕", "🚗", "🛒", "📄", "💰", "📈", "🎁"]),
-        ("Food & Drink", ["☕", "🍕", "🍔", "🍎", "🍰", "🍜", "🍺", "🥗", "🍩", "🍳"]),
-        ("Transportation", ["🚗", "🚌", "✈️", "🚂", "🚲", "🛴", "🚁", "⛽", "🚕", "🛻"]),
-        ("Shopping", ["🛒", "🛍️", "👕", "👟", "📱", "💻", "🎮", "📚", "🛏️", "🪑"]),
-        ("Money", ["💰", "💳", "💎", "🏦", "📈", "📊", "💸", "🪙", "💵", "🧾"]),
-        ("Activities", ["⚽", "🏀", "🎵", "🎬", "🎨", "📖", "🎯", "🎲", "🏃", "🏋️"]),
-        ("Objects", ["📄", "📱", "💻", "⌚", "🎁", "🔑", "💡", "🛠️", "📋", "🗂️"]),
-        ("Symbols", ["⭐", "❤️", "✅", "❌", "⚠️", "🔥", "💯", "✨", "🎯", "📍"])
+        ("emoji_category_recent", ["☕", "🍕", "🚗", "🛒", "📄", "💰", "📈", "🎁"]),
+        ("emoji_category_food_drink", ["☕", "🍕", "🍔", "🍎", "🍰", "🍜", "🍺", "🥗", "🍩", "🍳"]),
+        ("emoji_category_transportation", ["🚗", "🚌", "✈️", "🚂", "🚲", "🛴", "🚁", "⛽", "🚕", "🛻"]),
+        ("emoji_category_shopping", ["🛒", "🛍️", "👕", "👟", "📱", "💻", "🎮", "📚", "🛏️", "🪑"]),
+        ("emoji_category_money", ["💰", "💳", "💎", "🏦", "📈", "📊", "💸", "🪙", "💵", "🧾"]),
+        ("emoji_category_activities", ["⚽", "🏀", "🎵", "🎬", "🎨", "📖", "🎯", "🎲", "🏃", "🏋️"]),
+        ("emoji_category_objects", ["📄", "📱", "💻", "⌚", "🎁", "🔑", "💡", "🛠️", "📋", "🗂️"]),
+        ("emoji_category_symbols", ["⭐", "❤️", "✅", "❌", "⚠️", "🔥", "💯", "✨", "🎯", "📍"])
     ]
     
     public var body: some View {
@@ -33,7 +34,7 @@ public struct EmojiPickerSheet: View {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(emojiCategories, id: \.0) { category in
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(category.0)
+                            Text(LocalizedStringKey(category.0), bundle: .module)
                                 .font(.headline)
                                 .padding(.horizontal)
                             
@@ -52,6 +53,7 @@ public struct EmojiPickerSheet: View {
                                             .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityAddTraits(selectedEmoji == emoji ? [.isButton, .isSelected] : .isButton)
                                 }
                             }
                             .padding(.horizontal)
@@ -60,7 +62,7 @@ public struct EmojiPickerSheet: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("button_choose_emoji")
+            .navigationTitle(Text("button_choose_emoji", bundle: .module))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -68,7 +70,7 @@ public struct EmojiPickerSheet: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("button_done")
+                    .accessibilityLabel(Text("button_done", bundle: .module))
                 }
             }
         }

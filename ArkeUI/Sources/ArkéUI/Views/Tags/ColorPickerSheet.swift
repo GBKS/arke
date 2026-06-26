@@ -32,7 +32,7 @@ public struct ColorPickerSheet: View {
                 VStack(spacing: 24) {
                     // Predefined Colors
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
-                        ForEach(predefinedColors, id: \.self) { colorHex in
+                        ForEach(Array(predefinedColors.enumerated()), id: \.element) { index, colorHex in
                             Button(action: {
                                 selectedColorHex = colorHex
                                 dismiss()
@@ -51,6 +51,8 @@ public struct ColorPickerSheet: View {
                                     .animation(.spring(response: 0.3), value: selectedColorHex)
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(Text("accessibility_color_swatch \(index + 1)", bundle: .module))
+                            .accessibilityAddTraits(selectedColorHex == colorHex ? [.isButton, .isSelected] : .isButton)
                         }
                     }
                     .padding(.horizontal)
@@ -60,14 +62,18 @@ public struct ColorPickerSheet: View {
                     
                     // Custom Color Picker
                     HStack(spacing: 16) {
-                        ColorPicker(String(localized: "action_choose_custom_color"), selection: $customColor, supportsOpacity: false)
+                        ColorPicker(String(localized: "action_choose_custom_color", bundle: .module), selection: $customColor, supportsOpacity: false)
                             .padding(.horizontal)
-                        
+
                         Button(action: {
                             selectedColorHex = customColor.toHex()
                             dismiss()
                         }) {
-                            Label("button_use_custom_color", systemImage: "paintbrush")
+                            Label {
+                                Text("button_use_custom_color", bundle: .module)
+                            } icon: {
+                                Image(systemName: "paintbrush")
+                            }
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .background(customColor.opacity(0.2))
@@ -80,7 +86,7 @@ public struct ColorPickerSheet: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("button_choose_color")
+            .navigationTitle(Text("button_choose_color", bundle: .module))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
@@ -88,7 +94,7 @@ public struct ColorPickerSheet: View {
                     } label: {
                         Image(systemName: "checkmark")
                     }
-                    .accessibilityLabel("button_done")
+                    .accessibilityLabel(Text("button_done", bundle: .module))
                 }
             }
         }

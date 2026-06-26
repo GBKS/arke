@@ -40,19 +40,20 @@ public struct FeeDisplayView: View {
     @ViewBuilder
     private var content: some View {
         HStack(spacing: 8) {
-            Text("Fee")
+            Text("label_fee", bundle: .module)
                 .font(.body)
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text(feeText)
                 .font(.body)
-            
+
             if showDisclosure {
                 Image(systemName: "chevron.down")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, 20)
@@ -67,6 +68,13 @@ public struct FeeDisplayView: View {
                     .strokeBorder(Color.arkeSeparatorColor.opacity(0.5), lineWidth: 1)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(fee == nil
+            ? Text("accessibility_value_fee_unavailable", bundle: .module)
+            : Text(""))
+        .accessibilityHint(showDisclosure && onTap != nil
+            ? Text("accessibility_hint_change_fee", bundle: .module)
+            : Text(""))
     }
     
     private var feeText: String {

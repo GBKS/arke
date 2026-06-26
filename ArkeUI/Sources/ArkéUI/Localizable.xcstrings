@@ -60,12 +60,52 @@
     "accessibility_amount_label_with_unit %@" : {
 
     },
+    "accessibility_color_swatch %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color option %lld"
+          }
+        }
+      }
+    },
     "accessibility_fee_label" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fee"
+          }
+        }
+      }
+    },
+    "accessibility_hint_change_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens fee selection"
+          }
+        }
+      }
+    },
+    "accessibility_hint_choose_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the color picker"
+          }
+        }
+      }
+    },
+    "accessibility_hint_choose_emoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the emoji picker"
           }
         }
       }
@@ -172,16 +212,44 @@
       }
     },
     "action_change_emoji" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change emoji"
+          }
+        }
+      }
     },
     "action_choose_color" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose color"
+          }
+        }
+      }
     },
     "action_choose_custom_color" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose custom color"
+          }
+        }
+      }
     },
     "action_choose_emoji" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose emoji"
+          }
+        }
+      }
     },
     "action_copy_address" : {
 
@@ -404,13 +472,34 @@
       }
     },
     "button_choose_color" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Color"
+          }
+        }
+      }
     },
     "button_choose_emoji" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Emoji"
+          }
+        }
+      }
     },
     "button_clear" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        }
+      }
     },
     "button_close" : {
       "extractionState" : "manual",
@@ -424,7 +513,14 @@
       }
     },
     "button_done" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
     },
     "button_finalize" : {
       "extractionState" : "stale",
@@ -480,7 +576,14 @@
       }
     },
     "button_use_custom_color" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Custom Color"
+          }
+        }
+      }
     },
     "Cannot use: %@" : {
       "localizations" : {
@@ -510,6 +613,86 @@
     },
     "Done" : {
 
+    },
+    "emoji_category_activities" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activities"
+          }
+        }
+      }
+    },
+    "emoji_category_food_drink" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food & Drink"
+          }
+        }
+      }
+    },
+    "emoji_category_money" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Money"
+          }
+        }
+      }
+    },
+    "emoji_category_objects" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects"
+          }
+        }
+      }
+    },
+    "emoji_category_recent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
+          }
+        }
+      }
+    },
+    "emoji_category_shopping" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shopping"
+          }
+        }
+      }
+    },
+    "emoji_category_symbols" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbols"
+          }
+        }
+      }
+    },
+    "emoji_category_transportation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transportation"
+          }
+        }
+      }
     },
     "error_copy" : {
       "localizations" : {
@@ -544,12 +727,16 @@
       }
     },
     "error_tag_already_exists" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tag with this name already exists"
+          }
+        }
+      }
     },
     "Estimated fee" : {
-
-    },
-    "Fee" : {
 
     },
     "format_accounting_style" : {
@@ -693,7 +880,14 @@
       }
     },
     "label_color" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color"
+          }
+        }
+      }
     },
     "label_current_format" : {
       "localizations" : {
@@ -706,7 +900,14 @@
       }
     },
     "label_emoji_optional" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emoji (Optional)"
+          }
+        }
+      }
     },
     "label_fee" : {
       "localizations" : {
@@ -760,7 +961,14 @@
       }
     },
     "label_label_colon" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label:"
+          }
+        }
+      }
     },
     "label_linked_to_contacts" : {
       "localizations" : {
@@ -773,7 +981,14 @@
       }
     },
     "label_message_colon" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message:"
+          }
+        }
+      }
     },
     "label_minimum" : {
       "localizations" : {
@@ -786,7 +1001,14 @@
       }
     },
     "label_name" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        }
+      }
     },
     "label_next_round" : {
       "localizations" : {
@@ -949,7 +1171,14 @@
       }
     },
     "placeholder_tag_name" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter tag name"
+          }
+        }
+      }
     },
     "Read-Only Mode" : {
 
@@ -978,7 +1207,14 @@
       }
     },
     "send_amount_to_pay" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount to pay:"
+          }
+        }
+      }
     },
     "status_available" : {
       "localizations" : {

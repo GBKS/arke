@@ -57,17 +57,18 @@ public struct TagFormFields: View {
     private var nameField: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("label_name")
+                Text("label_name", bundle: .module)
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text("\(name.count)/30")
                     .font(.caption)
                     .foregroundStyle(name.count > 25 ? .orange : .secondary)
+                    .accessibilityHidden(true)
             }
-            
-            TextField(String(localized: "placeholder_tag_name"), text: $name)
+
+            TextField(String(localized: "placeholder_tag_name", bundle: .module), text: $name)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled()
                 .submitLabel(.done)
@@ -76,11 +77,16 @@ public struct TagFormFields: View {
                     isNameFieldFocused = false
                     onSubmit()
                 }
-            
+                .accessibilityLabel(Text("label_name", bundle: .module))
+
             if nameExists {
-                Label("error_tag_already_exists", systemImage: "exclamationmark.triangle")
-                    .font(.caption)
-                    .foregroundColor(.Arke.orange)
+                Label {
+                    Text("error_tag_already_exists", bundle: .module)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle")
+                }
+                .font(.caption)
+                .foregroundColor(.Arke.orange)
             }
         }
     }
@@ -90,9 +96,9 @@ public struct TagFormFields: View {
     @ViewBuilder
     private var emojiField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "label_emoji_optional"))
+            Text("label_emoji_optional", bundle: .module)
                 .font(.headline)
-            
+
             HStack {
                 Button(action: {
                     showingEmojiPicker.toggle()
@@ -105,25 +111,32 @@ public struct TagFormFields: View {
                             Text(selectedEmoji)
                                 .font(.title2)
                         }
-                        
-                        Text(selectedEmoji.isEmpty ? String(localized: "action_choose_emoji") : String(localized: "action_change_emoji"))
+
+                        (selectedEmoji.isEmpty
+                            ? Text("action_choose_emoji", bundle: .module)
+                            : Text("action_change_emoji", bundle: .module))
                             .foregroundStyle(selectedEmoji.isEmpty ? .secondary : .primary)
-                        
+
                         Spacer()
-                        
+
                         Image(systemName: "chevron.right")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .accessibilityHidden(true)
                     }
                     .padding()
                     .background(.background)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
-                
+                .accessibilityElement(children: .combine)
+                .accessibilityHint(Text("accessibility_hint_choose_emoji", bundle: .module))
+
                 if !selectedEmoji.isEmpty {
-                    Button("button_clear") {
+                    Button {
                         selectedEmoji = ""
+                    } label: {
+                        Text("button_clear", bundle: .module)
                     }
                     .font(.caption)
                     .foregroundColor(Color.Arke.red)
@@ -137,9 +150,9 @@ public struct TagFormFields: View {
     @ViewBuilder
     private var colorField: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("label_color")
+            Text("label_color", bundle: .module)
                 .font(.headline)
-            
+
             Button(action: {
                 showingColorPicker.toggle()
             }) {
@@ -147,20 +160,24 @@ public struct TagFormFields: View {
                     Circle()
                         .fill(Color(hex: selectedColorHex) ?? .Arke.blue)
                         .frame(width: 24, height: 24)
-                    
-                    Text("action_choose_color")
-                    
+                        .accessibilityHidden(true)
+
+                    Text("action_choose_color", bundle: .module)
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                 }
                 .padding()
                 .background(.background)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityHint(Text("accessibility_hint_choose_color", bundle: .module))
         }
     }
 }
