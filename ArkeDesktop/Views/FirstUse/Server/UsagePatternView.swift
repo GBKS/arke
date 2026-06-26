@@ -194,7 +194,7 @@ struct UsagePatternView: View {
             .padding(.bottom, 60)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .onAppear {
             // Initialize state from the provided usage pattern
             averageBalance = Double(usagePattern.averageBalance)

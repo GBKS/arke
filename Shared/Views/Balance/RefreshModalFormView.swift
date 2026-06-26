@@ -138,7 +138,7 @@ struct RefreshModalFormView: View {
                     }
                     Text(isLoading ? String(localized: "status_refreshing") : "Start")
                         .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)

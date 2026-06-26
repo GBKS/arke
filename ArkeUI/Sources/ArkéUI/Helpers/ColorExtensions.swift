@@ -22,7 +22,7 @@ extension Color {
     //public static let gold = Color(r: 255, g: 215, b: 0) // Arke.gold
     //public static let arkeGold = Color(r: 248, g: 209, b: 117) // Arke.gold
     //public static let arkeDarker = Color(r: 192, g: 159, b: 88) // .Arke.gold2
-    //public static let arkeDark = Color(r: 23, g: 11, b: 0) // .Arke.gold3
+    //public static let arkeDark = Color(r: 23, g: 11, b: 0) // .Arke.gold4
 }
 
 extension Color {
@@ -30,6 +30,7 @@ extension Color {
         public static let gold = Color("ArkeGold", bundle: .module)
         public static let gold2 = Color("ArkeGold2", bundle: .module)
         public static let gold3 = Color("ArkeGold3", bundle: .module)
+        public static let gold4 = Color("ArkeGold4", bundle: .module)
         public static let green = Color("ArkeGreen", bundle: .module)
         public static let blue = Color("ArkeBlue", bundle: .module)
         public static let orange = Color("ArkeOrange", bundle: .module)

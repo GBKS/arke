@@ -214,7 +214,7 @@ struct LightningInvoiceSheet_iOS: View {
                 ShareLink(item: createBIP21URI()) {
                     Text("button_share")
                         .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 20)
                 }

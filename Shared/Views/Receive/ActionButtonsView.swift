@@ -21,7 +21,7 @@ struct ActionButtonsView: View {
                 ShareLink(item: shareContent) {
                     Text("button_share")
                         .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 40)
                 }
                 .buttonStyle(.glassProminent)
@@ -36,7 +36,7 @@ struct ActionButtonsView: View {
                 } label: {
                     Image(systemName: "qrcode")
                         .font(.system(size: 20))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.vertical, 3)
                 }
                 .buttonStyle(.glassProminent)

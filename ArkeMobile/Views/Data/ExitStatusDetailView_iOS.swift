@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import Bark
 import ArkeUI
 import os
@@ -292,7 +293,13 @@ private struct TransactionIdsSection: View {
             ForEach(txids, id: \.self) { txid in
                 Text(txid.prefix(8) + "..." + txid.suffix(8))
                     .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
+                    .contextMenu {
+                        Button {
+                            UIPasteboard.general.string = txid
+                        } label: {
+                            Label("Copy Transaction ID", systemImage: "doc.on.doc")
+                        }
+                    }
             }
         }
     }
@@ -312,8 +319,15 @@ private struct ConfirmedTransactionsSection: View {
                         
                         Text(item.txid.prefix(8) + "..." + item.txid.suffix(8))
                             .font(.system(.caption, design: .monospaced))
+                            .contextMenu {
+                                Button {
+                                    UIPasteboard.general.string = item.txid
+                                } label: {
+                                    Label("Copy Transaction ID", systemImage: "doc.on.doc")
+                                }
+                            }
                     }
-                    
+
                     Text("Block \(item.block.height)")
                         .font(.caption2)
                         .foregroundStyle(.secondary)

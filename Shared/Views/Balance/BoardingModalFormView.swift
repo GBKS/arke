@@ -131,7 +131,7 @@ struct BoardingModalFormView: View {
                     } label: {
                         Text("button_start")
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold3)
+                            .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
                     }

@@ -14,7 +14,6 @@ struct AddressCard: View {
     let label: String?
     let onTap: () -> Void
     
-    @State private var showingCopied = false
     @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
     
     init(address: String, shareContent: String? = nil, label: String? = nil, onTap: @escaping () -> Void) {
@@ -83,31 +82,8 @@ struct AddressCard: View {
             }
             
             Spacer()
-            
-            Button {
-                copyToClipboard(address)
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                    showingCopied = true
-                }
-                
-                Task {
-                    try? await Task.sleep(nanoseconds: 1_500_000_000)
-                    withAnimation {
-                        showingCopied = false
-                    }
-                }
-            } label: {
-                Image(systemName: showingCopied ? "checkmark" : "doc.on.doc.fill")
-                    .foregroundStyle(showingCopied ? Color.Arke.green : Color.Arke.gold)
-                    .frame(width: 14, height: 14)
-                    .padding(.horizontal, 2)
-                    .padding(.vertical, 4)
-                    .contentTransition(.symbolEffect(.replace))
-                    .scaleEffect(showingCopied ? 1.1 : 1.0)
-            }
-            .buttonStyle(.bordered)
-            .tint(showingCopied ? .Arke.green : .Arke.gold)
-            .help("action_copy_address")
+
+            CopyButton(address, help: "action_copy_address")
         }
     }
 }

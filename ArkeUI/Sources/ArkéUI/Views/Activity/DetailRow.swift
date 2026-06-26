@@ -37,16 +37,7 @@ public struct DetailRow: View {
             .accessibilityElement(children: .combine)
 
             if isCopyable {
-                Button {
-                    copyToClipboard(value)
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                        .font(.caption)
-                        .foregroundColor(.Arke.blue)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "action_copy_value", bundle: .module))
-                .accessibilityHint(String(localized: "accessibility_hint_copy_value", bundle: .module))
+                CopyButton(value, style: .plain)
             }
         }
         .frame(maxWidth: .infinity)

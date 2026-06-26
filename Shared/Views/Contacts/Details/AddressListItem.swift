@@ -62,7 +62,7 @@ struct AddressListItem: View {
                     Button(action: onEdit) {
                         Image(systemName: "paintbrush.pointed.fill")
                             .font(.body)
-                            .tint(Color.Arke.gold3)
+                            .tint(Color.Arke.gold4)
                     }
                     .accessibilityLabel("action_edit_address")
                     .buttonStyle(.bordered)

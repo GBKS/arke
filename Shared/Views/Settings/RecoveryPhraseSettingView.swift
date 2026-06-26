@@ -158,7 +158,7 @@ struct RecoveryPhraseSettingView: View {
                 } label: {
                     Text("Show Recovery Phrase")
                         .font(.system(size: 19, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                 }

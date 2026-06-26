@@ -129,7 +129,7 @@ struct ServerSelectionView: View {
             .padding(.bottom, 60)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .onAppear {
             // If custom usage pattern is provided, use it directly
             if let pattern = usagePattern {

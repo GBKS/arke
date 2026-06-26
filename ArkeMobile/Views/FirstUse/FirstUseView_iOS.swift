@@ -138,7 +138,7 @@ struct FirstUseView_iOS: View {
                             Text("button_create_wallet")
                                 .font(.system(.title2, weight: .semibold))
                                 .fontWeight(.semibold)
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 20)
                         }
@@ -175,7 +175,7 @@ struct FirstUseView_iOS: View {
             .frame(maxWidth: .infinity)
         }
         .colorScheme(.dark)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .safeAreaPadding([.top, .bottom])
         .confirmationDialog("button_delete_wallet",
             isPresented: $showingDeleteConfirmation,

@@ -521,7 +521,7 @@ struct QuickPaymentView: View {
                     } label: {
                         Text("button_send")
                             .font(.title2)
-                            .foregroundStyle(Color.Arke.gold3)
+                            .foregroundStyle(Color.Arke.gold4)
                             .padding(.horizontal, 40)
                     }
                     .buttonStyle(.glassProminent)

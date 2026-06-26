@@ -66,7 +66,7 @@ struct WalletCreatedView_iOS: View {
                 } label: {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 27))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.glassProminent)
@@ -81,7 +81,7 @@ struct WalletCreatedView_iOS: View {
             .padding(.bottom, safeAreaInsets.bottom)
         }
         .colorScheme(.dark)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .ignoresSafeArea()
     }
 }

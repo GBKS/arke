@@ -58,7 +58,7 @@ struct FeeSelectionSheet: View {
             } label: {
                 Text("button_done")
                     .font(.title3)
-                    .foregroundStyle(Color.Arke.gold3)
+                    .foregroundStyle(Color.Arke.gold4)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             }

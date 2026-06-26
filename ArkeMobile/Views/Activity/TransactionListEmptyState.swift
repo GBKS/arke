@@ -100,7 +100,7 @@ struct TransactionListEmptyState: View {
                 } label: {
                     Text("Receive Bitcoin")
                         .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                 }

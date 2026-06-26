@@ -47,7 +47,7 @@ public struct SendNoteEditorSheet: View {
                 } label: {
                     Image(systemName: "checkmark")
                         .font(.title2)
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 6)
                 }

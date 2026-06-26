@@ -182,7 +182,7 @@ struct ReceiveView_iOS: View {
                             ShareLink(item: shareContent) {
                                 Text("Share Payment Link")
                                     .font(.system(size: 21, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold3)
+                                    .foregroundStyle(Color.Arke.gold4)
                                     .frame(maxWidth: .infinity)
                                     .padding(.horizontal, 20)
                             }
@@ -197,7 +197,7 @@ struct ReceiveView_iOS: View {
                                 ShareButton(items: [vcardURL]) {
                                     Text("Share Contact Card")
                                         .font(.system(size: 21, weight: .semibold))
-                                        .foregroundStyle(Color.Arke.gold3)
+                                        .foregroundStyle(Color.Arke.gold4)
                                         .frame(maxWidth: .infinity)
                                         .padding(.horizontal, 20)
                                 }
@@ -271,7 +271,7 @@ struct ReceiveView_iOS: View {
                             ShareLink(item: shareContent) {
                                 Text("button_share")
                                     .font(.system(size: 21, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold3)
+                                    .foregroundStyle(Color.Arke.gold4)
                                     .frame(maxWidth: .infinity)
                                     .padding(.horizontal, 20)
                             }
@@ -286,7 +286,7 @@ struct ReceiveView_iOS: View {
                                 ShareButton(items: [vcardURL]) {
                                     Image(systemName: "person.text.rectangle.fill")
                                         .font(.system(size: 20))
-                                        .foregroundStyle(Color.Arke.gold3)
+                                        .foregroundStyle(Color.Arke.gold4)
                                         .frame(width: 30, height: 30)
                                 }
                                 .buttonStyle(.glassProminent)

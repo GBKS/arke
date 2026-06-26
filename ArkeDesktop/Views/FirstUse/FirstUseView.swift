@@ -96,6 +96,6 @@ struct FirstUseView: View {
             .padding(.vertical, 60)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
     }
 }

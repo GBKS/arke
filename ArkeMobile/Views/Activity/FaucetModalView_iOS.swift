@@ -118,10 +118,10 @@ struct FaucetModalView_iOS: View {
                         HStack {
                             Image(systemName: "book.pages")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                             Text("button_view_test_guide")
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -139,10 +139,10 @@ struct FaucetModalView_iOS: View {
                         HStack {
                             Image(systemName: "bubble.left.and.bubble.right")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                             Text("action_chat_discord")
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -186,7 +186,7 @@ private struct FaucetInstructionRow: View {
                 .font(.system(size: 14, weight: .bold))
                 .foregroundStyle(Color.white)
                 .frame(width: 24, height: 24)
-                .background(Color.Arke.gold3)
+                .background(Color.Arke.gold4)
                 .clipShape(Circle())
             
             Text(text)

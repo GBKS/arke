@@ -103,6 +103,6 @@ struct CreateWalletView: View {
         .padding(.top, 20)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
     }
 }

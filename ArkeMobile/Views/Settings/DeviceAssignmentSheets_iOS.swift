@@ -62,7 +62,7 @@ struct DemoteDeviceSheet: View {
                         } else {
                             Text("Make Secondary")
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -76,7 +76,7 @@ struct DemoteDeviceSheet: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold3)
+                            .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
                         
                     }
@@ -162,7 +162,7 @@ struct PromoteDeviceSheet: View {
                         } else {
                             Text("Make Primary")
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -176,7 +176,7 @@ struct PromoteDeviceSheet: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold3)
+                            .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
                         
                     }

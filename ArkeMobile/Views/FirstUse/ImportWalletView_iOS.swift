@@ -172,7 +172,7 @@ struct ImportWalletView_iOS: View {
                     } label: {
                         Text(isImporting ? "status_importing" : "button_import_wallet")
                             .font(.system(.title2, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold3)
+                            .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
                     }
@@ -194,7 +194,7 @@ struct ImportWalletView_iOS: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .colorScheme(.dark)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .ignoresSafeArea()
         .fileImporter(
             isPresented: $showingFilePicker,

@@ -38,7 +38,7 @@ struct SendModalSuccessView: View {
                 } label: {
                     Text("button_done")
                         .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 20)
                 }
                 .buttonStyle(.glassProminent)

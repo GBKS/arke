@@ -114,10 +114,10 @@ struct PaymentInfoReceivedSheet: View {
                         HStack {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                             Text("Pay")
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -135,10 +135,10 @@ struct PaymentInfoReceivedSheet: View {
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold3)
+                                    .foregroundStyle(Color.Arke.gold4)
                                 Text("View Contact")
                                     .font(.system(size: 21, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold3)
+                                    .foregroundStyle(Color.Arke.gold4)
                             }
                             .frame(maxWidth: .infinity)
                         }
@@ -155,7 +155,7 @@ struct PaymentInfoReceivedSheet: View {
                             HStack {
                                 if isCreatingContact {
                                     ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: Color.Arke.gold3))
+                                        .progressViewStyle(CircularProgressViewStyle(tint: Color.Arke.gold4))
                                         .scaleEffect(0.8)
                                 } else {
                                     Image(systemName: "person.crop.circle.badge.plus")

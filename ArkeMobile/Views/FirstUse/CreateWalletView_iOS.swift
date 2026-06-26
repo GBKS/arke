@@ -83,7 +83,7 @@ struct CreateWalletView_iOS: View {
                         VStack(spacing: 30) {
                             Text("onboarding_wallet_awaits")
                                 .font(.system(.title, design: .serif))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                                 .accessibilityAddTraits(.isHeader)
                             
                             Button {
@@ -93,7 +93,7 @@ struct CreateWalletView_iOS: View {
                             } label: {
                                 Text("onboarding_step_in")
                                     .font(.system(.title2, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold3)
+                                    .foregroundStyle(Color.Arke.gold4)
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.glassProminent)
@@ -115,12 +115,12 @@ struct CreateWalletView_iOS: View {
                         VStack(spacing: 20) {
                             ProgressView()
                                 .progressViewStyle(.circular)
-                                .tint(Color.Arke.gold3)
+                                .tint(Color.Arke.gold4)
                                 .scaleEffect(1.5)
                             
                             Text("onboarding_creating_wallet")
                                 .font(.system(.headline, weight: .medium))
-                                .foregroundStyle(Color.Arke.gold3)
+                                .foregroundStyle(Color.Arke.gold4)
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityLabel("onboarding_creating_wallet")

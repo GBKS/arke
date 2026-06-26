@@ -109,7 +109,7 @@ struct LightningInvoiceQREmptyStateView: View {
             } label: {
                 Image(systemName: "arrow.right")
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Color.Arke.gold3)
+                    .foregroundStyle(Color.Arke.gold4)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 12)
             }

@@ -189,7 +189,7 @@ struct ExitView_iOS: View {
                 Text(String(localized: "balance_confirm_recover", defaultValue: "Recover \(BitcoinFormatter.shared.formatAmount(spendableBalance))? It takes about 24 hours and cannot be cancelled."))
             }
         }
-        .tint(Color.Arke.gold3)
+        .tint(Color.Arke.gold4)
         .alert("button_start_withdrawal", isPresented: $showingClaimConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("button_start") {

@@ -292,7 +292,7 @@ struct IntroVideoView_iOS: View {
                         }
                         .padding(16)
                     }
-                    .background(Color.Arke.gold3.opacity(0.98))
+                    .background(Color.Arke.gold4.opacity(0.98))
                 }
                 .frame(maxWidth: 400)
                 .frame(maxHeight: .infinity)
@@ -305,7 +305,7 @@ struct IntroVideoView_iOS: View {
             }
         }
         .colorScheme(.dark)
-        .background(Color.Arke.gold3)
+        .background(Color.Arke.gold4)
         .ignoresSafeArea()
         .animation(reduceMotion ? .none : .spring(response: 0.3, dampingFraction: 0.8), value: showPlaylist)
         .onChange(of: showPlaylist) { _, newValue in

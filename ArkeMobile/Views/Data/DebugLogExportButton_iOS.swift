@@ -21,14 +21,14 @@ struct DebugLogExportButton_iOS: View {
             HStack(spacing: 8) {
                 if isGenerating {
                     ProgressView()
-                        .tint(Color.Arke.gold3)
+                        .tint(Color.Arke.gold4)
                 } else {
                     Image(systemName: "square.and.arrow.up")
                 }
                 Text(isGenerating ? "debug_logs_generating" : "debug_logs_title")
                     .font(.system(size: 17, weight: .semibold))
             }
-            .foregroundStyle(Color.Arke.gold3)
+            .foregroundStyle(Color.Arke.gold4)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
         }

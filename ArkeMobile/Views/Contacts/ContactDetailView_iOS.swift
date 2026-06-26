@@ -239,16 +239,16 @@ struct ContactDetailView_iOS: View {
             HStack {
                 if viewModel?.isRequestingFaucet == true {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color.Arke.gold3))
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.Arke.gold4))
                         .controlSize(.small)
                 } else {
                     Image(systemName: "bitcoinsign.circle.fill")
                         .font(.body)
-                        .foregroundStyle(Color.Arke.gold3)
+                        .foregroundStyle(Color.Arke.gold4)
                 }
                 Text(viewModel?.isRequestingFaucet == true ? String(localized: "status_requesting") : String(localized: "onboarding_ask_test_bitcoin"))
                     .font(.system(.body, weight: .semibold))
-                    .foregroundStyle(Color.Arke.gold3)
+                    .foregroundStyle(Color.Arke.gold4)
             }
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity)
