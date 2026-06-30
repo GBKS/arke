@@ -1,14 +1,15 @@
 //
 //  MovementCategory.swift
-//  Ark wallet prototype
+//  ArkéUI
 //
-//  Categorization system for movements based on subsystem
+//  Categorization system for movements based on subsystem.
+//  Moved into ArkéUI as a pure presentation value type (no SwiftData/Bark).
 //
 
 import Foundation
 
 /// High-level categorization of movements based on subsystem
-enum MovementCategory: String, Codable, CaseIterable, Sendable {
+public enum MovementCategory: String, Codable, CaseIterable, Sendable {
     case offchainTransfer = "offchain_transfer"  // bark.arkoor send/receive
     case boarding = "boarding"                   // bark.board
     case exit = "exit"                          // bark.exit
@@ -19,11 +20,11 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
     case refresh = "refresh"                    // bark.round refresh
     case onchainTransaction = "onchain_transaction"  // BDK wallet onchain tx
     case unknown = "unknown"
-    
+
     // MARK: - Display
-    
+
     /// Display name for UI
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .offchainTransfer: return "Offchain Transfer"
         case .boarding: return "Boarding"
@@ -37,9 +38,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
         case .unknown: return "Unknown"
         }
     }
-    
+
     /// Short display name for compact UI
-    var shortDisplayName: String {
+    public var shortDisplayName: String {
         switch self {
         case .offchainTransfer: return "Ark Transfer"
         case .boarding: return "Board"
@@ -53,9 +54,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
         case .unknown: return "?"
         }
     }
-    
+
     /// Description of what this category represents
-    var description: String {
+    public var description: String {
         switch self {
         case .offchainTransfer:
             return "Offchain transfer between Ark users"
@@ -79,11 +80,11 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return "Unknown operation"
         }
     }
-    
+
     // MARK: - Icons
-    
+
     /// System icon name (SF Symbols)
-    var icon: String {
+    public var icon: String {
         switch self {
         case .offchainTransfer: return "repeat"
         case .boarding: return "repeat"
@@ -97,9 +98,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
         case .unknown: return "questionmark"
         }
     }
-    
+
     /// Icon color name for theming
-    var iconColorName: String {
+    public var iconColorName: String {
         switch self {
         case .offchainTransfer: return "purple"
         case .boarding: return "gray"
@@ -113,11 +114,11 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
         case .unknown: return "gray"
         }
     }
-    
+
     // MARK: - Behavior
-    
+
     /// Whether this category should be shown in transaction history by default
-    var showInHistoryByDefault: Bool {
+    public var showInHistoryByDefault: Bool {
         switch self {
         case .refresh:
             // Refresh operations are maintenance, might want to hide by default
@@ -126,9 +127,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return true
         }
     }
-    
+
     /// Whether this operation involves Lightning Network
-    var isLightning: Bool {
+    public var isLightning: Bool {
         switch self {
         case .lightningSend, .lightningReceive:
             return true
@@ -136,9 +137,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return false
         }
     }
-    
+
     /// Whether this operation involves onchain Bitcoin
-    var isOnchain: Bool {
+    public var isOnchain: Bool {
         switch self {
         case .boarding, .exit, .offboarding, .onchainSend, .onchainTransaction:
             return true
@@ -146,9 +147,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return false
         }
     }
-    
+
     /// Whether this operation is offchain (Ark-to-Ark)
-    var isOffchain: Bool {
+    public var isOffchain: Bool {
         switch self {
         case .offchainTransfer:
             return true
@@ -156,9 +157,9 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return false
         }
     }
-    
+
     /// Whether this is a maintenance operation
-    var isMaintenance: Bool {
+    public var isMaintenance: Bool {
         switch self {
         case .refresh:
             return true
@@ -166,31 +167,31 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             return false
         }
     }
-    
+
     // MARK: - Detection
-    
+
     /// Determine category from subsystem name and kind
     /// - Parameters:
     ///   - subsystemName: The subsystem name (e.g., "bark.arkoor")
     ///   - subsystemKind: The subsystem kind (e.g., "send", "receive")
     /// - Returns: The detected movement category
-    static func from(subsystemName: String, subsystemKind: String) -> MovementCategory {
+    public static func from(subsystemName: String, subsystemKind: String) -> MovementCategory {
         switch subsystemName {
         case "bark.arkoor":
             return .offchainTransfer
-            
+
         case "bark.board":
             return .boarding
-            
+
         case "bark.exit":
             return .exit
-            
+
         case "bark.lightning_send":
             return .lightningSend
-            
+
         case "bark.lightning_receive":
             return .lightningReceive
-            
+
         case "bark.offboard":
             // Differentiate between collaborative send and traditional offboarding
             switch subsystemKind {
@@ -203,7 +204,7 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             default:
                 return .unknown
             }
-            
+
         case "bark.round":
             // Differentiate based on kind (legacy/alternative pathways)
             switch subsystemKind {
@@ -216,7 +217,7 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
             default:
                 return .unknown
             }
-            
+
         default:
             return .unknown
         }
@@ -225,18 +226,18 @@ enum MovementCategory: String, Codable, CaseIterable, Sendable {
 
 // MARK: - Filter Groups
 
-extension MovementCategory {
+public extension MovementCategory {
     /// Groups of categories for filtering UI
-    enum FilterGroup: String, CaseIterable {
+    enum FilterGroup: String, CaseIterable, Sendable {
         case all = "All"
         case offchain = "Offchain"
         case lightning = "Lightning"
         case onchain = "Onchain"
         case maintenance = "Maintenance"
-        
-        var displayName: String { rawValue }
-        
-        func matches(_ category: MovementCategory) -> Bool {
+
+        public var displayName: String { rawValue }
+
+        public func matches(_ category: MovementCategory) -> Bool {
             switch self {
             case .all:
                 return true

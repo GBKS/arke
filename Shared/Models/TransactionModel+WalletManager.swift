@@ -1,0 +1,92 @@
+//
+//  TransactionModel+WalletManager.swift
+//  Ark wallet prototype
+//
+//  App-side service lookups for `TransactionModel`. The pure value type lives in
+//  the ArkéUI package; these computed properties reach into `WalletManager`
+//  (current block height, cached unilateral exits) and therefore stay app-side so
+//  the model itself remains free of app singletons and previewable in isolation.
+//
+//  Views set `TransactionModel.walletManager` before displaying transactions.
+//
+
+import Foundation
+import ArkeUI
+import Bark
+
+extension TransactionModel {
+
+    // MARK: - WalletManager hook
+
+    /// Weak reference to wallet manager for looking up live confirmations and
+    /// current exit status. This is set by views when displaying transactions.
+    static weak var walletManager: AnyObject?
+
+    // MARK: - Confirmation Helpers
+
+    /// Get live confirmation count based on current block height
+    /// This is calculated dynamically from confirmationHeight and current chain tip
+    /// Returns nil if this is not an onchain transaction or if confirmation height is unknown
+    var liveConfirmations: UInt32? {
+        guard let confirmationHeight = confirmationHeight else {
+            // Not an onchain transaction or unconfirmed
+            return confirmationCount
+        }
+
+        // Access wallet manager through the static weak reference
+        guard let walletManager = Self.walletManager as? WalletManager else {
+            // Fallback to stored confirmationCount if wallet manager unavailable
+            return confirmationCount
+        }
+
+        // Get current block height
+        guard let currentHeight = walletManager.estimatedBlockHeight else {
+            // Fallback to stored confirmationCount if current height unavailable
+            return confirmationCount
+        }
+
+        // Calculate confirmations: currentHeight - confirmationHeight + 1
+        // +1 because a transaction in block 100 has 1 confirmation at height 100
+        let calculatedConfirmations = UInt32(currentHeight) - confirmationHeight + 1
+        return max(calculatedConfirmations, 1)  // Ensure at least 1 confirmation if confirmed
+    }
+
+    // MARK: - Exit Status Helpers
+
+    /// Get the current exit status for this transaction
+    /// Returns nil if this is not an exit transaction or if wallet manager is not available
+    var currentExitStatus: ExitStatus? {
+        // Early return: Not an exit transaction
+        guard hasUnilateralExit else {
+            return nil
+        }
+
+        // Early return: Wallet manager not available
+        guard let walletManager = Self.walletManager as? WalletManager else {
+            return nil
+        }
+
+        // Early return: Wallet not initialized yet (prevents cache refresh storms)
+        guard walletManager.isInitialized else {
+            return nil
+        }
+
+        // Get all exits from cache (no refresh triggered)
+        let allExits = walletManager.allUnilateralExits
+
+        // For exit transactions, the VTXOs are in inputVtxoIds (not exitedVtxoIds which is empty)
+        // Find the exit that matches any of this transaction's input VTXOs
+        for vtxoId in inputVtxoIds {
+            if let exit = allExits.first(where: { $0.vtxoId == vtxoId }) {
+                return ExitStatus(from: exit)
+            }
+        }
+
+        return nil
+    }
+
+    /// Check if the exit associated with this transaction is claimed
+    var isExitClaimed: Bool {
+        currentExitStatus?.isClaimed ?? false
+    }
+}

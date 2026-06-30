@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 /// Shared view model for transaction detail management across macOS and iOS
 @Observable

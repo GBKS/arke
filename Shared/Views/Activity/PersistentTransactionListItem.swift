@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 import SwiftData
 
 struct PersistentTransactionListItem: View {

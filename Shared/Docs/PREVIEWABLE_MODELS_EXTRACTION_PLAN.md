@@ -191,12 +191,51 @@ conform to `Decoder`", "'nil' is not compatible with closure result type"). If
 you see those, suspect target membership of the `+Persistence` files, not the
 code.
 
-**Phase 1c — `TransactionModel`:** the poster child. Adds the Bark boundary
-(`ExitStatus`/`ExitVtxo`) and the `WalletManager` static-lookup inversion on top
-of the now-moved tag/contact types + `MovementCategory`.
+**Phase 1c — `TransactionModel` (DONE, 2026-06-30):** the poster child. Added the
+Bark boundary (`ExitStatus`/`ExitVtxo`) and the `WalletManager` static-lookup
+inversion on top of the now-moved tag/contact types.
+- Pure value types moved to `ArkeUI/Sources/ArkéUI/Models/` (all `public`,
+  `Sendable`):
+  - `TransactionModel.swift` — stored props + memberwise init + every
+    dependency-free helper (the `formatted*`/`netAmount`/`totalFees`/fee helpers,
+    tag/contact/notes/linking helpers, `isInternalTransfer`, and the pure
+    `hasUnilateralExit`); added `sampleReceive`/`sampleSend`/`samplePending` +
+    `#Preview`.
+  - `MovementCategory.swift` (incl. nested `FilterGroup`), `TransactionStatusEnum.swift`
+    (uses the `.Arke` palette, so it belongs with the UI layer), and
+    `ExitStatus.swift` (pure struct + `public` memberwise init).
+- App-side concerns kept as extensions in `Shared/Models/`:
+  - `TransactionModel+Persistence.swift` — `init(from: PersistentTransaction)`,
+    `toPersistentTransaction()`, and the four `*IncludingLinked` fee/amount
+    variants (the `FetchDescriptor<PersistentTransaction>` code).
+  - `TransactionModel+WalletManager.swift` — the inverted singleton lookups:
+    `static weak var walletManager`, `liveConfirmations`, `currentExitStatus`,
+    `isExitClaimed`. (Static stored properties *are* allowed in extensions.)
+  - `ExitStatus+Bark.swift` — `init(from: ExitVtxo)` at the Bark boundary.
+- `TransactionModel+OnchainAdapter.swift` and `+DisplayHelpers.swift` were already
+  app-side extensions and needed no change beyond the now-public memberwise init.
+- Added `import ArkeUI` to the 7 app files that referenced the moved types
+  without it.
+- Verified: both apps build; previews render from sample data.
 
-- **Exit criteria (per sub-step):** preview renders from sample data; both apps
+**Phase 1c notes (learned):**
+- **The `WalletManager` extension still imports `Bark`.** `currentExitStatus`
+  reads `walletManager.allUnilateralExits` (`[ExitVtxo]`, a Bark type) and maps
+  via `ExitStatus(from:)`, so `TransactionModel+WalletManager.swift` imports Bark.
+  That's expected and fine — it's app-side; the point is the *pure* model in
+  ArkeUI imports neither Bark nor SwiftData.
+- **Same target-membership step as Phase 1b** (see below): the three deletions
+  left stale references and the three new `Shared/Models/` files had to be added
+  to the target in Xcode before the build resolved.
+
+- **Phase 1 exit criteria (all met):** preview renders from sample data; both apps
   build (iOS + macOS); no behavior change.
+
+**Phase 1 (transaction graph) is complete.** The tag/contact/transaction value
+types and their enums (`TagModel`, `ContactModel`, `ContactAddressModel`,
+`ContactType`, `AddressFormat`, `BitcoinNetwork`, `TransactionModel`,
+`MovementCategory`, `TransactionStatusEnum`, `ExitStatus`) now live in
+`ArkeUI/Models/`, with all Bark/SwiftData/WalletManager coupling pushed app-side.
 
 ### Phase 2 — Migrate the remaining pure value types
 Once the transaction graph (Phase 1a–1c) is done, move the other genuinely pure

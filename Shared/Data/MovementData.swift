@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 struct MovementData: Codable {
     let id: Int

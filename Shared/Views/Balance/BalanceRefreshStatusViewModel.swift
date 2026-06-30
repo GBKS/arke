@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import ArkeUI
 
 /// Shared view model for balance refresh status calculations
 /// Uses ultra-simple logic: show when refresh becomes ppm-free (cheapest)

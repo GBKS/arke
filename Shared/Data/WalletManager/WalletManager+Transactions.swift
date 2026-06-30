@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ArkeUI
 import OSLog
 
 extension WalletManager {

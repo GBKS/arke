@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 struct TransactionStatusBadge: View {
     let status: TransactionStatusEnum
