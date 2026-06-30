@@ -1102,6 +1102,16 @@
         }
       }
     },
+    "label_preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview"
+          }
+        }
+      }
+    },
     "label_received": {
       "localizations": {
         "en": {
@@ -1226,6 +1236,16 @@
         }
       }
     },
+    "placeholder_name_preview": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name to see preview"
+          }
+        }
+      }
+    },
     "placeholder_note_optional": {
       "localizations": {
         "en": {
@@ -1273,6 +1293,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Amount to pay:"
+          }
+        }
+      }
+    },
+    "status_added": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added %@"
           }
         }
       }

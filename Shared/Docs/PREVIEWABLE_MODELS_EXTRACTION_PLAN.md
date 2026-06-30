@@ -357,9 +357,83 @@ deferred balance/service DTOs above.
   "Project structure"), then rebuild.
 
 ### Phase 3 — Migrate composed, data-driven views
-Move views that compose `ArkeUI` components over the now-pure models and don't
-need Bark/WalletManager. Add previews backed by sample data. Views that
-genuinely need app logic stay in the app and receive data via their inits.
+
+Now that the value types are in `ArkeUI/Models/`, move the **presentational,
+data-driven views** that compose `ArkeUI` components over those models and need
+neither Bark, `WalletManager`, nor SwiftData. Each gets a sample-data `#Preview`.
+
+**Destination is already seeded.** `ArkeUI/Sources/ArkéUI/Views/` exists with
+~19 presentational subviews already moved (e.g. `Send/FeeDisplayView`,
+`Balance/FeeEstimateView`, `Contacts/NativeContactLinkBadge`, `Tags/ColorPickerSheet`),
+organised by feature folder (`Activity/`, `Balance/`, `Contacts/`, `Data/`,
+`Receive/`, `Send/`, `Tags/`, `Exit/`). Phase 3 extends that set.
+
+#### Movability criteria (a file moves only if ALL hold)
+1. It is an actual SwiftUI `View` (not console/command logic, a state enum, a
+   resolver/validator, or a `*ViewModel`).
+2. Its inputs are value types / `ArkeUI` models / primitives / closures — passed
+   in via `let`/`@Binding`, **not** an `@EnvironmentObject`/`@Environment`
+   `WalletManager`, a `*ViewModel`, or a SwiftData `@Query`.
+3. No Bark, no SwiftData (`ModelContext`/`@Query`/`FetchDescriptor`), and no
+   `WalletManager` — **including indirect** reach-through such as
+   `context.walletManager` or a service singleton (the plain text grep below
+   misses these; verify per file).
+4. Any localized strings use `bundle: .module` with keys copied into the package
+   `Localizable.xcstrings` (see Phase 2b).
+
+Views that fail (2)/(3) **stay app-side** but should be refactored to *receive
+their data via `init`* where cheap, so a thin app-side wrapper feeds a moved
+presentational subview. Platform screens (`ArkeMobile/Views`, `ArkeDesktop/Views`)
+generally stay; harvest movable subviews out of them rather than moving wholesale.
+
+#### Survey (2026-06-30)
+`Shared/Views` = 113 files. Coupling: imports Bark = 17; references
+`WalletManager` = 41; SwiftData (import/`ModelContext`/`@Query`/`FetchDescriptor`)
+= 15. ~58 files trip none of those greps — the candidate pool — **but the grep
+has false positives**: e.g. `Console/WalletCommands.swift` (uses
+`context.walletManager`, and isn't a View), `Send/RecipientState.swift` (a state
+enum), `Console/CommandExecutor.swift`, `Send/SendModalState.swift`,
+`Contacts/Editor/ContactValidation.swift`, `Send/LightningAddressResolver.swift`,
+`Send/ReceiveQRContentHelper.swift`. Filter those out per criterion (1)/(3).
+
+Confirmed clean movers spot-checked (take model/value inputs, already
+`import ArkeUI`): `Balance/BalanceDetailCard` (primitives + color),
+`Contacts/Details/ContactHeaderView` (`ContactModel`),
+`Send/FeeOptionRow` (`FeePriority` + closure),
+`Activity/TransactionStatusBadge` (`TransactionStatusEnum`).
+
+#### Stays app-side (non-exhaustive)
+- The 17 Bark-importing + 41 WalletManager-referencing views, the SwiftData
+  `@Query` Data debug views (`ArkBalanceView`, `OnchainBalanceView`), and all
+  `*ViewModel`s.
+- Console command logic, send/receive flow state machines and resolvers.
+- Most `ArkeMobile`/`ArkeDesktop` screen-level views (compose app state); move
+  their pure subviews instead.
+
+#### Proposed sequencing
+- **Phase 3a — proof batch (high-confidence presentational subviews).** A small,
+  cohesive set that already imports `ArkeUI` and takes value/model inputs —
+  e.g. `TransactionStatusBadge`, `BalanceDetailCard`, `ContactHeaderView`,
+  `ContactPreviewCard`, `FeeOptionRow`, `TagPreviewCard`, `Receive/AddressCard`,
+  `Data/UTXORowView`. Prove the per-view preview + membership flow end-to-end,
+  then settle naming/folder conventions before scaling.
+- **Phase 3b… — by feature area**, one folder at a time (Contacts → Tags →
+  Receive → Send subviews → Balance → Activity/Data rows). For each: move the
+  pure subviews, add sample-data previews, and where a screen is *almost* pure,
+  extract its presentational body into a moved subview fed by `init`.
+- **Demand-driven model moves (from 2c/2d):** when a moved view needs balance
+  data, that's the trigger to move `ArkBalanceResponse`/`OnchainBalanceResponse`
+  and to do the `TotalBalanceModel` `@Model` decoupling (rewrite it to wrap the
+  `*Response` value types) — now with a concrete view to validate against.
+- **Exit criteria (per batch):** preview renders from sample data; both apps
+  build (iOS + macOS); no behavior change.
+
+#### Recurring mechanics (same as Phases 1–2)
+- Files moved into the package need no project entry; **deleted `Shared/` files
+  leave stale references and must be removed in Xcode** (per-target membership
+  pass), then rebuild. Never edit `project.pbxproj` by hand.
+- Add `import ArkeUI` to app files that referenced a moved view by name.
+- Watch for `bundle: .module` on any localized strings.
 
 ## Project structure (learned during Phase 1a)
 - **`Shared/` now uses default file-system-synchronized membership for all three

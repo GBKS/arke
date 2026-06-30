@@ -1,31 +1,40 @@
 //
 //  ContactHeaderView.swift
-//  Ark wallet prototype
+//  ArkéUI
 //
 //  Created by Christoph on 11/13/25.
+//  Moved into ArkéUI as a pure, previewable presentation view.
 //
 
 import SwiftUI
-import ArkeUI
 
-struct ContactHeaderView: View {
+public struct ContactHeaderView: View {
     let contact: ContactModel
-    
-    var body: some View {
+
+    public init(contact: ContactModel) {
+        self.contact = contact
+    }
+
+    public var body: some View {
         HStack(spacing: 15) {
             ContactAvatarView(avatarData: contact.avatarData, size: 75)
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 Text(contact.displayName)
                     .font(.title)
                     .fontWeight(.semibold)
-                
-                Text(String(localized: "status_added", defaultValue: "Added \(contact.createdAt.formatted(date: .abbreviated, time: .omitted))"))
+
+                Text(String(localized: "status_added", defaultValue: "Added \(contact.createdAt.formatted(date: .abbreviated, time: .omitted))", bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
         }
     }
+}
+
+#Preview {
+    ContactHeaderView(contact: .sampleAlice)
+        .padding()
 }

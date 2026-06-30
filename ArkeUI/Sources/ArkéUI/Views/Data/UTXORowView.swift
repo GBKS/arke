@@ -1,19 +1,19 @@
 //
 //  UTXORowView.swift
-//  Ark wallet prototype
+//  ArkéUI
 //
 //  Created by Christoph on 10/17/25.
+//  Moved into ArkéUI as a pure, previewable presentation view.
 //
 
 import SwiftUI
-import ArkeUI
 
-enum UTXOStatus {
+public enum UTXOStatus {
     case unconfirmed
     case confirming(Int)
     case confirmed
-    
-    var displayText: String {
+
+    public var displayText: String {
         switch self {
         case .unconfirmed:
             return "Unconfirmed"
@@ -23,8 +23,8 @@ enum UTXOStatus {
             return "Confirmed"
         }
     }
-    
-    var color: Color {
+
+    public var color: Color {
         switch self {
         case .unconfirmed:
             return .Arke.orange
@@ -34,8 +34,8 @@ enum UTXOStatus {
             return .Arke.green
         }
     }
-    
-    var systemImage: String {
+
+    public var systemImage: String {
         switch self {
         case .unconfirmed:
             return "clock"
@@ -47,10 +47,15 @@ enum UTXOStatus {
     }
 }
 
-struct UTXORowView: View {
+public struct UTXORowView: View {
     let utxo: UTXOModel
     let isSelected: Bool
-    
+
+    public init(utxo: UTXOModel, isSelected: Bool = false) {
+        self.utxo = utxo
+        self.isSelected = isSelected
+    }
+
     private var utxoStatus: UTXOStatus {
         if let confirmationHeight = utxo.confirmationHeight {
             // You can adjust these thresholds based on your requirements
@@ -66,8 +71,8 @@ struct UTXORowView: View {
             return .unconfirmed
         }
     }
-    
-    var body: some View {
+
+    public var body: some View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -77,25 +82,25 @@ struct UTXORowView: View {
                             .fontWeight(.semibold)
                             .foregroundStyle(.primary)
                     }
-                    
+
                     HStack(spacing: 6) {
                         Image(systemName: utxoStatus.systemImage)
                             .font(.caption2)
                             .foregroundStyle(utxoStatus.color)
-                        
+
                         Text(utxoStatus.displayText)
                             .font(.caption2)
                             .foregroundStyle(utxoStatus.color)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Text(utxo.shortOutpoint)
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.primary)
-                
+
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -103,5 +108,11 @@ struct UTXORowView: View {
             .contentShape(Rectangle())
             .cornerRadius(15)
         }
+    }
+}
+
+#Preview {
+    List(UTXOModel.samples) { utxo in
+        UTXORowView(utxo: utxo)
     }
 }

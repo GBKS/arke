@@ -5691,6 +5691,7 @@
       }
     },
     "label_preview" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6697,6 +6698,7 @@
       }
     },
     "placeholder_name_preview" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7742,6 +7744,7 @@
       }
     },
     "status_added" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
