@@ -7,6 +7,7 @@
 //  Examples demonstrating the new PaymentRequest API
 
 import Foundation
+import ArkeUI
 
 /// Examples of using the refactored AddressValidator with PaymentRequest
 enum PaymentRequestExamples {

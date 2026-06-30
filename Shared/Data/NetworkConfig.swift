@@ -1,43 +1,12 @@
 import Foundation
 import Combine
+import ArkeUI
 
 // MARK: - Bitcoin Network Types
+// `BitcoinNetwork` is a pure value type and now lives in the ArkéUI package.
+// Its `NetworkConfig`-based helper stays here, since `NetworkConfig` is app-side.
 
-enum BitcoinNetwork: String, CaseIterable, Codable {
-    case mainnet = "mainnet"
-    case testnet = "testnet"
-    case signet = "signet"
-    case regtest = "regtest"
-    
-    var displayName: String {
-        switch self {
-        case .mainnet:
-            return "Bitcoin Mainnet"
-        case .testnet:
-            return "Bitcoin Testnet"
-        case .signet:
-            return "Bitcoin Signet"
-        case .regtest:
-            return "Bitcoin Regtest"
-        }
-    }
-    
-    /// Initialize from NetworkConfig networkType string
-    init?(networkType: String) {
-        switch networkType.lowercased() {
-        case "mainnet":
-            self = .mainnet
-        case "testnet":
-            self = .testnet
-        case "signet":
-            self = .signet
-        case "regtest":
-            self = .regtest
-        default:
-            return nil
-        }
-    }
-    
+extension BitcoinNetwork {
     /// Check if this network matches a NetworkConfig
     func matches(_ networkConfig: NetworkConfig) -> Bool {
         return self.rawValue == networkConfig.networkType.lowercased()

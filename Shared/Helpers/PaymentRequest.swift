@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 /// Represents a payment request which may contain one or more payment destinations
 struct PaymentRequest: Identifiable, Hashable, Codable {

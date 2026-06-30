@@ -1,13 +1,14 @@
 //
 //  AddressFormat.swift
-//  Arké
+//  ArkéUI
 //
 //  Created by Christoph on 11/17/25.
+//  Moved into ArkéUI as a pure presentation value type (no SwiftData/Bark).
 //
 
 import Foundation
 
-enum AddressFormat: String, CaseIterable, Codable {
+public enum AddressFormat: String, CaseIterable, Codable, Sendable {
     case bitcoin = "Bitcoin"
     case ark = "Ark"
     case lightning = "Lightning"
@@ -17,8 +18,8 @@ enum AddressFormat: String, CaseIterable, Codable {
     case bip353 = "BIP-353"
     case bip21 = "BIP-21"
     case silentPayments = "Silent Payments"
-    
-    var displayName: String {
+
+    public var displayName: String {
         switch self {
         case .bitcoin:
             return "Bitcoin address"
@@ -40,8 +41,8 @@ enum AddressFormat: String, CaseIterable, Codable {
             return "Silent payments address"
         }
     }
-    
-    var simplifiedDisplayName: String {
+
+    public var simplifiedDisplayName: String {
         switch self {
         case .bitcoin:
             return "Savings (Bitcoin)"
@@ -63,8 +64,8 @@ enum AddressFormat: String, CaseIterable, Codable {
             return "Savings (Silent payments)"
         }
     }
-    
-    var supportsBitcoinNetworks: Bool {
+
+    public var supportsBitcoinNetworks: Bool {
         switch self {
         case .bitcoin, .silentPayments, .bip21, .ark:
             return true

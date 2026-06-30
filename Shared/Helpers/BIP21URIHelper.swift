@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 struct BIP21URIHelper {
     /// Converts satoshis string to BTC string formatted for BIP-21

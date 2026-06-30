@@ -152,10 +152,44 @@ SwiftData-bridging + sample-data-preview pattern end-to-end.
 - Added `import ArkeUI` to the 5 files that referenced `TagModel` without it.
 - Verified: both apps build; isolated preview renders from sample data.
 
-**Phase 1b — `ContactModel` graph (next):** `ContactModel`,
-`ContactAddressModel`, `ContactType`, `AddressFormat`. Keep `NetworkConfig`-based
-helpers (`addressesForNetwork`, `isCompatibleWith`) app-side as extensions —
-`NetworkConfig` does **not** need to move.
+**Phase 1b — `ContactModel` graph (DONE, 2026-06-30):**
+- Pure value types moved to `ArkeUI/Sources/ArkéUI/Models/`
+  (all `public`, `Sendable`):
+  - `ContactModel.swift` — keeps `displayName`, `formatted*` (via
+    `BitcoinFormatter`), the `*Addresses` / `addressCount` / `addressTypesSummary`
+    / `addresses(for:)` helpers, `withUpdatedTimestamp`; added sample data
+    (`sampleAlice`/`sampleBob`/`sampleFaucet` + `samples`) and an isolated
+    `#Preview`.
+  - `ContactAddressModel.swift` — keeps `displayName`/`fullDisplayName`/
+    `shortAddress`/`supportsBitcoinNetworks`/`withUpdatedTimestamp`/
+    `withPrimaryStatus` + `CustomStringConvertible`; added `sampleArk`/
+    `sampleBitcoin`/`sampleLightning` factories.
+  - `ContactType.swift` and `AddressFormat.swift` — pure enums, moved wholesale.
+  - `BitcoinNetwork.swift` — **split** out of `Shared/Data/NetworkConfig.swift`:
+    the pure parts (cases, `displayName`, `init?(networkType:)`) moved into the
+    package; the `NetworkConfig`-based `matches(_:)` stays app-side as an
+    extension in `NetworkConfig.swift`. `NetworkConfig` itself did **not** move.
+- Persistence/bridging kept app-side as extensions in `Shared/Models/`:
+  - `ContactModel+Persistence.swift` — `init(from: PersistentContact)`,
+    `toPersistentContact()`, and the `NetworkConfig` helper `addressesForNetwork(_:)`.
+  - `ContactAddressModel+Persistence.swift` — `init(from: PaymentDestination …)`,
+    `init(from: PersistentContactAddress)`, `toPersistentAddress()`, and the
+    `NetworkConfig` helper `isCompatibleWith(_:)`.
+- Added `import ArkeUI` to the ~23 app files that referenced these types without
+  it (incl. `Persistent*`, `PaymentDestination`/`PaymentRequest`,
+  `AddressValidator`, `ContactService*`, contact views/view-models).
+- Verified: both apps build; previews render from sample data.
+
+**Phase 1b watch-item (learned):** because all four moved types are `Codable`,
+the synthesized `init(from: Decoder)` collides with the app-side bridging
+`init(from: PersistentContact)` / `init(from: PersistentContactAddress)` /
+`init(from: PaymentDestination)`. This is fine **as long as the bridging
+extension files are actually compiled into the target.** When they were missing
+from a target's membership, every `Type(from:)` call silently resolved to the
+`Decodable` initializer and produced misleading errors ("argument does not
+conform to `Decoder`", "'nil' is not compatible with closure result type"). If
+you see those, suspect target membership of the `+Persistence` files, not the
+code.
 
 **Phase 1c — `TransactionModel`:** the poster child. Adds the Bark boundary
 (`ExitStatus`/`ExitVtxo`) and the `WalletManager` static-lookup inversion on top
@@ -181,11 +215,20 @@ genuinely need app logic stay in the app and receive data via their inits.
   enumerated every `Shared` source file explicitly in its membership-exception
   set, so every add/remove needed a `project.pbxproj` edit. ArkeMobile was
   converted (via the `Shared` folder's Target Membership) to include the whole
-  synchronized folder by default, matching Desktop/Widgets. **Consequence:**
-  adding/removing files under `Shared/` is now pure file I/O — no project edits
-  for the rest of this migration. (The conversion also added two files that had
-  been missing from ArkeMobile: `Models/Extensions/TransactionModel+OnchainAdapter.swift`
+  synchronized folder by default, matching Desktop/Widgets. (The conversion also
+  added two files that had been missing from ArkeMobile:
+  `Models/Extensions/TransactionModel+OnchainAdapter.swift`
   and `Views/Send/Payment destination/PaymentDestinationSelectorExamples.swift`.)
+- **Correction (learned in Phase 1b): adding/removing `Shared/` files is NOT
+  always pure file I/O.** The `Shared` synchronized root group carries per-target
+  `exceptions` lists (one each for ArkeDesktop, ArkeMobile, ArkeWidgets in
+  `project.pbxproj`), so synchronization is not blanket. In Phase 1b, **deleting**
+  files left stale references (`Build input files cannot be found`) and the two
+  **new** `+Persistence.swift` files were not compiled into a target until added
+  via Xcode. Budget for a per-target membership/cleanup pass in Xcode after
+  adding or deleting `Shared/` files, and re-confirm with a build. **Still never
+  edit `project.pbxproj` by hand** — make these changes in Xcode (the user's to
+  do).
 - **Never edit `project.pbxproj` directly** (it can crash a running Xcode). Files
   moved *into the ArkeUI package* need no project entry (SwiftPM auto-discovers
   `Sources/`). Files added/removed under `Shared/` are auto-synced per the above.

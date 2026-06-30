@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 import AppKit
 
 struct ContactDetailView: View {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 import Combine
 
 /// Shared view model for contact management across macOS and iOS

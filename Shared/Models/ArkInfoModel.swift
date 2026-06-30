@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 struct ArkInfoModel: Codable, Sendable, Equatable {
     let network: String

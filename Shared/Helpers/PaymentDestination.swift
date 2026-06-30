@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 /// Represents a single payment destination with format-specific information
 struct PaymentDestination: Identifiable, Hashable, Codable {

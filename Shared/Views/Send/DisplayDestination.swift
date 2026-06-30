@@ -5,6 +5,8 @@
 //  Created by Christoph on 11/19/25.
 //
 
+import ArkeUI
+
 /// Helper struct to unify destination display data
 struct DisplayDestination {
     let destination: PaymentDestination

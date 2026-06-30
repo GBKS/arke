@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 struct ContactEditor_iOS: View {
     let editingContact: ContactModel?

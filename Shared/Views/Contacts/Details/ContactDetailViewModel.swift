@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 import UserNotifications
 
 /// Shared view model for contact detail management across macOS and iOS
