@@ -289,7 +289,7 @@
 				Models/PersistentTag.swift,
 				Models/PersistentTransaction.swift,
 				"Models/PersistentTransaction+DisplayHelpers.swift",
-				Models/TagModel.swift,
+				"Models/TagModel+Persistence.swift",
 				Models/TotalBalanceModel.swift,
 				Models/TransactionContactAssignment.swift,
 				Models/TransactionModel.swift,

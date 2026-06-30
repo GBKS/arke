@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 /// Shared view model for tag management across macOS and iOS
 @Observable

@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import ArkeUI
 
 struct TagValidation {
     let name: String

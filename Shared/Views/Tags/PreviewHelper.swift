@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import ArkeUI
 
 /// Provides isolated preview environments that don't affect production data
 @MainActor

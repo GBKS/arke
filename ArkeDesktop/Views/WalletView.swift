@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import ArkeUI
 
 enum NavigationItem: String, CaseIterable {
     case balance = "Balancé"
