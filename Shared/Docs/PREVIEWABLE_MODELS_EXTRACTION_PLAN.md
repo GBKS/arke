@@ -238,10 +238,123 @@ types and their enums (`TagModel`, `ContactModel`, `ContactAddressModel`,
 `ArkeUI/Models/`, with all Bark/SwiftData/WalletManager coupling pushed app-side.
 
 ### Phase 2 — Migrate the remaining pure value types
-Once the transaction graph (Phase 1a–1c) is done, move the other genuinely pure
-models and enums: balance/fee value types, etc., plus any not pulled in by the
-transaction graph. Leave every `Persistent*` `@Model` class in the app. Apply the
-boundary pattern to any that touch Bark (`VTXOModel`) or SwiftData.
+
+Survey of everything left in `Shared/Models` (done 2026-06-30) sorts the
+remaining types into four buckets. Counts below are *files that reference the
+type* (`views` = under any `Views/` folder; signals preview payoff).
+
+**Bucket A — stays in the app (not a previewable DTO). Do not move.**
+- `@Model` SwiftData store classes: `ArkBalanceModel`, `OnchainBalanceModel`,
+  `OnchainTransactionEntity`, `PersistentContact`/`PersistentContactAddress`/
+  `PersistentTag`/`PersistentTransaction`/`PersistentExitCache`,
+  `PendingPaymentMetadata` (+ `PendingTagAssignment`), `DeviceRegistration`,
+  `UserProfile`, `TransactionContactAssignment`, `TransactionTagAssignment`.
+- All existing `*+Persistence` / `*+WalletManager` / `*+OnchainAdapter` /
+  `*+DisplayHelpers` extension files (already app-side bridging).
+- `ExitProgressActivityAttributes` (imports `ActivityKit`; Live-Activity infra
+  shared with `ArkeWidgets`, not a previewable view DTO). **Out of scope** unless
+  a preview need appears.
+
+**Bucket B — straightforward moves (pure structs/enums; mirror Phase 1a/1b).**
+Make `public` + `Sendable`, add sample data, drop any unnecessary `import
+SwiftData`. Highest payoff first:
+- `UTXOModel` (views=6) — already `Foundation`+`ArkeUI`, pure. Easy.
+- `FeePriority` (views=6) — enum + `OnchainFeeRates` struct; imports `SwiftUI`
+  (palette). UI DTO — belongs in the package.
+- `FeeSchedule` (views=1) — several pure fee value structs (`PpmExpiryEntry`,
+  `BoardFeeStructure`, …). Low view use but cohesive with `FeePriority`.
+- `ArkInfoModel` (views=1) — references `BitcoinNetwork` (already in ArkeUI).
+- `ArkConfigModel` (views=1) — pure `Foundation` struct.
+- `OnchainTransactionModel` (+ `ConfirmationTime`) (views=0) — pure `Foundation`;
+  no direct view use, but it feeds `TransactionModel+OnchainAdapter` and is the
+  natural source DTO. Move for consistency, or **defer** (see note).
+- Networking/response DTOs `ArkBalanceResponse`, `OnchainBalanceResponse`,
+  `TotalBalanceModel` (views=0). Their `import SwiftData` is unused (only a
+  "mirrored from …Model" comment). Pure, but **service-only** — moving them is
+  churn with no preview payoff. **Recommend deferring** these to Phase 2c /
+  leaving app-side unless a view ends up consuming them.
+
+**Bucket C — Bark boundary (mirror Phase 1c `ExitStatus`/`VTXO`).**
+- `VTXOModel` (views=8) + `VTXOState` + `VTXOKind`: pure struct/enums move to
+  `ArkeUI/Models/`; the only Bark coupling is `init(from vtxo: Vtxo)`
+  (`VTXOModel.swift:226`) — relocate to an app-side `VTXOModel+Bark.swift`,
+  exactly like `ExitStatus+Bark.swift`. Highest single-type payoff in Phase 2.
+
+**Bucket D — the genuinely harder one: balance display (needs a decision).**
+`ArkBalanceModel` / `OnchainBalanceModel` are `@Model` classes consumed
+*directly* by balance views (views=3 each). Per the Bucket-A rule they stay in
+the app, so making balance views previewable is **not a move** — it requires
+introducing a pure balance snapshot value type that views consume, with the
+`@Model` converted to it at the boundary (the `*Response` structs already
+"mirror" these classes and may be the basis). This is a real refactor; treat it
+as its own sub-step and **get a design decision before starting** (new
+`BalanceSnapshot` DTO vs. promoting the existing `*Response` types).
+
+**Proposed sequencing (each step: build iOS+macOS, preview from sample data, no
+behavior change — same exit criteria as Phase 1):**
+- **Phase 2a — `VTXOModel` (Bark boundary) (DONE, 2026-06-30).** Moved the
+  `VTXOModel` struct + its computed helpers, the `VTXOState`/`VTXOKind` enums with
+  their display/icon/color extensions, the JSON parsing helpers, and `mockVTXOs()`
+  (+ a `samples` alias and `#Preview`) into `ArkeUI/Sources/ArkéUI/Models/VTXOModel.swift`
+  (all `public`, `Sendable`). The only Bark coupling — `init(from vtxo: Vtxo)` —
+  stayed app-side in `Shared/Models/VTXOModel+Bark.swift`. Added `import ArkeUI`
+  to the 6 app files that referenced VTXO types without it. Same target-membership
+  pass as before (stale deletion + new file). Verified: both apps build; preview
+  renders from sample data.
+- **Phase 2b — pure UI DTOs (DONE, 2026-06-30).** Moved to `ArkeUI/Models/`
+  (all `public`, `Sendable`): `UTXOModel` (+ its `Array` totals extension);
+  `FeePriority` + `OnchainFeeRates`; `FeeSchedule` + its five fee structs +
+  `FeeOperation`; `ArkInfoModel`; `ArkConfigModel`. Notes:
+  - **Explicit public memberwise inits** were added to every moved struct.
+    (JSON `Decodable` decoding works cross-module without one — the protocol
+    requirement is satisfiable even when the synthesized init isn't `public` — but
+    *memberwise* call sites in mocks/services do need it.)
+  - **Localized strings → `bundle: .module`.** `FeePriority` (9 keys) and
+    `ArkConfigModel` (`format_network`, `data_server`) had `String(localized:)`;
+    all 11 keys were added to `ArkeUI/Sources/ArkéUI/Localizable.xcstrings` with
+    canonical values copied from `Shared/Localizable.xcstrings`. (`symbol_ellipsis`
+    was already in the package bundle, which is why the Phase 1/2a moves rendered
+    correctly without a bundle arg.)
+  - Added `import ArkeUI` to the 5 app files that referenced these without it.
+  - These were all clean moves — **no Bark/SwiftData boundary, so no new app-side
+    files** (the membership pass was pure stale-reference removal).
+  - Verified: both apps build; previews render from sample data.
+- **Phase 2c / 2d — DEFERRED to Phase 3 (decided 2026-06-30, demand-driven).**
+  The remaining candidates (`OnchainTransactionModel`, `ArkBalanceResponse`,
+  `OnchainBalanceResponse`, `TotalBalanceModel`) have **zero view consumers
+  today** — the main balance views read `WalletManager`'s `formatted*` strings /
+  `totalBalance`; only the SwiftData `@Query`-bound **Data debug views**
+  (`ArkBalanceView`, `OnchainBalanceView`) touch the `@Model`s, and those stay
+  app-side. Findings from the survey:
+  - `ArkBalanceResponse` / `OnchainBalanceResponse` are already pure DTOs that
+    *mirror* their `@Model` computed properties (their `import SwiftData` is
+    unused). Trivially movable — but no preview payoff yet.
+  - **`TotalBalanceModel` is *not* pure:** it stores `ArkBalanceModel` /
+    `OnchainBalanceModel` (the `@Model` classes) directly, so making it
+    previewable is a real refactor — rewrite it to wrap the `*Response` value
+    types and update `WalletManager.totalBalance` + every consumer.
+  - `WalletManager` already exposes a `BalanceData` value struct holding
+    `ArkBalanceResponse?` / `OnchainBalanceResponse?`, plus computed `arkBalance`/
+    `onchainBalance`/`totalBalance` (`@Model`/`TotalBalanceModel`) accessors.
+  - **Decision:** don't move these speculatively. Move each at the moment a
+    Phase 3 previewable view needs it — so `TotalBalanceModel`'s `@Model`
+    decoupling has a concrete view to validate against. The `@Model` classes and
+    the `@Query`-bound Data debug views stay app-side regardless.
+
+**Phase 2 is complete.** Every value type with view payoff is now in
+`ArkeUI/Models/`: the tag/contact/transaction graph (Phase 1) plus `VTXOModel`,
+`UTXOModel`, `FeePriority`/`OnchainFeeRates`, `FeeSchedule` (+ fee structs/
+`FeeOperation`), `ArkInfoModel`, `ArkConfigModel`. Remaining model files are
+either `@Model` stores, app-side bridging extensions, `ActivityKit` infra, or the
+deferred balance/service DTOs above.
+
+**Per-type checklist (reaffirms the global risk items):**
+- Audit for hidden `WalletManager`/`Persistent*` reach-through before moving;
+  push any found coupling into an app-side extension.
+- Pull any `FetchDescriptor`/`#Predicate`/`ModelContext` out to app-side bridging.
+- Drop unused `import SwiftData`/`import Bark` from the moved pure file.
+- Expect a per-target Xcode membership pass for new/deleted `Shared/` files (see
+  "Project structure"), then rebuild.
 
 ### Phase 3 — Migrate composed, data-driven views
 Move views that compose `ArkeUI` components over the now-pure models and don't

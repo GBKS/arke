@@ -1,16 +1,17 @@
 //
 //  VTXOModel.swift
-//  Ark wallet prototype
+//  ArkéUI
 //
 //  Created by Christoph on 10/16/25.
+//  Moved into ArkéUI as a pure, previewable presentation value type
+//  (no SwiftData/Bark). Mapping from Bark's `Vtxo` lives app-side in
+//  `VTXOModel+Bark.swift`, keeping this type free of Bark/FFI (which breaks
+//  previews).
 //
 
-import Foundation
 import SwiftUI
-import ArkeUI
-import Bark
 
-enum VTXOState: String, Codable, CaseIterable, Sendable {
+public enum VTXOState: String, Codable, CaseIterable, Sendable {
     case unregisteredBoard = "UnregisteredBoard"
     case registeredBoard = "RegisteredBoard"
     case spent = "Spent"
@@ -19,7 +20,7 @@ enum VTXOState: String, Codable, CaseIterable, Sendable {
     case locked = "Locked"
 }
 
-extension VTXOState {
+public extension VTXOState {
     var displayName: String {
         switch self {
         case .unregisteredBoard:
@@ -36,7 +37,7 @@ extension VTXOState {
             return "Locked"
         }
     }
-    
+
     var iconName: String {
         switch self {
         case .unregisteredBoard:
@@ -53,7 +54,7 @@ extension VTXOState {
             return "lock.circle"
         }
     }
-    
+
     var iconColor: Color {
         switch self {
         case .unregisteredBoard:
@@ -70,7 +71,7 @@ extension VTXOState {
             return .Arke.purple
         }
     }
-    
+
     var backgroundColor: Color {
         switch self {
         case .unregisteredBoard:
@@ -87,7 +88,7 @@ extension VTXOState {
             return .Arke.purple.opacity(0.3)
         }
     }
-    
+
     var textColor: Color {
         switch self {
         case .unregisteredBoard:
@@ -106,7 +107,7 @@ extension VTXOState {
     }
 }
 
-enum VTXOKind: String, Codable, CaseIterable, Sendable {
+public enum VTXOKind: String, Codable, CaseIterable, Sendable {
     case pubkey = "pubkey"
     case checkpoint = "checkpoint"
     case serverHTLCSend = "server-htlc-send"
@@ -117,7 +118,7 @@ enum VTXOKind: String, Codable, CaseIterable, Sendable {
     case arkoor = "arkoor"
 }
 
-extension VTXOKind {
+public extension VTXOKind {
     var displayName: String {
         switch self {
         case .pubkey:
@@ -142,22 +143,22 @@ extension VTXOKind {
 
 /// VTXO model that matches what Bark FFI provides
 /// Only contains fields directly available from the Rust wallet
-struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
+public struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
     /// VTXO id in format "txid:vout"
-    let id: String
+    public let id: String
     /// Amount in satoshis
-    let amountSat: Int
+    public let amountSat: Int
     /// Expiry height (0 if unknown)
-    let expiryHeight: Int
+    public let expiryHeight: Int
     /// Type of VTXO (e.g., "board", "round", "arkoor", "pubkey")
-    let kind: VTXOKind
+    public let kind: VTXOKind
     /// State of VTXO (e.g., "spendable", "spent", "locked")
-    let state: VTXOState
+    public let state: VTXOState
     /// Genesis chain length (exit depth)
-    let exitDepth: UInt32
+    public let exitDepth: UInt32
     /// Weight units of exit transaction chain
-    let exitTxWeightWu: UInt64
-    
+    public let exitTxWeightWu: UInt64
+
     // Coding keys to match serialization
     enum CodingKeys: String, CodingKey {
         case id
@@ -168,8 +169,8 @@ struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
         case exitDepth = "exit_depth"
         case exitTxWeightWu = "exit_tx_weight_wu"
     }
-    
-    init(id: String, amountSat: Int, expiryHeight: Int, kind: VTXOKind, state: VTXOState, exitDepth: UInt32 = 0, exitTxWeightWu: UInt64 = 0) {
+
+    public init(id: String, amountSat: Int, expiryHeight: Int, kind: VTXOKind, state: VTXOState, exitDepth: UInt32 = 0, exitTxWeightWu: UInt64 = 0) {
         self.id = id
         self.amountSat = amountSat
         self.expiryHeight = expiryHeight
@@ -178,104 +179,75 @@ struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
         self.exitDepth = exitDepth
         self.exitTxWeightWu = exitTxWeightWu
     }
-    
+
     // Computed properties for convenience
-    var formattedAmount: String {
+    public var formattedAmount: String {
         return BitcoinFormatter.shared.formatAmount(amountSat)
     }
-    
-    var shortId: String {
+
+    public var shortId: String {
         if id.count > 12 {
             return String(id.prefix(8)) + String(localized: "symbol_ellipsis")
         }
         return id
     }
-    
+
     // Extract txid and vout from the id (which is in format "txid:vout")
-    var txid: String {
+    public var txid: String {
         return String(id.split(separator: ":").first ?? "")
     }
-    
-    var vout: Int {
+
+    public var vout: Int {
         if let voutString = id.split(separator: ":").last {
             return Int(voutString) ?? 0
         }
         return 0
     }
-    
-    var outpoint: String {
+
+    public var outpoint: String {
         return id
     }
-    
-    var shortTxid: String {
+
+    public var shortTxid: String {
         let txidValue = txid
         if txidValue.count > 8 {
             return String(txidValue.prefix(8)) + String(localized: "symbol_ellipsis")
         }
         return txidValue
     }
-    
-    var isSpent: Bool {
+
+    public var isSpent: Bool {
         return state == .spent
     }
 }
 
-// Extension for conversion from SDK types
-extension VTXOModel {
-    /// Initialize from SDK's Vtxo type
-    init(from vtxo: Vtxo) {
-        // Map SDK state string to VTXOState enum
-        let state: VTXOState = {
-            switch vtxo.state.lowercased() {
-            case "spendable": return .spendable
-            case "spent": return .spent
-            case "locked": return .locked
-            case "pending": return .pending
-            default: return .pending
-            }
-        }()
-        
-        // Map SDK kind string to VTXOKind enum
-        let kind: VTXOKind = {
-            switch vtxo.kind.lowercased() {
-            case "board": return .board
-            case "round": return .round
-            case "arkoor": return .arkoor
-            case "pubkey": return .pubkey
-            case "checkpoint": return .checkpoint
-            case "server-htlc-send", "serverhtlcsend": return .serverHTLCSend
-            case "server-htlc-receive", "serverhtlcreceive": return .serverHTLCRecv
-            case "expiry": return .expiry
-            default: return .round
-            }
-        }()
-        
-        self.init(
-            id: vtxo.id,
-            amountSat: Int(vtxo.amountSats),
-            expiryHeight: Int(vtxo.expiryHeight),
-            kind: kind,
-            state: state,
-            exitDepth: vtxo.exitDepth,
-            exitTxWeightWu: vtxo.exitTxWeightWu
-        )
-    }
-}
+// MARK: - Parsing helpers
 
-// Extension for parsing and mock data
-extension VTXOModel {
+public extension VTXOModel {
     static func parseFromJSON(_ jsonData: Data) throws -> [VTXOModel] {
         let decoder = JSONDecoder()
         return try decoder.decode([VTXOModel].self, from: jsonData)
     }
-    
+
     static func parseFromJSONString(_ jsonString: String) throws -> [VTXOModel] {
         guard let data = jsonString.data(using: .utf8) else {
             throw NSError(domain: "VTXOModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON string"])
         }
         return try parseFromJSON(data)
     }
-    
+
+    // Legacy parsing method (kept for backward compatibility if needed)
+    static func parseFromWalletOutput(_ output: String) -> [VTXOModel] {
+        // This method would need to be updated based on the actual output format
+        // For now, returning empty array as the format has changed significantly
+        return []
+    }
+}
+
+// MARK: - Sample Data
+
+public extension VTXOModel {
+    /// Stable sample values for previews and tests. No database or Bark required.
     static func mockVTXOs() -> [VTXOModel] {
         return [
             VTXOModel(
@@ -307,11 +279,29 @@ extension VTXOModel {
             )
         ]
     }
-    
-    // Legacy parsing method (kept for backward compatibility if needed)
-    static func parseFromWalletOutput(_ output: String) -> [VTXOModel] {
-        // This method would need to be updated based on the actual output format
-        // For now, returning empty array as the format has changed significantly
-        return []
+
+    /// Convenience alias matching the sample-data naming used elsewhere in ArkéUI.
+    static let samples: [VTXOModel] = mockVTXOs()
+}
+
+// MARK: - Preview
+
+#Preview("VTXOModel sample data") {
+    List(VTXOModel.samples) { vtxo in
+        HStack {
+            Image(systemName: vtxo.state.iconName)
+                .foregroundStyle(vtxo.state.iconColor)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(vtxo.kind.displayName)
+                    .font(.headline)
+                Text(vtxo.shortId)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(vtxo.formattedAmount)
+                .font(.subheadline.monospacedDigit())
+        }
+        .padding(.vertical, 4)
     }
 }

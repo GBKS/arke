@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 extension WalletManager {
     

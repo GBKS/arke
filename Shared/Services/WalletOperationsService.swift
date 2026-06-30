@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 import Bark
 
 @MainActor

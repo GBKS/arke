@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 
 /// Generic cache manager that handles caching with configurable timeouts
 @MainActor

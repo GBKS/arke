@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ArkeUI
 import Bark
 
 // Protocol so both real and mock wallets can be used interchangeably

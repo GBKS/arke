@@ -9,6 +9,7 @@
 
 import Foundation
 import OSLog
+import ArkeUI
 
 extension SendViewModel {
     

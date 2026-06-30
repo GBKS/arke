@@ -8,6 +8,7 @@
 
 import Foundation
 import OSLog
+import ArkeUI
 
 #if os(iOS)
 extension WalletManager {

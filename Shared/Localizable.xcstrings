@@ -4868,6 +4868,7 @@
       }
     },
     "fee_priority_fast" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4878,6 +4879,7 @@
       }
     },
     "fee_priority_fast_description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4888,6 +4890,7 @@
       }
     },
     "fee_priority_fast_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4898,6 +4901,7 @@
       }
     },
     "fee_priority_medium" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4908,6 +4912,7 @@
       }
     },
     "fee_priority_medium_description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4918,6 +4923,7 @@
       }
     },
     "fee_priority_medium_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4928,6 +4934,7 @@
       }
     },
     "fee_priority_slow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4938,6 +4945,7 @@
       }
     },
     "fee_priority_slow_description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4948,6 +4956,7 @@
       }
     },
     "fee_priority_slow_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

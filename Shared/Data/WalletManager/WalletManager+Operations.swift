@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import ArkeUI
 import Bark
 
 extension WalletManager {
