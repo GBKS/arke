@@ -1,6 +1,6 @@
 //
 //  AppIntent.swift
-//  Arke​Widgets
+//  ArkeWidgets
 //
 //  Created by Christoph on 5/12/26.
 //

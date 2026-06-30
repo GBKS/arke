@@ -17,8 +17,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "599094ED2FB309F90044E442"
-               BuildableName = "Arke&#x200b;Widgets.appex"
-               BlueprintName = "Arke&#x200b;Widgets"
+               BuildableName = "ArkeWidgets.appex"
+               BlueprintName = "ArkeWidgets"
                ReferencedContainer = "container:Arke.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

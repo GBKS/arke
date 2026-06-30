@@ -276,7 +276,7 @@ extension BarkWalletFFI {
             Self.logger.debug("Opening Bark wallet with onchain capabilities - Mnemonic word count: \(mnemonic.split(separator: " ").count), Config network: \(String(describing: self.config.network)), Data directory: \(self.datadir)")
             
             // Check if Bark wallet data exists
-            let barkWalletFiles = ["wallet.db", "state.json", "wallet.dat"]
+            let barkWalletFiles = ["bark.sqlite", "db.sqlite", "wallet.db", "state.json", "wallet.dat"]
             for file in barkWalletFiles {
                 let filePath = (datadir as NSString).appendingPathComponent(file)
                 let exists = fileManager.fileExists(atPath: filePath)

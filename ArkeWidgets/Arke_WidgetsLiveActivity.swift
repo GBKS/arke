@@ -1,6 +1,6 @@
 //
 //  Arke_WidgetsLiveActivity.swift
-//  Arke​Widgets
+//  ArkeWidgets
 //
 //  Exit progression Live Activity
 //  Created by Christoph on 5/12/26.

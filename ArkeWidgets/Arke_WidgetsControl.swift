@@ -1,6 +1,6 @@
 //
 //  Arke_WidgetsControl.swift
-//  Arke​Widgets
+//  ArkeWidgets
 //
 //  Created by Christoph on 5/12/26.
 //
@@ -10,7 +10,7 @@ import SwiftUI
 import WidgetKit
 
 struct Arke_WidgetsControl: ControlWidget {
-    static let kind: String = "GBKS.Arke.Arke​Widgets"
+    static let kind: String = "GBKS.Arke.ArkeWidgets"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(

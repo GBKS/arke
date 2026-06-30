@@ -199,6 +199,19 @@ extension BarkWalletFFI {
             self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
             
+            // Check if Bark wallet data exists
+            let barkWalletFiles = ["bark.sqlite", "db.sqlite"]
+            for file in barkWalletFiles {
+                let filePath = (datadir as NSString).appendingPathComponent(file)
+                let exists = fileManager.fileExists(atPath: filePath)
+                if exists {
+                    if let attrs = try? fileManager.attributesOfItem(atPath: filePath),
+                       let size = attrs[.size] as? Int64 {
+                        Self.logger.debug("Found Bark file: \(file) (\(size) bytes)")
+                    }
+                }
+            }
+            
             // Perform initial transaction reader sync in background
             Task { [weak self] in
                 guard self != nil else { return }
@@ -510,6 +523,19 @@ extension BarkWalletFFI {
             // Since we can't easily detect that, we skip it here and let WalletManager handle it
             print("✅ [BarkWalletFFI] Wallet imported - mnemonic storage handled by WalletManager")
             print("   ⏭️  Skipping storeMnemonic() to prevent duplication")
+            
+            // Check if Bark wallet data exists
+            let barkWalletFiles = ["bark.sqlite", "db.sqlite"]
+            for file in barkWalletFiles {
+                let filePath = (datadir as NSString).appendingPathComponent(file)
+                let exists = fileManager.fileExists(atPath: filePath)
+                if exists {
+                    if let attrs = try? fileManager.attributesOfItem(atPath: filePath),
+                       let size = attrs[.size] as? Int64 {
+                        Self.logger.debug("Found Bark file: \(file) (\(size) bytes)")
+                    }
+                }
+            }
 
             // Perform initial backup after wallet import
             await backupWallet()
