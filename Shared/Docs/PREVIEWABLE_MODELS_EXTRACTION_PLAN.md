@@ -25,6 +25,48 @@ Package shape is resolved: these types **fold into the existing `ArkeUI` package
 (under a `Models/` folder), rather than a new `ArkeModels` package. See the
 "Decision" section for why.
 
+## Status — PAUSED 2026-07-01 (resume here)
+
+Progress so far (details in the per-phase sections below):
+- **Phase 1 — DONE.** Tag/contact/transaction value-type graph moved to
+  `ArkeUI/Models/`: `TagModel`, `ContactModel`, `ContactAddressModel`,
+  `ContactType`, `AddressFormat`, `BitcoinNetwork`, `TransactionModel`,
+  `MovementCategory`, `TransactionStatusEnum`, `ExitStatus`. Bark/SwiftData/
+  WalletManager coupling pushed to app-side `+Persistence` / `+WalletManager` /
+  `+Bark` extensions.
+- **Phase 2a — DONE.** `VTXOModel` (+ `VTXOState`/`VTXOKind`), Bark boundary in
+  `VTXOModel+Bark.swift`.
+- **Phase 2b — DONE.** `UTXOModel`, `FeePriority`/`OnchainFeeRates`, `FeeSchedule`
+  (+ fee structs/`FeeOperation`), `ArkInfoModel`, `ArkConfigModel`.
+- **Phase 2c/2d — DEFERRED** (demand-driven): balance/response/service DTOs have
+  no view consumers yet, and `TotalBalanceModel` needs a real `@Model` decoupling.
+  Move them when a Phase 3 view needs them.
+- **Phase 3a — DONE.** Proof batch of 6 presentational subviews moved to
+  `ArkeUI/Views/` (`TransactionStatusBadge`, `ContactHeaderView`,
+  `ContactPreviewCard`, `FeeOptionRow`, `TagPreviewCard`, `UTXORowView`).
+
+**Next when resuming: Phase 3b** — migrate presentational subviews feature-area by
+feature area (see the Phase 3 section for criteria, survey, and sequencing).
+
+This can be done **opportunistically**: when you next work on a feature area (e.g.
+Contacts, Tags, Send), harvest its pure subviews into `ArkeUI/Views/<Feature>/`
+as part of that work. Each move is self-contained. **Repeatable recipe per view:**
+1. Confirm it meets the movability criteria (Phase 3) — a real `View`, inputs are
+   value types/models/closures, no Bark/SwiftData/WalletManager (incl. indirect
+   `context.walletManager`), no app-side helpers/constants (e.g. `showAddressIconsKey`).
+2. Copy into `ArkeUI/Sources/ArkéUI/Views/<Feature>/`; make `public struct` /
+   `public init` / `public var body`; move nested helper types too.
+3. Localization: `String(localized:)` **and** `Text("key")`/`LocalizedStringKey`
+   literals both need `bundle: .module`; add any new keys to the package
+   `Localizable.xcstrings` with canonical values from `Shared/Localizable.xcstrings`.
+4. Add a sample-data `#Preview`.
+5. Delete the original under `Shared/Views/`; add `import ArkeUI` to any app file
+   that still names it.
+6. **Xcode membership pass** (the only non-file-IO step): remove the deleted
+   file's stale target reference (and add any new app-side boundary file) in
+   Xcode — never edit `project.pbxproj` by hand — then build iOS + macOS and
+   check the preview.
+
 ## Current state (as surveyed 2026-06-30)
 
 ### What's already clean
@@ -411,12 +453,31 @@ Confirmed clean movers spot-checked (take model/value inputs, already
   their pure subviews instead.
 
 #### Proposed sequencing
-- **Phase 3a — proof batch (high-confidence presentational subviews).** A small,
-  cohesive set that already imports `ArkeUI` and takes value/model inputs —
-  e.g. `TransactionStatusBadge`, `BalanceDetailCard`, `ContactHeaderView`,
-  `ContactPreviewCard`, `FeeOptionRow`, `TagPreviewCard`, `Receive/AddressCard`,
-  `Data/UTXORowView`. Prove the per-view preview + membership flow end-to-end,
-  then settle naming/folder conventions before scaling.
+- **Phase 3a — proof batch (DONE, 2026-06-30).** Moved 6 presentational subviews
+  into `ArkeUI/Sources/ArkéUI/Views/` (all `public struct` / `public init` /
+  `public var body` + sample-data `#Preview`, matching the existing `DetailRow`
+  convention):
+  - `Activity/TransactionStatusBadge` (`TransactionStatusEnum`; no localization)
+  - `Contacts/ContactHeaderView` (`ContactModel`; `String(localized:)` → `.module`)
+  - `Contacts/ContactPreviewCard` (`ContactModel`; `Text(key)` → `.module`)
+  - `Send/FeeOptionRow` (`FeePriority` + closure; clean)
+  - `Tags/TagPreviewCard` (`TagModel`; two `Text(key)` → `.module`)
+  - `Data/UTXORowView` (+ its `UTXOStatus` enum; `UTXOModel`; clean)
+
+  Conventions this batch locked in:
+  - **`Text("key")` `LocalizedStringKey` literals ALSO need `bundle: .module`** in
+    the package — not only `String(localized:)`. The localization audit must scan
+    both forms. Added `label_preview`, `placeholder_name_preview`, `status_added`
+    to the package `Localizable.xcstrings` (canonical values from Shared).
+  - **Verify each candidate's transitive deps**, not just the coupling grep. Two
+    originally-listed candidates were **deferred**: `Receive/AddressCard` (uses
+    app-side `UserDefaults.showAddressIconsKey` from `Shared/Helpers/UserSettings.swift`
+    — must move/abstract that first) and `Balance/BalanceDetailCard` (asset
+    `Image(imageName)` resolves via main bundle, so previews can't show it; plus 3
+    `Text(key)`s). `String.chunked(into:)` was already in ArkeUI.
+  - All referencing app files already imported `ArkeUI` (0 import fixups). Pure
+    moves → membership pass was stale-reference removal only.
+  - Verified: both apps build; previews render from sample data.
 - **Phase 3b… — by feature area**, one folder at a time (Contacts → Tags →
   Receive → Send subviews → Balance → Activity/Data rows). For each: move the
   pure subviews, add sample-data previews, and where a screen is *almost* pure,
