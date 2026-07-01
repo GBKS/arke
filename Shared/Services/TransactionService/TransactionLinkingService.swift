@@ -175,11 +175,13 @@ class TransactionLinkingService {
             )
             
             if linkableTxids.isEmpty {
+                /*
                 if category == .exit {
                     Self.logger.debug("   ℹ️ No linkable txids found yet (exit status may not be cached)")
                 } else {
                     Self.logger.debug("   ℹ️ No linkable txids found in metadata")
                 }
+                */
                 return
             }
             

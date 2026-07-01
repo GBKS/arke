@@ -14,75 +14,7 @@ import Bark
 import OSLog
 
 extension SendViewModel {
-    
-    // MARK: - LNURL-Pay Resolution
-    
-    /// Requests a Lightning invoice from an LNURL-pay callback URL
-    private func requestLightningInvoice(callback: String, amountMillisats: Int, comment: String?) async throws -> String {
-        // Construct the callback URL with amount parameter
-        guard var urlComponents = URLComponents(string: callback) else {
-            throw SendError.invalidFormat("Invalid LNURL-pay callback URL")
-        }
-        
-        // Add amount parameter (in millisatoshis)
-        var queryItems = urlComponents.queryItems ?? []
-        queryItems.append(URLQueryItem(name: "amount", value: String(amountMillisats)))
-        
-        // Add comment if provided
-        if let comment = comment, !comment.isEmpty {
-            queryItems.append(URLQueryItem(name: "comment", value: comment))
-        }
-        
-        urlComponents.queryItems = queryItems
-        
-        guard let url = urlComponents.url else {
-            throw SendError.invalidFormat("Failed to construct LNURL-pay callback URL")
-        }
-        
-        // Make the HTTP request
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.timeoutInterval = 30  // Increased to 30 seconds for slow LNURL servers
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        
-        logger.debug("   → Requesting invoice from: \(url.absoluteString)")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        logger.debug("   → Received response (\(data.count) bytes)")
-        
-        // Check HTTP status
-        if let httpResponse = response as? HTTPURLResponse {
-            guard (200...299).contains(httpResponse.statusCode) else {
-                let body = String(data: data, encoding: .utf8) ?? "(no body)"
-                logger.error("   HTTP \(httpResponse.statusCode): \(body)")
-                throw SendError.invalidFormat("LNURL-pay callback returned HTTP \(httpResponse.statusCode)")
-            }
-        }
-        
-        // Parse JSON response
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            let body = String(data: data, encoding: .utf8) ?? "(binary data)"
-            logger.error("   Invalid JSON response: \(body)")
-            throw SendError.invalidFormat("Invalid JSON response from LNURL-pay callback")
-        }
-        
-        logger.debug("   → Response JSON: \(json)")
-        
-        // Check for error response
-        if let status = json["status"] as? String, status == "ERROR" {
-            let reason = json["reason"] as? String ?? "Unknown error"
-            throw SendError.invalidFormat("LNURL-pay error: \(reason)")
-        }
-        
-        // Extract the invoice (pr = payment request)
-        guard let invoice = json["pr"] as? String else {
-            throw SendError.invalidFormat("No invoice returned from LNURL-pay callback")
-        }
-        
-        return invoice
-    }
-    
+
     // MARK: - Payment Execution
     
     /// Executes the payment using the current send state
@@ -302,10 +234,11 @@ extension SendViewModel {
             
         case .lnurl:
             logger.info("   → Paying LNURL: \(destination.address)")
-            
-            // Get resolved LNURL data (should be cached from clipboard/QR resolution)
+
+            // Resolve the LNURL if not already cached. Bark performs the full
+            // LNURL-pay flow natively during payment, but we still resolve here for
+            // pre-send amount-limit validation and note/metadata pre-population.
             if resolvedLNURL == nil {
-                // Fallback: resolve now if not cached
                 logger.debug("   → LNURL not cached, resolving now...")
                 resolvedLNURL = try await LNURLResolver.resolve(destination.address)
 
@@ -317,43 +250,34 @@ extension SendViewModel {
             guard let lnurlData = resolvedLNURL else {
                 throw SendError.invalidFormat("LNURL resolution failed")
             }
-            
+
             // Validate amount is within LNURL limits
             if amountInt < lnurlData.minSendableSats || amountInt > lnurlData.maxSendableSats {
                 throw SendError.invalidFormat("Amount must be between \(lnurlData.minSendableSats) and \(lnurlData.maxSendableSats) sats")
             }
-            
-            // Request invoice from LNURL callback
-            logger.debug("   → Requesting invoice from LNURL callback...")
-            let amountMillisats = amountInt * 1000
-            let invoice = try await requestLightningInvoice(
-                callback: lnurlData.callback,
-                amountMillisats: amountMillisats,
-                comment: nil  // No comment support in v1
-            )
-            
-            logger.debug("   → Got invoice: \(invoice)")
-            
-            // Verify invoice amount matches requested amount
-            if let parsedInvoice = try? LightningInvoiceParser.parse(invoice),
-               let invoiceAmount = parsedInvoice.amountSatoshis,
-               invoiceAmount != UInt64(amountInt) {
-                throw SendError.invalidFormat("Invoice amount (\(invoiceAmount) sats) doesn't match requested amount (\(amountInt) sats)")
+
+            // Bark handles callback fetch → invoice request → pay in one call.
+            if isSendingMax {
+                logger.debug("   → Send-max mode: enabling retry logic")
+                try await executeWithRetry(
+                    destination: destination,
+                    initialAmount: amountInt,
+                    maxRetries: 3
+                )
+            } else {
+                let status = try await walletManager.payLnurl(
+                    lnurl: destination.address,
+                    amountSats: UInt64(amountInt),
+                    comment: nil
+                )
+                logLightningPaymentStatus(status, label: "LNURL payment")
+
+                // PHASE 1: Extract and store payment hash for Lightning payments
+                if let paymentHash = extractPaymentHash(from: status) {
+                    updatePendingMetadataWithPaymentHash(paymentHash)
+                }
             }
-            
-            // Pay the invoice via Bark (existing flow)
-            logger.debug("   → Paying invoice via Bark...")
-            let status = try await walletManager.payLightningInvoice(
-                invoice: invoice,
-                amountSats: nil  // Amount is embedded in invoice
-            )
-            logLightningPaymentStatus(status, label: "LNURL payment")
-            
-            // PHASE 1: Extract and store payment hash for Lightning payments
-            if let paymentHash = extractPaymentHash(from: status) {
-                updatePendingMetadataWithPaymentHash(paymentHash)
-            }
-            
+
         case .bolt12:
             // BOLT12 offers require explicit amount and use dedicated payment method
             // The offer is resolved into an invoice internally by the wallet
@@ -436,6 +360,12 @@ extension SendViewModel {
                     status = try await walletManager.payLightningOffer(
                         offer: destination.address,
                         amountSats: UInt64(currentAmount)
+                    )
+                case .lnurl:
+                    status = try await walletManager.payLnurl(
+                        lnurl: destination.address,
+                        amountSats: UInt64(currentAmount),
+                        comment: nil
                     )
                 default:
                     throw SendError.invalidFormat("Unsupported format for retry logic")
