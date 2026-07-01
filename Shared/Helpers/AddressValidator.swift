@@ -206,31 +206,37 @@ class AddressValidator {
     
     /// Determines the Bitcoin network for a silent payments address
     static func detectSilentPaymentsNetwork(_ address: String) -> BitcoinNetwork? {
+        // Normalize to lowercase for case-insensitive comparison (bech32m is case-insensitive)
+        let normalized = address.lowercased()
+
         // Mainnet silent payments: sp1...
-        if address.hasPrefix("sp1") && isValidSilentPaymentsAddress(address) {
+        if normalized.hasPrefix("sp1") && isValidSilentPaymentsAddress(normalized) {
             return .mainnet
         }
-        
+
         // Testnet silent payments: tsp1...
-        if address.hasPrefix("tsp1") && isValidSilentPaymentsAddress(address) {
+        if normalized.hasPrefix("tsp1") && isValidSilentPaymentsAddress(normalized) {
             return .testnet
         }
-        
+
         // Signet silent payments: ssp1...
-        if address.hasPrefix("ssp1") && isValidSilentPaymentsAddress(address) {
+        if normalized.hasPrefix("ssp1") && isValidSilentPaymentsAddress(normalized) {
             return .signet
         }
-        
+
         // Regtest silent payments: rsp1...
-        if address.hasPrefix("rsp1") && isValidSilentPaymentsAddress(address) {
+        if normalized.hasPrefix("rsp1") && isValidSilentPaymentsAddress(normalized) {
             return .regtest
         }
-        
+
         return nil
     }
     
     /// Validates a silent payments address according to BIP-352
     static func isValidSilentPaymentsAddress(_ address: String) -> Bool {
+        // Normalize to lowercase for case-insensitive comparison (bech32m is case-insensitive)
+        let address = address.lowercased()
+
         // Check if it has a valid silent payments prefix
         let validPrefixes = ["sp1", "tsp1", "ssp1", "rsp1"]
         guard validPrefixes.contains(where: { address.hasPrefix($0) }) else {
@@ -264,7 +270,10 @@ class AddressValidator {
     private static func decodeBech32m(_ address: String) -> (hrp: String, data: Data)? {
         // This is a simplified bech32m decoder for validation purposes
         // In production, you'd want a full implementation that handles all edge cases
-        
+
+        // Normalize to lowercase (bech32m is case-insensitive; charset below is lowercase)
+        let address = address.lowercased()
+
         guard let separatorIndex = address.lastIndex(of: "1") else { return nil }
         
         let hrp = String(address[..<separatorIndex])
@@ -303,14 +312,17 @@ class AddressValidator {
     
     /// Determines the Ark network for an address
     static func detectArkNetwork(_ address: String) -> BitcoinNetwork? {
+        // Normalize to lowercase for case-insensitive comparison (bech32m is case-insensitive)
+        let normalized = address.lowercased()
+
         // Mainnet Ark addresses start with "ark1"
-        if address.range(of: "^ark1[a-z0-9]+$", options: .regularExpression) != nil {
+        if normalized.range(of: "^ark1[a-z0-9]+$", options: .regularExpression) != nil {
             return .mainnet
         }
-        
+
         // Signet Ark addresses start with "tark1"
         // Based on actual Signet Ark address format: tark1pm6sr0fpzqqpu4k5llkn6wdswx48fwjjujgu4gm679lqwudrzghz7a2rx7wuup9cpqq6ssw20
-        if address.range(of: "^tark1[a-z0-9]+$", options: .regularExpression) != nil {
+        if normalized.range(of: "^tark1[a-z0-9]+$", options: .regularExpression) != nil {
             return .signet
         }
         

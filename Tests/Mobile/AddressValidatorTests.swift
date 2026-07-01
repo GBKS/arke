@@ -100,4 +100,49 @@ struct AddressValidatorTests {
         #expect(destination?.format == .lightningInvoice, "Should be Lightning invoice format")
         #expect(destination?.address.hasPrefix("lnbc") == true, "Address should start with lnbc")
     }
+
+    @Test("Parse BIP-21 with uppercase Ark address in ark= parameter")
+    func testBIP21WithUppercaseArkParameter() async throws {
+        // Real example from user: bech32m Ark address supplied in uppercase.
+        // Bech32m is case-insensitive, so the ark= destination must still be detected.
+        let bip21 = "bitcoin:bc1p90d2l4dkt805y0z7xnj9063hgr3c20sx5785ndykql37fwv7p28ql4ftum?amount=0.00000500&ark=ARK1PU6H30W3ZQQPZSSLLL7Q3SHC64TYNF0ADPZNG6SURCLED29XCMEM9PGDW79U2LPPZQYPJE9GYVCQX3RRD7XK83ASUHQNK0ZUKSH9J3GV706YJ009MKGGTZ4GNM04Q4&lightning=LNBC5U1P4Z8454SP5JQJAZW30TT9G0MR5ZSMZED824CYDML33GU7C383880YR0SSDFWUSPP5MLU85LKWTLKR8A5YLN6P0275Y76M47HJXM203YNDR6V7VMH99Z6SDQQXQY9GCQCQZXG9QYYSGQ5V8QR8T4F8TXX62668S04FR83P66QZEERRKVJZUD5Z0HAVW9ST88DYR0N2JH0V4GP307H2JNPGZY3ZTMRKKNNDK7X3C8UPQPVUL7UPQQA6Q25R"
+
+        let paymentRequest = AddressValidator.parsePaymentRequest(bip21)
+
+        #expect(paymentRequest != nil, "Should parse BIP-21 URI")
+        #expect(paymentRequest?.amount == 500, "Amount should be 500 sats (0.00000500 BTC)")
+
+        // The uppercase ark= parameter must produce an Ark destination.
+        let hasArk = paymentRequest?.destinations.contains { $0.format == .ark } ?? false
+        #expect(hasArk, "Should detect the uppercase Ark address in the ark= parameter")
+
+        // The onchain and lightning destinations should also be present.
+        let hasOnchain = paymentRequest?.destinations.contains { $0.format == .bitcoin } ?? false
+        let hasLightning = paymentRequest?.destinations.contains { $0.format == .lightningInvoice } ?? false
+        #expect(hasOnchain, "Should have onchain destination")
+        #expect(hasLightning, "Should have lightning destination")
+    }
+
+    @Test("Detect Ark network is case-insensitive")
+    func testDetectArkNetworkCaseInsensitive() async throws {
+        let upper = "ARK1PU6H30W3ZQQPZSSLLL7Q3SHC64TYNF0ADPZNG6SURCLED29XCMEM9PGDW79U2LPPZQYPJE9GYVCQX3RRD7XK83ASUHQNK0ZUKSH9J3GV706YJ009MKGGTZ4GNM04Q4"
+        let lower = upper.lowercased()
+
+        #expect(AddressValidator.detectArkNetwork(upper) == .mainnet, "Uppercase ark address should be mainnet")
+        #expect(AddressValidator.detectArkNetwork(lower) == .mainnet, "Lowercase ark address should be mainnet")
+        #expect(AddressValidator.isArkAddress(upper), "Uppercase ark address should be recognized as Ark")
+    }
+
+    @Test("Detect Silent Payments network is case-insensitive")
+    func testDetectSilentPaymentsCaseInsensitive() async throws {
+        // Synthetic vector: the simplified bech32m decoder does not verify the checksum,
+        // it only requires the sp1 prefix and a 66-byte payload (33-byte scan + 33-byte
+        // spend key). 112 charset characters after "sp1" decode to exactly 66 bytes.
+        let lower = "sp1" + String(repeating: "q", count: 112)
+        let upper = lower.uppercased()
+
+        #expect(AddressValidator.detectSilentPaymentsNetwork(lower) == .mainnet, "Lowercase sp address should be mainnet")
+        #expect(AddressValidator.detectSilentPaymentsNetwork(upper) == .mainnet, "Uppercase sp address should be mainnet")
+        #expect(AddressValidator.extractSilentPaymentsKeys(upper) != nil, "Should extract keys from uppercase sp address")
+    }
 }
