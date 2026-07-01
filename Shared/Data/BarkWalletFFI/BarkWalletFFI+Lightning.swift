@@ -360,7 +360,57 @@ extension BarkWalletFFI {
             throw error
         }
     }
-    
+
+    func payLnurl(lnurl: String, amountSats: UInt64, comment: String?, wait: Bool) async throws -> LightningSendStatus {
+        // Pay an LNURL-pay endpoint (bech32-encoded `lnurl...` or Lightning address)
+
+        if isPreview {
+            let send = LightningSend(invoice: "lnbc...", amountSats: amountSats, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
+            return .inProgress(send: send)
+        }
+
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        guard amountSats > 0 else {
+            throw BarkWalletFFIError.configurationError("Amount must be greater than 0 for LNURL payments")
+        }
+
+        if let comment = comment {
+            Self.logger.debug("Paying LNURL via FFI, Amount: \(amountSats) sats, Comment: \(comment), Wait: \(wait)")
+        } else {
+            Self.logger.debug("Paying LNURL via FFI, Amount: \(amountSats) sats, Wait: \(wait)")
+        }
+
+        do {
+            let status = try await wallet.payLnurl(
+                lnurl: lnurl,
+                amountSats: amountSats,
+                comment: comment,
+                wait: wait
+            )
+
+            switch status {
+            case .paid(let paymentHash, let preimage):
+                Self.logger.info("LNURL payment settled, Payment hash: \(String(paymentHash.prefix(16)))..., Preimage: \(String(preimage.prefix(16)))...")
+            case .inProgress(let send):
+                Self.logger.info("LNURL payment in progress, Amount: \(send.amountSats) sats, Fee: \(send.feeSats) sats")
+            case .unknown:
+                Self.logger.warning("LNURL payment status unknown")
+            }
+
+            return status
+
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error paying LNURL: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to pay LNURL: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error paying LNURL: \(error)")
+            throw error
+        }
+    }
+
     // MARK: - Payment Status Polling
     
     /// Poll lightning payment status until preimage is available or max attempts reached

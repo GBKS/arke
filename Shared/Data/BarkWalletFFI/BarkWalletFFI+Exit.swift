@@ -319,7 +319,32 @@ extension BarkWalletFFI {
             throw error
         }
     }
-    
+
+    func syncForceExitedVtxos() async throws {
+        // Sync the state of VTXOs that have been force-exited (unilateral exit)
+
+        if isPreview {
+            return
+        }
+
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        Self.logger.debug("Syncing force-exited VTXOs via FFI...")
+
+        do {
+            try await wallet.syncForceExitedVtxos()
+            Self.logger.info("Force-exited VTXOs synced")
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error syncing force-exited VTXOs: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to sync force-exited VTXOs: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error syncing force-exited VTXOs: \(error)")
+            throw error
+        }
+    }
+
     func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         // Drain claimable exits to an address
         

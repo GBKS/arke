@@ -38,6 +38,14 @@ extension WalletManager {
         }
         return try await wallet.payLightningAddress(lightningAddress: lightningAddress, amountSats: amountSats, comment: comment, wait: true)
     }
+
+    /// Pay an LNURL-pay endpoint (bech32 `lnurl...` or Lightning address)
+    func payLnurl(lnurl: String, amountSats: UInt64, comment: String?) async throws -> LightningSendStatus {
+        guard let wallet = wallet else {
+            throw BarkErrorArke.commandFailed("Wallet not initialized")
+        }
+        return try await wallet.payLnurl(lnurl: lnurl, amountSats: amountSats, comment: comment, wait: true)
+    }
     
     /// Pay a BOLT12 Lightning offer
     func payLightningOffer(offer: String, amountSats: UInt64?) async throws -> LightningSendStatus {

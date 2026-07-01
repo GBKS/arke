@@ -95,6 +95,14 @@ extension WalletManager {
         }
         try await wallet.syncExits()
     }
+
+    /// Sync the state of VTXOs that have been force-exited (unilateral exit)
+    func syncForceExitedVtxos() async throws {
+        guard let wallet = wallet else {
+            throw BarkErrorArke.commandFailed("Wallet not initialized")
+        }
+        try await wallet.syncForceExitedVtxos()
+    }
     
     /// Get all VTXOs currently in exit process
     func getExitVtxos() async throws -> [ExitVtxo] {

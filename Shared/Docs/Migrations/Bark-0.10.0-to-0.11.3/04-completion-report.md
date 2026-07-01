@@ -75,6 +75,22 @@ runtime smoke tests remain as follow-ups.
   (`BDKOnchainWallet` is not currently wired via `OnchainWallet.custom(callbacks:)`
   — the app uses `OnchainWallet.default` — but the conformance still had to compile.)
 
+### Phase 7: Additive APIs exposed ✅
+**Files:** `BarkWalletProtocol.swift`, `BarkWalletFFI+Lightning.swift`,
+`BarkWalletFFI+Exit.swift`, `MockBarkWallet.swift`,
+`WalletManager+Lightning.swift`, `WalletManager+Operations.swift`
+
+Exposed the two additive 0.11 methods across all four layers (protocol, FFI, mock,
+manager), mirroring the existing `payLightningAddress` / `syncExits` patterns:
+
+- `payLnurl(lnurl:amountSats:comment:wait:) -> LightningSendStatus` — manager
+  wrapper passes `wait: true`, consistent with the other Lightning send wrappers.
+- `syncForceExitedVtxos()` — the underlying FFI call takes no arguments (unlike
+  `syncExits`, which takes the onchain wallet).
+
+Not yet called from any UI — these are available for future wiring (e.g. `payLnurl`
+may complete/replace part of `LNURL_PAY_IMPLEMENTATION_PLAN.md`).
+
 ### Unplanned: wider `Bark.Error` / `Swift.Error` collision ✅
 **Files:** `BarkWalletFFI.swift`, `WalletManager.swift`, `BDKCpfpHelper.swift`,
 `BDKTransactionReader.swift`, `BDKOnchainWallet.swift`, `BarkWalletFFI+Balance.swift`
@@ -180,9 +196,8 @@ user-facing message is ever needed, extract via `if case .Inner(let m) = error`.
 
 ## Follow-ups (not required for compile-green)
 
-- **Phase 7 additive APIs:** expose `payLnurl(lnurl:amountSats:comment:wait:) -> LightningSendStatus`
-  and `syncForceExitedVtxos()` (protocol + FFI + mock + manager). May
-  complete/replace part of `LNURL_PAY_IMPLEMENTATION_PLAN.md`.
+- ~~**Phase 7 additive APIs**~~ ✅ done — `payLnurl` and `syncForceExitedVtxos`
+  exposed across all four layers (see Phase 7 above). Still un-wired to any UI.
 - **Runtime smoke tests** (checklist above).
 - **Second scheme build.**
 

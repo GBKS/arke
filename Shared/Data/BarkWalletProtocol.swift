@@ -93,6 +93,7 @@ protocol BarkWalletProtocol {
     
     func progressExits(feeRateSatPerVb: UInt64?) async throws -> [ExitProgressStatus]
     func syncExits() async throws
+    func syncForceExitedVtxos() async throws
     func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction
     func listClaimableExits() async throws -> [ExitVtxo]
     func getExitVtxos() async throws -> [ExitVtxo]
@@ -159,6 +160,7 @@ protocol BarkWalletProtocol {
     
     func payLightningOffer(offer: String, amountSats: UInt64?, wait: Bool) async throws -> LightningSendStatus
     func payLightningAddress(lightningAddress: String, amountSats: UInt64, comment: String?, wait: Bool) async throws -> LightningSendStatus
+    func payLnurl(lnurl: String, amountSats: UInt64, comment: String?, wait: Bool) async throws -> LightningSendStatus
     func checkLightningPayment(paymentHash: String, wait: Bool) async throws -> LightningSendStatus
     func isInvoicePaid(paymentHash: String) async throws -> Bool
     func lightningSendState(paymentHash: String) async throws -> LightningSendStatus

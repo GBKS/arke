@@ -532,6 +532,11 @@ class MockBarkWallet: BarkWalletProtocol {
         try await Task.sleep(nanoseconds: 500_000_000)
         print("🔄 Mock: Syncing exits")
     }
+
+    func syncForceExitedVtxos() async throws {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        print("🔄 Mock: Syncing force-exited VTXOs")
+    }
     
     func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         try await Task.sleep(nanoseconds: 1_000_000_000)
@@ -682,7 +687,24 @@ class MockBarkWallet: BarkWalletProtocol {
         )
         return .inProgress(send: send)
     }
-    
+
+    func payLnurl(lnurl: String, amountSats: UInt64, comment: String?, wait: Bool) async throws -> LightningSendStatus {
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        if let comment = comment {
+            print("⚡️ Mock: Paying LNURL: \(lnurl) for \(amountSats) sats with comment: \(comment), wait: \(wait)")
+        } else {
+            print("⚡️ Mock: Paying LNURL: \(lnurl) for \(amountSats) sats, wait: \(wait)")
+        }
+        let send = LightningSend(
+            invoice: "lnbc\(amountSats)n1mock...",
+            amountSats: amountSats,
+            feeSats: 50,
+            htlcVtxoCount: 1,
+            hasFailedRevocation: false
+        )
+        return .inProgress(send: send)
+    }
+
     func checkLightningPayment(paymentHash: String, wait: Bool) async throws -> LightningSendStatus {
         try await Task.sleep(nanoseconds: wait ? 1_000_000_000 : 300_000_000)
         print("🔍 Mock: Checking Lightning payment status for \(String(paymentHash.prefix(16)))...")
