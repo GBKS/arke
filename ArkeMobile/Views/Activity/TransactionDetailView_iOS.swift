@@ -162,10 +162,13 @@ struct TransactionDetailView_iOS: View {
                     .multilineTextAlignment(.center)
                 
                 // Amount (transferred amount for internal transfers, net amount for others)
-                Text(transaction.formattedDisplayAmount)
-                    .font(.system(size: 54, weight: .bold, design: .rounded))
-                    .foregroundColor(amountTextColor == .black || amountTextColor == .primary ? .white : amountTextColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                // Refreshes have no meaningful amount to display, so hide it.
+                if transaction.category != .refresh {
+                    Text(transaction.formattedDisplayAmount)
+                        .font(.system(size: 54, weight: .bold, design: .rounded))
+                        .foregroundColor(amountTextColor == .black || amountTextColor == .primary ? .white : amountTextColor)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                }
             }
             
             VStack(alignment: .center, spacing: 5) {

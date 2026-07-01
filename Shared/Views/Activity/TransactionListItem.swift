@@ -167,7 +167,8 @@ struct TransactionListItem: View {
             return transaction.transactionType.amountColor
             
         case .pending:
-            return .Arke.blue
+            return .primary // Testing if blue is needed
+            //return .Arke.blue
             
         case .failed:
             return .Arke.red
@@ -314,11 +315,14 @@ struct TransactionListItem: View {
                 }
                 */
                 
-                // For exits, include fees from linked onchain transactions
-                Text(transaction.formattedNetAmountIncludingLinked(modelContext: modelContext))
-                    .font(.body)
-                    .fontWeight(.medium)
-                    .foregroundColor(amountTextColor)
+                // For exits, include fees from linked onchain transactions.
+                // Hide the amount for refresh transactions with a zero net amount.
+                if !(transaction.category == .refresh && transaction.netAmountIncludingLinked(modelContext: modelContext) == 0) {
+                    Text(transaction.formattedNetAmountIncludingLinked(modelContext: modelContext))
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundColor(amountTextColor)
+                }
             }
         }
         .padding(.horizontal, 12)
