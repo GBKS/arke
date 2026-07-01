@@ -10,19 +10,23 @@ before editing (do **not** use `~/workspace/bark-ffi-bindings`).
 
 ---
 
-## Phase 0 — Verify real signatures (do first)
+## Phase 0 — Verify real signatures ✅ DONE (2026-07-01)
 
-Read the generated `Bark.swift` from DerivedData and confirm:
+Verified against `Bark.swift` in DerivedData SourcePackages:
 
-- `initWallet(...)` full argument list and whether it takes the onchain wallet.
-- `WalletOpenArgs` exact field names/types — especially `onchain`'s type
-  (`OnchainWallet?` vs something else) and where `forceRescan` behaviour went.
-- `OnchainWallet.default(...)` parameter order with the new `network:`.
-- `Config`'s new `userAgent` position and whether other fields shifted.
-- Whether `Bark.Error` conforms to `LocalizedError` (affects `.localizedDescription`).
-
-Fix any discrepancies between the findings here and the real bindings before
-proceeding.
+- `initWallet(network:mnemonicOrSeed:config:datadir:allowUnreachableServer:)` —
+  free func, `async throws -> Void`. No onchain wallet, no rescan param.
+- `Wallet.open(network:mnemonicOrSeed:config:args:)` — `async throws -> Wallet`.
+- `WalletOpenArgs(runDaemon:datadir:onchain:createIfNotExists:createWithoutServer:)`
+  — **`datadir: String` is REQUIRED (no default)**; `onchain: OnchainWallet? = nil`;
+  `createIfNotExists = true`; `createWithoutServer = false`; `runDaemon = true`.
+- `OnchainWallet.default(network:mnemonic:config:datadir:)` — param order confirmed.
+- `Config`: `network` removed; `userAgent: String?` added as the **last** field;
+  memberwise init is fully positional with no defaults.
+- `Bark.Error: Foundation.LocalizedError`, single `case Inner(message: String)`.
+  `.localizedDescription` compiles but reflects the enum
+  (`Bark.Error.Inner(message: "…")`), not the bare message.
+- `forceRescan` has no replacement anywhere → dropped.
 
 ---
 
@@ -90,21 +94,22 @@ Confirm where the wallet's `Network` value is sourced (there is already
   at **189** → replace with:
   ```swift
   try await initWallet(network: net, mnemonicOrSeed: mnemonic, config: finalConfig,
-                       datadir: datadir, allowUnreachableServer: true) // ⚠️ verify flag
+                       datadir: datadir, allowUnreachableServer: true)
   let newWallet = try await Wallet.open(
       network: net, mnemonicOrSeed: mnemonic, config: finalConfig,
-      args: WalletOpenArgs(onchain: builtInWallet, createIfNotExists: true))
+      args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet, createIfNotExists: true))
   ```
-  Decide how to preserve the old `forceRescan: true` intent (Phase 0 finding).
+  `WalletOpenArgs.datadir` is required — pass it explicitly (same `datadir` as
+  `initWallet`). `forceRescan` is gone with no replacement; drop it.
 
 ### `BarkWalletFFI+WalletCreation.swift` — `importWallet`
 
 - `OnchainWallet.default(...)` at **456** → add `network:`.
 - The `walletExists` branch (478–500):
   - existing: `Wallet.openWithOnchain(...)` at **483** →
-    `Wallet.open(..., args: WalletOpenArgs(onchain: builtInWallet, createIfNotExists: false))`.
+    `Wallet.open(..., args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet, createIfNotExists: false))`.
   - new: `Wallet.createWithOnchain(...)` at **492** → `initWallet(...)` +
-    `Wallet.open(..., args: WalletOpenArgs(onchain: builtInWallet, createIfNotExists: true))`.
+    `Wallet.open(..., args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet, createIfNotExists: true))`.
   - Consider collapsing both branches into a single `Wallet.open` with
     `createIfNotExists: true` now that open can create — but keep the explicit
     branch if the restore-from-backup logging/behaviour matters.
@@ -113,7 +118,7 @@ Confirm where the wallet's `Network` value is sourced (there is already
 
 - `OnchainWallet.default(...)` at **197** → add `network:`.
 - `Wallet.openWithOnchain(...)` at **291** →
-  `Wallet.open(network:, ..., args: WalletOpenArgs(onchain: builtInWallet))`.
+  `Wallet.open(network:, ..., args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet))`.
 
 > Database filename is unchanged: `bark.sqlite` was and remains the on-disk name
 > in this release. No data migration or rename is required. The existing

@@ -29,7 +29,7 @@ extension BarkWalletFFI {
         
         do {
             return try wallet.mailboxIdentifier()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting mailbox identifier: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get mailbox identifier: \(error.localizedDescription)")
         } catch {
@@ -51,7 +51,7 @@ extension BarkWalletFFI {
         
         do {
             return try wallet.mailboxAuthorization()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting mailbox authorization: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get mailbox authorization: \(error.localizedDescription)")
         } catch {

@@ -38,7 +38,7 @@ extension BarkWalletFFI {
             
             return "VTXO offboard initiated. Round ID: \(roundId)"
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error offboarding VTXO: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to offboard VTXO: \(error.localizedDescription)")
         } catch {
@@ -81,7 +81,7 @@ extension BarkWalletFFI {
             
             return "Unilateral exit started for entire wallet. Call progressExits() to advance the process."
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error starting exit: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to start exit: \(error.localizedDescription)")
         } catch {
@@ -113,7 +113,7 @@ extension BarkWalletFFI {
             
             return "Unilateral exit started for \(vtxo_ids.count) VTXOs. Call progressExits() to advance."
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error starting exit: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to start exit: \(error.localizedDescription)")
         } catch {
@@ -280,7 +280,7 @@ extension BarkWalletFFI {
             
             return statuses
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error progressing exits: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to progress exits: \(error.localizedDescription)")
         } catch {
@@ -311,7 +311,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.syncExits(onchainWallet: onchainWallet)
             Self.logger.info("Exits synced")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error syncing exits: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to sync exits: \(error.localizedDescription)")
         } catch {
@@ -340,7 +340,7 @@ extension BarkWalletFFI {
             
             return claimTx
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error draining exits: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to drain exits: \(error.localizedDescription)")
         } catch {
@@ -366,7 +366,7 @@ extension BarkWalletFFI {
             let exits = try await wallet.listClaimableExits()
             Self.logger.info("Retrieved \(exits.count) claimable exits")
             return exits
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error listing claimable exits: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to list claimable exits: \(error.localizedDescription)")
         } catch {
@@ -390,7 +390,7 @@ extension BarkWalletFFI {
             let exits = try await wallet.getExitVtxos()
             Self.logger.info("Retrieved \(exits.count) VTXOs in exit process")
             return exits
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting exit VTXOs: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get exit VTXOs: \(error.localizedDescription)")
         } catch {
@@ -414,7 +414,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.hasPendingExits()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error checking pending exits: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to check pending exits: \(error.localizedDescription)")
         } catch {
@@ -436,7 +436,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.pendingExitsTotalSats()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting pending exits total: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get pending exits total: \(error.localizedDescription)")
         } catch {
@@ -458,7 +458,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.getExitStatus(vtxoId: vtxoId, includeHistory: includeHistory, includeTransactions: includeTransactions)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting exit status: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get exit status: \(error.localizedDescription)")
         } catch {
@@ -480,7 +480,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.allExitsClaimableAtHeight()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting claimable height: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get claimable height: \(error.localizedDescription)")
         } catch {

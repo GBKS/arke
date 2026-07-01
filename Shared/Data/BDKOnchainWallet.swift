@@ -368,7 +368,13 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
     func storeSignedP2aCpfp(txHex: String) throws {
         try cpfpHelper.storeSignedP2aCpfp(txHex: txHex)
     }
-    
+
+    /// Synchronous, no-arg sync required by `CustomOnchainWalletCallbacks` (Bark 0.11+).
+    /// Delegates to the existing incremental `syncSync()`.
+    func sync() throws {
+        _ = try syncSync()
+    }
+
     // MARK: - Additional Public Methods
     
     /// Sync wallet with blockchain (async version)
@@ -829,14 +835,14 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
 
 // MARK: - Error Types
 
-enum BDKWalletError: Error, LocalizedError {
+enum BDKWalletError: Swift.Error, LocalizedError {
     case walletNotInitialized
     case psbtNotFinalized
     case notImplemented(String)
     case invalidTransaction
     case insufficientFunds
     case networkError(String)
-    case broadcastFailed(psbt: String?, txid: String, underlyingError: Error)
+    case broadcastFailed(psbt: String?, txid: String, underlyingError: Swift.Error)
     
     var errorDescription: String? {
         switch self {

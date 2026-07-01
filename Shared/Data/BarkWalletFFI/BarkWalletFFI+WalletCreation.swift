@@ -59,13 +59,16 @@ extension BarkWalletFFI {
         print("🔍 [DEBUG] Generated mnemonic: \(mnemonic)")
         print("🔍 [DEBUG] Mnemonic word count: \(mnemonic.split(separator: " ").count)")
         
-        // Use the provided config or override with custom params
+        // Use the provided config or override with custom params.
+        // Network is passed separately to the FFI as of Bark 0.11.
         let finalConfig: Config
+        let net: Network
         if let network = network, let arkServer = arkServer {
             guard let ffiNetwork = Self.convertToFFINetwork(network) else {
                 throw BarkWalletFFIError.configurationError("Invalid network type: \(network)")
             }
-            
+            net = ffiNetwork
+
             finalConfig = Config(
                 serverAddress: arkServer,
                 serverAccessToken: networkConfig.arkServerAccessToken,
@@ -74,7 +77,6 @@ extension BarkWalletFFI {
                 bitcoindCookiefile: nil,
                 bitcoindUser: nil,
                 bitcoindPass: nil,
-                network: ffiNetwork,
                 vtxoRefreshExpiryThreshold: nil,
                 vtxoExitMargin: nil,
                 htlcRecvClaimDelta: nil,
@@ -83,14 +85,16 @@ extension BarkWalletFFI {
                 daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
                 daemonManualSync: nil,  // Use default (v0.6.3+)
-                lightningReceiveClaimRetries: nil  // Use default retries (v0.6.3+)
+                lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
+                userAgent: nil  // Use default user agent (v0.11+)
             )
         } else {
             finalConfig = config
+            net = ffiNetwork
         }
-        
+
         print("🔧 Creating wallet with FFI...")
-        print("   Network: \(finalConfig.network)")
+        print("   Network: \(net)")
         print("   Ark Server: \(finalConfig.serverAddress)")
         print("   Esplora Server: \(finalConfig.esploraAddress ?? "none")")
         print("   networkConfig.esploraBaseURL: \(networkConfig.esploraBaseURL)")
@@ -142,9 +146,8 @@ extension BarkWalletFFI {
         // Create wallet using FFI
         print("🔍 Step 2: Creating wallet with FFI...")
         do {
-            print("   About to call Wallet.createWithOnchain()...")
-            print("   forceRescan: true")
-            
+            print("   About to call initWallet() + Wallet.open()...")
+
             // Create onchain wallet directory
             print("   Creating onchain wallet...")
             let bdkDataDir = walletDir.appendingPathComponent("bdk", isDirectory: true)
@@ -169,29 +172,41 @@ extension BarkWalletFFI {
             
             // Use Bark's built-in BDK wallet
             let builtInWallet = try await OnchainWallet.default(
+                network: net,
                 mnemonic: mnemonic,
                 config: finalConfig,
                 datadir: bdkDataDir.path
             )
             print("   ✅ Built-in onchain wallet created")
-            
+
             // Create lightweight transaction reader for history
             print("   Creating transaction history reader...")
             let txReader = try BDKTransactionReader(
                 mnemonic: mnemonic,
-                network: finalConfig.network,
+                network: net,
                 esploraURL: finalConfig.esploraAddress ?? networkConfig.esploraBaseURL,
                 dataDir: bdkDataDir
             )
             print("   ✅ Transaction reader created")
-            
-            // Create Bark wallet with built-in onchain capabilities
-            let newWallet = try await Wallet.createWithOnchain(
-                mnemonic: mnemonic,
+
+            // Create Bark wallet with built-in onchain capabilities.
+            // Bark 0.11 splits create into initWallet (writes on-disk state) + Wallet.open.
+            try await initWallet(
+                network: net,
+                mnemonicOrSeed: mnemonic,
                 config: finalConfig,
                 datadir: datadir,
-                onchainWallet: builtInWallet,
-                forceRescan: true
+                allowUnreachableServer: true
+            )
+            let newWallet = try await Wallet.open(
+                network: net,
+                mnemonicOrSeed: mnemonic,
+                config: finalConfig,
+                args: WalletOpenArgs(
+                    datadir: datadir,
+                    onchain: builtInWallet,
+                    createIfNotExists: true
+                )
             )
             
             self.wallet = newWallet
@@ -297,7 +312,7 @@ extension BarkWalletFFI {
             
             return mnemonic
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             print("❌ FFI Error creating wallet: \(error)")
             
             // ✅ NEW: Enhanced error handling with cleanup suggestion
@@ -343,13 +358,16 @@ extension BarkWalletFFI {
         print("🔍 [DEBUG] Importing with mnemonic: \(mnemonic)")
         print("🔍 [DEBUG] Mnemonic word count: \(words.count)")
         
-        // Use the provided config or override with custom params
+        // Use the provided config or override with custom params.
+        // Network is passed separately to the FFI as of Bark 0.11.
         let finalConfig: Config
+        let net: Network
         if let network = network, let arkServer = arkServer {
             guard let ffiNetwork = Self.convertToFFINetwork(network) else {
                 throw BarkWalletFFIError.configurationError("Invalid network type: \(network)")
             }
-            
+            net = ffiNetwork
+
             finalConfig = Config(
                 serverAddress: arkServer,
                 serverAccessToken: networkConfig.arkServerAccessToken,
@@ -358,7 +376,6 @@ extension BarkWalletFFI {
                 bitcoindCookiefile: nil,
                 bitcoindUser: nil,
                 bitcoindPass: nil,
-                network: ffiNetwork,
                 vtxoRefreshExpiryThreshold: nil,
                 vtxoExitMargin: nil,
                 htlcRecvClaimDelta: nil,
@@ -367,14 +384,16 @@ extension BarkWalletFFI {
                 daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
                 daemonManualSync: nil,  // Use default (v0.6.3+)
-                lightningReceiveClaimRetries: nil  // Use default retries (v0.6.3+)
+                lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
+                userAgent: nil  // Use default user agent (v0.11+)
             )
         } else {
             finalConfig = config
+            net = ffiNetwork
         }
-        
+
         print("🔧 Importing wallet with FFI...")
-        print("   Network: \(finalConfig.network)")
+        print("   Network: \(net)")
         print("   Ark server: \(finalConfig.serverAddress)")
         print("   Data dir: \(datadir)")
         
@@ -454,17 +473,18 @@ extension BarkWalletFFI {
             
             // Use Bark's built-in BDK wallet
             let builtInWallet = try await OnchainWallet.default(
+                network: net,
                 mnemonic: mnemonic,
                 config: finalConfig,
                 datadir: bdkDataDir.path
             )
             print("✅ Built-in onchain wallet created")
-            
+
             // Create lightweight transaction reader for history
             print("🔧 Creating transaction history reader...")
             let txReader = try BDKTransactionReader(
                 mnemonic: mnemonic,
-                network: finalConfig.network,
+                network: net,
                 esploraURL: finalConfig.esploraAddress ?? networkConfig.esploraBaseURL,
                 dataDir: bdkDataDir
             )
@@ -480,21 +500,35 @@ extension BarkWalletFFI {
 
             if walletExists {
                 print("📂 Wallet database detected at \(barkSqlitePath) - opening existing wallet...")
-                restoredWallet = try await Wallet.openWithOnchain(
-                    mnemonic: mnemonic,
+                restoredWallet = try await Wallet.open(
+                    network: net,
+                    mnemonicOrSeed: mnemonic,
                     config: finalConfig,
-                    datadir: datadir,
-                    onchainWallet: builtInWallet
+                    args: WalletOpenArgs(
+                        datadir: datadir,
+                        onchain: builtInWallet,
+                        createIfNotExists: false
+                    )
                 )
                 print("✅ Existing wallet opened successfully")
             } else {
                 print("🆕 No wallet database found - creating new wallet...")
-                restoredWallet = try await Wallet.createWithOnchain(
-                    mnemonic: mnemonic,
+                try await initWallet(
+                    network: net,
+                    mnemonicOrSeed: mnemonic,
                     config: finalConfig,
                     datadir: datadir,
-                    onchainWallet: builtInWallet,
-                    forceRescan: true
+                    allowUnreachableServer: true
+                )
+                restoredWallet = try await Wallet.open(
+                    network: net,
+                    mnemonicOrSeed: mnemonic,
+                    config: finalConfig,
+                    args: WalletOpenArgs(
+                        datadir: datadir,
+                        onchain: builtInWallet,
+                        createIfNotExists: true
+                    )
                 )
                 print("✅ New wallet created successfully")
             }
@@ -543,7 +577,7 @@ extension BarkWalletFFI {
             print("✅ Wallet imported successfully")
             return "Wallet imported successfully. Syncing with network..."
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             print("❌ FFI Error importing wallet: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to import wallet: \(error.localizedDescription)")
         } catch {
@@ -619,7 +653,7 @@ extension BarkWalletFFI {
         let config = await wallet.config()
         print("   Config server: \(config.serverAddress)")
         print("   Config esplora: \(config.esploraAddress ?? "nil")")
-        print("   Config network: \(config.network)")
+        print("   Config network: \(self.ffiNetwork)")
         
         // Try to get properties if available
         do {

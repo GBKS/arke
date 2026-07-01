@@ -53,9 +53,10 @@ extension BarkWalletFFI {
         let ffiConfig = await wallet.config()
         
         printFullConfig()
-        
-        // Convert FFI Network enum to string
-        let networkString = Self.convertFFINetworkToString(ffiConfig.network)
+
+        // Convert FFI Network enum to string.
+        // `Config` no longer carries the network (Bark 0.11) — use the stored one.
+        let networkString = Self.convertFFINetworkToString(self.ffiNetwork)
         
         // Convert FFI Config to ArkConfigModel (1:1 mapping of all fields)
         let configModel = ArkConfigModel(
@@ -84,7 +85,7 @@ extension BarkWalletFFI {
     
     /// Print the entire config object for debugging
     func printFullConfig() {
-        let networkString = Self.convertFFINetworkToString(self.config.network)
+        let networkString = Self.convertFFINetworkToString(self.ffiNetwork)
         Self.logger.debug("Full Config Object: Server Address: \(self.config.serverAddress), Esplora Address: \(self.config.esploraAddress ?? "nil"), Bitcoind Address: \(self.config.bitcoindAddress ?? "nil"), Bitcoind Cookie File: \(self.config.bitcoindCookiefile ?? "nil"), Bitcoind User: \(self.config.bitcoindUser ?? "nil"), Bitcoind Pass: \(self.config.bitcoindPass != nil ? "[REDACTED]" : "nil"), Network: \(networkString), VTXO Refresh Expiry Threshold: \(self.config.vtxoRefreshExpiryThreshold.map { String($0) } ?? "nil"), VTXO Exit Margin: \(self.config.vtxoExitMargin.map { String($0) } ?? "nil"), HTLC Recv Claim Delta: \(self.config.htlcRecvClaimDelta.map { String($0) } ?? "nil"), Fallback Fee Rate: \(self.config.fallbackFeeRate.map { String($0) } ?? "nil"), Round Tx Required Confirmations: \(self.config.roundTxRequiredConfirmations.map { String($0) } ?? "nil")")
     }
     

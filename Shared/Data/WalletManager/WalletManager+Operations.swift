@@ -297,15 +297,6 @@ extension WalletManager {
         return try await walletOperationsService.refreshVtxosDelegated(vtxo_ids: vtxo_ids)
     }
     
-    /// Check if maintenance refresh is needed and schedule it
-    /// Returns the block height when next refresh is needed, or nil if not needed
-    func maybeScheduleMaintenanceRefresh() async throws -> UInt32? {
-        guard let wallet = wallet else {
-            throw BarkErrorArke.commandFailed("Wallet not initialized")
-        }
-        return try await wallet.maybeScheduleMaintenanceRefresh()
-    }
-    
     /// Perform maintenance refresh in delegated mode (non-interactive, automatic)
     func maintenanceDelegated() async throws {
         guard let wallet = wallet else {

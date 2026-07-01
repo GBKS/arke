@@ -59,7 +59,7 @@ extension BarkWalletFFI {
             
             return response
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error fetching balance: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get balance: \(error.localizedDescription)")
         } catch {
@@ -110,14 +110,16 @@ extension BarkWalletFFI {
             
             return addressWithIndex.address
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error generating address: \(error)")
             Self.logger.debug("BarkError details - Type: \(type(of: error)), Description: \(error.localizedDescription)")
             
-            // Check if this is specifically a connection error
-            if case .ServerConnection(let message) = error {
-                Self.logger.debug("Confirmed: ServerConnection error - Message: \(message)")
-                Self.logger.debug("Hint: The Rust wallet needs an explicit connection step. Solutions: 1) Call wallet.connect(), 2) Check forceRescan parameter, 3) Investigate network initialization delay")
+            // Check if this looks like a connection error. Bark 0.11 collapsed the
+            // granular error cases into `.Inner(message:)`, so inspect the message.
+            if case .Inner(let message) = error,
+               message.localizedCaseInsensitiveContains("connect") || message.localizedCaseInsensitiveContains("server") {
+                Self.logger.debug("Likely a server connection error - Message: \(message)")
+                Self.logger.debug("Hint: The Rust wallet may need an explicit connection step or is still initializing the network.")
             }
             
             throw BarkWalletFFIError.configurationError("Failed to generate address: \(error.localizedDescription)")
@@ -192,7 +194,7 @@ extension BarkWalletFFI {
             
             return response
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error fetching onchain balance: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get onchain balance: \(error.localizedDescription)")
         } catch {

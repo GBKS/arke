@@ -117,7 +117,7 @@ extension BarkWalletFFI {
             Self.logger.warning("   ⚠️ Wallet directory does not exist!")
         }
         
-        Self.logger.debug("Opening existing wallet - Config: Server Address: \(self.config.serverAddress), Esplora Address: \(self.config.esploraAddress ?? "not set"), Network: \(String(describing: self.config.network)), VTXO Refresh Expiry Threshold: \(self.config.vtxoRefreshExpiryThreshold.map { String(describing: $0) } ?? "nil"), VTXO Exit Margin: \(self.config.vtxoExitMargin.map { String(describing: $0) } ?? "nil"), HTLC Recv Claim Delta: \(self.config.htlcRecvClaimDelta.map { String(describing: $0) } ?? "nil"), Data Directory: \(self.datadir)")
+        Self.logger.debug("Opening existing wallet - Config: Server Address: \(self.config.serverAddress), Esplora Address: \(self.config.esploraAddress ?? "not set"), Network: \(String(describing: self.ffiNetwork)), VTXO Refresh Expiry Threshold: \(self.config.vtxoRefreshExpiryThreshold.map { String(describing: $0) } ?? "nil"), VTXO Exit Margin: \(self.config.vtxoExitMargin.map { String(describing: $0) } ?? "nil"), HTLC Recv Claim Delta: \(self.config.htlcRecvClaimDelta.map { String(describing: $0) } ?? "nil"), Data Directory: \(self.datadir)")
         
         printFullConfig()
         
@@ -191,21 +191,22 @@ extension BarkWalletFFI {
                 }
             }
             
-            Self.logger.debug("Using Bark's built-in BDK wallet - Mnemonic word count: \(mnemonic.split(separator: " ").count), Network: \(String(describing: self.config.network)), Esplora: \(self.config.esploraAddress ?? self.networkConfig.esploraBaseURL)")
-            
+            Self.logger.debug("Using Bark's built-in BDK wallet - Mnemonic word count: \(mnemonic.split(separator: " ").count), Network: \(String(describing: self.ffiNetwork)), Esplora: \(self.config.esploraAddress ?? self.networkConfig.esploraBaseURL)")
+
             // Use Bark's built-in BDK wallet (handles CPFP internally)
             let builtInWallet = try await OnchainWallet.default(
+                network: ffiNetwork,
                 mnemonic: mnemonic,
                 config: config,
                 datadir: bdkDataDir.path
             )
             Self.logger.info("Built-in onchain wallet created")
-            
+
             // Create lightweight transaction reader for history
             Self.logger.debug("Creating transaction history reader...")
             let txReader = try BDKTransactionReader(
                 mnemonic: mnemonic,
-                network: config.network,
+                network: ffiNetwork,
                 esploraURL: config.esploraAddress ?? networkConfig.esploraBaseURL,
                 dataDir: bdkDataDir
             )
@@ -273,7 +274,7 @@ extension BarkWalletFFI {
             */
             
             // Open Bark wallet with BDK-backed onchain capabilities
-            Self.logger.debug("Opening Bark wallet with onchain capabilities - Mnemonic word count: \(mnemonic.split(separator: " ").count), Config network: \(String(describing: self.config.network)), Data directory: \(self.datadir)")
+            Self.logger.debug("Opening Bark wallet with onchain capabilities - Mnemonic word count: \(mnemonic.split(separator: " ").count), Config network: \(String(describing: self.ffiNetwork)), Data directory: \(self.datadir)")
             
             // Check if Bark wallet data exists
             let barkWalletFiles = ["bark.sqlite", "db.sqlite", "wallet.db", "state.json", "wallet.dat"]
@@ -288,13 +289,16 @@ extension BarkWalletFFI {
                 }
             }
             
-            let openedWallet = try await Wallet.openWithOnchain(
-                mnemonic: mnemonic,
+            let openedWallet = try await Wallet.open(
+                network: ffiNetwork,
+                mnemonicOrSeed: mnemonic,
                 config: config,
-                datadir: datadir,
-                onchainWallet: builtInWallet
+                args: WalletOpenArgs(
+                    datadir: datadir,
+                    onchain: builtInWallet
+                )
             )
-            Self.logger.info("Bark Wallet.openWithOnchain() succeeded!")
+            Self.logger.info("Bark Wallet.open() succeeded!")
             
             self.wallet = openedWallet
             self.onchainWallet = builtInWallet
@@ -334,7 +338,7 @@ extension BarkWalletFFI {
                 Self.logger.warning("[DIAGNOSTIC] No server connection after wallet open - May need explicit connection step or network delay")
             }
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("Could not open existing wallet: BarkError - Error: \(error), Description: \(error.localizedDescription), Type: \(type(of: error))")
             
             // Print error string representation to see if it contains "DataAlreadyExists"
@@ -379,7 +383,7 @@ extension BarkWalletFFI {
             
             Self.logger.info("Wallet daemon started successfully")
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error starting daemon: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to start daemon: \(error.localizedDescription)")
         } catch {
@@ -408,7 +412,7 @@ extension BarkWalletFFI {
             
             Self.logger.info("Wallet daemon stopped successfully")
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error stopping daemon: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to stop daemon: \(error.localizedDescription)")
         } catch {

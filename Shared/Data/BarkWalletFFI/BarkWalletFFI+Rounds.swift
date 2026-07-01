@@ -32,7 +32,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.cancelAllPendingRounds()
             Self.logger.info("All pending rounds canceled")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error canceling pending rounds: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to cancel pending rounds: \(error.localizedDescription)")
         } catch {
@@ -57,7 +57,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.cancelPendingRound(roundId: roundId)
             Self.logger.info("Round \(roundId) canceled")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error canceling round: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to cancel round: \(error.localizedDescription)")
         } catch {
@@ -81,7 +81,7 @@ extension BarkWalletFFI {
             let states = try await wallet.pendingRoundStates()
             Self.logger.info("Retrieved \(states.count) pending round states")
             return states
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting pending round states: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get pending round states: \(error.localizedDescription)")
         } catch {
@@ -112,7 +112,7 @@ extension BarkWalletFFI {
             
             // Log round details after progression
             await RoundStateDebugger.logPendingRounds(from: wallet, context: "AFTER progression")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error progressing pending rounds: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to progress pending rounds: \(error.localizedDescription)")
         } catch {
@@ -137,7 +137,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.syncPendingBoards()
             Self.logger.info("Pending boards synced")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error syncing pending boards: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to sync pending boards: \(error.localizedDescription)")
         } catch {
@@ -162,7 +162,7 @@ extension BarkWalletFFI {
             let timestamp = try await wallet.nextRoundStartTime()
             Self.logger.info("Next round start time: \(timestamp)")
             return timestamp
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting next round start time: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get next round start time: \(error.localizedDescription)")
         } catch {

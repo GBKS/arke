@@ -11,7 +11,7 @@ import BitcoinDevKit
 import Bark
 
 /// Errors that can occur during CPFP transaction creation
-enum CpfpError: Error {
+enum CpfpError: Swift.Error {
     case invalidHex
     case noFeeAnchor
     case finalizeFailed

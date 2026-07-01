@@ -149,7 +149,7 @@ extension BarkWalletFFI {
             
             Self.logger.info("Wallet synced successfully")
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error syncing wallet: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to sync wallet: \(error.localizedDescription)")
         } catch {
@@ -176,7 +176,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.refreshServer()
             Self.logger.info("Server connection refreshed")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error refreshing server: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to refresh server: \(error.localizedDescription)")
         } catch {

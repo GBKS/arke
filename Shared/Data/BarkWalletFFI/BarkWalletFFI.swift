@@ -87,7 +87,11 @@ class BarkWalletFFI: BarkWalletProtocol {
     
     /// FFI configuration object
     let config: Config
-    
+
+    /// FFI network (no longer carried by `Config` as of Bark 0.11 — passed
+    /// separately to `initWallet` / `Wallet.open` / `OnchainWallet.default`)
+    let ffiNetwork: Network
+
     /// Network configuration (our app's model)
     var networkConfig: NetworkConfig
     
@@ -125,7 +129,8 @@ class BarkWalletFFI: BarkWalletProtocol {
             Self.logger.error("Invalid network type: \(networkConfig.networkType)")
             return nil
         }
-        
+        self.ffiNetwork = ffiNetwork
+
         self.config = Config(
             serverAddress: networkConfig.arkServerBaseURL,
             serverAccessToken: networkConfig.arkServerAccessToken,
@@ -134,7 +139,6 @@ class BarkWalletFFI: BarkWalletProtocol {
             bitcoindCookiefile: nil,
             bitcoindUser: nil,
             bitcoindPass: nil,
-            network: ffiNetwork,
             vtxoRefreshExpiryThreshold: nil,  // Use defaults
             vtxoExitMargin: nil,
             htlcRecvClaimDelta: nil,
@@ -143,7 +147,8 @@ class BarkWalletFFI: BarkWalletProtocol {
             daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
             offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
             daemonManualSync: nil,  // Use default (v0.6.3+)
-            lightningReceiveClaimRetries: nil  // Use default retries (v0.6.3+)
+            lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
+            userAgent: nil  // Use default user agent (v0.11+)
         )
         
         Self.logger.info("BarkWalletFFI initialized - Network: \(networkConfig.name)")
@@ -167,7 +172,7 @@ class BarkWalletFFI: BarkWalletProtocol {
             
             return txHex
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error extracting transaction from PSBT: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to extract transaction: \(error.localizedDescription)")
         } catch {
@@ -192,7 +197,7 @@ class BarkWalletFFI: BarkWalletProtocol {
             
             return txid
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error broadcasting transaction: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to broadcast transaction: \(error.localizedDescription)")
         } catch {
@@ -270,7 +275,7 @@ class BarkWalletFFI: BarkWalletProtocol {
 
 // MARK: - Error Types
 
-enum BarkWalletFFIError: Error, LocalizedError {
+enum BarkWalletFFIError: Swift.Error, LocalizedError {
     case notImplemented(String)
     case notSupported(String)
     case walletNotInitialized

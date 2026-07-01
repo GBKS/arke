@@ -43,27 +43,30 @@ static func Wallet.open(
 ) async throws -> Wallet
 
 struct WalletOpenArgs {
-    var runDaemon: Bool          // defaulted
-    var datadir: String?         // defaulted
-    var onchain: OnchainWallet?  // defaulted — onchain wallet now passed HERE, ⚠️ verify type
-    var createIfNotExists: Bool  // defaulted
-    var createWithoutServer: Bool// defaulted
+    var runDaemon: Bool          // defaulted true
+    var datadir: String          // ✅ verified REQUIRED — no default; must be passed
+    var onchain: OnchainWallet?  // defaulted nil — onchain wallet now passed HERE
+    var createIfNotExists: Bool  // defaulted true
+    var createWithoutServer: Bool// defaulted false
 }
 ```
 
 **Mapping:**
 
+> `datadir` is **required** in `WalletOpenArgs` and must be supplied in every
+> construction below (in addition to the `datadir` passed to `initWallet`).
+
 | Old call | New equivalent |
 |---|---|
-| `Wallet.create(...)` | `initWallet(...)` then `Wallet.open(..., args: WalletOpenArgs(createIfNotExists: true))` |
-| `Wallet.createWithOnchain(..., onchainWallet:, forceRescan:)` | `initWallet(...)` then `Wallet.open(..., args: WalletOpenArgs(onchain: builtInWallet, createIfNotExists: true))` |
-| `Wallet.open(...)` | `Wallet.open(network:, ..., args: WalletOpenArgs())` |
-| `Wallet.openWithDaemon(...)` | `Wallet.open(..., args: WalletOpenArgs(runDaemon: true))` |
-| `Wallet.openWithOnchain(..., onchainWallet:)` | `Wallet.open(..., args: WalletOpenArgs(onchain: builtInWallet))` |
+| `Wallet.create(...)` | `initWallet(...)` then `Wallet.open(..., args: WalletOpenArgs(datadir: datadir, createIfNotExists: true))` |
+| `Wallet.createWithOnchain(..., onchainWallet:, forceRescan:)` | `initWallet(...)` then `Wallet.open(..., args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet, createIfNotExists: true))` |
+| `Wallet.open(...)` | `Wallet.open(network:, ..., args: WalletOpenArgs(datadir: datadir))` |
+| `Wallet.openWithDaemon(...)` | `Wallet.open(..., args: WalletOpenArgs(runDaemon: true, datadir: datadir))` |
+| `Wallet.openWithOnchain(..., onchainWallet:)` | `Wallet.open(..., args: WalletOpenArgs(datadir: datadir, onchain: builtInWallet))` |
 
-> Note: `forceRescan` has no obvious replacement in `WalletOpenArgs`. Confirm
-> whether rescan behaviour moved into `initWallet`, is implicit on first open, or
-> was dropped. ⚠️ verify.
+> **`forceRescan` is dropped (✅ verified).** There is no rescan parameter on
+> `initWallet` *or* `WalletOpenArgs` in the generated bindings. The old
+> `forceRescan: true` intent has no API to map onto and is simply gone.
 
 ---
 
@@ -115,9 +118,11 @@ Our code never switches on specific `BarkError` cases (it only does
 `catch let error as BarkError { … error.localizedDescription … }`), so the sweep
 is mechanical: `catch let error as BarkError` → `catch let error as Bark.Error`.
 
-> `Bark.Error`'s `localizedDescription` should still work if the generated type
-> conforms to `LocalizedError`; if not, extract via `if case .Inner(let m) = error`.
-> ⚠️ verify.
+> ✅ verified: `Bark.Error` conforms to `Foundation.LocalizedError`, so
+> `.localizedDescription` compiles. **But** `errorDescription` is
+> `String(reflecting: self)`, so it yields `Bark.Error.Inner(message: "…")` rather
+> than the clean message. Any user-facing string that needs the raw message should
+> extract it via `if case .Inner(let m) = error`.
 
 ---
 

@@ -587,12 +587,6 @@ class MockBarkWallet: BarkWalletProtocol {
         return nil
     }
     
-    func maybeScheduleMaintenanceRefresh() async throws -> UInt32? {
-        try await Task.sleep(nanoseconds: 500_000_000)
-        print("📅 Mock: Checking if maintenance refresh should be scheduled")
-        return nil
-    }
-    
     func maintenanceWithOnchain() async throws {
         try await Task.sleep(nanoseconds: 1_500_000_000)
         print("🔧 Mock: Performing full maintenance with onchain sync")

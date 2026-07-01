@@ -118,7 +118,7 @@ final class BDKTransactionReader {
     /// We use withCheckedThrowingContinuation + DispatchQueue.global to ensure this
     /// runs on a background thread and never blocks the main thread/UI.
     func sync(fullScan: Bool = false, stopGap: UInt64 = 10, parallelRequests: UInt64 = 3) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Swift.Error>) in
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 guard let self = self else {
                     continuation.resume(throwing: BDKTransactionReaderError.syncFailed(NSError(domain: "BDKTransactionReader", code: -1)))
@@ -390,8 +390,8 @@ final class BDKTransactionReader {
 
 // MARK: - Errors
 
-enum BDKTransactionReaderError: Error {
+enum BDKTransactionReaderError: Swift.Error {
     case unsupportedNetwork
-    case syncFailed(Error)
+    case syncFailed(Swift.Error)
     case invalidTransaction
 }

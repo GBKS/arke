@@ -22,6 +22,11 @@ struct VTXOListView: View {
     private var totalVTXOAmount: Int {
         vtxos.reduce(into: 0) { $0 += $1.amountSat }
     }
+
+    /// VTXOs eligible for a refresh (exclude locked and already-spent ones)
+    private var spendableVTXOs: [VTXOModel] {
+        vtxos.filter { $0.state != .locked && $0.state != .spent }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -165,16 +170,29 @@ struct VTXOListView: View {
     private func refreshVTXOs() async {
         isLoadingVTXOs = true
         error = nil
-        
+
         print("refreshVTXOs")
-        
+
         do {
-            // Call refreshVTXOs on the wallet manager to get new VTXOs
-            let refreshResult = try await walletManager.maybeScheduleMaintenanceRefresh()
-            
-            print("refreshVTXOs: \(String(describing: refreshResult))")
-            
-            // After refreshing, reload the VTXOs to update the UI
+            // Refresh spendable VTXOs (extends their expiry via a delegated round).
+            let vtxosToRefresh = spendableVTXOs
+            guard !vtxosToRefresh.isEmpty else {
+                print("refreshVTXOs: no spendable VTXOs to refresh")
+                await loadVTXOs()
+                return
+            }
+
+            let vtxoIds = vtxosToRefresh.map { $0.id }
+            print("refreshVTXOs: scheduling delegated refresh for \(vtxoIds.count) VTXO(s)...")
+
+            let roundState = try await walletManager.refreshVtxosDelegated(vtxoIds: vtxoIds)
+            if roundState != nil {
+                print("refreshVTXOs: refresh round scheduled")
+            } else {
+                print("refreshVTXOs: no refresh scheduled (VTXOs may not need it yet)")
+            }
+
+            // Reload to reflect the new VTXO state.
             await loadVTXOs()
         } catch {
             self.error = error.localizedDescription

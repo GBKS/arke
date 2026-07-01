@@ -200,7 +200,7 @@ extension BarkWalletFFI {
             
             return jsonString
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error fetching movements: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get movements: \(error.localizedDescription)")
         } catch {
@@ -238,15 +238,16 @@ extension BarkWalletFFI {
         Self.logger.debug("Sending \(amount) sats to \(address) via FFI, Network: \(self.networkConfig.name)")
         
         do {
-            // Call FFI sendArkoorPayment method
-            let roundId = try await wallet.sendArkoorPayment(arkAddress: address, amountSats: amountSats)
-            
-            Self.logger.info("Payment sent successfully, Round ID: \(roundId), Amount: \(amount) sats, To: \(address)")
-            
-            // Return success message with round ID
-            return "Successfully sent \(amount) sats to \(address). Round ID: \(roundId)"
-            
-        } catch let error as BarkError {
+            // Call FFI sendArkoorPayment method (returns Void as of Bark 0.11)
+            try await wallet.sendArkoorPayment(arkAddress: address, amountSats: amountSats)
+
+            Self.logger.info("Payment sent successfully, Amount: \(amount) sats, To: \(address)")
+
+            // Return success message. Completion is reflected via Movement events,
+            // not a return value.
+            return "Successfully sent \(amount) sats to \(address)."
+
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error sending payment: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to send payment: \(error.localizedDescription)")
         } catch {
@@ -292,7 +293,7 @@ extension BarkWalletFFI {
             // Return result with round ID
             //return "Onchain payment initiated. Round ID: \(roundId)"
             return roundState
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error sending onchain payment: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to send onchain payment: \(error.localizedDescription)")
         } catch {

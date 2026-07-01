@@ -1045,7 +1045,7 @@ class WalletManager {
     }
 }
 
-enum BarkErrorArke: Error, LocalizedError {
+enum BarkErrorArke: Swift.Error, LocalizedError {
     case binaryNotFound
     case commandFailed(String)
     

@@ -76,7 +76,7 @@ extension BarkWalletFFI {
             // Return status
             return status
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error paying Lightning invoice: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to pay Lightning invoice: \(error.localizedDescription)")
         } catch {
@@ -115,7 +115,7 @@ extension BarkWalletFFI {
             // Return the invoice string
             return result.invoice
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error generating Lightning invoice: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to generate Lightning invoice: \(error.localizedDescription)")
         } catch {
@@ -169,7 +169,7 @@ extension BarkWalletFFI {
                 return "Invoice not found in pending receives. It may be already claimed or not yet paid."
             }
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error checking invoice status: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to check invoice status: \(error.localizedDescription)")
         } catch {
@@ -222,7 +222,7 @@ extension BarkWalletFFI {
             
             return jsonString
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error listing invoices: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to list invoices: \(error.localizedDescription)")
         } catch {
@@ -257,7 +257,7 @@ extension BarkWalletFFI {
             
             return "Successfully claimed all pending Lightning receives"
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error claiming Lightning receives: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to claim Lightning receives: \(error.localizedDescription)")
         } catch {
@@ -302,7 +302,7 @@ extension BarkWalletFFI {
             
             return status
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error paying Lightning offer: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to pay Lightning offer: \(error.localizedDescription)")
         } catch {
@@ -352,7 +352,7 @@ extension BarkWalletFFI {
             
             return status
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error paying Lightning address: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to pay Lightning address: \(error.localizedDescription)")
         } catch {
@@ -418,7 +418,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.checkLightningPayment(paymentHash: paymentHash, wait: wait)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error checking lightning payment: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to check lightning payment: \(error.localizedDescription)")
         } catch {
@@ -440,7 +440,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.lightningReceiveStatus(paymentHash: paymentHash)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting lightning receive status: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get lightning receive status: \(error.localizedDescription)")
         } catch {
@@ -465,7 +465,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.tryClaimLightningReceive(paymentHash: paymentHash, wait: wait)
             Self.logger.info("Lightning receive claimed")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error claiming lightning receive: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to claim lightning receive: \(error.localizedDescription)")
         } catch {
@@ -487,7 +487,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.claimableLightningReceiveBalanceSats()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting claimable lightning receive balance: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get claimable lightning receive balance: \(error.localizedDescription)")
         } catch {
@@ -509,7 +509,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.pendingLightningReceives()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting pending lightning receives: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get pending lightning receives: \(error.localizedDescription)")
         } catch {
@@ -534,7 +534,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.cancelLightningReceive(paymentHash: paymentHash)
             Self.logger.info("Lightning receive canceled")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error canceling lightning receive: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to cancel lightning receive: \(error.localizedDescription)")
         } catch {
@@ -558,7 +558,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.isInvoicePaid(paymentHash: paymentHash)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error checking if invoice paid: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to check if invoice paid: \(error.localizedDescription)")
         } catch {
@@ -580,7 +580,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.lightningSendState(paymentHash: paymentHash)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting lightning send state: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get lightning send state: \(error.localizedDescription)")
         } catch {
@@ -607,7 +607,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.allowLightningSendToExit(paymentHash: paymentHash)
             Self.logger.info("Stuck Lightning send allowed to exit successfully")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error allowing Lightning send to exit: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to allow Lightning send to exit: \(error.localizedDescription)")
         } catch {
@@ -632,7 +632,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.attemptLightningReceiveExit(paymentHash: paymentHash)
             Self.logger.info("Lightning receive exit attempted successfully")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error attempting Lightning receive exit: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to attempt Lightning receive exit: \(error.localizedDescription)")
         } catch {
@@ -656,7 +656,7 @@ extension BarkWalletFFI {
             let stuckSends = try await wallet.stuckFailedLightningSends()
             Self.logger.info("Retrieved \(stuckSends.count) stuck failed Lightning sends")
             return stuckSends
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting stuck failed Lightning sends: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get stuck failed Lightning sends: \(error.localizedDescription)")
         } catch {

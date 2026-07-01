@@ -64,7 +64,7 @@ extension BarkWalletFFI {
             
             return vtxoModels
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error fetching VTXOs: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get VTXOs: \(error.localizedDescription)")
         } catch {
@@ -111,7 +111,7 @@ extension BarkWalletFFI {
             }
             
             return roundState
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error scheduling delegated VTXO refresh: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to schedule delegated VTXO refresh: \(error.localizedDescription)")
         } catch {
@@ -146,7 +146,7 @@ extension BarkWalletFFI {
             
             return "Successfully refreshed VTXOs via maintenance"
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error during maintenance: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to refresh VTXOs: \(error.localizedDescription)")
         } catch {
@@ -185,7 +185,7 @@ extension BarkWalletFFI {
                 return "VTXO does not need refresh at this time"
             }
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error refreshing VTXO: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to refresh VTXO: \(error.localizedDescription)")
         } catch {
@@ -232,7 +232,7 @@ extension BarkWalletFFI {
             
             Self.logger.info("Board transaction initiated, VTXO ID: \(roundId.vtxoId), Amount: \(amount) sats, Txid: \(roundId.txid), Waiting for confirmations...")
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error boarding funds: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to board funds: \(error.localizedDescription)")
         } catch {
@@ -268,7 +268,7 @@ extension BarkWalletFFI {
             
             return "Successfully initiated boarding all funds. VTXO ID: \(roundId.vtxoId), Txid: \(roundId.txid)"
             
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error boarding all funds: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to board all funds: \(error.localizedDescription)")
         } catch {
@@ -294,7 +294,7 @@ extension BarkWalletFFI {
             let vtxos = try await wallet.allVtxos()
             Self.logger.info("Retrieved \(vtxos.count) VTXOs (all)")
             return vtxos
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting all VTXOs: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get all VTXOs: \(error.localizedDescription)")
         } catch {
@@ -318,7 +318,7 @@ extension BarkWalletFFI {
             let vtxos = try await wallet.spendableVtxos()
             Self.logger.info("Retrieved \(vtxos.count) spendable VTXOs")
             return vtxos
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting spendable VTXOs: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get spendable VTXOs: \(error.localizedDescription)")
         } catch {
@@ -342,7 +342,7 @@ extension BarkWalletFFI {
             let vtxos = try await wallet.getExpiringVtxos(thresholdBlocks: thresholdBlocks)
             Self.logger.info("Retrieved \(vtxos.count) expiring VTXOs (within \(thresholdBlocks) blocks)")
             return vtxos
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting expiring VTXOs: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get expiring VTXOs: \(error.localizedDescription)")
         } catch {
@@ -366,7 +366,7 @@ extension BarkWalletFFI {
             let vtxos = try await wallet.getVtxosToRefresh()
             Self.logger.info("Retrieved \(vtxos.count) VTXOs needing refresh")
             return vtxos
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting VTXOs to refresh: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get VTXOs to refresh: \(error.localizedDescription)")
         } catch {
@@ -388,7 +388,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.getVtxoById(vtxoId: vtxoId)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting VTXO by ID: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get VTXO by ID: \(error.localizedDescription)")
         } catch {
@@ -410,7 +410,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.getFirstExpiringVtxoBlockheight()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting first expiring VTXO height: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get first expiring VTXO height: \(error.localizedDescription)")
         } catch {
@@ -432,7 +432,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.getNextRequiredRefreshBlockheight()
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting next refresh height: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get next refresh height: \(error.localizedDescription)")
         } catch {
@@ -458,7 +458,7 @@ extension BarkWalletFFI {
         do {
             try await wallet.importVtxo(vtxoBase64: vtxoBase64)
             Self.logger.info("VTXO imported successfully")
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error importing VTXO: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to import VTXO: \(error.localizedDescription)")
         } catch {

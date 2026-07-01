@@ -105,7 +105,6 @@ protocol BarkWalletProtocol {
     
     func sync() async throws
     func maintenanceRefresh() async throws -> String?
-    func maybeScheduleMaintenanceRefresh() async throws -> UInt32?
     func maintenanceWithOnchain() async throws
     
     // MARK: - Delegated / Non-interactive Operations

@@ -29,7 +29,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateArkoorPaymentFee(amountSats: amountSats)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating Arkoor payment fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate Arkoor payment fee: \(error.localizedDescription)")
         } catch {
@@ -51,7 +51,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateBoardFee(amountSats: amountSats)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating board fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate board fee: \(error.localizedDescription)")
         } catch {
@@ -73,7 +73,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateLightningReceiveFee(amountSats: amountSats)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating lightning receive fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate lightning receive fee: \(error.localizedDescription)")
         } catch {
@@ -95,7 +95,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateLightningSendFee(amountSats: amountSats)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating lightning send fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate lightning send fee: \(error.localizedDescription)")
         } catch {
@@ -117,7 +117,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateOffboardFee(address: address, vtxoIds: vtxoIds)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating offboard fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate offboard fee: \(error.localizedDescription)")
         } catch {
@@ -139,7 +139,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateRefreshFee(vtxoIds: vtxoIds)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating refresh fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate refresh fee: \(error.localizedDescription)")
         } catch {
@@ -161,7 +161,7 @@ extension BarkWalletFFI {
         
         do {
             return try await wallet.estimateSendOnchainFee(address: address, amountSats: amountSats)
-        } catch let error as BarkError {
+        } catch let error as Bark.Error {
             Self.logger.error("FFI Error estimating send onchain fee: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to estimate send onchain fee: \(error.localizedDescription)")
         } catch {
