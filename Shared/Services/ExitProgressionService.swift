@@ -143,21 +143,28 @@ class ExitProgressionService {
         print("🔍 [ExitProgression] Starting check at \(startTime)")
         
         do {
-            // Step 1: Quick check - do we have any pending exits?
+            // Step 1: Quick check - do we have any exits that need work?
+            // IMPORTANT: Bark's hasPendingExits() only counts exits in the
+            // Start/Processing/AwaitingDelta states - an exit sitting at
+            // Claimable is NOT "pending". Claimable exits must be checked
+            // separately, otherwise they are never auto-claimed (the bark
+            // daemon usually performs the final AwaitingDelta -> Claimable
+            // transition and never claims).
             let hasPending = try await wallet.hasPendingExits()
-            
-            if !hasPending {
-                print("✅ [ExitProgression] No pending exits - skipping progression")
+            var claimableExits = try await wallet.listClaimableExits()
+
+            if !hasPending && claimableExits.isEmpty {
+                print("✅ [ExitProgression] No pending or claimable exits - skipping progression")
                 lastCheckTime = Date()
                 lastError = nil
                 return
             }
-            
-            print("📋 [ExitProgression] Found pending exits - progressing...")
-            
+
+            print("📋 [ExitProgression] Found \(hasPending ? "pending" : "claimable") exits - progressing...")
+
             // Step 2: Progress all exits (broadcasts, fee bumps, state updates)
             let statuses = try await wallet.progressExits(feeRateSatPerVb: nil)
-            
+
             // Log what happened
             if statuses.isEmpty {
                 print("   ℹ️ No exits progressed")
@@ -171,10 +178,11 @@ class ExitProgressionService {
                     }
                 }
             }
-            
+
             // Step 3: Check for claimable exits and auto-claim them
-            let claimableExits = try await wallet.listClaimableExits()
-            
+            // Re-fetch after progression, which may have just made exits claimable
+            claimableExits = try await wallet.listClaimableExits()
+
             if !claimableExits.isEmpty {
                 print("   💰 Found \(claimableExits.count) claimable exit(s) - auto-claiming...")
                 try await autoClaimExits(claimableExits)
@@ -247,9 +255,11 @@ class ExitProgressionService {
     func progressExitsManually() async throws {
         print("🔄 [ExitProgression] Manual progression requested")
         
+        // See checkAndProgressExits(): Claimable exits don't count as "pending"
         let hasPending = try await wallet.hasPendingExits()
-        guard hasPending else {
-            print("   ℹ️ No pending exits to progress")
+        let claimableExits = try await wallet.listClaimableExits()
+        guard hasPending || !claimableExits.isEmpty else {
+            print("   ℹ️ No pending or claimable exits to progress")
             return
         }
         
