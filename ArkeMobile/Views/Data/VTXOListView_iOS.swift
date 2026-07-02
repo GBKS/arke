@@ -24,7 +24,7 @@ struct VTXOListView_iOS: View {
     @State private var refreshFeeEstimate: FeeEstimate?
     
     private var spendableVTXOs: [VTXOModel] {
-        vtxos.filter { $0.state != .locked && $0.state != .spent }
+        vtxos.filter { $0.state != .locked && $0.state != .spent && $0.state != .exited }
     }
     
     private var totalVTXOAmount: Int {

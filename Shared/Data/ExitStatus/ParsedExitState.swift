@@ -16,6 +16,7 @@ public enum ParsedExitState: Equatable {
     case claimable(ClaimableState)
     case claimInProgress(ClaimInProgressState)
     case claimed(ClaimedState)
+    case vtxoAlreadySpent(VtxoAlreadySpentState)
     case unparsed(String) // Fallback for unknown states
     
     public struct StartState: Equatable {
@@ -76,11 +77,22 @@ public enum ParsedExitState: Equatable {
         public let tipHeight: UInt32
         public let txid: String
         public let block: ArkeBlockRef
-        
+
         public init(tipHeight: UInt32, txid: String, block: ArkeBlockRef) {
             self.tipHeight = tipHeight
             self.txid = txid
             self.block = block
+        }
+    }
+
+    /// Terminal state: the exit cannot proceed because the VTXO was already
+    /// consumed by something other than this exit (e.g. spent via refresh/arkoor,
+    /// or forfeited by the server in a round). No exit transactions get broadcast.
+    public struct VtxoAlreadySpentState: Equatable {
+        public let tipHeight: UInt32
+
+        public init(tipHeight: UInt32) {
+            self.tipHeight = tipHeight
         }
     }
 }

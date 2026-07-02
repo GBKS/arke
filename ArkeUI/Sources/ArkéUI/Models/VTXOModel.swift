@@ -18,6 +18,9 @@ public enum VTXOState: String, Codable, CaseIterable, Sendable {
     case pending = "Pending"
     case spendable = "Spendable"
     case locked = "Locked"
+    /// The VTXO is in (or has completed) a unilateral exit — the funds were
+    /// moved onchain rather than forfeited in the protocol. Distinct from `.spent`.
+    case exited = "Exited"
 }
 
 public extension VTXOState {
@@ -35,6 +38,8 @@ public extension VTXOState {
             return "Spendable"
         case .locked:
             return "Locked"
+        case .exited:
+            return "Exited"
         }
     }
 
@@ -52,6 +57,8 @@ public extension VTXOState {
             return "bitcoinsign.circle"
         case .locked:
             return "lock.circle"
+        case .exited:
+            return "arrow.up.forward.square"
         }
     }
 
@@ -69,6 +76,8 @@ public extension VTXOState {
             return .Arke.green
         case .locked:
             return .Arke.purple
+        case .exited:
+            return .Arke.orange
         }
     }
 
@@ -86,6 +95,8 @@ public extension VTXOState {
             return .Arke.green.opacity(0.3)
         case .locked:
             return .Arke.purple.opacity(0.3)
+        case .exited:
+            return .Arke.orange.opacity(0.2)
         }
     }
 
@@ -103,6 +114,8 @@ public extension VTXOState {
             return .Arke.green
         case .locked:
             return .Arke.purple
+        case .exited:
+            return .Arke.orange
         }
     }
 }

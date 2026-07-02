@@ -214,7 +214,11 @@ private struct ParsedStateSection: View {
                         .font(.system(.caption, design: .monospaced))
                 }
                 LabeledContent("Block", value: "\(data.block.height)")
-                
+
+            case .vtxoAlreadySpent(let data):
+                LabeledContent("Type", value: "VTXO Already Spent")
+                LabeledContent("Tip Height", value: "\(data.tipHeight)")
+
             case .unparsed(let str):
                 LabeledContent("Type", value: "Unparsed")
                 Text(str)
@@ -354,6 +358,8 @@ private struct ParsedStateLabel: View {
             Label("Claim In Progress", systemImage: "arrow.down.circle")
         case .claimed:
             Label("Claimed", systemImage: "checkmark.circle.fill")
+        case .vtxoAlreadySpent:
+            Label("VTXO Already Spent", systemImage: "xmark.circle")
         case .unparsed:
             Label("Unknown", systemImage: "questionmark.circle")
         }
@@ -478,7 +484,11 @@ private struct ParsedStateDetails: View {
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
                 StateDetailRow(label: "Claim TX", value: data.txid.prefix(8) + "..." + data.txid.suffix(8))
                 StateDetailRow(label: "Block", value: "\(data.block.height)")
-                
+
+            case .vtxoAlreadySpent(let data):
+                StateDetailRow(label: "Type", value: "VTXO Already Spent")
+                StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
+
             case .unparsed(let str):
                 StateDetailRow(label: "Type", value: "Unparsed")
                 Text(str)

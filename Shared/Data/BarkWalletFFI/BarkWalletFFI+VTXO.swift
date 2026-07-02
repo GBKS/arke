@@ -511,6 +511,11 @@ extension BarkWalletFFI {
             return .locked
         case "pending":
             return .pending
+        case "exited":
+            // Bark's VtxoState::Exited (serde kebab-case "exited"): the VTXO was
+            // moved onchain via a unilateral exit rather than forfeited. Distinct
+            // from "spent" — see Docs/Migrations/Bark-0.10.0-to-0.11.3/05-vtxo-exited-and-already-spent.md
+            return .exited
         default:
             // If we can't map it, default to pending
             Self.logger.warning("Unknown VTXO state: '\(stateString)', defaulting to pending")

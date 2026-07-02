@@ -339,7 +339,12 @@ extension ExitProgressionService {
         case .claimed:
             let currentStep = transactionCount + 4
             return (currentStep, .claimed, "Move complete", false, false, true)
-            
+
+        case .vtxoAlreadySpent:
+            // Terminal: exit cancelled because the VTXO was spent elsewhere.
+            // No dedicated Live Activity state yet — surface as a terminal message.
+            return (transactionCount + 4, .unparsed, "Exit cancelled — funds already spent", false, false, true)
+
         case .unparsed:
             return (1, .unparsed, "Processing...", false, false, false)
         }
@@ -379,6 +384,8 @@ extension ExitProgressionService {
         case .claimInProgress(let state):
             return state.tipHeight
         case .claimed(let state):
+            return state.tipHeight
+        case .vtxoAlreadySpent(let state):
             return state.tipHeight
         case .unparsed:
             return nil

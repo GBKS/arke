@@ -43,6 +43,8 @@ public struct ExitStatusParser {
             return parseClaimInProgress(stateString)
         case "claimed":
             return parseClaimed(stateString)
+        case "vtxoalreadyspent":
+            return parseVtxoAlreadySpent(stateString)
         default:
             return .unparsed(stateString)
         }
@@ -150,7 +152,15 @@ public struct ExitStatusParser {
         
         return .claimed(.init(tipHeight: tipHeight, txid: txid, block: block))
     }
-    
+
+    private static func parseVtxoAlreadySpent(_ str: String) -> ParsedExitState? {
+        // "VtxoAlreadySpent(ExitVtxoAlreadySpentState { tip_height: 301492 })"
+        guard let tipHeight = extractUInt32(from: str, field: "tip_height") else {
+            return nil
+        }
+        return .vtxoAlreadySpent(.init(tipHeight: tipHeight))
+    }
+
     // MARK: - Transaction Parsing
     
     private static func extractTransactions(from str: String) -> [ExitTransaction] {
@@ -465,6 +475,9 @@ public struct ExitStatusParser {
             txids.insert(data.claimTxid)
         case .claimed(let data):
             txids.insert(data.txid)
+        case .vtxoAlreadySpent:
+            // Terminal state carries no exit transactions.
+            break
         case .unparsed:
             break
         }

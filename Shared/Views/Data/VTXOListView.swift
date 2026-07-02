@@ -23,9 +23,9 @@ struct VTXOListView: View {
         vtxos.reduce(into: 0) { $0 += $1.amountSat }
     }
 
-    /// VTXOs eligible for a refresh (exclude locked and already-spent ones)
+    /// VTXOs eligible for a refresh (exclude locked, already-spent, and exited ones)
     private var spendableVTXOs: [VTXOModel] {
-        vtxos.filter { $0.state != .locked && $0.state != .spent }
+        vtxos.filter { $0.state != .locked && $0.state != .spent && $0.state != .exited }
     }
     
     var body: some View {

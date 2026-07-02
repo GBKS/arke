@@ -106,7 +106,11 @@ struct TransactionClaimExitBanner: View {
         case .claimed:
             // Complete
             return transactionCount + 4
-            
+
+        case .vtxoAlreadySpent:
+            // Terminal: exit cancelled because the VTXO was spent elsewhere.
+            return 1
+
         case .unparsed:
             return 1
         }
@@ -177,7 +181,10 @@ struct TransactionClaimExitBanner: View {
             
         case .claimed:
             return "Exit complete"
-            
+
+        case .vtxoAlreadySpent:
+            return "Exit cancelled — funds already spent"
+
         case .unparsed:
             return "Processing exit"
         }
