@@ -135,10 +135,10 @@ struct PaymentInfoReceivedSheet: View {
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold4)
+                                    .foregroundStyle(.primary)
                                 Text("View Contact")
                                     .font(.system(size: 21, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold4)
+                                    .foregroundStyle(.primary)
                             }
                             .frame(maxWidth: .infinity)
                         }

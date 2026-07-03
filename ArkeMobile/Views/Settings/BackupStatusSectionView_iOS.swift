@@ -60,10 +60,10 @@ struct BackupStatusSectionView_iOS: View {
                         HStack {
                             Image(systemName: "square.and.arrow.down")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold4)
+                                .foregroundStyle(.primary)
                             Text(String(localized: "backup_download"))
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold4)
+                                .foregroundStyle(.primary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -83,11 +83,11 @@ struct BackupStatusSectionView_iOS: View {
                             } else {
                                 Image(systemName: "arrow.clockwise.icloud")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Color.Arke.gold4)
+                                    .foregroundStyle(.primary)
                             }
                             Text(isBackingUp ? String(localized: "backup_syncing") : String(localized: "backup_sync_now"))
                                 .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold4)
+                                .foregroundStyle(.primary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)

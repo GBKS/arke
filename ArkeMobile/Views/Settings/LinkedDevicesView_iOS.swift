@@ -88,7 +88,7 @@ struct LinkedDevicesView_iOS: View {
                     if currentDevice?.isPrimaryDevice == true {
                         Button(action: { showDemoteSheet = true }) {
                             Label("button_make_device_secondary", systemImage: "arrow.down.circle")
-                                .foregroundStyle(Color.Arke.blue)
+                                .foregroundStyle(.primary)
                         }
                         .accessibilityHint(NSLocalizedString("accessibility_make_secondary_hint", comment: ""))
                     }

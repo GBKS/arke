@@ -197,7 +197,7 @@ struct ReceiveView_iOS: View {
                                 ShareButton(items: [vcardURL]) {
                                     Text("Share Contact Card")
                                         .font(.system(size: 21, weight: .semibold))
-                                        .foregroundStyle(Color.Arke.gold4)
+                                        .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.horizontal, 20)
                                 }

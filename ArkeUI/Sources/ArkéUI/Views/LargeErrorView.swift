@@ -103,7 +103,7 @@ public struct LargeErrorView: View {
                     Button(action: onDismiss) {
                         Text("button_cancel", bundle: .module)
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold4)
+                            .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.glass)

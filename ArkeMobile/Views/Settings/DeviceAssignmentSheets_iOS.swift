@@ -76,7 +76,7 @@ struct DemoteDeviceSheet: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold4)
+                            .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                         
                     }
@@ -176,7 +176,7 @@ struct PromoteDeviceSheet: View {
                     } label: {
                         Text("Cancel")
                             .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold4)
+                            .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                         
                     }
