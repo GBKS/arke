@@ -86,7 +86,7 @@ extension BarkWalletFFI {
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
                 daemonManualSync: nil,  // Use default (v0.6.3+)
                 lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-                userAgent: nil  // Use default user agent (v0.11+)
+                userAgent: BarkWalletFFI.userAgent  // e.g. "arke-ios/17" (v0.11+)
             )
         } else {
             finalConfig = config
@@ -385,7 +385,7 @@ extension BarkWalletFFI {
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
                 daemonManualSync: nil,  // Use default (v0.6.3+)
                 lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-                userAgent: nil  // Use default user agent (v0.11+)
+                userAgent: BarkWalletFFI.userAgent  // e.g. "arke-ios/17" (v0.11+)
             )
         } else {
             finalConfig = config

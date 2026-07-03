@@ -110,8 +110,19 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// Security service for secure mnemonic storage and biometric authentication
     let securityService: SecurityService?
     
+    /// User agent reported to the Ark server, e.g. "arke-ios/17".
+    /// The number is the app's build number (CFBundleVersion).
+    static var userAgent: String {
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
+        #if os(iOS)
+        return "arke-ios/\(build)"
+        #else
+        return "arke-macos/\(build)"
+        #endif
+    }
+
     // MARK: - Initialization
-    
+
     init?(networkConfig: NetworkConfig = .signet, securityService: SecurityService? = nil) {
         self.networkConfig = networkConfig
         self.isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -148,7 +159,7 @@ class BarkWalletFFI: BarkWalletProtocol {
             offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
             daemonManualSync: nil,  // Use default (v0.6.3+)
             lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-            userAgent: nil  // Use default user agent (v0.11+)
+            userAgent: Self.userAgent  // e.g. "arke-ios/17" (v0.11+)
         )
         
         Self.logger.info("BarkWalletFFI initialized - Network: \(networkConfig.name)")
