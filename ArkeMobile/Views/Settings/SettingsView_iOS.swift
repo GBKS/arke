@@ -47,9 +47,8 @@ struct SettingsView_iOS: View {
     
     var body: some View {
         List {
-            // Display Section
+            // Profile Section
             Section {
-                // My Profile Section
                 NavigationLink(destination: UserProfileSettingView_iOS()) {
                     HStack(spacing: 12) {
                         // Avatar preview
@@ -88,28 +87,13 @@ struct SettingsView_iOS: View {
                     }
                     .padding(.vertical, 4)
                 }
-                
-                // Fee Summary
-                NavigationLink(destination: FeeSummaryView_iOS()) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "chart.bar.fill")
-                            .foregroundColor(.Arke.green)
-                            .frame(width: 24, height: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("activity_fee_summary")
-                                .font(.system(size: 16))
-                            Text("action_view_fees")
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                
+            }
+
+            // General Section
+            Section {
                 NavigationLink(destination: DisplaySettingsView()) {
                     HStack(spacing: 12) {
-                        Image(systemName: "textformat.size")
+                        Image(systemName: "numbers")
                             .foregroundColor(.Arke.indigo)
                             .frame(width: 24, height: 24)
                         
@@ -172,44 +156,10 @@ struct SettingsView_iOS: View {
                     }
                     .padding(.vertical, 4)
                 }
-                
-                // Proximity Sharing
-                Toggle(isOn: $proximityEnabled) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "wave.3.right")
-                            .foregroundColor(.Arke.blue)
-                            .frame(width: 24, height: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("settings_proximity_sharing")
-                                .font(.system(size: 16))
-                            Text("settings_proximity_sharing_hint")
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
-                
-                // Address Icons
-                Toggle(isOn: $showAddressIcons) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "square.grid.2x2.fill")
-                            .foregroundColor(.Arke.teal)
-                            .frame(width: 24, height: 24)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Address Patterns")
-                                .font(.system(size: 16))
-                            Text("Show unique visual patterns to help identify addresses")
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
+            } header: {
+                Text("General")
             }
-            
+
             // Security Section
             Section {
                 if !manager.isReadOnlyMode {
@@ -252,52 +202,6 @@ struct SettingsView_iOS: View {
                 Text("settings_security")
             }
             
-            // Danger Zone Section (only in primary mode)
-            //if !manager.isReadOnlyMode {
-                Section {
-                    // Exit
-                    NavigationLink(destination: ExitView_iOS()) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "light.beacon.max.fill")
-                                .foregroundColor(.Arke.orange)
-                                .frame(width: 24, height: 24)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("button_force_move_savings")
-                                    .font(.system(size: 16))
-                                Text(manager.hasActiveUnilateralExits ? String(localized: "status_in_progress") : String(localized: "balance_transfer_independently"))
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .disabled(manager.hasActiveUnilateralExits)
-                    .opacity(manager.hasActiveUnilateralExits ? 0.5 : 1.0)
-                    
-                    // Delete Wallet
-                    NavigationLink(destination: DeleteWalletView(onWalletDeleted: onWalletDeleted)) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "trash.fill")
-                                .foregroundColor(.Arke.red)
-                                .frame(width: 24, height: 24)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("button_delete_wallet")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.Arke.red)
-                                Text("settings_delete_wallet_title")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                } header: {
-                    Text("settings_danger_zone")
-                }
-            //}
-            
             // Help & Learning Section
             Section {
                 // Intro Video
@@ -320,10 +224,29 @@ struct SettingsView_iOS: View {
             } header: {
                 Text("settings_help_learning")
             }
-            
-            // Behind the Curtain Section (only in primary mode - ASP-dependent data)
-            if !manager.isReadOnlyMode {
-                Section {
+
+            // Behind the Curtain Section
+            Section {
+                // Fee Summary
+                NavigationLink(destination: FeeSummaryView_iOS()) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "chart.bar.fill")
+                            .foregroundColor(.Arke.green)
+                            .frame(width: 24, height: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("activity_fee_summary")
+                                .font(.system(size: 16))
+                            Text("action_view_fees")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                // ASP-dependent rows (only in primary mode)
+                if !manager.isReadOnlyMode {
                     // Server Fee Schedule
                     NavigationLink(destination: FeeScheduleView_iOS()) {
                         HStack(spacing: 12) {
@@ -378,6 +301,7 @@ struct SettingsView_iOS: View {
                         .padding(.vertical, 4)
                     }
                     
+                    /*
                     // Transaction Testing
                     NavigationLink(destination: TransactionTestingView_iOS()) {
                         HStack(spacing: 12) {
@@ -395,6 +319,7 @@ struct SettingsView_iOS: View {
                         }
                         .padding(.vertical, 4)
                     }
+                    */
                 
                     /*
                     // Console
@@ -415,11 +340,99 @@ struct SettingsView_iOS: View {
                         .padding(.vertical, 4)
                     }
                     */
-                } header: {
-                    Text("data_behind_curtain")
                 }
+            } header: {
+                Text("data_behind_curtain")
             }
+
+            // Experimental Section
+            Section {
+                // Proximity Sharing
+                Toggle(isOn: $proximityEnabled) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "wave.3.right")
+                            .foregroundColor(.Arke.blue)
+                            .frame(width: 24, height: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("settings_proximity_sharing")
+                                .font(.system(size: 16))
+                            Text("settings_proximity_sharing_hint")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+
+                // Address Icons
+                Toggle(isOn: $showAddressIcons) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "square.grid.2x2.fill")
+                            .foregroundColor(.Arke.teal)
+                            .frame(width: 24, height: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Address Patterns")
+                                .font(.system(size: 16))
+                            Text("Show unique visual patterns to help identify addresses")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            } header: {
+                Text("Experimental")
+            }
+
+            // Danger Zone Section (only in primary mode)
+            //if !manager.isReadOnlyMode {
+                Section {
+                    // Exit
+                    NavigationLink(destination: ExitView_iOS()) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "light.beacon.max.fill")
+                                .foregroundColor(.Arke.orange)
+                                .frame(width: 24, height: 24)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("button_force_move_savings")
+                                    .font(.system(size: 16))
+                                Text(manager.hasActiveUnilateralExits ? String(localized: "status_in_progress") : String(localized: "balance_transfer_independently"))
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .disabled(manager.hasActiveUnilateralExits)
+                    .opacity(manager.hasActiveUnilateralExits ? 0.5 : 1.0)
+
+                    // Delete Wallet
+                    NavigationLink(destination: DeleteWalletView(onWalletDeleted: onWalletDeleted)) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "trash.fill")
+                                .foregroundColor(.Arke.red)
+                                .frame(width: 24, height: 24)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("button_delete_wallet")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.Arke.red)
+                                Text("settings_delete_wallet_title")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("settings_danger_zone")
+                }
+            //}
         }
+        .contentMargins(.top, 12, for: .scrollContent)
         .navigationTitle("settings_title")
         .navigationBarTitleDisplayMode(.large)
         .alert("Notification Error", isPresented: $showNotificationError) {

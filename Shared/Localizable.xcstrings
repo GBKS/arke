@@ -4485,9 +4485,6 @@
         }
       }
     },
-    "Developer stress tests" : {
-
-    },
     "Device Role" : {
 
     },
@@ -4788,6 +4785,9 @@
           }
         }
       }
+    },
+    "Experimental" : {
+
     },
     "Expiry Height" : {
       "localizations" : {
@@ -5288,6 +5288,9 @@
           }
         }
       }
+    },
+    "General" : {
+
     },
     "Generate Invoices" : {
 
