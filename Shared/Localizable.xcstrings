@@ -322,6 +322,7 @@
       }
     },
     "accessibility_balance_type_options" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -332,6 +333,7 @@
       }
     },
     "accessibility_balance_type_selection_hint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -582,6 +584,7 @@
       }
     },
     "accessibility_loading_payment_address" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2897,6 +2900,7 @@
       }
     },
     "button_create_new_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2917,6 +2921,7 @@
       }
     },
     "button_create_wallet_caps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6990,6 +6995,7 @@
       }
     },
     "receive_choose_method" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7113,6 +7119,7 @@
       }
     },
     "receive_your_addresses" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
