@@ -40,6 +40,7 @@ struct LightningInvoiceSheet_iOS: View {
     // Notification state
     @AppStorage(UserDefaults.notificationsEnabledKey)
     private var notificationsEnabled: Bool = false
+    @State private var notificationsJustEnabled = false
     
     private var userProfile: UserProfile? {
         profiles.first
@@ -57,6 +58,7 @@ struct LightningInvoiceSheet_iOS: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()
+                .accessibilityHidden(true)
             
             // Dark overlay (darker when upside down)
             Color.black.opacity(isDeviceUpsideDown ? 0.6 : 0.3)
@@ -69,11 +71,13 @@ struct LightningInvoiceSheet_iOS: View {
                     ownerView(screenWidth: screenWidth)
                         .opacity(isDeviceUpsideDown ? 0 : 1)
                         .offset(y: isDeviceUpsideDown ? -50 : 0)
-                    
+                        .accessibilityHidden(isDeviceUpsideDown)
+
                     recipientView(screenWidth: screenWidth)
                         .rotationEffect(.degrees(180))
                         .opacity(isDeviceUpsideDown ? 1 : 0)
                         .offset(y: isDeviceUpsideDown ? 0 : 50)
+                        .accessibilityHidden(!isDeviceUpsideDown)
                 }
                 .padding(.bottom, geo.safeAreaInsets.bottom)
                 .animation(.easeInOut(duration: 0.25), value: isDeviceUpsideDown)
@@ -107,7 +111,9 @@ struct LightningInvoiceSheet_iOS: View {
             Spacer()
             
             // QR Code
-            Text(paymentReceived ? "Payment received" : "Share your Request")
+            Text(paymentReceived ?
+                LocalizedStringKey("status_payment_received") :
+                LocalizedStringKey("receive_share_request_title"))
                 .font(.system(size: 30, weight: .semibold, design: .serif))
                 .foregroundStyle(.white)
             
@@ -168,11 +174,17 @@ struct LightningInvoiceSheet_iOS: View {
                 .onTapGesture {
                     let impact = UIImpactFeedbackGenerator(style: .light)
                     impact.impactOccurred()
-                    
+
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.95)) {
                         showingStyledVersion.toggle()
                     }
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(invoice != nil ?
+                    LocalizedStringKey("accessibility_lightning_invoice_qr") :
+                    LocalizedStringKey("accessibility_payment_qr"))
+                .accessibilityHint(LocalizedStringKey("accessibility_hint_toggle_qr_style"))
+                .accessibilityAddTraits(.isButton)
                 
                 // Video overlay (only shown when payment received)
                 if paymentReceived {
@@ -182,6 +194,7 @@ struct LightningInvoiceSheet_iOS: View {
                                height: qrCodeSize(for: screenWidth))
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .transition(.opacity)
+                        .accessibilityHidden(true)
                 }
             }
             .frame(width: qrCodeSize(for: screenWidth), height: qrCodeSize(for: screenWidth))
@@ -211,25 +224,51 @@ struct LightningInvoiceSheet_iOS: View {
             // Actions
             VStack(spacing: 20) {
                 // Share button
-                ShareLink(item: createBIP21URI()) {
-                    Text("button_share")
-                        .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(Color.Arke.gold4)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 20)
+                HStack(spacing: 12) {
+                    ShareLink(item: createBIP21URI()) {
+                        Text("button_share")
+                            .font(.system(size: 21, weight: .semibold))
+                            .foregroundStyle(Color.Arke.gold4)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .tint(.Arke.gold)
+                    .controlSize(.large)
+                    .accessibilityLabel(String(localized: "accessibility_share_payment_request"))
+                    .accessibilityHint(String(localized: "accessibility_share_payment_hint"))
+
+                    // Enable notifications (only in primary mode - requires ASP connection)
+                    if (!notificationsEnabled || notificationsJustEnabled) && !walletManager.isReadOnlyMode {
+                        Button {
+                            Task {
+                                await enableNotifications()
+                            }
+                        } label: {
+                            Image(systemName: notificationsJustEnabled ? "checkmark" : "bell.fill")
+                                .font(.system(size: 21, weight: .semibold))
+                                //.foregroundStyle(.white)
+                                .contentTransition(.symbolEffect(.replace))
+                                .frame(width: 28, height: 28)
+                        }
+                        .buttonStyle(.glass)
+                        .controlSize(.large)
+                        .tint(Color.Arke.gold)
+                        .environment(\.colorScheme, .dark)
+                        .disabled(notificationsJustEnabled)
+                        .accessibilityLabel(notificationsJustEnabled ?
+                            LocalizedStringKey("status_notifications_enabled") :
+                            LocalizedStringKey("action_enable_notifications"))
+                        .accessibilityHint(LocalizedStringKey("accessibility_hint_enable_notifications"))
+                    }
                 }
-                .buttonStyle(.glassProminent)
-                .tint(.Arke.gold)
-                .controlSize(.large)
                 .disabled(paymentReceived)
                 .opacity(paymentReceived ? 0 : 1)
-                .accessibilityLabel(String(localized: "accessibility_share_payment_request"))
-                .accessibilityHint(String(localized: "accessibility_share_payment_hint"))
                 
                 Button {
                     onClose()
                 } label: {
-                    Text("Done")
+                    Text("button_done")
                         .font(.system(size: 21, weight: .semibold))
                         .frame(maxWidth: .infinity)
                 }
@@ -253,7 +292,9 @@ struct LightningInvoiceSheet_iOS: View {
             // QR Code (larger for scanning)
             VStack(spacing: 24) {
                 // Scan to Pay message
-                Text(paymentReceived ? "Payment received" : "Scan to Pay")
+                Text(paymentReceived ?
+                    LocalizedStringKey("status_payment_received") :
+                    LocalizedStringKey("receive_scan_to_pay_title"))
                     .font(.system(size: 30, weight: .semibold, design: .serif))
                     .foregroundStyle(.white)
                 
@@ -314,11 +355,17 @@ struct LightningInvoiceSheet_iOS: View {
                     .onTapGesture {
                         let impact = UIImpactFeedbackGenerator(style: .light)
                         impact.impactOccurred()
-                        
+
                         withAnimation(.spring(response: 0.5, dampingFraction: 0.95)) {
                             showingStyledVersion.toggle()
                         }
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(invoice != nil ?
+                        LocalizedStringKey("accessibility_lightning_invoice_qr") :
+                        LocalizedStringKey("accessibility_payment_qr"))
+                    .accessibilityHint(LocalizedStringKey("accessibility_hint_toggle_qr_style"))
+                    .accessibilityAddTraits(.isButton)
                     
                     // Video overlay (only shown when payment received)
                     if paymentReceived {
@@ -328,6 +375,7 @@ struct LightningInvoiceSheet_iOS: View {
                                    height: qrCodeSize(for: screenWidth))
                             .clipShape(RoundedRectangle(cornerRadius: 20))
                             .transition(.opacity)
+                            .accessibilityHidden(true)
                     }
                 }
                 .frame(width: qrCodeSize(for: screenWidth), height: qrCodeSize(for: screenWidth))
@@ -363,6 +411,7 @@ struct LightningInvoiceSheet_iOS: View {
                                 .frame(width: 32, height: 32)
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.25), radius: 4, x: 0, y: 2)
+                                .accessibilityHidden(true)
                         }
                         
                         Text(name)
@@ -479,7 +528,10 @@ struct LightningInvoiceSheet_iOS: View {
             if granted {
                 await MainActor.run {
                     UIApplication.shared.registerForRemoteNotifications()
-                    notificationsEnabled = true
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        notificationsJustEnabled = true
+                        notificationsEnabled = true
+                    }
                 }
                 
                 // Wait for token to be received
@@ -495,6 +547,47 @@ struct LightningInvoiceSheet_iOS: View {
         }
     }
     
+    private func enableNotifications() async {
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+
+        // Permission previously denied - the system prompt won't show again, so send the user to Settings
+        if settings.authorizationStatus == .denied {
+            await MainActor.run {
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            return
+        }
+
+        do {
+            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+            guard granted else { return }
+
+            await MainActor.run {
+                UIApplication.shared.registerForRemoteNotifications()
+                // Set the local flag first: the AppStorage write can commit in a separate
+                // transaction, and the button must never see (enabled, !justEnabled) or it
+                // gets removed and re-inserted, making the share button jump.
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    notificationsJustEnabled = true
+                    notificationsEnabled = true
+                }
+            }
+
+            // Wait for token to be received
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+
+            // Register with relay
+            await walletManager.registerForPushNotifications()
+
+            Self.logger.info("Successfully registered for notifications from invoice sheet")
+        } catch {
+            Self.logger.error("Failed to request notifications: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Payment Monitoring
     
     private func setupPaymentListener() {
@@ -550,6 +643,9 @@ struct LightningInvoiceSheet_iOS: View {
         withAnimation(.easeInOut(duration: 0.4)) {
             paymentReceived = true
         }
+
+        // Announce to VoiceOver users, who can't see the video overlay
+        UIAccessibility.post(notification: .announcement, argument: String(localized: "status_payment_received"))
     }
     
     private func cleanupSubscription() {

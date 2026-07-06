@@ -511,6 +511,26 @@
         }
       }
     },
+    "accessibility_hint_enable_notifications" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks for permission to notify you when funds arrive"
+          }
+        }
+      }
+    },
+    "accessibility_hint_toggle_qr_style" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switches between styled and plain QR code"
+          }
+        }
+      }
+    },
     "accessibility_last_seen" : {
       "localizations" : {
         "en" : {
@@ -532,7 +552,6 @@
       }
     },
     "accessibility_lightning_invoice_qr" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1212,6 +1231,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit address"
+          }
+        }
+      }
+    },
+    "action_enable_notifications" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable notifications"
           }
         }
       }
@@ -4457,9 +4486,6 @@
     "Device Role" : {
 
     },
-    "Done" : {
-
-    },
     "Enter amount" : {
 
     },
@@ -6606,9 +6632,6 @@
     "Payment Info Received" : {
 
     },
-    "Payment received" : {
-
-    },
     "Payments and Savings" : {
 
     },
@@ -7049,12 +7072,32 @@
         }
       }
     },
+    "receive_scan_to_pay_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan to Pay"
+          }
+        }
+      }
+    },
     "receive_share_info" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Share your payment info"
+          }
+        }
+      }
+    },
+    "receive_share_request_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share your Request"
           }
         }
       }
@@ -7133,7 +7176,14 @@
 
     },
     "Scan to Pay" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scan to Pay"
+          }
+        }
+      }
     },
     "section_device_role" : {
       "localizations" : {
@@ -7698,9 +7748,6 @@
     "Share your Addresses" : {
 
     },
-    "Share your Request" : {
-
-    },
     "Short Reference" : {
       "localizations" : {
         "en" : {
@@ -8099,6 +8146,16 @@
         }
       }
     },
+    "status_notifications_enabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications enabled"
+          }
+        }
+      }
+    },
     "status_offboard_successful" : {
       "localizations" : {
         "en" : {
@@ -8126,6 +8183,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paused"
+          }
+        }
+      }
+    },
+    "status_payment_received" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment received"
           }
         }
       }
