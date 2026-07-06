@@ -5452,16 +5452,6 @@
         }
       }
     },
-    "label_camera_view" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camera View"
-          }
-        }
-      }
-    },
     "label_change" : {
       "localizations" : {
         "en" : {
@@ -7343,16 +7333,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld payment options available"
-          }
-        }
-      }
-    },
-    "send_qr_scanner_placeholder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "QR Scanner will appear here"
           }
         }
       }

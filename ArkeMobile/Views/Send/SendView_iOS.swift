@@ -203,8 +203,6 @@ struct SendView_iOS: View {
                 .glassEffect()
                 .foregroundStyle(.primary)
         }
-        //.buttonStyle(.plain)
-        //.shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
     }
     
     @ViewBuilder
@@ -316,16 +314,6 @@ struct SendView_iOS: View {
                     
                     // SCAN ROUTING: All scanned payment requests go to quick mode
                     // Rationale: User scanned with intent to pay - unlikely to edit address
-                    // To revert to complexity-based routing, uncomment the if/else below:
-                    /*
-                    if viewModel.isSimplePaymentRequest(paymentRequest) {
-                        logger.debug("   └─ Using manual mode (simple address)")
-                        viewModel.lockInPaymentRequest(paymentRequest)
-                    } else {
-                        logger.debug("   └─ Using quick mode (rich payment request)")
-                        await viewModel.enterQuickMode(paymentRequest: paymentRequest, source: .qrCode)
-                    }
-                    */
                     logger.debug("   └─ Using quick mode (scanned payment)")
                     await viewModel.enterQuickMode(paymentRequest: paymentRequest, source: .qrCode)
                     
@@ -524,16 +512,6 @@ struct SendView_iOS: View {
                 
                 // SCAN ROUTING: All scanned payment requests go to quick mode
                 // Rationale: User scanned with intent to pay - unlikely to edit address
-                // To revert to complexity-based routing, uncomment the if/else below:
-                /*
-                if viewModel?.isSimplePaymentRequest(paymentRequest) == true {
-                    logger.debug("   └─ Using manual mode (simple address)")
-                    viewModel?.lockInPaymentRequest(paymentRequest)
-                } else {
-                    logger.debug("   └─ Using quick mode (rich payment request)")
-                    await viewModel?.enterQuickMode(paymentRequest: paymentRequest, source: .nfc)
-                }
-                */
                 logger.debug("   └─ Using quick mode (scanned payment)")
                 await viewModel?.enterQuickMode(paymentRequest: paymentRequest, source: .nfc)
                 
@@ -791,30 +769,5 @@ struct SendView_iOS: View {
             }
         )
         .frame(maxWidth: 400)
-    }
-}
-
-// MARK: - Camera Placeholder View
-
-struct CameraPlaceholderView: View {
-    var body: some View {
-        ZStack {
-            Color.Arke.blue.opacity(0.3)
-            
-            VStack(spacing: 16) {
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                
-                Text("label_camera_view")
-                    .font(.title2)
-                    .foregroundStyle(.secondary)
-                
-                Text("send_qr_scanner_placeholder")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
-        }
-        .ignoresSafeArea()
     }
 }
