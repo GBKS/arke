@@ -64,16 +64,6 @@
     "%lld" : {
 
     },
-    "%lld %@ connected" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld %2$@ connected"
-          }
-        }
-      }
-    },
     "%lld exit%@ • %@" : {
       "localizations" : {
         "en" : {
@@ -1656,9 +1646,6 @@
 
     },
     "Address" : {
-
-    },
-    "Address Patterns" : {
 
     },
     "Address: %@" : {
@@ -4786,9 +4773,6 @@
         }
       }
     },
-    "Experimental" : {
-
-    },
     "Expiry Height" : {
       "localizations" : {
         "en" : {
@@ -5289,9 +5273,6 @@
         }
       }
     },
-    "General" : {
-
-    },
     "Generate Invoices" : {
 
     },
@@ -5299,9 +5280,6 @@
 
     },
     "Generating invoice..." : {
-
-    },
-    "Get notified when funds arrive" : {
 
     },
     "help_clear_filter" : {
@@ -6284,8 +6262,37 @@
     "Notes" : {
 
     },
-    "Notification Error" : {
-
+    "notification_error_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Error"
+          }
+        }
+      }
+    },
+    "notification_error_permission_denied" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notification permission denied. Please enable in Settings."
+          }
+        }
+      }
+    },
+    "notification_error_registration_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to register: %@"
+          }
+        }
+      }
     },
     "notification_vtxo_refresh_body" : {
       "extractionState" : "extracted_with_value",
@@ -6308,9 +6315,6 @@
           }
         }
       }
-    },
-    "Notifications" : {
-
     },
     "Number of invoices to generate" : {
 
@@ -6800,7 +6804,6 @@
       }
     },
     "profile_photo_set" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7141,9 +7144,6 @@
     "Round %u" : {
 
     },
-    "Save your wallet offline" : {
-
-    },
     "Scan to Pay" : {
       "localizations" : {
         "en" : {
@@ -7340,9 +7340,6 @@
         }
       }
     },
-    "Server fee breakdown" : {
-
-    },
     "settings_backup_print" : {
       "localizations" : {
         "en" : {
@@ -7369,6 +7366,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose how bitcoin amounts are displayed throughout the app."
+          }
+        }
+      }
+    },
+    "settings_address_patterns" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Patterns"
+          }
+        }
+      }
+    },
+    "settings_address_patterns_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show unique visual patterns to help identify addresses"
           }
         }
       }
@@ -7477,12 +7494,75 @@
         }
       }
     },
+    "settings_devices_connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld device connected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld devices connected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "settings_display" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Display"
+          }
+        }
+      }
+    },
+    "settings_experimental" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Experimental"
+          }
+        }
+      }
+    },
+    "settings_fee_schedule" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee Schedule"
+          }
+        }
+      }
+    },
+    "settings_fee_schedule_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server fee breakdown"
+          }
+        }
+      }
+    },
+    "settings_general" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
           }
         }
       }
@@ -7537,6 +7617,16 @@
         }
       }
     },
+    "settings_manual_backup_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save your wallet offline"
+          }
+        }
+      }
+    },
     "settings_my_profile" : {
       "localizations" : {
         "en" : {
@@ -7563,6 +7653,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Other Devices (%lld)"
+          }
+        }
+      }
+    },
+    "settings_notifications" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        }
+      }
+    },
+    "settings_notifications_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get notified when funds arrive"
           }
         }
       }
@@ -7718,9 +7828,6 @@
       }
     },
     "Show Recovery Phrase" : {
-
-    },
-    "Show unique visual patterns to help identify addresses" : {
 
     },
     "Spam Payments" : {

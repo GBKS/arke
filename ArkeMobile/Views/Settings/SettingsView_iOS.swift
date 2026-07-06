@@ -29,7 +29,10 @@ struct SettingsView_iOS: View {
     
     @AppStorage(UserDefaults.showAddressIconsKey)
     private var showAddressIcons: Bool = true
-    
+
+    @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 24
+    @ScaledMetric(relativeTo: .body) private var avatarSize: CGFloat = 40
+
     @State private var navPath = NavigationPath()
     @State private var defaultAvatarImage: String = Bool.random() ? "avatar-silhouette-male" : "avatar-silhouette-female"
     @State private var showNotificationError: Bool = false
@@ -57,8 +60,9 @@ struct SettingsView_iOS: View {
                             Image(uiImage: uiImage)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(width: 40, height: 40)
+                                .frame(width: avatarSize, height: avatarSize)
                                 .clipShape(Circle())
+                                .accessibilityHidden(true)
                         } else {
                             ZStack {
                                 Image(defaultAvatarImage)
@@ -68,20 +72,26 @@ struct SettingsView_iOS: View {
                                 Circle()
                                     .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                             }
-                            .frame(width: 40, height: 40)
+                            .frame(width: avatarSize, height: avatarSize)
                             .clipShape(Circle())
+                            .accessibilityHidden(true)
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
                             //Text("settings_my_profile")
-                            //    .font(.system(size: 16))
+                            //    .font(.callout)
                             
                             if let profile = userProfile, profile.isConfigured {
-                                Text(profile.name.isEmpty ? "profile_photo_set" : profile.name)
-                                    .font(.system(size: 19, weight: .semibold))
+                                if profile.name.isEmpty {
+                                    Text("profile_photo_set")
+                                        .font(.title3.weight(.semibold))
+                                } else {
+                                    Text(profile.name)
+                                        .font(.title3.weight(.semibold))
+                                }
                             } else {
                                 Text("profile_customize_info")
-                                    .font(.system(size: 16))
+                                    .font(.callout)
                             }
                         }
                     }
@@ -95,17 +105,18 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: "numbers")
                             .foregroundColor(.Arke.indigo)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("settings_unit_format")
-                                .font(.system(size: 16))
+                                .font(.body)
                             Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedFormat.displayName)"))
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
                 
                 // Balance Privacy Toggle
@@ -113,18 +124,19 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: balancePrivacyEnabled ? "eye.slash.fill" : "eye.fill")
                             .foregroundColor(.Arke.purple)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("action_hide_balance")
-                                .font(.system(size: 16))
+                                .font(.body)
                             Text("balance_reveal_hint")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
                 
                 // Notifications (only in primary mode - requires ASP connection)
                 if !manager.isReadOnlyMode {
@@ -132,13 +144,14 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "bell.fill")
                                 .foregroundColor(.Arke.orange)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Notifications")
-                                    .font(.system(size: 16))
-                                Text("Get notified when funds arrive")
-                                    .font(.system(size: 13))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("settings_notifications")
+                                    .font(.body)
+                                Text("settings_notifications_hint")
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -157,7 +170,7 @@ struct SettingsView_iOS: View {
                     .padding(.vertical, 4)
                 }
             } header: {
-                Text("General")
+                Text("settings_general")
             }
 
             // Security Section
@@ -167,17 +180,18 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "shield.fill")
                                 .foregroundColor(.Arke.green)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Manual Backup")
-                                    .font(.system(size: 16))
-                                Text("Save your wallet offline")
-                                    .font(.system(size: 13))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("settings_manual_backup")
+                                    .font(.body)
+                                Text("settings_manual_backup_hint")
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                 }
                 
@@ -186,17 +200,18 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: "laptopcomputer.and.iphone")
                             .foregroundColor(.Arke.purple)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("settings_linked_devices")
-                                .font(.system(size: 16))
-                            Text("\(deviceCount) \(deviceCount == 1 ? "device" : "devices") connected")
-                                .font(.system(size: 13))
+                                .font(.body)
+                            Text(String(localized: "settings_devices_connected", defaultValue: "\(deviceCount) devices connected"))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
             } header: {
                 Text("settings_security")
@@ -209,17 +224,18 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: "play.circle.fill")
                             .foregroundColor(.Arke.purple)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("onboarding_intro_video")
-                                .font(.system(size: 16))
+                                .font(.body)
                             Text("settings_learn_how")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
             } header: {
                 Text("settings_help_learning")
@@ -232,17 +248,18 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: "chart.bar.fill")
                             .foregroundColor(.Arke.green)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("activity_fee_summary")
-                                .font(.system(size: 16))
+                                .font(.body)
                             Text("action_view_fees")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
 
                 // ASP-dependent rows (only in primary mode)
@@ -252,17 +269,18 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "list.bullet.rectangle.fill")
                                 .foregroundColor(.Arke.teal)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Fee Schedule")
-                                    .font(.system(size: 16))
-                                Text("Server fee breakdown")
-                                    .font(.system(size: 13))
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("settings_fee_schedule")
+                                    .font(.body)
+                                Text("settings_fee_schedule_hint")
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                     
                     // Address History
@@ -270,17 +288,18 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "building.columns.fill")
                                 .foregroundColor(.Arke.blue)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
                             
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("receive_address_history")
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                 Text("action_view_addresses")
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                     
                     // X-Ray
@@ -288,17 +307,18 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "brain.head.profile.fill")
                                 .foregroundColor(.Arke.teal)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
                             
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("data_xray_title")
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                 Text("data_wallet_raw")
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                     
                     /*
@@ -307,13 +327,13 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "testtube.2")
                                 .foregroundColor(.Arke.orange)
-                                .frame(width: 24, height: 24)
+                                .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Transaction Testing")
-                                    .font(.system(size: 16))
+                                    .font(.callout)
                                 Text("Developer stress tests")
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -327,13 +347,13 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "arcade.stick.console.fill")
                                 .foregroundColor(.orange)
-                                .frame(width: 24, height: 24)
+                                .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("console_title")
-                                    .font(.system(size: 16))
+                                    .font(.callout)
                                 Text("Debug logs and diagnostics")
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -352,38 +372,40 @@ struct SettingsView_iOS: View {
                     HStack(spacing: 12) {
                         Image(systemName: "wave.3.right")
                             .foregroundColor(.Arke.blue)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
 
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text("settings_proximity_sharing")
-                                .font(.system(size: 16))
+                                .font(.body)
                             Text("settings_proximity_sharing_hint")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
 
                 // Address Icons
                 Toggle(isOn: $showAddressIcons) {
                     HStack(spacing: 12) {
                         Image(systemName: "square.grid.2x2.fill")
                             .foregroundColor(.Arke.teal)
-                            .frame(width: 24, height: 24)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Address Patterns")
-                                .font(.system(size: 16))
-                            Text("Show unique visual patterns to help identify addresses")
-                                .font(.system(size: 13))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("settings_address_patterns")
+                                .font(.body)
+                            Text("settings_address_patterns_hint")
+                                .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 2)
             } header: {
-                Text("Experimental")
+                Text("settings_experimental")
             }
 
             // Danger Zone Section (only in primary mode)
@@ -394,17 +416,18 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "light.beacon.max.fill")
                                 .foregroundColor(.Arke.orange)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
 
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("button_force_move_savings")
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                 Text(manager.hasActiveUnilateralExits ? String(localized: "status_in_progress") : String(localized: "balance_transfer_independently"))
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                     .disabled(manager.hasActiveUnilateralExits)
                     .opacity(manager.hasActiveUnilateralExits ? 0.5 : 1.0)
@@ -414,18 +437,19 @@ struct SettingsView_iOS: View {
                         HStack(spacing: 12) {
                             Image(systemName: "trash.fill")
                                 .foregroundColor(.Arke.red)
-                                .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
+                                .frame(width: iconSize, height: iconSize)
 
-                            VStack(alignment: .leading, spacing: 2) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text("button_delete_wallet")
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                     .foregroundColor(.Arke.red)
                                 Text("settings_delete_wallet_title")
-                                    .font(.system(size: 13))
+                                    .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 2)
                     }
                 } header: {
                     Text("settings_danger_zone")
@@ -435,8 +459,8 @@ struct SettingsView_iOS: View {
         .contentMargins(.top, 12, for: .scrollContent)
         .navigationTitle("settings_title")
         .navigationBarTitleDisplayMode(.large)
-        .alert("Notification Error", isPresented: $showNotificationError) {
-            Button("OK", role: .cancel) { }
+        .alert("notification_error_title", isPresented: $showNotificationError) {
+            Button("button_ok", role: .cancel) { }
         } message: {
             Text(notificationErrorMessage)
         }
@@ -473,7 +497,7 @@ struct SettingsView_iOS: View {
                 // User denied permission
                 await MainActor.run {
                     notificationsEnabled = false
-                    notificationErrorMessage = "Notification permission denied. Please enable in Settings."
+                    notificationErrorMessage = String(localized: "notification_error_permission_denied", defaultValue: "Notification permission denied. Please enable in Settings.")
                     showNotificationError = true
                 }
             }
@@ -481,7 +505,7 @@ struct SettingsView_iOS: View {
             // Error requesting permission
             await MainActor.run {
                 notificationsEnabled = false
-                notificationErrorMessage = "Failed to register: \(error.localizedDescription)"
+                notificationErrorMessage = String(localized: "notification_error_registration_failed", defaultValue: "Failed to register: \(error.localizedDescription)")
                 showNotificationError = true
             }
         }
@@ -522,4 +546,3 @@ struct IntroVideoSettingsView: View {
         .navigationBarHidden(true)
     }
 }
-
