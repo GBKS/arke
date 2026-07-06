@@ -73,10 +73,27 @@ class WalletManager {
     var error: String?
     var isRefreshing: Bool = false
     var hasLoadedOnce: Bool = false
+
+    /// Whether this install has ever completed a refresh that reached the server.
+    /// Persisted so app relaunches can trust an empty local cache: if we synced
+    /// before and stored no transactions, the wallet is genuinely empty and the
+    /// transaction list shows its empty state directly instead of a skeleton.
+    var hasEverSyncedSuccessfully: Bool = UserDefaults.standard.bool(forKey: UserDefaults.initialSyncCompletedKey)
     
     /// Whether this device is in read-only mode (not the primary device)
     /// When true, wallet operations like send/receive are unavailable
     var isReadOnlyMode: Bool = false
+
+    /// How the wallet entered the app during onboarding, if it did this session.
+    /// Drives the first-sync UI: a freshly created wallet cannot have history, so the
+    /// transaction list shows its empty state immediately (no skeleton), while an
+    /// imported wallet may have history, so the skeleton shows from the moment the
+    /// wallet UI appears until the first sync completes.
+    enum FreshWalletOrigin {
+        case created
+        case imported
+    }
+    var freshWalletOrigin: FreshWalletOrigin?
     
     /// Counter for active refresh calls (used to track concurrent refresh attempts)
     private var activeRefreshCount: Int = 0
@@ -210,7 +227,17 @@ class WalletManager {
     }
     
     var isInitialLoading: Bool {
-        isRefreshing && !hasLoadedOnce && !(transactionService?.hasLoadedTransactions ?? false)
+        guard !hasLoadedOnce && !(transactionService?.hasLoadedTransactions ?? false) else {
+            return false
+        }
+        switch freshWalletOrigin {
+        case .created:
+            return false
+        case .imported:
+            return true
+        case nil:
+            return isRefreshing && !hasEverSyncedSuccessfully
+        }
     }
     
     var isRefreshingWithData: Bool {
@@ -336,6 +363,9 @@ class WalletManager {
         #if os(iOS)
         let relayAPIToken = Bundle.main.object(forInfoDictionaryKey: "RelayAPIToken") as? String
         relayRegistrationService = RelayRegistrationService(relayAPIToken: relayAPIToken)
+        relayRegistrationService?.onNeedsRefresh = { [weak self] in
+            await self?.registerForPushNotifications()
+        }
         Self.logger.info("📮 [WalletManager] RelayRegistrationService initialized\(relayAPIToken != nil ? " with API token" : " without API token")")
         #endif
         
@@ -784,6 +814,12 @@ class WalletManager {
             Self.logger.info("✅ All wallet data refreshed successfully on \(self.currentNetworkName)")
         } else {
             Self.logger.warning("⚠️ Wallet refresh completed with errors on \(self.currentNetworkName)")
+        }
+
+        if anyServerCallSucceeded && !hasEverSyncedSuccessfully {
+            hasEverSyncedSuccessfully = true
+            UserDefaults.standard.set(true, forKey: UserDefaults.initialSyncCompletedKey)
+            Self.logger.info("📌 First successful sync recorded - future launches will trust an empty transaction cache")
         }
         
         // CRITICAL: Always increment dataVersion to trigger UI updates, even if there were errors

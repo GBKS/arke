@@ -52,18 +52,26 @@ class RelayRegistrationService {
     
     /// Timestamp when authorization expires
     private var authExpiresAt: Date?
-    
-    /// TTL for authorization token (in seconds, default 20 minutes)
-    private let authTTL: TimeInterval = 20 * 60
-    
-    /// Refresh authorization this many seconds before expiry (default 3 minutes)
-    private let authRefreshBuffer: TimeInterval = 3 * 60
-    
+
+    /// TTL for authorization token. Matches the expiry `bark-ffi`'s
+    /// `mailbox_authorization()` bakes in (see bark-ffi/src/core/wallet.rs)
+    /// so our local bookkeeping doesn't drift from the real token lifetime.
+    private let authTTL: TimeInterval = 24 * 60 * 60
+
+    /// Refresh authorization this many seconds before expiry (default 1 hour)
+    private let authRefreshBuffer: TimeInterval = 60 * 60
+
     /// Timer for scheduled authorization refresh
     private var refreshTimer: Task<Void, Never>?
-    
+
+    /// Called shortly before the current authorization expires so the caller
+    /// can mint a fresh one (via the wallet) and re-register. Without this,
+    /// a registered mailbox goes silently stale once its token expires and
+    /// is never renewed until something else happens to re-register it.
+    var onNeedsRefresh: (() async -> Void)?
+
     // MARK: - Initialization
-    
+
     init(relayBaseURL: String = "https://relay.arke.cash", relayAPIToken: String? = nil) {
         self.relayBaseURL = relayBaseURL
         self.relayAPIToken = relayAPIToken
@@ -78,7 +86,7 @@ class RelayRegistrationService {
     /// Registers device with the relay
     /// - Parameters:
     ///   - mailboxId: Hex-encoded mailbox identifier
-    ///   - authorizationHex: Short-lived mailbox authorization token
+    ///   - authorizationHex: Mailbox authorization token (24h expiry, see bark-ffi)
     ///   - arkAddr: Ark server URL
     ///   - deviceToken: APNs device token (64-char hex)
     ///   - apnsTopic: App bundle identifier
@@ -122,14 +130,9 @@ class RelayRegistrationService {
             // Update state
             lastAuthHash = authHash
             authExpiresAt = Date().addingTimeInterval(authTTL)
-            
+
             // Schedule refresh
-            scheduleAuthRefresh(
-                mailboxId: mailboxId,
-                arkAddr: arkAddr,
-                deviceToken: deviceToken,
-                apnsTopic: apnsTopic
-            )
+            scheduleAuthRefresh()
         } catch let error as RelayError {
             print("❌ [RelayRegistration] Registration failed: \(error.localizedDescription)")
             
@@ -193,36 +196,30 @@ class RelayRegistrationService {
     // MARK: - Authorization Refresh
     
     /// Schedules automatic refresh before authorization expires
-    private func scheduleAuthRefresh(
-        mailboxId: String,
-        arkAddr: String,
-        deviceToken: String,
-        apnsTopic: String
-    ) {
+    private func scheduleAuthRefresh() {
         // Cancel existing timer
         refreshTimer?.cancel()
-        
+
         // Calculate when to refresh (TTL - buffer)
         let refreshDelay = authTTL - authRefreshBuffer
-        
-        refreshTimer = Task {
+
+        refreshTimer = Task { [weak self] in
             do {
                 try await Task.sleep(nanoseconds: UInt64(refreshDelay * 1_000_000_000))
-                
-                // Check if task was cancelled
-                if Task.isCancelled { return }
-                
-                print("🔄 [RelayRegistration] Auto-refreshing authorization")
-                
-                // Request fresh authorization and re-register
-                // Note: This will be called from WalletManager which has access to wallet
-                // For now, just clear the cache to force refresh on next call
-                lastAuthHash = nil
-                authExpiresAt = nil
-                
             } catch {
-                print("⚠️ [RelayRegistration] Refresh timer error: \(error)")
+                return
             }
+
+            guard let self, !Task.isCancelled else { return }
+
+            print("🔄 [RelayRegistration] Auto-refreshing authorization")
+
+            // Clear cached state so the upcoming registerDevice() call (made
+            // by the handler with access to the wallet) isn't skipped as a
+            // no-op duplicate, then mint + send a fresh authorization.
+            self.lastAuthHash = nil
+            self.authExpiresAt = nil
+            await self.onNeedsRefresh?()
         }
     }
     

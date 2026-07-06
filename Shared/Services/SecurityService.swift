@@ -93,13 +93,13 @@ class SecurityService {
             // Get the device ID from keychain
             guard let deviceIdData = getDeviceIdFromKeychain(),
                   let deviceId = String(data: deviceIdData, encoding: .utf8) else {
-                print("⚠️ Could not get device ID from keychain")
+                Self.logger.warning("⚠️ Could not get device ID from keychain")
                 return nil
             }
-            
+
             // Get the current wallet hash
             guard let currentWalletHash = getUbiquitousHash() else {
-                print("⚠️ Could not get current wallet hash")
+                Self.logger.warning("⚠️ Could not get current wallet hash")
                 return nil
             }
             
@@ -120,12 +120,12 @@ class SecurityService {
                     let primaryDevice = walletDevices.first { $0.isPrimaryDevice }
                     let primaryDeviceName = primaryDevice?.deviceName ?? "Another Device"
                     
-                    print("⚠️ Wallet exists locally but device is not primary. Primary device: \(primaryDeviceName)")
+                    Self.logger.info("⚠️ Wallet exists locally but device is not primary. Primary device: \(primaryDeviceName)")
                     return .walletActiveElsewhere(deviceName: primaryDeviceName)
                 }
             }
         } catch {
-            print("⚠️ Failed to check device primary status: \(error)")
+            Self.logger.warning("⚠️ Failed to check device primary status: \(error)")
             // Continue with normal flow if check fails
         }
         
@@ -154,11 +154,15 @@ class SecurityService {
     
     /// Internal method that performs the actual wallet state detection
     private func performWalletStateDetection() async -> WalletState {
-        print("SecurityService.detectWalletState step 1 at \(Date())")
-        
+        let startTime = CFAbsoluteTimeGetCurrent()
+        defer {
+            Self.logger.info("⏱️ Wallet state detection took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime))s")
+        }
+        Self.logger.debug("Wallet state detection: checking local keychain...")
+
         // 1. Check local keychain first (instant)
         if self.hasMnemonic() {
-            print("SecurityService.detectWalletState step 1.1 at \(Date())")
+            Self.logger.debug("Wallet state detection: mnemonic found, checking device primary status...")
             
             // 1.5. Check if this device is the primary device
             // If wallet exists but device is not primary, return walletActiveElsewhere
@@ -171,8 +175,8 @@ class SecurityService {
             return .walletWithSeed
         }
         
-        print("SecurityService.detectWalletState step 2 at \(Date())")
-        
+        Self.logger.debug("Wallet state detection: no local mnemonic, checking iCloud KVS...")
+
         // 2. Check NSUbiquitousKeyValueStore for synced hash
         // This is the single source of truth for cross-device wallet detection
         if self.getUbiquitousHash() != nil {
@@ -189,11 +193,11 @@ class SecurityService {
                         let primaryDevice = try await deviceService.getPrimaryDevice()
                         let primaryDeviceName = primaryDevice?.deviceName ?? "Another Device"
                         
-                        print("📱 Device is registered as secondary (no seed) - enabling read-only mode")
+                        Self.logger.info("📱 Device is registered as secondary (no seed) - enabling read-only mode")
                         return .walletActiveElsewhere(deviceName: primaryDeviceName)
                     }
                 } catch {
-                    print("⚠️ Failed to check device registration: \(error)")
+                    Self.logger.warning("⚠️ Failed to check device registration: \(error)")
                 }
             }
             
@@ -201,8 +205,8 @@ class SecurityService {
             return .walletWithoutSeed
         }
         
-        print("SecurityService.detectWalletState step 3 at \(Date())")
-        
+        Self.logger.debug("Wallet state detection: no wallet found anywhere")
+
         return .noWallet
     }
     

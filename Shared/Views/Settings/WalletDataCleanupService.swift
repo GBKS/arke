@@ -224,6 +224,9 @@ class WalletDataCleanupService {
         
         // Reset nearby device detection
         UserDefaults.standard.removeObject(forKey: UserDefaults.proximityPermissionKey)
+
+        // Reset initial sync completion marker
+        UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
         
         #if DEBUG
         print("🗑️ [WalletDataCleanupService] Cleared balance privacy, notification settings, network config, and address icons preference")

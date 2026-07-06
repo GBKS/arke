@@ -71,10 +71,10 @@ struct BalanceRefreshStatusContainerCompact: View {
     private func colorScheme(viewModel: BalanceRefreshStatusViewModel) -> (Color, Color, Color) {
         if viewModel.hasActiveRefresh {
             // Blue for refreshing
-            return (.white, .blue, .white)
+            return (.white, .blue, .blue)
         } else if viewModel.hasVtxosToRefresh {
             // Orange for "Refresh now"
-            return (.white, .orange, .white)
+            return (.white, .orange, .orange)
         } else {
             // Gray for countdown
             return (.white, .black.opacity(0.15), .black)

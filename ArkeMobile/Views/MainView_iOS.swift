@@ -38,13 +38,15 @@ struct MainView_iOS: View {
         let hasSeed = securityService.hasMnemonic()
         
         // Register device (SwiftData operation)
+        let startTime = CFAbsoluteTimeGetCurrent()
+        Self.logger.debug("Device registration starting...")
         do {
             try await serviceContainer.deviceRegistrationService.registerCurrentDevice(
                 walletHash: hash,
                 hasSeed: hasSeed
             )
-            
-            Self.logger.info("Device registered with hasSeed=\(hasSeed)")
+
+            Self.logger.info("Device registered with hasSeed=\(hasSeed) in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime))s")
         } catch {
             // Log but don't fail - device registration is not critical
             Self.logger.error("Device registration failed: \(error.localizedDescription)")
@@ -103,39 +105,43 @@ struct MainView_iOS: View {
                 OnboardingFlow_iOS(
                     walletState: walletState,
                     onWalletReady: {
+                        // Transition to the wallet UI immediately - createWallet already
+                        // set isInitialized and started services, so WalletView_iOS can
+                        // render while the remaining setup completes in the background
+                        withAnimation(.smooth(duration: 0.6)) {
+                            hasWallet = true
+                        }
+
                         Task {
                             // 1. Activate services now that wallet exists
                             serviceContainer.setActive(true)
-                            
+
                             // 2. Configure services with model context (CRITICAL: must happen before registration)
                             Self.logger.debug("Calling serviceContainer.configureServices()...")
                             serviceContainer.configureServices(with: modelContext)
-                            
-                            // 3. Start CloudKit sync now that wallet exists
+
+                            // 3. Start the initial wallet sync immediately - it's the longest step
+                            //    and drives the transaction list's first-load UI, so it must not
+                            //    wait behind push/device registration below
+                            Task {
+                                Self.logger.debug("CALL #3: Initializing newly created wallet from onWalletReady callback")
+                                await walletManager.initialize()
+                                Self.logger.info("CALL #3: New wallet initialization complete")
+                            }
+
+                            // 4. Start CloudKit sync now that wallet exists
                             serviceContainer.startCloudKitSync(modelContainer: modelContext.container)
-                            
-                            // 4. Register for remote notifications
+
+                            // 5. Register for remote notifications
                             await MainActor.run {
                                 #if os(iOS)
                                 UIApplication.shared.registerForRemoteNotifications()
                                 Self.logger.info("Registered for remote notifications")
                                 #endif
                             }
-                            
-                            // 5. Register device (NOW ModelContext is available)
+
+                            // 6. Register device (NOW ModelContext is available)
                             await registerDeviceIfNeeded()
-                            
-                            // 6. Initialize the wallet FIRST (before UI transition)
-                            Self.logger.debug("CALL #3: Initializing newly created wallet from onWalletReady callback")
-                            await walletManager.initialize()
-                            Self.logger.info("CALL #3: New wallet initialization complete")
-                            
-                            // 7. THEN update UI with smooth animation (all heavy work is done)
-                            await MainActor.run {
-                                withAnimation(.smooth(duration: 0.6)) {
-                                    hasWallet = true
-                                }
-                            }
                         }
                     },
                     onWalletDeleted: {
@@ -324,15 +330,17 @@ struct MainView_iOS: View {
     }
     
     private func checkForExistingWallet() async {
+        let checkStartTime = CFAbsoluteTimeGetCurrent()
         Self.logger.debug("checkForExistingWallet started")
-        
+
         // Use the early detection result from app initialization
         // This avoids redundant keychain checks and SwiftData queries
         if initialWalletDetected {
             Self.logger.info("Using cached wallet detection result: wallet exists")
-            
+
             // CRITICAL: Perform deeper check to determine if device is primary
             // This is necessary because the early detection only checks for mnemonic existence
+            Self.logger.debug("Requesting deeper wallet state detection...")
             let state = await securityService.detectWalletState()
             walletState = state
             Self.logger.info("Deeper detection returned: \(String(describing: state))")
@@ -341,10 +349,18 @@ struct MainView_iOS: View {
             if case .walletActiveElsewhere = state {
                 Self.logger.info("📱 Wallet exists but device is not primary - initializing in read-only mode")
                 hasWallet = false  // Keep false so we don't trigger normal wallet view yet
-                
-                // Register device before initialization
+
+                // Disable animation for initial loading transition
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isCheckingWallet = false
+                }
+
+                // Register device before initialization - read-only mode reads the
+                // device registration record during initialize()
                 await registerDeviceIfNeeded()
-                
+
                 // Initialize wallet in read-only mode
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
@@ -355,26 +371,27 @@ struct MainView_iOS: View {
             } else {
                 // Set UI state FIRST so view transitions immediately (without animation)
                 hasWallet = true
-                
+
+                // Disable animation for initial loading transition
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isCheckingWallet = false
+                }
+
                 Self.logger.debug("UI transition complete - wallet will initialize in background")
-                
-                // Register device (services are already configured at this point)
-                await registerDeviceIfNeeded()
-                
-                // Initialize wallet in a detached task so it doesn't block UI
+
+                // Start the wallet sync immediately - primary mode doesn't depend on
+                // device registration, which can take a while (CloudKit round trips)
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
                     Self.logger.debug("CALL #1: Initializing wallet in detached background task (cached detection path)")
                     await walletManager.initialize()
                     Self.logger.info("CALL #1: Wallet initialization complete")
                 }
-            }
-            
-            // Disable animation for initial loading transition
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                isCheckingWallet = false
+
+                // Register device (services are already configured at this point)
+                await registerDeviceIfNeeded()
             }
         } else {
             // Perform deeper check only for edge cases (wallet on other device, etc.)
@@ -383,60 +400,63 @@ struct MainView_iOS: View {
             walletState = state
             Self.logger.info("detectWalletState returned: \(String(describing: state))")
             
-            // Register device after detection (if not .noWallet)
-            if state != .noWallet && state != .unknown {
-                await registerDeviceIfNeeded()
-            }
-            
             switch state {
             case .walletWithSeed:
                 // Wallet exists with mnemonic in local keychain
-                print("✅ Wallet found with seed in keychain")
-                
+                Self.logger.info("✅ Wallet found with seed in keychain")
+
                 // Set UI state FIRST for immediate transition (without animation)
                 hasWallet = true
-                
+
                 // Disable animation for initial loading -> wallet transition
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     isCheckingWallet = false
                 }
-                
-                // Initialize wallet in detached task
+
+                // Start the wallet sync immediately - primary mode doesn't depend on
+                // device registration, which can take a while (CloudKit round trips)
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
-                    print("🔧 [MainView_iOS] 📍 CALL #2: Initializing wallet in detached background task... at \(Date())")
-                    print("   └─ Location: MainView_iOS deep detection path (walletWithSeed)")
+                    Self.logger.debug("CALL #2: Initializing wallet in detached background task (deep detection path, walletWithSeed)")
                     await walletManager.initialize()
-                    print("✅ [MainView_iOS] 📍 CALL #2: Wallet initialization complete")
+                    Self.logger.info("CALL #2: Wallet initialization complete")
                 }
-                
+
+                await registerDeviceIfNeeded()
+
             case .walletActiveElsewhere:
                 // Wallet exists but device is not primary - initialize in read-only mode
-                print("📱 Wallet exists but device is not primary - initializing in read-only mode")
+                Self.logger.info("📱 Wallet exists but device is not primary - initializing in read-only mode")
                 hasWallet = false
-                
+
                 // Disable animation for initial loading transition
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     isCheckingWallet = false
                 }
-                
+
+                // Register device before initialization - read-only mode reads the
+                // device registration record during initialize()
+                await registerDeviceIfNeeded()
+
                 // Initialize wallet in read-only mode
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
-                    print("🔒 Initializing wallet in read-only mode (deep detection path)")
+                    Self.logger.debug("🔒 Initializing wallet in read-only mode (deep detection path)")
                     await walletManager.initialize(forceReadOnly: true)
-                    print("✅ Read-only wallet initialization complete")
+                    Self.logger.info("✅ Read-only wallet initialization complete")
                 }
-                
+
             case .walletWithoutSeed:
                 // Wallet found on another device (via iCloud), but no local seed
-                print("⚠️ Wallet found on another device, but no seed locally")
+                Self.logger.warning("⚠️ Wallet found on another device, but no seed locally")
                 // User needs to recover by entering their mnemonic
                 hasWallet = false
+
+                await registerDeviceIfNeeded()
                 
                 // Disable animation for initial loading -> onboarding transition
                 var transaction = Transaction()
@@ -447,7 +467,7 @@ struct MainView_iOS: View {
                 
             case .noWallet:
                 // No wallet found anywhere
-                print("ℹ️ No wallet found")
+                Self.logger.info("ℹ️ No wallet found")
                 hasWallet = false
                 
                 // Disable animation for initial loading -> onboarding transition
@@ -459,7 +479,7 @@ struct MainView_iOS: View {
                 
             case .unknown:
                 // Unable to determine state
-                print("❓ Unable to determine wallet state")
+                Self.logger.warning("❓ Unable to determine wallet state")
                 hasWallet = false
                 
                 // Disable animation for initial loading -> onboarding transition
@@ -471,7 +491,7 @@ struct MainView_iOS: View {
             }
         }
         
-        print("🔍 [MainView_iOS] Wallet check complete at \(Date())")
+        Self.logger.info("🔍 Wallet check complete in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime))s")
     }
 }
 

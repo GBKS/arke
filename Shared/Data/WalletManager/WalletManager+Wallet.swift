@@ -116,7 +116,9 @@ extension WalletManager {
             NetworkConfigPersistence.save(config)
             
             isInitialized = true
-            
+            freshWalletOrigin = .imported
+            Self.logger.info("🌱 Fresh wallet origin: imported (with backup) - transaction list shows skeleton until first sync completes")
+
             // Step 8: Register device after wallet import
             do {
                 // Get wallet hash from ubiquitous store (set during mnemonic save)
@@ -246,7 +248,9 @@ extension WalletManager {
         }
         
         isInitialized = true
-        
+        freshWalletOrigin = .imported
+        Self.logger.info("🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes")
+
         // Start background progression services for imported wallet
         exitProgressionService?.start()
         roundProgressionService?.start()
@@ -316,7 +320,9 @@ extension WalletManager {
             }
             
             self.isInitialized = true
-            
+            self.freshWalletOrigin = .created
+            Self.logger.info("🌱 Fresh wallet origin: created - transaction list will skip the initial-sync skeleton")
+
             // Start background progression services for new wallet
             stepStartTime = CFAbsoluteTimeGetCurrent()
             self.exitProgressionService?.start()
@@ -449,7 +455,10 @@ extension WalletManager {
         error = nil
         isRefreshing = false
         hasLoadedOnce = false
-        
+        freshWalletOrigin = nil
+        hasEverSyncedSuccessfully = false
+        UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
+
         // Reset balance service state
         balanceService?.arkBalance = nil
         balanceService?.onchainBalance = nil
@@ -491,7 +500,8 @@ extension WalletManager {
         error = nil
         isRefreshing = false
         hasLoadedOnce = false
-        
+        freshWalletOrigin = nil
+
         // DON'T reset balance service state - secondary device needs to display balances
         // The ReadOnlyBalanceService will take over and use the existing in-memory data
         // or reload from SwiftData/CloudKit if needed
