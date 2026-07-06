@@ -5557,33 +5557,12 @@
         }
       }
     },
-    "label_full_address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Full Address"
-          }
-        }
-      }
-    },
     "label_input" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Input"
-          }
-        }
-      }
-    },
-    "label_invoice" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invoice"
           }
         }
       }
@@ -7027,16 +7006,6 @@
         }
       }
     },
-    "receive_lightning_empty" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a lightning request to see and share it here."
-          }
-        }
-      }
-    },
     "receive_lightning_invoice" : {
       "localizations" : {
         "en" : {
@@ -7916,16 +7885,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exit Successful"
-          }
-        }
-      }
-    },
-    "status_expires_1_hour" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expires in 1 hour"
           }
         }
       }
