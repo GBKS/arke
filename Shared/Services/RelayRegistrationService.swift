@@ -112,12 +112,9 @@ class RelayRegistrationService {
             apns_topic: apnsTopic
         )
         
-        // Debug: Log request payload
-        if let jsonData = try? JSONEncoder().encode(request),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            print("📤 [RelayRegistration] Request payload: \(jsonString)")
-        }
-        
+        // Note: don't log the full request payload here - authorization_hex and
+        // device_token are credentials. Redacted params are logged by the caller
+        // in WalletManager+Notifications.
         do {
             let response: RelayRegisterResponse = try await makeRequest(
                 path: "/v1/register",
