@@ -71,7 +71,7 @@ struct FirstUseView: View {
                         
                     } else {
                         // Standard onboarding options
-                        Button("button_create_new_wallet") {
+                        Button("button_create_wallet") {
                             onCreateWallet()
                         }
                         .buttonStyle(ArkeButtonStyle(size: .large))

@@ -72,7 +72,7 @@ struct CreateWalletView: View {
                         .padding(.bottom, 8)
                 }
                 
-                Button("button_create_wallet_caps") {
+                Button("button_create_wallet") {
                     Task {
                         isCreatingWallet = true
                         errorMessage = nil

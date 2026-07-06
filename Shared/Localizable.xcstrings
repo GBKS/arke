@@ -2071,7 +2071,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This amount will be temporarily locked"
+            "value" : "This amount will be temporarily locked."
           }
         }
       }
@@ -2091,7 +2091,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Amount being refreshed"
+            "value" : "Amount to refresh"
           }
         }
       }
@@ -2436,7 +2436,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You can close this and the refresh will continue in the background."
+            "value" : "You can close this modal and the refresh will continue in the background."
           }
         }
       }
@@ -2707,7 +2707,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add contact"
+            "value" : "Add Contact"
           }
         }
       }
@@ -2727,7 +2727,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add new address"
+            "value" : "Add new Address"
           }
         }
       }
@@ -2901,7 +2901,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create new wallet"
+            "value" : "Create new Wallet"
           }
         }
       }
@@ -2911,7 +2911,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create wallet"
+            "value" : "Create Wallet"
           }
         }
       }
@@ -3044,7 +3044,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delete wallet data"
+            "value" : "Delete Wallet Data"
           }
         }
       }
@@ -3232,7 +3232,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import wallet"
+            "value" : "Import Wallet"
           }
         }
       }
@@ -3295,7 +3295,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Back up wallet"
+            "value" : "Back up Wallet"
           }
         }
       }
@@ -3305,7 +3305,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move to payments"
+            "value" : "Move to Payments"
           }
         }
       }
@@ -3315,7 +3315,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move to savings"
+            "value" : "Move to Savings"
           }
         }
       }
@@ -3537,7 +3537,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start recovery"
+            "value" : "Start Recovery"
           }
         }
       }
@@ -3547,7 +3547,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start withdrawal"
+            "value" : "Start Withdrawal"
           }
         }
       }
