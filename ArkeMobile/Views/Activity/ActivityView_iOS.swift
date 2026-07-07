@@ -27,6 +27,10 @@ struct ActivityView_iOS: View {
     
     // State for connection info sheet
     @State private var showConnectionInfoSheet = false
+
+    // State for recovery phrase entry (offered when read-only because the seed
+    // hasn't synced to this device yet)
+    @State private var showImportWalletSheet = false
     
     // State for balance privacy mode (persistent across app launches)
     @AppStorage(UserDefaults.balancePrivacyKey) private var isBalanceHidden = false
@@ -298,8 +302,29 @@ struct ActivityView_iOS: View {
             ConnectionInfoSheet(
                 isOnSignet: manager.networkConfig?.networkType.lowercased() == "signet",
                 networkName: manager.currentNetworkName,
-                connectionStatus: manager.connectionStatus
+                connectionStatus: manager.connectionStatus,
+                onEnterRecoveryPhrase: manager.connectionStatus.readOnlyReason == .seedNotSynced ? {
+                    showImportWalletSheet = true
+                } : nil
             )
+        }
+        .sheet(isPresented: $showImportWalletSheet) {
+            ImportWalletView_iOS(
+                isMainnet: manager.networkConfig?.networkType.lowercased() != "signet",
+                onBack: {
+                    showImportWalletSheet = false
+                },
+                onWalletImported: {
+                    showImportWalletSheet = false
+                    Task {
+                        // This device now holds the seed - record it in the registry and
+                        // re-derive the wallet mode (stays read-only unless primary)
+                        try? await ServiceContainer.shared.deviceRegistrationService.updateCurrentDeviceHasSeed(true)
+                        await manager.initialize()
+                    }
+                }
+            )
+            .environment(manager)
         }
         .task {
             // Grace period fallback for connection status indicator

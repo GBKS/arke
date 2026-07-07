@@ -60,8 +60,15 @@ struct Arke_mobile: App {
     /// Performs lightweight wallet check before app initialization
     /// This determines whether to activate services and sync
     init() {
-        let hasWallet = SecurityService.hasMnemonicInKeychain()
-        
+        // Early check is a fast-path hint only: a positive result is trustworthy, a
+        // negative one is not (keychain may be unavailable at cold launch/prewarming).
+        // MainView's deeper detection re-checks with retries whenever this is false.
+        let earlyStatus = SecurityService.mnemonicKeychainStatus()
+        if case .unavailable(let osStatus) = earlyStatus {
+            Self.logger.warning("Early wallet check indeterminate (OSStatus \(osStatus)) - deferring to deeper detection")
+        }
+        let hasWallet = earlyStatus == .found
+
         // Store the detection result (must be done before calling serviceContainer.setActive)
         self.initialWalletDetected = hasWallet
         
@@ -100,14 +107,17 @@ struct Arke_mobile: App {
                 .environment(\.initialWalletDetected, initialWalletDetected)
                 .withServiceContainer(serviceContainer)
                 .onAppear {
+                    // Always install observers - they only react once registration actually
+                    // happens, and late wallet detection (MainView) relies on them being ready
+                    setupPushNotificationObservers()
+
                     // Start CloudKit sync if wallet exists
-                    // This happens when app launches with an existing wallet
+                    // This happens when app launches with an existing wallet.
+                    // If the early check missed (keychain unavailable), MainView starts
+                    // sync itself when deeper detection finds the wallet.
                     if initialWalletDetected {
                         Self.logger.info("Starting CloudKit sync (wallet exists)...")
                         serviceContainer.startCloudKitSync(modelContainer: modelContainer)
-
-                        // Set up push notification observers
-                        setupPushNotificationObservers()
                     } else {
                         Self.logger.info("Skipping CloudKit sync (no wallet yet)")
                     }

@@ -13,6 +13,7 @@ struct MainView: View {
     @State private var hasWallet: Bool = false
     @State private var isCheckingWallet: Bool = true
     @State private var walletState: WalletState = .unknown
+    @State private var lateServicesActivated: Bool = false
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.securityService) private var securityService
@@ -47,7 +48,6 @@ struct MainView: View {
             } else {
                 // Onboarding sequence when no wallet found
                 OnboardingFlow(
-                    walletState: walletState,
                     onWalletReady: {
                         Task {
                             // Activate services now that wallet exists
@@ -99,6 +99,21 @@ struct MainView: View {
         }
     }
     
+    // MARK: - Late Wallet Detection
+
+    /// Starts the services that the App body gates on `initialWalletDetected`.
+    /// When the early keychain check missed (keychain transiently unreadable) but deeper
+    /// detection finds the wallet, CloudKit sync and remote notification registration
+    /// would otherwise silently never run for this session.
+    private func activateLateDetectedWalletServices() {
+        guard !initialWalletDetected, !lateServicesActivated else { return }
+        lateServicesActivated = true
+
+        print("🔄 [MainView] Wallet found after negative early check - starting CloudKit sync and notification registration")
+        serviceContainer.startCloudKitSync(modelContainer: modelContext.container)
+        NSApplication.shared.registerForRemoteNotifications()
+    }
+
     // MARK: - NSUbiquitousKeyValueStore Observation
     
     private func subscribeToUbiquitousStoreChanges() {
@@ -247,7 +262,10 @@ struct MainView: View {
             case .walletWithSeed:
                 // Wallet exists with mnemonic in local keychain
                 print("✅ Wallet found with seed in keychain")
-                
+
+                // Early check missed this wallet - start the services it gates
+                activateLateDetectedWalletServices()
+
                 // Set UI state FIRST for immediate transition
                 hasWallet = true
                 isCheckingWallet = false
@@ -263,6 +281,10 @@ struct MainView: View {
             case .walletActiveElsewhere:
                 // Wallet exists but device is not primary - initialize in read-only mode
                 print("📱 Wallet exists but device is not primary - initializing in read-only mode")
+
+                // Early check missed this wallet - start the services it gates
+                activateLateDetectedWalletServices()
+
                 hasWallet = false
                 isCheckingWallet = false
                 
@@ -273,13 +295,6 @@ struct MainView: View {
                     await walletManager.initialize(forceReadOnly: true)
                     print("✅ Read-only wallet initialization complete")
                 }
-                
-            case .walletWithoutSeed:
-                // Wallet found on another device (via iCloud), but no local seed
-                print("⚠️ Wallet found on another device, but no seed locally")
-                // User needs to recover by entering their mnemonic
-                hasWallet = false
-                isCheckingWallet = false
                 
             case .noWallet:
                 // No wallet found anywhere
@@ -295,6 +310,15 @@ struct MainView: View {
             }
         }
         
-        print("🔍 [MainView] Wallet check complete at \(Date())")
+        // Single structured line summarizing how this launch was routed
+        let route: String
+        if case .walletActiveElsewhere = walletState {
+            route = "read-only"
+        } else if hasWallet {
+            route = "wallet"
+        } else {
+            route = "onboarding"
+        }
+        print("🔍 [MainView] Launch verdict: earlyDetected=\(initialWalletDetected), state=\(walletState), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route)")
     }
 }

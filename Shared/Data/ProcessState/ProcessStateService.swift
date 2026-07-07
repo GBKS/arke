@@ -112,8 +112,9 @@ final class ProcessStateService {
     }
 
     /// Update read-only mode status
-    func updateReadOnlyMode(isReadOnly: Bool) {
+    func updateReadOnlyMode(isReadOnly: Bool, reason: ReadOnlyReason? = nil) {
         connectionStatus.isReadOnlyMode = isReadOnly
+        connectionStatus.readOnlyReason = isReadOnly ? reason : nil
     }
     
     

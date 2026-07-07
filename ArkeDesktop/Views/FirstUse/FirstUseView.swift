@@ -9,10 +9,8 @@ import SwiftUI
 import ArkeUI
 
 struct FirstUseView: View {
-    let walletState: WalletState
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
-    let onDeleteWallet: () -> Void
     
     var body: some View {
         HStack(spacing: 0) {
@@ -59,38 +57,16 @@ struct FirstUseView: View {
                 Spacer()
                 
                 VStack(spacing: 16) {
-                    if walletState == .walletWithoutSeed {
-                        Button("button_delete_wallet_data") {
-                            onDeleteWallet()
-                        }
-                        .buttonStyle(ArkeButtonStyle(size: .large, variant: .outline, color: .Arke.red))
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                        
-                    } else {
-                        // Standard onboarding options
-                        Button("button_create_wallet") {
-                            onCreateWallet()
-                        }
-                        .buttonStyle(ArkeButtonStyle(size: .large))
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
-                        
-                        Button("action_import_wallet") {
-                            onImportWallet()
-                        }
-                        .buttonStyle(ArkeButtonStyle(size: .large, variant: .outline))
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)
-                        ))
+                    Button("button_create_wallet") {
+                        onCreateWallet()
                     }
+                    .buttonStyle(ArkeButtonStyle(size: .large))
+
+                    Button("action_import_wallet") {
+                        onImportWallet()
+                    }
+                    .buttonStyle(ArkeButtonStyle(size: .large, variant: .outline))
                 }
-                .animation(.smooth(duration: 0.5), value: walletState)
             }
             .padding(.horizontal, 40)
             .padding(.vertical, 60)

@@ -13,11 +13,20 @@ public struct ConnectionInfoSheet: View {
     let isOnSignet: Bool
     let networkName: String
     let connectionStatus: ConnectionStatus
+    /// Shown as a button in the read-only section when the wallet key hasn't
+    /// synced to this device yet (`readOnlyReason == .seedNotSynced`)
+    let onEnterRecoveryPhrase: (() -> Void)?
 
-    public init(isOnSignet: Bool, networkName: String, connectionStatus: ConnectionStatus) {
+    public init(
+        isOnSignet: Bool,
+        networkName: String,
+        connectionStatus: ConnectionStatus,
+        onEnterRecoveryPhrase: (() -> Void)? = nil
+    ) {
         self.isOnSignet = isOnSignet
         self.networkName = networkName
         self.connectionStatus = connectionStatus
+        self.onEnterRecoveryPhrase = onEnterRecoveryPhrase
     }
 
     private var hasArkConnection: Bool {
@@ -51,14 +60,40 @@ public struct ConnectionInfoSheet: View {
                                     .fontWeight(.semibold)
                             }
 
-                            Text("This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device.")
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                            if connectionStatus.readOnlyReason == .seedNotSynced {
+                                Text("This device is viewing wallet data synced via iCloud. Your wallet key hasn't arrived on this device yet — it usually syncs on its own through iCloud Keychain.")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
 
-                            VStack(alignment: .leading, spacing: 8) {
-                                ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: "Viewing synced data only")
-                                ConnectionInfoRow(icon: "icloud.fill", iconColor: Color.Arke.blue, text: "Data synced via iCloud")
-                                ConnectionInfoRow(icon: "lock.fill", iconColor: Color.Arke.blue, text: "Send and receive disabled")
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: "Viewing synced data only")
+                                    ConnectionInfoRow(icon: "icloud.and.arrow.down", iconColor: Color.Arke.blue, text: "Wallet key syncing via iCloud Keychain")
+                                    ConnectionInfoRow(icon: "key.fill", iconColor: Color.Arke.blue, text: "Or enter your recovery phrase now")
+                                }
+
+                                if let onEnterRecoveryPhrase {
+                                    Button {
+                                        dismiss()
+                                        onEnterRecoveryPhrase()
+                                    } label: {
+                                        Text("Enter Recovery Phrase")
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.large)
+                                    .tint(Color.Arke.blue)
+                                    .padding(.top, 4)
+                                }
+                            } else {
+                                Text("This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device.")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: "Viewing synced data only")
+                                    ConnectionInfoRow(icon: "icloud.fill", iconColor: Color.Arke.blue, text: "Data synced via iCloud")
+                                    ConnectionInfoRow(icon: "lock.fill", iconColor: Color.Arke.blue, text: "Send and receive disabled")
+                                }
                             }
                         }
 
@@ -267,6 +302,29 @@ public struct ConnectionInfoRow: View {
             lastSuccessfulSync: Date().addingTimeInterval(-600),
             reconnectionAttempts: 2,
             lastError: nil
+        )
+    )
+}
+
+#Preview("Read-Only, Seed Not Synced") {
+    ConnectionInfoSheet(
+        isOnSignet: false,
+        networkName: "Bitcoin Mainnet",
+        connectionStatus: ConnectionStatus(
+            isReadOnlyMode: true,
+            readOnlyReason: .seedNotSynced
+        ),
+        onEnterRecoveryPhrase: {}
+    )
+}
+
+#Preview("Read-Only, Not Primary") {
+    ConnectionInfoSheet(
+        isOnSignet: false,
+        networkName: "Bitcoin Mainnet",
+        connectionStatus: ConnectionStatus(
+            isReadOnlyMode: true,
+            readOnlyReason: .notPrimary
         )
     )
 }

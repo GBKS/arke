@@ -447,16 +447,23 @@ class WalletManager {
         }
     }
     
+    /// Why this device is read-only. A missing seed beats not-primary as the
+    /// explanation, because the seed is the actionable gap (wait for iCloud
+    /// Keychain sync, or enter the recovery phrase).
+    private func currentReadOnlyReason() -> ReadOnlyReason {
+        securityService.hasMnemonic() ? .notPrimary : .seedNotSynced
+    }
+
     /// Checks if this device is in read-only mode (not the primary device)
     private func checkReadOnlyMode() async {
         let deviceService = ServiceContainer.shared.deviceRegistrationService
-        
+
         do {
             if let currentDevice = try await deviceService.getCurrentDevice() {
                 isReadOnlyMode = !currentDevice.isPrimaryDevice
-                
+
                 // Update process state service with read-only mode status
-                processStateService?.updateReadOnlyMode(isReadOnly: isReadOnlyMode)
+                processStateService?.updateReadOnlyMode(isReadOnly: isReadOnlyMode, reason: isReadOnlyMode ? currentReadOnlyReason() : nil)
                 
                 if isReadOnlyMode {
                     Self.logger.info("🔒 [WalletManager] Device is in read-only mode (not primary device)")
@@ -484,7 +491,7 @@ class WalletManager {
         if await shouldBlockWalletAccess() {
             Self.logger.warning("⚠️ [WalletManager] Device has been demoted - switching to read-only mode")
             isReadOnlyMode = true
-            processStateService?.updateReadOnlyMode(isReadOnly: true)
+            processStateService?.updateReadOnlyMode(isReadOnly: true, reason: currentReadOnlyReason())
             
             // Initialize in read-only mode instead
             await initializeReadOnlyMode()
@@ -495,7 +502,7 @@ class WalletManager {
         if let forced = forceReadOnly {
             // Caller explicitly specified read-only mode (from SecurityService detection)
             isReadOnlyMode = forced
-            processStateService?.updateReadOnlyMode(isReadOnly: forced)
+            processStateService?.updateReadOnlyMode(isReadOnly: forced, reason: forced ? currentReadOnlyReason() : nil)
             Self.logger.info("✅ [WalletManager] Read-only mode set explicitly: \(forced)")
         } else {
             // Fallback: Check device registration (may have race conditions)
@@ -905,7 +912,7 @@ class WalletManager {
         // Step 2: Switch to read-only mode immediately
         Self.logger.info("Step 2: Switching to read-only mode...")
         isReadOnlyMode = true
-        processStateService?.updateReadOnlyMode(isReadOnly: true)
+        processStateService?.updateReadOnlyMode(isReadOnly: true, reason: currentReadOnlyReason())
         Self.logger.info("🔒 [WalletManager] Device switched to read-only mode")
         
         // Step 3: Unregister from push notifications

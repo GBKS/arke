@@ -310,7 +310,7 @@ extension WalletManager {
             // Save mnemonic to keychain (this also saves hash to NSUbiquitousKeyValueStore)
             stepStartTime = CFAbsoluteTimeGetCurrent()
             do {
-                try await self.securityService.saveMnemonic(mnemonic, requireBiometric: false)
+                try await self.securityService.saveMnemonic(mnemonic)
                 let keychainTime = CFAbsoluteTimeGetCurrent() - stepStartTime
                 Self.logger.info("⏱️ [PROFILE] securityService.saveMnemonic() took \(String(format: "%.3f", keychainTime))s")
                 Self.logger.info("✅ Mnemonic saved to keychain and hash synced via iCloud KVS")
@@ -417,6 +417,10 @@ extension WalletManager {
             // Clear the saved network configuration
             Self.logger.debug("   Step 5: Clearing saved network configuration...")
             NetworkConfigPersistence.clear()
+
+            // Clear the local wallet evidence breadcrumb (files are gone; the caller
+            // handles mnemonic deletion, which clears it again - harmless)
+            SecurityService.clearLocalWalletEvidence()
             
             // Note: Mnemonic deletion is now handled by the caller (DeleteWalletSettingView)
             // This allows for intelligent deletion strategies based on device registry

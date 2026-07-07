@@ -88,6 +88,14 @@ public extension ConnectionQuality {
     }
 }
 
+/// Why the wallet is in read-only mode
+public enum ReadOnlyReason: Sendable, Equatable {
+    /// Another device is the primary device; this one views synced data
+    case notPrimary
+    /// The wallet key hasn't reached this device yet (iCloud Keychain sync pending)
+    case seedNotSynced
+}
+
 /// Connection status information (not persisted - computed/updated on each refresh)
 public struct ConnectionStatus: Sendable {
     public var isConnected: Bool
@@ -96,6 +104,8 @@ public struct ConnectionStatus: Sendable {
     public var reconnectionAttempts: Int
     public var lastError: String?
     public var isReadOnlyMode: Bool
+    /// Set when `isReadOnlyMode` is true; nil otherwise
+    public var readOnlyReason: ReadOnlyReason?
 
     public init(
         isConnected: Bool = false,
@@ -103,7 +113,8 @@ public struct ConnectionStatus: Sendable {
         lastSuccessfulSync: Date? = nil,
         reconnectionAttempts: Int = 0,
         lastError: String? = nil,
-        isReadOnlyMode: Bool = false
+        isReadOnlyMode: Bool = false,
+        readOnlyReason: ReadOnlyReason? = nil
     ) {
         self.isConnected = isConnected
         self.quality = quality
@@ -111,6 +122,7 @@ public struct ConnectionStatus: Sendable {
         self.reconnectionAttempts = reconnectionAttempts
         self.lastError = lastError
         self.isReadOnlyMode = isReadOnlyMode
+        self.readOnlyReason = readOnlyReason
     }
     
     // MARK: - Display Properties

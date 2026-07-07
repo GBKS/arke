@@ -28,7 +28,6 @@ struct OnboardingFlow: View {
     @State private var navigationDirection: NavigationDirection = .forward
     @State private var usagePattern: ServerUsageProfile = .casual
     @Environment(WalletManager.self) private var walletManager
-    let walletState: WalletState
     let onWalletReady: () -> Void
     
     var body: some View {
@@ -47,7 +46,6 @@ struct OnboardingFlow: View {
                     switch currentState {
                     case .firstUse:
                         FirstUseView(
-                            walletState: walletState,
                             onCreateWallet: {
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
@@ -59,9 +57,6 @@ struct OnboardingFlow: View {
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .importWallet
                                 }
-                            },
-                            onDeleteWallet: {
-                                //walletManager.deleteWallet()
                             }
                         )
                         .transition(.asymmetric(

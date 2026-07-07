@@ -24,6 +24,12 @@ class SecurityService {
     
     /// Current wallet state for cross-device detection
     var walletState: WalletState = .unknown
+
+    /// Whether the last wallet state detection reached a definitive keychain answer.
+    /// False means the keychain was unavailable (e.g. protected data not ready) and the
+    /// returned state is low-confidence — callers should re-run detection when the
+    /// keychain becomes readable (foreground, protectedDataDidBecomeAvailable).
+    private(set) var lastDetectionWasDefinitive: Bool = true
     
     /// Error message for security operations
     var error: String?
@@ -55,11 +61,14 @@ class SecurityService {
     }
     
     // MARK: - Static Lightweight Detection
-    
+
     /// Lightweight synchronous check for wallet existence (no dependencies required)
     /// Use this for early app initialization before full service stack is available
-    /// - Returns: `true` if a mnemonic exists in the Keychain, `false` otherwise
-    static func hasMnemonicInKeychain() -> Bool {
+    ///
+    /// Distinguishes "the item definitively does not exist" from "the keychain could not
+    /// be read right now" (e.g. errSecInteractionNotAllowed when protected data is not yet
+    /// available at cold launch / prewarming). Only `.notFound` may ever route to onboarding.
+    nonisolated static func mnemonicKeychainStatus() -> MnemonicKeychainStatus {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: "com.arke.wallet",
@@ -67,16 +76,68 @@ class SecurityService {
             kSecMatchLimit as String: kSecMatchLimitOne,
             kSecAttrSynchronizable as String: true  // Match the save operation
         ]
-        
-        let exists = SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
-        
-        #if DEBUG
-        print("🔍 [SecurityService.static] Keychain mnemonic check: \(exists ? "✅ Found" : "⚠️ Not found") at \(Date())")
-        #endif
-        
-        return exists
+
+        let status = SecItemCopyMatching(query as CFDictionary, nil)
+
+        switch status {
+        case errSecSuccess:
+            logger.debug("Keychain mnemonic check: found")
+            return .found
+        case errSecItemNotFound:
+            logger.info("Keychain mnemonic check: definitively not found (errSecItemNotFound)")
+            return .notFound
+        default:
+            logger.warning("Keychain mnemonic check indeterminate: OSStatus \(status)")
+            return .unavailable(status)
+        }
     }
     
+    // MARK: - Local Wallet Evidence
+
+    /// UserDefaults key marking that a wallet was created or imported on this install.
+    /// Used as a tiebreaker when the keychain is unreadable: a device that ran a wallet
+    /// before must never be routed to onboarding on an indeterminate check.
+    private nonisolated static let hasRunWalletLocallyKey = "com.arke.wallet.hasRunLocally"
+
+    /// Records that a wallet demonstrably exists on this install
+    nonisolated static func recordLocalWalletEvidence() {
+        UserDefaults.standard.set(true, forKey: hasRunWalletLocallyKey)
+    }
+
+    /// Clears the local wallet evidence after deliberate wallet deletion
+    nonisolated static func clearLocalWalletEvidence() {
+        UserDefaults.standard.removeObject(forKey: hasRunWalletLocallyKey)
+        logger.info("Cleared local wallet evidence")
+    }
+
+    /// True if this install shows signs of having run a wallet: the UserDefaults
+    /// breadcrumb, or the bark database on disk (covers installs predating the flag).
+    nonisolated static func hasLocalWalletEvidence() -> Bool {
+        if UserDefaults.standard.bool(forKey: hasRunWalletLocallyKey) {
+            return true
+        }
+        return localWalletDatabaseExists()
+    }
+
+    /// Checks for the bark wallet database on disk.
+    /// Path mirrors `BarkWalletFFI.getWalletDirectory()` (also duplicated in
+    /// `WalletManager.getWalletDirectory()`); no directories are created here.
+    private nonisolated static func localWalletDatabaseExists() -> Bool {
+        guard let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first else {
+            return false
+        }
+
+        let databaseURL = appSupport
+            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "GBKS.Arke")
+            .appendingPathComponent("bark-data-ffi")
+            .appendingPathComponent("bark.sqlite")
+
+        return FileManager.default.fileExists(atPath: databaseURL.path)
+    }
+
     // MARK: - Wallet State Detection
     
     /// Detects if user has a wallet on another device
@@ -160,10 +221,18 @@ class SecurityService {
         }
         Self.logger.debug("Wallet state detection: checking local keychain...")
 
-        // 1. Check local keychain first (instant)
-        if self.hasMnemonic() {
+        // 1. Check local keychain first (retries briefly if the keychain is unavailable)
+        let mnemonicStatus = await resolveMnemonicStatus()
+
+        switch mnemonicStatus {
+        case .found:
+            lastDetectionWasDefinitive = true
+
+            // Self-healing breadcrumb for installs that predate the evidence flag
+            Self.recordLocalWalletEvidence()
+
             Self.logger.debug("Wallet state detection: mnemonic found, checking device primary status...")
-            
+
             // 1.5. Check if this device is the primary device
             // If wallet exists but device is not primary, return walletActiveElsewhere
             if let modelContext = self.modelContext {
@@ -171,38 +240,59 @@ class SecurityService {
                     return state
                 }
             }
-            
+
             return .walletWithSeed
+
+        case .unavailable(let osStatus):
+            // Retries exhausted and the keychain still can't be read: the answer is
+            // unknown, not "no wallet". Never route to onboarding from here.
+            lastDetectionWasDefinitive = false
+
+            let hasCloudHash = self.getUbiquitousHash() != nil
+            let hasLocalEvidence = Self.hasLocalWalletEvidence()
+
+            if hasCloudHash || hasLocalEvidence {
+                // Some signal says a wallet exists — assume the seed is present too
+                // (low confidence). Callers observing `lastDetectionWasDefinitive ==
+                // false` should re-detect once the keychain becomes readable.
+                Self.logger.error("Keychain unavailable after retries (OSStatus \(osStatus)) but wallet signals present (kvsHash=\(hasCloudHash), localEvidence=\(hasLocalEvidence)) — assuming wallet exists (low confidence)")
+                return .walletWithSeed
+            }
+
+            // No corroborating signal anywhere: treat as fresh install. Wallet creation
+            // will surface keychain errors on its own if the keychain is truly broken.
+            Self.logger.error("Keychain unavailable after retries (OSStatus \(osStatus)), no KVS hash, no local evidence — treating as fresh install (low confidence)")
+            return .noWallet
+
+        case .notFound:
+            lastDetectionWasDefinitive = true
         }
-        
+
         Self.logger.debug("Wallet state detection: no local mnemonic, checking iCloud KVS...")
 
         // 2. Check NSUbiquitousKeyValueStore for synced hash
         // This is the single source of truth for cross-device wallet detection
         if self.getUbiquitousHash() != nil {
-            // Wallet exists on another device
-            // Check if this device is registered and whether it should have read-only access
+            // Wallet exists on this iCloud account but the seed hasn't reached this
+            // device (iCloud Keychain off or lagging). Route into read-only mode; the
+            // caller registers this device and initializes with forceReadOnly. The
+            // sheet explains the missing key (ReadOnlyReason.seedNotSynced) and offers
+            // recovery phrase entry. Registration status doesn't change the routing,
+            // only the primary-device name we can show.
+            var primaryDeviceName = "Another Device"
             if self.modelContext != nil {
                 do {
-                    // Get device registration service
                     let deviceService = ServiceContainer.shared.deviceRegistrationService
-                    
-                    // Check if this device is registered
-                    if try await deviceService.getCurrentDevice() != nil {
-                        // Device is registered - it's a secondary device with read-only access
-                        let primaryDevice = try await deviceService.getPrimaryDevice()
-                        let primaryDeviceName = primaryDevice?.deviceName ?? "Another Device"
-                        
-                        Self.logger.info("📱 Device is registered as secondary (no seed) - enabling read-only mode")
-                        return .walletActiveElsewhere(deviceName: primaryDeviceName)
+                    if let primaryDevice = try await deviceService.getPrimaryDevice() {
+                        primaryDeviceName = primaryDevice.deviceName
                     }
                 } catch {
-                    Self.logger.warning("⚠️ Failed to check device registration: \(error)")
+                    Self.logger.warning("⚠️ Failed to look up primary device: \(error)")
                 }
             }
-            
-            // Device not registered or check failed - return walletWithoutSeed
-            return .walletWithoutSeed
+
+            Self.logger.info("📱 Wallet hash found but no local seed - entering read-only mode (seed not synced)")
+            return .walletActiveElsewhere(deviceName: primaryDeviceName)
         }
         
         Self.logger.debug("Wallet state detection: no wallet found anywhere")
@@ -214,64 +304,51 @@ class SecurityService {
     
     /// Saves mnemonic to keychain and syncs via iCloud Keychain
     /// Note: Device registration should be done by coordinator after this call
-    func saveMnemonic(_ mnemonic: String, requireBiometric: Bool = false) async throws {
+    ///
+    /// The item is always synchronizable and never ACL-protected (Decision B in
+    /// STARTUP_WALLET_DETECTION_PLAN.md): a keychain ACL would block iCloud Keychain
+    /// sync (the basis of the multi-device story) and break the existence checks that
+    /// route the launch screen. Biometric gating happens at the app level via
+    /// `authenticateUser()` instead.
+    ///
+    /// Uses update-then-add so a failed write never deletes the existing item.
+    func saveMnemonic(_ mnemonic: String) async throws {
         let startTime = CFAbsoluteTimeGetCurrent()
-        
+
         guard let data = mnemonic.data(using: .utf8) else {
             throw WalletError.encodingFailed
         }
-        
-        var query: [String: Any] = [
+
+        let baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: mnemonicAccount,
-            kSecValueData as String: data,
             kSecAttrSynchronizable as String: true  // Sync via iCloud Keychain
         ]
-        
-        // Set access control based on biometric requirement
-        if requireBiometric {
-            // Use SecAccessControl for biometric protection
-            var error: Unmanaged<CFError>?
-            guard let access = SecAccessControlCreateWithFlags(
-                nil,
-                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-                .biometryCurrentSet,
-                &error
-            ) else {
-                if let error = error?.takeRetainedValue() {
-                    print("⚠️ Failed to create SecAccessControl: \(error)")
-                    throw WalletError.keychainError(errSecParam)
-                }
-                throw WalletError.keychainError(errSecParam)
-            }
-            query[kSecAttrAccessControl as String] = access
-        } else {
-            // Use simple accessibility without biometric requirement
-            // Use kSecAttrAccessibleWhenUnlocked (not ThisDeviceOnly) to allow iCloud Keychain sync
-            query[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
-        }
-        
-        // Delete existing entry first (use a clean query with only identifying attributes)
-        let deleteQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: mnemonicAccount,
-            kSecAttrSynchronizable as String: true
+
+        // Use kSecAttrAccessibleWhenUnlocked (not ThisDeviceOnly) to allow iCloud Keychain sync
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
         ]
-        let deleteStartTime = CFAbsoluteTimeGetCurrent()
-        SecItemDelete(deleteQuery as CFDictionary)
-        let deleteTime = CFAbsoluteTimeGetCurrent() - deleteStartTime
-        Self.logger.info("⏱️ [PROFILE] Keychain delete took \(String(format: "%.3f", deleteTime))s")
-        
-        // Add new entry
-        let addStartTime = CFAbsoluteTimeGetCurrent()
-        let status = SecItemAdd(query as CFDictionary, nil)
+
+        let writeStartTime = CFAbsoluteTimeGetCurrent()
+        var status = SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary)
+
+        if status == errSecItemNotFound {
+            let addQuery = baseQuery.merging(attributes) { _, new in new }
+            status = SecItemAdd(addQuery as CFDictionary, nil)
+        }
+
         guard status == errSecSuccess else {
+            Self.logger.error("saveMnemonic failed with OSStatus \(status) - existing item (if any) left untouched")
             throw WalletError.keychainError(status)
         }
-        let addTime = CFAbsoluteTimeGetCurrent() - addStartTime
-        Self.logger.info("⏱️ [PROFILE] Keychain add took \(String(format: "%.3f", addTime))s")
+        let writeTime = CFAbsoluteTimeGetCurrent() - writeStartTime
+        Self.logger.info("⏱️ [PROFILE] Keychain write took \(String(format: "%.3f", writeTime))s")
+
+        // Breadcrumb: this install has a wallet (covers both create and import)
+        Self.recordLocalWalletEvidence()
         
         // Save hash to ubiquitous store for cross-device wallet detection
         let hashStartTime = CFAbsoluteTimeGetCurrent()
@@ -306,6 +383,7 @@ class SecurityService {
             if status == errSecItemNotFound {
                 return nil
             }
+            Self.logger.error("loadMnemonic failed with OSStatus \(status)")
             throw WalletError.keychainError(status)
         }
         
@@ -316,17 +394,31 @@ class SecurityService {
         return String(data: data, encoding: .utf8)
     }
     
-    /// Checks if mnemonic exists in keychain
+    /// Checks if mnemonic exists in keychain.
+    ///
+    /// Note: a `false` here means "not confirmed present" — it does NOT prove absence
+    /// (the keychain may be temporarily unreadable). Callers that route UI on absence
+    /// must use `mnemonicKeychainStatus()` and require `.notFound`.
     func hasMnemonic() -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: mnemonicAccount,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecAttrSynchronizable as String: true  // Match the save operation
-        ]
-        
-        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+        return Self.mnemonicKeychainStatus() == .found
+    }
+
+    /// Checks the mnemonic keychain status, retrying while the keychain is unavailable.
+    /// Bounded backoff (~2s worst case) for transient failures like
+    /// errSecInteractionNotAllowed shortly after launch, before protected data is ready.
+    private func resolveMnemonicStatus() async -> MnemonicKeychainStatus {
+        var status = Self.mnemonicKeychainStatus()
+        var delayMilliseconds = 300
+
+        for attempt in 1...3 {
+            guard case .unavailable = status else { break }
+            Self.logger.warning("Keychain unavailable, retry \(attempt)/3 in \(delayMilliseconds)ms...")
+            try? await Task.sleep(for: .milliseconds(delayMilliseconds))
+            delayMilliseconds *= 2
+            status = Self.mnemonicKeychainStatus()
+        }
+
+        return status
     }
     
     /// Handles seed import after QR code scan
@@ -375,7 +467,10 @@ class SecurityService {
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw WalletError.keychainError(status)
         }
-        
+
+        // Deliberate deletion: this install no longer has a wallet
+        Self.clearLocalWalletEvidence()
+
         #if DEBUG
         print("🗑️ [SecurityService] Deleted mnemonic from Keychain")
         print("   ℹ️  Coordinator should call DeviceRegistrationService.unregisterCurrentDevice() next")
@@ -778,12 +873,22 @@ class SecurityService {
 
 // MARK: - Supporting Types
 
+/// Result of a keychain existence check for the wallet mnemonic.
+/// `.unavailable` means the keychain could not be read (transient at cold launch);
+/// it must never be treated as proof of absence.
+enum MnemonicKeychainStatus: Equatable {
+    case found
+    case notFound              // errSecItemNotFound — definitively absent
+    case unavailable(OSStatus) // any other error — answer unknown right now
+}
+
 enum WalletState: Equatable {
     case unknown                // Initial state, not yet checked
     case noWallet              // No wallet exists anywhere
-    case walletWithoutSeed     // CloudKit has data, but no local seed
     case walletWithSeed        // Full wallet with local seed
-    case walletActiveElsewhere(deviceName: String)  // Wallet exists locally but device is not primary
+    case walletActiveElsewhere(deviceName: String)  // Wallet exists but this device can't spend
+                                                    // (not primary, or seed not synced here yet -
+                                                    // see ConnectionStatus.readOnlyReason)
 }
 
 enum MnemonicValidationResult {

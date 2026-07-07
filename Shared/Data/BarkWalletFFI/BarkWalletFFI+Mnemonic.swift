@@ -82,15 +82,10 @@ extension BarkWalletFFI {
         
         Self.logger.info("Storing mnemonic securely via SecurityService (Keychain)")
         do {
-            // Store with biometric protection if available
-            let useBiometric = securityService.biometricsAvailable()
-            try await securityService.saveMnemonic(mnemonic, requireBiometric: useBiometric)
-            
-            if useBiometric {
-                Self.logger.info("Mnemonic stored securely in Keychain with biometric protection enabled")
-            } else {
-                Self.logger.info("Mnemonic stored securely in Keychain")
-            }
+            // Always stored synchronizable without a keychain ACL - biometric gating
+            // happens at the app level (see Decision B in STARTUP_WALLET_DETECTION_PLAN.md)
+            try await securityService.saveMnemonic(mnemonic)
+            Self.logger.info("Mnemonic stored securely in Keychain")
         } catch {
             Self.logger.error("SecurityService storage failed: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to store mnemonic securely: \(error.localizedDescription)")

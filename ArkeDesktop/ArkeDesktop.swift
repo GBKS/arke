@@ -53,8 +53,15 @@ struct Arke_desktop: App {
     /// Performs lightweight wallet check before app initialization
     /// This determines whether to activate services and sync
     init() {
-        let hasWallet = SecurityService.hasMnemonicInKeychain()
-        
+        // Early check is a fast-path hint only: a positive result is trustworthy, a
+        // negative one is not (keychain may be transiently unreadable). MainView's
+        // deeper detection re-checks with retries whenever this is false.
+        let earlyStatus = SecurityService.mnemonicKeychainStatus()
+        if case .unavailable(let osStatus) = earlyStatus {
+            print("⚠️ [App Init] Early wallet check indeterminate (OSStatus \(osStatus)) - deferring to deeper detection")
+        }
+        let hasWallet = earlyStatus == .found
+
         // Store the detection result (must be done before calling serviceContainer.setActive)
         self.initialWalletDetected = hasWallet
         

@@ -1,1479 +1,1549 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "": {},
-    "%@ – %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ – %2$@"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "." : {
+
+    },
+    "(%@)" : {
+
+    },
+    "%@ – %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ – %2$@"
           }
         }
       }
+    },
+    "%lld/30" : {
+
     },
-    "%lld/30": {},
-    "(%@)": {},
-    ".": {},
-    "A forced move is meant for emergencies.": {},
-    "Add a note...": {},
-    "Address identicon": {},
-    "Ark Server": {},
-    "Cannot use: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cannot use: %@"
+    "A forced move is meant for emergencies." : {
+
+    },
+    "accessibility_amount_field" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send amount"
           }
         }
       }
     },
-    "Connection Status": {},
-    "Done": {},
-    "Estimated fee": {},
-    "If you're experiencing connection issues, try:": {},
-    "Increase your savings balance to cover the fee.": {},
-    "Insufficient Balance": {},
-    "Read-Only Mode": {},
-    "Test Network": {},
-    "This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device.": {},
-    "Troubleshooting": {},
-    "You are connected to %@, a test network for development and experimentation.": {},
-    "You are still connected to the server. If it still cooperates and you just want to move bitcoin from payments to savings, use the respective option in the balance details view.": {},
-    "accessibility_amount_field": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send amount"
+    "accessibility_amount_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount"
           }
         }
       }
     },
-    "accessibility_amount_label": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount"
+    "accessibility_amount_label_with_unit" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount in %@"
           }
         }
       }
+    },
+    "accessibility_amount_label_with_unit %@" : {
+
     },
-    "accessibility_amount_label_with_unit": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount in %@"
+    "accessibility_color_swatch %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color option %lld"
           }
         }
       }
     },
-    "accessibility_amount_label_with_unit %@": {},
-    "accessibility_color_swatch %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Color option %lld"
+    "accessibility_fee_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee"
           }
         }
       }
     },
-    "accessibility_fee_label": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee"
+    "accessibility_hint_change_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens fee selection"
           }
         }
       }
     },
-    "accessibility_hint_change_fee": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens fee selection"
+    "accessibility_hint_choose_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the color picker"
           }
         }
       }
     },
-    "accessibility_hint_choose_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the color picker"
+    "accessibility_hint_choose_emoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the emoji picker"
           }
         }
       }
     },
-    "accessibility_hint_choose_emoji": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens the emoji picker"
+    "accessibility_hint_copy_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the Lightning invoice to the clipboard"
           }
         }
       }
     },
-    "accessibility_hint_copy_invoice": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copies the Lightning invoice to the clipboard"
+    "accessibility_hint_copy_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the value to the clipboard"
           }
         }
       }
     },
-    "accessibility_hint_copy_value": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copies the value to the clipboard"
+    "accessibility_hint_finalize_claim" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a confirmation to withdraw to your savings balance"
           }
         }
       }
     },
-    "accessibility_hint_finalize_claim": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opens a confirmation to withdraw to your savings balance"
+    "accessibility_hint_select_destination" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selects this payment destination"
           }
         }
       }
     },
-    "accessibility_hint_select_destination": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selects this payment destination"
+    "accessibility_hint_set_max" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets the amount to your maximum spendable balance. Activate again to clear."
           }
         }
       }
     },
-    "accessibility_hint_set_max": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sets the amount to your maximum spendable balance. Activate again to clear."
+    "accessibility_hint_start_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes your balance now"
           }
         }
       }
     },
-    "accessibility_hint_start_refresh": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Refreshes your balance now"
+    "accessibility_note_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note"
           }
         }
       }
     },
-    "accessibility_note_label": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note"
+    "accessibility_value_exceeds_balance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exceeds available balance"
           }
         }
       }
     },
-    "accessibility_value_exceeds_balance": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exceeds available balance"
+    "accessibility_value_fee_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not yet estimated"
           }
         }
       }
     },
-    "accessibility_value_fee_pending": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not yet estimated"
+    "accessibility_value_fee_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not available"
           }
         }
       }
     },
-    "accessibility_value_fee_unavailable": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not available"
+    "action_change_emoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change emoji"
           }
         }
       }
     },
-    "action_change_emoji": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change emoji"
+    "action_choose_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose color"
           }
         }
       }
     },
-    "action_choose_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose color"
+    "action_choose_custom_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose custom color"
           }
         }
       }
     },
-    "action_choose_custom_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose custom color"
+    "action_choose_emoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose emoji"
           }
         }
       }
     },
-    "action_choose_emoji": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose emoji"
+    "action_copy_address" : {
+
+    },
+    "action_copy_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy invoice"
           }
         }
       }
     },
-    "action_copy_address": {},
-    "action_copy_invoice": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy invoice"
+    "action_copy_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy value"
           }
         }
       }
     },
-    "action_copy_value": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy value"
+    "action_dismiss_error" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dismiss error"
           }
         }
       }
+    },
+    "action_start_forced_move" : {
+
     },
-    "action_dismiss_error": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dismiss error"
+    "action_tap_copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to copy"
           }
         }
       }
     },
-    "action_start_forced_move": {},
-    "action_tap_copy": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap to copy"
+    "Add a note..." : {
+
+    },
+    "Address identicon" : {
+
+    },
+    "address_format_ark_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark protocol addresses for off-chain payments"
           }
         }
       }
     },
-    "address_format_ark_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ark protocol addresses for off-chain payments"
+    "address_format_ark_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark Address"
           }
         }
       }
     },
-    "address_format_ark_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ark Address"
+    "address_format_bip21_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin URIs with embedded payment details"
           }
         }
       }
     },
-    "address_format_bip21_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitcoin URIs with embedded payment details"
+    "address_format_bip21_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BIP-21 Payment URI"
           }
         }
       }
     },
-    "address_format_bip21_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BIP-21 Payment URI"
+    "address_format_bip353_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Human-readable Bitcoin addresses using DNS"
           }
         }
       }
     },
-    "address_format_bip353_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Human-readable Bitcoin addresses using DNS"
+    "address_format_bip353_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BIP-353 Address"
           }
         }
       }
     },
-    "address_format_bip353_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BIP-353 Address"
+    "address_format_bitcoin_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard Bitcoin addresses (P2PKH, P2SH, Bech32)"
           }
         }
       }
     },
-    "address_format_bitcoin_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standard Bitcoin addresses (P2PKH, P2SH, Bech32)"
+    "address_format_bitcoin_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Address"
           }
         }
       }
     },
-    "address_format_bitcoin_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitcoin Address"
+    "address_format_lightning_address_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Human-readable Lightning payment addresses"
           }
         }
       }
     },
-    "address_format_lightning_address_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Human-readable Lightning payment addresses"
+    "address_format_lightning_address_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning Address"
           }
         }
       }
     },
-    "address_format_lightning_address_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lightning Address"
+    "address_format_lightning_invoice_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning network payment requests"
           }
         }
       }
     },
-    "address_format_lightning_invoice_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lightning network payment requests"
+    "address_format_lightning_invoice_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightning Invoice"
           }
         }
       }
     },
-    "address_format_lightning_invoice_title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lightning Invoice"
+    "address_review_sheet_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review Address"
           }
         }
       }
+    },
+    "Ark Server" : {
+
+    },
+    "balance_amount_to_recover" : {
+
     },
-    "address_review_sheet_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Review Address"
+    "balance_confirm_withdraw" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Withdraw %@ to your savings balance?"
           }
         }
       }
     },
-    "balance_amount_to_recover": {},
-    "balance_confirm_withdraw": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Withdraw %@ to your savings balance?"
+    "balance_emergency_move_help" : {
+
+    },
+    "balance_final_step_fee" : {
+
+    },
+    "balance_no_bitcoin_payments" : {
+
+    },
+    "button_cancel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
           }
         }
       }
     },
-    "balance_emergency_move_help": {},
-    "balance_final_step_fee": {},
-    "balance_no_bitcoin_payments": {},
-    "button_cancel": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+    "button_choose_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Color"
           }
         }
       }
     },
-    "button_choose_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose Color"
+    "button_choose_emoji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Emoji"
           }
         }
       }
     },
-    "button_choose_emoji": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose Emoji"
+    "button_clear" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
           }
         }
       }
     },
-    "button_clear": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clear"
+    "button_close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
           }
         }
       }
     },
-    "button_close": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Close"
+    "button_done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
           }
         }
       }
     },
-    "button_done": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done"
+    "button_finalize" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalize"
           }
         }
       }
     },
-    "button_finalize": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalize"
+    "button_finalize_claim" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalize Claim"
           }
         }
       }
     },
-    "button_finalize_claim": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalize Claim"
+    "button_finalize_withdrawal" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalize Withdrawal"
           }
         }
       }
     },
-    "button_finalize_withdrawal": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalize Withdrawal"
+    "button_retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
           }
         }
       }
     },
-    "button_retry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retry"
+    "button_start" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
           }
         }
       }
     },
-    "button_start": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start"
+    "button_use_custom_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use Custom Color"
           }
         }
       }
     },
-    "button_use_custom_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use Custom Color"
+    "Cannot use: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot use: %@"
           }
         }
       }
+    },
+    "Connection Status" : {
+
+    },
+    "data_network_support_note" : {
+
     },
-    "data_network_support_note": {},
-    "data_server": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server: %@"
+    "data_server" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server: %@"
           }
         }
       }
     },
-    "description_bitcoin_formatter_demo": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This view demonstrates how Bitcoin amounts are formatted based on your selected format preference and system locale."
+    "description_bitcoin_formatter_demo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This view demonstrates how Bitcoin amounts are formatted based on your selected format preference and system locale."
           }
         }
       }
     },
-    "emoji_category_activities": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activities"
+    "Done" : {
+
+    },
+    "emoji_category_activities" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activities"
           }
         }
       }
     },
-    "emoji_category_food_drink": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Food & Drink"
+    "emoji_category_food_drink" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Food & Drink"
           }
         }
       }
     },
-    "emoji_category_money": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Money"
+    "emoji_category_money" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Money"
           }
         }
       }
     },
-    "emoji_category_objects": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Objects"
+    "emoji_category_objects" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects"
           }
         }
       }
     },
-    "emoji_category_recent": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recent"
+    "emoji_category_recent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent"
           }
         }
       }
     },
-    "emoji_category_shopping": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shopping"
+    "emoji_category_shopping" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shopping"
           }
         }
       }
     },
-    "emoji_category_symbols": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Symbols"
+    "emoji_category_symbols" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbols"
           }
         }
       }
     },
-    "emoji_category_transportation": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Transportation"
+    "emoji_category_transportation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transportation"
           }
         }
       }
+    },
+    "Enter Recovery Phrase" : {
+
     },
-    "error_copy": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copy Error"
+    "error_copy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Error"
           }
         }
       }
     },
-    "error_refresh_failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Refresh Failed"
+    "error_refresh_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh Failed"
           }
         }
       }
     },
-    "error_since_regrets": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincere regrets"
+    "error_since_regrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincere regrets"
           }
         }
       }
     },
-    "error_tag_already_exists": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A tag with this name already exists"
+    "error_tag_already_exists" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tag with this name already exists"
           }
         }
       }
     },
-    "fee_priority_fast": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fast"
+    "Estimated fee" : {
+
+    },
+    "fee_priority_fast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast"
           }
         }
       }
     },
-    "fee_priority_fast_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Higher fee for faster confirmation"
+    "fee_priority_fast_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Higher fee for faster confirmation"
           }
         }
       }
     },
-    "fee_priority_fast_time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~10-20 min"
+    "fee_priority_fast_time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~10-20 min"
           }
         }
       }
     },
-    "fee_priority_medium": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Medium"
+    "fee_priority_medium" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medium"
           }
         }
       }
     },
-    "fee_priority_medium_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Balanced fee and confirmation time"
+    "fee_priority_medium_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balanced fee and confirmation time"
           }
         }
       }
     },
-    "fee_priority_medium_time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~30-60 min"
+    "fee_priority_medium_time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~30-60 min"
           }
         }
       }
     },
-    "fee_priority_slow": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Slow"
+    "fee_priority_slow" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slow"
           }
         }
       }
     },
-    "fee_priority_slow_description": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lower fee with longer confirmation time"
+    "fee_priority_slow_description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lower fee with longer confirmation time"
           }
         }
       }
     },
-    "fee_priority_slow_time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~1-2 hours"
+    "fee_priority_slow_time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~1-2 hours"
           }
         }
       }
     },
-    "format_accounting_style": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accounting Style (Symbol at End)"
+    "format_accounting_style" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accounting Style (Symbol at End)"
           }
         }
       }
     },
-    "format_example_with_placeholder": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Example: %@"
+    "format_example_with_placeholder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Example: %@"
           }
         }
       }
     },
-    "format_fee_approximate": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "approximately %@"
+    "format_fee_approximate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "approximately %@"
           }
         }
       }
     },
-    "format_fee_estimate": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee: ~%@"
+    "format_fee_estimate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: ~%@"
           }
         }
       }
     },
-    "format_less_than_minute": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "< 1m"
+    "format_less_than_minute" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "< 1m"
           }
         }
       }
     },
-    "format_network": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Network: %@"
+    "format_network" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network: %@"
           }
         }
       }
     },
-    "format_time_ago": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ ago"
+    "format_time_ago" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ago"
           }
         }
       }
     },
-    "format_with_sign_prefixes": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "With Sign Prefixes"
+    "format_with_sign_prefixes" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With Sign Prefixes"
           }
         }
       }
     },
-    "format_zero": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "0"
+    "format_zero" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0"
           }
         }
       }
     },
-    "hint_change_settings_formats": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change in Settings to see different formats"
+    "hint_change_settings_formats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change in Settings to see different formats"
           }
         }
       }
+    },
+    "If you're experiencing connection issues, try:" : {
+
     },
-    "label_amount": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount"
+    "Increase your savings balance to cover the fee." : {
+
+    },
+    "Insufficient Balance" : {
+
+    },
+    "label_amount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount"
           }
         }
       }
     },
-    "label_amount_colon": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount:"
+    "label_amount_colon" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount:"
           }
         }
       }
     },
-    "label_amount_examples": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount Examples"
+    "label_amount_examples" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount Examples"
           }
         }
       }
     },
-    "label_amount_to_refresh": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount to refresh"
+    "label_amount_to_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount to refresh"
           }
         }
       }
     },
-    "label_color": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Color"
+    "label_color" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color"
           }
         }
       }
     },
-    "label_current_format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Current Format"
+    "label_current_format" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Format"
           }
         }
       }
     },
-    "label_emoji_optional": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emoji (Optional)"
+    "label_emoji_optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emoji (Optional)"
           }
         }
       }
     },
-    "label_fee": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee"
+    "label_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee"
           }
         }
       }
     },
-    "label_fee_colon": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee:"
+    "label_fee_colon" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee:"
           }
         }
       }
     },
-    "label_fee_pending": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee: —"
+    "label_fee_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: —"
           }
         }
       }
     },
-    "label_free": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free"
+    "label_free" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
           }
         }
       }
     },
-    "label_known_address": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Known address"
+    "label_known_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Known address"
           }
         }
       }
     },
-    "label_label_colon": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Label:"
+    "label_label_colon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label:"
           }
         }
       }
     },
-    "label_linked_to_contacts": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Linked to Contacts"
+    "label_linked_to_contacts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linked to Contacts"
           }
         }
       }
     },
-    "label_message_colon": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Message:"
+    "label_message_colon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message:"
           }
         }
       }
     },
-    "label_minimum": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minimum"
+    "label_minimum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum"
           }
         }
       }
     },
-    "label_name": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Name"
+    "label_name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
           }
         }
       }
     },
-    "label_next_round": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next round"
+    "label_next_round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next round"
           }
         }
       }
     },
-    "label_payments_balance_refresh": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Payments balance refresh"
+    "label_payments_balance_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payments balance refresh"
           }
         }
       }
     },
-    "label_preview": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preview"
+    "label_preview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview"
           }
         }
       }
     },
-    "label_received": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Received:"
+    "label_received" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Received:"
           }
         }
       }
     },
-    "label_selected": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Selected:"
+    "label_selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected:"
           }
         }
       }
     },
-    "label_sent": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sent:"
+    "label_sent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent:"
           }
         }
       }
     },
-    "label_status": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Status"
+    "label_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
           }
         }
       }
     },
-    "label_time_until_expiry": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time until expiry"
+    "label_time_until_expiry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time until expiry"
           }
         }
       }
     },
-    "label_transaction_formatting_examples": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Transaction Formatting Examples"
+    "label_transaction_formatting_examples" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction Formatting Examples"
           }
         }
       }
+    },
+    "message_cannot_cancel" : {
+
+    },
+    "message_hourly_checkin_required" : {
+
     },
-    "message_cannot_cancel": {},
-    "message_hourly_checkin_required": {},
-    "message_not_needed_empty_balance": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not needed for empty balance"
+    "message_not_needed_empty_balance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not needed for empty balance"
           }
         }
       }
     },
-    "message_takes_24_hours": {},
-    "nav_title_bitcoin_formatter_examples": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bitcoin Formatter Demo"
+    "message_takes_24_hours" : {
+
+    },
+    "nav_title_bitcoin_formatter_examples" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Formatter Demo"
           }
         }
       }
     },
-    "onboarding_sincere_regrets": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sincere regrets"
+    "onboarding_sincere_regrets" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincere regrets"
           }
         }
       }
     },
-    "placeholder_amount_optional": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add amount (optional)"
+    "placeholder_amount_optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add amount (optional)"
           }
         }
       }
     },
-    "placeholder_amount_required": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount (required)"
+    "placeholder_amount_required" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount (required)"
           }
         }
       }
     },
-    "placeholder_enter_amount": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter amount"
+    "placeholder_enter_amount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter amount"
           }
         }
       }
     },
-    "placeholder_name_preview": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter a name to see preview"
+    "placeholder_name_preview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter a name to see preview"
           }
         }
       }
     },
-    "placeholder_note_optional": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Note (optional)"
+    "placeholder_note_optional" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note (optional)"
           }
         }
       }
     },
-    "placeholder_tag_name": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter tag name"
+    "placeholder_tag_name" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter tag name"
           }
         }
       }
+    },
+    "Read-Only Mode" : {
+
     },
-    "receive_add_amount_note": {},
-    "receive_address_formats": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Address formats"
+    "receive_add_amount_note" : {
+
+    },
+    "receive_address_formats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address formats"
           }
         }
       }
     },
-    "send_amount_fixed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount is fixed"
+    "send_amount_fixed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount is fixed"
           }
         }
       }
     },
-    "send_amount_to_pay": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Amount to pay:"
+    "send_amount_to_pay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount to pay:"
           }
         }
       }
     },
-    "status_added": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Added %@"
+    "status_added" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added %@"
           }
         }
       }
     },
-    "status_available": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available"
+    "status_available" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available"
           }
         }
       }
     },
-    "status_calculating": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Calculating..."
+    "status_calculating" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calculating..."
           }
         }
       }
     },
-    "status_copied": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copied"
+    "status_copied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
           }
         }
       }
     },
-    "status_copied_exclaim": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copied!"
+    "status_copied_exclaim" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied!"
           }
         }
       }
     },
-    "status_expired": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expired"
+    "status_expired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expired"
           }
         }
       }
     },
-    "status_fee_unavailable": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fee: Not available"
+    "status_fee_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee: Not available"
           }
         }
       }
     },
-    "status_finalizing": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizing..."
+    "status_finalizing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizing..."
           }
         }
       }
     },
-    "status_invoice_generated": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invoice generated"
+    "status_invoice_generated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice generated"
           }
         }
       }
     },
-    "status_last_synced": {
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Last synced %@"
+    "status_last_synced" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last synced %@"
           }
         }
       }
     },
-    "status_loading": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loading"
+    "status_loading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading"
           }
         }
       }
     },
-    "status_ready_finalize": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ready to Finalize Withdrawal"
+    "status_ready_finalize" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to Finalize Withdrawal"
           }
         }
       }
     },
-    "status_refreshing": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Refreshing"
+    "status_refreshing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshing"
           }
         }
       }
     },
-    "status_withdrawal_complete": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Withdrawal Complete"
+    "status_withdrawal_complete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Withdrawal Complete"
           }
         }
       }
     },
-    "status_withdrawal_progress": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Withdrawal In Progress"
+    "status_withdrawal_progress" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Withdrawal In Progress"
           }
         }
       }
     },
-    "symbol_bitcoin": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "₿"
+    "symbol_bitcoin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "₿"
           }
         }
       }
     },
-    "symbol_ellipsis": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "…"
+    "symbol_ellipsis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "…"
           }
         }
       }
+    },
+    "Test Network" : {
+
+    },
+    "This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device." : {
+
+    },
+    "This device is viewing wallet data synced via iCloud. Your wallet key hasn't arrived on this device yet — it usually syncs on its own through iCloud Keychain." : {
+
+    },
+    "Troubleshooting" : {
+
+    },
+    "You are connected to %@, a test network for development and experimentation." : {
+
+    },
+    "You are still connected to the server. If it still cooperates and you just want to move bitcoin from payments to savings, use the respective option in the balance details view." : {
+
     }
   },
-  "version": "1.1"
+  "version" : "1.1"
 }

@@ -424,6 +424,7 @@
       }
     },
     "accessibility_delete_wallet_hint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1178,6 +1179,7 @@
       }
     },
     "action_delete_existing_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1691,6 +1693,7 @@
       }
     },
     "alert_delete_wallet_permanently" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3032,6 +3035,7 @@
       }
     },
     "button_delete_wallet_data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6262,16 +6266,6 @@
     "Notes" : {
 
     },
-    "notification_error_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notification Error"
-          }
-        }
-      }
-    },
     "notification_error_permission_denied" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -6290,6 +6284,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Failed to register: %@"
+          }
+        }
+      }
+    },
+    "notification_error_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Error"
           }
         }
       }
@@ -7340,6 +7344,26 @@
         }
       }
     },
+    "settings_address_patterns" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address Patterns"
+          }
+        }
+      }
+    },
+    "settings_address_patterns_hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show unique visual patterns to help identify addresses"
+          }
+        }
+      }
+    },
     "settings_backup_print" : {
       "localizations" : {
         "en" : {
@@ -7366,26 +7390,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose how bitcoin amounts are displayed throughout the app."
-          }
-        }
-      }
-    },
-    "settings_address_patterns" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Address Patterns"
-          }
-        }
-      }
-    },
-    "settings_address_patterns_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show unique visual patterns to help identify addresses"
           }
         }
       }
@@ -7637,26 +7641,6 @@
         }
       }
     },
-    "settings_other_devices" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other Devices (%lld)"
-          }
-        }
-      }
-    },
-    "settings_other_devices_count" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other Devices (%lld)"
-          }
-        }
-      }
-    },
     "settings_notifications" : {
       "localizations" : {
         "en" : {
@@ -7673,6 +7657,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get notified when funds arrive"
+          }
+        }
+      }
+    },
+    "settings_other_devices" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other Devices (%lld)"
+          }
+        }
+      }
+    },
+    "settings_other_devices_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other Devices (%lld)"
           }
         }
       }

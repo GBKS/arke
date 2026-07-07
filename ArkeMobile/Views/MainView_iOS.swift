@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import Combine
 import OSLog
+import ArkeUI
 
 struct MainView_iOS: View {
     /// Logger for main view operations
@@ -17,12 +18,28 @@ struct MainView_iOS: View {
     @State private var hasWallet: Bool = false
     @State private var isCheckingWallet: Bool = true
     @State private var walletState: WalletState = .unknown
+    @State private var lateServicesActivated: Bool = false
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.securityService) private var securityService
     @Environment(\.serviceContainer) private var serviceContainer
     @Environment(\.initialWalletDetected) private var initialWalletDetected
     
+    // MARK: - Late Wallet Detection
+
+    /// Starts the services that the App body gates on `initialWalletDetected`.
+    /// When the early keychain check missed (keychain unavailable at launch) but deeper
+    /// detection finds the wallet, CloudKit sync and remote notification registration
+    /// would otherwise silently never run for this session.
+    private func activateLateDetectedWalletServices() {
+        guard !initialWalletDetected, !lateServicesActivated else { return }
+        lateServicesActivated = true
+
+        Self.logger.info("Wallet found after negative early check - starting CloudKit sync and notification registration")
+        serviceContainer.startCloudKitSync(modelContainer: modelContext.container)
+        UIApplication.shared.registerForRemoteNotifications()
+    }
+
     // MARK: - Device Registration Coordination
     
     /// Registers the current device after wallet detection or creation
@@ -103,7 +120,6 @@ struct MainView_iOS: View {
             } else {
                 // Onboarding sequence when no wallet found
                 OnboardingFlow_iOS(
-                    walletState: walletState,
                     onWalletReady: {
                         // Transition to the wallet UI immediately - createWallet already
                         // set isInitialized and started services, so WalletView_iOS can
@@ -143,14 +159,6 @@ struct MainView_iOS: View {
                             // 6. Register device (NOW ModelContext is available)
                             await registerDeviceIfNeeded()
                         }
-                    },
-                    onWalletDeleted: {
-                        // Re-detect wallet state after deletion
-                        let newState = await securityService.detectWalletState()
-                        await MainActor.run {
-                            walletState = newState
-                            Self.logger.info("Wallet state updated after deletion: \(String(describing: newState))")
-                        }
                     }
                 )
                 .transition(.move(edge: .bottom))
@@ -170,6 +178,10 @@ struct MainView_iOS: View {
 
             // Subscribe to foreground notifications for heartbeat updates
             subscribeToForegroundNotifications()
+
+            // Re-run detection when the keychain becomes readable, in case the launch
+            // check ran while protected data was unavailable
+            subscribeToProtectedDataNotifications()
             
             // Set model context first - fast operation
             Self.logger.debug("Calling walletManager.setModelContext()...")
@@ -193,9 +205,37 @@ struct MainView_iOS: View {
         .onDisappear {
             unsubscribeFromUbiquitousStoreChanges()
             unsubscribeFromForegroundNotifications()
+            unsubscribeFromProtectedDataNotifications()
         }
     }
     
+    // MARK: - Protected Data Notification Handling
+
+    private func subscribeToProtectedDataNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                // Only re-check if the last detection couldn't read the keychain
+                guard !securityService.lastDetectionWasDefinitive else { return }
+                Self.logger.info("Protected data became available after low-confidence detection - re-checking wallet")
+                await checkForExistingWallet()
+            }
+        }
+
+        Self.logger.debug("Subscribed to protected data notifications")
+    }
+
+    private func unsubscribeFromProtectedDataNotifications() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.protectedDataDidBecomeAvailableNotification,
+            object: nil
+        )
+    }
+
     // MARK: - Foreground Notification Handling
     
     private func subscribeToForegroundNotifications() {
@@ -205,11 +245,23 @@ struct MainView_iOS: View {
             queue: .main
         ) { _ in
             Task { @MainActor in
+                // Re-check the wallet if the launch detection couldn't read the keychain,
+                // or if a seed-not-synced device just received its key via iCloud Keychain.
+                // The re-check updates the device registration (hasSeed) and re-derives
+                // the wallet mode.
+                let seedJustArrived = walletManager.connectionStatus.readOnlyReason == .seedNotSynced
+                    && SecurityService.mnemonicKeychainStatus() == .found
+
+                if !securityService.lastDetectionWasDefinitive || seedJustArrived {
+                    Self.logger.info("Re-checking wallet on foreground (lowConfidence=\(!securityService.lastDetectionWasDefinitive), seedArrived=\(seedJustArrived))")
+                    await checkForExistingWallet()
+                }
+
                 // Update heartbeat when app enters foreground
                 await serviceContainer.deviceRegistrationService.updateHeartbeatIfNeeded()
             }
         }
-        
+
         Self.logger.debug("Subscribed to foreground notifications")
     }
     
@@ -405,6 +457,9 @@ struct MainView_iOS: View {
                 // Wallet exists with mnemonic in local keychain
                 Self.logger.info("✅ Wallet found with seed in keychain")
 
+                // Early check missed this wallet - start the services it gates
+                activateLateDetectedWalletServices()
+
                 // Set UI state FIRST for immediate transition (without animation)
                 hasWallet = true
 
@@ -429,6 +484,10 @@ struct MainView_iOS: View {
             case .walletActiveElsewhere:
                 // Wallet exists but device is not primary - initialize in read-only mode
                 Self.logger.info("📱 Wallet exists but device is not primary - initializing in read-only mode")
+
+                // Early check missed this wallet - start the services it gates
+                activateLateDetectedWalletServices()
+
                 hasWallet = false
 
                 // Disable animation for initial loading transition
@@ -450,21 +509,6 @@ struct MainView_iOS: View {
                     Self.logger.info("✅ Read-only wallet initialization complete")
                 }
 
-            case .walletWithoutSeed:
-                // Wallet found on another device (via iCloud), but no local seed
-                Self.logger.warning("⚠️ Wallet found on another device, but no seed locally")
-                // User needs to recover by entering their mnemonic
-                hasWallet = false
-
-                await registerDeviceIfNeeded()
-                
-                // Disable animation for initial loading -> onboarding transition
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    isCheckingWallet = false
-                }
-                
             case .noWallet:
                 // No wallet found anywhere
                 Self.logger.info("ℹ️ No wallet found")
@@ -491,7 +535,16 @@ struct MainView_iOS: View {
             }
         }
         
-        Self.logger.info("🔍 Wallet check complete in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime))s")
+        // Single structured line summarizing how this launch was routed
+        let route: String
+        if case .walletActiveElsewhere = walletState {
+            route = "read-only"
+        } else if hasWallet {
+            route = "wallet"
+        } else {
+            route = "onboarding"
+        }
+        Self.logger.info("🔍 Launch verdict: earlyDetected=\(initialWalletDetected), state=\(String(describing: walletState)), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route), took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime))s")
     }
 }
 
