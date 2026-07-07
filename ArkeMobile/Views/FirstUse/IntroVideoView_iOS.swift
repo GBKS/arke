@@ -32,58 +32,69 @@ struct IntroVideoView_iOS: View {
     private let sharedVideo1 = IntroVideo(
         title: "Welcome",
         thumbnailName: "1-intro-v2-small-image",
-        videoAssetName: "1-intro-v2-small",
+        videoAssetName: "1-intro-v3-small",
         subtitles: [
-            VideoSubtitle(startTime: 0.020, endTime: 1.520, text: "Hey, welcome to Arké."),
-            VideoSubtitle(startTime: 2.420, endTime: 4.100, text: "You're about to try something new."),
-            VideoSubtitle(startTime: 4.760, endTime: 7.060, text: "A bitcoin wallet built for real payments."),
-            VideoSubtitle(startTime: 7.860, endTime: 10.200, text: "Fast, cheap, and fully yours."),
-            VideoSubtitle(startTime: 11.260, endTime: 15.200, text: "Before you dive in, my friends are going to walk you through how things work.")
+            VideoSubtitle(startTime: 0.001, endTime: 2.240, text: "Hey, welcome to Arké."),
+            VideoSubtitle(startTime: 2.240, endTime: 4.320, text: "You're about to try something new."),
+            VideoSubtitle(startTime: 4.320, endTime: 7.440, text: "A bitcoin wallet built for real payments."),
+            VideoSubtitle(startTime: 7.440, endTime: 10.480, text: "Fast, cheap, and fully yours."),
+            VideoSubtitle(startTime: 10.480, endTime: 14.760, text: "Before you dive in, my friends are going to walk you through how things work."),
+            VideoSubtitle(startTime: 14.760, endTime: 16.840, text: "This'll only take a couple minutes.")
         ]
     )
     
     private let sharedVideo3 = IntroVideo(
         title: "It's yours",
         thumbnailName: "3-ownership-v2-small-image",
-        videoAssetName: "3-ownership-v2-small",
+        videoAssetName: "3-ownership-v3-small",
         subtitles: [
-            VideoSubtitle(startTime: 0.020, endTime: 2.260, text: "This wallet belongs entirely to you."),
-            VideoSubtitle(startTime: 2.850, endTime: 6.560, text: "No accounts, no logins, no company holding your funds."),
-            VideoSubtitle(startTime: 7.360, endTime: 9.220, text: "You'll get a 12 word recovery phrase,"),
-            VideoSubtitle(startTime: 9.670, endTime: 12.740, text: "and your wallet will back up data to iCloud automatically."),
-            VideoSubtitle(startTime: 13.520, endTime: 15.260, text: "You need both to restore your wallet."),
-            VideoSubtitle(startTime: 15.850, endTime: 19.840, text: "So keep your phrase somewhere safe and stay signed in to iCloud.")
+            VideoSubtitle(startTime: 0.001, endTime: 2.640, text: "This wallet belongs entirely to you."),
+            VideoSubtitle(startTime: 2.640, endTime: 5.120, text: "No accounts, no logins."),
+            VideoSubtitle(startTime: 5.120, endTime: 6.560, text: "You hold the keys."),
+            VideoSubtitle(startTime: 6.560, endTime: 9.040, text: "You'll get a 12-word recovery phrase."),
+            VideoSubtitle(startTime: 9.040, endTime: 12.400, text: "Both your phrase and your wallet data back up to iCloud"),
+            VideoSubtitle(startTime: 12.560, endTime: 13.680, text: "automatically."),
+            VideoSubtitle(startTime: 13.460, endTime: 16.340, text: "To restore on a new device, you'll need both, so"),
+            VideoSubtitle(startTime: 16.500, endTime: 17.220, text: "stay signed into"),
+            VideoSubtitle(startTime: 17.380, endTime: 19.300, text: "iCloud and write your phrase down"),
+            VideoSubtitle(startTime: 19.460, endTime: 21.220, text: "too, just in case.")
         ]
     )
     
     private let sharedVideo4 = IntroVideo(
         title: "Instant payments",
         thumbnailName: "4-speed-small-image",
-        videoAssetName: "4-speed-small",
+        videoAssetName: "4-speed-v2-small",
         subtitles: [
-            VideoSubtitle(startTime: 0.020, endTime: 2.720, text: "So why Arké instead of a regular Bitcoin wallet?"),
-            VideoSubtitle(startTime: 4.100, endTime: 5.560, text: "Normally Bitcoin payments are slow."),
-            VideoSubtitle(startTime: 6.600, endTime: 8.780, text: "You wait for confirmations, fees add up."),
-            VideoSubtitle(startTime: 9.320, endTime: 10.660, text: "It's not great for grabbing coffee."),
-            VideoSubtitle(startTime: 11.760, endTime: 12.620, text: "Arké fixes that."),
-            VideoSubtitle(startTime: 13.520, endTime: 15.820, text: "Payments arrive in seconds, fees are almost nothing."),
-            VideoSubtitle(startTime: 16.580, endTime: 18.400, text: "Same Bitcoin, just a better experience.")
+            VideoSubtitle(startTime: 0.001, endTime: 1.760, text: "Okay, security sorted."),
+            VideoSubtitle(startTime: 1.760, endTime: 2.880, text: "So why Arké"),
+            VideoSubtitle(startTime: 3.040, endTime: 5.040, text: "instead of a regular Bitcoin wallet?"),
+            VideoSubtitle(startTime: 5.040, endTime: 7.120, text: "Normally Bitcoin payments are slow."),
+            VideoSubtitle(startTime: 7.120, endTime: 9.920, text: "You wait for confirmations, fees add up."),
+            VideoSubtitle(startTime: 9.860, endTime: 11.700, text: "It is not great for grabbing coffee."),
+            VideoSubtitle(startTime: 11.700, endTime: 13.139, text: "Arké fixes that."),
+            VideoSubtitle(startTime: 13.139, endTime: 14.980, text: "Payments arrive in seconds."),
+            VideoSubtitle(startTime: 14.980, endTime: 16.580, text: "Fees are almost nothing."),
+            VideoSubtitle(startTime: 16.580, endTime: 19.540, text: "Same Bitcoin, just a better experience.")
         ]
     )
     
     private let sharedVideo5 = IntroVideo(
         title: "Two balances",
         thumbnailName: "5-two-balances-v2-small-image",
-        videoAssetName: "5-two-balances-v2-small",
+        videoAssetName: "5-two-balances-v3-small",
         subtitles: [
-            VideoSubtitle(startTime: 0.020, endTime: 3.780, text: "One thing to know, your wallet has two balances."),
-            VideoSubtitle(startTime: 5.000, endTime: 6.520, text: "Savings is for holding."),
-            VideoSubtitle(startTime: 7.460, endTime: 10.900, text: "Fully independent, nothing to rely on but yourself."),
-            VideoSubtitle(startTime: 12.240, endTime: 14.380, text: "Spending is for everyday use."),
-            VideoSubtitle(startTime: 15.060, endTime: 17.080, text: "Instant payments, tiny fees."),
-            VideoSubtitle(startTime: 18.180, endTime: 21.500, text: "It uses a coordination server to make things fast."),
-            VideoSubtitle(startTime: 22.400, endTime: 26.240, text: "But that server can never access your money or see your balance."),
-            VideoSubtitle(startTime: 27.140, endTime: 30.280, text: "You can move funds between them whenever you like.")
+            VideoSubtitle(startTime: 0.001, endTime: 1.280, text: "One thing to know, your"),
+            VideoSubtitle(startTime: 1.440, endTime: 3.360, text: "wallet has two balances."),
+            VideoSubtitle(startTime: 3.360, endTime: 5.280, text: "Savings is for holding, fully"),
+            VideoSubtitle(startTime: 5.440, endTime: 8.480, text: "independent, nothing to rely on but yourself."),
+            VideoSubtitle(startTime: 8.240, endTime: 10.640, text: "Spending is for everyday use."),
+            VideoSubtitle(startTime: 10.640, endTime: 12.480, text: "A server keeps it fast."),
+            VideoSubtitle(startTime: 12.480, endTime: 16.560, text: "As long as you open the app now and then, it can't touch your funds on its own."),
+            VideoSubtitle(startTime: 16.560, endTime: 17.920, text: "Turn on notifications"),
+            VideoSubtitle(startTime: 18.080, endTime: 18.400, text: "and we will"),
+            VideoSubtitle(startTime: 18.560, endTime: 20.160, text: "remind you when it's time."),
+            VideoSubtitle(startTime: 20.160, endTime: 22.880, text: "You can move funds to savings anytime.")
         ]
     )
     
