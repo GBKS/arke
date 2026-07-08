@@ -18,7 +18,6 @@ public struct EmojiPickerSheet: View {
     // Common emoji categories for tags. The first tuple element is a
     // localization key resolved against the package bundle.
     private let emojiCategories = [
-        ("emoji_category_recent", ["☕", "🍕", "🚗", "🛒", "📄", "💰", "📈", "🎁"]),
         ("emoji_category_food_drink", ["☕", "🍕", "🍔", "🍎", "🍰", "🍜", "🍺", "🥗", "🍩", "🍳"]),
         ("emoji_category_transportation", ["🚗", "🚌", "✈️", "🚂", "🚲", "🛴", "🚁", "⛽", "🚕", "🛻"]),
         ("emoji_category_shopping", ["🛒", "🛍️", "👕", "👟", "📱", "💻", "🎮", "📚", "🛏️", "🪑"]),
@@ -31,26 +30,30 @@ public struct EmojiPickerSheet: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .center, spacing: 15) {
                     ForEach(emojiCategories, id: \.0) { category in
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .center, spacing: 15) {
                             Text(LocalizedStringKey(category.0), bundle: .module)
                                 .font(.headline)
                                 .padding(.horizontal)
                             
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 10), spacing: 5) {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
                                 ForEach(category.1, id: \.self) { emoji in
                                     Button(action: {
                                         selectedEmoji = emoji
                                         dismiss()
                                     }) {
                                         Text(emoji)
-                                            .font(.title)
-                                            .frame(width: 44, height: 44)
+                                            .font(.title2)
+                                            .frame(width: 50, height: 50)
                                             .background(
-                                                selectedEmoji == emoji ? Color.Arke.blue.opacity(0.2) : Color.clear
+                                                selectedEmoji == emoji ? Color.Arke.gold.opacity(0.2) : Color.systemBackground
                                             )
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(selectedEmoji == emoji ? Color.Arke.gold : Color.clear, lineWidth: 2)
+                                            )
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityAddTraits(selectedEmoji == emoji ? [.isButton, .isSelected] : .isButton)
@@ -60,6 +63,11 @@ public struct EmojiPickerSheet: View {
                         }
                     }
                 }
+                .padding(.horizontal)
+                .padding(.vertical)
+                .background(Color.systemControlBackground)
+                .cornerRadius(15)
+                .padding(.horizontal)
                 .padding(.vertical)
             }
             .navigationTitle(Text("button_choose_emoji", bundle: .module))

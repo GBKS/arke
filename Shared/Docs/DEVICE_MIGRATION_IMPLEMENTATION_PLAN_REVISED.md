@@ -1593,7 +1593,7 @@ If a device has been demoted, the app:
 ## Related Documentation
 - `LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` - Overview of device system
 - `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` - Read-only mode details (✅ Complete)
-- `DEVICE_REGISTRY_QUICK_REFERENCE.md` - Device API reference
+- `Device_Registry_Reference.md` - Device API reference
 
 ---
 

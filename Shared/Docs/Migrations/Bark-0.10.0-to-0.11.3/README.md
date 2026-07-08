@@ -1,7 +1,7 @@
 # Bark FFI Bindings Migration: v0.10.0 → v0.11.3
 
 **Date:** 2026-07-01
-**Status:** 📝 Planning
+**Status:** ✅ Completed 2026-07-01 — build green, runtime smoke tests pending (see [04-completion-report.md](./04-completion-report.md))
 **Bark Version:** v0.2.5 → v0.3.0
 **FFI Bindings Version:** v0.10.0 → v0.11.3
 

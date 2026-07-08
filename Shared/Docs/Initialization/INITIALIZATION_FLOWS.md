@@ -1,6 +1,6 @@
 # Arké Mobile - Initialization Flow Documentation
 
-> ⚠️ **DEPRECATION NOTICE**: This document references `LinkWalletView` which was removed in June 2026. Wallet linking via QR code scanning is no longer supported. Wallet synchronization now happens automatically via iCloud Keychain sync. See the [Device Registry documentation](../DEVICE_REGISTRY_QUICK_REFERENCE.md) for current multi-device support.
+> ⚠️ **DEPRECATION NOTICE**: This document references `LinkWalletView` which was removed in June 2026. Wallet linking via QR code scanning is no longer supported. Wallet synchronization now happens automatically via iCloud Keychain sync. See the [Device Registry documentation](../Device_Registry_Reference.md) for current multi-device support.
 
 ## Executive Summary
 

@@ -20,6 +20,17 @@ These documents chronicle the step-by-step implementation of the tag system:
 - `STEP3_IMPLEMENTATION.md` - WalletManager integration and coordinator pattern
 - `STEP4_TAG_PRESERVATION_IMPLEMENTATION.md` - Tag preservation during server refreshes
 
+## Device Registry & Device Migration (archived 2026-07-08)
+
+Completed device-registry implementation docs. The living references remain at the Docs root (`Device_Registry_Reference.md`, `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md`):
+
+- `DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Phase 1: foundation
+- `DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Phase 2: wallet lifecycle integration
+- `DEVICE_REGISTRY_PHASE3_SUMMARY.md` - Phase 3: device management UI
+- `DEVICE_REGISTRY_COMPLETE.md` - Intermediate completion snapshot (superseded by ALL_PHASES_COMPLETE)
+- `DEVICE_REGISTRATION_RACE_CONDITION_FIX.md` - Completed fix (2026-05-13)
+- `DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md` - Superseded by DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md (at Docs root)
+
 ## Purpose
 
 These documents are preserved for:

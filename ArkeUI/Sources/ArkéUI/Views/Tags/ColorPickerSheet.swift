@@ -39,12 +39,16 @@ public struct ColorPickerSheet: View {
                             }) {
                                 Circle()
                                     .fill(Color(hex: colorHex) ?? .Arke.blue)
-                                    .frame(width: 40, height: 40)
+                                    .frame(width: 50, height: 50)
                                     .overlay(
                                         Circle()
                                             .stroke(
-                                                selectedColorHex == colorHex ? Color.primary : Color.clear,
-                                                lineWidth: 3
+                                                selectedColorHex == colorHex ? Color.systemBackground : Color.clear,
+                                                lineWidth: 8
+                                            )
+                                            .stroke(
+                                                selectedColorHex == colorHex ? Color(hex: colorHex) : Color.clear,
+                                                lineWidth: 2
                                             )
                                     )
                                     .scaleEffect(selectedColorHex == colorHex ? 1.1 : 1.0)

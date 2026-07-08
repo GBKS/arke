@@ -210,9 +210,9 @@ ThisDeviceOnly          Syncs Across Devices
 ## 📝 Documentation
 
 **Created:**
-- `DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Foundation details
-- `DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Integration details
-- `DEVICE_REGISTRY_PHASE3_SUMMARY.md` - UI details
+- `Archive/DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Foundation details
+- `Archive/DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Integration details
+- `Archive/DEVICE_REGISTRY_PHASE3_SUMMARY.md` - UI details
 - `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` - This file
 
 **Updated:**

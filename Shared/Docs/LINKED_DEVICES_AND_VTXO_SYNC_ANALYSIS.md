@@ -579,7 +579,7 @@ if !manager.isReadOnlyMode {
 
 - `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` - Detailed read-only mode implementation
 - `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` - Device system implementation
-- `DEVICE_REGISTRY_QUICK_REFERENCE.md` - Device API reference
+- `Device_Registry_Reference.md` - Device API reference
 - `CloudKitSyncImplementation.md` - Sync architecture
 - `CloudKit/CloudKitSyncGuidelines.md` - Sync best practices
 - `PASSKEY_INTEGRATION_PLAN.md` - Future server recovery plans
