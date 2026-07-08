@@ -1,47 +1,23 @@
 # Documentation Archive
 
-This folder contains historical implementation and migration documentation that chronicles the development process but is no longer the primary reference for current system state.
+Historical implementation, migration, and fix documentation. These files chronicle how the system was built but are no longer the primary reference for current behavior. Archived files keep their original names (see naming policy in `../Documentation_Inventory.md`).
 
-## Migration Documents
+## Structure
 
-These documents describe completed architectural changes:
-
-- `MIGRATION_HISTORY.md` - Consolidated summary of all completed migrations  
-- `ARCHITECTURE_MIGRATION.md` - Transaction architecture restructuring
-- `ARK_BALANCE_MIGRATION.md` - Ark balance model unification
-- `ONCHAIN_BALANCE_MIGRATION.md` - Onchain balance model unification
-
-## Implementation Step Documents
-
-These documents chronicle the step-by-step implementation of the tag system:
-
-- `STEP1_IMPLEMENTATION.md` - SwiftData tag models and relationships
-- `STEP2_IMPLEMENTATION.md` - TagService implementation with CRUD operations
-- `STEP3_IMPLEMENTATION.md` - WalletManager integration and coordinator pattern
-- `STEP4_TAG_PRESERVATION_IMPLEMENTATION.md` - Tag preservation during server refreshes
-
-## Device Registry & Device Migration (archived 2026-07-08)
-
-Completed device-registry implementation docs. The living references remain at the Docs root (`Device_Registry_Reference.md`, `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md`):
-
-- `DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Phase 1: foundation
-- `DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Phase 2: wallet lifecycle integration
-- `DEVICE_REGISTRY_PHASE3_SUMMARY.md` - Phase 3: device management UI
-- `DEVICE_REGISTRY_COMPLETE.md` - Intermediate completion snapshot (superseded by ALL_PHASES_COMPLETE)
-- `DEVICE_REGISTRATION_RACE_CONDITION_FIX.md` - Completed fix (2026-05-13)
-- `DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md` - Superseded by DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md (at Docs root)
+- **`Migrations/`** — Completed architectural and model migrations (balance models, transaction architecture, iOS view migrations, BitcoinFormatter). `migration-history.md` is the consolidated summary.
+- **`Implementations/`** — Completed feature implementations and refactorings, chronicled step-by-step or phase-by-phase: tag models, device registry (phases 1–3 + intermediate snapshot), wallet deletion, superseded device migration plan, and assorted refactoring summaries. Multi-file batches archived from a feature directory keep a topic subfolder (e.g. `Movements/`).
+- **`Fixes/`** — Completed bug-fix and diagnostic/tracing docs. Each describes a specific resolved issue; the fix itself lives in git history.
 
 ## Purpose
 
 These documents are preserved for:
 - Historical context of design decisions
 - Understanding the evolution of the codebase
-- Reference for similar future implementations  
+- Reference for similar future implementations
 - Troubleshooting migration-related issues
 
-## Current Documentation
+## Pointers to living docs
 
-For current system documentation, see the main `Docs/` folder structure.
-
----
-*Archived: October 30, 2025*
+- Device registry: `../Device_Registry_Reference.md` (API reference), `../DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` (final summary)
+- Device migration planning: `../DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md`
+- For current system documentation, see the main `Docs/` folder structure.

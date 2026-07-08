@@ -194,9 +194,9 @@ Use **NSUbiquitousKeyValueStore** as a fast-syncing device registry that syncs m
 
 ## Related Issues
 
-- [ISSUE_1_DEVICE_REGISTRATION.md](Initialization/ISSUE_1_DEVICE_REGISTRATION.md) - Original device registration timing issue
-- [DEVICE_REGISTRY_COMPLETE.md](DEVICE_REGISTRY_COMPLETE.md) - Device registry implementation
-- [DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md](DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md) - Device migration strategy
+- [ISSUE_1_DEVICE_REGISTRATION.md](../../Initialization/ISSUE_1_DEVICE_REGISTRATION.md) - Original device registration timing issue
+- [DEVICE_REGISTRY_COMPLETE.md](../Implementations/DEVICE_REGISTRY_COMPLETE.md) - Device registry implementation
+- [DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md](../Implementations/DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md) - Device migration strategy
 
 ---
 

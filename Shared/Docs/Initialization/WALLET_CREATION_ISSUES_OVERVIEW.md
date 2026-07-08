@@ -174,8 +174,8 @@ User Creates Wallet
 ## Related Documents
 
 - `INITIALIZATION_FLOWS.md` - Full architecture analysis
-- `../Archive/DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Device registry implementation
-- `../Archive/DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Device registry enhancements
+- `../Archive/Implementations/DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Device registry implementation
+- `../Archive/Implementations/DEVICE_REGISTRY_PHASE2_SUMMARY.md` - Device registry enhancements
 
 ---
 

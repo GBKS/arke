@@ -218,7 +218,7 @@ This fix directly implements:
 ## Related Documents
 
 - `INITIALIZATION_FLOWS.md` - Full initialization architecture
-- `../Archive/DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Device registry implementation
+- `../Archive/Implementations/DEVICE_REGISTRY_PHASE1_SUMMARY.md` - Device registry implementation
 - `ISSUE_2_ADDRESS_GENERATION.md` - Address generation connection issue
 
 ---
