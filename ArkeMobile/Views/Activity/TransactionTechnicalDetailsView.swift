@@ -228,6 +228,7 @@ struct TransactionTechnicalDetailsView: View {
                         )
                     }
                     
+                    /*
                     Divider()
                     
                     // Timestamp
@@ -242,6 +243,7 @@ struct TransactionTechnicalDetailsView: View {
                         )
                     }
                     .buttonStyle(.plain)
+                    */
                 }
                 .padding()
                 .background(.ultraThinMaterial)

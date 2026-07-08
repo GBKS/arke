@@ -65,7 +65,7 @@ public enum FeePriority: String, CaseIterable, Identifiable, Sendable {
 }
 
 /// On-chain fee rates for different priority levels
-public struct OnchainFeeRates: Sendable {
+public struct OnchainFeeRates: Sendable, Equatable {
     public let fast: UInt64    // sat/vB
     public let medium: UInt64  // sat/vB
     public let slow: UInt64    // sat/vB

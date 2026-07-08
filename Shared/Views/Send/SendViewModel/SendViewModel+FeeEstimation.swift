@@ -28,7 +28,15 @@ extension SendViewModel {
             logger.warning("Not an onchain destination")
             return
         }
-        
+
+        // Keep published rates fresh while the send screen stays open
+        // (served from FeeRateService's cache when recent, so this is cheap)
+        let freshRates = await walletManager.currentFeeRates()
+        if freshRates != onchainFeeRates {
+            onchainFeeRates = freshRates
+            invalidateOnchainFeeCache()
+        }
+
         guard let amountInt = Int(amount), amountInt > 0 else {
             logger.warning("Invalid amount: \(self.amount)")
             cachedOnchainFee = nil

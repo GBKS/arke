@@ -419,7 +419,18 @@ class PaymentDestinationSelector {
                 // Fall through to static estimate
             }
         }
-        
+
+        // For onchain payments, size the fee with live Esplora rates
+        // (medium priority, matching SendViewModel's default selection)
+        if destination.format == .bitcoin || destination.format == .silentPayments {
+            guard let walletManager = context.walletManager else {
+                logger.warning("WalletManager is nil during onchain fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. Falling back to static estimate.")
+                return estimateFeeFallback(for: destination)
+            }
+            let feeRate = await walletManager.currentFeeRates().rate(for: .medium)
+            return estimateOnchainFee(for: destination, amount: amount, feeRate: feeRate)
+        }
+
         return estimateFeeFallback(for: destination)
     }
     
@@ -431,7 +442,7 @@ class PaymentDestinationSelector {
         case .lightning, .lightningInvoice, .lnurl, .bolt12:
             return 20 // Fallback estimate based on Ark server base fee
         case .bitcoin:
-            return 500 // Rough on-chain fee estimate (could be dynamic based on mempool)
+            return 500 // Last-resort estimate when no WalletManager is available for live rates
         case .silentPayments:
             return 600 // Slightly higher due to additional outputs
         case .bip353, .bip21:

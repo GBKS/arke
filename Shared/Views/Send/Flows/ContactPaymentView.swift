@@ -484,7 +484,14 @@ struct ContactPaymentView: View {
         .onChange(of: selectedFeePriority) { _, _ in
             // Recalculate fee immediately when priority changes (onchain only)
             guard let estimator = onEstimateFee else { return }
-            
+
+            Task {
+                await estimator()
+            }
+        }
+        .onChange(of: showFeeSelectionSheet) { _, isShowing in
+            // Refresh fee rates when the fee sheet opens so it never shows stale tiers
+            guard isShowing, let estimator = onEstimateFee else { return }
             Task {
                 await estimator()
             }

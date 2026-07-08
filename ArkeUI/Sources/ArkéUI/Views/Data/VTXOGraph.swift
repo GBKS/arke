@@ -242,8 +242,14 @@ private struct VTXOGraphBar: View {
             let fitsOutside = barWidth + labelSpacing + labelWidth <= geometry.size.width
 
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(barColor)
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 0,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: cornerRadius,
+                    topTrailingRadius: cornerRadius,
+                    style: .continuous
+                )
+                .fill(barColor)
                     .frame(width: barWidth)
 
                 if fitsOutside {
@@ -251,6 +257,7 @@ private struct VTXOGraphBar: View {
                         .offset(x: barWidth + labelSpacing)
                 } else {
                     label(inside: true)
+                        .foregroundStyle(Color.Arke.gold3)
                         .padding(.trailing, insideLabelPadding)
                         .frame(width: barWidth, alignment: .trailing)
                 }

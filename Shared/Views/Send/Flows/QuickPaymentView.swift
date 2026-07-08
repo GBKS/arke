@@ -620,6 +620,13 @@ struct QuickPaymentView: View {
                 await estimator()
             }
         }
+        .onChange(of: showFeeSelectionSheet) { _, isShowing in
+            // Refresh fee rates when the fee sheet opens so it never shows stale tiers
+            guard isShowing, let estimator = onEstimateFee else { return }
+            Task {
+                await estimator()
+            }
+        }
         .sheet(isPresented: $showFeeSelectionSheet) {
             FeeSelectionSheet(
                 selectedPriority: $selectedFeePriority,
