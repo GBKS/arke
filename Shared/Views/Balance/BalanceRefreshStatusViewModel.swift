@@ -145,18 +145,9 @@ class BalanceRefreshStatusViewModel {
         return nil
     }
     
-    /// Format blocks into human-readable time
+    /// Format blocks into human-readable time, assuming 10-minute blocks
+    /// on all networks.
     func formatBlocks(_ blocks: Int) -> String {
-        let network = walletManager.arkInfo?.network.lowercased() ?? "bitcoin"
-        let secondsPerBlock = (network == "mainnet" || network == "bitcoin") ? 600 : 150
-        let seconds = blocks * secondsPerBlock
-        
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.day, .hour, .minute]
-        formatter.maximumUnitCount = 2
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .dropAll
-        
-        return formatter.string(from: TimeInterval(seconds)) ?? "\(blocks) blocks"
+        BlockTimeFormatter.duration(forBlocks: blocks)
     }
 }

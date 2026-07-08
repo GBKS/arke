@@ -167,21 +167,21 @@ class MockBarkWallet: BarkWalletProtocol {
                 id: "abc123def456789012345678901234567890abcdef123456789012345678901234:0",
                 amountSat: 25000,
                 expiryHeight: 274500,
-                kind: .board,
+                kind: .pubkey,
                 state: .spendable
             ),
             VTXOModel(
                 id: "def456abc123789012345678901234567890abcdef123456789012345678901234:1",
                 amountSat: 15000,
                 expiryHeight: 274600,
-                kind: .round,
+                kind: .pubkey,
                 state: .spendable
             ),
             VTXOModel(
                 id: "789012abc456def789012345678901234567890abcdef123456789012345678:2",
                 amountSat: 5000,
                 expiryHeight: 0,
-                kind: .arkoor,
+                kind: .pubkey,
                 state: .locked
             )
         ]

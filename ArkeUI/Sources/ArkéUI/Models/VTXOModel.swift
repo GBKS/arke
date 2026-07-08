@@ -120,15 +120,26 @@ public extension VTXOState {
     }
 }
 
+/// Mirrors bark's `VtxoPolicyKind`. Raw values must match its `Display`
+/// output exactly, since the FFI passes the kind through as a string.
 public enum VTXOKind: String, Codable, CaseIterable, Sendable {
+    /// Standard VTXO output protected with a public key.
     case pubkey = "pubkey"
-    case checkpoint = "checkpoint"
+    /// A VTXO that represents an HTLC with the Ark server to send money.
     case serverHTLCSend = "server-htlc-send"
+    /// A VTXO that represents an HTLC with the Ark server to receive money.
     case serverHTLCRecv = "server-htlc-receive"
+    /// Simple VTXO owned by the server key.
+    case serverOwned = "server-owned"
+    /// A public policy that grants bitcoin back to the server after expiry.
+    /// It is used to construct checkpoint transactions.
+    case checkpoint = "checkpoint"
+    /// Server-only policy where coins can only be swept by the server after expiry.
     case expiry = "expiry"
-    case board = "board"
-    case round = "round"
-    case arkoor = "arkoor"
+    /// hArk leaf output policy (intermediate outputs spent by leaf txs).
+    case harkLeaf = "hark-leaf"
+    /// hArk forfeit tx output policy.
+    case harkForfeit = "hark-forfeit"
 }
 
 public extension VTXOKind {
@@ -136,20 +147,20 @@ public extension VTXOKind {
         switch self {
         case .pubkey:
             return "Public Key"
-        case .checkpoint:
-            return "Checkpoint"
         case .serverHTLCSend:
             return "Server HTLC Send"
         case .serverHTLCRecv:
             return "Server HTLC Receive"
+        case .serverOwned:
+            return "Server Owned"
+        case .checkpoint:
+            return "Checkpoint"
         case .expiry:
             return "Expiry"
-        case .board:
-            return "Board"
-        case .round:
-            return "Round"
-        case .arkoor:
-            return "Arkoor"
+        case .harkLeaf:
+            return "hArk Leaf"
+        case .harkForfeit:
+            return "hArk Forfeit"
         }
     }
 }
@@ -163,7 +174,7 @@ public struct VTXOModel: Codable, Identifiable, Hashable, Sendable {
     public let amountSat: Int
     /// Expiry height (0 if unknown)
     public let expiryHeight: Int
-    /// Type of VTXO (e.g., "board", "round", "arkoor", "pubkey")
+    /// Type of VTXO (e.g., "pubkey", "server-htlc-send", "checkpoint")
     public let kind: VTXOKind
     /// State of VTXO (e.g., "spendable", "spent", "locked")
     public let state: VTXOState
@@ -267,7 +278,7 @@ public extension VTXOModel {
                 id: "4f35af824858dd69802af664a2d1b03d2a49d60b7f66741ba3292de3b756d49a:0",
                 amountSat: 1000,
                 expiryHeight: 274399,
-                kind: .board,
+                kind: .pubkey,
                 state: .spendable,
                 exitDepth: 1,
                 exitTxWeightWu: 500
@@ -276,7 +287,7 @@ public extension VTXOModel {
                 id: "abc123def456789012345678901234567890abcdef123456789012345678901234:1",
                 amountSat: 25000,
                 expiryHeight: 274500,
-                kind: .round,
+                kind: .pubkey,
                 state: .spendable,
                 exitDepth: 2,
                 exitTxWeightWu: 750
@@ -285,7 +296,7 @@ public extension VTXOModel {
                 id: "def456abc123789012345678901234567890abcdef123456789012345678901234:2",
                 amountSat: 5000,
                 expiryHeight: 0,
-                kind: .arkoor,
+                kind: .pubkey,
                 state: .locked,
                 exitDepth: 3,
                 exitTxWeightWu: 1000

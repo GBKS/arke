@@ -13,6 +13,7 @@ struct VTXODetailView: View {
     
     @Environment(WalletManager.self) private var walletManager
     @State private var currentVtxo: VTXOModel
+    @State private var currentBlockHeight: Int?
     @State private var reloadTrigger = 0
     
     // Minimum amount of sats required for a refresh operation
@@ -110,13 +111,23 @@ struct VTXODetailView: View {
                             value: currentVtxo.state.displayName
                         )
                         
-                        // Expiry Height
-                        if currentVtxo.expiryHeight > 0 {
-                            DetailRow(
-                                title: "Expiry Height",
-                                value: currentVtxo.expiryHeight.formatted()
-                            )
-                        }
+                        // Expiry Height (0 means unknown)
+                        DetailRow(
+                            title: "Expiry Height",
+                            value: expiryHeightValue
+                        )
+
+                        // Exit Depth
+                        DetailRow(
+                            title: "Exit Depth",
+                            value: currentVtxo.exitDepth.formatted()
+                        )
+
+                        // Exit Transaction Weight
+                        DetailRow(
+                            title: "Exit Transaction Weight",
+                            value: "\(currentVtxo.exitTxWeightWu.formatted()) WU"
+                        )
                     }
                 }
                 
@@ -135,10 +146,27 @@ struct VTXODetailView: View {
         }
     }
     
+    // MARK: - Expiry Formatting
+
+    private var expiryHeightValue: String {
+        guard currentVtxo.expiryHeight > 0 else {
+            return String(localized: "Unknown")
+        }
+        var value = currentVtxo.expiryHeight.formatted()
+        if let blockHeight = currentBlockHeight {
+            let blocksUntilExpiry = currentVtxo.expiryHeight - blockHeight
+            if blocksUntilExpiry > 0 {
+                value += " (~\(BlockTimeFormatter.duration(forBlocks: blocksUntilExpiry)))"
+            }
+        }
+        return value
+    }
+
     // MARK: - Data Loading
-    
+
     private func loadVTXO() async {
         do {
+            currentBlockHeight = try? await walletManager.getLatestBlockHeight()
             let vtxos = try await walletManager.getVTXOs()
             if let updatedVtxo = vtxos.first(where: { $0.id == vtxo.id }) {
                 currentVtxo = updatedVtxo

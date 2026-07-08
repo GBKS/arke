@@ -27,59 +27,23 @@ struct VTXORowView: View {
     private var isNearExpiry: Bool {
         guard let blocksUntilExpiry = blocksUntilExpiry else { return false }
         // Check if expiry is within 24 hours based on block time (~10 minutes per block)
-        let secondsPerBlock = 600 // 10 minutes
-        let secondsUntilExpiry = blocksUntilExpiry * secondsPerBlock
+        let secondsUntilExpiry = blocksUntilExpiry * BlockTimeFormatter.secondsPerBlock
         let hoursUntilExpiry = secondsUntilExpiry / 3600
         return blocksUntilExpiry > 0 && hoursUntilExpiry <= 24
     }
-    
+
     private var expiryText: String {
         guard let blocksUntilExpiry = blocksUntilExpiry else {
-            //print("🔍 VTXO Expiry: No blocksUntilExpiry - latestBlockHeight is nil")
-            //print("   - expiryHeight: \(vtxo.expiryHeight)")
             return "Block \(vtxo.expiryHeight)"
         }
-        
-        // Use block time (~10 minutes per block) for expiry calculation
-        let secondsPerBlock = 600 // 10 minutes
-        let totalSeconds = abs(blocksUntilExpiry) * secondsPerBlock
-        
-        /*
-        print("🔍 VTXO Expiry Calculation:")
-        print("   - VTXO ID: \(vtxo.id)")
-        print("   - expiryHeight: \(vtxo.expiryHeight)")
-        print("   - latestBlockHeight: \(latestBlockHeight ?? -1)")
-        print("   - blocksUntilExpiry: \(blocksUntilExpiry)")
-        print("   - secondsPerBlock: \(secondsPerBlock)")
-        print("   - totalSeconds: \(totalSeconds)")
-        print("   - isExpired: \(isExpired)")
-        print("   - formatted time: \(formatTimeInterval(totalSeconds))")
-        */
-        
+
         if isExpired {
-            return "Expired \(formatTimeInterval(totalSeconds)) ago"
-        } else if blocksUntilExpiry == 1 {
-            return "Expires in ~\(formatTimeInterval(totalSeconds))"
+            return "Expired \(BlockTimeFormatter.duration(forBlocks: blocksUntilExpiry)) ago"
         } else {
-            return "Expires in ~\(formatTimeInterval(totalSeconds))"
+            return "Expires in ~\(BlockTimeFormatter.duration(forBlocks: blocksUntilExpiry))"
         }
     }
-    
-    private func formatTimeInterval(_ seconds: Int) -> String {
-        let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.day, .hour, .minute]
-        formatter.maximumUnitCount = 2
-        formatter.unitsStyle = .abbreviated
-        formatter.zeroFormattingBehavior = .dropAll
-        
-        // For very short durations, show "< 1m"
-        if seconds < 60 {
-            return "< 1m"
-        }
-        
-        return formatter.string(from: TimeInterval(seconds)) ?? "< 1m"
-    }
-    
+
     private var expiryColor: Color {
         if isExpired {
             return .Arke.red

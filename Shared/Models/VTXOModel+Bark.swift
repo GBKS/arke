@@ -29,15 +29,15 @@ extension VTXOModel {
         // Map SDK kind string to VTXOKind enum
         let kind: VTXOKind = {
             switch vtxo.kind.lowercased() {
-            case "board": return .board
-            case "round": return .round
-            case "arkoor": return .arkoor
             case "pubkey": return .pubkey
             case "checkpoint": return .checkpoint
             case "server-htlc-send", "serverhtlcsend": return .serverHTLCSend
             case "server-htlc-receive", "serverhtlcreceive": return .serverHTLCRecv
+            case "server-owned": return .serverOwned
             case "expiry": return .expiry
-            default: return .round
+            case "hark-leaf": return .harkLeaf
+            case "hark-forfeit": return .harkForfeit
+            default: return .pubkey
             }
         }()
 

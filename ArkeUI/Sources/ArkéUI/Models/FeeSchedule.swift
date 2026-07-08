@@ -150,6 +150,18 @@ public struct RefreshFeeStructure: Codable, Sendable, Equatable {
     public func isFreeRefresh(blocksUntilExpiry: Int) -> Bool {
         return baseFeeSat == 0 && getPpm(blocksUntilExpiry: blocksUntilExpiry) == 0
     }
+
+    /// The size of the free refresh window: refreshing is free while a VTXO
+    /// is fewer than this many blocks away from expiry. Returns `Int.max`
+    /// when refreshes are always free and `nil` when they never are.
+    public var freeRefreshBlocks: Int? {
+        guard baseFeeSat == 0 else { return nil }
+        let sorted = ppmExpiryTable.sorted { $0.expiryBlocksThreshold < $1.expiryBlocksThreshold }
+        for entry in sorted where entry.ppm > 0 {
+            return entry.expiryBlocksThreshold > 0 ? entry.expiryBlocksThreshold : nil
+        }
+        return .max
+    }
 }
 
 /// Fee structure for receiving Lightning payments

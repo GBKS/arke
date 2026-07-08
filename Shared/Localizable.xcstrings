@@ -4777,6 +4777,12 @@
         }
       }
     },
+    "Exit Depth" : {
+
+    },
+    "Exit Transaction Weight" : {
+
+    },
     "Expiry Height" : {
       "localizations" : {
         "en" : {
@@ -5808,6 +5814,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "VTXOs"
+          }
+        }
+      }
+    },
+    "label_vtxos_inactive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spent & exited"
           }
         }
       }

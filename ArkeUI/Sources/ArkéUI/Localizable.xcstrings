@@ -211,6 +211,26 @@
         }
       }
     },
+    "accessibility_vtxo_graph_bar %@ %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, expires in ^[%2$lld days](inflect: true)"
+          }
+        }
+      }
+    },
+    "accessibility_vtxo_graph_locked" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "locked"
+          }
+        }
+      }
+    },
     "action_change_emoji" : {
       "localizations" : {
         "en" : {
@@ -1537,6 +1557,26 @@
     },
     "Troubleshooting" : {
 
+    },
+    "vtxo_graph_empty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No active VTXOs"
+          }
+        }
+      }
+    },
+    "vtxo_graph_free_refresh_zone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free refresh zone"
+          }
+        }
+      }
     },
     "You are connected to %@, a test network for development and experimentation." : {
 

@@ -471,16 +471,11 @@ extension BarkWalletFFI {
     
     /// Map FFI VTXO kind string to our VTXOKind enum
     private func mapFFIKindToVTXOKind(_ kindString: String) -> VTXOKind {
-        // FFI kinds from Rust: "board", "round", "arkoor", "pubkey", "checkpoint", 
-        // "server-htlc-send", "server-htlc-receive", "expiry"
+        // FFI kinds from Rust (`VtxoPolicyKind` Display): "pubkey",
+        // "server-htlc-send", "server-htlc-receive", "server-owned",
+        // "checkpoint", "expiry", "hark-leaf", "hark-forfeit".
         
         switch kindString.lowercased() {
-        case "board":
-            return .board
-        case "round":
-            return .round
-        case "arkoor":
-            return .arkoor
         case "pubkey":
             return .pubkey
         case "checkpoint":
@@ -489,8 +484,14 @@ extension BarkWalletFFI {
             return .serverHTLCSend
         case "server-htlc-receive", "serverhtlcreceive":
             return .serverHTLCRecv
+        case "server-owned":
+            return .serverOwned
         case "expiry":
             return .expiry
+        case "hark-leaf":
+            return .harkLeaf
+        case "hark-forfeit":
+            return .harkForfeit
         default:
             Self.logger.warning("Unknown VTXO kind: '\(kindString)', defaulting to pubkey")
             return .pubkey

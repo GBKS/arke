@@ -22,9 +22,15 @@ struct VTXOListView_iOS: View {
     @State private var latestBlockHeight: Int?
     @State private var updateTimer: Timer?
     @State private var refreshFeeEstimate: FeeEstimate?
+    @State private var arkInfo: ArkInfoModel?
     
     private var spendableVTXOs: [VTXOModel] {
         vtxos.filter { $0.state != .locked && $0.state != .spent && $0.state != .exited }
+    }
+
+    /// The complement of what VTXOGraph displays: spent and exited VTXOs.
+    private var inactiveVTXOs: [VTXOModel] {
+        vtxos.filter { $0.isSpent || $0.state == .exited }
     }
     
     private var totalVTXOAmount: Int {
@@ -103,25 +109,50 @@ struct VTXOListView_iOS: View {
                 .padding(.vertical, 20)
                 .padding(.horizontal)
             } else {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(vtxos.enumerated()), id: \.element.id) { index, vtxo in
-                        Button {
+                if let latestBlockHeight {
+                    VTXOGraph(
+                        vtxos: vtxos,
+                        currentBlockHeight: latestBlockHeight,
+                        horizonBlocks: arkInfo?.vtxoExpiryDelta,
+                        freeRefreshBlocks: arkInfo?.feeSchedule?.refresh.freeRefreshBlocks,
+                        maxExitDepth: (arkInfo?.maxVtxoExitDepth).map(Int.init),
+                        onSelect: { vtxo in
                             onSelectItem?(vtxo)
-                        } label: {
-                            VTXORowView(
-                                vtxo: vtxo,
-                                isSelected: false,
-                                latestBlockHeight: latestBlockHeight
-                            )
                         }
-                        .buttonStyle(.plain)
-                        
-                        if index < vtxos.count - 1 {
-                            Divider()
+                    )
+                    .padding(.top, 16)
+                    .padding(.horizontal)
+                }
+
+                // The graph above covers active VTXOs; the list shows the
+                // spent and exited ones the graph filters out.
+                if !inactiveVTXOs.isEmpty {
+                    Text("label_vtxos_inactive")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 20)
+                        .padding(.horizontal)
+
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(inactiveVTXOs.enumerated()), id: \.element.id) { index, vtxo in
+                            Button {
+                                onSelectItem?(vtxo)
+                            } label: {
+                                VTXORowView(
+                                    vtxo: vtxo,
+                                    isSelected: false,
+                                    latestBlockHeight: latestBlockHeight
+                                )
+                            }
+                            .buttonStyle(.plain)
+
+                            if index < inactiveVTXOs.count - 1 {
+                                Divider()
+                            }
                         }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
         }
         .task(id: reloadTrigger) {
@@ -159,6 +190,13 @@ struct VTXOListView_iOS: View {
             // Fetch VTXOs and get estimated block height for real-time updates
             vtxos = try await walletManager.getVTXOs()
             latestBlockHeight = await walletManager.getEstimatedBlockHeight()
+
+            // The ark info drives VTXOGraph's horizon, free refresh zone,
+            // and hop coloring; keep the previous value (or the graph's
+            // defaults) if unavailable.
+            if let arkInfo = try? await walletManager.getArkInfo() {
+                self.arkInfo = arkInfo
+            }
             
             print("vtxos: \(vtxos)")
             print("latestBlockHeight: \(latestBlockHeight ?? -1)")
