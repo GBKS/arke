@@ -22,7 +22,7 @@
       "target" : {
         "containerPath" : "container:Arke.xcodeproj",
         "identifier" : "5904310C2ED8680000AD6337",
-        "name" : "Arke_mobile_tests"
+        "name" : "ArkeMobileTests"
       }
     }
   ],

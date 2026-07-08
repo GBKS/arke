@@ -462,10 +462,10 @@
 			);
 			target = 597585A02EA0F0290042F0E5 /* ArkeDesktopTests */;
 		};
-		5956132F2F9F674300201E77 /* Exceptions for "Tests" folder in "ArkeMobileTests" target */ = {
+		5970E0AE2FFE788E006888D0 /* Exceptions for "Tests" folder in "ArkeMobileTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Mobile/ArkeMobileTests.swift,
+				Desktop/ArkeDesktopTests.swift,
 			);
 			target = 5904310C2ED8680000AD6337 /* ArkeMobileTests */;
 		};
@@ -735,7 +735,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5956132E2F9F674300201E77 /* Exceptions for "Tests" folder in "ArkeDesktopTests" target */,
-				5956132F2F9F674300201E77 /* Exceptions for "Tests" folder in "ArkeMobileTests" target */,
+				5970E0AE2FFE788E006888D0 /* Exceptions for "Tests" folder in "ArkeMobileTests" target */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -893,6 +893,9 @@
 			);
 			dependencies = (
 				5904310F2ED8680000AD6337 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				597585A42EA0F0290042F0E5 /* Tests */,
 			);
 			name = ArkeMobileTests;
 			packageProductDependencies = (
@@ -1240,7 +1243,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arke mobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Arke mobile";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArkeMobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArkeMobile";
 			};
 			name = Debug;
 		};
@@ -1263,7 +1266,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arke mobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Arke mobile";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArkeMobile.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArkeMobile";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -1524,7 +1527,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arké.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Arké";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArkeDesktop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArkeDesktop";
 			};
 			name = Debug;
 		};
@@ -1546,7 +1549,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Arké.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Arké";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ArkeDesktop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ArkeDesktop";
 			};
 			name = Release;
 		};

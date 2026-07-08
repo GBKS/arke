@@ -6,6 +6,7 @@
 //
 
 import Testing
+import ArkeUI
 
 #if os(iOS)
 @testable import ArkeMobile

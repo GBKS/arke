@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 
 #if os(iOS)
 @testable import ArkeMobile
@@ -76,15 +77,21 @@ struct LNURLResolverTests {
     
     @Test("Rejects malformed bech32")
     func testMalformedBech32() throws {
-        #expect(throws: LNURLResolver.LNURLError.decodingFailed) {
+        #expect {
             try LNURLResolver.decode("lnurl1invalid_characters_!")
+        } throws: { error in
+            guard case LNURLResolver.LNURLError.decodingFailed = error else { return false }
+            return true
         }
     }
     
     @Test("Rejects invalid bech32 prefix")
     func testInvalidPrefix() throws {
-        #expect(throws: LNURLResolver.LNURLError.invalidFormat) {
+        #expect {
             try LNURLResolver.decode("wrongprefix1dp68gurn8ghj7")
+        } throws: { error in
+            guard case LNURLResolver.LNURLError.invalidFormat = error else { return false }
+            return true
         }
     }
     

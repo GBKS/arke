@@ -6,7 +6,12 @@
 //
 
 import Testing
-@testable import Shared
+
+#if os(iOS)
+@testable import ArkeMobile
+#else
+@testable import ArkeDesktop
+#endif
 
 @Suite("Lightning Invoice Parser Tests")
 struct LightningInvoiceParserTests {

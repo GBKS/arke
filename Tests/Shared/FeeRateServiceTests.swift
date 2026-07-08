@@ -8,6 +8,7 @@
 
 import Testing
 import Foundation
+import ArkeUI
 
 #if os(iOS)
 @testable import ArkeMobile

@@ -9,9 +9,16 @@
 import Testing
 import SwiftData
 import Foundation
-@testable import Shared
+import ArkeUI
+
+#if os(iOS)
+@testable import ArkeMobile
+#else
+@testable import ArkeDesktop
+#endif
 
 @Suite("Pending Metadata Matching Tests")
+@MainActor
 struct PendingMetadataMatchingTests {
     
     // MARK: - Test Setup
@@ -37,20 +44,8 @@ struct PendingMetadataMatchingTests {
     }
     
     /// Create a mock wallet for TransactionService
-    private class MockWallet: BarkWalletProtocol {
-        func getMovements() async throws -> String { return "[]" }
-        func sendToAddress(address: String, amountSat: UInt64, feeRateSatPerVbyte: UInt64?) async throws -> String { return "" }
-        func receivePayment() async throws -> String { return "" }
-        func getBalance() async throws -> String { return "{}" }
-        func getArkConfig() async throws -> String { return "{}" }
-        func getBoardingAddress() async throws -> String { return "" }
-        func getAllVTXOs() async throws -> String { return "[]" }
-        func getOnchainBalance() async throws -> String { return "{}" }
-        func refreshOnchainWallet(stopGap: UInt32?) async throws {}
-        func unilateralExit() async throws -> String { return "" }
-        func getUnilateralExits() async throws -> String { return "[]" }
-        func claimUnilateralExits() async throws -> String { return "" }
-        func getOffboardingAddress() async throws -> String { return "" }
+    private func makeMockWallet() -> BarkWalletProtocol {
+        MockBarkWallet()
     }
     
     // MARK: - Priority 1: Payment Hash Matching (Lightning)
@@ -86,17 +81,17 @@ struct PendingMetadataMatchingTests {
         
         // Create TransactionService and apply metadata
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         // Apply pending metadata
         service.applyPendingMetadata(to: transaction)
         
-        // Verify metadata was deleted after match
-        let remainingMetadata = try context.fetch(FetchDescriptor<PendingPaymentMetadata>())
-        #expect(remainingMetadata.isEmpty, "Pending metadata should be deleted after match")
+        // Verify metadata was marked as matched (deletion is deferred to cleanup)
+        #expect(pendingMetadata.isMatched, "Pending metadata should be marked as matched")
+        #expect(pendingMetadata.matchedTxid == transaction.txid, "Matched txid should be recorded")
     }
-    
+
     @Test("Payment hash match - case sensitivity")
     func testPaymentHashCaseSensitive() async throws {
         let container = try createTestContainer()
@@ -125,7 +120,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -169,7 +164,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -177,9 +172,9 @@ struct PendingMetadataMatchingTests {
         // Verify notes were applied
         #expect(transaction.notes == "Test payment", "Notes should be applied from pending metadata")
         
-        // Verify metadata was deleted
-        let remainingMetadata = try context.fetch(FetchDescriptor<PendingPaymentMetadata>())
-        #expect(remainingMetadata.isEmpty, "Pending metadata should be deleted after match")
+        // Verify metadata was marked as matched (deletion is deferred to cleanup)
+        #expect(pendingMetadata.isMatched, "Pending metadata should be marked as matched")
+        #expect(pendingMetadata.matchedTxid == transaction.txid, "Matched txid should be recorded")
     }
     
     @Test("Timestamp match - within 5 minute window")
@@ -214,14 +209,13 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
         
         // Verify match occurred
-        let remainingMetadata = try context.fetch(FetchDescriptor<PendingPaymentMetadata>())
-        #expect(remainingMetadata.isEmpty, "Should match within 5 minute window")
+        #expect(pendingMetadata.isMatched, "Should match within 5 minute window")
     }
     
     @Test("Timestamp match - outside window")
@@ -256,7 +250,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -297,7 +291,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -337,14 +331,13 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
         
         // Verify match occurred (case-insensitive)
-        let remainingMetadata = try context.fetch(FetchDescriptor<PendingPaymentMetadata>())
-        #expect(remainingMetadata.isEmpty, "Should match addresses case-insensitively")
+        #expect(pendingMetadata.isMatched, "Should match addresses case-insensitively")
     }
     
     // MARK: - Multiple Matches
@@ -392,7 +385,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -400,10 +393,10 @@ struct PendingMetadataMatchingTests {
         // Verify the closer metadata was used
         #expect(transaction.notes == "Second metadata (closer)", "Should use closest timestamp match")
         
-        // Verify one metadata remains (the farther one)
-        let remainingMetadata = try context.fetch(FetchDescriptor<PendingPaymentMetadata>())
-        #expect(remainingMetadata.count == 1, "One metadata should remain")
-        #expect(remainingMetadata.first?.notes == "First metadata", "Farther metadata should remain")
+        // Verify only the closer metadata was matched (both remain until cleanup)
+        #expect(metadata2.isMatched, "Closer metadata should be matched")
+        #expect(metadata2.matchedTxid == transaction.txid, "Matched txid should be recorded")
+        #expect(!metadata1.isMatched, "Farther metadata should remain unmatched")
     }
     
     // MARK: - Metadata Transfer
@@ -421,13 +414,7 @@ struct PendingMetadataMatchingTests {
         context.insert(tag)
         
         // Create contact
-        let contact = PersistentContact(
-            name: "Alice",
-            colorHex: "#00FF00",
-            emoji: "👤",
-            notes: nil,
-            type: .manual
-        )
+        let contact = PersistentContact(cachedName: "Alice")
         context.insert(contact)
         
         // Create pending metadata with notes, tag, and contact
@@ -458,7 +445,7 @@ struct PendingMetadataMatchingTests {
         context.insert(transaction)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         service.applyPendingMetadata(to: transaction)
@@ -466,7 +453,7 @@ struct PendingMetadataMatchingTests {
         // Verify all metadata was transferred
         #expect(transaction.notes == "Coffee and snacks", "Notes should be transferred")
         #expect(transaction.hasContacts, "Contact should be assigned")
-        #expect(transaction.associatedContacts.first?.name == "Alice", "Correct contact should be assigned")
+        #expect(transaction.associatedContacts.first?.cachedName == "Alice", "Correct contact should be assigned")
         #expect(transaction.hasTags, "Tag should be assigned")
         #expect(transaction.associatedTags.first?.name == "Shopping", "Correct tag should be assigned")
     }
@@ -501,7 +488,7 @@ struct PendingMetadataMatchingTests {
         context.insert(recentMetadata)
         
         let taskManager = TaskDeduplicationManager()
-        let service = TransactionService(wallet: MockWallet(), taskManager: taskManager)
+        let service = TransactionService(wallet: makeMockWallet(), taskManager: taskManager)
         service.setModelContext(context)
         
         // Run cleanup

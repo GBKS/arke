@@ -171,24 +171,36 @@ public struct ExitStatusParser {
             return []
         }
         
-        // Split by "ExitTx {" to find individual transactions
+        // Walk each "ExitTx {" occurrence and capture its content with brace
+        // counting — statuses like "AwaitingInputConfirmation { txids: {...} }"
+        // nest braces two levels deep, which a regex can't match reliably
         var transactions: [ExitTransaction] = []
-        let pattern = "ExitTx\\s*\\{([^}]+(?:\\{[^}]+\\})*[^}]*)\\}"
-        
-        if let regex = try? NSRegularExpression(pattern: pattern) {
-            let nsString = transactionsContent as NSString
-            let matches = regex.matches(in: transactionsContent, range: NSRange(location: 0, length: nsString.length))
-            
-            for match in matches {
-                if match.numberOfRanges > 1 {
-                    let content = nsString.substring(with: match.range(at: 1))
-                    if let tx = parseExitTx(content) {
-                        transactions.append(tx)
-                    }
+        var searchRange = transactionsContent.startIndex..<transactionsContent.endIndex
+
+        while let markerRange = transactionsContent.range(of: "ExitTx\\s*\\{", options: .regularExpression, range: searchRange) {
+            let contentStart = markerRange.upperBound
+            var braceCount = 1
+            var currentIndex = contentStart
+
+            while currentIndex < transactionsContent.endIndex && braceCount > 0 {
+                let char = transactionsContent[currentIndex]
+                if char == "{" {
+                    braceCount += 1
+                } else if char == "}" {
+                    braceCount -= 1
                 }
+                currentIndex = transactionsContent.index(after: currentIndex)
             }
+
+            guard braceCount == 0 else { break }
+
+            let content = String(transactionsContent[contentStart..<transactionsContent.index(before: currentIndex)])
+            if let tx = parseExitTx(content) {
+                transactions.append(tx)
+            }
+            searchRange = currentIndex..<transactionsContent.endIndex
         }
-        
+
         return transactions
     }
     
