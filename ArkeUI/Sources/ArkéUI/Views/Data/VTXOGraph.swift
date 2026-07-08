@@ -149,7 +149,8 @@ public struct VTXOGraph: View {
                         vtxo: entry.vtxo,
                         fraction: entry.daysLeft / horizonDays,
                         daysLeft: entry.daysLeft,
-                        exitCostFraction: exitCostFraction(for: entry.vtxo)
+                        exitCostFraction: exitCostFraction(for: entry.vtxo),
+                        isExpired: entry.vtxo.expiryHeight <= currentBlockHeight
                     )
                     .frame(height: barHeight)
 
@@ -213,16 +214,20 @@ private struct VTXOGraphBar: View {
     let fraction: Double
     let daysLeft: Double
     let exitCostFraction: Double
+    let isExpired: Bool
 
     @State private var labelWidth: CGFloat = 0
 
     private let cornerRadius: CGFloat = 6
     private let labelSpacing: CGFloat = 8
     private let insideLabelPadding: CGFloat = 12
-    private let minBarWidth: CGFloat = 6
+    private let minBarWidth: CGFloat = 4
 
     private var barColor: Color {
-        Color.Arke.gold.mix(with: .primary, by: exitCostFraction)
+        if isExpired {
+            return Color.Arke.red
+        }
+        return Color.Arke.gold.mix(with: .primary, by: exitCostFraction)
     }
 
     private var accessibilityText: Text {
@@ -230,6 +235,9 @@ private struct VTXOGraphBar: View {
             localized: "accessibility_vtxo_graph_bar \(vtxo.formattedAmount) \(Int(daysLeft.rounded(.up)))",
             bundle: .module
         )
+        if isExpired {
+            label += ", " + String(localized: "accessibility_vtxo_graph_expired", bundle: .module)
+        }
         if vtxo.state == .locked {
             label += ", " + String(localized: "accessibility_vtxo_graph_locked", bundle: .module)
         }
@@ -279,6 +287,15 @@ private struct VTXOGraphBar: View {
                 .lineLimit(1)
                 .fixedSize()
 
+            if isExpired {
+                Text("vtxo_graph_expired", bundle: .module)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.Arke.red, in: Capsule())
+            }
+
             if vtxo.state == .locked {
                 Image(systemName: "lock.circle.fill")
                     .symbolRenderingMode(.palette)
@@ -301,6 +318,13 @@ private struct VTXOGraphBar: View {
 #Preview("VTXOGraph") {
     let currentHeight = 250_000
     let vtxos = [
+        VTXOModel(
+            id: "9c21be5a7f30412d8e6a0f47c1db92e5a83f60d1b24c9e7a5061f38da2c47b13:0",
+            amountSat: 1_337,
+            expiryHeight: currentHeight - 50, // expired
+            kind: .pubkey,
+            state: .spendable
+        ),
         VTXOModel(
             id: "4f35af824858dd69802af664a2d1b03d2a49d60b7f66741ba3292de3b756d49a:0",
             amountSat: 569,

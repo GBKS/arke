@@ -221,6 +221,16 @@
         }
       }
     },
+    "accessibility_vtxo_graph_expired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "expired"
+          }
+        }
+      }
+    },
     "accessibility_vtxo_graph_locked" : {
       "localizations" : {
         "en" : {
@@ -1564,6 +1574,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No active VTXOs"
+          }
+        }
+      }
+    },
+    "vtxo_graph_expired" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expired"
           }
         }
       }
