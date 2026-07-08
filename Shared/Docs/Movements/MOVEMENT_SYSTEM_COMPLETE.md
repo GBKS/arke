@@ -122,10 +122,10 @@ var htlcVtxoCount: Int            // HTLC count
 2. `MovementDestination.swift` - Destination wrapper
 3. `MovementMetadata.swift` - Metadata models + parser
 4. `MovementCategory.swift` - Categorization system
-5. `PHASE_1_COMPLETE.md` - Phase 1 documentation
-6. `PHASE_2_COMPLETE.md` - Phase 2 documentation
-7. `PHASE_3_COMPLETE.md` - Phase 3 documentation
-8. `PHASE_4_COMPLETE.md` - Phase 4 documentation
+5. `../Archive/Implementations/Movements/PHASE_1_COMPLETE.md` - Phase 1 documentation
+6. `../Archive/Implementations/Movements/PHASE_2_COMPLETE.md` - Phase 2 documentation
+7. `../Archive/Implementations/Movements/PHASE_3_COMPLETE.md` - Phase 3 documentation
+8. `../Archive/Implementations/Movements/PHASE_4_COMPLETE.md` - Phase 4 documentation
 
 ### Modified Files (2)
 1. `BarkWalletFFI.swift` - Added exitedVtxoIds serialization

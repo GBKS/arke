@@ -48,7 +48,7 @@
 - 🔧 Add internal transfer detection for sent transactions
 - 🔧 Pass AddressService to TransactionService
 
-**See `PHASE_3_IMPLEMENTATION.md` for detailed instructions.**
+**See `../Archive/Implementations/Address history/PHASE_3_IMPLEMENTATION.md` for detailed instructions.**
 
 ---
 
@@ -207,4 +207,4 @@ Task {
 
 ---
 
-**Ready to continue with Phase 3?** Check `PHASE_3_IMPLEMENTATION.md` for the detailed guide!
+**Ready to continue with Phase 3?** Check `../Archive/Implementations/Address history/PHASE_3_IMPLEMENTATION.md` for the detailed guide!

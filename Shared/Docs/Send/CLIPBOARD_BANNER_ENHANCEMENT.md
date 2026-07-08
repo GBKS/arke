@@ -287,7 +287,7 @@ ClipboardAddressBanner(
 - `ClipboardAddressBanner.swift` - Main changes to display optimal destination
 - `SendView.swift` - Pass `paymentContext` to banner
 - `PaymentDestinationSelector.swift` - Used by banner for ranking
-- `CLIPBOARD_BANNER_BUG_FIX.md` - Related fix for preserving alternatives
+- `../Archive/Fixes/CLIPBOARD_BANNER_BUG_FIX.md` - Related fix for preserving alternatives
 
 ## Future Enhancements
 

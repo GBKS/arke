@@ -13,12 +13,12 @@
 | Category | Count | % of Total |
 |----------|-------|------------|
 | Root-level files | 45 | 24% |
-| Archive (historical) | 27 | 14% |
-| Send feature | 18 | 10% |
-| Initialization docs | 16 | 9% |
+| Archive (historical) | 60 | 32% |
+| Send feature | 14 | 7% |
+| Initialization docs | 7 | 4% |
 | Migrations (Bark FFI) | 10 | 5% |
-| Address history | 9 | 5% |
-| Other subdirectories | 62 | 33% |
+| Address history | 4 | 2% |
+| Other subdirectories | 47 | 25% |
 | **TOTAL** | **187** | **100%** |
 
 ### Documentation Health
@@ -76,14 +76,16 @@ Was seven root-level files for one completed feature. Archived the 3 phase summa
 - ~~`ExitTransactionStatus_History.md` and `ExitTransactionStatus_State.md`~~ — moved to `Data samples/` (Step 1).
 - `PASSKEY_INTEGRATION_PLAN_REVIEW.md` is a pasted conversation transcript — handled with the passkey plan in Step 15.
 
-### 4. Long-Standing Misplaced/Historical Files (carried over from May inventory)
+### 4. Long-Standing Misplaced/Historical Files — ✅ ARCHIVAL HALF RESOLVED 2026-07-08
 
-Still pending from previous inventory passes:
-- `FFI initial integration/` — entire directory (6 files) is historical → Archive
-- `Contacts/` — all 5 migration docs → Archive
-- `Initialization/` — 9 completed fix/tracing docs → Archive
-- `Movements/` + `Address history/` — 8 phase-complete docs → Archive
-- `Send/` — 3 bug-fix docs → Archive
+The archival items (Steps 5–10) are done:
+- ~~`FFI initial integration/` (6 files)~~ → Archive/Implementations/
+- ~~`Contacts/` migration docs (5)~~ → Archive/Implementations/Contacts/
+- ~~`Initialization/` fix/tracing docs (9)~~ → Archive/Fixes/
+- ~~`Movements/` + `Address history/` phase docs (8 + 1 fix)~~ → Archive/Implementations/ + Fixes/
+- ~~`Send/` bug-fix docs (4)~~ → Archive/Fixes/
+
+Still pending (reorganization, Steps 16–23):
 - BIP39 docs (3), `ACCESSIBILITY.md`, `SCRATCH_CARD_IMPLEMENTATION.md`, `INTRO_VIDEO_PLAYER_GUIDE.md`, `SIGNET_FAUCET_IMPLEMENTATION.md` → Features/
 - `BarkTypes.md` → API/; `CloudKitSyncImplementation.md` → CloudKit/
 
@@ -110,15 +112,17 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 - [x] **Step 2:** ✅ 2026-07-08 — Archived `DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md` with a superseded-by note pointing to `_REVISED`.
 - [x] **Step 3:** ✅ 2026-07-08 — Updated `Migrations/Bark-0.10.0-to-0.11.3/README.md` status to Completed (verified via 04-completion-report.md: build green, runtime smoke tests pending).
 - [x] **Step 4:** ✅ 2026-07-08 — Archived DEVICE_REGISTRY_PHASE1/2/3_SUMMARY, DEVICE_REGISTRY_COMPLETE (intermediate snapshot), and DEVICE_REGISTRATION_RACE_CONDITION_FIX. Kept `Device_Registry_Reference.md` (renamed 2026-07-08) + `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` at root. Fixed references in Initialization/ and Security device separation/ docs; updated Archive/readme.md index.
-- [ ] **Step 5:** Move `FFI initial integration/` (6 files) into `Archive/`.
+- [x] **Step 5:** ✅ 2026-07-08 — Moved `FFI initial integration/` (6 files) to `Archive/Implementations/FFI initial integration/`; directory removed.
 
 ### Archival passes (one directory per step)
 
-- [ ] **Step 6:** Archive `Movements/PHASE_1..4_COMPLETE.md` (4 files). Keep MOVEMENT_SYSTEM_COMPLETE, TRANSFER_TYPE_IMPLEMENTATION, FEE_DISPLAY_FIX.
-- [ ] **Step 7:** Archive `Address history/` phase + fix docs (5 files: PHASE_3_*, FIX_REDECLARATION_ERRORS). Keep plan, guide, status, quick reference.
-- [ ] **Step 8:** Archive `Initialization/` completed fix/tracing docs (9 files: DOUBLE_*, FIX_DUPLICATE_MNEMONIC_SAVES, CLOUDKIT_NOTIFICATION_STORM_FIX, BATCH_TAG_CREATION_FIX, ENHANCED_*, ADDRESS_GENERATION_TRACING, SERVER_CONNECTION_DIAGNOSTICS). Keep INITIALIZATION_FLOWS, REVIEW, STARTUP_WALLET_DETECTION_PLAN (active), and evaluate the two ISSUE_* docs.
-- [ ] **Step 9:** Archive all 5 `Contacts/` migration docs.
-- [ ] **Step 10:** Archive `Send/` bug-fix docs (ARK_ADDRESS_FIX_CORRECTED, ARK_ADDRESS_VALIDATION_FIX, SCENARIO_9_FIX_SUMMARY, CLIPBOARD_BANNER_BUG_FIX).
+> Steps 5–10 were executed together on 2026-07-08, after first restructuring `Archive/` into `Migrations/`, `Implementations/`, and `Fixes/` category folders (commit "Restructure Docs/Archive…"). Multi-file batches kept topic subfolders under `Implementations/`, which also resolved the `PHASE_3_COMPLETE.md` name collision between Movements and Address history.
+
+- [x] **Step 6:** ✅ 2026-07-08 — Archived `Movements/PHASE_1..4_COMPLETE.md` (4 files) to `Archive/Implementations/Movements/`. Kept MOVEMENT_SYSTEM_COMPLETE, TRANSFER_TYPE_IMPLEMENTATION, FEE_DISPLAY_FIX; updated phase-doc references in MOVEMENT_SYSTEM_COMPLETE.
+- [x] **Step 7:** ✅ 2026-07-08 — Archived `Address history/` PHASE_3_* (4 files) to `Archive/Implementations/Address history/` and FIX_REDECLARATION_ERRORS to `Archive/Fixes/`. Kept plan, guide, status, quick reference; updated references in ADDRESS_IMPLEMENTATION_STATUS.
+- [x] **Step 8:** ✅ 2026-07-08 — Archived the 9 completed fix/tracing docs to `Archive/Fixes/`. Kept INITIALIZATION_FLOWS, REVIEW, STARTUP_WALLET_DETECTION_PLAN (active), WALLET_CREATION_ISSUES(_OVERVIEW). **ISSUE_1/ISSUE_2 kept in place** — both say "root cause identified, ready for implementation" (Dec 2024); whether their fixes shipped needs code verification before archiving (folded into Step 25's review).
+- [x] **Step 9:** ✅ 2026-07-08 — Archived all 5 `Contacts/` migration docs to `Archive/Implementations/Contacts/`; directory removed (will be recreated by Step 20's living docs).
+- [x] **Step 10:** ✅ 2026-07-08 — Archived the 4 `Send/` bug-fix docs to `Archive/Fixes/`; updated the reference in CLIPBOARD_BANNER_ENHANCEMENT.
 
 ### Completed-plan cleanup (verify status, then archive or convert)
 
@@ -151,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (53 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (45 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — grew from 46 to 53 since April. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 45 after Steps 1–4. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -224,11 +228,11 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Send/ (18 files) ⚠️ PARTIALLY CONSOLIDATED
+### Send/ (14 files) ⚠️ PARTIALLY CONSOLIDATED
 
-**Status: IMPROVED** — down from 23 (integration summary, architecture, quick reference, test scenarios, flow diagrams docs were removed since the May inventory).
+**Status: IMPROVED** — down from 23 in May; bug-fix docs archived 2026-07-08 (Step 10).
 
-#### Architecture/refactoring (still overlapping — merge into one)
+#### Architecture/refactoring (still overlapping — merge into one, Step 24)
 - `SENDVIEW_OVERVIEW.md`, `SENDVIEW_REFACTORING.md`, `SENDVIEW_REFACTORING_SUMMARY.md`
 
 #### Reference & guides (keep)
@@ -237,42 +241,33 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 #### Feature-specific (keep)
 - ✅ `QR_CODE_SOURCE_IMPLEMENTATION.md`, `PAYMENT_REQUEST_INFO_BANNER_GUIDE.md`, `PAYMENT_REQUEST_INFO_BANNER_IMPLEMENTATION.md`, `PAYMENT_REQUEST_INFO_BANNER_VISUAL_REFERENCE.md`, `CLIPBOARD_BANNER_ENHANCEMENT.md`
 
-#### Bug fixes (archive — Step 10)
-- `ARK_ADDRESS_FIX_CORRECTED.md`, `ARK_ADDRESS_VALIDATION_FIX.md`, `SCENARIO_9_FIX_SUMMARY.md`, `CLIPBOARD_BANNER_BUG_FIX.md`
-
 ---
 
-### Initialization/ (16 files) ⚠️ MOSTLY HISTORICAL + ONE ACTIVE PLAN
+### Initialization/ (7 files) ✅ CLEANED UP 2026-07-08
 
-#### Current (keep)
 - ✅ `INITIALIZATION_FLOWS.md` (1,444 lines) — comprehensive flow doc
 - ✅ `STARTUP_WALLET_DETECTION_PLAN.md` (Jul 7) — **ACTIVE**: launch-to-onboarding bug hardening, Phases 1–4 done, review follow-ups remain
 - ✅ `REVIEW.md` — system review
 - ⚠️ `WALLET_CREATION_ISSUES.md`, `WALLET_CREATION_ISSUES_OVERVIEW.md` — verify still current
-- ⚠️ `ISSUE_1_DEVICE_REGISTRATION.md`, `ISSUE_2_ADDRESS_GENERATION.md` — evaluate
+- ⚠️ `ISSUE_1_DEVICE_REGISTRATION.md`, `ISSUE_2_ADDRESS_GENERATION.md` — Dec 2024 root-cause analyses, "ready for implementation"; verify fixes shipped, then archive (Step 25)
 
-#### Archive (completed fixes/tracing — Step 8)
-- `DOUBLE_WALLET_INITIALIZATION_FIX.md`, `DOUBLE_INITIALIZATION_FIX_CORRECTED.md`, `FIX_DUPLICATE_MNEMONIC_SAVES.md`, `CLOUDKIT_NOTIFICATION_STORM_FIX.md`, `BATCH_TAG_CREATION_FIX.md`, `ENHANCED_CALL_TRACING.md`, `ENHANCED_INITIALIZATION_LOGGING.md`, `ADDRESS_GENERATION_TRACING.md`, `SERVER_CONNECTION_DIAGNOSTICS.md`
+The 9 completed fix/tracing docs moved to `Archive/Fixes/` (Step 8).
 
 ---
 
-### Address history/ (9 files) ⚠️ NEEDS CLEANUP
+### Address history/ (4 files) ✅ CLEANED UP 2026-07-08
 
-#### Keep
 - ✅ `ADDRESS_HISTORY_PLAN.md`, `ADDRESS_IMPLEMENTATION_GUIDE.md`, `ADDRESS_QUICK_REFERENCE.md`, `ADDRESS_IMPLEMENTATION_STATUS.md`
 
-#### Archive (Step 7)
-- `PHASE_3_IMPLEMENTATION.md`, `PHASE_3_TRANSACTION_INTEGRATION.md`, `PHASE_3_COMPLETE.md`, `PHASE_3_COMPLETE_SUMMARY.md`, `FIX_REDECLARATION_ERRORS.md`
+Phase docs moved to `Archive/Implementations/Address history/`, FIX_REDECLARATION_ERRORS to `Archive/Fixes/` (Step 7).
 
 ---
 
-### Movements/ (7 files) ⚠️ ARCHIVE PHASES
+### Movements/ (3 files) ✅ CLEANED UP 2026-07-08
 
-#### Keep
 - ✅ `MOVEMENT_SYSTEM_COMPLETE.md`, `TRANSFER_TYPE_IMPLEMENTATION.md`, `FEE_DISPLAY_FIX.md`
 
-#### Archive (Step 6)
-- `PHASE_1_COMPLETE.md`, `PHASE_2_COMPLETE.md`, `PHASE_3_COMPLETE.md`, `PHASE_4_COMPLETE.md`
+Phase docs moved to `Archive/Implementations/Movements/` (Step 6).
 
 **Note:** `movements.md` and `Movement_Onchain_Linking.md` currently live at root — consolidate here (Step 21).
 
@@ -286,11 +281,9 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Contacts/ (5 files) ⚠️ ARCHIVE ALL (Step 9)
+### Contacts/ — ✅ ARCHIVED 2026-07-08 (Step 9)
 
-All 5 are completed-migration docs: `CONTACTS_VIEW_REFACTOR_COMPLETE.md`, `CONTACT_DETAIL_IOS_MERGE_SUMMARY.md`, `FORM_MIGRATION_SUMMARY.md`, `FORM_MIGRATION_TECHNICAL_DETAILS.md`, `FORM_MIGRATION_VISUAL_GUIDE.md`
-
-Root-level `DEFAULT_CONTACT_IMPLEMENTATION.md` and `CONTACT_ADDRESS_DELETION_LOGIC.md` would move in as the living docs (Step 20).
+All 5 completed-migration docs moved to `Archive/Implementations/Contacts/`; the directory is gone. It will be recreated when Step 20 moves the living docs (`DEFAULT_CONTACT_IMPLEMENTATION.md`, `CONTACT_ADDRESS_DELETION_LOGIC.md`) in from root.
 
 ---
 
@@ -328,15 +321,20 @@ Root-level `DEFAULT_CONTACT_IMPLEMENTATION.md` and `CONTACT_ADDRESS_DELETION_LOG
 
 ---
 
-### FFI initial integration/ (6 files) ⚠️ ARCHIVE ALL (Step 5)
+### FFI initial integration/ — ✅ ARCHIVED 2026-07-08 (Step 5)
 
-Historical: `PHASE1..4_COMPLETE.md`, `PHASES567_COMPLETE.md`, `FINAL_COMPLETE.md`
+All 6 historical phase docs moved to `Archive/Implementations/FFI initial integration/`; the directory is gone.
 
 ---
 
-### Archive/ (27 files) ✅ PROPER USE
+### Archive/ (60 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
 
-Appropriately archived migration/refactoring/phase docs plus `readme.md` index (6 device registry/migration docs added 2026-07-08). Will grow substantially as the backlog above executes — consider subfolders (`migrations/`, `completed-implementations/`, `fixes/`) once it passes ~40 files.
+Now organized into category folders (plus `readme.md` index at Archive root):
+- `Migrations/` (7) — completed model/architecture migrations
+- `Implementations/` (37) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
+- `Fixes/` (15) — completed bug-fix and tracing/diagnostic docs
+
+Steps 5–10 added 33 files. Archived files keep their original names per the naming policy.
 
 ---
 
@@ -400,8 +398,8 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 |--------|-------|--------|
 | Total Files | 187 | 🔴 Growing (was 157 in May) |
 | Root Files | 45 | ⚠️ Improving (53 → 45 on Jul 8) |
-| Archived Files | 27 | ⚠️ Growing appropriately |
-| Phase/Fix Docs (active dirs) | ~30 | ⚠️ Should archive |
+| Archived Files | 60 | ✅ Restructured into category folders |
+| Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | ~7 | ⚠️ New problem category |
 | Total Lines | ~56,800 | — |
 
@@ -420,6 +418,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-08 | Claude Code | Steps 5–10 completed: restructured Archive/ into Migrations/Implementations/Fixes category folders (26 existing files sorted), then archived 33 files from FFI initial integration/ (dir removed), Movements/, Address history/, Initialization/, Contacts/ (dir removed), and Send/. Archive 27 → 60. ISSUE_1/2 kept pending code verification. Fixed 6 inbound references |
 | 2026-07-08 | Claude Code | Naming convention decided: `Title_Case_With_Underscores.md` (per Christoph); living docs get renamed during their backlog moves, Archive keeps original names |
 | 2026-07-08 | Claude Code | Renamed the two settled keepers to the new convention: DEVICE_REGISTRY_QUICK_REFERENCE → Device_Registry_Reference, DOCUMENTATION_INVENTORY → Documentation_Inventory; fixed inbound links (INITIALIZATION_FLOWS deprecation notice + 2 mentions) |
 | 2026-07-08 | Claude Code | Backlog Steps 1–4 completed: moved 2 ExitTransactionStatus dumps to Data samples/, archived superseded device migration plan + 5 device registry docs (root 53 → 45, Archive 21 → 27), corrected Bark 0.11.3 migration README status, fixed cross-references in 5 docs, updated Archive/readme.md index |
