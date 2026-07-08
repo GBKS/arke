@@ -77,19 +77,29 @@ extension Color {
     
     /// Convert Color to hex string representation
     public func toHex() -> String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+
         #if canImport(AppKit)
-        let uic = NSColor(self)
-        #elseif canImport(UIKit)
-        let uic = UIColor(self)
-        #endif
-        
-        guard let components = uic.cgColor.components, components.count >= 3 else {
+        // Convert to sRGB first: colors from the system picker can be in
+        // grayscale or wide-gamut color spaces where reading raw CGColor
+        // components gives wrong or out-of-range values.
+        guard let srgb = NSColor(self).usingColorSpace(.sRGB) else {
             return "#000000"
         }
-        let r = Float(components[0])
-        let g = Float(components[1])
-        let b = Float(components[2])
-        return String(format: "#%02lX%02lX%02lX", lroundf(r * 255), lroundf(g * 255), lroundf(b * 255))
+        srgb.getRed(&r, green: &g, blue: &b, alpha: &a)
+        #elseif canImport(UIKit)
+        // getRed converts grayscale and wide-gamut colors to extended sRGB.
+        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a) else {
+            return "#000000"
+        }
+        #endif
+
+        // Clamp: extended sRGB components can fall outside 0...1 and would
+        // otherwise produce malformed hex strings.
+        func component(_ value: CGFloat) -> Int {
+            Int((min(max(value, 0), 1) * 255).rounded())
+        }
+        return String(format: "#%02X%02X%02X", component(r), component(g), component(b))
     }
 }
 

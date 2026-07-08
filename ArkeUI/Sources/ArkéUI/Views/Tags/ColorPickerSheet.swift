@@ -64,6 +64,11 @@ public struct ColorPickerSheet: View {
                     HStack(spacing: 16) {
                         ColorPicker(String(localized: "action_choose_custom_color", bundle: .module), selection: $customColor, supportsOpacity: false)
                             .padding(.horizontal)
+                            .onChange(of: customColor) { _, newColor in
+                                // Commit immediately so dismissing via the
+                                // checkmark doesn't discard the custom color.
+                                selectedColorHex = newColor.toHex()
+                            }
 
                         Button(action: {
                             selectedColorHex = customColor.toHex()
