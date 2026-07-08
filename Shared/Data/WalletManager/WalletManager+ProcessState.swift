@@ -57,6 +57,16 @@ extension WalletManager {
     var connectionStatus: ConnectionStatus {
         processStateService?.connectionStatus ?? ConnectionStatus()
     }
+
+    /// Whether the Ark server is believed reachable, for payment routing decisions.
+    /// Optimistic until the first sync produces a result: the default status is
+    /// "disconnected" only because nothing has been attempted yet, and treating
+    /// that as offline would wrongly rule out Lightning destinations at startup.
+    var isArkServerReachable: Bool {
+        guard let status = processStateService?.connectionStatus else { return true }
+        guard status.lastSuccessfulSync != nil || status.lastError != nil else { return true }
+        return status.isConnected
+    }
     
     /// Get current backup reminder status
     var backupStatus: BackupStatus? {

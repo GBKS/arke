@@ -21,8 +21,8 @@ extension WalletManager {
             bitcoinBalance: onchainBalance?.spendableSat,
             networkConfig: networkConfig ?? NetworkConfig.mainnet,
             userPreferences: preferences ?? .default,
-            arkServerConnected: true, // TODO: Add actual server connectivity check
-            hasLightningCapability: true, // TODO: Add actual Lightning capability check
+            arkServerConnected: isArkServerReachable,
+            hasLightningCapability: true, // Ark servers always provide Lightning routing
             walletManager: self
         )
     }

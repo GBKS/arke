@@ -74,8 +74,8 @@ extension SendViewModel {
             bitcoinBalance: walletManager.onchainBalance?.spendableSat,
             networkConfig: currentNetworkConfig,
             userPreferences: .default,
-            arkServerConnected: true, // TODO: Get from manager
-            hasLightningCapability: true, // TODO: Get from manager
+            arkServerConnected: walletManager.isArkServerReachable,
+            hasLightningCapability: true, // Ark servers always provide Lightning routing
             walletManager: walletManager
         )
     }
