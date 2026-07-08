@@ -23,11 +23,12 @@ struct DebugLogExportButton_iOS: View {
                     ProgressView()
                         .tint(Color.Arke.gold4)
                 } else {
-                    Image(systemName: "square.and.arrow.up")
+                    Image(systemName: "waveform.path.ecg")
                 }
                 Text(isGenerating ? "debug_logs_generating" : "debug_logs_title")
                     .font(.system(size: 17, weight: .semibold))
             }
+            .padding(.vertical, 4)
             .foregroundStyle(Color.Arke.gold4)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)

@@ -47,7 +47,7 @@ public enum CopyButtonStyle {
     var defaultIconColor: Color {
         switch self {
         case .plain, .regular:
-            return .Arke.gold2
+            return .Arke.goldLabel
         case .prominent:
             return .Arke.gold3
         }

@@ -67,12 +67,18 @@ struct VTXOListView_iOS: View {
                             if feeEstimate.feeSats == 0 {
                                 let freeText = String(localized: "Free")
                                 Text("action_get_new_ones_with_fee \(freeText)")
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(Color.Arke.goldLabel)
                             } else {
                                 let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
                                 Text("action_get_new_ones_with_fee \(formattedFee)")
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(Color.Arke.goldLabel)
                             }
                         } else {
                             Text("action_get_new_ones")
+                                .fontWeight(.medium)
+                                .foregroundStyle(Color.Arke.goldLabel)
                         }
                     }
                     .buttonStyle(.bordered)

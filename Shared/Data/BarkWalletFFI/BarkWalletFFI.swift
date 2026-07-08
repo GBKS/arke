@@ -110,6 +110,11 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// Security service for secure mnemonic storage and biometric authentication
     let securityService: SecurityService?
     
+    /// Fallback fee rate (sat/vB) for bark's internal fee estimation.
+    /// Without it, bark seeds its fee cache at 1 sat/vB (broadcast minimum)
+    /// and errors on fee estimation whenever the Esplora backend is unreachable.
+    static let defaultFallbackFeeRateSatPerVb: UInt64 = 10
+
     /// User agent reported to the Ark server, e.g. "arke-ios/17".
     /// The number is the app's build number (CFBundleVersion).
     static var userAgent: String {
@@ -153,7 +158,7 @@ class BarkWalletFFI: BarkWalletProtocol {
             vtxoRefreshExpiryThreshold: nil,  // Use defaults
             vtxoExitMargin: nil,
             htlcRecvClaimDelta: nil,
-            fallbackFeeRate: nil,  // Use default fee rate
+            fallbackFeeRate: Self.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
             roundTxRequiredConfirmations: nil,  // Use default confirmations
             daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
             offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)

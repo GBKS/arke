@@ -41,17 +41,24 @@ struct VTXODeveloperActionsView: View {
                             if isRefreshing {
                                 ProgressView()
                                     .controlSize(.small)
+                                    .foregroundStyle(Color.Arke.goldLabel)
                             }
                             if let feeEstimate = refreshFeeEstimate {
                                 if feeEstimate.feeSats == 0 {
                                     let freeText = String(localized: "Free")
                                     Text("action_refresh_with_fee \(freeText)")
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(Color.Arke.goldLabel)
                                 } else {
                                     let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
                                     Text("action_refresh_with_fee \(formattedFee)")
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(Color.Arke.goldLabel)
                                 }
                             } else {
                                 Text("button_refresh")
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(Color.Arke.goldLabel)
                             }
                         }
                     }
@@ -69,8 +76,11 @@ struct VTXODeveloperActionsView: View {
                         if isOffboarding {
                             ProgressView()
                                 .controlSize(.small)
+                                .foregroundStyle(Color.Arke.goldLabel)
                         }
                         Text("button_offboard")
+                            .fontWeight(.medium)
+                            .foregroundStyle(Color.Arke.goldLabel)
                     }
                 }
                 .buttonStyle(.bordered)
@@ -86,8 +96,11 @@ struct VTXODeveloperActionsView: View {
                         if isExiting {
                             ProgressView()
                                 .controlSize(.small)
+                                .foregroundStyle(Color.Arke.goldLabel)
                         }
                         Text("button_exit")
+                            .fontWeight(.medium)
+                            .foregroundStyle(Color.Arke.goldLabel)
                     }
                 }
                 .buttonStyle(.bordered)

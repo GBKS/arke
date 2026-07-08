@@ -80,7 +80,7 @@ extension BarkWalletFFI {
                 vtxoRefreshExpiryThreshold: nil,
                 vtxoExitMargin: nil,
                 htlcRecvClaimDelta: nil,
-                fallbackFeeRate: nil,  // Use default fee rate
+                fallbackFeeRate: BarkWalletFFI.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
                 roundTxRequiredConfirmations: nil,  // Use default confirmations
                 daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
@@ -379,7 +379,7 @@ extension BarkWalletFFI {
                 vtxoRefreshExpiryThreshold: nil,
                 vtxoExitMargin: nil,
                 htlcRecvClaimDelta: nil,
-                fallbackFeeRate: nil,  // Use default fee rate
+                fallbackFeeRate: BarkWalletFFI.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
                 roundTxRequiredConfirmations: nil,  // Use default confirmations
                 daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
                 offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)

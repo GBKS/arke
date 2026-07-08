@@ -131,6 +131,7 @@ class WalletManager {
     var transactionLinkingService: TransactionLinkingService?  // Movement-onchain linking
     var relayRegistrationService: RelayRegistrationService?
     var walletNotificationService: WalletNotificationService?
+    var feeRateService: FeeRateService?
     
     // Services from ServiceContainer (internal for extension access)
     var securityService: SecurityService { ServiceContainer.shared.securityService }
@@ -318,6 +319,9 @@ class WalletManager {
         // Initialize all services with shared task manager and cache manager
         transactionService = TransactionService(wallet: wallet, taskManager: taskManager)
         balanceService = BalanceService(wallet: wallet, taskManager: taskManager, cacheManager: cacheManager)
+        feeRateService = FeeRateService(taskManager: taskManager) { [weak self] in
+            self?.networkConfig?.esploraBaseURL
+        }
         // AddressService requires ModelContext, so it will be initialized later in setModelContext()
         addressService = nil
         walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)
@@ -785,6 +789,11 @@ class WalletManager {
                 } catch {
                     Self.logger.warning("⚠️ [Refresh] Failed to fetch block height: \(error)")
                 }
+            }
+
+            // Onchain fee rate refresh (best effort, keeps last-known-good on failure)
+            group.addTask {
+                await self.feeRateService?.refresh()
             }
         }
         

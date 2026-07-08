@@ -166,6 +166,9 @@
     "%lld/500" : {
 
     },
+    "%llu sat/vB" : {
+
+    },
     "%u" : {
 
     },
@@ -2131,6 +2134,7 @@
       }
     },
     "balance_board_confirmations" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4053,12 +4057,34 @@
         }
       }
     },
+    "data_bitcoind_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bitcoin Core"
+          }
+        }
+      }
+    },
     "data_block_height" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Block Height"
+          }
+        }
+      }
+    },
+    "data_board_confirmations_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Board Confirmations"
           }
         }
       }
@@ -4094,7 +4120,19 @@
         }
       }
     },
+    "data_esplora_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Esplora"
+          }
+        }
+      }
+    },
     "data_estimated_blocks_behind" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4104,7 +4142,19 @@
         }
       }
     },
+    "data_estimated_blocks_behind_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Estimated Blocks Behind"
+          }
+        }
+      }
+    },
     "data_estimated_current" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4114,7 +4164,85 @@
         }
       }
     },
+    "data_estimated_current_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Estimated Current"
+          }
+        }
+      }
+    },
+    "data_exit_margin_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exit Margin (blocks)"
+          }
+        }
+      }
+    },
+    "data_fallback_fee_rate_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fallback Fee Rate (sat/vB)"
+          }
+        }
+      }
+    },
+    "data_fee_rates" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fee Rates"
+          }
+        }
+      }
+    },
+    "data_fee_rates_fallback" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fallback defaults (no Esplora data yet)"
+          }
+        }
+      }
+    },
+    "data_fee_rates_updated" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Updated: %@"
+          }
+        }
+      }
+    },
+    "data_htlc_claim_delta_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTLC Claim Delta (blocks)"
+          }
+        }
+      }
+    },
     "data_htlc_expiry_delta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4124,7 +4252,19 @@
         }
       }
     },
+    "data_htlc_expiry_delta_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTLC Expiry Delta (blocks)"
+          }
+        }
+      }
+    },
     "data_htlc_send_expiry_delta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4134,12 +4274,35 @@
         }
       }
     },
+    "data_htlc_send_expiry_delta_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTLC Send Expiry Delta (blocks)"
+          }
+        }
+      }
+    },
     "data_last_loaded" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last Loaded: %@"
+          }
+        }
+      }
+    },
+    "data_last_loaded_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last Loaded"
           }
         }
       }
@@ -4155,6 +4318,7 @@
       }
     },
     "data_ln_receive_antidos" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4164,7 +4328,19 @@
         }
       }
     },
+    "data_ln_receive_antidos_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "LN Receive Anti-DoS"
+          }
+        }
+      }
+    },
     "data_max_user_invoice_cltv" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4174,7 +4350,19 @@
         }
       }
     },
+    "data_max_user_invoice_cltv_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Max User Invoice CLTV Delta (blocks)"
+          }
+        }
+      }
+    },
     "data_max_vtxo_amount" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4184,18 +4372,30 @@
         }
       }
     },
-    "data_max_vtxo_exit_depth" : {
+    "data_max_vtxo_amount_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Max VTXO Exit Depth: %u"
+            "value" : "Max VTXO Amount (BTC)"
+          }
+        }
+      }
+    },
+    "data_max_vtxo_exit_depth_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Max VTXO Exit Depth"
           }
         }
       }
     },
     "data_max_vtxo_not_set" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4206,11 +4406,34 @@
       }
     },
     "data_min_board_amount" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Min Board Amount: %@ BTC"
+          }
+        }
+      }
+    },
+    "data_min_board_amount_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Min Board Amount (BTC)"
+          }
+        }
+      }
+    },
+    "data_network_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network"
           }
         }
       }
@@ -4266,6 +4489,17 @@
         }
       }
     },
+    "data_no_fee_rates" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No fee rate data"
+          }
+        }
+      }
+    },
     "data_no_onchain_balance" : {
       "localizations" : {
         "en" : {
@@ -4307,7 +4541,30 @@
         }
       }
     },
+    "data_refresh_threshold_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refresh Threshold (blocks)"
+          }
+        }
+      }
+    },
+    "data_required_confirmations_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Required Confirmations"
+          }
+        }
+      }
+    },
     "data_round_interval" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4317,7 +4574,19 @@
         }
       }
     },
+    "data_round_interval_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Round Interval"
+          }
+        }
+      }
+    },
     "data_round_nonces" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4327,12 +4596,35 @@
         }
       }
     },
+    "data_round_nonces_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Round Nonces"
+          }
+        }
+      }
+    },
     "data_server" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Server: %@"
+          }
+        }
+      }
+    },
+    "data_server_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Server"
           }
         }
       }
@@ -4357,7 +4649,41 @@
         }
       }
     },
+    "data_value_not_required" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not Required"
+          }
+        }
+      }
+    },
+    "data_value_not_set" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not set"
+          }
+        }
+      }
+    },
+    "data_value_required" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Required"
+          }
+        }
+      }
+    },
     "data_vtxo_exit_delta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4367,12 +4693,35 @@
         }
       }
     },
+    "data_vtxo_exit_delta_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "VTXO Exit Delta (blocks)"
+          }
+        }
+      }
+    },
     "data_vtxo_expiry_delta" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "VTXO Expiry Delta: %lld blocks"
+          }
+        }
+      }
+    },
+    "data_vtxo_expiry_delta_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "VTXO Expiry Delta (blocks)"
           }
         }
       }
@@ -5182,6 +5531,7 @@
       }
     },
     "format_network" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

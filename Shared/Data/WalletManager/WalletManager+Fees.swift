@@ -8,9 +8,26 @@
 
 import Foundation
 import Bark
+import ArkeUI
 
 extension WalletManager {
-    
+
+    // MARK: - Onchain Fee Rates
+
+    /// Latest known onchain fee rates (fallback defaults until the first
+    /// successful Esplora fetch)
+    var onchainFeeRates: OnchainFeeRates {
+        feeRateService?.feeRates ?? .default
+    }
+
+    /// Onchain fee rates, refreshed from Esplora when the cache is stale.
+    /// Never throws; falls back to last-known-good or default rates.
+    /// - Parameter maxAge: Maximum cache age; pass 0 to force a fresh fetch
+    func currentFeeRates(maxAge: TimeInterval = 300) async -> OnchainFeeRates {
+        guard let feeRateService else { return .default }
+        return await feeRateService.currentRates(maxAge: maxAge)
+    }
+
     // MARK: - Fee Estimation
     
     /// Estimate the fee for an Arkoor payment

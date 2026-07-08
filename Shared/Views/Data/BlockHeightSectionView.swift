@@ -42,25 +42,32 @@ struct BlockHeightSectionView: View {
                 }
                 .padding()
             } else {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 10) {
                     if let lastLoaded = lastLoadedBlockHeight {
-                        Text(String(localized: "data_last_loaded", defaultValue: "Last Loaded: \(lastLoaded.formatted())"))
+                        LabeledValueRow(
+                            String(localized: "data_last_loaded_label", defaultValue: "Last Loaded"),
+                            value: lastLoaded.formatted()
+                        )
                     }
-                    
+
                     if let estimated = estimatedBlockHeight {
-                        Text(String(localized: "data_estimated_current", defaultValue: "Estimated Current: \(estimated.formatted())"))
+                        LabeledValueRow(
+                            String(localized: "data_estimated_current_label", defaultValue: "Estimated Current"),
+                            value: estimated.formatted()
+                        )
                     }
-                    
+
                     // Show the difference if both values are available
-                    if let lastLoaded = lastLoadedBlockHeight, 
+                    if let lastLoaded = lastLoadedBlockHeight,
                        let estimated = estimatedBlockHeight,
                        estimated > lastLoaded {
-                        Text(String(localized: "data_estimated_blocks_behind", defaultValue: "Estimated Blocks Behind: \(estimated - lastLoaded)"))
-                            .foregroundStyle(.orange)
+                        LabeledValueRow(
+                            String(localized: "data_estimated_blocks_behind_label", defaultValue: "Estimated Blocks Behind"),
+                            value: (estimated - lastLoaded).formatted(),
+                            valueColor: .orange
+                        )
                     }
                 }
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             

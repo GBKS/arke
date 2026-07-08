@@ -20,6 +20,9 @@ extension SendViewModel {
     /// Handles initial setup when view appears
     /// Implements Option C: automatic clipboard check only when SendView is first opened
     func handleInitialSetup(prefilledRecipient: String?, prefilledContact: ContactModel?) async {
+        // Populate live onchain fee rates (falls back to defaults on failure)
+        onchainFeeRates = await walletManager.currentFeeRates()
+
         // Check for pre-filled contact first (highest priority)
         if let contact = prefilledContact, let recipient = prefilledRecipient {
             logger.info("Pre-filling contact: \(contact.cachedName)")

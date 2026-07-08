@@ -20,9 +20,11 @@ struct DataView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
+                /*
                 ArkBalanceView(reloadTrigger: reloadTrigger)
                 
                 OnchainBalanceView(reloadTrigger: reloadTrigger)
+                 */
                 
                 VTXOListView_iOS(
                     reloadTrigger: reloadTrigger,
@@ -34,6 +36,7 @@ struct DataView_iOS: View {
                     },
                     minimumRefreshAmountSats: minimumRefreshAmountSats
                 )
+                .padding(.top, 15)
                 
                 UnilateralExitListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { exitVtxo in
                     onNavigateToDetail?(.exitVtxo(exitVtxo))
@@ -52,6 +55,8 @@ struct DataView_iOS: View {
                 ArkInfoSectionView(reloadTrigger: reloadTrigger)
 
                 BlockHeightSectionView(reloadTrigger: reloadTrigger)
+
+                FeeRatesSectionView(reloadTrigger: reloadTrigger)
 
                 DebugLogExportButton_iOS()
 

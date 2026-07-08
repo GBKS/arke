@@ -31,6 +31,7 @@ extension Color {
         public static let gold2 = Color("ArkeGold2", bundle: .module)
         public static let gold3 = Color("ArkeGold3", bundle: .module)
         public static let gold4 = Color("ArkeGold4", bundle: .module)
+        public static let goldLabel = Color("ArkeGoldLabel", bundle: .module)
         public static let green = Color("ArkeGreen", bundle: .module)
         public static let blue = Color("ArkeBlue", bundle: .module)
         public static let orange = Color("ArkeOrange", bundle: .module)

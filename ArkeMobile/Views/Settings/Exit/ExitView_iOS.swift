@@ -37,12 +37,15 @@
 // - Claim phase: (214+10×304)/4 × 8 = 6,508 sats
 // - Total with 15% margin: ~147,150 sats
 
-// TODO: Fee Rate Estimation (MEDIUM PRIORITY)
-// Both progressExits() and drainExits() currently pass nil for fee rates.
-// Should implement proper fee estimation or provide user selection UI.
-// Locations: refreshExitStatus() and claimExit()
-// Fix: Integrate fee estimation service (mempool.space, Bitcoin Core, etc.)
-// Consider: Add user preference for fee urgency (low/medium/high)
+// NOTE: Fee Rates for progressExits()/drainExits() (verified against bark 0.3.0 sources)
+// Passing nil is correct and intentional: Bark resolves nil internally from its
+// chain source (the same Esplora backend this app configures, cached 30s):
+// - progressExits: uses the FAST tier (1-block target) for CPFP fee bumping
+// - drainExits: uses the REGULAR tier (3-block target) for the claim tx
+// Do NOT replace nil with a hardcoded rate — Bark's RBF guard rejects rates below
+// the RBF minimum. Only pass a value if a user-facing urgency picker is added.
+// The cost *estimate* shown to the user comes from FeeRateService (fast tier),
+// which queries the same endpoint, so preview and broadcast rates agree.
 
 // TODO: Offline Claim Broadcast Fallback (LOW PRIORITY)
 // Currently, drainExits() creates a signed PSBT and progressExits() broadcasts it
@@ -233,8 +236,8 @@ struct ExitView_iOS: View {
         do {
             print("💰 Estimating exit cost...")
             
-            // Get current fee rate (query Esplora or use estimate)
-            let feeRate = try await estimateCurrentFeeRate()
+            // Get current fee rate (Esplora-backed, falls back to defaults)
+            let feeRate = await estimateCurrentFeeRate()
             print("   Fee rate: \(feeRate) sat/vB")
             
             // Get spendable VTXOs count (approximate - we'll exit all of them)
@@ -262,25 +265,10 @@ struct ExitView_iOS: View {
         }
     }
     
-    private func estimateCurrentFeeRate() async throws -> UInt64 {
-        // Try to get fee estimate from config
-        let config = try await manager.getConfig()
-        
-        // For Signet, use conservative estimate
-        // For mainnet, would query fee estimation API
-        let defaultFeeRate: UInt64 = switch config.network {
-        case "mainnet": 50
-        case "signet": 10
-        case "regtest": 1
-        default: 10
-        }
-        
-        // TODO: Query Esplora fee estimates endpoint for more accurate rates
-        // let esploraUrl = config.esploraBaseURL
-        // let feeEstimates = try await fetchEsploraFees(esploraUrl)
-        // return feeEstimates.fastTarget
-        
-        return defaultFeeRate
+    private func estimateCurrentFeeRate() async -> UInt64 {
+        // Fast tier matches what progressExits actually pays for CPFP
+        // when it resolves its nil fee rate internally
+        return await manager.currentFeeRates().fast
     }
     
     private func calculateExitCost(
