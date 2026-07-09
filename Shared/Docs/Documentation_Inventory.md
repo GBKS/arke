@@ -12,7 +12,7 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 31 | 17% |
+| Root-level files | 27 | 14% |
 | Archive (historical) | 68 | 36% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
@@ -137,7 +137,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 - [x] **Step 16:** ✅ 2026-07-09 — Consolidated the 3 BIP39 docs into new `Features/BIP39.md` (git mv of INTEGRATION_GUIDE preserves history; QUICK_REFERENCE was a subset, TROUBLESHOOTING's lasting content folded in). Rewritten against the code: the old guides documented a `Mnemonic`/`Entropy` API the anquii/BIP39 library doesn't have, and claimed 24-word phrases while the app generates 12-word (128-bit). Deleted originals per policy (content merged). No inbound links existed.
 - [x] **Step 17:** ✅ 2026-07-09 — Moved `BarkTypes.md` → `API/Bark_Types.md` (fixed 3 inbound references in the 2 BDK docs) and `daemon-functionality.md` → `API/Bark_Daemon.md` (no inbound links; chose API/ since it describes the Bark library's daemon, not app architecture; added a proper title heading).
 - [x] **Step 18:** ✅ 2026-07-09 — Moved `CloudKitSyncImplementation.md` → `CloudKit/CloudKit_Realtime_Sync.md` (doc covers the real-time NotificationCenter sync pattern); fixed the 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.
-- [ ] **Step 19:** `ACCESSIBILITY.md`, `INTRO_VIDEO_PLAYER_GUIDE.md`, `SCRATCH_CARD_IMPLEMENTATION.md`, `SIGNET_FAUCET_IMPLEMENTATION.md` → `Features/`.
+- [x] **Step 19:** ✅ 2026-07-09 — Moved to `Features/` with convention renames: `Accessibility.md`, `Intro_Video_Player.md`, `Scratch_Card.md`, `Signet_Faucet.md`. No inbound links existed.
 - [ ] **Step 20:** `DEFAULT_CONTACT_IMPLEMENTATION.md`, `CONTACT_ADDRESS_DELETION_LOGIC.md` → `Contacts/`; `WALLET_FIRST_INITIALIZATION.md` → `Initialization/`.
 - [ ] **Step 21:** Consolidate movements docs: decide the canonical home (suggest `Movements/`), move `movements.md` and `Movement_Onchain_Linking.md` there, cross-link.
 - [ ] **Step 22:** Consolidate CPFP docs: fold `bark_issue_cpfp_package_relay.md` + `cpfp_package_relay_solution.md` into `BDK/` (as background for CPFP-Implementation-Plan) or archive if resolved.
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (31 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (27 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 31 after Steps 1–4, 11–15, and 16–18. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 27 after Steps 1–4, 11–15, and 16–19. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -175,7 +175,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION (→ Features/), DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; all 2026-07-09.)*
+**Move to subdirectories:** DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; all 2026-07-09.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -209,16 +209,17 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Features/ (9 files) ✅ GOOD STRUCTURE
+### Features/ (13 files) ✅ GOOD STRUCTURE
 
 - `intro.md`, `balance-persistence.md`, `tag-system.md`, `theme-system-implementation.md`
 - `Read_Only_Mode.md` (Jul 9) — secondary-device read-only mode + primary device switching (distilled from the two archived plans, Steps 11–12)
 - `LNURL_Pay.md` (Jul 9) — LNURL-pay send support (distilled from the archived plan, Step 13; Bark 0.11 handles the flow natively via `payLnurl`)
 - `BIP39.md` (Jul 9) — mnemonic generation/validation/storage, consolidated from the 3 root BIP39 docs (Step 16) and corrected against the actual anquii/BIP39 API
+- `Accessibility.md`, `Intro_Video_Player.md`, `Scratch_Card.md`, `Signet_Faucet.md` — moved in from root 2026-07-09 (Step 19)
 - `send-metadata-enhancement.md` (1,088 lines, Jun 24) — active feature plan (contact/tag/note assignment during send)
 - `send-metadata-enhancement_phase_0_complete.md` — ⚠️ phase doc; fold status into the main doc and archive once the feature completes
 
-**Candidate additions from root:** accessibility, scratch card, signet faucet, intro video player (Step 19). *(BIP39 docs consolidated in 2026-07-09 — Step 16.)*
+*(All planned root candidates are in: BIP39 consolidation — Step 16; accessibility, scratch card, signet faucet, intro video player — Step 19.)*
 
 ---
 
@@ -399,7 +400,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 | Metric | Value | Health |
 |--------|-------|--------|
 | Total Files | 187 | 🔴 Growing (was 157 in May) |
-| Root Files | 31 | ⚠️ Improving (53 → 31 since Jul 8) |
+| Root Files | 27 | ⚠️ Improving (53 → 27 since Jul 8) |
 | Archived Files | 68 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
@@ -420,6 +421,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 19 completed: moved 4 feature docs from root to Features/ with convention renames — Accessibility, Intro_Video_Player, Scratch_Card, Signet_Faucet (root 31 → 27, Features 9 → 13). No inbound links |
 | 2026-07-09 | Claude Code | Step 18 completed: moved CloudKitSyncImplementation → `CloudKit/CloudKit_Realtime_Sync.md` (root 32 → 31, CloudKit 3 → 4); fixed 1 inbound reference |
 | 2026-07-09 | Claude Code | Step 17 completed: moved BarkTypes → `API/Bark_Types.md` and daemon-functionality → `API/Bark_Daemon.md` (root 34 → 32, API 3 → 5). Fixed 3 inbound references in BDK docs; gave the daemon doc a proper title |
 | 2026-07-09 | Claude Code | Step 16 completed: consolidated the 3 root BIP39 docs into `Features/BIP39.md` (root 37 → 34, total 189 → 187). Rewrote content against the code — old guides documented a nonexistent `Mnemonic`/`Entropy` API and 24-word phrases; the app uses the protocol-based anquii/BIP39 API and 12-word (128-bit) mnemonics. Noted the missing-checksum-validation gap |
