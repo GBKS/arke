@@ -75,6 +75,24 @@ struct ExitView_iOS: View {
     @State private var claimableHeight: UInt32?
     @State private var exitCostEstimate: ExitCostEstimate?
     @State private var isEstimatingCost = false
+
+    private let forceMoveIntroSubtitles: [VideoSubtitle] = [
+        VideoSubtitle(startTime: 0.001, endTime: 1.840, text: "Let's talk about the forced move."),
+        VideoSubtitle(startTime: 1.840, endTime: 3.440, text: "This is your safety net."),
+        VideoSubtitle(startTime: 3.440, endTime: 6.320, text: "Normally, moving bitcoin to savings is quick."),
+        VideoSubtitle(startTime: 6.320, endTime: 8.800, text: "The server helps, fees are small."),
+        VideoSubtitle(startTime: 8.740, endTime: 10.500, text: "Do that first if you can."),
+        VideoSubtitle(startTime: 10.500, endTime: 12.260, text: "But you're not dependent on it."),
+        VideoSubtitle(startTime: 12.260, endTime: 15.620, text: "If the server ever stops responding, you don't lose anything."),
+        VideoSubtitle(startTime: 15.620, endTime: 18.420, text: "A forced move gets your bitcoin out on your own."),
+        VideoSubtitle(startTime: 18.420, endTime: 20.020, text: "No one's permission needed."),
+        VideoSubtitle(startTime: 20.060, endTime: 21.340, text: "It's not free."),
+        VideoSubtitle(startTime: 21.340, endTime: 23.020, text: "Expect 10 hours or more."),
+        VideoSubtitle(startTime: 23.020, endTime: 26.619, text: "Fees can run high, and it can't be undone once it starts."),
+        VideoSubtitle(startTime: 26.619, endTime: 30.220, text: "And you'll need to check back about once an hour until it's done."),
+        VideoSubtitle(startTime: 30.039, endTime: 34.040, text: "We'll remind you. Keep it for emergencies, but know it's here."),
+        VideoSubtitle(startTime: 34.040, endTime: 36.600, text: "This is what makes the bitcoin truly yours.")
+    ]
     
     // Computed properties
     private var firstExit: ExitVtxo? {
@@ -133,7 +151,15 @@ struct ExitView_iOS: View {
                         exitCostEstimate: exitCostEstimate,
                         onchainBalance: onchainBalance,
                         isConnectedToServer: manager.connectionStatus.isConnected
-                    )
+                    ) {
+                        IntroVideoPlayer_iOS(
+                            videoName: "force-move-intro",
+                            subtitles: forceMoveIntroSubtitles,
+                            autoPlay: false,
+                            subtitleBottomPadding: 16
+                        )
+                        .frame(height: 300)
+                    }
                 }
             }
             .padding()
@@ -176,7 +202,7 @@ struct ExitView_iOS: View {
                     This takes about 24 hours and cannot be cancelled.
                     """)
                     */
-                    Text("This takes about 24 hours and cannot be cancelled.")
+                    Text("This takes about 10+ hours and cannot be cancelled.")
                 } else {
                     Text("""
                     ⚠️ Insufficient onchain balance
@@ -189,7 +215,7 @@ struct ExitView_iOS: View {
                     """)
                 }
             } else {
-                Text(String(localized: "balance_confirm_recover", defaultValue: "Recover \(BitcoinFormatter.shared.formatAmount(spendableBalance))? It takes about 24 hours and cannot be cancelled."))
+                Text(String(localized: "balance_confirm_recover", defaultValue: "Recover \(BitcoinFormatter.shared.formatAmount(spendableBalance))? It takes 10+ hours and cannot be cancelled."))
             }
         }
         .tint(Color.Arke.gold4)

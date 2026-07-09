@@ -39,34 +39,31 @@ class IntroVideoPlayerViewModel: ObservableObject {
     let videoName: String
     let videoExtension: String
     let subtitles: [VideoSubtitle]
+    let autoPlay: Bool
     let onVideoEnded: () -> Void
-    
+
+    private var hasConfiguredAudioSession = false
+
     init(
         videoName: String,
         videoExtension: String = "mp4",
         subtitles: [VideoSubtitle] = [],
+        autoPlay: Bool = true,
         onVideoEnded: @escaping () -> Void = {}
     ) {
         self.videoName = videoName
         self.videoExtension = videoExtension
         self.subtitles = subtitles
+        self.autoPlay = autoPlay
         self.onVideoEnded = onVideoEnded
     }
-    
+
     func setupPlayer() -> AVPlayer? {
         guard let videoURL = Bundle.main.url(forResource: videoName, withExtension: videoExtension) else {
             print("❌ Video not found: \(videoName).\(videoExtension)")
             return nil
         }
-        
-        // Configure audio session for playback with audio
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to set audio session: \(error)")
-        }
-        
+
         let player = AVPlayer(url: videoURL)
         self.player = player
         
@@ -89,33 +86,55 @@ class IntroVideoPlayerViewModel: ObservableObject {
             }
         }
         
-        // Auto-play
-        player.play()
-        // Defer state change to avoid "Publishing changes from within view updates" warning
-        DispatchQueue.main.async { [weak self] in
-            self?.isPlaying = true
+        if autoPlay {
+            configureAudioSession()
+            player.play()
+            // Defer state change to avoid "Publishing changes from within view updates" warning
+            DispatchQueue.main.async { [weak self] in
+                self?.isPlaying = true
+            }
         }
-        
+
         return player
     }
-    
+
+    // Configure lazily so a paused player doesn't interrupt other audio until playback starts
+    private func configureAudioSession() {
+        guard !hasConfiguredAudioSession else { return }
+        hasConfiguredAudioSession = true
+
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("Failed to set audio session: \(error)")
+        }
+    }
+
     func togglePlayPause() {
         guard let player = player else { return }
-        
+
         if isPlaying {
             player.pause()
+            isPlaying = false
         } else {
+            if hasEnded {
+                player.seek(to: .zero)
+                hasEnded = false
+            }
+            configureAudioSession()
             player.play()
+            isPlaying = true
         }
-        isPlaying.toggle()
     }
-    
+
     func pause() {
         player?.pause()
         isPlaying = false
     }
-    
+
     func play() {
+        configureAudioSession()
         player?.play()
         isPlaying = true
     }
@@ -167,11 +186,14 @@ struct IntroVideoPlayer_iOS: View {
     @StateObject private var viewModel: IntroVideoPlayerViewModel
     @Binding var isMuted: Bool
     @Binding var isPaused: Bool
-    
+    private let subtitleBottomPadding: CGFloat
+
     init(
         videoName: String,
         videoExtension: String = "mp4",
         subtitles: [VideoSubtitle] = [],
+        autoPlay: Bool = true,
+        subtitleBottomPadding: CGFloat = 60,
         isMuted: Binding<Bool> = .constant(false),
         isPaused: Binding<Bool> = .constant(false),
         onVideoEnded: @escaping () -> Void = {}
@@ -180,10 +202,12 @@ struct IntroVideoPlayer_iOS: View {
             videoName: videoName,
             videoExtension: videoExtension,
             subtitles: subtitles,
+            autoPlay: autoPlay,
             onVideoEnded: onVideoEnded
         ))
         _isMuted = isMuted
         _isPaused = isPaused
+        self.subtitleBottomPadding = subtitleBottomPadding
     }
     
     var body: some View {
@@ -192,19 +216,17 @@ struct IntroVideoPlayer_iOS: View {
             IntroVideoPlayerView(viewModel: viewModel)
                 .ignoresSafeArea()
             
-            // Tap overlay for play/pause
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    viewModel.togglePlayPause()
-                }
-            
-            // Play/pause indicator
-            if !viewModel.isPlaying && !viewModel.hasEnded {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .shadow(color: .black.opacity(0.3), radius: 10)
+            // Play/pause/replay indicator
+            if !viewModel.isPlaying {
+                Image(systemName: viewModel.hasEnded ? "arrow.counterclockwise" : "play.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.white)
+                    .frame(width: 75, height: 75)
+                    .background(
+                        Circle()
+                            .fill(.black.opacity(0.75))
+                            .shadow(color: .black.opacity(0.3), radius: 10)
+                    )
                     .transition(.opacity.combined(with: .scale))
             }
             
@@ -225,10 +247,18 @@ struct IntroVideoPlayer_iOS: View {
                                 .shadow(color: .black.opacity(0.3), radius: 8)
                         )
                         .padding(.horizontal, 40)
-                        .padding(.bottom, 60)
+                        .padding(.bottom, subtitleBottomPadding)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+
+            // Tap overlay for play/pause; kept topmost so the indicator and
+            // subtitles below never swallow taps
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    viewModel.togglePlayPause()
+                }
         }
         .animation(.easeInOut(duration: 0.3), value: viewModel.isPlaying)
         .animation(.easeInOut(duration: 0.3), value: viewModel.currentSubtitle)

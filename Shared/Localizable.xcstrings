@@ -2191,7 +2191,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This is an emergency feature for moving your bitcoin from payments to savings, without the involvement of the server that is usually involved."
+            "value" : "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only."
           }
         }
       }

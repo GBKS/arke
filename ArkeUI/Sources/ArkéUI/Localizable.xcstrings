@@ -23,9 +23,6 @@
     "%lld/30" : {
 
     },
-    "A forced move is meant for emergencies." : {
-
-    },
     "accessibility_amount_field" : {
       "localizations" : {
         "en" : {
@@ -315,7 +312,14 @@
       }
     },
     "action_start_forced_move" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start a forced move"
+          }
+        }
+      }
     },
     "action_tap_copy" : {
       "localizations" : {
@@ -468,7 +472,14 @@
 
     },
     "balance_amount_to_recover" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount to move"
+          }
+        }
+      }
     },
     "balance_confirm_withdraw" : {
       "extractionState" : "stale",
@@ -482,13 +493,54 @@
       }
     },
     "balance_emergency_move_help" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only."
+          }
+        }
+      }
     },
     "balance_final_step_fee" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fees may be quite large"
+          }
+        }
+      }
+    },
+    "balance_forced_move_emergencies_only" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use a forced move only if the server won't cooperate."
+          }
+        }
+      }
+    },
+    "balance_forced_move_server_connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There's a faster, cheaper way to move to Savings in the balance details view."
+          }
+        }
+      }
     },
     "balance_no_bitcoin_payments" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You don't have any bitcoin in your payments balance to move."
+          }
+        }
+      }
     },
     "button_cancel" : {
       "extractionState" : "manual",
@@ -581,6 +633,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finalize Withdrawal"
+          }
+        }
+      }
+    },
+    "button_insufficient_balance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insufficient Balance"
           }
         }
       }
@@ -695,6 +757,7 @@
       }
     },
     "emoji_category_recent" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -978,9 +1041,6 @@
     "Increase your savings balance to cover the fee." : {
 
     },
-    "Insufficient Balance" : {
-
-    },
     "label_amount" : {
       "localizations" : {
         "en" : {
@@ -1244,10 +1304,24 @@
       }
     },
     "message_cannot_cancel" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It cannot be cancelled"
+          }
+        }
+      }
     },
     "message_hourly_checkin_required" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You will need to check in once per hour until completion"
+          }
+        }
+      }
     },
     "message_not_needed_empty_balance" : {
       "localizations" : {
@@ -1260,7 +1334,14 @@
       }
     },
     "message_takes_24_hours" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A forced move can take 10+ hours"
+          }
+        }
+      }
     },
     "nav_title_bitcoin_formatter_examples" : {
       "localizations" : {
@@ -1599,9 +1680,6 @@
       }
     },
     "You are connected to %@, a test network for development and experimentation." : {
-
-    },
-    "You are still connected to the server. If it still cooperates and you just want to move bitcoin from payments to savings, use the respective option in the balance details view." : {
 
     }
   },

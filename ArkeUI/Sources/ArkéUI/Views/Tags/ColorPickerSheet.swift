@@ -33,30 +33,7 @@ public struct ColorPickerSheet: View {
                     // Predefined Colors
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
                         ForEach(Array(predefinedColors.enumerated()), id: \.element) { index, colorHex in
-                            Button(action: {
-                                selectedColorHex = colorHex
-                                dismiss()
-                            }) {
-                                Circle()
-                                    .fill(Color(hex: colorHex) ?? .Arke.blue)
-                                    .frame(width: 50, height: 50)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(
-                                                selectedColorHex == colorHex ? Color.systemBackground : Color.clear,
-                                                lineWidth: 8
-                                            )
-                                            .stroke(
-                                                selectedColorHex == colorHex ? Color(hex: colorHex) : Color.clear,
-                                                lineWidth: 2
-                                            )
-                                    )
-                                    .scaleEffect(selectedColorHex == colorHex ? 1.1 : 1.0)
-                                    .animation(.spring(response: 0.3), value: selectedColorHex)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel(Text("accessibility_color_swatch \(index + 1)", bundle: .module))
-                            .accessibilityAddTraits(selectedColorHex == colorHex ? [.isButton, .isSelected] : .isButton)
+                            swatchButton(index: index, colorHex: colorHex)
                         }
                     }
                     .padding(.horizontal)
@@ -112,6 +89,29 @@ public struct ColorPickerSheet: View {
                 customColor = color
             }
         }
+    }
+
+    private func swatchButton(index: Int, colorHex: String) -> some View {
+        let isSelected = selectedColorHex == colorHex
+        let fillColor: Color = Color(hex: colorHex) ?? .Arke.blue
+        let outerRing: Color = isSelected ? .systemBackground : .clear
+        let innerRing: Color = isSelected ? fillColor : .clear
+
+        return Button(action: {
+            selectedColorHex = colorHex
+            dismiss()
+        }) {
+            Circle()
+                .fill(fillColor)
+                .frame(width: 50, height: 50)
+                .overlay(Circle().stroke(outerRing, lineWidth: 8))
+                .overlay(Circle().stroke(innerRing, lineWidth: 2))
+                .scaleEffect(isSelected ? 1.1 : 1.0)
+                .animation(.spring(response: 0.3), value: selectedColorHex)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("accessibility_color_swatch \(index + 1)", bundle: .module))
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 

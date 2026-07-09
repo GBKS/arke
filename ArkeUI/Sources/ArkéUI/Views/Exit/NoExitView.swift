@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-public struct NoExitView: View {
+public struct NoExitView<Media: View>: View {
     let spendableBalance: UInt64
     let isProcessing: Bool
     let onStartExit: () -> Void
     let exitCostEstimate: ExitCostEstimate?
     let onchainBalance: UInt64
     let isConnectedToServer: Bool
+    let media: Media
 
     @State private var acknowledgedTakesTime = false
     @State private var acknowledgedCannotCancel = false
@@ -26,7 +27,8 @@ public struct NoExitView: View {
         onStartExit: @escaping () -> Void,
         exitCostEstimate: ExitCostEstimate?,
         onchainBalance: UInt64,
-        isConnectedToServer: Bool
+        isConnectedToServer: Bool,
+        @ViewBuilder media: () -> Media
     ) {
         self.spendableBalance = spendableBalance
         self.isProcessing = isProcessing
@@ -34,6 +36,7 @@ public struct NoExitView: View {
         self.exitCostEstimate = exitCostEstimate
         self.onchainBalance = onchainBalance
         self.isConnectedToServer = isConnectedToServer
+        self.media = media()
     }
     
     private var allAcknowledged: Bool {
@@ -42,19 +45,17 @@ public struct NoExitView: View {
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Image("exit")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: 250)
+            media
+                .frame(maxWidth: .infinity, maxHeight: 300)
                 .cornerRadius(25)
                 .clipped()
             
             // Icon and title
             VStack(alignment: .leading, spacing: 10) {
-                Text("action_start_forced_move")
+                Text("action_start_forced_move", bundle: .module)
                     .font(.system(.title, design: .serif))
-                
-                Text(String(localized: "balance_emergency_move_help"))
+
+                Text(String(localized: "balance_emergency_move_help", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -82,15 +83,18 @@ public struct NoExitView: View {
                 // Connection status info box
                 if isConnectedToServer {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("You are still connected to the server. If it still cooperates and you just want to move bitcoin from payments to savings, use the respective option in the balance details view.")
+                        Text("balance_forced_move_server_connected", bundle: .module)
                             .font(.body)
                             .foregroundColor(.primary)
-                        
-                        Text("A forced move is meant for emergencies.")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("balance_forced_move_emergencies_only", bundle: .module)
                             .font(.body)
                             .foregroundColor(.primary)
                             .fontWeight(.medium)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 15)
                     .background {
@@ -141,12 +145,12 @@ public struct NoExitView: View {
                     onStartExit()
                 } label: {
                     if let estimate = exitCostEstimate, !estimate.canAfford {
-                        Label("Insufficient Balance", systemImage: "exclamationmark.triangle")
+                        Label(String(localized: "button_insufficient_balance", bundle: .module), systemImage: "exclamationmark.triangle")
                             .font(.system(size: 21, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
                     } else {
-                        Text("button_start")
+                        Text("button_start", bundle: .module)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
@@ -158,7 +162,7 @@ public struct NoExitView: View {
                 .tint(exitCostEstimate?.canAfford == false ? .red : Color.Arke.gold)
                 .disabled(spendableBalance == 0 || isProcessing || (exitCostEstimate?.canAfford == false) || !allAcknowledged)
             } else {
-                Text(String(localized: "balance_no_bitcoin_payments"))
+                Text(String(localized: "balance_no_bitcoin_payments", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.primary)
                     .padding(.top, 10)
@@ -181,8 +185,8 @@ struct CheckableWarningItem: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 30))
                     .foregroundColor(isChecked ? Color.Arke.green : .primary.opacity(0.15))
-                
-                Text(text)
+
+                Text(text, bundle: .module)
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
@@ -282,7 +286,11 @@ public struct ExitCostEstimate {
         ),
         onchainBalance: 50000,
         isConnectedToServer: true
-    )
+    ) {
+        Image("exit")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+    }
     .padding()
 }
 #Preview("Cannot Afford") {
@@ -302,7 +310,11 @@ public struct ExitCostEstimate {
         ),
         onchainBalance: 10000,
         isConnectedToServer: false
-    )
+    ) {
+        Image("exit")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+    }
     .padding()
 }
 
@@ -314,7 +326,11 @@ public struct ExitCostEstimate {
         exitCostEstimate: nil,
         onchainBalance: 10000,
         isConnectedToServer: true
-    )
+    ) {
+        Image("exit")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+    }
     .padding()
 }
 
