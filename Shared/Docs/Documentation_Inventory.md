@@ -1,7 +1,7 @@
 # Documentation Inventory & Modernization Plan
 
 **Last Updated:** July 9, 2026
-**Total Documentation Files:** 189
+**Total Documentation Files:** 187
 **Purpose:** Comprehensive inventory of all documentation to guide modernization efforts
 
 ---
@@ -12,7 +12,7 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 37 | 20% |
+| Root-level files | 34 | 18% |
 | Archive (historical) | 68 | 36% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
@@ -134,7 +134,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ### Reorganization (move to proper homes)
 
-- [ ] **Step 16:** BIP39 docs (3 files) → `Features/` (or consolidate 3 → 1 while moving).
+- [x] **Step 16:** ✅ 2026-07-09 — Consolidated the 3 BIP39 docs into new `Features/BIP39.md` (git mv of INTEGRATION_GUIDE preserves history; QUICK_REFERENCE was a subset, TROUBLESHOOTING's lasting content folded in). Rewritten against the code: the old guides documented a `Mnemonic`/`Entropy` API the anquii/BIP39 library doesn't have, and claimed 24-word phrases while the app generates 12-word (128-bit). Deleted originals per policy (content merged). No inbound links existed.
 - [ ] **Step 17:** `BarkTypes.md` → `API/`; `daemon-functionality.md` → `API/` or `Architecture/`.
 - [ ] **Step 18:** `CloudKitSyncImplementation.md` → `CloudKit/`.
 - [ ] **Step 19:** `ACCESSIBILITY.md`, `INTRO_VIDEO_PLAYER_GUIDE.md`, `SCRATCH_CARD_IMPLEMENTATION.md`, `SIGNET_FAUCET_IMPLEMENTATION.md` → `Features/`.
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (37 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (34 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 37 after Steps 1–4 and 11–15. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 34 after Steps 1–4, 11–15, and 16. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -175,7 +175,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** BIP39_* (3 → Features/), ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION (→ Features/), BarkTypes, daemon-functionality (→ API/), CloudKitSyncImplementation (→ CloudKit/), DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs)
+**Move to subdirectories:** ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION (→ Features/), BarkTypes, daemon-functionality (→ API/), CloudKitSyncImplementation (→ CloudKit/), DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md 2026-07-09 — Step 16.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -210,15 +210,16 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Features/ (8 files) ✅ GOOD STRUCTURE
+### Features/ (9 files) ✅ GOOD STRUCTURE
 
 - `intro.md`, `balance-persistence.md`, `tag-system.md`, `theme-system-implementation.md`
 - `Read_Only_Mode.md` (Jul 9) — secondary-device read-only mode + primary device switching (distilled from the two archived plans, Steps 11–12)
 - `LNURL_Pay.md` (Jul 9) — LNURL-pay send support (distilled from the archived plan, Step 13; Bark 0.11 handles the flow natively via `payLnurl`)
+- `BIP39.md` (Jul 9) — mnemonic generation/validation/storage, consolidated from the 3 root BIP39 docs (Step 16) and corrected against the actual anquii/BIP39 API
 - `send-metadata-enhancement.md` (1,088 lines, Jun 24) — active feature plan (contact/tag/note assignment during send)
 - `send-metadata-enhancement_phase_0_complete.md` — ⚠️ phase doc; fold status into the main doc and archive once the feature completes
 
-**Candidate additions from root:** BIP39 docs, accessibility, scratch card, signet faucet, intro video player.
+**Candidate additions from root:** accessibility, scratch card, signet faucet, intro video player (Step 19). *(BIP39 docs consolidated in 2026-07-09 — Step 16.)*
 
 ---
 
@@ -398,8 +399,8 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Metric | Value | Health |
 |--------|-------|--------|
-| Total Files | 189 | 🔴 Growing (was 157 in May) |
-| Root Files | 37 | ⚠️ Improving (53 → 37 since Jul 8) |
+| Total Files | 187 | 🔴 Growing (was 157 in May) |
+| Root Files | 34 | ⚠️ Improving (53 → 34 since Jul 8) |
 | Archived Files | 68 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
@@ -420,6 +421,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 16 completed: consolidated the 3 root BIP39 docs into `Features/BIP39.md` (root 37 → 34, total 189 → 187). Rewrote content against the code — old guides documented a nonexistent `Mnemonic`/`Entropy` API and 24-word phrases; the app uses the protocol-based anquii/BIP39 API and 12-word (128-bit) mnemonics. Noted the missing-checksum-validation gap |
 | 2026-07-09 | Claude Code | Step 15 completed: archived PASSKEY_INTEGRATION_PLAN + _REVIEW to Archive/Implementations/ as **not pursued** (decision by Christoph: passkeys don't bring enough benefit; plan was never implemented). Root 39 → 37, Archive 66 → 68; stale-status plan docs now 0. Updated 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS and the Archive index |
 | 2026-07-09 | Claude Code | Step 14 completed: verified all three plans shipped — Live Activity exits (2026-05-12), VTXO refresh ppm-free logic (2026-04-24), wallet backup (2026-05-07) — and archived them to Archive/Implementations/ with archive notes (root 42 → 39, Archive 63 → 66). Fixed 1 reference in DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED |
 | 2026-07-09 | Claude Code | Step 13 completed: verified LNURL-pay shipped 2026-05-30 (Bark 0.11 now runs the flow natively via `payLnurl`, superseding the plan's app-side invoice handling), archived LNURL_PAY_IMPLEMENTATION_PLAN to Archive/Implementations/ (root 43 → 42, Archive 62 → 63), distilled current behavior into new `Features/LNURL_Pay.md`, updated 2 references in Bark 0.11.3 migration docs and the Archive index |
