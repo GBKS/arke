@@ -499,7 +499,7 @@ func emergencyTakeoverAsPrimary() async throws {
 - ✅ Basic `migrateToThisDevice()` method (DeviceRegistrationService.swift:554)
 - ✅ CloudKit sync of device registrations
 - ✅ NSUbiquitousKeyValueStore infrastructure (MainView_iOS.swift:155-290)
-- ✅ Read-only mode (WalletManager.isReadOnlyMode, READ_ONLY_MODE_IMPLEMENTATION_PLAN.md)
+- ✅ Read-only mode (WalletManager.isReadOnlyMode, Features/Read_Only_Mode.md)
 
 **What needs to be added**:
 
@@ -1592,7 +1592,7 @@ If a device has been demoted, the app:
 
 ## Related Documentation
 - `LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` - Overview of device system
-- `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` - Read-only mode details (✅ Complete)
+- `Features/Read_Only_Mode.md` - Read-only mode + device role switching (✅ shipped; plan archived)
 - `Device_Registry_Reference.md` - Device API reference
 
 ---

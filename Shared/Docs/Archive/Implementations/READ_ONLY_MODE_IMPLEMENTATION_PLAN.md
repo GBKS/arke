@@ -1,5 +1,7 @@
 # Read-Only Mode Implementation Plan
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-05-07. Current behavior is documented in [`../../Features/Read_Only_Mode.md`](../../Features/Read_Only_Mode.md); this plan is preserved for implementation history.
+
 **Created:** 2026-05-07
 **Status:** ✅ **COMPLETED** (Phase 1 & 2 Complete)
 **Completed:** 2026-05-07

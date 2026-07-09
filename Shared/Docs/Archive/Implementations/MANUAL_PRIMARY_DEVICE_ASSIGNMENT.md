@@ -1,5 +1,7 @@
 # Manual Primary Device Assignment
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-05-12. Current behavior is documented in [`../../Features/Read_Only_Mode.md`](../../Features/Read_Only_Mode.md) (Switching the Primary Device section); this plan and its code review are preserved for implementation history.
+
 **Created:** 2026-05-12
 **Status:** ✅ IMPLEMENTED (2026-05-12)
 **Priority:** High

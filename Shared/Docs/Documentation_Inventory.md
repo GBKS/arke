@@ -1,7 +1,7 @@
 # Documentation Inventory & Modernization Plan
 
-**Last Updated:** July 8, 2026
-**Total Documentation Files:** 187
+**Last Updated:** July 9, 2026
+**Total Documentation Files:** 188
 **Purpose:** Comprehensive inventory of all documentation to guide modernization efforts
 
 ---
@@ -12,14 +12,14 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 45 | 24% |
-| Archive (historical) | 60 | 32% |
+| Root-level files | 43 | 23% |
+| Archive (historical) | 62 | 33% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
 | Migrations (Bark FFI) | 10 | 5% |
 | Address history | 4 | 2% |
-| Other subdirectories | 47 | 25% |
-| **TOTAL** | **187** | **100%** |
+| Other subdirectories | 48 | 26% |
+| **TOTAL** | **188** | **100%** |
 
 ### Documentation Health
 
@@ -53,8 +53,8 @@ The dominant new problem. Implementation plans get created at root, the work shi
 
 | File | Doc Says | Actual Status |
 |------|----------|---------------|
-| `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` | ✅ Completed | Done — archive or convert to feature doc |
-| `MANUAL_PRIMARY_DEVICE_ASSIGNMENT.md` | ✅ Implemented | Done — archive or convert to feature doc |
+| ~~`READ_ONLY_MODE_IMPLEMENTATION_PLAN.md`~~ | — | ✅ Archived 2026-07-09, distilled into `Features/Read_Only_Mode.md` |
+| ~~`MANUAL_PRIMARY_DEVICE_ASSIGNMENT.md`~~ | — | ✅ Archived 2026-07-09, covered by `Features/Read_Only_Mode.md` |
 | `LNURL_PAY_IMPLEMENTATION_PLAN.md` | Plan | Shipped (LNURLResolverTests exist) — verify, then archive/convert |
 | `LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` | ✅ Complete | Done — valuable architecture content, keep but consider Architecture/ |
 | `DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` | Planning | Supersedes non-revised version |
@@ -126,8 +126,8 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ### Completed-plan cleanup (verify status, then archive or convert)
 
-- [ ] **Step 11:** `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` — completed; archive, or distill into a short `Features/read-only-mode.md` if the behavior needs living docs.
-- [ ] **Step 12:** `MANUAL_PRIMARY_DEVICE_ASSIGNMENT.md` — implemented; same treatment.
+- [x] **Step 11:** ✅ 2026-07-09 — Archived `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` to `Archive/Implementations/`; distilled current behavior into new `Features/Read_Only_Mode.md` (also covers Step 12's role switching). Fixed 4 inbound references in 3 docs.
+- [x] **Step 12:** ✅ 2026-07-09 — Archived `MANUAL_PRIMARY_DEVICE_ASSIGNMENT.md` to `Archive/Implementations/` (no inbound links); its demote/promote flows are covered by `Features/Read_Only_Mode.md` § Switching the Primary Device.
 - [ ] **Step 13:** `LNURL_PAY_IMPLEMENTATION_PLAN.md` — verify shipped, then same treatment.
 - [ ] **Step 14:** `LIVE_ACTIVITY_EXIT_PROGRESSION_PLAN.md`, `VTXO_REFRESH_LOGIC_PLAN.md`, `WALLET_BACKUP_PLAN.md` — check each against the codebase, update status header, archive if done and abandoned.
 - [ ] **Step 15:** `PASSKEY_INTEGRATION_PLAN.md` + `_REVIEW.md` — decide: revise for current codebase (LinkWalletView is gone) or archive both.
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (45 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (43 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 45 after Steps 1–4. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 43 after Steps 1–4 and 11–12. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -171,7 +171,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 #### Everything Else
 All other root files have a disposition in the Small-Steps Refinement Backlog above (archive, move to a subdirectory, or verify-then-archive). Full categorized listing:
 
-**Completed work, archive candidates:** READ_ONLY_MODE_IMPLEMENTATION_PLAN, MANUAL_PRIMARY_DEVICE_ASSIGNMENT, LNURL_PAY_IMPLEMENTATION_PLAN, FIX_DATABASE_ERROR_AFTER_DELETION, BEFORE_AFTER_COMPARISON, NETWORK_MISMATCH_UX_CHANGES, PASSKEY_INTEGRATION_PLAN(_REVIEW). *(Device registry/migration docs archived 2026-07-08 — Steps 2 & 4.)*
+**Completed work, archive candidates:** LNURL_PAY_IMPLEMENTATION_PLAN, FIX_DATABASE_ERROR_AFTER_DELETION, BEFORE_AFTER_COMPARISON, NETWORK_MISMATCH_UX_CHANGES, PASSKEY_INTEGRATION_PLAN(_REVIEW). *(Device registry/migration docs archived 2026-07-08 — Steps 2 & 4; read-only mode + manual primary assignment archived 2026-07-09 — Steps 11 & 12.)*
 
 **Verify status first:** LIVE_ACTIVITY_EXIT_PROGRESSION_PLAN, VTXO_REFRESH_LOGIC_PLAN, WALLET_BACKUP_PLAN, APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation
 
@@ -210,9 +210,10 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Features/ (6 files) ✅ GOOD STRUCTURE
+### Features/ (7 files) ✅ GOOD STRUCTURE
 
 - `intro.md`, `balance-persistence.md`, `tag-system.md`, `theme-system-implementation.md`
+- `Read_Only_Mode.md` (Jul 9) — secondary-device read-only mode + primary device switching (distilled from the two archived plans, Steps 11–12)
 - `send-metadata-enhancement.md` (1,088 lines, Jun 24) — active feature plan (contact/tag/note assignment during send)
 - `send-metadata-enhancement_phase_0_complete.md` — ⚠️ phase doc; fold status into the main doc and archive once the feature completes
 
@@ -327,14 +328,14 @@ All 6 historical phase docs moved to `Archive/Implementations/FFI initial integr
 
 ---
 
-### Archive/ (60 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
+### Archive/ (62 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
 
 Now organized into category folders (plus `readme.md` index at Archive root):
 - `Migrations/` (7) — completed model/architecture migrations
-- `Implementations/` (37) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
+- `Implementations/` (39) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
 - `Fixes/` (15) — completed bug-fix and tracing/diagnostic docs
 
-Steps 5–10 added 33 files. Archived files keep their original names per the naming policy.
+Steps 5–10 added 33 files; Steps 11–12 added the read-only mode and manual primary assignment plans. Archived files keep their original names per the naming policy.
 
 ---
 
@@ -392,15 +393,15 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 ## Metrics & Health Indicators
 
-### Current State (July 8, 2026)
+### Current State (July 9, 2026)
 
 | Metric | Value | Health |
 |--------|-------|--------|
-| Total Files | 187 | 🔴 Growing (was 157 in May) |
-| Root Files | 45 | ⚠️ Improving (53 → 45 on Jul 8) |
-| Archived Files | 60 | ✅ Restructured into category folders |
+| Total Files | 188 | 🔴 Growing (was 157 in May) |
+| Root Files | 43 | ⚠️ Improving (53 → 43 since Jul 8) |
+| Archived Files | 62 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
-| Stale-status plan docs | ~7 | ⚠️ New problem category |
+| Stale-status plan docs | ~5 | ⚠️ Improving (was ~7) |
 | Total Lines | ~56,800 | — |
 
 ### Target State
@@ -418,6 +419,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Steps 11–12 completed: archived READ_ONLY_MODE_IMPLEMENTATION_PLAN + MANUAL_PRIMARY_DEVICE_ASSIGNMENT to Archive/Implementations/ (root 45 → 43, Archive 60 → 62), distilled both into new `Features/Read_Only_Mode.md`, fixed 4 inbound references in 3 docs, updated Archive/readme.md index |
 | 2026-07-08 | Claude Code | Steps 5–10 completed: restructured Archive/ into Migrations/Implementations/Fixes category folders (26 existing files sorted), then archived 33 files from FFI initial integration/ (dir removed), Movements/, Address history/, Initialization/, Contacts/ (dir removed), and Send/. Archive 27 → 60. ISSUE_1/2 kept pending code verification. Fixed 6 inbound references |
 | 2026-07-08 | Claude Code | Naming convention decided: `Title_Case_With_Underscores.md` (per Christoph); living docs get renamed during their backlog moves, Archive keeps original names |
 | 2026-07-08 | Claude Code | Renamed the two settled keepers to the new convention: DEVICE_REGISTRY_QUICK_REFERENCE → Device_Registry_Reference, DOCUMENTATION_INVENTORY → Documentation_Inventory; fixed inbound links (INITIALIZATION_FLOWS deprecation notice + 2 mentions) |

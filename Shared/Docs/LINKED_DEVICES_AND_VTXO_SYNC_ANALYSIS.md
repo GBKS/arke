@@ -577,7 +577,7 @@ if !manager.isReadOnlyMode {
 
 ## Related Documentation
 
-- `READ_ONLY_MODE_IMPLEMENTATION_PLAN.md` - Detailed read-only mode implementation
+- `Features/Read_Only_Mode.md` - Read-only mode behavior (plan archived in Archive/Implementations/)
 - `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` - Device system implementation
 - `Device_Registry_Reference.md` - Device API reference
 - `CloudKitSyncImplementation.md` - Sync architecture
