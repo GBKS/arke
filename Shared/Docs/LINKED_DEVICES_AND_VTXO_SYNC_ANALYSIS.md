@@ -582,7 +582,7 @@ if !manager.isReadOnlyMode {
 - `Device_Registry_Reference.md` - Device API reference
 - `CloudKitSyncImplementation.md` - Sync architecture
 - `CloudKit/CloudKitSyncGuidelines.md` - Sync best practices
-- `PASSKEY_INTEGRATION_PLAN.md` - Future server recovery plans
+- `Archive/Implementations/PASSKEY_INTEGRATION_PLAN.md` - Server recovery-mailbox research (passkey integration itself not pursued; archived 2026-07-09)
 
 ---
 

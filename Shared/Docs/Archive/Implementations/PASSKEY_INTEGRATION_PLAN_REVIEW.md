@@ -1,3 +1,7 @@
+# Passkey Integration Plan — Review Transcript
+
+> **📦 Archived 2026-07-09 — not pursued.** Raw review transcript for `PASSKEY_INTEGRATION_PLAN.md`, which was archived unimplemented (passkeys were judged not to bring enough benefit to Arke).
+
 From bark repo:
 
 I’m reviewing the passkey integration plan against the repo’s own agent instructions and the existing code/docs first, then I’ll give you a findings-first evaluation with concrete gaps and risks.

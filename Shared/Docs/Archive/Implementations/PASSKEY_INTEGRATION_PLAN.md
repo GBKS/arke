@@ -1,6 +1,6 @@
 # Passkey Integration Implementation Plan
 
-> ⚠️ **DEPRECATION NOTICE**: This document references `LinkWalletView` as part of the pre-Passkey user experience. LinkWalletView was removed in June 2026 when QR-based wallet linking was replaced with automatic iCloud Keychain sync. Future Passkey integration should build upon the current Device Registry system, not the deprecated LinkWalletView.
+> **📦 Archived 2026-07-09 — not pursued.** Decision (Christoph): passkey integration does not bring enough benefit to Arke, so this plan was never implemented and there are no plans to revive it. Preserved for the recovery-mailbox research it contains (see also `PASSKEY_INTEGRATION_PLAN_REVIEW.md`). Note the plan also references `LinkWalletView`, which was removed in June 2026 when QR-based wallet linking was replaced with automatic iCloud Keychain sync.
 
 ## Executive Summary
 

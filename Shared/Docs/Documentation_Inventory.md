@@ -12,8 +12,8 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 39 | 21% |
-| Archive (historical) | 66 | 35% |
+| Root-level files | 37 | 20% |
+| Archive (historical) | 68 | 36% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
 | Migrations (Bark FFI) | 10 | 5% |
@@ -64,8 +64,8 @@ The dominant new problem. Implementation plans get created at root, the work shi
 | ~~`WALLET_BACKUP_PLAN.md`~~ | — | ✅ Archived 2026-07-09 (shipped 2026-05-07) |
 | `RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md` | Plan | Active (Jul 6) — keep at root for now |
 | `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md` | Active | Paused mid-refactor (Phase 3b next) — keep |
-| `PASSKEY_INTEGRATION_PLAN.md` | Planning | Has deprecation notice (references removed LinkWalletView) — needs revision or archive |
-| `PASSKEY_INTEGRATION_PLAN_REVIEW.md` | Review notes | Raw pasted review transcript — archive with plan |
+| ~~`PASSKEY_INTEGRATION_PLAN.md`~~ | — | ✅ Archived 2026-07-09, not pursued (decision: no benefit) |
+| ~~`PASSKEY_INTEGRATION_PLAN_REVIEW.md`~~ | — | ✅ Archived 2026-07-09 with the plan |
 
 ### 2. Device Registry Documentation Redundancy — ✅ RESOLVED 2026-07-08
 
@@ -74,7 +74,7 @@ Was seven root-level files for one completed feature. Archived the 3 phase summa
 ### 3. Non-Documentation Files at Root — ✅ MOSTLY RESOLVED 2026-07-08
 
 - ~~`ExitTransactionStatus_History.md` and `ExitTransactionStatus_State.md`~~ — moved to `Data samples/` (Step 1).
-- `PASSKEY_INTEGRATION_PLAN_REVIEW.md` is a pasted conversation transcript — handled with the passkey plan in Step 15.
+- ~~`PASSKEY_INTEGRATION_PLAN_REVIEW.md` is a pasted conversation transcript~~ — ✅ archived with the passkey plan (Step 15, 2026-07-09).
 
 ### 4. Long-Standing Misplaced/Historical Files — ✅ ARCHIVAL HALF RESOLVED 2026-07-08
 
@@ -130,7 +130,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 - [x] **Step 12:** ✅ 2026-07-09 — Archived `MANUAL_PRIMARY_DEVICE_ASSIGNMENT.md` to `Archive/Implementations/` (no inbound links); its demote/promote flows are covered by `Features/Read_Only_Mode.md` § Switching the Primary Device.
 - [x] **Step 13:** ✅ 2026-07-09 — Verified LNURL-pay shipped (2026-05-30; LNURLResolver, `.lnurl` in ArkéUI AddressFormat, payment execution, tests all present). Archived the plan to `Archive/Implementations/`; distilled current behavior into `Features/LNURL_Pay.md` — notably, since Bark 0.11 the LNURL flow runs natively via `payLnurl`, superseding the plan's app-side invoice handling. Updated 2 references in the Bark 0.11.3 migration docs.
 - [x] **Step 14:** ✅ 2026-07-09 — All three verified shipped and archived to `Archive/Implementations/` with archive notes: Live Activity (2026-05-12; all planned files exist in Shared + ArkeWidgets, plan's checklist was just never ticked), VTXO refresh logic (2026-04-24; `BalanceRefreshStatusViewModel` implements the ppm-free-window design as written), wallet backup (2026-05-07; `WalletBackupService` — note the DB is `bark.sqlite`, not the plan's `db.sqlite`). Fixed 1 inbound reference in DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.
-- [ ] **Step 15:** `PASSKEY_INTEGRATION_PLAN.md` + `_REVIEW.md` — decide: revise for current codebase (LinkWalletView is gone) or archive both.
+- [x] **Step 15:** ✅ 2026-07-09 — Archived `PASSKEY_INTEGRATION_PLAN.md` + `_REVIEW.md` to `Archive/Implementations/` with "not pursued" notes. Decision (Christoph): passkey integration doesn't bring enough benefit; no revival planned. Updated the 1 inbound reference (LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS related-docs list).
 
 ### Reorganization (move to proper homes)
 
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (39 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (37 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 39 after Steps 1–4 and 11–14. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 37 after Steps 1–4 and 11–15. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -171,7 +171,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 #### Everything Else
 All other root files have a disposition in the Small-Steps Refinement Backlog above (archive, move to a subdirectory, or verify-then-archive). Full categorized listing:
 
-**Completed work, archive candidates:** FIX_DATABASE_ERROR_AFTER_DELETION, BEFORE_AFTER_COMPARISON, NETWORK_MISMATCH_UX_CHANGES, PASSKEY_INTEGRATION_PLAN(_REVIEW). *(Device registry/migration docs archived 2026-07-08 — Steps 2 & 4; read-only mode + manual primary assignment archived 2026-07-09 — Steps 11 & 12; LNURL-pay plan archived 2026-07-09 — Step 13.)*
+**Completed work, archive candidates:** FIX_DATABASE_ERROR_AFTER_DELETION, BEFORE_AFTER_COMPARISON, NETWORK_MISMATCH_UX_CHANGES. *(Device registry/migration docs archived 2026-07-08 — Steps 2 & 4; read-only mode + manual primary assignment archived 2026-07-09 — Steps 11 & 12; LNURL-pay plan archived 2026-07-09 — Step 13; passkey plan + review archived unimplemented 2026-07-09 — Step 15.)*
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
@@ -329,14 +329,14 @@ All 6 historical phase docs moved to `Archive/Implementations/FFI initial integr
 
 ---
 
-### Archive/ (66 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
+### Archive/ (68 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
 
 Now organized into category folders (plus `readme.md` index at Archive root):
 - `Migrations/` (7) — completed model/architecture migrations
-- `Implementations/` (43) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
+- `Implementations/` (45) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
 - `Fixes/` (15) — completed bug-fix and tracing/diagnostic docs
 
-Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans. Archived files keep their original names per the naming policy.
+Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans; Step 15 added the passkey plan + review (archived unimplemented — not pursued). Archived files keep their original names per the naming policy.
 
 ---
 
@@ -399,10 +399,10 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 | Metric | Value | Health |
 |--------|-------|--------|
 | Total Files | 189 | 🔴 Growing (was 157 in May) |
-| Root Files | 39 | ⚠️ Improving (53 → 39 since Jul 8) |
-| Archived Files | 66 | ✅ Restructured into category folders |
+| Root Files | 37 | ⚠️ Improving (53 → 37 since Jul 8) |
+| Archived Files | 68 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
-| Stale-status plan docs | ~1 | ✅ Nearly cleared (was ~7; passkey plan remains — Step 15) |
+| Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
 | Total Lines | ~56,800 | — |
 
 ### Target State
@@ -420,6 +420,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 15 completed: archived PASSKEY_INTEGRATION_PLAN + _REVIEW to Archive/Implementations/ as **not pursued** (decision by Christoph: passkeys don't bring enough benefit; plan was never implemented). Root 39 → 37, Archive 66 → 68; stale-status plan docs now 0. Updated 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS and the Archive index |
 | 2026-07-09 | Claude Code | Step 14 completed: verified all three plans shipped — Live Activity exits (2026-05-12), VTXO refresh ppm-free logic (2026-04-24), wallet backup (2026-05-07) — and archived them to Archive/Implementations/ with archive notes (root 42 → 39, Archive 63 → 66). Fixed 1 reference in DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED |
 | 2026-07-09 | Claude Code | Step 13 completed: verified LNURL-pay shipped 2026-05-30 (Bark 0.11 now runs the flow natively via `payLnurl`, superseding the plan's app-side invoice handling), archived LNURL_PAY_IMPLEMENTATION_PLAN to Archive/Implementations/ (root 43 → 42, Archive 62 → 63), distilled current behavior into new `Features/LNURL_Pay.md`, updated 2 references in Bark 0.11.3 migration docs and the Archive index |
 | 2026-07-09 | Claude Code | Steps 11–12 completed: archived READ_ONLY_MODE_IMPLEMENTATION_PLAN + MANUAL_PRIMARY_DEVICE_ASSIGNMENT to Archive/Implementations/ (root 45 → 43, Archive 60 → 62), distilled both into new `Features/Read_Only_Mode.md`, fixed 4 inbound references in 3 docs, updated Archive/readme.md index |
