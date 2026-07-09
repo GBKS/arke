@@ -12,7 +12,7 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 27 | 14% |
+| Root-level files | 24 | 13% |
 | Archive (historical) | 68 | 36% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
@@ -138,7 +138,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 - [x] **Step 17:** ✅ 2026-07-09 — Moved `BarkTypes.md` → `API/Bark_Types.md` (fixed 3 inbound references in the 2 BDK docs) and `daemon-functionality.md` → `API/Bark_Daemon.md` (no inbound links; chose API/ since it describes the Bark library's daemon, not app architecture; added a proper title heading).
 - [x] **Step 18:** ✅ 2026-07-09 — Moved `CloudKitSyncImplementation.md` → `CloudKit/CloudKit_Realtime_Sync.md` (doc covers the real-time NotificationCenter sync pattern); fixed the 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.
 - [x] **Step 19:** ✅ 2026-07-09 — Moved to `Features/` with convention renames: `Accessibility.md`, `Intro_Video_Player.md`, `Scratch_Card.md`, `Signet_Faucet.md`. No inbound links existed.
-- [ ] **Step 20:** `DEFAULT_CONTACT_IMPLEMENTATION.md`, `CONTACT_ADDRESS_DELETION_LOGIC.md` → `Contacts/`; `WALLET_FIRST_INITIALIZATION.md` → `Initialization/`.
+- [x] **Step 20:** ✅ 2026-07-09 — Recreated `Contacts/` with `Default_Contact.md` + `Contact_Address_Deletion.md` (renamed from DEFAULT_CONTACT_IMPLEMENTATION / CONTACT_ADDRESS_DELETION_LOGIC); moved `WALLET_FIRST_INITIALIZATION.md` → `Initialization/Wallet_First_Initialization.md` (updated its mention in STARTUP_WALLET_DETECTION_PLAN, whose "this folder" note is now accurate).
 - [ ] **Step 21:** Consolidate movements docs: decide the canonical home (suggest `Movements/`), move `movements.md` and `Movement_Onchain_Linking.md` there, cross-link.
 - [ ] **Step 22:** Consolidate CPFP docs: fold `bark_issue_cpfp_package_relay.md` + `cpfp_package_relay_solution.md` into `BDK/` (as background for CPFP-Implementation-Plan) or archive if resolved.
 - [ ] **Step 23:** Resolve `tags-view-architecture.md` vs `Features/tag-system.md` — merge or archive the older one.
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (27 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (24 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 27 after Steps 1–4, 11–15, and 16–19. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 24 after Steps 1–4, 11–15, and 16–20. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -175,7 +175,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; all 2026-07-09.)*
+**Move to subdirectories:** movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; DEFAULT_CONTACT_IMPLEMENTATION + CONTACT_ADDRESS_DELETION_LOGIC → Contacts/, WALLET_FIRST_INITIALIZATION → Initialization/ — Step 20; all 2026-07-09.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -246,11 +246,12 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Initialization/ (7 files) ✅ CLEANED UP 2026-07-08
+### Initialization/ (8 files) ✅ CLEANED UP 2026-07-08
 
 - ✅ `INITIALIZATION_FLOWS.md` (1,444 lines) — comprehensive flow doc
 - ✅ `STARTUP_WALLET_DETECTION_PLAN.md` (Jul 7) — **ACTIVE**: launch-to-onboarding bug hardening, Phases 1–4 done, review follow-ups remain
 - ✅ `REVIEW.md` — system review
+- ✅ `Wallet_First_Initialization.md` — moved in from root 2026-07-09 (Step 20)
 - ⚠️ `WALLET_CREATION_ISSUES.md`, `WALLET_CREATION_ISSUES_OVERVIEW.md` — verify still current
 - ⚠️ `ISSUE_1_DEVICE_REGISTRATION.md`, `ISSUE_2_ADDRESS_GENERATION.md` — Dec 2024 root-cause analyses, "ready for implementation"; verify fixes shipped, then archive (Step 25)
 
@@ -284,9 +285,9 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6).
 
 ---
 
-### Contacts/ — ✅ ARCHIVED 2026-07-08 (Step 9)
+### Contacts/ (2 files) ✅ RECREATED 2026-07-09 (Step 20)
 
-All 5 completed-migration docs moved to `Archive/Implementations/Contacts/`; the directory is gone. It will be recreated when Step 20 moves the living docs (`DEFAULT_CONTACT_IMPLEMENTATION.md`, `CONTACT_ADDRESS_DELETION_LOGIC.md`) in from root.
+- `Default_Contact.md`, `Contact_Address_Deletion.md` — living docs moved in from root (Step 20). The 5 completed-migration docs went to `Archive/Implementations/Contacts/` on 2026-07-08 (Step 9).
 
 ---
 
@@ -400,7 +401,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 | Metric | Value | Health |
 |--------|-------|--------|
 | Total Files | 187 | 🔴 Growing (was 157 in May) |
-| Root Files | 27 | ⚠️ Improving (53 → 27 since Jul 8) |
+| Root Files | 24 | ⚠️ Improving (53 → 24 since Jul 8) |
 | Archived Files | 68 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
@@ -421,6 +422,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 20 completed: recreated Contacts/ with Default_Contact + Contact_Address_Deletion (renamed on move); WALLET_FIRST_INITIALIZATION → Initialization/Wallet_First_Initialization (root 27 → 24). Updated 1 mention in STARTUP_WALLET_DETECTION_PLAN |
 | 2026-07-09 | Claude Code | Step 19 completed: moved 4 feature docs from root to Features/ with convention renames — Accessibility, Intro_Video_Player, Scratch_Card, Signet_Faucet (root 31 → 27, Features 9 → 13). No inbound links |
 | 2026-07-09 | Claude Code | Step 18 completed: moved CloudKitSyncImplementation → `CloudKit/CloudKit_Realtime_Sync.md` (root 32 → 31, CloudKit 3 → 4); fixed 1 inbound reference |
 | 2026-07-09 | Claude Code | Step 17 completed: moved BarkTypes → `API/Bark_Types.md` and daemon-functionality → `API/Bark_Daemon.md` (root 34 → 32, API 3 → 5). Fixed 3 inbound references in BDK docs; gave the daemon doc a proper title |

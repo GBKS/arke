@@ -374,7 +374,7 @@ change handler — duplicated across iOS and macOS MainViews.
 
 ## Related docs
 
-- `INITIALIZATION_FLOWS.md`, `WALLET_FIRST_INITIALIZATION.md` (this folder) —
+- `INITIALIZATION_FLOWS.md`, `Wallet_First_Initialization.md` (this folder) —
   update if Phase 5 changes the flow they describe.
 - `../Features/Read_Only_Mode.md` — secondary-device behavior that
   `detectWalletState()` feeds.
