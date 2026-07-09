@@ -8,7 +8,7 @@ A comprehensive enhancement of the bark wallet's movement tracking system, trans
 
 ## Overview
 
-**Goal:** Align the code with the movements.md documentation and create a type-safe, extensible movement tracking system.
+**Goal:** Align the code with the `Bark_Movements.md` documentation and create a type-safe, extensible movement tracking system.
 
 **Result:** ✅ Complete implementation across 4 phases with 8 new files and enhanced existing systems.
 
@@ -288,7 +288,7 @@ ForEach(lightningTxs) { tx in
 
 ## Documentation Alignment
 
-✅ **movements.md Coverage:**
+✅ **`Bark_Movements.md` Coverage:**
 - [x] All subsystems documented
 - [x] All metadata fields extracted
 - [x] Payment methods detected
@@ -352,7 +352,7 @@ ForEach(lightningTxs) { tx in
 
 The movement system enhancement is **complete and production-ready**! 
 
-All four phases have been implemented, creating a robust, type-safe, and extensible system for tracking wallet movements. The code now fully aligns with the movements.md documentation and provides a solid foundation for advanced features.
+All four phases have been implemented, creating a robust, type-safe, and extensible system for tracking wallet movements. The code now fully aligns with the `Bark_Movements.md` documentation and provides a solid foundation for advanced features.
 
 **Total Development Time:** ~2 hours  
 **Total Lines Added:** ~1,200  

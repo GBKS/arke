@@ -1,5 +1,7 @@
 # Movement-Onchain Transaction Linking
 
+> **Related docs:** `Bark_Movements.md` (bark movement schema reference), `MOVEMENT_SYSTEM_COMPLETE.md` (app-side movement system).
+
 ## Problem Statement
 
 Boarding, offboarding, and unilateral exits create both:
@@ -161,7 +163,7 @@ Linking logic:
 
 Unilateral exits have more data to work with:
 - A movement
-- Exit status (see ExitTransactionStatus, `Data samples/ExitTransactionStatus_State.md`, `Data samples/ExitTransactionStatus_History.md`)
+- Exit status (see ExitTransactionStatus, `../Data samples/ExitTransactionStatus_State.md`, `../Data samples/ExitTransactionStatus_History.md`)
 - Intermediate onchain transactions
 - Claim onchain transaction
 

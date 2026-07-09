@@ -4,6 +4,8 @@
 The movement system tracks all balance and VTXO changes within bark. Each movement represents a distinct action that
 the wallet performs.
 
+> **Related docs:** `MOVEMENT_SYSTEM_COMPLETE.md` (app-side implementation of this schema), `Movement_Onchain_Linking.md` (linking movements to onchain transactions), `TRANSFER_TYPE_IMPLEMENTATION.md`.
+
 ## Table of Contents
 
 - [Quick Reference](#quick-reference)
