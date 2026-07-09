@@ -64,8 +64,8 @@ class ExitProgressionNotifications {
         let id = "exit-check-\(UUID().uuidString)"
         
         let content = UNMutableNotificationContent()
-        content.title = "Move Progress Check"
-        content.body = "Tap to continue progressing your move to savings."
+        content.title = "Forced Move Check-In"
+        content.body = "Tap to keep your forced move to Savings going."
         content.sound = .default
         content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1.0

@@ -47,9 +47,9 @@ struct ActiveExitAlertView_iOS: View {
     
     private var titleMessage: String {
         if exit.isClaimable {
-            return "Finalize your recovery"
+            return "Finishing your forced move"
         }
-        
+
         // Extract the state case name
         let stateString = String(describing: exit.state)
         let caseName: String
@@ -58,18 +58,18 @@ struct ActiveExitAlertView_iOS: View {
         } else {
             caseName = stateString.lowercased()
         }
-        
+
         switch caseName {
         case "start", "processing":
-            return "Recovery in progress"
+            return "Forced move in progress"
         case "awaitingdelta":
-            return "Recovery in progress"
+            return "Forced move in progress"
         case "claiminprogress":
-            return "Finalizing recovery"
+            return "Finishing your forced move"
         case "claimed":
-            return "Recovery complete"
+            return "Forced move complete"
         default:
-            return "Recovery in progress"
+            return "Forced move in progress"
         }
     }
     

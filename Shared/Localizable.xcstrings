@@ -213,16 +213,6 @@
     "3. Make that device primary" : {
 
     },
-    "About %lld hour%@ to go." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "About %1$lld hour%2$@ to go."
-          }
-        }
-      }
-    },
     "accessibility_address_details" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1446,7 +1436,6 @@
       }
     },
     "action_start_forced_move" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1533,16 +1522,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "View transaction fees"
-          }
-        }
-      }
-    },
-    "action_withdraw_bitcoin" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Withdraw your bitcoin"
           }
         }
       }
@@ -2042,16 +2021,6 @@
         }
       }
     },
-    "balance_add_to_savings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The amount will be added to your savings balance."
-          }
-        }
-      }
-    },
     "balance_all_claimable" : {
       "localizations" : {
         "en" : {
@@ -2068,16 +2037,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This amount will be temporarily locked."
-          }
-        }
-      }
-    },
-    "balance_amount_recovering" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Amount being recovered"
           }
         }
       }
@@ -2159,7 +2118,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recover %@? It takes about 24 hours and cannot be cancelled."
+            "value" : "Move %@ to Savings? It takes 10+ hours and cannot be cancelled."
           }
         }
       }
@@ -2171,16 +2130,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Withdraw %@ to your savings balance?"
-          }
-        }
-      }
-    },
-    "balance_confirm_withdraw_alt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Withdraw %@ to your wallet's savings balance?"
           }
         }
       }
@@ -2414,16 +2363,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Periodic maintenance fees"
-          }
-        }
-      }
-    },
-    "balance_recovery_process" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recovery Process"
           }
         }
       }
@@ -3532,26 +3471,6 @@
         }
       }
     },
-    "button_start_recovery" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Recovery"
-          }
-        }
-      }
-    },
-    "button_start_withdrawal" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Withdrawal"
-          }
-        }
-      }
-    },
     "button_sync" : {
       "localizations" : {
         "en" : {
@@ -4100,6 +4019,7 @@
       }
     },
     "data_current_state" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5424,6 +5344,149 @@
         }
       }
     },
+    "forced_move_expect_automatic" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When it completes, the bitcoin is added to your Savings balance automatically."
+          }
+        }
+      }
+    },
+    "forced_move_expect_checkin" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check in about once an hour. Opening the app keeps the move going."
+          }
+        }
+      }
+    },
+    "forced_move_expect_reminders" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll remind you to check in."
+          }
+        }
+      }
+    },
+    "forced_move_finishing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your bitcoin is on its way to your Savings balance."
+          }
+        }
+      }
+    },
+    "forced_move_finishing_title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing your forced move"
+          }
+        }
+      }
+    },
+    "forced_move_hours_remaining" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %lld hours to go."
+          }
+        }
+      }
+    },
+    "forced_move_less_than_hour" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less than 1 hour to go."
+          }
+        }
+      }
+    },
+    "forced_move_one_hour_remaining" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 1 hour to go."
+          }
+        }
+      }
+    },
+    "forced_move_open_settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "forced_move_reminders_off" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders are off. Turn on notifications so you don't miss a check-in."
+          }
+        }
+      }
+    },
+    "forced_move_starting" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting started. Check back in about an hour."
+          }
+        }
+      }
+    },
+    "forced_move_turn_on_reminders" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On Notifications"
+          }
+        }
+      }
+    },
+    "forced_move_underway_title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forced move underway"
+          }
+        }
+      }
+    },
     "format_address_label" : {
       "localizations" : {
         "en" : {
@@ -6337,16 +6400,6 @@
     },
     "Manual Backup" : {
 
-    },
-    "message_24_hours" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This can take up to 24 hours."
-          }
-        }
-      }
     },
     "message_camera_access_qr" : {
       "extractionState" : "stale",
@@ -8247,16 +8300,6 @@
         }
       }
     },
-    "status_blocks_remaining" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld blocks to go."
-          }
-        }
-      }
-    },
     "status_calculating" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8448,16 +8491,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Last synced %@"
-          }
-        }
-      }
-    },
-    "status_less_than_hour" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Less than 1 hour to go."
           }
         }
       }
@@ -8705,16 +8738,6 @@
         }
       }
     },
-    "status_recovery_progress" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recovery In Progress"
-          }
-        }
-      }
-    },
     "status_refresh_started" : {
       "localizations" : {
         "en" : {
@@ -8821,16 +8844,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stale"
-          }
-        }
-      }
-    },
-    "status_starting_recovery" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starting the recovery process..."
           }
         }
       }
@@ -9096,7 +9109,7 @@
     "This is all alpha and experimental. Play and have fun." : {
 
     },
-    "This takes about 24 hours and cannot be cancelled." : {
+    "This takes about 10+ hours and cannot be cancelled." : {
 
     },
     "This will cancel round %u and release the locked VTXOs." : {

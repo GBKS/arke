@@ -935,6 +935,136 @@
         }
       }
     },
+    "forced_move_expect_automatic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When it completes, the bitcoin is added to your Savings balance automatically."
+          }
+        }
+      }
+    },
+    "forced_move_expect_checkin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check in about once an hour. Opening the app keeps the move going."
+          }
+        }
+      }
+    },
+    "forced_move_expect_reminders" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We'll remind you to check in."
+          }
+        }
+      }
+    },
+    "forced_move_finishing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your bitcoin is on its way to your Savings balance."
+          }
+        }
+      }
+    },
+    "forced_move_finishing_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing your forced move"
+          }
+        }
+      }
+    },
+    "forced_move_hours_remaining" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %lld hours to go."
+          }
+        }
+      }
+    },
+    "forced_move_less_than_hour" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less than 1 hour to go."
+          }
+        }
+      }
+    },
+    "forced_move_one_hour_remaining" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About 1 hour to go."
+          }
+        }
+      }
+    },
+    "forced_move_open_settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        }
+      }
+    },
+    "forced_move_reminders_off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders are off. Turn on notifications so you don't miss a check-in."
+          }
+        }
+      }
+    },
+    "forced_move_starting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting started. Check back in about an hour."
+          }
+        }
+      }
+    },
+    "forced_move_turn_on_reminders" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn On Notifications"
+          }
+        }
+      }
+    },
+    "forced_move_underway_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forced move underway"
+          }
+        }
+      }
+    },
     "format_accounting_style" : {
       "localizations" : {
         "en" : {

@@ -239,6 +239,7 @@
 				"Images/experimenter-small.mp4",
 				"Images/faucetto-signetto.jpg",
 				"Images/force-move-intro.mp4",
+				"Images/force-move-progress-square.mp4",
 				"Images/lightning-pattern-gold.png",
 				"Images/magic-wallet-creation.mp4",
 				"Images/nigerian-lady-thumbs-up-small.mp4",

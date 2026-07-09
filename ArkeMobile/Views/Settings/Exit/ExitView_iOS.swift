@@ -51,7 +51,7 @@
 // Currently, drainExits() creates a signed PSBT and progressExits() broadcasts it
 // via the Ark server. In the future, we may want a fallback option to manually
 // broadcast the PSBT if the Ark server is unavailable.
-// Location: claimExit() after manager.drainExits()
+// Location: ExitProgressionService.autoClaimExits() after wallet.drainExits()
 // Enhancement: Add manual broadcast capability using Bitcoin Core/Esplora API
 
 // NOTE: Exit Status State Machine
@@ -62,19 +62,21 @@
 import SwiftUI
 import Bark
 import ArkeUI
+import UserNotifications
 
 struct ExitView_iOS: View {
     @Environment(WalletManager.self) var manager
-    
+    @Environment(\.scenePhase) private var scenePhase
+
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showingStartConfirmation = false
-    @State private var showingClaimConfirmation = false
     @State private var showingError = false
     @State private var activeExits: [ExitVtxo] = []
     @State private var claimableHeight: UInt32?
     @State private var exitCostEstimate: ExitCostEstimate?
     @State private var isEstimatingCost = false
+    @State private var reminderState: ForcedMoveReminderState = .enabled
 
     private let forceMoveIntroSubtitles: [VideoSubtitle] = [
         VideoSubtitle(startTime: 0.001, endTime: 1.840, text: "Let's talk about the forced move."),
@@ -95,18 +97,10 @@ struct ExitView_iOS: View {
     ]
     
     // Computed properties
-    private var firstExit: ExitVtxo? {
-        activeExits.first
-    }
-    
     private var hasActiveExit: Bool {
         !activeExits.isEmpty
     }
-    
-    private var hasClaimableExit: Bool {
-        activeExits.contains { $0.isClaimable }
-    }
-    
+
     private var currentBlockHeight: Int {
         manager.estimatedBlockHeight ?? 0
     }
@@ -122,20 +116,23 @@ struct ExitView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                if let exit = firstExit {
-                    // State B or C: Exit exists
-                    if exit.isClaimable {
-                        ClaimableExitView_iOS(
-                            exit: exit,
-                            isProcessing: isProcessing,
-                            onClaim: { showingClaimConfirmation = true }
-                        )
-                    } else {
-                        ActiveExitView_iOS(
-                            exit: exit,
-                            currentBlockHeight: Int(currentBlockHeight),
-                            claimableHeight: Int(claimableHeight ?? 0)
-                        )
+                if hasActiveExit {
+                    // State B: Forced move underway. Progression and the final
+                    // claim are fully automatic (ExitProgressionService), so
+                    // this is purely informational.
+                    ForcedMoveProgressView(
+                        phase: movePhase,
+                        reminderState: reminderState,
+                        onEnableReminders: enableReminders
+                    ) {
+                        GeometryReader { geometry in
+                            LoopingVideoPlayer_iOS.aspectFill(
+                                videoName: "force-move-progress",
+                                videoExtension: "mp4"
+                            )
+                            .frame(width: geometry.size.width, height: 300)
+                        }
+                        .frame(height: 300)
                     }
                 } else {
                     // State A: No active exit
@@ -166,17 +163,25 @@ struct ExitView_iOS: View {
         }
         .task {
             await loadExitData()
+            await refreshReminderState()
             if !hasActiveExit && spendableBalance > 0 {
                 await estimateExitCost()
             }
         }
         .refreshable {
             await loadExitData()
+            await refreshReminderState()
             if !hasActiveExit && spendableBalance > 0 {
                 await estimateExitCost()
             }
         }
-        .alert("button_start_recovery", isPresented: $showingStartConfirmation) {
+        .onChange(of: scenePhase) { _, newPhase in
+            // Re-check after a round trip to the system notification settings
+            if newPhase == .active {
+                Task { await refreshReminderState() }
+            }
+        }
+        .alert("action_start_forced_move", isPresented: $showingStartConfirmation) {
             Button("Cancel", role: .cancel) { }
             if let estimate = exitCostEstimate, !estimate.canAfford {
                 Button("Board Funds") {
@@ -215,22 +220,10 @@ struct ExitView_iOS: View {
                     """)
                 }
             } else {
-                Text(String(localized: "balance_confirm_recover", defaultValue: "Recover \(BitcoinFormatter.shared.formatAmount(spendableBalance))? It takes 10+ hours and cannot be cancelled."))
+                Text(String(localized: "balance_confirm_recover", defaultValue: "Move \(BitcoinFormatter.shared.formatAmount(spendableBalance)) to Savings? It takes 10+ hours and cannot be cancelled."))
             }
         }
         .tint(Color.Arke.gold4)
-        .alert("button_start_withdrawal", isPresented: $showingClaimConfirmation) {
-            Button("Cancel", role: .cancel) { }
-            Button("button_start") {
-                Task {
-                    await claimExit()
-                }
-            }
-        } message: {
-            if let exit = firstExit {
-                Text(String(localized: "balance_confirm_withdraw_alt", defaultValue: "Withdraw \(exit.formattedAmount) to your wallet's savings balance?"))
-            }
-        }
         .alert("error_title", isPresented: $showingError) {
             Button("button_ok") { }
         } message: {
@@ -251,8 +244,56 @@ struct ExitView_iOS: View {
         }
     }
     
+    // MARK: - Forced Move Phase
+
+    private var movePhase: ForcedMovePhase {
+        // A forced move exits every spendable VTXO individually, so only report
+        // "finishing" once all of them are claimable or being claimed
+        if !activeExits.isEmpty, activeExits.allSatisfy({ $0.isClaimable || $0.isClaimInProgress }) {
+            return .finishing
+        }
+        // claimableHeight is allExitsClaimableAtHeight(), so the countdown
+        // covers the last VTXO to mature
+        if let claimableHeight, claimableHeight > 0 {
+            let blocksRemaining = max(0, Int(claimableHeight) - currentBlockHeight)
+            return .waiting(hoursRemaining: blocksRemaining * 10 / 60)
+        }
+        return .starting
+    }
+
+    // MARK: - Check-in Reminders
+
+    private func refreshReminderState() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            reminderState = .enabled
+        case .notDetermined:
+            reminderState = .canAsk
+        case .denied:
+            reminderState = .denied
+        @unknown default:
+            reminderState = .denied
+        }
+    }
+
+    private func enableReminders() {
+        Task {
+            if reminderState == .canAsk {
+                let granted = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
+                if granted {
+                    // Scheduling was skipped at exit start without permission
+                    await ExitProgressionNotifications.shared.scheduleCheckInSequence()
+                }
+                await refreshReminderState()
+            } else if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                await UIApplication.shared.open(url)
+            }
+        }
+    }
+
     // MARK: - Actions
-    
+
     private func estimateExitCost() async {
         guard spendableBalance > 0 else { return }
         
@@ -449,7 +490,12 @@ struct ExitView_iOS: View {
             // Start exit via wallet manager (Bark SDK handles all tracking)
             let result = try await manager.startExit()
             print("✅ Exit started: \(result)")
-            
+
+            // Ask for notification permission at the moment of commitment so
+            // the hourly check-in reminders can actually fire
+            _ = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
+            await refreshReminderState()
+
             // Start Live Activity monitoring for this exit
             if let exitVtxos = try? await manager.getExitVtxos() {
                 await manager.exitProgressionService?.startExitMonitoring(for: exitVtxos)
@@ -466,76 +512,4 @@ struct ExitView_iOS: View {
         }
     }
     
-    private func claimExit() async {
-        guard let exit = firstExit, exit.isClaimable else { return }
-        
-        isProcessing = true
-        defer { isProcessing = false }
-        
-        do {
-            print("💰 Claiming exit funds...")
-            
-            // Get a new address from the wallet
-            let address = manager.onchainAddress
-            
-            print("   Claiming to address: \(address)")
-            
-            // Claim the exit funds - use all exits or just this one?
-            // For now, claim all claimable exits
-            let claimableVtxoIds = activeExits.filter { $0.isClaimable }.map { $0.vtxoId }
-            
-            // Step 1: Create the claim transaction (returns signed PSBT)
-            let claimTx = try await manager.drainExits(
-                vtxoIds: claimableVtxoIds,
-                address: address,
-                feeRateSatPerVb: nil as UInt64?
-            )
-            
-            print("✅ Exit claim transaction created")
-            print("   📦 ClaimTx Object Details:")
-            print("      Fee: \(claimTx.feeSats) sats")
-            print("      PSBT Base64 length: \(claimTx.psbtBase64.count) characters")
-            print("      PSBT Base64 prefix (first 100 chars): \(String(claimTx.psbtBase64.prefix(100)))")
-            print("      PSBT Base64 suffix (last 50 chars): \(String(claimTx.psbtBase64.suffix(50)))")
-            
-            // Step 2: Extract the raw transaction hex from the PSBT
-            print("🔧 Extracting raw transaction from PSBT...")
-            let txHex = try manager.extractTxFromPsbt(psbtBase64: claimTx.psbtBase64)
-            print("✅ Transaction extracted")
-            print("   Tx hex length: \(txHex.count) characters")
-            print("   Tx hex prefix (first 100 chars): \(String(txHex.prefix(100)))")
-            print("   Tx hex suffix (last 50 chars): \(String(txHex.suffix(50)))")
-            
-            // Step 3: Broadcast the transaction to the Bitcoin network
-            print("📡 Broadcasting claim transaction to Bitcoin network...")
-            let txid = try await manager.broadcastTx(txHex: txHex)
-            print("✅ Transaction broadcast successful!")
-            print("   🎉 TXID: \(txid)")
-            
-            // Step 4: Progress exits to sync the state machine with the SDK
-            print("🔄 Syncing exit state via progressExits()...")
-            let progressStatuses = try await manager.progressExits(feeRateSatPerVb: nil as UInt64?)
-            print("✅ Progressed \(progressStatuses.count) exit(s) after claim")
-            
-            // Log progress status details for debugging
-            if !progressStatuses.isEmpty {
-                print("   📋 Progress Statuses Details:")
-                for (index, status) in progressStatuses.enumerated() {
-                    print("      [\(index)] VTXO ID: \(status.vtxoId)")
-                    if let error = status.error {
-                        print("          ⚠️ Error: \(error)")
-                    }
-                }
-            }
-            
-            // Refresh wallet state and exit data
-            await manager.refresh()
-            await loadExitData()
-            
-        } catch {
-            print("❌ Failed to claim exit: \(error)")
-            errorMessage = "Failed to claim exit: \(error.localizedDescription)"
-            showingError = true
-        }
-    }
 }
