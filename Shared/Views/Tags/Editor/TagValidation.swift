@@ -47,10 +47,10 @@ struct TagValidation {
     
     static func suggestRandomColor() -> String {
         let colors = [
-            "#FF6B35", "#4A90E2", "#7B68EE", "#32CD32", 
-            "#FFD700", "#FF69B4", "#8B4513", "#FF4444",
-            "#9370DB", "#20B2AA", "#FF8C00", "#6495ED"
+            "#DC8228", "#D2AF1E", "#2FA854", "#288C82",
+            "#2A7FAF", "#4B50A0", "#6E468C", "#BE5069",
+            "#C33C2D"
         ]
-        return colors.randomElement() ?? "#4A90E2"
+        return colors.randomElement() ?? "#2A7FAF"
     }
 }

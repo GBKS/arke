@@ -62,44 +62,40 @@ struct TagsView_iOS: View {
             get: { viewModel.showingNewTagEditor },
             set: { if !$0 { viewModel.hideNewTagEditor() } }
         )) {
-            NavigationStack {
-                TagEditor(
-                    onSave: { tag in
-                        Task {
-                            await viewModel.createNewTag(tag)
-                        }
-                        viewModel.hideNewTagEditor()
-                    },
-                    onCancel: {
-                        viewModel.hideNewTagEditor()
+            TagEditor(
+                onSave: { tag in
+                    Task {
+                        await viewModel.createNewTag(tag)
                     }
-                )
-                .environment(walletManager)
-                .environment(walletManager.tagServiceForEnvironment)
-            }
-            .presentationDetents([.medium, .large])
+                    viewModel.hideNewTagEditor()
+                },
+                onCancel: {
+                    viewModel.hideNewTagEditor()
+                }
+            )
+            .environment(walletManager)
+            .environment(walletManager.tagServiceForEnvironment)
+            .presentationDetents([.large])
         }
         // Sheet presentation for editing tag
         .sheet(item: Binding(
             get: { viewModel.editingTag },
             set: { viewModel.editingTag = $0 }
         )) { tag in
-            NavigationStack {
-                TagEditor(
-                    editingTag: tag,
-                    onSave: { updatedTag in
-                        Task {
-                            await viewModel.updateTag(updatedTag)
-                        }
-                        viewModel.hideEditTagEditor()
-                    },
-                    onCancel: {
-                        viewModel.hideEditTagEditor()
+            TagEditor(
+                editingTag: tag,
+                onSave: { updatedTag in
+                    Task {
+                        await viewModel.updateTag(updatedTag)
                     }
-                )
-                .environment(walletManager)
-                .environment(walletManager.tagServiceForEnvironment)
-            }
+                    viewModel.hideEditTagEditor()
+                },
+                onCancel: {
+                    viewModel.hideEditTagEditor()
+                }
+            )
+            .environment(walletManager)
+            .environment(walletManager.tagServiceForEnvironment)
             .presentationDetents([.medium, .large])
         }
         .confirmationDialog("button_delete_tag",

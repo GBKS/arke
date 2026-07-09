@@ -29,13 +29,14 @@ struct TagEditor: View {
     // MARK: - Form State
     
     @State private var name: String = ""
-    @State private var selectedColorHex: String = "#4A90E2"
+    @State private var selectedColorHex: String = "#2A7FAF"
     @State private var selectedEmoji: String = ""
     
     // MARK: - UI State
-    
-    @State private var showingEmojiPicker: Bool = false
-    @State private var showingColorPicker: Bool = false
+
+    /// Which inline picker is revealed below the preview (nil = none).
+    @State private var activePicker: TagPreviewField.ActivePicker?
+    @FocusState private var isNameFocused: Bool
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     
@@ -63,7 +64,7 @@ struct TagEditor: View {
     }
     
     private var canSave: Bool {
-        isValidName && !nameExists && !isLoading
+        isValidName && !nameExists && !selectedEmoji.isEmpty && !isLoading
     }
     
     private var isEditing: Bool {
@@ -83,37 +84,67 @@ struct TagEditor: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Preview Section
-                    // tagPreviewSection
-                    
-                    // Form Section
-                    TagFormFields(
+            VStack(spacing: 24) {
+                // Preview Section — stays fixed while the picker below
+                // scrolls, so changes remain visible and the emoji/name/
+                // color targets stay reachable.
+                VStack(spacing: 8) {
+                    TagPreviewField(
                         name: $name,
                         selectedEmoji: $selectedEmoji,
                         selectedColorHex: $selectedColorHex,
-                        showingEmojiPicker: $showingEmojiPicker,
-                        showingColorPicker: $showingColorPicker,
-                        nameExists: nameExists,
+                        isNameFocused: $isNameFocused,
+                        activePicker: activePicker,
+                        onTapEmoji: { togglePicker(.emoji) },
+                        onTapColor: { togglePicker(.color) },
                         onSubmit: saveTag
                     )
-                    
-                    // Error Section
-                    if let errorMessage = errorMessage {
-                        errorSection(errorMessage)
+
+                    if nameExists {
+                        nameExistsWarning
                     }
-                    
-                    Spacer(minLength: 20)
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top)
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Inline Picker Section
+                        // geometryGroup keeps a freshly inserted grid from
+                        // inheriting an in-flight animation (e.g. the
+                        // keyboard dismissal) and growing in from a zero
+                        // frame.
+                        switch activePicker {
+                        case .emoji:
+                            EmojiPickerGrid(selectedEmoji: $selectedEmoji)
+                                .geometryGroup()
+                        case .color:
+                            ColorPickerGrid(selectedColorHex: $selectedColorHex)
+                                .geometryGroup()
+                        case nil:
+                            EmptyView()
+                        }
+
+                        // Error Section
+                        if let errorMessage = errorMessage {
+                            errorSection(errorMessage)
+                        }
+
+                        Spacer(minLength: 20)
+                    }
+                    .padding(.horizontal)
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: nameExists)
             .navigationTitle(navigationTitle)
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     cancelButton
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     saveButton
                 }
@@ -122,6 +153,22 @@ struct TagEditor: View {
         .onAppear {
             print("🔧 TagEditor: onAppear called")
             setupInitialValues()
+
+            if editingTag == nil {
+                // A new tag starts with naming. The short delay lets the
+                // sheet presentation settle; focusing immediately in
+                // onAppear is unreliable inside sheets.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(400))
+                    isNameFocused = true
+                }
+            }
+        }
+        .onChange(of: isNameFocused) { _, focused in
+            // The keyboard and the inline pickers are mutually exclusive.
+            if focused {
+                activePicker = nil
+            }
         }
         .disabled(isLoading)
         .overlay {
@@ -129,21 +176,21 @@ struct TagEditor: View {
                 loadingOverlay
             }
         }
-        .sheet(isPresented: $showingEmojiPicker) {
-            EmojiPickerSheet(selectedEmoji: $selectedEmoji)
-        }
-        .sheet(isPresented: $showingColorPicker) {
-            ColorPickerSheet(selectedColorHex: $selectedColorHex)
-        }
     }
-    
+
     // MARK: - View Components
-    
+
     @ViewBuilder
-    private var tagPreviewSection: some View {
-        TagPreviewCard(tag: previewTag, isEmpty: name.isEmpty)
+    private var nameExistsWarning: some View {
+        Label {
+            Text("A tag with this name already exists")
+        } icon: {
+            Image(systemName: "exclamationmark.triangle")
+        }
+        .font(.caption)
+        .foregroundColor(.Arke.orange)
     }
-    
+
     @ViewBuilder
     private var cancelButton: some View {
         Button {
@@ -195,18 +242,14 @@ struct TagEditor: View {
     private var navigationTitle: String {
         isEditing ? "Edit Tag" : "New Tag"
     }
-    
-    private var previewTag: TagModel {
-        let displayName = name.isEmpty ? "Sample Tag" : name
-        return TagModel(
-            name: displayName,
-            colorHex: selectedColorHex,
-            emoji: selectedEmoji
-        )
-    }
-    
+
     // MARK: - Actions
-    
+
+    private func togglePicker(_ picker: TagPreviewField.ActivePicker) {
+        isNameFocused = false
+        activePicker = activePicker == picker ? nil : picker
+    }
+
     private func setupInitialValues() {
         print("🔧 TagEditor: setupInitialValues called with editingTag: \(editingTag?.name ?? "nil") (ID: \(editingTag?.id.uuidString ?? "nil"))")
         
@@ -216,10 +259,11 @@ struct TagEditor: View {
             selectedEmoji = tag.emoji
             print("🔧 TagEditor: Set form values - name: '\(name)', color: '\(selectedColorHex)', emoji: '\(selectedEmoji)'")
         } else {
-            // Set up defaults for new tag
+            // Set up defaults for new tag. Tags always have an emoji, so
+            // suggest a random one alongside the random color.
             name = ""
             selectedColorHex = suggestRandomColor()
-            selectedEmoji = ""
+            selectedEmoji = EmojiPickerGrid.randomEmoji()
             print("🔧 TagEditor: Set default values - name: '\(name)', color: '\(selectedColorHex)', emoji: '\(selectedEmoji)'")
         }
         
@@ -274,11 +318,11 @@ struct TagEditor: View {
     
     private func suggestRandomColor() -> String {
         let colors: [String] = [
-            "#FF6B35", "#4A90E2", "#7B68EE", "#32CD32", 
-            "#FFD700", "#FF69B4", "#8B4513", "#FF4444",
-            "#9370DB", "#20B2AA", "#FF8C00", "#6495ED"
+            "#DC8228", "#D2AF1E", "#2FA854", "#288C82",
+            "#2A7FAF", "#4B50A0", "#6E468C", "#BE5069",
+            "#C33C2D"
         ]
-        return colors.randomElement() ?? "#4A90E2"
+        return colors.randomElement() ?? "#2A7FAF"
     }
 }
 

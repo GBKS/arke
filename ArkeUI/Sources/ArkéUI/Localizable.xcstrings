@@ -20,9 +20,6 @@
         }
       }
     },
-    "%lld/30" : {
-
-    },
     "accessibility_amount_field" : {
       "localizations" : {
         "en" : {
@@ -554,6 +551,7 @@
       }
     },
     "button_choose_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -564,6 +562,7 @@
       }
     },
     "button_choose_emoji" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -574,6 +573,7 @@
       }
     },
     "button_clear" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -668,6 +668,7 @@
       }
     },
     "button_use_custom_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -833,6 +834,7 @@
       }
     },
     "error_tag_already_exists" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1213,6 +1215,7 @@
       }
     },
     "label_color" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1233,6 +1236,7 @@
       }
     },
     "label_emoji_optional" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1525,6 +1529,7 @@
       }
     },
     "placeholder_name_preview" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
