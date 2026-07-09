@@ -1,5 +1,7 @@
 # VTXO Refresh Logic - Simplified Plan
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-04-24 (expiry-calculation fixes 2026-05-04). `Shared/Views/Balance/BalanceRefreshStatusViewModel.swift` implements this plan's ppm-free-window design as described.
+
 ## Problem
 
 User has a VTXO expiring in 3d 11h. UI shows "Refresh urgent now" (orange), but tapping shows no VTXOs need refreshing. Confusing!

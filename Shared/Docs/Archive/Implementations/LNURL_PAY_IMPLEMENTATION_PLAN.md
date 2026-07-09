@@ -1,5 +1,7 @@
 # LNURL-pay Support Implementation Plan
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-05-30. Current behavior is documented in [`../../Features/LNURL_Pay.md`](../../Features/LNURL_Pay.md); this plan is preserved for implementation history. Note: the payment-execution design below (app requests and pays the invoice itself) was superseded during the Bark 0.11 migration — Bark now performs the LNURL-pay flow natively via `payLnurl`.
+
 ## Overview
 Add LNURL-pay support to the send view, enabling users to scan/paste LNURL strings (bech32-encoded `lnurl1...` format) and pay them. Since Bark only supports Lightning Addresses (not raw LNURL strings), we need to handle the full LNURL-pay protocol flow: decode → fetch parameters → request invoice → pay invoice.
 

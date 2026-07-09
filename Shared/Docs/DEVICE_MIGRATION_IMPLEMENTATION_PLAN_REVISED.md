@@ -565,7 +565,7 @@ func emergencyTakeoverAsPrimary() async throws {
 **Critical Dependency**: WalletBackupService (already implemented at Arke/Shared/Services/WalletBackupService.swift)
 - Provides `performBackup()`, `restoreFromBackup()`, `hasBackupAvailable()`
 - Uses iCloud Drive ubiquity container
-- See WALLET_BACKUP_PLAN.md for details
+- See `Archive/Implementations/WALLET_BACKUP_PLAN.md` for details
 
 ---
 

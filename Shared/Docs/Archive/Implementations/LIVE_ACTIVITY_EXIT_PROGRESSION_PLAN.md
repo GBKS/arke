@@ -1,7 +1,9 @@
 # Live Activity for Exit Progression - Implementation Plan
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-05-12/13 ("Add Live Activity and local notifications for exits"). All planned files exist: `ExitProgressActivityAttributes.swift`, `ExitProgressionService+LiveActivity.swift`, `ExitProgressionNotifications.swift` (Shared), plus the lock-screen and Dynamic Island UI in the `ArkeWidgets` widget target. The checklist at the bottom was never ticked off — it's all done.
+
 **Date:** 2026-05-11  
-**Status:** Planning  
+**Status:** ✅ Shipped 2026-05-12 (header previously said Planning)  
 **Platform:** iOS 16.1+
 
 ---

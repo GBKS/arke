@@ -1,5 +1,7 @@
 # Wallet Backup Implementation Plan
 
+> **📦 Archived 2026-07-09.** Implementation shipped 2026-05-07: `Shared/Services/WalletBackupService.swift` + `BarkWalletFFI+Backup.swift`, wired into `WalletManager`. Note: the wallet DB file is `bark.sqlite`, not `db.sqlite` as written below (fixed in the 2026-05-07 "Fixed bark db backup file name" commit).
+
 ## Overview
 Implement automatic backup of the `db.sqlite` file to iCloud Drive for disaster recovery purposes.
 
