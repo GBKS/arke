@@ -1,288 +1,149 @@
-# Tag System Implementation
+# Tag System
+
+**Status:** Shipped and maintained. Rewritten against the code 2026-07-09 (merged in the former root `tags-view-architecture.md`; see Update History).
 
 ## Overview
 
-The tag system provides comprehensive transaction categorization and organization capabilities for the macOS Bitcoin wallet. Users can create custom tags, assign them to transactions, and maintain these assignments even during server data refreshes. The system is built on SwiftData with a robust junction table architecture and integrates seamlessly with the existing service layer.
+The tag system provides transaction categorization for both platforms (macOS and iOS). Users create custom tags with a name, color, and emoji, assign them to transactions, and the assignments survive server data refreshes and sync across devices via CloudKit. The system is built on SwiftData with a junction-table architecture and follows the app's coordinator pattern: views talk to `WalletManager`, which delegates to `TagService`.
 
-## Architecture
-
-### Core Components
-
-#### 1. Data Models
-- **PersistentTag (@Model)**: SwiftData-persisted tag storage
-- **TransactionTagAssignment (@Model)**: Junction table for tag-transaction relationships
-- **TagModel (struct)**: UI-friendly tag representation
-- **Enhanced TransactionModel**: Includes tag relationship support
-
-#### 2. Service Layer
-- **TagService**: Observable service for all tag operations (CRUD, assignments, statistics)
-- **WalletManager Integration**: Coordinator pattern with computed properties and delegation
-- **TransactionService Enhancement**: Tag preservation during server refreshes
-
-#### 3. Architecture Pattern
 ```
-SwiftUI Views → WalletManager (coordinator) → TagService → SwiftData
-                     ↑                          ↓
-              Computed Properties        @Observable Updates
+SwiftUI Views → TagsViewModel → WalletManager (coordinator) → TagService → SwiftData
+                                                                  ↕
+                                                             CloudKit sync
+```
+
+## Core Components
+
+### Models
+
+| Type | Location | Role |
+|------|----------|------|
+| `TagModel` (struct) | ArkéUI package (`Models/TagModel.swift`) | Pure presentation value type — no SwiftData/Bark dependency, preview-friendly, with `samples` |
+| `TagModel+Persistence` | `Shared/Models/` | App-side bridging: `init(from:)` / `toPersistentTag()` |
+| `PersistentTag` (@Model) | `Shared/Models/` | SwiftData-persisted tag |
+| `TransactionTagAssignment` (@Model) | `Shared/Models/` | Junction table: tag ↔ transaction |
+| `PendingTagAssignment` (@Model) | `Shared/Models/PendingPaymentMetadata.swift` | Junction table: tag ↔ pending payment metadata (send metadata that arrives before its transaction) |
+| `TagStatistic` (struct) | `Shared/Services/TagService.swift` | Per-tag usage stats: transaction count, net/sent/received amounts, offchain/onchain/total fees, formatted variants |
+
+### Service Layer
+
+- **`TagService`** (`Shared/Services/`) — `@MainActor @Observable`; all CRUD, assignment, query, and statistics operations; owns the in-memory `tags: [TagModel]` cache
+- **`WalletManager+Tags`** (`Shared/Data/WalletManager/`) — coordinator delegation; views never touch `TagService` directly (there is no environment injection of the service)
+- **`TransactionService+AutoTagging`** — Balance system tag for internal transfers, contact auto-assignment
+- **`TransactionService+Upsert` / `+PendingMetadata`** — tag preservation during refreshes, pending-metadata matching
+
+### View Layer
+
+Business logic is shared; presentation is per-platform (~75–80% code reuse):
+
+- **`TagsViewModel`** (`Shared/Views/Tags/`) — `@MainActor @Observable`; statistics loading, CRUD actions (delegating to `WalletManager`), sheet presentation state, and sorting: tags ordered by net amount, zero-transaction tags at the bottom, system tags last
+- **`TagsView`** (macOS, `ArkeDesktop/Views/Tags/`) — `ScrollView` + `Grid` for multi-column alignment, `NetChangeBar` net-amount visualization, `TagsGraph`, menu-based row actions, fixed-size sheets, optional navigation callback
+- **`TagsView_iOS`** (`ArkeMobile/Views/Tags/`) — `List` + `NavigationLink`, swipe actions (edit/delete), context menus, pull-to-refresh, `.presentationDetents([.medium, .large])` sheets, `ContentUnavailableView` empty state, required navigation callback
+- **Shared components** — `TagChip` (ArkéUI), `TagEditor` + `TagValidation` (`Shared/Views/Tags/Editor/`), `TagSelectorSheet`, `TransactionTagView`; `TagRowContent` (desktop) is an optional shared row layout
+
+Usage:
+
+```swift
+// macOS — navigation callback optional
+TagsView(onNavigateToActivity: { tag in navigationPath.append(ActivityFilter.tag(tag)) })
+
+// iOS — navigation callback required
+TagsView_iOS { tag in navigationPath.append(ActivityFilter.tag(tag)) }
 ```
 
 ## Data Model Design
 
 ### Junction Table Approach
 
-The system uses `TransactionTagAssignment` as a junction table instead of direct `@Relationship` arrays:
+`TransactionTagAssignment` links tags and transactions instead of a direct many-to-many `@Relationship`:
 
-```swift
-PersistentTag ←→ TransactionTagAssignment ←→ TransactionModel
-     ↑                    ↑                        ↑
-   1:many             junction table            1:many
+```
+PersistentTag ←→ TransactionTagAssignment ←→ PersistentTransaction
 ```
 
-**Benefits:**
-- **Better relationship control** during server refreshes
-- **Extensible metadata** support (assignment date, notes, etc.)
-- **Easier query performance** and indexing
-- **Explicit lifecycle management** of tag assignments
+**Benefits:** relationship control during server refreshes, extensible metadata (`assignedDate`), efficient lookups in both directions, explicit lifecycle management.
+
+### CloudKit Constraints
+
+All persisted models are written for CloudKit compatibility:
+
+- No `@Attribute(.unique)` — uniqueness (e.g. tag names) is enforced in `TagService` with fetch-before-insert checks
+- Every stored property has a default value
+- All relationships are optional (`[TransactionTagAssignment]? = []`)
 
 ### Model Definitions
 
-#### PersistentTag
 ```swift
 @Model
-class PersistentTag {
-    var id: UUID
-    var name: String
-    var colorHex: String
-    var emoji: String
-    var isActive: Bool
-    var createdAt: Date
-    
+final class PersistentTag {
+    var id: UUID = UUID()
+    var name: String = ""
+    var colorHex: String = "#007AFF"
+    var emoji: String = "🏷️"
+    var createdDate: Date = Date()
+    var isSystemTag: Bool = false
+
     @Relationship(deleteRule: .cascade, inverse: \TransactionTagAssignment.tag)
-    var assignments: [TransactionTagAssignment] = []
-    
-    // Computed properties and convenience methods
+    var tagAssignments: [TransactionTagAssignment]? = []
+
+    @Relationship(deleteRule: .cascade, inverse: \PendingTagAssignment.tag)
+    var pendingTagAssignments: [PendingTagAssignment]? = []
 }
 ```
 
-#### TransactionTagAssignment
+`PersistentTag` also carries the statistics computed properties (`transactionCount`, `totalTransactionAmount` = received − sent, `sentAmount`, `receivedAmount`, `offchainFees`, `onchainFees`, `totalFees`) that `TagService.getTagStatistics()` aggregates into `TagStatistic` values.
+
 ```swift
 @Model
-class TransactionTagAssignment {
-    var tag: PersistentTag?
-    var transaction: TransactionModel?
-    var assignedAt: Date
-    var id: UUID
+final class TransactionTagAssignment {
+    var assignedDate: Date = Date()
+    @Relationship var tag: PersistentTag?
+    @Relationship var transaction: PersistentTransaction?
 }
 ```
 
-## Service Layer Implementation
+`PendingTagAssignment` mirrors this shape but links a tag to `PendingPaymentMetadata` instead of a transaction — it holds tag choices made during send until the matching transaction appears (see `Features/send-metadata-enhancement.md`).
 
-### TagService Features
+## TagService
 
-#### Core Operations
-- **CRUD Operations**: Create, read, update, delete (soft delete) tags
-- **Assignment Management**: Assign/unassign tags to/from transactions  
-- **Query Operations**: Get transactions by tag, tag statistics, filtering
-- **Default Management**: Auto-create default tags on first run
+### Operations
 
-#### Observable Properties
-```swift
-@Observable
-class TagService {
-    var tags: [TagModel] = []
-    var error: String?
-    var isLoading: Bool = false
-    
-    // Computed properties
-    var activeTags: [TagModel] { ... }
-    var activeTagCount: Int { ... }
-    var hasTags: Bool { ... }
-}
-```
-
-#### Key Methods
 ```swift
 // Tag management
-func createTag(_ tagModel: TagModel) async throws -> TagModel
-func updateTag(_ tagModel: TagModel) async throws -> TagModel
-func deleteTag(_ tagId: UUID) async throws
+func createTag(_ tagModel: TagModel) async throws -> TagModel   // rejects duplicate names
+func updateTag(_ updatedTag: TagModel) async throws
+func deleteTag(_ tagId: UUID) async throws                      // PERMANENT — cascade deletes assignments
 
-// Assignment operations
-func assignTag(_ tagId: UUID, to transactionId: String) async throws
-func unassignTag(_ tagId: UUID, from transactionId: String) async throws
+// Assignments
+func assignTag(_ tagId: UUID, to transactionTxid: String) async throws
+func unassignTag(_ tagId: UUID, from transactionTxid: String) async throws
 
-// Query operations
+// Queries
 func getTransactionsWithTag(_ tagId: UUID) async throws -> [TransactionModel]
-func getTagStatistics() async throws -> [TagStatistics]
+func getTagsForTransaction(_ transactionId: String) async throws -> [TagModel]
+func getTagStatistics() async throws -> [TagStatistic]
+
+// Lifecycle & bulk
+func createDefaultTagsIfNeeded() async
+func deleteAllTags() async throws   // wallet deletion with cloud-data removal
 ```
 
-### WalletManager Integration
+Notes:
 
-#### Coordinator Pattern
-WalletManager acts as a coordinator, providing a unified interface:
+- **Deletion is permanent.** There is no soft delete / `isActive` flag; removing a tag cascade-deletes all its assignments.
+- All mutating operations run through `TaskDeduplicationManager` (keyed per operation + target) to prevent concurrent duplicates.
+- `setModelContext(_:)` is only called once a wallet exists; it loads tags and starts CloudKit observation.
 
-```swift
-// Tag management delegation
-func createTag(_ tagModel: TagModel) async throws -> TagModel {
-    guard let tagService = tagService else {
-        throw BarkError.commandFailed("Tag service not initialized")
-    }
-    return try await tagService.createTag(tagModel)
-}
+### CloudKit Sync
 
-// Computed properties for UI
-var tags: [TagModel] { tagService?.tags ?? [] }
-var activeTags: [TagModel] { tagService?.activeTags ?? [] }
-var hasTagsAvailable: Bool { tagService?.hasTags ?? false }
-```
+Implemented (not a future enhancement):
 
-#### Environment Injection
-```swift
-// SwiftUI environment setup
-var tagServiceForEnvironment: TagService? { tagService }
+- Models are CloudKit-compatible (see constraints above), so SwiftData/CloudKit syncs tags and assignments across linked devices.
+- `TagService` subscribes to `.cloudKitDataDidChange` (debounced 1 s) and reloads its tag cache when remote changes land. See `CloudKit/CloudKit_Realtime_Sync.md` for the notification pattern.
+- Default-tag creation batches all inserts into a single `save()` so first-run setup triggers one CloudKit sync, not nine.
 
-// Usage in views
-@Environment(TagService.self) private var tagService
-@Environment(WalletManager.self) private var walletManager
-```
+### Error Handling
 
-## Tag Preservation System
-
-### Server Refresh Enhancement
-
-The system preserves tag assignments during server data updates through enhanced TransactionService logic:
-
-#### Upsert Strategy
-```swift
-// Existing transactions preserve tag relationships automatically
-if let existingTransaction = existingTransactionDict[transactionData.txid] {
-    // Update transaction properties from server
-    existingTransaction.amount = transactionData.amount
-    // ... other updates
-    
-    // SwiftData preserves tagAssignments relationship automatically
-    if !existingTransaction.tagAssignments.isEmpty {
-        preservedTagCount += existingTransaction.tagAssignments.count
-    }
-}
-```
-
-#### Orphaned Transaction Handling
-- **Detection**: Identifies transactions that exist locally but not on server
-- **Preservation**: Tagged orphaned transactions are preserved by default
-- **Manual Cleanup**: `cleanupOrphanedTaggedTransactions()` method available
-- **Detailed Logging**: Comprehensive monitoring and reporting
-
-### Data Integrity Guarantees
-
-1. **Existing Tag Preservation**: All `TransactionTagAssignment` relationships survive server updates
-2. **New Transaction Handling**: New transactions start with clean state (no tags)
-3. **Orphaned Management**: Tagged transactions missing from server are preserved with detailed logging
-4. **Cascade Rules**: Proper SwiftData deletion cascading ensures no orphaned relationships
-
-## Default Tags System
-
-### Auto-Creation
-The system creates 8 default tags on first initialization:
-
-```swift
-let defaultTags = [
-    TagModel(name: "Income", colorHex: "#2ECC40", emoji: "💰"),
-    TagModel(name: "Expense", colorHex: "#FF4136", emoji: "💸"),
-    TagModel(name: "Investment", colorHex: "#0074D9", emoji: "📈"),
-    TagModel(name: "Savings", colorHex: "#3D9970", emoji: "🏦"),
-    TagModel(name: "Bills", colorHex: "#FF851B", emoji: "🧾"),
-    TagModel(name: "Entertainment", colorHex: "#B10DC9", emoji: "🎮"),
-    TagModel(name: "Food", colorHex: "#FFDC00", emoji: "🍔"),
-    TagModel(name: "Transport", colorHex: "#85144B", emoji: "🚗")
-]
-```
-
-### Conditional Creation
-- Only created if no tags exist in the system
-- Runs automatically after wallet initialization
-- Background execution without blocking startup
-
-## SwiftUI Integration
-
-### Environment Setup
-```swift
-// App-level setup
-.environment(walletManager.tagServiceForEnvironment)
-
-// ModelContainer configuration
-.modelContainer(for: [
-    TransactionModel.self,
-    ArkBalanceModel.self,
-    OnchainBalanceModel.self,
-    PersistentTag.self,
-    TransactionTagAssignment.self
-])
-```
-
-### View Integration Examples
-
-#### Tag Management View
-```swift
-struct TagManagementView: View {
-    @Environment(TagService.self) private var tagService
-    @Environment(WalletManager.self) private var walletManager
-    
-    var body: some View {
-        List(walletManager.activeTags) { tag in
-            TagRow(tag: tag)
-        }
-        .toolbar {
-            Button("Create Tag") {
-                Task {
-                    let newTag = TagModel(name: "New Tag", colorHex: "#FF0000", emoji: "🏷️")
-                    try await walletManager.createTag(newTag)
-                }
-            }
-        }
-        .refreshable {
-            // Tags refresh automatically via @Observable
-        }
-    }
-}
-```
-
-#### Transaction with Tags
-```swift
-struct TransactionRowView: View {
-    let transaction: TransactionModel
-    @Environment(WalletManager.self) private var walletManager
-    
-    var body: some View {
-        VStack {
-            // Transaction details
-            Text(transaction.formattedAmount)
-            
-            // Tag display
-            if !transaction.associatedTags.isEmpty {
-                TagChipView(tags: transaction.associatedTags)
-            }
-        }
-    }
-}
-```
-
-## Performance Considerations
-
-### Optimizations
-- **Task Deduplication**: Prevents concurrent operations using `TaskDeduplicationManager`
-- **Soft Delete**: Tags are deactivated rather than deleted for better performance
-- **Computed Properties**: Efficient tag counting and filtering
-- **Junction Table Queries**: Optimized for both tag→transactions and transaction→tags lookups
-
-### Memory Management
-- **Observable Pattern**: Automatic UI updates without manual state management  
-- **SwiftData Integration**: Efficient relationship management and caching
-- **Minimal Overhead**: Tag preservation adds minimal processing during refreshes
-
-## Error Handling
-
-### TagService Errors
 ```swift
 enum TagServiceError: LocalizedError {
     case noModelContext
@@ -294,63 +155,34 @@ enum TagServiceError: LocalizedError {
 }
 ```
 
-### Error Strategy
-- **Specific Error Types**: Clear identification of failure modes
-- **User-Friendly Messages**: Localized error descriptions via `error` property
-- **Recovery Methods**: `clearError()` for UI error dismissal
-- **Comprehensive Logging**: Console output for debugging
+User-facing messages surface through the service's observable `error` property (`clearError()` to dismiss).
 
-## Testing Strategy
+## Default Tags & System Tags
 
-### Manual Testing Scenarios
-1. **Tag CRUD Operations**: Create, update, delete tags
-2. **Assignment Management**: Assign/unassign tags to transactions
-3. **Server Refresh Preservation**: Verify tags survive transaction updates
-4. **Default Tag Creation**: Confirm auto-creation on first run
-5. **Error Handling**: Test all error conditions and recovery
+`TagModel.createDefaultTags()` (ArkéUI) defines **9 defaults**, created on first run when no tags exist:
 
-### Observable Testing
-- **UI Updates**: Verify automatic updates via @Observable pattern
-- **Service Integration**: Confirm WalletManager delegation works correctly
-- **Environment Injection**: Test SwiftUI environment access patterns
+Savings 💰, Food 🍕, Transport 🚗, Shopping 🛒, Bills 📄, Income 💰, Investment 📈, Gift 🎁, and **Balance 👜** — the only *system tag* (`isSystemTag: true`).
 
-## Future Enhancements
+System tag behavior:
 
-### Planned Features
-- **Tag Categories**: Hierarchical organization of tags
-- **Bulk Operations**: Tag multiple transactions simultaneously
-- **Advanced Statistics**: Usage analytics and insights
-- **Tag Templates**: Predefined tag sets for workflows
-- **Export/Import**: Tag data backup and synchronization
+- The **Balance** tag marks internal transfers (board/offboard/refresh movements between the wallet's own balances). `TransactionService.autoTagInternalTransfer(_:)` applies it automatically, creating the tag on demand if the user deleted it.
+- System tags sort to the end of the Tags view list.
 
-### CloudKit Sync
-The architecture is designed to support CloudKit synchronization:
-- **SwiftData Foundation**: Models ready for cloud sync
-- **Relationship Integrity**: Junction table approach supports sync conflicts
-- **Unique Identifiers**: UUID-based IDs suitable for distributed systems
+## Tag Preservation During Refreshes
 
-## Benefits Summary
+Server refreshes must not destroy user categorization:
 
-### User Experience
-✅ **Persistent Organization**: Tags survive all server updates  
-✅ **Instant Feedback**: Real-time UI updates via SwiftData observation  
-✅ **Flexible System**: Custom tags with colors and emojis  
-✅ **Default Setup**: Ready-to-use tags on first launch  
-✅ **Clean Interface**: Integrated with existing wallet UI patterns
+- **Upsert strategy** (`TransactionService+Upsert`): existing `PersistentTransaction` rows are updated in place, so SwiftData keeps their `tagAssignments` relationships automatically; assignment counts are logged for verification.
+- **Orphaned transactions** (present locally, missing from server) are preserved by default when tagged; `cleanupOrphanedTaggedTransactions()` exists for manual cleanup.
+- **New transactions** start untagged, then pass through auto-tagging (Balance system tag, contact auto-assignment) and pending-metadata matching.
 
-### Developer Experience  
-✅ **Consistent Architecture**: Follows established service patterns  
-✅ **Observable Integration**: Automatic UI synchronization  
-✅ **Comprehensive API**: Full CRUD and assignment operations  
-✅ **Error Handling**: Detailed error types and recovery methods  
-✅ **Extensible Design**: Ready for advanced features and sync capabilities
+## WalletManager Integration
 
-### System Reliability
-✅ **Data Integrity**: Junction table approach ensures relationship consistency  
-✅ **Server Compatibility**: Tag assignments preserved during data refreshes  
-✅ **Performance**: Minimal overhead with intelligent caching  
-✅ **Fault Tolerance**: Graceful handling of edge cases and errors
+`WalletManager+Tags` exposes the full tag API to views (`tags`, `createTag`, `updateTag`, `deleteTag`, `assignTag`, `unassignTag`, `getTransactionsWithTag`, `getTagStatistics`, `getTransactionTags`, `transactionHasTags`, `createDefaultTagsIfNeeded`, `clearTagError`). Views and view models depend on `WalletManager` only; `TagService` is an implementation detail behind it.
 
----
+## Update History
 
-*Implementation completed across 4 development steps. Current as of: October 30, 2025*
+| Date | Change |
+|------|--------|
+| 2026-07-09 | Rewritten against the code (inventory Step 23). Corrected stale claims: delete is permanent (no soft delete/`isActive`), CloudKit sync is implemented, 9 default tags incl. Balance system tag, `TagModel` lives in ArkéUI, junction points to `PersistentTransaction`, statistics include fee breakdown, no `@Environment(TagService.self)` injection. Merged the view-layer architecture from root `tags-view-architecture.md` (now in `Archive/Implementations/`) |
+| 2025-10-30 | Original implementation doc (4 development steps) |

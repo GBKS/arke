@@ -1,5 +1,7 @@
 # Tags View Architecture - Shared Components
 
+> **📦 ARCHIVED 2026-07-09** — Completed refactor writeup (TagsViewModel extraction + iOS view, Dec 2025). The work shipped and the lasting architecture description was merged into `Features/tag-system.md` § View Layer, which is the current reference. Details below reflect the state at completion; since then, tag sorting gained system-tag handling and `TagStatistic` gained fee fields.
+
 This document describes the shared architecture for tag management across macOS and iOS.
 
 ## Architecture Overview

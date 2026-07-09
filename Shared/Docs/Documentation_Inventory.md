@@ -12,8 +12,8 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 20 | 11% |
-| Archive (historical) | 70 | 37% |
+| Root-level files | 19 | 10% |
+| Archive (historical) | 71 | 38% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
 | Migrations (Bark FFI) | 10 | 5% |
@@ -93,7 +93,7 @@ Still pending (reorganization, Steps 16–23):
 
 - ~~**Movements:** `movements.md` (root, bark movement system reference) vs `Movements/` directory vs `Movement_Onchain_Linking.md` (root). Three homes for one topic.~~ ✅ Consolidated into `Movements/` 2026-07-09 (Step 21).
 - ~~**CPFP:** `cpfp_package_relay_solution.md` + `bark_issue_cpfp_package_relay.md` (root) vs `BDK/CPFP-Implementation-Plan.md`.~~ ✅ Resolved 2026-07-09 (Step 22): both root docs archived to `Archive/Fixes/`; the BDK plan's status corrected to Superseded — the whole custom CPFP path is dead code since the switch to Bark's built-in onchain wallet.
-- **Tags:** `tags-view-architecture.md` (root, Dec 2025) vs `Features/tag-system.md`.
+- ~~**Tags:** `tags-view-architecture.md` (root, Dec 2025) vs `Features/tag-system.md`.~~ ✅ Resolved 2026-07-09 (Step 23): `Features/tag-system.md` rewritten against the code as the single tag reference (it had drifted badly — claimed soft delete, 8 default tags, CloudKit sync as "future"); the view-architecture doc's lasting content merged in, original archived to `Archive/Implementations/`.
 - ~~**Bark 0.10→0.11.3 migration:** README said "📝 Planning" though the migration shipped.~~ ✅ Status corrected 2026-07-08.
 
 ---
@@ -141,7 +141,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 - [x] **Step 20:** ✅ 2026-07-09 — Recreated `Contacts/` with `Default_Contact.md` + `Contact_Address_Deletion.md` (renamed from DEFAULT_CONTACT_IMPLEMENTATION / CONTACT_ADDRESS_DELETION_LOGIC); moved `WALLET_FIRST_INITIALIZATION.md` → `Initialization/Wallet_First_Initialization.md` (updated its mention in STARTUP_WALLET_DETECTION_PLAN, whose "this folder" note is now accurate).
 - [x] **Step 21:** ✅ 2026-07-09 — Consolidated movements docs into `Movements/`: `movements.md` → `Movements/Bark_Movements.md` (convention rename; also avoids a resource-copy basename clash with `Data samples/Movements.md`), `Movement_Onchain_Linking.md` moved as-is. Cross-linked the Movements/ docs; updated 3 mentions in MOVEMENT_SYSTEM_COMPLETE and the `Data samples/` path in Movement_Onchain_Linking.
 - [x] **Step 22:** ✅ 2026-07-09 — Verified the CPFP situation in code: the custom path (`BDKCpfpHelper`/`BDKOnchainWallet`) was implemented but abandoned — since the Bark 0.11 bindings update the app uses Bark's built-in BDK onchain wallet, which handles CPFP package broadcast internally; the custom files are now dead code. Archived both root docs to `Archive/Fixes/` with notes; corrected `BDK/CPFP-Implementation-Plan.md` status to Superseded. No inbound links existed.
-- [ ] **Step 23:** Resolve `tags-view-architecture.md` vs `Features/tag-system.md` — merge or archive the older one.
+- [x] **Step 23:** ✅ 2026-07-09 — Resolved the tags doc split: rewrote `Features/tag-system.md` against the code (permanent delete not soft delete, 9 default tags incl. Balance system tag, CloudKit sync implemented, TagModel in ArkéUI, `PersistentTransaction`, fee-aware statistics, no TagService environment injection) and merged in the view-layer architecture from `tags-view-architecture.md`, which was archived to `Archive/Implementations/` with a note. No inbound links existed.
 
 ### Content consolidation (larger, do last)
 
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (20 files) ⚠️ CLEANUP IN PROGRESS
+### Root Level (19 files) ⚠️ CLEANUP IN PROGRESS
 
-**Status: IMPROVING** — peaked at 53 in early July, down to 20 after Steps 1–4, 11–15, and 16–22. See backlog above; only these should remain long-term:
+**Status: IMPROVING** — peaked at 53 in early July, down to 19 after Steps 1–4, 11–15, and 16–23. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -175,7 +175,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** tags-view-architecture (→ merge with Features/tag-system), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(bark_issue_cpfp_package_relay + cpfp_package_relay_solution archived to Archive/Fixes/ — Step 22, 2026-07-09.)* *(movements + Movement_Onchain_Linking → Movements/ — Step 21, 2026-07-09; BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; DEFAULT_CONTACT_IMPLEMENTATION + CONTACT_ADDRESS_DELETION_LOGIC → Contacts/, WALLET_FIRST_INITIALIZATION → Initialization/ — Step 20; all 2026-07-09.)*
+**Move to subdirectories:** BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(tags-view-architecture merged into Features/tag-system and archived — Step 23, 2026-07-09.)* *(bark_issue_cpfp_package_relay + cpfp_package_relay_solution archived to Archive/Fixes/ — Step 22, 2026-07-09.)* *(movements + Movement_Onchain_Linking → Movements/ — Step 21, 2026-07-09; BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; DEFAULT_CONTACT_IMPLEMENTATION + CONTACT_ADDRESS_DELETION_LOGIC → Contacts/, WALLET_FIRST_INITIALIZATION → Initialization/ — Step 20; all 2026-07-09.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -211,7 +211,8 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ### Features/ (13 files) ✅ GOOD STRUCTURE
 
-- `intro.md`, `balance-persistence.md`, `tag-system.md`, `theme-system-implementation.md`
+- `intro.md`, `balance-persistence.md`, `theme-system-implementation.md`
+- `tag-system.md` — rewritten against the code 2026-07-09 (Step 23); now the single tag reference covering data, service, and view layers (absorbed root `tags-view-architecture.md`)
 - `Read_Only_Mode.md` (Jul 9) — secondary-device read-only mode + primary device switching (distilled from the two archived plans, Steps 11–12)
 - `LNURL_Pay.md` (Jul 9) — LNURL-pay send support (distilled from the archived plan, Step 13; Bark 0.11 handles the flow natively via `payLnurl`)
 - `BIP39.md` (Jul 9) — mnemonic generation/validation/storage, consolidated from the 3 root BIP39 docs (Step 16) and corrected against the actual anquii/BIP39 API
@@ -330,14 +331,14 @@ All 6 historical phase docs moved to `Archive/Implementations/FFI initial integr
 
 ---
 
-### Archive/ (70 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
+### Archive/ (71 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
 
 Now organized into category folders (plus `readme.md` index at Archive root):
 - `Migrations/` (7) — completed model/architecture migrations
-- `Implementations/` (45) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
+- `Implementations/` (46) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
 - `Fixes/` (15) — completed bug-fix and tracing/diagnostic docs
 
-Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans; Step 15 added the passkey plan + review (archived unimplemented — not pursued); Step 22 added the two CPFP package-relay docs to `Fixes/`. Archived files keep their original names per the naming policy — **exception:** basenames must be unique across all of `Docs/` because the ArkeDesktop resource copy flattens paths (`Address history/PHASE_3_COMPLETE.md` was renamed `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` on 2026-07-09 after it broke the macOS build against the Movements file of the same name).
+Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans; Step 15 added the passkey plan + review (archived unimplemented — not pursued); Step 22 added the two CPFP package-relay docs to `Fixes/`; Step 23 added the tags view architecture writeup (content merged into `Features/tag-system.md`). Archived files keep their original names per the naming policy — **exception:** basenames must be unique across all of `Docs/` because the ArkeDesktop resource copy flattens paths (`Address history/PHASE_3_COMPLETE.md` was renamed `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` on 2026-07-09 after it broke the macOS build against the Movements file of the same name).
 
 ---
 
@@ -400,8 +401,8 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 | Metric | Value | Health |
 |--------|-------|--------|
 | Total Files | 187 | 🔴 Growing (was 157 in May) |
-| Root Files | 20 | ⚠️ Improving (53 → 20 since Jul 8) |
-| Archived Files | 70 | ✅ Restructured into category folders |
+| Root Files | 19 | ⚠️ Improving (53 → 19 since Jul 8) |
+| Archived Files | 71 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
 | Total Lines | ~56,800 | — |
@@ -421,6 +422,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 23 completed: resolved the tags doc split — rewrote `Features/tag-system.md` against the code and merged in the view-layer content from root `tags-view-architecture.md`, which was archived to Archive/Implementations/ (root 20 → 19, Archive 70 → 71). The feature doc had drifted badly: claimed soft delete (delete is permanent, cascade), 8 default tags (now 9 incl. the Balance system tag auto-applied to internal transfers), CloudKit sync as future (implemented, with debounced remote-change reload), and `@Environment(TagService.self)` injection (views go through WalletManager only). Critical Issue 5 fully resolved |
 | 2026-07-09 | Claude Code | Step 22 completed: verified CPFP in code — the custom `BDKCpfpHelper`/`BDKOnchainWallet` path was implemented but abandoned (dead code; Bark's built-in onchain wallet handles CPFP internally since the 0.11 bindings update). Archived both root package-relay docs to Archive/Fixes/ (root 22 → 20, Archive 68 → 70); corrected BDK/CPFP-Implementation-Plan status to Superseded; flagged the rest of BDK/ for the same verify-then-archive treatment. Critical Issue 5's CPFP item resolved |
 | 2026-07-09 | Claude Code | Fixed the broken ArkeDesktop build: renamed `Archive/Implementations/Address history/PHASE_3_COMPLETE.md` → `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` (basename collided with the Movements file of the same name in the flattened resource copy). Documented the unique-basename requirement in the backlog notes and naming policy |
 | 2026-07-09 | Claude Code | Step 21 completed: consolidated movements docs into Movements/ — movements.md → `Movements/Bark_Movements.md` (convention rename), Movement_Onchain_Linking.md moved as-is (root 24 → 22, Movements 3 → 5). Cross-linked the Movements/ docs, updated 3 movements.md mentions in MOVEMENT_SYSTEM_COMPLETE and the Data samples path in Movement_Onchain_Linking. Critical Issue 5's movements item resolved |
