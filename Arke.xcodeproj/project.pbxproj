@@ -577,8 +577,6 @@
 				Docs/Movements/MOVEMENT_SYSTEM_COMPLETE.md,
 				Docs/Movements/TRANSFER_TYPE_IMPLEMENTATION.md,
 				Docs/NETWORK_MISMATCH_UX_CHANGES.md,
-				Docs/PASSKEY_INTEGRATION_PLAN_REVIEW.md,
-				Docs/PASSKEY_INTEGRATION_PLAN.md,
 				"Docs/Payment destination selection/BUG_FIXES_SUMMARY.md",
 				Docs/PAYMENT_DESTINATION_SELECTOR_README.md,
 				"Docs/process-state-service-implementation.md",
