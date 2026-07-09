@@ -1,6 +1,6 @@
 # Documentation Archive
 
-Historical implementation, migration, and fix documentation. These files chronicle how the system was built but are no longer the primary reference for current behavior. Archived files keep their original names (see naming policy in `../Documentation_Inventory.md`).
+Historical implementation, migration, and fix documentation. These files chronicle how the system was built but are no longer the primary reference for current behavior. Archived files keep their original names (see naming policy in `../Documentation_Inventory.md`) — unless the basename collides with another file anywhere under `Docs/`, which breaks the ArkeDesktop resource copy; rename to a unique basename in that case.
 
 ## Structure
 

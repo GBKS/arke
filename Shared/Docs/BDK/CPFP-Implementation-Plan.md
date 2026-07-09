@@ -1,11 +1,13 @@
 # CPFP Implementation Plan for BDK Wallet
 
+> **⚠️ Superseded (2026-07-09).** The custom CPFP path this doc describes was implemented but then abandoned: broadcasting the resulting packages requires package relay, which Esplora doesn't support (see `../Archive/Fixes/bark_issue_cpfp_package_relay.md`). Since the Bark 0.11 bindings update, the app uses Bark's built-in BDK onchain wallet (`OnchainWallet.default()`), which handles CPFP and package broadcast internally. `BDKCpfpHelper.swift` and `BDKOnchainWallet.swift` still compile but are no longer referenced anywhere — dead code kept as reference.
+
 ## Overview
 
 This document outlines the implementation plan for `makeSignedP2aCpfp()` in `BDKOnchainWallet.swift`. This method is required for the Ark exit process to work correctly.
 
 **Original Status**: Returns empty string (causes exits to fail)
-**Current Status**: ✅ **FULLY IMPLEMENTED** - Ready for testing
+**Current Status**: ⚠️ **SUPERSEDED** — implemented, but unused since the switch to Bark's built-in onchain wallet (see note above)
 **Target Status**: Creates and signs P2A CPFP transactions
 **Priority**: HIGH (blocks exit functionality)
 

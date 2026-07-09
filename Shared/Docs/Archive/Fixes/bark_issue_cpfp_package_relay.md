@@ -1,5 +1,7 @@
 # CPFP Package Broadcast Issue with Esplora Backend
 
+> **📦 Archived 2026-07-09.** This Esplora package-relay limitation was mooted by the Bark 0.11 bindings update: the app now uses Bark's built-in BDK onchain wallet (`OnchainWallet.default()` in `BarkWalletFFI+WalletLifecycle.swift`), whose internal chain source handles CPFP package broadcast. The custom `BDKOnchainWallet`/`BDKCpfpHelper` path this doc describes is no longer wired in. See `cpfp_package_relay_solution.md` (same folder) for the follow-up plan that was never needed, and `../../BDK/CPFP-Implementation-Plan.md` for the superseded custom implementation.
+
 ## Summary
 
 Exit transactions are failing because CPFP (Child Pays For Parent) transactions with P2A (Pay-to-Anchor) outputs require **package relay** to broadcast, but the current implementation attempts to broadcast them individually via Esplora, which doesn't support package relay.

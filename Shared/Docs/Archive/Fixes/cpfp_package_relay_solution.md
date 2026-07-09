@@ -1,5 +1,7 @@
 # CPFP Package Relay Solution Plan
 
+> **📦 Archived 2026-07-09 — not implemented.** Neither the Bitcoin Core RPC option nor package-enabled Esplora was built. Instead, the Bark 0.11 bindings update switched the app to Bark's built-in BDK onchain wallet, which broadcasts exit packages internally, making this plan moot. See `bark_issue_cpfp_package_relay.md` (same folder) for the original problem analysis.
+
 ## Problem Confirmed
 
 Bark's exit system **requires package relay support** in the chain backend. The current implementation broadcasts transactions individually via Esplora, which doesn't support package relay.
