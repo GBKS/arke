@@ -1,6 +1,6 @@
-This is what Copilot found from analyzing the bark repo on May 31, 2026:
+# Bark Daemon Functionality
 
--
+Notes from analyzing the bark repo (Copilot, May 31, 2026). Describes the background daemon the Bark library runs for a wallet.
 
 Daemon responsibilities, end-to-end:
 

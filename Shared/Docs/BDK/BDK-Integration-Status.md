@@ -175,7 +175,7 @@ If BDK integration proves too complex:
 - **BDK Swift**: https://github.com/bitcoindevkit/bdk-swift
 - **BDK Docs**: https://docs.rs/bdk/latest/bdk/
 - **BDK Book**: https://bitcoindevkit.org/
-- **Bark Docs**: `Arke/Shared/Docs/BarkTypes.md`
+- **Bark Docs**: `Arke/Shared/Docs/API/Bark_Types.md`
 
 ## Files Modified
 

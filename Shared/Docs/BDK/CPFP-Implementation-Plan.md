@@ -837,7 +837,7 @@ After implementation, update:
    - Update completion percentage from 95% to 100%
    - Add CPFP implementation notes
 
-2. **BarkTypes.md**
+2. **API/Bark_Types.md**
    - Document CPFP behavior
    - Note any limitations
 
@@ -889,7 +889,7 @@ The implementation is successful when:
 
 ### Code Files
 - `Arke/Shared/Data/BDKOnchainWallet.swift` - Implementation location
-- `Arke/Shared/Docs/BarkTypes.md` - CpfpParams documentation
+- `Arke/Shared/Docs/API/Bark_Types.md` - CpfpParams documentation
 - `Arke/Shared/Docs/BDK/BDK-Implementation-Complete.md` - Current status
 
 ### External Resources
