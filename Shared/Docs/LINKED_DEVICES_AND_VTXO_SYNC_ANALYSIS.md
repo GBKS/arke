@@ -580,7 +580,7 @@ if !manager.isReadOnlyMode {
 - `Features/Read_Only_Mode.md` - Read-only mode behavior (plan archived in Archive/Implementations/)
 - `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` - Device system implementation
 - `Device_Registry_Reference.md` - Device API reference
-- `CloudKitSyncImplementation.md` - Sync architecture
+- `CloudKit/CloudKit_Realtime_Sync.md` - Sync architecture
 - `CloudKit/CloudKitSyncGuidelines.md` - Sync best practices
 - `Archive/Implementations/PASSKEY_INTEGRATION_PLAN.md` - Server recovery-mailbox research (passkey integration itself not pursued; archived 2026-07-09)
 

@@ -12,7 +12,7 @@
 
 | Category | Count | % of Total |
 |----------|-------|------------|
-| Root-level files | 32 | 17% |
+| Root-level files | 31 | 17% |
 | Archive (historical) | 68 | 36% |
 | Send feature | 14 | 7% |
 | Initialization docs | 7 | 4% |
@@ -136,7 +136,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 - [x] **Step 16:** ✅ 2026-07-09 — Consolidated the 3 BIP39 docs into new `Features/BIP39.md` (git mv of INTEGRATION_GUIDE preserves history; QUICK_REFERENCE was a subset, TROUBLESHOOTING's lasting content folded in). Rewritten against the code: the old guides documented a `Mnemonic`/`Entropy` API the anquii/BIP39 library doesn't have, and claimed 24-word phrases while the app generates 12-word (128-bit). Deleted originals per policy (content merged). No inbound links existed.
 - [x] **Step 17:** ✅ 2026-07-09 — Moved `BarkTypes.md` → `API/Bark_Types.md` (fixed 3 inbound references in the 2 BDK docs) and `daemon-functionality.md` → `API/Bark_Daemon.md` (no inbound links; chose API/ since it describes the Bark library's daemon, not app architecture; added a proper title heading).
-- [ ] **Step 18:** `CloudKitSyncImplementation.md` → `CloudKit/`.
+- [x] **Step 18:** ✅ 2026-07-09 — Moved `CloudKitSyncImplementation.md` → `CloudKit/CloudKit_Realtime_Sync.md` (doc covers the real-time NotificationCenter sync pattern); fixed the 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.
 - [ ] **Step 19:** `ACCESSIBILITY.md`, `INTRO_VIDEO_PLAYER_GUIDE.md`, `SCRATCH_CARD_IMPLEMENTATION.md`, `SIGNET_FAUCET_IMPLEMENTATION.md` → `Features/`.
 - [ ] **Step 20:** `DEFAULT_CONTACT_IMPLEMENTATION.md`, `CONTACT_ADDRESS_DELETION_LOGIC.md` → `Contacts/`; `WALLET_FIRST_INITIALIZATION.md` → `Initialization/`.
 - [ ] **Step 21:** Consolidate movements docs: decide the canonical home (suggest `Movements/`), move `movements.md` and `Movement_Onchain_Linking.md` there, cross-link.
@@ -155,9 +155,9 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ## Directory-by-Directory Inventory
 
-### Root Level (32 files) 🔴 HIGH PRIORITY FOR CLEANUP
+### Root Level (31 files) 🔴 HIGH PRIORITY FOR CLEANUP
 
-**Status: BLOATED** — peaked at 53 in early July, down to 32 after Steps 1–4, 11–15, and 16–17. See backlog above; only these should remain long-term:
+**Status: BLOATED** — peaked at 53 in early July, down to 31 after Steps 1–4, 11–15, and 16–18. See backlog above; only these should remain long-term:
 
 #### Keep at Root
 - ✅ `README.md` — Main documentation index
@@ -175,7 +175,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION (→ Features/), CloudKitSyncImplementation (→ CloudKit/), DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; both 2026-07-09.)*
+**Move to subdirectories:** ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION (→ Features/), DEFAULT_CONTACT_IMPLEMENTATION, CONTACT_ADDRESS_DELETION_LOGIC (→ Contacts/), WALLET_FIRST_INITIALIZATION (→ Initialization/), movements + Movement_Onchain_Linking (→ Movements/), tags-view-architecture (→ merge with Features/tag-system), bark_issue_cpfp_package_relay + cpfp_package_relay_solution (→ BDK/), BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; all 2026-07-09.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -289,10 +289,10 @@ All 5 completed-migration docs moved to `Archive/Implementations/Contacts/`; the
 
 ---
 
-### CloudKit/ (3 files) ✅ KEEP
+### CloudKit/ (4 files) ✅ KEEP
 
 - `CloudKitQuickStart.md`, `CloudKitSetupChecklist.md`, `CloudKitSyncGuidelines.md`
-- Candidate addition: `CloudKitSyncImplementation.md` from root (Step 18).
+- `CloudKit_Realtime_Sync.md` — moved in from root (was CloudKitSyncImplementation) 2026-07-09, Step 18.
 
 ---
 
@@ -399,7 +399,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 | Metric | Value | Health |
 |--------|-------|--------|
 | Total Files | 187 | 🔴 Growing (was 157 in May) |
-| Root Files | 32 | ⚠️ Improving (53 → 32 since Jul 8) |
+| Root Files | 31 | ⚠️ Improving (53 → 31 since Jul 8) |
 | Archived Files | 68 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
 | Stale-status plan docs | 0 | ✅ Cleared (was ~7; last one, the passkey plan, archived in Step 15) |
@@ -420,6 +420,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 18 completed: moved CloudKitSyncImplementation → `CloudKit/CloudKit_Realtime_Sync.md` (root 32 → 31, CloudKit 3 → 4); fixed 1 inbound reference |
 | 2026-07-09 | Claude Code | Step 17 completed: moved BarkTypes → `API/Bark_Types.md` and daemon-functionality → `API/Bark_Daemon.md` (root 34 → 32, API 3 → 5). Fixed 3 inbound references in BDK docs; gave the daemon doc a proper title |
 | 2026-07-09 | Claude Code | Step 16 completed: consolidated the 3 root BIP39 docs into `Features/BIP39.md` (root 37 → 34, total 189 → 187). Rewrote content against the code — old guides documented a nonexistent `Mnemonic`/`Entropy` API and 24-word phrases; the app uses the protocol-based anquii/BIP39 API and 12-word (128-bit) mnemonics. Noted the missing-checksum-validation gap |
 | 2026-07-09 | Claude Code | Step 15 completed: archived PASSKEY_INTEGRATION_PLAN + _REVIEW to Archive/Implementations/ as **not pursued** (decision by Christoph: passkeys don't bring enough benefit; plan was never implemented). Root 39 → 37, Archive 66 → 68; stale-status plan docs now 0. Updated 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS and the Archive index |
