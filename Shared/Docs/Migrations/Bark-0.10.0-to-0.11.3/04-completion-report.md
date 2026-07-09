@@ -89,7 +89,9 @@ manager), mirroring the existing `payLightningAddress` / `syncExits` patterns:
   `syncExits`, which takes the onchain wallet).
 
 Not yet called from any UI — these are available for future wiring (e.g. `payLnurl`
-may complete/replace part of `LNURL_PAY_IMPLEMENTATION_PLAN.md`).
+may complete/replace part of `LNURL_PAY_IMPLEMENTATION_PLAN.md` — it later did; the plan is
+archived at `../../Archive/Implementations/LNURL_PAY_IMPLEMENTATION_PLAN.md`, current behavior
+in `../../Features/LNURL_Pay.md`).
 
 ### Unplanned: wider `Bark.Error` / `Swift.Error` collision ✅
 **Files:** `BarkWalletFFI.swift`, `WalletManager.swift`, `BDKCpfpHelper.swift`,

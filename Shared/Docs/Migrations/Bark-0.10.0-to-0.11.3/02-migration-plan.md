@@ -176,7 +176,8 @@ Not required for the build, but worth doing while the surface is fresh:
 - `payLnurl(lnurl:amountSats:comment:wait:) -> LightningSendStatus` — add to
   `BarkWalletProtocol`, `BarkWalletFFI+Lightning.swift`, `MockBarkWallet`, and a
   `WalletManager+Lightning` wrapper. Note the existing
-  `LNURL_PAY_IMPLEMENTATION_PLAN.md` — this may complete/replace part of it.
+  `LNURL_PAY_IMPLEMENTATION_PLAN.md` (since archived to `Archive/Implementations/`) — this
+  may complete/replace part of it.
 - `syncForceExitedVtxos()` — add if exit handling needs it.
 
 Track these as follow-ups if the goal is a minimal compile-green migration first.
