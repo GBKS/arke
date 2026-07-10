@@ -3062,6 +3062,7 @@
       }
     },
     "button_enable_proximity_sharing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

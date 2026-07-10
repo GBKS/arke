@@ -228,10 +228,10 @@ struct TiltShareOverlay_iOS: View {
                 }
             }
             
-            ProximityStatusIndicator(proximityManager: proximityManager)
-            
-            // Proximity exchange permission button or status
-            // proximityControlView
+            // Proximity sharing is opt-in via Settings; hide all traces when disabled
+            if hasGrantedProximityPermission {
+                ProximityStatusIndicator(proximityManager: proximityManager)
+            }
         }
         .padding(24)
         .frame(width: cardWidth(for: geometry.size.width))
@@ -304,44 +304,22 @@ struct TiltShareOverlay_iOS: View {
     
     private func handleVisibilityChange(_ visible: Bool) {
         if visible {
-            guard !arkAddress.isEmpty else { return }
-            
+            // Proximity sharing is opt-in via Settings; do nothing when disabled
+            guard hasGrantedProximityPermission, !arkAddress.isEmpty else { return }
+
             let bip21URI = BIP21URIHelper.createBIP21URI(
                 arkAddress: arkAddress,
                 onchainAddress: onchainAddress.isEmpty ? nil : onchainAddress,
                 label: userProfileName
             )
-            
+
             print("[TiltShareOverlay] Generated BIP21 URI for proximity exchange: \(bip21URI)")
-            
-            if hasGrantedProximityPermission {
-                // User has previously granted permission, start immediately
-                proximityManager.startExchange(bip21URI: bip21URI, avatarData: userProfile?.avatarData)
-            } else {
-                // First time, show permission button
-                proximityManager.showPermissionPrompt(bip21URI: bip21URI, avatarData: userProfile?.avatarData)
-            }
+
+            proximityManager.startExchange(bip21URI: bip21URI, avatarData: userProfile?.avatarData)
         } else {
             // Stop proximity exchange when overlay is hidden
             proximityManager.stopExchange()
         }
-    }
-    
-    private func enableProximitySharing() {
-        guard !arkAddress.isEmpty else { return }
-        
-        let bip21URI = BIP21URIHelper.createBIP21URI(
-            arkAddress: arkAddress,
-            onchainAddress: onchainAddress.isEmpty ? nil : onchainAddress,
-            label: userProfileName
-        )
-        
-        print("[TiltShareOverlay] Enabling proximity sharing with BIP21 URI: \(bip21URI)")
-        
-        // Mark permission as granted (assuming user will grant it when dialog appears)
-        hasGrantedProximityPermission = true
-        
-        proximityManager.startExchange(bip21URI: bip21URI, avatarData: userProfile?.avatarData)
     }
     
     // MARK: - Test Button
@@ -383,24 +361,4 @@ struct TiltShareOverlay_iOS: View {
         }
     }
     #endif
-    
-    @ViewBuilder
-    private var proximityControlView: some View {
-        if case .awaitingPermission = proximityManager.state {
-            Button {
-                enableProximitySharing()
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "wave.3.right")
-                    Text("button_enable_proximity_sharing", bundle: .main)
-                        .fontWeight(.medium)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .background(Color.Arke.gold.opacity(0.8))
-                .cornerRadius(25)
-            }
-        }
-    }
 }
