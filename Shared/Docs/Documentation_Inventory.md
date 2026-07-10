@@ -1,7 +1,7 @@
 # Documentation Inventory & Modernization Plan
 
 **Last Updated:** July 9, 2026
-**Total Documentation Files:** 187
+**Total Documentation Files:** 185
 **Purpose:** Comprehensive inventory of all documentation to guide modernization efforts
 
 ---
@@ -14,12 +14,12 @@
 |----------|-------|------------|
 | Root-level files | 19 | 10% |
 | Archive (historical) | 71 | 38% |
-| Send feature | 14 | 7% |
+| Send feature | 12 | 6% |
 | Initialization docs | 7 | 4% |
 | Migrations (Bark FFI) | 10 | 5% |
 | Address history | 4 | 2% |
 | Other subdirectories | 49 | 26% |
-| **TOTAL** | **189** | **100%** |
+| **TOTAL** | **185** | **100%** |
 
 ### Documentation Health
 
@@ -145,7 +145,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ### Content consolidation (larger, do last)
 
-- [ ] **Step 24:** Send/ architecture docs: merge SENDVIEW_OVERVIEW + SENDVIEW_REFACTORING + SENDVIEW_REFACTORING_SUMMARY into one architecture doc.
+- [x] **Step 24:** ✅ 2026-07-09 — Merged the 3 Send/ architecture docs into `Send/SendView_Architecture.md` (git mv of SENDVIEW_OVERVIEW preserves history; the two REFACTORING docs deleted, content merged). Rewritten against the code: SendViewModel is now 11 files in `Shared/Views/Send/SendViewModel/`, flow views live in `Flows/`, `AmountInputSection` moved to ArkéUI, iOS clipboard check is now explicit-paste (not on-appear), and SendView_iOS gained QR camera scanning. Fixed 1 inbound link in PAYMENT_DESTINATION_SELECTOR + 1 mention in SENDVIEW_MIGRATION_CHECKLIST.
 - [ ] **Step 25:** Review remaining root stragglers (`BEFORE_AFTER_COMPARISON.md`, `DataVersionObservation.md`, `process-state-service-implementation.md`, `BitcoinFormatter-Locale-Guide.md`, `FIX_DATABASE_ERROR_AFTER_DELETION.md`, `NETWORK_MISMATCH_UX_CHANGES.md`, `Fee-Calculation-Analysis.md`, `APNS_MAILBOX_SPEC.md`) — keep, move, or archive each.
 - [ ] **Step 26:** Update `README.md` links after the moves; add links to Migrations/ and the active plan docs.
 
@@ -232,12 +232,12 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Send/ (14 files) ⚠️ PARTIALLY CONSOLIDATED
+### Send/ (12 files) ✅ CONSOLIDATED 2026-07-09
 
-**Status: IMPROVED** — down from 23 in May; bug-fix docs archived 2026-07-08 (Step 10).
+**Status: GOOD** — down from 23 in May; bug-fix docs archived 2026-07-08 (Step 10), architecture docs merged 2026-07-09 (Step 24).
 
-#### Architecture/refactoring (still overlapping — merge into one, Step 24)
-- `SENDVIEW_OVERVIEW.md`, `SENDVIEW_REFACTORING.md`, `SENDVIEW_REFACTORING_SUMMARY.md`
+#### Architecture (single doc)
+- ✅ `SendView_Architecture.md` — consolidated from SENDVIEW_OVERVIEW + SENDVIEW_REFACTORING + SENDVIEW_REFACTORING_SUMMARY (Step 24), verified against the code
 
 #### Reference & guides (keep)
 - ✅ `SENDVIEW_USAGE_GUIDE.md`, `SENDVIEW_USAGE_EXAMPLES.md` (603 lines), `SENDVIEW_PREVIEW_STATES.md`, `SENDVIEW_MIGRATION_CHECKLIST.md`, `SENDVIEW_BANNER_COMPARISON.md`, `PAYMENT_SOURCE_FLOW_REFERENCE.md`
@@ -400,7 +400,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Metric | Value | Health |
 |--------|-------|--------|
-| Total Files | 187 | 🔴 Growing (was 157 in May) |
+| Total Files | 185 | 🔴 Growing (was 157 in May) |
 | Root Files | 19 | ⚠️ Improving (53 → 19 since Jul 8) |
 | Archived Files | 71 | ✅ Restructured into category folders |
 | Phase/Fix Docs (active dirs) | ~4 | ✅ Nearly cleared (was ~35) |
@@ -422,6 +422,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-07-09 | Claude Code | Step 24 completed: merged the 3 overlapping Send/ architecture docs into `Send/SendView_Architecture.md` (Send 14 → 12, total 187 → 185). Rewrote against the code — since the Dec 2025 docs, SendViewModel was decomposed into 11 per-concern files, flow views moved to `Flows/`, `AmountInputSection` moved to the ArkéUI package, iOS clipboard reading became explicit-paste-only (availability check drives button visibility), and SendView_iOS gained a QR camera scanning mode. Fixed 2 inbound references |
 | 2026-07-09 | Claude Code | Step 23 completed: resolved the tags doc split — rewrote `Features/tag-system.md` against the code and merged in the view-layer content from root `tags-view-architecture.md`, which was archived to Archive/Implementations/ (root 20 → 19, Archive 70 → 71). The feature doc had drifted badly: claimed soft delete (delete is permanent, cascade), 8 default tags (now 9 incl. the Balance system tag auto-applied to internal transfers), CloudKit sync as future (implemented, with debounced remote-change reload), and `@Environment(TagService.self)` injection (views go through WalletManager only). Critical Issue 5 fully resolved |
 | 2026-07-09 | Claude Code | Step 22 completed: verified CPFP in code — the custom `BDKCpfpHelper`/`BDKOnchainWallet` path was implemented but abandoned (dead code; Bark's built-in onchain wallet handles CPFP internally since the 0.11 bindings update). Archived both root package-relay docs to Archive/Fixes/ (root 22 → 20, Archive 68 → 70); corrected BDK/CPFP-Implementation-Plan status to Superseded; flagged the rest of BDK/ for the same verify-then-archive treatment. Critical Issue 5's CPFP item resolved |
 | 2026-07-09 | Claude Code | Fixed the broken ArkeDesktop build: renamed `Archive/Implementations/Address history/PHASE_3_COMPLETE.md` → `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` (basename collided with the Movements file of the same name in the flattened resource copy). Documented the unique-basename requirement in the backlog notes and naming policy |

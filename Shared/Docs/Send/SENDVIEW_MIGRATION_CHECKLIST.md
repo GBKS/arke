@@ -218,7 +218,7 @@
 
 ## Documentation
 
-- [x] SENDVIEW_REFACTORING_SUMMARY.md created
+- [x] SENDVIEW_REFACTORING_SUMMARY.md created (since merged into `SendView_Architecture.md`)
 - [x] SENDVIEW_USAGE_GUIDE.md created
 - [x] Code comments updated
 - [x] Architecture documented in file headers

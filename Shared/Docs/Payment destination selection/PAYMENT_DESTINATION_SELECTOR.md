@@ -176,8 +176,8 @@ await request.canFulfill(with:)                     // Bool
 
 ## How the Send flow uses it
 
-The selector is consumed by `SendViewModel` (see `SENDVIEW_OVERVIEW.md` for the overall
-Send architecture):
+The selector is consumed by `SendViewModel` (see `../Send/SendView_Architecture.md` for the
+overall Send architecture):
 
 - **`paymentContext`** (`SendViewModel+ComputedProperties.swift`) builds a fresh context
   from current wallet balances + `walletManager` on every access.
