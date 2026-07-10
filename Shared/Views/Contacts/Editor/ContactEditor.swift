@@ -33,15 +33,14 @@ struct ContactEditor: View {
     
     @State private var name: String = ""
     @State private var notes: String = ""
-    @State private var avatarData: Data? = nil
-    
+    @State private var avatarSelection: ContactAvatarSelection = .none
+
     // Native contact import state
     @State private var importedNativeID: String? = nil
     @State private var importedNativeSyncDate: Date? = nil
-    
+
     // MARK: - UI State
-    
-    @State private var showingAvatarPicker: Bool = false
+
     @State private var showingContactImport: Bool = false
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -89,95 +88,53 @@ struct ContactEditor: View {
         let _ = print("👤 [ContactEditor.body] [\(bodyEvalID)] Body being evaluated for editingContact: \(editingContact?.displayName ?? "nil")")
         
         NavigationStack {
-            Form {
-                // Contact Information Section
-                Section {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Inline avatar editing with large preview
+                    ContactAvatarEditor(selection: $avatarSelection)
+
                     // Name Field
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("label_name")
-                                .font(.headline)
-                            
-                            Spacer()
-                            
-                            Text("\(name.count)/50")
-                                .font(.caption)
-                                .foregroundStyle(name.count > 45 ? .orange : .secondary)
-                        }
-                        
                         TextField(String(localized: "placeholder_contact_name"), text: $name)
                             .font(.title3)
+                            .textFieldStyle(.plain)
                             .autocorrectionDisabled()
                             .onSubmit(saveContact)
-                        
-                        if let nameError = validation.nameError {
-                            Label(nameError, systemImage: "exclamationmark.triangle")
+                            .padding(12)
+                            .background(fieldBackground)
+                            .onChange(of: name) { _, newValue in
+                                if newValue.count > 50 {
+                                    name = String(newValue.prefix(50))
+                                }
+                            }
+
+                        if validation.nameExists {
+                            Label("A contact with this name already exists", systemImage: "exclamationmark.triangle")
                                 .font(.caption)
                                 .foregroundColor(.Arke.red)
                         }
                     }
-                    
-                    // Avatar Field
-                    Button {
-                        showingAvatarPicker.toggle()
-                    } label: {
-                        HStack {
-                            Text("label_avatar")
-                                .foregroundStyle(.primary)
-                            
-                            Spacer()
-                            
-                            ContactAvatarView(avatarData: avatarData, size: 32)
-                            
-                            if avatarData != nil {
-                                Button {
-                                    avatarData = nil
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
-                                }
-                                .buttonStyle(.plain)
+
+                    // Notes Field
+                    TextField(String(localized: "placeholder_add_note"), text: $notes, axis: .vertical)
+                        .lineLimit(1...6)
+                        .textFieldStyle(.plain)
+                        .padding(12)
+                        .background(fieldBackground)
+                        .onChange(of: notes) { _, newValue in
+                            if newValue.count > 500 {
+                                notes = String(newValue.prefix(500))
                             }
                         }
-                    }
-                }
-                
-                // Notes Section
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("label_notes")
-                                .font(.headline)
-                            
-                            Spacer()
-                            
-                            Text("\(notes.count)/500")
-                                .font(.caption)
-                                .foregroundStyle(notes.count > 450 ? .orange : .secondary)
-                        }
-                        
-                        TextEditor(text: $notes)
-                            .frame(minHeight: 80)
-                            .font(.body)
-                        
-                        if let notesError = validation.notesError {
-                            Label(notesError, systemImage: "exclamationmark.triangle")
-                                .font(.caption)
-                                .foregroundColor(.Arke.red)
-                        }
-                    }
-                } header: {
-                    Text(String(localized: "label_notes_optional"))
-                }
-                
-                // Error Section
-                if let errorMessage = errorMessage {
-                    Section {
+
+                    // Error Display
+                    if let errorMessage = errorMessage {
                         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                             .font(.callout)
                             .foregroundColor(.Arke.red)
                     }
                 }
+                .padding()
             }
             .navigationTitle(navigationTitle)            
             #if os(iOS)
@@ -231,9 +188,6 @@ struct ContactEditor: View {
                 loadingOverlay
             }
         }
-        .sheet(isPresented: $showingAvatarPicker) {
-            AvatarPickerSheet(selectedAvatarData: $avatarData)
-        }
         .sheet(isPresented: $showingContactImport) {
             ContactImportSheet(
                 onSelect: { importedData in
@@ -248,7 +202,12 @@ struct ContactEditor: View {
     }
     
     // MARK: - View Components
-    
+
+    private var fieldBackground: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color(PlatformColor.systemGray.withAlphaComponent(0.1)))
+    }
+
     @ViewBuilder
     private var importButton: some View {
         Button("button_import") {
@@ -317,18 +276,19 @@ struct ContactEditor: View {
         if let contact = editingContact {
             name = contact.cachedName
             notes = contact.notes ?? ""
-            avatarData = contact.avatarData
+            // Existing avatars are always treated as custom images; no preset matching
+            avatarSelection = contact.avatarData.map { .custom($0) } ?? .none
             importedNativeID = contact.nativeContactID
             importedNativeSyncDate = contact.lastSyncedFromNative
-            print("👤 ContactEditor: Set form values - name: '\(name)', notes: '\(notes.prefix(50))...', hasAvatar: \(avatarData != nil)")
+            print("👤 ContactEditor: Set form values - name: '\(name)', notes: '\(notes.prefix(50))...', hasAvatar: \(avatarSelection != .none)")
         } else {
             // Set up defaults for new contact
             name = ""
             notes = ""
-            avatarData = nil
+            avatarSelection = .none
             importedNativeID = nil
             importedNativeSyncDate = nil
-            print("👤 ContactEditor: Set default values - name: '\(name)', notes: '\(notes)', hasAvatar: \(avatarData != nil)")
+            print("👤 ContactEditor: Set default values - name: '\(name)', notes: '\(notes)', hasAvatar: \(avatarSelection != .none)")
         }
         
         errorMessage = nil
@@ -339,7 +299,7 @@ struct ContactEditor: View {
         
         // Populate form fields with imported data
         name = importedData.fullName
-        avatarData = importedData.imageData
+        avatarSelection = importedData.imageData.map { .custom($0) } ?? .none
         importedNativeID = importedData.identifier
         importedNativeSyncDate = Date()
         
@@ -352,7 +312,9 @@ struct ContactEditor: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard canSave else { return }
-        
+
+        let avatarData = avatarSelection.resolvedData()
+
         let contactToSave: ContactModel
         if let existingContact = editingContact {
             // Update existing contact (preserve native contact link)
@@ -386,6 +348,13 @@ struct ContactEditor: View {
         guard let contact = editingContact, let onDelete = onDelete else { return }
         onDelete(contact)
     }
+}
+
+#Preview("New Contact") {
+    ContactEditor(
+        onSave: { _ in },
+        onCancel: { }
+    )
 }
 
 // MARK: - Presentation Modifiers

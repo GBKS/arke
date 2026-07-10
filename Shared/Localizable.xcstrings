@@ -160,12 +160,6 @@
         }
       }
     },
-    "%lld/50" : {
-
-    },
-    "%lld/500" : {
-
-    },
     "%llu sat/vB" : {
 
     },
@@ -211,6 +205,9 @@
 
     },
     "3. Make that device primary" : {
+
+    },
+    "A contact with this name already exists" : {
 
     },
     "A tag with this name already exists" : {
@@ -1114,6 +1111,7 @@
       }
     },
     "action_choose_from_files" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2732,6 +2730,7 @@
       }
     },
     "button_choose_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3890,6 +3889,7 @@
       }
     },
     "contacts_preset_avatars" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5819,6 +5819,7 @@
       }
     },
     "label_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5881,6 +5882,7 @@
       }
     },
     "label_current_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5891,6 +5893,7 @@
       }
     },
     "label_custom_avatar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6038,6 +6041,7 @@
       }
     },
     "label_name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6078,6 +6082,7 @@
       }
     },
     "label_notes_optional" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

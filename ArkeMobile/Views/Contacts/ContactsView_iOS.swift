@@ -272,19 +272,23 @@ extension ContactsView_iOS {
         contact: ContactModel,
         viewModel: ContactsViewModel
     ) -> some View {
+        // `contact` is the navigation snapshot taken when the row was tapped; resolve
+        // the live model by id so edits saved while this screen is visible render
+        // immediately and a follow-up edit starts from current values.
+        let currentContact = viewModel.contacts.first(where: { $0.id == contact.id }) ?? contact
         ContactDetailView_iOS(
-            contact: contact,
+            contact: currentContact,
             onSendToAddress: { address in
                 print("📤 [ContactsView_iOS] Send to specific address: \(address.address)")
-                onSelectContact(contact, address)
+                onSelectContact(currentContact, address)
                 dismiss()
             },
             onEdit: {
-                viewModel.showEditContactEditor(for: contact)
+                viewModel.showEditContactEditor(for: currentContact)
             },
             onDelete: {
                 Task {
-                    await viewModel.deleteContact(contact)
+                    await viewModel.deleteContact(currentContact)
                     showingContactDetail = nil
                 }
             },

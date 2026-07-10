@@ -275,6 +275,16 @@
         }
       }
     },
+    "action_choose_from_files" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose from Files..."
+          }
+        }
+      }
+    },
     "action_copy_address" : {
 
     },
@@ -573,7 +583,6 @@
       }
     },
     "button_clear" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -690,6 +699,16 @@
     },
     "Connection Status" : {
 
+    },
+    "contacts_preset_avatars" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preset Avatars"
+          }
+        }
+      }
     },
     "data_network_support_note" : {
 

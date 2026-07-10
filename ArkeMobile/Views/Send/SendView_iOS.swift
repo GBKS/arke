@@ -214,10 +214,12 @@ struct SendView_iOS: View {
     
     @ViewBuilder
     private func contactCollageButton() -> some View {
-        // Get contacts with addresses from the service
-        let contactsWithAddresses = ServiceContainer.shared.contactService.contacts.filter { $0.hasAddresses }
-        
-        ContactCollageButton_iOS(contacts: contactsWithAddresses) {
+        // Show all contacts, not just those with stored addresses: with single-use
+        // Lightning invoices, no onchain address reuse, and Ark sender privacy,
+        // most legitimate contacts never have a saved address.
+        let contacts = ServiceContainer.shared.contactService.contacts
+
+        ContactCollageButton_iOS(contacts: contacts) {
             showContactPicker = true
         }
     }
