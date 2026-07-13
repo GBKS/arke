@@ -67,11 +67,12 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
         
         // Convert Bark Network to BDK Network
         let bdkNetwork = try Self.convertBarkNetworkToBDK(network)
+        let bdkNetworkKind = try Self.convertBarkNetworkToBDKNetworkKind(network)
         Self.logger.info("   BDK Network: \(String(describing: bdkNetwork))")
         
         // Create descriptors from mnemonic
         Self.logger.info("   Creating descriptors from mnemonic (word count: \(mnemonic.split(separator: " ").count))...")
-        let (desc, changeDesc) = try Self.createDescriptors(mnemonic: mnemonic, network: bdkNetwork)
+        let (desc, changeDesc) = try Self.createDescriptors(mnemonic: mnemonic, networkKind: bdkNetworkKind)
         self.descriptor = desc
         self.changeDescriptor = changeDesc
         
@@ -185,13 +186,25 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
             throw BDKWalletError.networkError("Unknown network type")
         }
     }
+
+    /// Convert Bark.Network to BitcoinDevKit.NetworkKind for descriptor derivation.
+    private static func convertBarkNetworkToBDKNetworkKind(_ barkNetwork: Bark.Network) throws -> BitcoinDevKit.NetworkKind {
+        switch barkNetwork {
+        case .bitcoin:
+            return .main
+        case .testnet, .signet, .regtest:
+            return .test
+        @unknown default:
+            throw BDKWalletError.networkError("Unknown network type")
+        }
+    }
     
     // MARK: - Descriptor Creation
     
     /// Creates BIP86 (taproot) descriptors from mnemonic
     private static func createDescriptors(
         mnemonic: String,
-        network: BitcoinDevKit.Network
+        networkKind: BitcoinDevKit.NetworkKind
     ) throws -> (Descriptor, Descriptor) {
         
         // Parse mnemonic into Mnemonic object
@@ -199,7 +212,7 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
         
         // Create descriptor secret key from mnemonic
         let descriptorSecretKey = DescriptorSecretKey(
-            network: network,
+            networkKind: networkKind,
             mnemonic: mnemonicObj,
             password: nil
         )
@@ -211,13 +224,13 @@ final class BDKOnchainWallet: @unchecked Sendable, CustomOnchainWalletCallbacks 
         let externalDescriptor = Descriptor.newBip86(
             secretKey: descriptorSecretKey,
             keychainKind: KeychainKind.external,
-            network: network
+            networkKind: networkKind
         )
         
         let changeDescriptor = Descriptor.newBip86(
             secretKey: descriptorSecretKey,
             keychainKind: KeychainKind.internal,
-            network: network
+            networkKind: networkKind
         )
         
         return (externalDescriptor, changeDescriptor)

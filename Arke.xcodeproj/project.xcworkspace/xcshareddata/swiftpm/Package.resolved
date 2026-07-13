@@ -1,5 +1,5 @@
 {
-  "originHash" : "210cd14d39597060430791441818b39bfd89902aa870f15ede5c89c9a6f21a9f",
+  "originHash" : "71c9bc8b143ef81018bbfe19deee5d90acffa21bed3c555237ca04ebbcf16549",
   "pins" : [
     {
       "identity" : "bark-ffi-bindings",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/bitcoindevkit/bdk-swift",
       "state" : {
-        "revision" : "c38d7caa06ec26289cb40b1ea42531aea631c47e",
-        "version" : "2.3.1"
+        "revision" : "5bc9c3cddf203f6aa147d77364782bf095e4f84e",
+        "version" : "3.0.0"
       }
     },
     {

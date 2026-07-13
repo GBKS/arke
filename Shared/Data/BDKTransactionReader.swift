@@ -43,6 +43,7 @@ final class BDKTransactionReader {
         
         // Convert Bark Network to BDK Network
         let bdkNetwork = try Self.convertToBDKNetwork(network)
+        let bdkNetworkKind = try Self.convertToBDKNetworkKind(network)
         
         // Create descriptor from mnemonic
         // IMPORTANT: Must match Bark's onchain wallet configuration:
@@ -52,7 +53,7 @@ final class BDKTransactionReader {
         // - Single-descriptor wallet using Wallet.createSingle() (same as Bark's Wallet::create_single)
         let mnemonicObj = try Mnemonic.fromString(mnemonic: mnemonic)
         let secretKey = DescriptorSecretKey(
-            network: bdkNetwork,
+            networkKind: bdkNetworkKind,
             mnemonic: mnemonicObj,
             password: nil  // Empty passphrase to match Bark's mnemonic.to_seed("")
         )
@@ -60,7 +61,7 @@ final class BDKTransactionReader {
         let descriptor = Descriptor.newBip86(
             secretKey: secretKey,
             keychainKind: .external,
-            network: bdkNetwork
+            networkKind: bdkNetworkKind
         )
         
         // Diagnostic: log the descriptor string
@@ -382,6 +383,17 @@ final class BDKTransactionReader {
             return .signet
         case .regtest:
             return .regtest
+        @unknown default:
+            throw BDKTransactionReaderError.unsupportedNetwork
+        }
+    }
+
+    private static func convertToBDKNetworkKind(_ network: Bark.Network) throws -> BitcoinDevKit.NetworkKind {
+        switch network {
+        case .bitcoin:
+            return .main
+        case .testnet, .signet, .regtest:
+            return .test
         @unknown default:
             throw BDKTransactionReaderError.unsupportedNetwork
         }
