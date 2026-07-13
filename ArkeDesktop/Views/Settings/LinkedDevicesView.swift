@@ -224,7 +224,7 @@ struct DeviceCard: View {
                         .font(.system(size: 16, weight: .semibold))
                     
                     if isCurrent {
-                        Text(String(localized: "label_this_device"))
+                        Text(String(localized: "settings_this_device_parentheses"))
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                     }

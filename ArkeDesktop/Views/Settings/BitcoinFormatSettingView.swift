@@ -26,7 +26,7 @@ struct BitcoinFormatSettingView: View {
                 .font(.body)
                 .foregroundColor(.secondary)
             
-            Picker("", selection: Binding(
+            Picker("settings_bitcoin_format", selection: Binding(
                 get: { selectedFormat },
                 set: { selectedFormat = $0 }
             )) {
@@ -43,6 +43,7 @@ struct BitcoinFormatSettingView: View {
                 }
             }
             .pickerStyle(.radioGroup)
+            .labelsHidden()
             .padding(.top, 15)
             
             Spacer()

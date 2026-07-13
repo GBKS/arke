@@ -551,6 +551,7 @@
 				Docs/Initialization/REVIEW.md,
 				Docs/Initialization/WALLET_CREATION_ISSUES_OVERVIEW.md,
 				Docs/Initialization/WALLET_CREATION_ISSUES.md,
+				Docs/Localization/Localization_Guidelines.md,
 				Docs/Localization/LOCALIZATION_MIGRATION_SUMMARY.md,
 				Docs/Localization/LOCALIZATION_UPDATE_SUMMARY.md,
 				"Docs/Migrations/Bark-0.6.3-to-0.7.0/01-api-changes.md",

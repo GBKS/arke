@@ -111,7 +111,7 @@ public struct SendMetadataSection: View {
             .buttonStyle(.plain)
             .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? LocalizedStringKey("action_change_note") : LocalizedStringKey("action_assign_note"))
             .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_note"))
-            .accessibilityValue((pendingMetadata?.hasNotes ?? false) ? LocalizedStringKey("accessibility_value_note_present") : "")
+            .accessibilityValue((pendingMetadata?.hasNotes ?? false) ? String(localized: "accessibility_value_note_present") : "")
         }
         .padding(.vertical, 12)
         .sheet(isPresented: $showContactSelector) {

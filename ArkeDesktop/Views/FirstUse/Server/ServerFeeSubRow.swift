@@ -14,7 +14,7 @@ struct ServerFeeSubRow: View {
     
     var body: some View {
         HStack {
-            Text("   \(label)")
+            Text(verbatim: "   \(label)")
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
             

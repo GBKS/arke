@@ -152,7 +152,7 @@ private struct ServerCardCostSection: View {
                     .foregroundStyle(Color.Arke.gold)
                     .contentTransition(.numericText())
                 
-                Text(" per month")
+                Text("server_cost_per_month")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
             }

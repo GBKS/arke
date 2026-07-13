@@ -10,45 +10,17 @@ This document outlines the accessibility standards and patterns used in the Ark�
 2. **Interactive elements must have clear labels** - Users should understand what each button/control does
 3. **Provide context through hints** - Explain what happens when an action is taken
 4. **Expose state through values** - Show current selections, status, or progress
-5. **Use semantic naming** - Follow established key naming conventions
+5. **Use semantic naming** - Follow the key naming conventions in `Shared/Docs/Localization/Localization_Guidelines.md`
 
 ---
 
-## Localization Key Naming Conventions
+## Localization Key Naming
 
-All accessibility strings must follow these naming patterns:
+General key naming conventions — including `action_`, `button_`, `status_`, and all other prefixes — are defined in **`Shared/Docs/Localization/Localization_Guidelines.md`**. Accessibility labels reuse those keys where they exist (e.g. `.accessibilityLabel("button_cancel")`).
 
-### 1. Actions (Buttons, Interactive Elements)
-Use `action_` prefix for button labels and interactive element labels:
-```swift
-.accessibilityLabel("action_change_contact")
-.accessibilityLabel("action_assign_tags")
-.accessibilityLabel("action_send_address")
-```
+The three accessibility-specific prefixes are defined here:
 
-**Pattern:** `action_{verb}_{object}`
-
-**Examples:**
-- `action_change_contact` → "Change contact"
-- `action_assign_tags` → "Assign tags"
-- `action_show_qr` → "Show QR code"
-
-### 2. Generic Buttons
-Use `button_` prefix for common button actions:
-```swift
-.accessibilityLabel("button_cancel")
-.accessibilityLabel("button_save")
-.accessibilityLabel("button_apply")
-```
-
-**Pattern:** `button_{action}`
-
-**Examples:**
-- `button_cancel` → "Cancel"
-- `button_save` → "Save"
-- `button_done` → "Done"
-
-### 3. Accessibility Hints
+### 1. Accessibility Hints
 Use `accessibility_hint_` prefix for hints that explain what happens:
 ```swift
 .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_contact"))
@@ -61,7 +33,7 @@ Use `accessibility_hint_` prefix for hints that explain what happens:
 - `accessibility_hint_assign_tags` → "Opens tag selector"
 - `accessibility_balance_hint` → "Tap to view balance details. Long press to toggle balance visibility."
 
-### 4. Accessibility Values
+### 2. Accessibility Values
 Use `accessibility_value_` prefix for state indicators:
 ```swift
 .accessibilityValue(LocalizedStringKey("accessibility_value_note_present"))
@@ -73,7 +45,7 @@ Use `accessibility_value_` prefix for state indicators:
 - `accessibility_value_note_present` → "Note added"
 - `accessibility_balance_hidden` → "Balance hidden"
 
-### 5. Accessibility Labels (Non-actions)
+### 3. Accessibility Labels (Non-actions)
 Use `accessibility_` prefix for descriptive labels and status:
 ```swift
 .accessibilityLabel("accessibility_balance_label")
@@ -84,18 +56,6 @@ Use `accessibility_` prefix for descriptive labels and status:
 **Examples:**
 - `accessibility_balance_label` → "Wallet Balance"
 - `accessibility_connection_status_label` → "Connection Status"
-
-### 6. Status Messages
-Use `status_` prefix for status indicators:
-```swift
-.accessibilityLabel(String(localized: "status_copied_exclaim"))
-```
-
-**Pattern:** `status_{state}`
-
-**Examples:**
-- `status_copied_exclaim` → "Copied!"
-- `accessibility_connection_poor` → "Poor connection"
 
 ---
 
@@ -140,8 +100,10 @@ Button("Note") {
     LocalizedStringKey("action_assign_note"))
 .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_note"))
 .accessibilityValue(hasNote ?
-    LocalizedStringKey("accessibility_value_note_present") : "")
+    String(localized: "accessibility_value_note_present") : "")
 ```
+
+> Use the `String(localized:)` form when one branch is empty — a bare `""` in `LocalizedStringKey` position gets extracted into the string catalog as an empty key.
 
 ### Dynamic Labels with String Interpolation
 When labels include dynamic content, use `String(localized:)`:
@@ -169,45 +131,13 @@ Corresponding localization entries:
 }
 ```
 
+> Interpolated strings are the one sanctioned use of natural-language keys — see "Exception: Interpolated Strings" in `Localization_Guidelines.md`.
+
 ---
 
 ## Localization String Requirements
 
-Every localization key used in code **must** have a value defined in `Localizable.xcstrings`:
-
-```json
-"action_assign_contact" : {
-  "localizations" : {
-    "en" : {
-      "stringUnit" : {
-        "state" : "translated",
-        "value" : "Assign contact"
-      }
-    }
-  }
-}
-```
-
-### ❌ Incorrect (Empty Value):
-```json
-"action_assign_contact" : {
-
-}
-```
-
-### ✅ Correct (With Value):
-```json
-"action_assign_contact" : {
-  "localizations" : {
-    "en" : {
-      "stringUnit" : {
-        "state" : "translated",
-        "value" : "Assign contact"
-      }
-    }
-  }
-}
-```
+Every localization key used in code **must** have an English value defined in `Localizable.xcstrings` — a missing value renders the raw key in the UI. See "Rules" in `Shared/Docs/Localization/Localization_Guidelines.md` for details and examples.
 
 ---
 
@@ -270,7 +200,7 @@ Shows the current state or value of a control.
 ```swift
 // Show when note exists
 .accessibilityValue(hasNote ?
-    LocalizedStringKey("accessibility_value_note_present") : "")
+    String(localized: "accessibility_value_note_present") : "")
 
 // Show current selection
 .accessibilityValue(currentMode.rawValue)
@@ -303,8 +233,8 @@ When reviewing or implementing UI for accessibility:
 
 ### ✅ Localization
 - [ ] All accessibility labels use localization keys (no hardcoded English)
-- [ ] Keys follow proper naming conventions (`action_`, `button_`, `accessibility_`)
-- [ ] All keys have values defined in `Localizable.xcstrings`
+- [ ] Keys follow the naming conventions in `Localization_Guidelines.md`
+- [ ] All keys have English values defined in `Localizable.xcstrings`
 - [ ] Dynamic strings use `String(localized:)` with format strings
 
 ### ✅ Labels
@@ -410,7 +340,7 @@ Button {
     LocalizedStringKey("action_assign_note"))
 .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_note"))
 .accessibilityValue(hasNote ?
-    LocalizedStringKey("accessibility_value_note_present") : "")
+    String(localized: "accessibility_value_note_present") : "")
 ```
 
 ---
@@ -444,32 +374,11 @@ Button {
 .accessibilityLabel(LocalizedStringKey("action_change_contact"))
 ```
 
-### ❌ Missing Values in Localizable.xcstrings
+### ❌ Not Using LocalizedStringKey in Ternaries
+A bare ternary of string literals infers `String`, not `LocalizedStringKey`, so the key is passed through unlocalized and the raw key appears in the UI:
+
 ```swift
-// Code references this key:
-.accessibilityLabel("action_assign_contact")
-
-// But Localizable.xcstrings has:
-"action_assign_contact" : {
-  // ❌ WRONG - no value!
-}
-
-// ✅ CORRECT:
-"action_assign_contact" : {
-  "localizations" : {
-    "en" : {
-      "stringUnit" : {
-        "state" : "translated",
-        "value" : "Assign contact"
-      }
-    }
-  }
-}
-```
-
-### ❌ Not Using LocalizedStringKey for Dynamic Content
-```swift
-// WRONG - won't update when state changes
+// WRONG - infers String, key is never looked up
 .accessibilityLabel(hasContact ? "action_change_contact" : "action_assign_contact")
 
 // CORRECT - wraps in LocalizedStringKey
@@ -478,18 +387,19 @@ Button {
     LocalizedStringKey("action_assign_contact"))
 ```
 
+For catalog-side anti-patterns (missing values, duplicate keys, concatenation), see `Localization_Guidelines.md`.
+
 ---
 
 ## Quick Reference
 
 | Use Case | Prefix | Example |
 |----------|--------|---------|
-| Button action | `action_` | `action_assign_contact` |
-| Generic button | `button_` | `button_save` |
 | Accessibility hint | `accessibility_hint_` | `accessibility_hint_assign_tags` |
 | State value | `accessibility_value_` | `accessibility_value_note_present` |
-| Status message | `status_` | `status_copied_exclaim` |
 | General accessibility | `accessibility_` | `accessibility_balance_label` |
+
+For all other prefixes (`action_`, `button_`, `status_`, `label_`, feature prefixes, etc.), see `Shared/Docs/Localization/Localization_Guidelines.md`.
 
 ---
 

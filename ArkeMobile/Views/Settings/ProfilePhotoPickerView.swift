@@ -117,7 +117,7 @@ struct ProfilePhotoPickerView: View {
                     avatarData = nil
                 }
             }
-            Button("action_cancel", role: .cancel) {}
+            Button("button_cancel", role: .cancel) {}
         } message: {
             Text("profile_remove_photo_confirm")
         }

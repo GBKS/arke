@@ -11,6 +11,16 @@
         }
       }
     },
+    "Cannot use: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot use: %@"
+          }
+        }
+      }
+    },
     "accessibility_address_identicon" : {
       "localizations" : {
         "en" : {
@@ -664,16 +674,6 @@
         }
       }
     },
-    "Cannot use: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cannot use: %@"
-          }
-        }
-      }
-    },
     "connection_ark_server_title" : {
       "localizations" : {
         "en" : {
@@ -1248,9 +1248,21 @@
     "forced_move_hours_remaining" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About %lld hours to go."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "About %lld hour to go."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "About %lld hours to go."
+                }
+              }
+            }
           }
         }
       }
@@ -1740,7 +1752,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Note (optional)"
+            "value" : "Add note (optional)"
           }
         }
       }
@@ -1940,7 +1952,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Refreshing"
+            "value" : "Refreshing..."
           }
         }
       }
@@ -1953,7 +1965,8 @@
             "value" : "₿"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "symbol_ellipsis" : {
       "extractionState" : "manual",
@@ -1964,7 +1977,8 @@
             "value" : "…"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "vtxo_graph_empty" : {
       "localizations" : {

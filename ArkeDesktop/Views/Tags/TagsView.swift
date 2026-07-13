@@ -186,7 +186,7 @@ struct TagsView: View {
                                     .foregroundColor(item.statistic.totalAmount >= 0 ? .Arke.green : .Arke.red)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             } else {
-                                Text("")
+                                Text(verbatim: "")
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }
                         }
