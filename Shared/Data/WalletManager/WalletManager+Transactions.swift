@@ -20,6 +20,16 @@ extension WalletManager {
         unifiedTransactionService?.allTransactions ?? []
     }
     
+    /// Whether a VTXO refresh is currently pending. This is the canonical
+    /// "ongoing refresh" signal — a pending refresh settles before an exit
+    /// chain and would cancel a concurrently started forced move
+    /// (see Shared/Docs/Features/Exit_Refresh_Coordination.md).
+    var hasActiveRefresh: Bool {
+        transactions.contains {
+            $0.category == .refresh && $0.status == .pending
+        }
+    }
+
     /// Get Ark-only transactions (for debugging/admin views)
     var arkTransactionsOnly: [TransactionModel] {
         transactionService?.transactions ?? []

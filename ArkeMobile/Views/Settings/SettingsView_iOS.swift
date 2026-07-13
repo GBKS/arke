@@ -12,6 +12,7 @@ import ArkeUI
 struct SettingsView_iOS: View {
     let onWalletDeleted: (() -> Void)?
     let onNavigateToActivity: (() -> Void)?
+    var onNavigateToBalance: (() -> Void)? = nil
     @Environment(WalletManager.self) private var manager
     @Environment(\.deviceRegistrationService) private var deviceService
     
@@ -412,7 +413,7 @@ struct SettingsView_iOS: View {
             //if !manager.isReadOnlyMode {
                 Section {
                     // Exit
-                    NavigationLink(destination: ExitView_iOS()) {
+                    NavigationLink(destination: ExitView_iOS(onNavigateToBalance: onNavigateToBalance)) {
                         HStack(spacing: 12) {
                             Image(systemName: "light.beacon.max.fill")
                                 .foregroundColor(.Arke.orange)

@@ -509,6 +509,16 @@
         }
       }
     },
+    "balance_estimated_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimated fee"
+          }
+        }
+      }
+    },
     "balance_final_step_fee" : {
       "localizations" : {
         "en" : {
@@ -529,12 +539,52 @@
         }
       }
     },
+    "balance_forced_move_refresh_in_progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There’s a pending refresh. If you start a forced move now, it may get cancelled by the refresh. Best to wait."
+          }
+        }
+      }
+    },
+    "balance_forced_move_refresh_in_progress_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh in progress"
+          }
+        }
+      }
+    },
     "balance_forced_move_server_connected" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There's a faster, cheaper way to move to Savings in the balance details view."
+            "value" : "There's a faster, cheaper way to move to Savings in the balance view."
+          }
+        }
+      }
+    },
+    "balance_forced_move_server_connected_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you start"
+          }
+        }
+      }
+    },
+    "balance_increase_savings_for_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increase your savings balance to cover the fee."
           }
         }
       }
@@ -683,6 +733,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Use Custom Color"
+          }
+        }
+      }
+    },
+    "button_view_balance_details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View balance"
           }
         }
       }
@@ -863,9 +923,6 @@
         }
       }
     },
-    "Estimated fee" : {
-
-    },
     "fee_priority_fast" : {
       "localizations" : {
         "en" : {
@@ -952,6 +1009,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "~1-2 hours"
+          }
+        }
+      }
+    },
+    "fee_transactions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transactions"
           }
         }
       }
@@ -1187,9 +1254,6 @@
       }
     },
     "If you're experiencing connection issues, try:" : {
-
-    },
-    "Increase your savings balance to cover the fee." : {
 
     },
     "label_amount" : {

@@ -227,10 +227,15 @@ struct WalletView_iOS: View {
                                 if !activityNavPath.isEmpty {
                                     activityNavPath.removeLast(activityNavPath.count)
                                 }
+                            },
+                            onNavigateToBalance: {
+                                activityNavPath.append(ActivityDestination.balance)
                             }
                         )
                     case .exit:
-                        ExitView_iOS()
+                        ExitView_iOS(onNavigateToBalance: {
+                            activityNavPath.append(ActivityDestination.balance)
+                        })
                     case .contacts:
                         // Note: This is currently unused - contacts are accessed via SendView
                         // Consider removing this case if not needed

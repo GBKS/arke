@@ -151,6 +151,16 @@ population exposed to the race.
   exclusion only risks the benign self-cancel race, while skipping a
   near-expiry refresh risks real fund loss. (2026-07-13)
 
+- **Ongoing-refresh note in `NoExitView`** — first slice of the force-move
+  pre-flight: when a refresh transaction is pending, the pre-exit screen shows
+  an advisory ("your balance is being refreshed; a forced move started now
+  would be cancelled by it"). Advisory only — never gates the Start button
+  (design principle 1). Signal is the new canonical
+  `WalletManager.hasActiveRefresh` (pending `.refresh` transactions;
+  `BalanceRefreshStatusViewModel` now delegates to it). Does *not* cover
+  server-side pending delegated rounds or daemon maintenance refreshes — those
+  remain in the pre-flight item below. (2026-07-13)
+
 ### Open — app side (exit view scope)
 
 - **Force-move pre-flight (supersedes "Guard A").** Before starting the exit:

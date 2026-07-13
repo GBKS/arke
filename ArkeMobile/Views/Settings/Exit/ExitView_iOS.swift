@@ -65,6 +65,8 @@ import ArkeUI
 import UserNotifications
 
 struct ExitView_iOS: View {
+    var onNavigateToBalance: (() -> Void)? = nil
+
     @Environment(WalletManager.self) var manager
     @Environment(\.scenePhase) private var scenePhase
 
@@ -147,7 +149,9 @@ struct ExitView_iOS: View {
                         },
                         exitCostEstimate: exitCostEstimate,
                         onchainBalance: onchainBalance,
-                        isConnectedToServer: manager.connectionStatus.isConnected
+                        isConnectedToServer: manager.connectionStatus.isConnected,
+                        hasOngoingRefresh: manager.hasActiveRefresh,
+                        onGoToBalance: onNavigateToBalance
                     ) {
                         IntroVideoPlayer_iOS(
                             videoName: "force-move-intro",

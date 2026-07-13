@@ -33,7 +33,7 @@ public struct ExitCostEstimateCard: View {
                 */
 
                 ExitCostRow(
-                    label: String(localized: "balance_amount_to_recover"),
+                    label: String(localized: "balance_amount_to_recover", bundle: .module),
                     value: BitcoinFormatter.shared.formatAmount(Int(spendableBalance))
                 )
 
@@ -41,7 +41,7 @@ public struct ExitCostEstimateCard: View {
 
                 // Show fee range if available, otherwise single estimate
                 ExitCostRow(
-                    label: "Estimated fee",
+                    label: String(localized: "balance_estimated_fee", bundle: .module),
                     value: estimate.isRange
                         ? "\(BitcoinFormatter.shared.formatAmount(Int(estimate.lowCost))) – \(BitcoinFormatter.shared.formatAmount(Int(estimate.highCost)))"
                         : BitcoinFormatter.shared.formatAmount(Int(estimate.totalCost))
@@ -51,7 +51,7 @@ public struct ExitCostEstimateCard: View {
 
                 // Show transaction count
                 ExitCostRow(
-                    label: "Transactions",
+                    label: String(localized: "fee_transactions", bundle: .module),
                     value: "\(estimate.transactionRange)"
                 )
 
@@ -77,10 +77,16 @@ public struct ExitCostEstimateCard: View {
             if !estimate.canAfford {                
                 Divider()
                 
-                Text("Increase your savings balance to cover the fee.")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 4)
+                Label {
+                    Text("balance_increase_savings_for_fee", bundle: .module)
+                } icon: {
+                    Image(systemName: "tornado")
+                        .accessibilityHidden(true)
+                }
+                .font(.body)
+                .foregroundStyle(Color.Arke.purple)
+                .fontWeight(.medium)
+                .padding(.top, 4)
             } else {
                 /*
                 Text("✓ You have sufficient savings balance.")
@@ -97,4 +103,60 @@ public struct ExitCostEstimateCard: View {
                 .fill(.ultraThinMaterial)
         }
     }
+}
+
+// MARK: - Previews
+
+#Preview("Can Afford") {
+    ExitCostEstimateCard(
+        spendableBalance: 100000,
+        estimate: ExitCostEstimate(
+            lowCost: 12000,
+            totalCost: 15000,
+            highCost: 18000,
+            minTransactions: 4,
+            maxTransactions: 7,
+            feeRate: 8,
+            canAfford: true,
+            onchainBalance: 50000
+        ),
+        onchainBalance: 50000
+    )
+    .padding()
+}
+
+#Preview("Cannot Afford") {
+    ExitCostEstimateCard(
+        spendableBalance: 100000,
+        estimate: ExitCostEstimate(
+            lowCost: 12000,
+            totalCost: 15000,
+            highCost: 18000,
+            minTransactions: 4,
+            maxTransactions: 7,
+            feeRate: 8,
+            canAfford: false,
+            onchainBalance: 5000
+        ),
+        onchainBalance: 5000
+    )
+    .padding()
+}
+
+#Preview("Single Estimate") {
+    ExitCostEstimateCard(
+        spendableBalance: 100000,
+        estimate: ExitCostEstimate(
+            lowCost: 15000,
+            totalCost: 15000,
+            highCost: 15000,
+            minTransactions: 4,
+            maxTransactions: 4,
+            feeRate: 8,
+            canAfford: true,
+            onchainBalance: 50000
+        ),
+        onchainBalance: 50000
+    )
+    .padding()
 }

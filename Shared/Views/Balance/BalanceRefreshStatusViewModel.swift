@@ -55,9 +55,7 @@ class BalanceRefreshStatusViewModel {
     }
     
     var hasActiveRefresh: Bool {
-        walletManager.transactions.contains {
-            $0.category == .refresh && $0.status == .pending
-        }
+        walletManager.hasActiveRefresh
     }
     
     var hasVtxosToRefresh: Bool {

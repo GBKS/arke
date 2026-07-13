@@ -14,6 +14,8 @@ public struct NoExitView<Media: View>: View {
     let exitCostEstimate: ExitCostEstimate?
     let onchainBalance: UInt64
     let isConnectedToServer: Bool
+    let hasOngoingRefresh: Bool
+    let onGoToBalance: (() -> Void)?
     let media: Media
 
     @State private var acknowledgedTakesTime = false
@@ -28,6 +30,8 @@ public struct NoExitView<Media: View>: View {
         exitCostEstimate: ExitCostEstimate?,
         onchainBalance: UInt64,
         isConnectedToServer: Bool,
+        hasOngoingRefresh: Bool = false,
+        onGoToBalance: (() -> Void)? = nil,
         @ViewBuilder media: () -> Media
     ) {
         self.spendableBalance = spendableBalance
@@ -36,6 +40,8 @@ public struct NoExitView<Media: View>: View {
         self.exitCostEstimate = exitCostEstimate
         self.onchainBalance = onchainBalance
         self.isConnectedToServer = isConnectedToServer
+        self.hasOngoingRefresh = hasOngoingRefresh
+        self.onGoToBalance = onGoToBalance
         self.media = media()
     }
     
@@ -82,27 +88,74 @@ public struct NoExitView<Media: View>: View {
                 
                 // Connection status info box
                 if isConnectedToServer {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("balance_forced_move_server_connected", bundle: .module)
-                            .font(.body)
-                            .foregroundColor(.primary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 15) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("balance_forced_move_server_connected_title", bundle: .module)
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text("balance_forced_move_emergencies_only", bundle: .module)
-                            .font(.body)
-                            .foregroundColor(.primary)
-                            .fontWeight(.medium)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("balance_forced_move_server_connected", bundle: .module)
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            
+                            Text("balance_forced_move_emergencies_only", bundle: .module)
+                                .font(.body)
+                                .foregroundColor(.white)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
+                        if let onGoToBalance {
+                            Button(action: onGoToBalance) {
+                                Text("button_view_balance_details", bundle: .module)
+                                    .font(.body)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(Color.Arke.gold4)
+                                    .padding(.horizontal, 4)
+                            }
+                            .tint(Color.Arke.gold)
+                            .buttonStyle(.glassProminent)
+                            .padding(.top, 4)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 15)
+                    .padding(.vertical, 20)
                     .background {
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(.ultraThinMaterial)
+                            .fill(Color.Arke.purple)
                     }
                 }
                 
+                // Ongoing refresh note. Advisory only — a lingering refresh
+                // must never block the forced move (exit fails open, see
+                // Exit_Refresh_Coordination.md).
+                if hasOngoingRefresh {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("balance_forced_move_refresh_in_progress_title", bundle: .module)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Text("balance_forced_move_refresh_in_progress", bundle: .module)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 20)
+                    .background {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.Arke.purple)
+                    }
+                }
+
                 // Exit cost estimate card (if available)
                 if let estimate = exitCostEstimate {
                     ExitCostEstimateCard(
@@ -111,8 +164,6 @@ public struct NoExitView<Media: View>: View {
                         onchainBalance: onchainBalance
                     )
                 }
-                
-                
                 
                 // Icon and title
                 VStack(alignment: .leading, spacing: 10) {
@@ -270,67 +321,104 @@ public struct ExitCostEstimate {
 // MARK: - Previews
 
 #Preview("Can Afford") {
-    NoExitView(
-        spendableBalance: 100000,
-        isProcessing: false,
-        onStartExit: {},
-        exitCostEstimate: ExitCostEstimate(
-            lowCost: 12000,
-            totalCost: 15000,
-            highCost: 18000,
-            minTransactions: 4,
-            maxTransactions: 7,
-            feeRate: 8,
-            canAfford: true,
-            onchainBalance: 50000
-        ),
-        onchainBalance: 50000,
-        isConnectedToServer: true
-    ) {
-        Image("exit")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
+    // ScrollView mirrors the real call site (ExitView_iOS); without it the
+    // fixed preview height compresses and truncates the text
+    ScrollView {
+        NoExitView(
+            spendableBalance: 100000,
+            isProcessing: false,
+            onStartExit: {},
+            exitCostEstimate: ExitCostEstimate(
+                lowCost: 12000,
+                totalCost: 15000,
+                highCost: 18000,
+                minTransactions: 4,
+                maxTransactions: 7,
+                feeRate: 8,
+                canAfford: true,
+                onchainBalance: 50000
+            ),
+            onchainBalance: 50000,
+            isConnectedToServer: true,
+            onGoToBalance: {}
+        ) {
+            Image("exit")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        }
+        .padding()
     }
-    .padding()
 }
 #Preview("Cannot Afford") {
-    NoExitView(
-        spendableBalance: 100000,
-        isProcessing: false,
-        onStartExit: {},
-        exitCostEstimate: ExitCostEstimate(
-            lowCost: 12000,
-            totalCost: 15000,
-            highCost: 18000,
-            minTransactions: 4,
-            maxTransactions: 7,
-            feeRate: 8,
-            canAfford: false,
-            onchainBalance: 10000
-        ),
-        onchainBalance: 10000,
-        isConnectedToServer: false
-    ) {
-        Image("exit")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
+    ScrollView {
+        NoExitView(
+            spendableBalance: 100000,
+            isProcessing: false,
+            onStartExit: {},
+            exitCostEstimate: ExitCostEstimate(
+                lowCost: 12000,
+                totalCost: 15000,
+                highCost: 18000,
+                minTransactions: 4,
+                maxTransactions: 7,
+                feeRate: 8,
+                canAfford: false,
+                onchainBalance: 10000
+            ),
+            onchainBalance: 10000,
+            isConnectedToServer: false
+        ) {
+            Image("exit")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        }
+        .padding()
     }
-    .padding()
+}
+
+#Preview("Ongoing Refresh") {
+    ScrollView {
+        NoExitView(
+            spendableBalance: 100000,
+            isProcessing: false,
+            onStartExit: {},
+            exitCostEstimate: ExitCostEstimate(
+                lowCost: 12000,
+                totalCost: 15000,
+                highCost: 18000,
+                minTransactions: 4,
+                maxTransactions: 7,
+                feeRate: 8,
+                canAfford: true,
+                onchainBalance: 50000
+            ),
+            onchainBalance: 50000,
+            isConnectedToServer: true,
+            hasOngoingRefresh: true
+        ) {
+            Image("exit")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        }
+        .padding()
+    }
 }
 
 #Preview("No Estimate") {
-    NoExitView(
-        spendableBalance: 100000,
-        isProcessing: false,
-        onStartExit: {},
-        exitCostEstimate: nil,
-        onchainBalance: 10000,
-        isConnectedToServer: true
-    ) {
-        Image("exit")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
+    ScrollView {
+        NoExitView(
+            spendableBalance: 100000,
+            isProcessing: false,
+            onStartExit: {},
+            exitCostEstimate: nil,
+            onchainBalance: 10000,
+            isConnectedToServer: true
+        ) {
+            Image("exit")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+        }
+        .padding()
     }
-    .padding()
 }
 
