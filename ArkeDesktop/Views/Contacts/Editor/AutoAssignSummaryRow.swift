@@ -52,6 +52,8 @@ struct AutoAssignSummaryRow: View {
             return .Arke.orange
         case .failed:
             return .Arke.red
+        case .cancelled:
+            return .gray
         }
     }
 }

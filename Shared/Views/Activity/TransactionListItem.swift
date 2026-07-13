@@ -86,6 +86,12 @@ struct TransactionListItem: View {
     
     /// Returns the appropriate icon color based on transaction status
     private var transactionIconColor: Color {
+        // Cancelled is terminal and wins over the exit-progress check below,
+        // which would otherwise show a never-completing pending state.
+        if transaction.transactionStatus == .cancelled {
+            return .gray
+        }
+
         // Special case for unilateral exits: only complete when claimed
         if transaction.hasUnilateralExit {
             // Check current exit status
@@ -122,14 +128,23 @@ struct TransactionListItem: View {
             
         case .pending:
             return .Arke.blue
-            
+
         case .failed:
             return .Arke.red
+
+        case .cancelled:
+            return .gray
         }
     }
-    
+
     /// Returns the appropriate amount text color based on transaction status
     private var amountTextColor: Color {
+        // Cancelled is terminal and wins over the exit-progress check below,
+        // which would otherwise show a never-completing pending state.
+        if transaction.transactionStatus == .cancelled {
+            return .gray
+        }
+
         // Special case for unilateral exits: only complete when claimed
         if transaction.hasUnilateralExit {
             // Check current exit status
@@ -169,9 +184,12 @@ struct TransactionListItem: View {
         case .pending:
             return .primary // Testing if blue is needed
             //return .Arke.blue
-            
+
         case .failed:
             return .Arke.red
+
+        case .cancelled:
+            return .gray
         }
     }
     

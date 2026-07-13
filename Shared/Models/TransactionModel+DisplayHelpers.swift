@@ -132,6 +132,7 @@ extension TransactionModel {
                 confirmed: "Received",
                 pending: "Receiving",
                 failed: "Failed receive",
+                cancelled: "Cancelled receive",
                 includePrefix: includeStatusPrefix
             )
         case .sent:
@@ -139,6 +140,7 @@ extension TransactionModel {
                 confirmed: "Sent",
                 pending: "Sending",
                 failed: "Failed send",
+                cancelled: "Cancelled send",
                 includePrefix: includeStatusPrefix
             )
         case .transfer:
@@ -146,6 +148,7 @@ extension TransactionModel {
                 confirmed: "Move",
                 pending: "Moving",
                 failed: "Failed move",
+                cancelled: "Cancelled move",
                 includePrefix: includeStatusPrefix
             )
         case .pending:
@@ -467,6 +470,7 @@ extension TransactionModel {
                     confirmed: "Received \(amountText) from \(contact.cachedName).",
                     pending: "Receiving \(amountText) from \(contact.cachedName).",
                     failed: "Failed receive from \(contact.cachedName).",
+                    cancelled: "Cancelled receive from \(contact.cachedName).",
                     includePrefix: includeStatusPrefix
                 )
             case .sent:
@@ -474,6 +478,7 @@ extension TransactionModel {
                     confirmed: "Sent \(amountText) to \(contact.cachedName).",
                     pending: "Sending \(amountText) to \(contact.cachedName).",
                     failed: "Failed send to \(contact.cachedName).",
+                    cancelled: "Cancelled send to \(contact.cachedName).",
                     includePrefix: includeStatusPrefix
                 )
             case .transfer:
@@ -481,6 +486,7 @@ extension TransactionModel {
                     confirmed: "Transfer.",
                     pending: "Transferring.",
                     failed: "Failed transfer.",
+                    cancelled: "Cancelled transfer.",
                     includePrefix: includeStatusPrefix
                 )
             case .pending:
@@ -493,11 +499,18 @@ extension TransactionModel {
     }
     
     /// Helper method to return status-aware text
-    private func statusAwareText(confirmed: String, pending: String, failed: String, includePrefix: Bool) -> String {
+    private func statusAwareText(confirmed: String, pending: String, failed: String, cancelled: String = "Cancelled", includePrefix: Bool) -> String {
         guard includePrefix else {
             return confirmed
         }
-        
+
+        // A cancelled movement is terminal in bark (its VTXOs were consumed by
+        // something else, e.g. a refresh), so it wins over the exit-progress
+        // check below, which would otherwise report a never-completing "pending".
+        if transactionStatus == .cancelled {
+            return cancelled
+        }
+
         // Special case for unilateral exits: check live exit status
         // Only consider exit complete when it's been claimed
         if hasUnilateralExit {
@@ -527,6 +540,8 @@ extension TransactionModel {
             return pending
         case .failed:
             return failed
+        case .cancelled:
+            return cancelled
         }
     }
     
@@ -542,6 +557,7 @@ extension TransactionModel {
                 confirmed: "Sent",
                 pending: "Sending",
                 failed: "Failed send",
+                cancelled: "Cancelled send",
                 includePrefix: includePrefix
             )
         case .received:
@@ -549,6 +565,7 @@ extension TransactionModel {
                 confirmed: "Received",
                 pending: "Receiving",
                 failed: "Failed receive",
+                cancelled: "Cancelled receive",
                 includePrefix: includePrefix
             )
         case .transfer:
@@ -556,6 +573,7 @@ extension TransactionModel {
                 confirmed: "Move",
                 pending: "Moving",
                 failed: "Failed move",
+                cancelled: "Cancelled move",
                 includePrefix: includePrefix
             )
         case .pending:

@@ -537,7 +537,7 @@
 				Docs/Development/setup.md,
 				"Docs/Development/testing-patterns.md",
 				Docs/DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md,
-				Docs/DOCUMENTATION_INVENTORY.md,
+				Docs/Documentation_Inventory.md,
 				"Docs/Features/balance-persistence.md",
 				Docs/Features/intro.md,
 				"Docs/Features/send-metadata-enhancement_phase_0_complete.md",

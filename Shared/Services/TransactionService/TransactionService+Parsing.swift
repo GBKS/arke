@@ -245,8 +245,12 @@ extension TransactionService {
             return .confirmed
         case "pending":
             return .pending
-        case "failed", "cancelled":
+        case "failed":
             return .failed
+        // Bark serializes MovementStatus::Canceled as "canceled" (single l,
+        // bark movement/mod.rs); "cancelled" kept as a safety net.
+        case "canceled", "cancelled":
+            return .cancelled
         default:
             TransactionService.logger.warning("Unknown movement status '\(status)', defaulting to pending")
             return .pending

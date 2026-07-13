@@ -174,9 +174,19 @@ class VTXORefreshService {
                 return
             }
             
-            // Step 2: Get all VTXOs that could potentially be refreshed
-            let vtxos = try await wallet.spendableVtxos()
-            
+            // Step 2: Get all VTXOs that could potentially be refreshed.
+            // Since bark 0.11.3 (MR #2117) VTXOs stay spendable while a unilateral
+            // exit is in progress, so mid-exit VTXOs must be excluded here:
+            // refreshing one spends it and self-cancels the exit (VtxoAlreadySpent).
+            // See Docs/Features/Exit_Refresh_Coordination.md.
+            let exitingIds = await exitingVtxoIds()
+            let allSpendable = try await wallet.spendableVtxos()
+            let vtxos = allSpendable.filter { !exitingIds.contains($0.id) }
+
+            if vtxos.count < allSpendable.count {
+                Self.logger.info("Excluded \(allSpendable.count - vtxos.count) VTXO(s) with an in-progress exit from auto-refresh")
+            }
+
             if vtxos.isEmpty {
                 Self.logger.debug("No spendable VTXOs - skipping")
                 lastCheckTime = Date()
@@ -394,10 +404,14 @@ class VTXORefreshService {
     /// Uses delegated refresh so the app doesn't need to stay online until the round starts
     func refreshManually() async throws {
         Self.logger.info("Manual refresh requested")
-        
-        // Get VTXOs that need refresh
+
+        // Get VTXOs that need refresh. Bark's selection includes VTXOs with an
+        // in-progress exit (they stay spendable until the exit chain broadcasts);
+        // refreshing one would self-cancel the exit, so exclude them.
+        let exitingIds = await exitingVtxoIds()
         let vtxos = try await wallet.getVtxosToRefresh()
-        
+            .filter { !exitingIds.contains($0.id) }
+
         if !vtxos.isEmpty {
             let vtxoIds = vtxos.map { $0.id }
             let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
@@ -414,6 +428,21 @@ class VTXORefreshService {
         }
     }
     
+    /// IDs of VTXOs currently in the unilateral exit process (any state).
+    ///
+    /// On error this returns an empty set and the refresh proceeds unfiltered:
+    /// a missed exclusion only risks the benign self-cancel race (funds stay
+    /// safe), whereas skipping the refresh entirely could miss a near-expiry
+    /// renewal, which risks actual fund loss.
+    private func exitingVtxoIds() async -> Set<String> {
+        do {
+            return Set(try await wallet.getExitVtxos().map { $0.vtxoId })
+        } catch {
+            Self.logger.warning("Could not fetch exit VTXOs for refresh exclusion: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     // MARK: - Notification Scheduling
     
     /// Schedule a local notification to remind user to refresh VTXOs

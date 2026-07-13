@@ -155,6 +155,7 @@ extension TransactionService {
         case .confirmed: return "confirmed"
         case .pending: return "pending"
         case .failed: return "failed"
+        case .cancelled: return "cancelled"
         }
     }
     

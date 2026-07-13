@@ -314,6 +314,12 @@ struct TransactionDetailView_iOS: View {
     
     /// Returns the appropriate icon color based on transaction status
     private var transactionIconColor: Color {
+        // Cancelled is terminal and wins over the exit-progress check below,
+        // which would otherwise show a never-completing pending state.
+        if transaction.transactionStatus == .cancelled {
+            return .gray
+        }
+
         // Special case for unilateral exits: only complete when claimed
         if transaction.subsystemName == "bark.exit" {
             if transaction.subsystemKind == "claimed" {
@@ -338,14 +344,23 @@ struct TransactionDetailView_iOS: View {
             
         case .pending:
             return .Arke.blue
-            
+
         case .failed:
             return .Arke.red
+
+        case .cancelled:
+            return .gray
         }
     }
-    
+
     /// Returns the appropriate amount text color based on transaction status
     private var amountTextColor: Color {
+        // Cancelled is terminal and wins over the exit-progress check below,
+        // which would otherwise show a never-completing pending state.
+        if transaction.transactionStatus == .cancelled {
+            return .gray
+        }
+
         // Special case for unilateral exits: only complete when claimed
         if transaction.subsystemName == "bark.exit" {
             if transaction.subsystemKind == "claimed" {
@@ -370,12 +385,15 @@ struct TransactionDetailView_iOS: View {
             
         case .pending:
             return .Arke.blue
-            
+
         case .failed:
             return .Arke.red
+
+        case .cancelled:
+            return .gray
         }
     }
-    
+
     // MARK: - Helper Properties
     
     /// Determines the appropriate background pattern image based on transaction category
