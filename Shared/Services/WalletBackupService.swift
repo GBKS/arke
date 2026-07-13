@@ -18,44 +18,92 @@ class WalletBackupService {
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "WalletBackup")
     
     private let walletDirectory: URL
-    private let databaseFileName = "bark.sqlite"
-    private let backupSubdirectory = "Backups"
+
+    /// Live database filename as of bark 0.11
+    nonisolated static let currentDatabaseFileName = "db.sqlite"
+    /// Pre-0.11 filename; survives only in legacy iCloud backup artifacts
+    nonisolated static let legacyDatabaseFileName = "bark.sqlite"
+
+    private static let backupSubdirectory = "Backups"
     
     /// iCloud ubiquity container URL (nil if iCloud unavailable)
     private var ubiquityContainer: URL? {
         FileManager.default.url(forUbiquityContainerIdentifier: nil)
     }
-    
-    // MARK: - Static Helpers for Device Migration
-    
-    /// Check if wallet database file exists locally
-    /// Used to determine if restore from backup is needed during device migration
-    /// - Returns: True if bark.sqlite exists in the wallet directory
-    static func hasLocalWalletFile() -> Bool {
-        let walletDirectory = getWalletDirectory()
-        let walletFilePath = walletDirectory.appendingPathComponent("bark.sqlite")
-        let exists = FileManager.default.fileExists(atPath: walletFilePath.path)
-        
-        logger.debug("Wallet file exists check: \(exists) at \(walletFilePath.path)")
-        return exists
+
+    /// iCloud backup directory (nil if iCloud unavailable)
+    private var backupDirectory: URL? {
+        ubiquityContainer?.appendingPathComponent(Self.backupSubdirectory, isDirectory: true)
+    }
+
+    /// Existing iCloud backup artifact, preferring the current name over the legacy one
+    private var existingBackupFile: URL? {
+        backupDirectory.flatMap { Self.existingDatabaseURL(in: $0) }
+    }
+
+    /// Local wallet database file (current name)
+    private var localDatabaseFile: URL {
+        walletDirectory.appendingPathComponent(Self.currentDatabaseFileName)
     }
     
+    // MARK: - Static Helpers for Device Migration
+
+    /// First existing database file in a directory, preferring the current name
+    private static func existingDatabaseURL(in directory: URL) -> URL? {
+        for name in [currentDatabaseFileName, legacyDatabaseFileName] {
+            let url = directory.appendingPathComponent(name)
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    /// One-time normalization to the bark 0.11 database name.
+    /// A `bark.sqlite` next to a live `db.sqlite` can only be pre-rename residue
+    /// or a stale backup restore, so `db.sqlite` always wins.
+    static func migrateLegacyDatabaseFileIfNeeded() {
+        let walletDirectory = getWalletDirectory()
+        let legacyFile = walletDirectory.appendingPathComponent(legacyDatabaseFileName)
+        guard FileManager.default.fileExists(atPath: legacyFile.path) else { return }
+
+        let currentFile = walletDirectory.appendingPathComponent(currentDatabaseFileName)
+        do {
+            if FileManager.default.fileExists(atPath: currentFile.path) {
+                try FileManager.default.removeItem(at: legacyFile)
+                logger.info("🧹 Removed stale \(legacyDatabaseFileName) next to live \(currentDatabaseFileName)")
+            } else {
+                try FileManager.default.moveItem(at: legacyFile, to: currentFile)
+                logger.info("📦 Renamed legacy \(legacyDatabaseFileName) to \(currentDatabaseFileName)")
+            }
+        } catch {
+            logger.error("❌ Failed to migrate legacy database file: \(error.localizedDescription)")
+        }
+    }
+
+    /// Check if wallet database file exists locally
+    /// Used to determine if restore from backup is needed during device migration
+    /// - Returns: True if a wallet database (current or legacy name) exists in the wallet directory
+    static func hasLocalWalletFile() -> Bool {
+        let walletFile = existingDatabaseURL(in: getWalletDirectory())
+
+        logger.debug("Wallet file exists check: \(walletFile != nil) (\(walletFile?.lastPathComponent ?? "no db file"))")
+        return walletFile != nil
+    }
+
     /// Get the modification date of the local wallet database file
     /// Used to compare with backup timestamps to determine which is newer
-    /// - Returns: Modification date of bark.sqlite, or nil if file doesn't exist or error occurs
+    /// - Returns: Modification date of the wallet database, or nil if file doesn't exist or error occurs
     static func getLocalWalletFileModificationDate() -> Date? {
-        let walletDirectory = getWalletDirectory()
-        let walletFilePath = walletDirectory.appendingPathComponent("bark.sqlite")
-        
-        guard FileManager.default.fileExists(atPath: walletFilePath.path) else {
+        guard let walletFilePath = existingDatabaseURL(in: getWalletDirectory()) else {
             logger.debug("Local wallet file does not exist")
             return nil
         }
-        
+
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: walletFilePath.path)
             let modificationDate = attributes[.modificationDate] as? Date
-            
+
             logger.debug("Local wallet file modification date: \(modificationDate?.description ?? "unknown")")
             return modificationDate
         } catch {
@@ -93,16 +141,14 @@ class WalletBackupService {
     /// Performs a backup of the wallet database to iCloud
     /// - Returns: BackupResult indicating success, already up-to-date, or failure
     func performBackup() async -> BackupResult {
-        guard let container = ubiquityContainer else {
+        guard ubiquityContainer != nil, let backupDir = backupDirectory else {
             Self.logger.debug("Backup skipped - iCloud unavailable")
             return .failed
         }
-        
-        let sourceFile = walletDirectory.appendingPathComponent(databaseFileName)
-        
+
         // Check if source exists
-        guard FileManager.default.fileExists(atPath: sourceFile.path) else {
-            Self.logger.debug("Backup skipped - database file not found at: \(sourceFile.path)")
+        guard let sourceFile = Self.existingDatabaseURL(in: walletDirectory) else {
+            Self.logger.debug("Backup skipped - database file not found in: \(self.walletDirectory.path)")
             
             // Log all files in wallet directory for debugging
             do {
@@ -125,11 +171,10 @@ class WalletBackupService {
         }
         
         // Create backup directory if needed
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
         try? FileManager.default.createDirectory(at: backupDir, withIntermediateDirectories: true)
-        
+
         // Create current backup file
-        let currentBackup = backupDir.appendingPathComponent(databaseFileName)
+        let currentBackup = backupDir.appendingPathComponent(Self.currentDatabaseFileName)
         
         // Check if backup already exists and is identical
         if FileManager.default.fileExists(atPath: currentBackup.path) {
@@ -147,12 +192,19 @@ class WalletBackupService {
             
             // Copy database to iCloud
             try FileManager.default.copyItem(at: sourceFile, to: currentBackup)
-            
+
             Self.logger.info("✅ Wallet backup completed")
-            
+
+            // A current-name backup now exists - the legacy artifact is obsolete
+            let legacyBackup = backupDir.appendingPathComponent(Self.legacyDatabaseFileName)
+            if FileManager.default.fileExists(atPath: legacyBackup.path) {
+                try? FileManager.default.removeItem(at: legacyBackup)
+                Self.logger.info("🧹 Removed legacy backup artifact \(Self.legacyDatabaseFileName)")
+            }
+
             // Create timestamped backup for versioning
             await createTimestampedBackup(from: sourceFile, in: backupDir)
-            
+
             return .success
             
         } catch {
@@ -164,7 +216,7 @@ class WalletBackupService {
     /// Creates a timestamped backup and cleans up old ones
     private func createTimestampedBackup(from sourceFile: URL, in backupDir: URL) async {
         let timestamp = ISO8601DateFormatter().string(from: Date())
-        let timestampedBackup = backupDir.appendingPathComponent("db.sqlite.\(timestamp)")
+        let timestampedBackup = backupDir.appendingPathComponent("\(Self.currentDatabaseFileName).\(timestamp)")
         
         do {
             try FileManager.default.copyItem(at: sourceFile, to: timestampedBackup)
@@ -188,7 +240,7 @@ class WalletBackupService {
             )
             
             // Filter timestamped backups only
-            let timestampedBackups = files.filter { $0.lastPathComponent.hasPrefix("db.sqlite.") }
+            let timestampedBackups = files.filter { $0.lastPathComponent.hasPrefix("\(Self.currentDatabaseFileName).") }
             
             // Sort by creation date (newest first)
             let sortedBackups = try timestampedBackups.sorted { file1, file2 in
@@ -214,20 +266,19 @@ class WalletBackupService {
     /// - Parameter overwriteExisting: If true, will overwrite existing database
     /// - Returns: Success status
     func restoreFromBackup(overwriteExisting: Bool = false) async -> Bool {
-        guard let container = ubiquityContainer else {
+        guard ubiquityContainer != nil else {
             Self.logger.warning("Restore failed - iCloud unavailable")
             return false
         }
-        
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
-        let sourceBackup = backupDir.appendingPathComponent(databaseFileName)
-        let destinationFile = walletDirectory.appendingPathComponent(databaseFileName)
-        
-        // Check if backup exists
-        guard FileManager.default.fileExists(atPath: sourceBackup.path) else {
+
+        // Check if backup exists (current name preferred, legacy artifact as fallback)
+        guard let sourceBackup = existingBackupFile else {
             Self.logger.warning("Restore failed - no backup found")
             return false
         }
+
+        // Always restore to the current name - it's the only file bark opens
+        let destinationFile = localDatabaseFile
         
         // Check if destination exists
         if FileManager.default.fileExists(atPath: destinationFile.path) {
@@ -267,7 +318,7 @@ class WalletBackupService {
     /// - Returns: Success status
     /// - Throws: Error if restoration fails
     func restoreFromUserBackup(sourceFileURL: URL) async throws -> Bool {
-        let destinationFile = walletDirectory.appendingPathComponent(databaseFileName)
+        let destinationFile = localDatabaseFile
         
         // Start accessing security-scoped resource (required for file picker selections)
         let accessGranted = sourceFileURL.startAccessingSecurityScopedResource()
@@ -334,23 +385,13 @@ class WalletBackupService {
     
     /// Checks if a backup exists in iCloud
     func hasBackupAvailable() -> Bool {
-        guard let container = ubiquityContainer else { return false }
-        
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
-        let backupFile = backupDir.appendingPathComponent(databaseFileName)
-        
-        return FileManager.default.fileExists(atPath: backupFile.path)
+        existingBackupFile != nil
     }
-    
+
     /// Gets information about the backup
     func getBackupInfo() async -> BackupInfo? {
-        guard let container = ubiquityContainer else { return nil }
-        
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
-        let backupFile = backupDir.appendingPathComponent(databaseFileName)
-        
-        guard FileManager.default.fileExists(atPath: backupFile.path) else { return nil }
-        
+        guard let backupFile = existingBackupFile else { return nil }
+
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: backupFile.path)
             let modificationDate = attributes[.modificationDate] as? Date
@@ -369,20 +410,13 @@ class WalletBackupService {
     
     /// Gets the URL of the backup file for sharing/exporting
     func getBackupFileURL() -> URL? {
-        guard let container = ubiquityContainer else { return nil }
-        
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
-        let backupFile = backupDir.appendingPathComponent(databaseFileName)
-        
-        guard FileManager.default.fileExists(atPath: backupFile.path) else { return nil }
-        
-        return backupFile
+        existingBackupFile
     }
-    
+
     /// Removes the restored database file (used for rollback during failed imports)
-    /// This deletes the bark.sqlite file from the wallet directory
+    /// This deletes the wallet database file from the wallet directory
     func removeRestoredDatabase() throws {
-        let databaseFile = walletDirectory.appendingPathComponent(databaseFileName)
+        let databaseFile = localDatabaseFile
         
         // Only remove if file exists
         guard FileManager.default.fileExists(atPath: databaseFile.path) else {
@@ -399,16 +433,50 @@ class WalletBackupService {
         }
     }
     
+    /// Removes every wallet backup artifact from the iCloud container
+    /// (current, legacy, and timestamped copies). Used when the wallet is
+    /// deleted permanently - a leftover backup would otherwise resurface
+    /// via the restore-on-launch path after a new wallet is created.
+    /// - Returns: True if all present artifacts were removed (or none existed)
+    static func deleteAllBackups() -> Bool {
+        guard let container = FileManager.default.url(forUbiquityContainerIdentifier: nil) else {
+            logger.debug("Backup deletion skipped - iCloud unavailable")
+            return false
+        }
+
+        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: backupDir,
+            includingPropertiesForKeys: nil,
+            options: .skipsHiddenFiles
+        ) else {
+            return true // No backup directory - nothing to delete
+        }
+
+        var allRemoved = true
+        for file in files {
+            let name = file.lastPathComponent
+            let isBackupArtifact = name == currentDatabaseFileName
+                || name == legacyDatabaseFileName
+                || name.hasPrefix("\(currentDatabaseFileName).")
+            guard isBackupArtifact else { continue }
+
+            do {
+                try FileManager.default.removeItem(at: file)
+                logger.info("🗑️ Deleted iCloud backup artifact: \(name)")
+            } catch {
+                logger.error("❌ Failed to delete backup artifact \(name): \(error.localizedDescription)")
+                allRemoved = false
+            }
+        }
+        return allRemoved
+    }
+
     /// Creates a temporary shareable copy of the backup file for export/sharing
     /// - Returns: URL of the temporary copy, or nil if backup unavailable
     func getShareableBackupFileURL() -> URL? {
-        guard let container = ubiquityContainer else { return nil }
-        
-        let backupDir = container.appendingPathComponent(backupSubdirectory, isDirectory: true)
-        let backupFile = backupDir.appendingPathComponent(databaseFileName)
-        
-        guard FileManager.default.fileExists(atPath: backupFile.path) else { return nil }
-        
+        guard let backupFile = existingBackupFile else { return nil }
+
         // Create temp directory for shareable backup
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("ArkeBackups", isDirectory: true)

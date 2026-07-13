@@ -539,7 +539,15 @@ class WalletManager {
         if let ffiWallet = wallet as? BarkWalletFFI {
             let opened = await ffiWallet.openWalletIfNeeded()
             if !opened {
-                Self.logger.info("ℹ️ No existing wallet to open - user needs to create or import")
+                if securityService.hasMnemonic() {
+                    // A seed exists but the wallet database could not be opened -
+                    // this is an error state (e.g. network/database mismatch),
+                    // not a first-launch situation
+                    Self.logger.error("❌ Wallet failed to open despite mnemonic in Keychain")
+                    error = "Wallet could not be opened. Please restart the app or contact support."
+                } else {
+                    Self.logger.info("ℹ️ No existing wallet to open - user needs to create or import")
+                }
                 isInitialized = false
                 return
             }
@@ -1037,7 +1045,16 @@ class WalletManager {
             Self.logger.warning("⚠️ [WalletManager] Cannot restore - wallet is not BarkWalletFFI")
             return
         }
-        
+
+        // An open wallet is authoritative - restoring a backup over it would
+        // shut it down and pair the keychain mnemonic with a foreign database
+        // (e.g. right after wallet creation, when a stale backup may still
+        // exist in iCloud from a previously deleted wallet)
+        guard ffiWallet.wallet == nil else {
+            Self.logger.info("ℹ️ [WalletManager] Wallet is open - skipping backup restore check")
+            return
+        }
+
         let walletFileExists = WalletBackupService.hasLocalWalletFile()
         let hasBackup = ffiWallet.hasBackupAvailable()
         

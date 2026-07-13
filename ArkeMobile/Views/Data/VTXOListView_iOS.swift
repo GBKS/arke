@@ -105,7 +105,7 @@ struct VTXOListView_iOS: View {
                 ErrorBox(errorMessage: error)
                     .padding(.horizontal)
             } else if vtxos.isEmpty {
-                VStack {
+                HStack(spacing: 10) {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
                     Text("balance_no_vtxos")

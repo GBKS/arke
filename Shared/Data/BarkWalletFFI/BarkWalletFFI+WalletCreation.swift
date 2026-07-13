@@ -68,26 +68,7 @@ extension BarkWalletFFI {
                 throw BarkWalletFFIError.configurationError("Invalid network type: \(network)")
             }
             net = ffiNetwork
-
-            finalConfig = Config(
-                serverAddress: arkServer,
-                serverAccessToken: networkConfig.arkServerAccessToken,
-                esploraAddress: networkConfig.esploraBaseURL,
-                bitcoindAddress: nil,  // Optional - not needed for basic wallet operations
-                bitcoindCookiefile: nil,
-                bitcoindUser: nil,
-                bitcoindPass: nil,
-                vtxoRefreshExpiryThreshold: nil,
-                vtxoExitMargin: nil,
-                htlcRecvClaimDelta: nil,
-                fallbackFeeRate: BarkWalletFFI.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
-                roundTxRequiredConfirmations: nil,  // Use default confirmations
-                daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
-                offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
-                daemonManualSync: nil,  // Use default (v0.6.3+)
-                lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-                userAgent: BarkWalletFFI.userAgent  // e.g. "arke-ios/17" (v0.11+)
-            )
+            finalConfig = Self.makeConfig(from: networkConfig, serverAddressOverride: arkServer)
         } else {
             finalConfig = config
             net = ffiNetwork
@@ -367,26 +348,7 @@ extension BarkWalletFFI {
                 throw BarkWalletFFIError.configurationError("Invalid network type: \(network)")
             }
             net = ffiNetwork
-
-            finalConfig = Config(
-                serverAddress: arkServer,
-                serverAccessToken: networkConfig.arkServerAccessToken,
-                esploraAddress: networkConfig.esploraBaseURL,
-                bitcoindAddress: nil,  // Optional - not needed for basic wallet operations
-                bitcoindCookiefile: nil,
-                bitcoindUser: nil,
-                bitcoindPass: nil,
-                vtxoRefreshExpiryThreshold: nil,
-                vtxoExitMargin: nil,
-                htlcRecvClaimDelta: nil,
-                fallbackFeeRate: BarkWalletFFI.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
-                roundTxRequiredConfirmations: nil,  // Use default confirmations
-                daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
-                offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
-                daemonManualSync: nil,  // Use default (v0.6.3+)
-                lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-                userAgent: BarkWalletFFI.userAgent  // e.g. "arke-ios/17" (v0.11+)
-            )
+            finalConfig = Self.makeConfig(from: networkConfig, serverAddressOverride: arkServer)
         } else {
             finalConfig = config
             net = ffiNetwork
@@ -493,13 +455,12 @@ extension BarkWalletFFI {
             // Open or create Bark wallet with built-in onchain capabilities
             // If backup was restored, wallet data already exists, so we should open it
             // Otherwise, create a new wallet
-            // Check for bark.sqlite (the main database file restored from backup)
-            let barkSqlitePath = (datadir as NSString).appendingPathComponent("bark.sqlite")
-            let walletExists = fileManager.fileExists(atPath: barkSqlitePath)
+            let dbSqlitePath = (datadir as NSString).appendingPathComponent(WalletBackupService.currentDatabaseFileName)
+            let walletExists = fileManager.fileExists(atPath: dbSqlitePath)
             let restoredWallet: Wallet
 
             if walletExists {
-                print("📂 Wallet database detected at \(barkSqlitePath) - opening existing wallet...")
+                print("📂 Wallet database detected at \(dbSqlitePath) - opening existing wallet...")
                 restoredWallet = try await Wallet.open(
                     network: net,
                     mnemonicOrSeed: mnemonic,

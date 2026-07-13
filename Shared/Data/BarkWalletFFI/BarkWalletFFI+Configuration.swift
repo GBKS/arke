@@ -218,11 +218,37 @@ extension BarkWalletFFI {
     }
     
     // MARK: - Network Configuration Updates
-    
+
     /// Update the network configuration after wallet creation/import
-    /// This ensures the wallet's networkConfig reflects the actual network being used
+    /// This ensures the wallet's networkConfig reflects the actual network being used.
+    /// The derived `config` and `ffiNetwork` properties follow automatically.
     func updateNetworkConfig(_ newConfig: NetworkConfig) {
         Self.logger.info("Updating network configuration to: \(newConfig.name)")
         self.networkConfig = newConfig
+    }
+
+    /// Build the FFI `Config` for a network configuration.
+    /// Single source of truth for the Config fields - used by the derived
+    /// `config` property and the creation/import paths.
+    static func makeConfig(from networkConfig: NetworkConfig, serverAddressOverride: String? = nil) -> Config {
+        Config(
+            serverAddress: serverAddressOverride ?? networkConfig.arkServerBaseURL,
+            serverAccessToken: networkConfig.arkServerAccessToken,
+            esploraAddress: networkConfig.esploraBaseURL,
+            bitcoindAddress: nil,  // Optional - not needed for basic wallet operations
+            bitcoindCookiefile: nil,
+            bitcoindUser: nil,
+            bitcoindPass: nil,
+            vtxoRefreshExpiryThreshold: nil,  // Use defaults
+            vtxoExitMargin: nil,
+            htlcRecvClaimDelta: nil,
+            fallbackFeeRate: defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
+            roundTxRequiredConfirmations: nil,  // Use default confirmations
+            daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
+            offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
+            daemonManualSync: nil,  // Use default (v0.6.3+)
+            lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
+            userAgent: userAgent  // e.g. "arke-ios/17" (v0.11+)
+        )
     }
 }

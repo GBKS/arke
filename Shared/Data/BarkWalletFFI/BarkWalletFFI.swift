@@ -85,12 +85,21 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// Read-only transaction history reader (runs alongside OnchainWallet.default())
     var transactionReader: BDKTransactionReader?
     
-    /// FFI configuration object
-    let config: Config
+    /// FFI configuration object, always derived from the current `networkConfig`.
+    /// Computed (not stored) so that `updateNetworkConfig()` propagates to every
+    /// FFI call - a snapshot taken at init would keep the launch-time network
+    /// (e.g. the mainnet default) and make `Wallet.open` fail with a network
+    /// mismatch after creating a wallet on another network.
+    var config: Config {
+        Self.makeConfig(from: networkConfig)
+    }
 
     /// FFI network (no longer carried by `Config` as of Bark 0.11 — passed
-    /// separately to `initWallet` / `Wallet.open` / `OnchainWallet.default`)
-    let ffiNetwork: Network
+    /// separately to `initWallet` / `Wallet.open` / `OnchainWallet.default`).
+    /// Derived from `networkConfig` for the same reason as `config`.
+    var ffiNetwork: Network {
+        Self.convertToFFINetwork(networkConfig.networkType) ?? .signet
+    }
 
     /// Network configuration (our app's model)
     var networkConfig: NetworkConfig
@@ -139,34 +148,17 @@ class BarkWalletFFI: BarkWalletProtocol {
         // Set up wallet directory
         self.walletDir = Self.getWalletDirectory()
         self.datadir = walletDir.path
-        
-        // Convert NetworkConfig to FFI Config
-        guard let ffiNetwork = Self.convertToFFINetwork(networkConfig.networkType) else {
+
+        // Validate the network type (config/ffiNetwork are derived on access)
+        guard Self.convertToFFINetwork(networkConfig.networkType) != nil else {
             Self.logger.error("Invalid network type: \(networkConfig.networkType)")
             return nil
         }
-        self.ffiNetwork = ffiNetwork
 
-        self.config = Config(
-            serverAddress: networkConfig.arkServerBaseURL,
-            serverAccessToken: networkConfig.arkServerAccessToken,
-            esploraAddress: networkConfig.esploraBaseURL,
-            bitcoindAddress: nil,  // Optional - not needed for basic wallet operations
-            bitcoindCookiefile: nil,
-            bitcoindUser: nil,
-            bitcoindPass: nil,
-            vtxoRefreshExpiryThreshold: nil,  // Use defaults
-            vtxoExitMargin: nil,
-            htlcRecvClaimDelta: nil,
-            fallbackFeeRate: Self.defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
-            roundTxRequiredConfirmations: nil,  // Use default confirmations
-            daemonSyncIntervalSecs: nil,  // Use default unified sync interval (v0.6.3+)
-            offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
-            daemonManualSync: nil,  // Use default (v0.6.3+)
-            lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-            userAgent: Self.userAgent  // e.g. "arke-ios/17" (v0.11+)
-        )
-        
+        // Normalize a pre-0.11 bark.sqlite to db.sqlite before anything
+        // checks for or opens the wallet database
+        WalletBackupService.migrateLegacyDatabaseFileIfNeeded()
+
         Self.logger.info("BarkWalletFFI initialized - Network: \(networkConfig.name)")
         Self.logger.debug("Wallet dir: \(self.walletDir.path)")
         

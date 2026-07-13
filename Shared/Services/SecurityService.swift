@@ -130,12 +130,15 @@ class SecurityService {
             return false
         }
 
-        let databaseURL = appSupport
+        let walletDirectory = appSupport
             .appendingPathComponent(Bundle.main.bundleIdentifier ?? "GBKS.Arke")
             .appendingPathComponent("bark-data-ffi")
-            .appendingPathComponent("bark.sqlite")
 
-        return FileManager.default.fileExists(atPath: databaseURL.path)
+        // Check the current (bark 0.11+) name first, then the pre-0.11 legacy name
+        return [WalletBackupService.currentDatabaseFileName, WalletBackupService.legacyDatabaseFileName]
+            .contains { name in
+                FileManager.default.fileExists(atPath: walletDirectory.appendingPathComponent(name).path)
+            }
     }
 
     // MARK: - Wallet State Detection

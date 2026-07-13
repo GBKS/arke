@@ -146,6 +146,15 @@ class WalletDataCleanupService {
                 print("✅ [WalletDataCleanupService] Cleared device registrations from KV store")
                 #endif
             }
+
+            // Delete the wallet database backup from iCloud Drive
+            // A leftover backup would resurface via the restore-on-launch path
+            // after a new wallet is created
+            updateProgress(.deletingBackupStatus, message: "Deleting iCloud backup...")
+            summary.iCloudBackupDeleted = WalletBackupService.deleteAllBackups()
+            #if DEBUG
+            print("✅ [WalletDataCleanupService] iCloud backup deletion: \(summary.iCloudBackupDeleted ? "complete" : "skipped or failed")")
+            #endif
             
             // Delete all CloudKit data
             guard let modelContext = modelContext else {
@@ -556,6 +565,7 @@ struct DeletionSummary: Codable {
     var deviceUnregistered: Bool = false
     var ubiquitousHashDeleted: Bool = false
     var userDefaultsCleared: Bool = false
+    var iCloudBackupDeleted: Bool = false
     
     var transactionsDeleted: Int = 0
     var transactionTagAssignmentsDeleted: Int = 0
@@ -597,6 +607,7 @@ struct DeletionSummary: Codable {
         deviceUnregistered = deviceUnregistered || other.deviceUnregistered
         ubiquitousHashDeleted = ubiquitousHashDeleted || other.ubiquitousHashDeleted
         userDefaultsCleared = userDefaultsCleared || other.userDefaultsCleared
+        iCloudBackupDeleted = iCloudBackupDeleted || other.iCloudBackupDeleted
         
         transactionsDeleted += other.transactionsDeleted
         transactionTagAssignmentsDeleted += other.transactionTagAssignmentsDeleted
