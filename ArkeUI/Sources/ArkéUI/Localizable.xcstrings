@@ -1,21 +1,22 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
-    "." : {
-
-    },
-    "(%@)" : {
-
-    },
     "%@ – %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$@ – %2$@"
+          }
+        }
+      }
+    },
+    "accessibility_address_identicon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address identicon"
           }
         }
       }
@@ -40,8 +41,7 @@
         }
       }
     },
-    "accessibility_amount_label_with_unit" : {
-      "extractionState" : "stale",
+    "accessibility_amount_label_with_unit %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -50,9 +50,6 @@
           }
         }
       }
-    },
-    "accessibility_amount_label_with_unit %@" : {
-
     },
     "accessibility_color_swatch %lld" : {
       "localizations" : {
@@ -120,17 +117,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Copies the value to the clipboard"
-          }
-        }
-      }
-    },
-    "accessibility_hint_finalize_claim" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens a confirmation to withdraw to your savings balance"
           }
         }
       }
@@ -286,7 +272,14 @@
       }
     },
     "action_copy_address" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy address"
+          }
+        }
+      }
     },
     "action_copy_invoice" : {
       "localizations" : {
@@ -337,12 +330,6 @@
           }
         }
       }
-    },
-    "Add a note..." : {
-
-    },
-    "Address identicon" : {
-
     },
     "address_format_ark_description" : {
       "localizations" : {
@@ -475,26 +462,12 @@
         }
       }
     },
-    "Ark Server" : {
-
-    },
     "balance_amount_to_recover" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Amount to move"
-          }
-        }
-      }
-    },
-    "balance_confirm_withdraw" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Withdraw %@ to your savings balance?"
           }
         }
       }
@@ -610,28 +583,6 @@
         }
       }
     },
-    "button_choose_color" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Color"
-          }
-        }
-      }
-    },
-    "button_choose_emoji" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Emoji"
-          }
-        }
-      }
-    },
     "button_clear" : {
       "localizations" : {
         "en" : {
@@ -663,35 +614,12 @@
         }
       }
     },
-    "button_finalize" : {
-      "extractionState" : "stale",
+    "button_enter_recovery_phrase" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finalize"
-          }
-        }
-      }
-    },
-    "button_finalize_claim" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finalize Claim"
-          }
-        }
-      }
-    },
-    "button_finalize_withdrawal" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finalize Withdrawal"
+            "value" : "Enter Recovery Phrase"
           }
         }
       }
@@ -726,17 +654,6 @@
         }
       }
     },
-    "button_use_custom_color" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use Custom Color"
-          }
-        }
-      }
-    },
     "button_view_balance_details" : {
       "localizations" : {
         "en" : {
@@ -757,8 +674,285 @@
         }
       }
     },
-    "Connection Status" : {
-
+    "connection_ark_server_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark Server"
+          }
+        }
+      }
+    },
+    "connection_quality_disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        }
+      }
+    },
+    "connection_quality_excellent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excellent"
+          }
+        }
+      }
+    },
+    "connection_quality_good" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good"
+          }
+        }
+      }
+    },
+    "connection_quality_poor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poor"
+          }
+        }
+      }
+    },
+    "connection_readonly_not_primary_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device."
+          }
+        }
+      }
+    },
+    "connection_readonly_row_data_synced" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data synced via iCloud"
+          }
+        }
+      }
+    },
+    "connection_readonly_row_enter_phrase" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or enter your recovery phrase now"
+          }
+        }
+      }
+    },
+    "connection_readonly_row_key_syncing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet key syncing via iCloud Keychain"
+          }
+        }
+      }
+    },
+    "connection_readonly_row_send_receive_disabled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send and receive disabled"
+          }
+        }
+      }
+    },
+    "connection_readonly_row_viewing_only" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viewing synced data only"
+          }
+        }
+      }
+    },
+    "connection_readonly_seed_not_synced_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device is viewing wallet data synced via iCloud. Your wallet key hasn’t arrived on this device yet — it usually syncs on its own through iCloud Keychain."
+          }
+        }
+      }
+    },
+    "connection_readonly_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read-Only Mode"
+          }
+        }
+      }
+    },
+    "connection_row_connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected to Ark server"
+          }
+        }
+      }
+    },
+    "connection_row_not_connected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connection to Ark server"
+          }
+        }
+      }
+    },
+    "connection_row_quality %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection quality: %@"
+          }
+        }
+      }
+    },
+    "connection_row_reconnection_attempts %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnection attempts: %lld"
+          }
+        }
+      }
+    },
+    "connection_sheet_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection Status"
+          }
+        }
+      }
+    },
+    "connection_test_network_message %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You are connected to %@, a test network for development and experimentation."
+          }
+        }
+      }
+    },
+    "connection_test_network_row_faucet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the faucet to get test funds"
+          }
+        }
+      }
+    },
+    "connection_test_network_row_no_value" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test coins have no real value"
+          }
+        }
+      }
+    },
+    "connection_test_network_row_safe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test network for safe experimentation"
+          }
+        }
+      }
+    },
+    "connection_test_network_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Network"
+          }
+        }
+      }
+    },
+    "connection_troubleshooting_message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you’re experiencing connection issues, try:"
+          }
+        }
+      }
+    },
+    "connection_troubleshooting_row_internet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check your internet connection"
+          }
+        }
+      }
+    },
+    "connection_troubleshooting_row_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull down to refresh"
+          }
+        }
+      }
+    },
+    "connection_troubleshooting_row_restart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart the app"
+          }
+        }
+      }
+    },
+    "connection_troubleshooting_title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troubleshooting"
+          }
+        }
+      }
     },
     "contacts_preset_avatars" : {
       "localizations" : {
@@ -771,7 +965,14 @@
       }
     },
     "data_network_support_note" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note: Network support includes mainnet, testnet, signet, and regtest where applicable."
+          }
+        }
+      }
     },
     "data_server" : {
       "localizations" : {
@@ -792,9 +993,6 @@
           }
         }
       }
-    },
-    "Done" : {
-
     },
     "emoji_category_activities" : {
       "localizations" : {
@@ -836,17 +1034,6 @@
         }
       }
     },
-    "emoji_category_recent" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent"
-          }
-        }
-      }
-    },
     "emoji_category_shopping" : {
       "localizations" : {
         "en" : {
@@ -877,9 +1064,6 @@
         }
       }
     },
-    "Enter Recovery Phrase" : {
-
-    },
     "error_copy" : {
       "localizations" : {
         "en" : {
@@ -901,24 +1085,12 @@
         }
       }
     },
-    "error_since_regrets" : {
-      "extractionState" : "manual",
+    "error_sincere_regrets" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sincere regrets"
-          }
-        }
-      }
-    },
-    "error_tag_already_exists" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A tag with this name already exists"
           }
         }
       }
@@ -1163,7 +1335,7 @@
         }
       }
     },
-    "format_example_with_placeholder" : {
+    "format_example_with_placeholder %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1253,26 +1425,12 @@
         }
       }
     },
-    "If you're experiencing connection issues, try:" : {
-
-    },
     "label_amount" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Amount"
-          }
-        }
-      }
-    },
-    "label_amount_colon" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Amount:"
           }
         }
       }
@@ -1297,17 +1455,6 @@
         }
       }
     },
-    "label_color" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Color"
-          }
-        }
-      }
-    },
     "label_current_format" : {
       "localizations" : {
         "en" : {
@@ -1318,34 +1465,12 @@
         }
       }
     },
-    "label_emoji_optional" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emoji (Optional)"
-          }
-        }
-      }
-    },
     "label_fee" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fee"
-          }
-        }
-      }
-    },
-    "label_fee_colon" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fee:"
           }
         }
       }
@@ -1570,13 +1695,12 @@
         }
       }
     },
-    "onboarding_sincere_regrets" : {
-      "extractionState" : "stale",
+    "placeholder_add_note" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sincere regrets"
+            "value" : "Add a note..."
           }
         }
       }
@@ -1611,17 +1735,6 @@
         }
       }
     },
-    "placeholder_name_preview" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a name to see preview"
-          }
-        }
-      }
-    },
     "placeholder_note_optional" : {
       "localizations" : {
         "en" : {
@@ -1642,11 +1755,15 @@
         }
       }
     },
-    "Read-Only Mode" : {
-
-    },
     "receive_add_amount_note" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add amount and note"
+          }
+        }
+      }
     },
     "receive_address_formats" : {
       "localizations" : {
@@ -1698,13 +1815,12 @@
         }
       }
     },
-    "status_calculating" : {
-      "extractionState" : "stale",
+    "status_connected" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Calculating..."
+            "value" : "Connected"
           }
         }
       }
@@ -1729,6 +1845,16 @@
         }
       }
     },
+    "status_disconnected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        }
+      }
+    },
     "status_expired" : {
       "localizations" : {
         "en" : {
@@ -1749,17 +1875,6 @@
         }
       }
     },
-    "status_finalizing" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Finalizing..."
-          }
-        }
-      }
-    },
     "status_invoice_generated" : {
       "localizations" : {
         "en" : {
@@ -1770,12 +1885,11 @@
         }
       }
     },
-    "status_last_synced" : {
-      "extractionState" : "extracted_with_value",
+    "status_last_synced %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "Last synced %@"
           }
         }
@@ -1791,13 +1905,32 @@
         }
       }
     },
-    "status_ready_finalize" : {
-      "extractionState" : "stale",
+    "status_poor_connection" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to Finalize Withdrawal"
+            "value" : "Poor connection"
+          }
+        }
+      }
+    },
+    "status_readonly_mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read-only mode"
+          }
+        }
+      }
+    },
+    "status_reconnecting_attempt %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting... (attempt %lld)"
           }
         }
       }
@@ -1808,28 +1941,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refreshing"
-          }
-        }
-      }
-    },
-    "status_withdrawal_complete" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Withdrawal Complete"
-          }
-        }
-      }
-    },
-    "status_withdrawal_progress" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Withdrawal In Progress"
           }
         }
       }
@@ -1854,18 +1965,6 @@
           }
         }
       }
-    },
-    "Test Network" : {
-
-    },
-    "This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device." : {
-
-    },
-    "This device is viewing wallet data synced via iCloud. Your wallet key hasn't arrived on this device yet — it usually syncs on its own through iCloud Keychain." : {
-
-    },
-    "Troubleshooting" : {
-
     },
     "vtxo_graph_empty" : {
       "localizations" : {
@@ -1896,9 +1995,6 @@
           }
         }
       }
-    },
-    "You are connected to %@, a test network for development and experimentation." : {
-
     }
   },
   "version" : "1.1"

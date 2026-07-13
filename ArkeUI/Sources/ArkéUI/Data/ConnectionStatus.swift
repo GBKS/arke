@@ -19,13 +19,13 @@ public extension ConnectionQuality {
     var displayName: String {
         switch self {
         case .excellent:
-            return "Excellent"
+            return String(localized: "connection_quality_excellent", bundle: .module)
         case .good:
-            return "Good"
+            return String(localized: "connection_quality_good", bundle: .module)
         case .poor:
-            return "Poor"
+            return String(localized: "connection_quality_poor", bundle: .module)
         case .disconnected:
-            return "Disconnected"
+            return String(localized: "connection_quality_disconnected", bundle: .module)
         }
     }
     
@@ -129,25 +129,25 @@ public struct ConnectionStatus: Sendable {
     
     public var statusMessage: String {
         if isReadOnlyMode {
-            return "Read-only mode"
+            return String(localized: "status_readonly_mode", bundle: .module)
         }
 
         if isConnected {
             switch quality {
             case .excellent:
-                return "Connected"
+                return String(localized: "status_connected", bundle: .module)
             case .good:
-                return "Connected"
+                return String(localized: "status_connected", bundle: .module)
             case .poor:
-                return "Poor connection"
+                return String(localized: "status_poor_connection", bundle: .module)
             case .disconnected:
-                return "Disconnected"
+                return String(localized: "status_disconnected", bundle: .module)
             }
         } else {
             if reconnectionAttempts > 0 {
-                return "Reconnecting... (attempt \(reconnectionAttempts))"
+                return String(localized: "status_reconnecting_attempt \(reconnectionAttempts)", bundle: .module)
             } else {
-                return "Disconnected"
+                return String(localized: "status_disconnected", bundle: .module)
             }
         }
     }
@@ -156,7 +156,7 @@ public struct ConnectionStatus: Sendable {
         if let lastSync = lastSuccessfulSync {
             let formatter = RelativeDateTimeFormatter()
             formatter.unitsStyle = .full
-            return String(localized: "status_last_synced", defaultValue: "Last synced \(formatter.localizedString(for: lastSync, relativeTo: Date()))")
+            return String(localized: "status_last_synced \(formatter.localizedString(for: lastSync, relativeTo: Date()))", bundle: .module)
         }
         return nil
     }

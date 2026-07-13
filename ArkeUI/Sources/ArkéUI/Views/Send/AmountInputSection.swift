@@ -87,7 +87,7 @@ public struct AmountInputSection: View {
                     .fontWeight(.medium)
                 
                 if isAmountLocked, let reason = lockedAmountReason {
-                    Text("(\(reason))")
+                    Text(verbatim: "(\(reason))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -114,7 +114,7 @@ public struct AmountInputSection: View {
                 .accessibilityLabel(Text("accessibility_amount_field", bundle: .module))
                 .accessibilityValue(exceedsBalance
                     ? Text("accessibility_value_exceeds_balance", bundle: .module)
-                    : Text(""))
+                    : Text(verbatim: ""))
             
             Divider()
             
@@ -221,7 +221,7 @@ public struct AmountInputSection: View {
     .toolbar {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            Button("button_done") {
+            Button(String(localized: "button_done", bundle: .module)) {
                 isFocused = false
             }
         }

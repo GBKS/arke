@@ -61,7 +61,7 @@ public struct ExpandableAddressView: View {
             }
             
             if chunks.count > 4 {
-                Text(String(localized: "symbol_ellipsis"))
+                Text(String(localized: "symbol_ellipsis", bundle: .module))
                     .foregroundStyle(.primary)
                     .fontWeight(.regular)
             }

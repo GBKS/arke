@@ -71,10 +71,10 @@ public struct FeeDisplayView: View {
         .accessibilityElement(children: .combine)
         .accessibilityValue(fee == nil
             ? Text("accessibility_value_fee_unavailable", bundle: .module)
-            : Text(""))
+            : Text(verbatim: ""))
         .accessibilityHint(showDisclosure && onTap != nil
             ? Text("accessibility_hint_change_fee", bundle: .module)
-            : Text(""))
+            : Text(verbatim: ""))
     }
     
     private var feeText: String {

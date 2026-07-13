@@ -132,7 +132,7 @@ public struct LightningAmountInputSection: View {
         .accessibilityLabel(Text("action_copy_invoice", bundle: .module))
         .accessibilityHint(Text("accessibility_hint_copy_invoice", bundle: .module))
         .accessibilityValue(showCopySuccess ?
-            Text("status_copied_exclaim", bundle: .module) : Text(""))
+            Text("status_copied_exclaim", bundle: .module) : Text(verbatim: ""))
         .accessibilityAction {
             onInvoiceTap()
         }

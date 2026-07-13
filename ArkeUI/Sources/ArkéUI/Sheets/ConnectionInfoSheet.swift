@@ -41,7 +41,7 @@ public struct ConnectionInfoSheet: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    Text("Connection Status")
+                    Text("connection_sheet_title", bundle: .module)
                         .font(.system(size: 30, design: .serif))
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
@@ -55,20 +55,20 @@ public struct ConnectionInfoSheet: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(Color.Arke.blue)
 
-                                Text("Read-Only Mode")
+                                Text("connection_readonly_title", bundle: .module)
                                     .font(.title2)
                                     .fontWeight(.semibold)
                             }
 
                             if connectionStatus.readOnlyReason == .seedNotSynced {
-                                Text("This device is viewing wallet data synced via iCloud. Your wallet key hasn't arrived on this device yet — it usually syncs on its own through iCloud Keychain.")
+                                Text("connection_readonly_seed_not_synced_message", bundle: .module)
                                     .font(.body)
                                     .foregroundColor(.secondary)
 
                                 VStack(alignment: .leading, spacing: 8) {
-                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: "Viewing synced data only")
-                                    ConnectionInfoRow(icon: "icloud.and.arrow.down", iconColor: Color.Arke.blue, text: "Wallet key syncing via iCloud Keychain")
-                                    ConnectionInfoRow(icon: "key.fill", iconColor: Color.Arke.blue, text: "Or enter your recovery phrase now")
+                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_viewing_only", bundle: .module))
+                                    ConnectionInfoRow(icon: "icloud.and.arrow.down", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_key_syncing", bundle: .module))
+                                    ConnectionInfoRow(icon: "key.fill", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_enter_phrase", bundle: .module))
                                 }
 
                                 if let onEnterRecoveryPhrase {
@@ -76,7 +76,7 @@ public struct ConnectionInfoSheet: View {
                                         dismiss()
                                         onEnterRecoveryPhrase()
                                     } label: {
-                                        Text("Enter Recovery Phrase")
+                                        Text("button_enter_recovery_phrase", bundle: .module)
                                             .frame(maxWidth: .infinity)
                                     }
                                     .buttonStyle(.borderedProminent)
@@ -85,14 +85,14 @@ public struct ConnectionInfoSheet: View {
                                     .padding(.top, 4)
                                 }
                             } else {
-                                Text("This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device.")
+                                Text("connection_readonly_not_primary_message", bundle: .module)
                                     .font(.body)
                                     .foregroundColor(.secondary)
 
                                 VStack(alignment: .leading, spacing: 8) {
-                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: "Viewing synced data only")
-                                    ConnectionInfoRow(icon: "icloud.fill", iconColor: Color.Arke.blue, text: "Data synced via iCloud")
-                                    ConnectionInfoRow(icon: "lock.fill", iconColor: Color.Arke.blue, text: "Send and receive disabled")
+                                    ConnectionInfoRow(icon: "eye.fill", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_viewing_only", bundle: .module))
+                                    ConnectionInfoRow(icon: "icloud.fill", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_data_synced", bundle: .module))
+                                    ConnectionInfoRow(icon: "lock.fill", iconColor: Color.Arke.blue, text: String(localized: "connection_readonly_row_send_receive_disabled", bundle: .module))
                                 }
                             }
                         }
@@ -108,19 +108,19 @@ public struct ConnectionInfoSheet: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(Color.Arke.blue)
                                 
-                                Text("Test Network")
+                                Text("connection_test_network_title", bundle: .module)
                                     .font(.title2)
                                     .fontWeight(.semibold)
                             }
                             
-                            Text("You are connected to \(networkName), a test network for development and experimentation.")
+                            Text("connection_test_network_message \(networkName)", bundle: .module)
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                ConnectionInfoRow(icon: "testtube.2", iconColor: Color.Arke.blue, text: "Test network for safe experimentation")
-                                ConnectionInfoRow(icon: "bitcoinsign", iconColor: Color.Arke.blue, text: "Test coins have no real value")
-                                ConnectionInfoRow(icon: "books.vertical", iconColor: Color.Arke.blue, text: "Use the faucet to get test funds")
+                                ConnectionInfoRow(icon: "testtube.2", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_safe", bundle: .module))
+                                ConnectionInfoRow(icon: "bitcoinsign", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_no_value", bundle: .module))
+                                ConnectionInfoRow(icon: "books.vertical", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_faucet", bundle: .module))
                             }
                         }
                         
@@ -135,7 +135,7 @@ public struct ConnectionInfoSheet: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(hasArkConnection ? Color.Arke.green : Color.Arke.red)
 
-                                Text("Ark Server")
+                                Text("connection_ark_server_title", bundle: .module)
                                     .font(.title2)
                                     .fontWeight(.semibold)
                             }
@@ -154,14 +154,16 @@ public struct ConnectionInfoSheet: View {
                             ConnectionInfoRow(
                                 icon: hasArkConnection ? "checkmark.circle.fill" : "xmark.circle.fill",
                                 iconColor: hasArkConnection ? Color.Arke.green : Color.Arke.red,
-                                text: hasArkConnection ? "Connected to Ark server" : "No connection to Ark server"
+                                text: hasArkConnection
+                                    ? String(localized: "connection_row_connected", bundle: .module)
+                                    : String(localized: "connection_row_not_connected", bundle: .module)
                             )
                             
                             if hasArkConnection {
                                 ConnectionInfoRow(
                                     icon: connectionQualityIcon,
                                     iconColor: connectionQualityColor,
-                                    text: "Connection quality: \(connectionQualityText)"
+                                    text: String(localized: "connection_row_quality \(connectionQualityText)", bundle: .module)
                                 )
                             }
                             
@@ -169,7 +171,7 @@ public struct ConnectionInfoSheet: View {
                                 ConnectionInfoRow(
                                     icon: "arrow.clockwise",
                                     iconColor: Color.Arke.orange,
-                                    text: "Reconnection attempts: \(connectionStatus.reconnectionAttempts)"
+                                    text: String(localized: "connection_row_reconnection_attempts \(connectionStatus.reconnectionAttempts)", bundle: .module)
                                 )
                             }
                             
@@ -194,19 +196,19 @@ public struct ConnectionInfoSheet: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(Color.Arke.orange)
                                 
-                                Text("Troubleshooting")
+                                Text("connection_troubleshooting_title", bundle: .module)
                                     .font(.title2)
                                     .fontWeight(.semibold)
                             }
                             
-                            Text("If you're experiencing connection issues, try:")
+                            Text("connection_troubleshooting_message", bundle: .module)
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                ConnectionInfoRow(icon: "wifi", iconColor: Color.Arke.orange, text: "Check your internet connection")
-                                ConnectionInfoRow(icon: "arrow.clockwise", iconColor: Color.Arke.orange, text: "Pull down to refresh")
-                                ConnectionInfoRow(icon: "arrow.down.app", iconColor: Color.Arke.orange, text: "Restart the app")
+                                ConnectionInfoRow(icon: "wifi", iconColor: Color.Arke.orange, text: String(localized: "connection_troubleshooting_row_internet", bundle: .module))
+                                ConnectionInfoRow(icon: "arrow.clockwise", iconColor: Color.Arke.orange, text: String(localized: "connection_troubleshooting_row_refresh", bundle: .module))
+                                ConnectionInfoRow(icon: "arrow.down.app", iconColor: Color.Arke.orange, text: String(localized: "connection_troubleshooting_row_restart", bundle: .module))
                             }
                         }
                     }
@@ -216,7 +218,7 @@ public struct ConnectionInfoSheet: View {
             #if os(iOS)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(String(localized: "button_done", bundle: .module)) {
                         dismiss()
                     }
                 }

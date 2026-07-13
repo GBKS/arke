@@ -118,7 +118,7 @@ public struct AddressPattern: View {
         let spec = AddressPatternSpec(address: address, style: style, bordered: bordered)
         AddressPatternCanvas(spec: spec)
             .aspectRatio(AddressPatternSpec.aspectRatio, contentMode: .fit)
-            .accessibilityLabel("Address identicon")
+            .accessibilityLabel(Text("accessibility_address_identicon", bundle: .module))
     }
 }
 

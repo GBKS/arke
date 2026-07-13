@@ -34,7 +34,7 @@ public struct ErrorBox: View {
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
-                    Text(String(localized: "error_since_regrets", bundle: .module))
+                    Text(String(localized: "error_sincere_regrets", bundle: .module))
                         .font(.headline)
                         .foregroundColor(.Arke.red)
                     

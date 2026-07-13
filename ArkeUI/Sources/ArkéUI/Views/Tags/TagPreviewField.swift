@@ -132,7 +132,7 @@ public struct TagPreviewField: View {
         .opacity(0)
         .accessibilityHidden(true)
         .overlay {
-            TextField("", text: $name)
+            TextField(String(), text: $name)
                 .textFieldStyle(.plain)
                 .font(.title3)
                 .fontWeight(.medium)

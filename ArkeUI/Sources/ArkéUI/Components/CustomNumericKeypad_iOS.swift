@@ -131,7 +131,7 @@ public struct CustomNumericKeypad_iOS: View {
         Button {
             appendPeriod()
         } label: {
-            Text(".")
+            Text(verbatim: ".")
                 .font(.system(size: 28, weight: .medium, design: .rounded))
                 .foregroundStyle(theme.textColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
