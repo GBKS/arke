@@ -77,6 +77,13 @@ extension WalletManager {
         // Track what we've done for rollback purposes
         var backupRestored = false
         var mnemonicSaved = false
+
+        // Capture detection state before the import mutates it. saveMnemonic()
+        // writes the wallet hash to iCloud KVS and sets the local-evidence
+        // breadcrumb; if the import then fails, a leftover hash with no local
+        // seed routes the next launch into read-only mode (walletActiveElsewhere).
+        let preImportUbiquitousHash = securityService.getUbiquitousHash()
+        let hadLocalWalletEvidence = SecurityService.hasLocalWalletEvidence()
         
         // Get services for rollback
         let walletDirectory = getWalletDirectory()
@@ -163,6 +170,22 @@ extension WalletManager {
                     Self.logger.info("✅ Rollback: Mnemonic removed")
                 } catch {
                     Self.logger.error("⚠️ Rollback failed: Could not remove mnemonic: \(error.localizedDescription)")
+                }
+
+                // Restore the iCloud KVS hash and local-evidence breadcrumb that
+                // saveMnemonic() wrote. Without this, the next launch finds a
+                // wallet hash but no seed and enters read-only mode.
+                if let previousHash = preImportUbiquitousHash {
+                    securityService.restoreUbiquitousHash(previousHash)
+                    Self.logger.info("✅ Rollback: Restored pre-import wallet hash to iCloud KVS")
+                } else {
+                    securityService.deleteHashFromUbiquitousStore()
+                    Self.logger.info("✅ Rollback: Removed wallet hash from iCloud KVS")
+                }
+
+                if !hadLocalWalletEvidence {
+                    SecurityService.clearLocalWalletEvidence()
+                    Self.logger.info("✅ Rollback: Cleared local wallet evidence breadcrumb")
                 }
             }
             

@@ -777,6 +777,19 @@ class SecurityService {
         #endif
     }
     
+    /// Restores a previously captured raw hash value to NSUbiquitousKeyValueStore.
+    /// Used to roll back a failed import: the pre-import hash must be reinstated
+    /// verbatim, without re-deriving it from a mnemonic we no longer have.
+    func restoreUbiquitousHash(_ hash: String) {
+        let store = NSUbiquitousKeyValueStore.default
+        store.set(hash, forKey: ubiquitousHashKey)
+        store.synchronize()
+
+        #if DEBUG
+        print("🔄 [SecurityService] Restored pre-import hash to NSUbiquitousKeyValueStore at \(Date())")
+        #endif
+    }
+
     /// Deletes hash from NSUbiquitousKeyValueStore
     func deleteHashFromUbiquitousStore() {
         let store = NSUbiquitousKeyValueStore.default
