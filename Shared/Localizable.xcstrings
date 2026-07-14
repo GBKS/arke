@@ -8589,6 +8589,496 @@
         }
       }
     },
+    "transaction_bitcoin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Transaction"
+          }
+        }
+      }
+    },
+    "transaction_cancelled" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled"
+          }
+        }
+      }
+    },
+    "transaction_cancelled_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled move"
+          }
+        }
+      }
+    },
+    "transaction_cancelled_receive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled receive"
+          }
+        }
+      }
+    },
+    "transaction_cancelled_send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled send"
+          }
+        }
+      }
+    },
+    "transaction_detail_cancelled_receive_from %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled receive from %@."
+          }
+        }
+      }
+    },
+    "transaction_detail_cancelled_send_to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled send to %@."
+          }
+        }
+      }
+    },
+    "transaction_detail_cancelled_transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled transfer."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_move_within_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed move within savings."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_receive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed receive."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_receive_from %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed receive from %@."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_receive_to_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed receive to payments."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_refreshing_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed refreshing payments balance."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed send."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_send_to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed send to %@."
+          }
+        }
+      }
+    },
+    "transaction_detail_failed_transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed transfer."
+          }
+        }
+      }
+    },
+    "transaction_detail_from_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From payments."
+          }
+        }
+      }
+    },
+    "transaction_detail_from_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From savings."
+          }
+        }
+      }
+    },
+    "transaction_detail_generic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction."
+          }
+        }
+      }
+    },
+    "transaction_detail_payments_to_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From payments to savings."
+          }
+        }
+      }
+    },
+    "transaction_detail_received_amount_from %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Received %1$@ from %2$@."
+          }
+        }
+      }
+    },
+    "transaction_detail_receiving_amount_from %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiving %1$@ from %2$@."
+          }
+        }
+      }
+    },
+    "transaction_detail_refreshed_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshed payments balance."
+          }
+        }
+      }
+    },
+    "transaction_detail_refreshing_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshing payments balance."
+          }
+        }
+      }
+    },
+    "transaction_detail_savings_to_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From savings to payments."
+          }
+        }
+      }
+    },
+    "transaction_detail_sending_amount_to %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending %1$@ to %2$@."
+          }
+        }
+      }
+    },
+    "transaction_detail_sent_amount_to %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent %1$@ to %2$@."
+          }
+        }
+      }
+    },
+    "transaction_detail_to_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To payments."
+          }
+        }
+      }
+    },
+    "transaction_detail_to_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To savings."
+          }
+        }
+      }
+    },
+    "transaction_detail_transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transfer."
+          }
+        }
+      }
+    },
+    "transaction_detail_transferring" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transferring."
+          }
+        }
+      }
+    },
+    "transaction_detail_within_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Within savings."
+          }
+        }
+      }
+    },
+    "transaction_explainer_exit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A recovery moves bitcoin from your payments balance to your savings balance without the involvement of the server that typically facilitates this."
+          }
+        }
+      }
+    },
+    "transaction_explainer_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A refresh is a maintenance operation that extends the lifetime of your payments balance. No bitcoin was sent or received."
+          }
+        }
+      }
+    },
+    "transaction_failed_forced_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed forced move"
+          }
+        }
+      }
+    },
+    "transaction_failed_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed move"
+          }
+        }
+      }
+    },
+    "transaction_failed_move_to_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed move to savings"
+          }
+        }
+      }
+    },
+    "transaction_failed_receive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed receive"
+          }
+        }
+      }
+    },
+    "transaction_failed_receive_from_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed receive from %@"
+          }
+        }
+      }
+    },
+    "transaction_failed_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed refresh"
+          }
+        }
+      }
+    },
+    "transaction_failed_send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed send"
+          }
+        }
+      }
+    },
+    "transaction_failed_send_to_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed send to %@"
+          }
+        }
+      }
+    },
+    "transaction_failed_transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed transfer"
+          }
+        }
+      }
+    },
+    "transaction_force_moved_amount %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Force moved %@"
+          }
+        }
+      }
+    },
+    "transaction_force_moving_amount %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Force moving %@"
+          }
+        }
+      }
+    },
+    "transaction_forced_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forced Move"
+          }
+        }
+      }
+    },
+    "transaction_forcing_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forcing Move"
+          }
+        }
+      }
+    },
+    "transaction_from_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %@"
+          }
+        }
+      }
+    },
+    "transaction_generic" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction"
+          }
+        }
+      }
+    },
     "transaction_list_empty_contact_message" : {
       "localizations" : {
         "en" : {
@@ -8599,7 +9089,16 @@
         }
       }
     },
-    "transaction_list_empty_contact_title %@" : {},
+    "transaction_list_empty_contact_title %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Transactions with %@"
+          }
+        }
+      }
+    },
     "transaction_list_empty_guide_button" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8647,6 +9146,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ready when you are"
+          }
+        }
+      }
+    },
+    "transaction_move" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move"
+          }
+        }
+      }
+    },
+    "transaction_moved" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved"
+          }
+        }
+      }
+    },
+    "transaction_moved_amount %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved %@"
+          }
+        }
+      }
+    },
+    "transaction_moving" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving"
+          }
+        }
+      }
+    },
+    "transaction_moving_amount %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving %@"
+          }
+        }
+      }
+    },
+    "transaction_pending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pending..."
+          }
+        }
+      }
+    },
+    "transaction_received" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Received"
+          }
+        }
+      }
+    },
+    "transaction_receiving" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiving"
+          }
+        }
+      }
+    },
+    "transaction_receiving_from_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiving from %@"
+          }
+        }
+      }
+    },
+    "transaction_refresh" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh"
+          }
+        }
+      }
+    },
+    "transaction_refreshing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshing"
+          }
+        }
+      }
+    },
+    "transaction_sending" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending"
+          }
+        }
+      }
+    },
+    "transaction_sending_to_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to %@"
+          }
+        }
+      }
+    },
+    "transaction_sent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent"
+          }
+        }
+      }
+    },
+    "transaction_to_contact %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To %@"
+          }
+        }
+      }
+    },
+    "transaction_transfer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transfer"
+          }
+        }
+      }
+    },
+    "transaction_transferring" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transferring"
           }
         }
       }
