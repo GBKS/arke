@@ -147,6 +147,10 @@ class WalletManager {
     /// Cached exit statuses for linking
     var cachedExitStatuses: [String: ExitTransactionStatus] = [:]  // vtxoId -> status
     var exitStatusesCacheTime: Date?
+
+    /// Exits currently blocked because fees can't be covered (vtxoId -> info)
+    /// In-memory only for now; persistence lands with Exit_Blocked_State Phase 2
+    var exitBlockedInfoByVtxoId: [String: ExitBlockedInfo] = [:]
     
     // MARK: - Network Info Properties
     var currentNetworkName: String {

@@ -23,11 +23,15 @@ final class PersistentExitCache {
     
     // Exit status data (serialized JSON for flexibility)
     var exitStatusJson: String?
-    
+
+    // Blocked state (serialized ExitBlockedInfo), set when the exit can't
+    // progress because fees can't be covered
+    var blockedInfoJson: String?
+
     // Cache metadata
     var cachedAt: Date = Date()
     var lastRefreshedAt: Date = Date()
-    
+
     init(
         vtxoId: String,
         amountSats: UInt64,
@@ -35,6 +39,7 @@ final class PersistentExitCache {
         isClaimable: Bool,
         stateDisplayName: String,
         exitStatusJson: String? = nil,
+        blockedInfoJson: String? = nil,
         cachedAt: Date = Date(),
         lastRefreshedAt: Date = Date()
     ) {
@@ -44,6 +49,7 @@ final class PersistentExitCache {
         self.isClaimable = isClaimable
         self.stateDisplayName = stateDisplayName
         self.exitStatusJson = exitStatusJson
+        self.blockedInfoJson = blockedInfoJson
         self.cachedAt = cachedAt
         self.lastRefreshedAt = lastRefreshedAt
     }

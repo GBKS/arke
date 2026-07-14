@@ -78,6 +78,22 @@ extension WalletManager {
                     // The fresh data will be loaded during wallet initialization
                     exitVtxosCacheTime = lastRefresh
                 }
+
+                // Restore blocked state so the UI shows it immediately instead of
+                // waiting for the next two progression checks to re-debounce
+                var restoredBlockedCount = 0
+                for entry in persistedExits where !entry.isClaimed {
+                    if let json = entry.blockedInfoJson,
+                       let data = json.data(using: .utf8),
+                       let info = try? JSONDecoder().decode(ExitBlockedInfo.self, from: data) {
+                        exitBlockedInfoByVtxoId[entry.vtxoId] = info
+                        restoredBlockedCount += 1
+                    }
+                }
+                if restoredBlockedCount > 0 {
+                    Self.logger.info("[Exit Blocked] Restored \(restoredBlockedCount) blocked exit(s) from persistent storage")
+                    dataVersion += 1
+                }
             } else {
                 Self.logger.info("[Exit Cache] No persistent cache found (first launch or after migration)")
             }
@@ -102,6 +118,12 @@ extension WalletManager {
             // Save new cache entries
             let now = Date()
             for exitVtxo in cachedExitVtxos {
+                var blockedInfoJson: String?
+                if let blockedInfo = exitBlockedInfoByVtxoId[exitVtxo.vtxoId],
+                   let data = try? JSONEncoder().encode(blockedInfo) {
+                    blockedInfoJson = String(data: data, encoding: .utf8)
+                }
+
                 let cacheEntry = PersistentExitCache(
                     vtxoId: exitVtxo.vtxoId,
                     amountSats: exitVtxo.amountSats,
@@ -109,6 +131,7 @@ extension WalletManager {
                     isClaimable: exitVtxo.isClaimable,
                     stateDisplayName: exitVtxo.stateDisplayName,
                     exitStatusJson: nil, // Could serialize full status here if needed
+                    blockedInfoJson: blockedInfoJson,
                     cachedAt: now,
                     lastRefreshedAt: now
                 )
@@ -150,7 +173,19 @@ extension WalletManager {
         cachedExitVtxos = try await getExitVtxos()
         exitVtxosCacheTime = Date()
         Self.logger.info("[Exit Cache] Fetched \(self.cachedExitVtxos.count) exit VTXO(s)")
-        
+
+        // Prune blocked records for exits that are claimed or no longer exist,
+        // before they get persisted below
+        let activeVtxoIds = Set(cachedExitVtxos.filter { !$0.isClaimed }.map { $0.vtxoId })
+        let staleBlockedIds = exitBlockedInfoByVtxoId.keys.filter { !activeVtxoIds.contains($0) }
+        if !staleBlockedIds.isEmpty {
+            for vtxoId in staleBlockedIds {
+                exitBlockedInfoByVtxoId.removeValue(forKey: vtxoId)
+            }
+            Self.logger.info("[Exit Blocked] Pruned \(staleBlockedIds.count) stale blocked record(s)")
+            dataVersion += 1
+        }
+
         // Save to persistent storage for next app launch
         await saveExitCacheToDisk()
         
@@ -213,7 +248,62 @@ extension WalletManager {
     func getCachedExitStatus(for vtxoId: String) -> ExitTransactionStatus? {
         return cachedExitStatuses[vtxoId]
     }
-    
+
+    // MARK: - Blocked Exits
+
+    /// Record a failed progression/claim attempt for a VTXO
+    /// Called by ExitProgressionService when bark reports a funding-related error
+    func recordExitBlocked(vtxoId: String, phase: ExitBlockedPhase, errorMessage: String) {
+        let reason = ExitBlockedReason.classify(errorMessage)
+        let now = Date()
+
+        if let existing = exitBlockedInfoByVtxoId[vtxoId],
+           existing.reason == reason, existing.phase == phase {
+            exitBlockedInfoByVtxoId[vtxoId] = ExitBlockedInfo(
+                reason: reason,
+                phase: phase,
+                rawErrorMessage: errorMessage,
+                firstSeenAt: existing.firstSeenAt,
+                lastSeenAt: now,
+                attemptCount: existing.attemptCount + 1
+            )
+        } else {
+            // New blockage, or the reason/phase changed - restart the debounce count
+            exitBlockedInfoByVtxoId[vtxoId] = ExitBlockedInfo(
+                reason: reason,
+                phase: phase,
+                rawErrorMessage: errorMessage,
+                firstSeenAt: now,
+                lastSeenAt: now,
+                attemptCount: 1
+            )
+        }
+
+        Self.logger.info("[Exit Blocked] VTXO \(vtxoId.prefix(16))...: \(reason.rawValue) during \(phase.rawValue) (attempt \(self.exitBlockedInfoByVtxoId[vtxoId]?.attemptCount ?? 1))")
+        dataVersion += 1
+    }
+
+    /// Clear the blocked state for a VTXO after a successful attempt of the given
+    /// phase. A successful claim ends the exit, so it clears any record. A
+    /// successful progression only clears progression-phase blockage: progression
+    /// succeeds every check while the exit sits at Claimable, and clearing the
+    /// claim record would reset its debounce count each time.
+    func clearExitBlocked(vtxoId: String, phase: ExitBlockedPhase) {
+        guard let existing = exitBlockedInfoByVtxoId[vtxoId] else { return }
+        if phase == .progression && existing.phase == .claim { return }
+        exitBlockedInfoByVtxoId.removeValue(forKey: vtxoId)
+        Self.logger.info("[Exit Blocked] VTXO \(vtxoId.prefix(16))...: cleared after successful \(phase.rawValue)")
+        dataVersion += 1
+    }
+
+    /// Blocked info for a VTXO, debounced: only returned once the blockage has
+    /// persisted for 2+ consecutive checks, so a single bad fee estimate doesn't
+    /// flash a banner
+    func getExitBlockedInfo(for vtxoId: String) -> ExitBlockedInfo? {
+        guard let info = exitBlockedInfoByVtxoId[vtxoId], info.isSurfaceable else { return nil }
+        return info
+    }
+
     // MARK: - Exit Progression
     
     /// Manually trigger exit progression check

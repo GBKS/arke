@@ -14,9 +14,10 @@ import Bark
 struct TransactionClaimExitBanner: View {
     let exitStatus: ExitTransactionStatus
     let currentBlockHeight: UInt32?
-    
+    var blockedInfo: ExitBlockedInfo? = nil
+
     @State private var showClaimConfirmation = false
-    
+
     var body: some View {
         if !exitStatus.isClaimed {
             VStack(alignment: .leading, spacing: 12) {
@@ -27,13 +28,13 @@ struct TransactionClaimExitBanner: View {
                         .font(.title3)
                         .foregroundColor(.white)
                     */
-                    
+
                     Text("Step \(currentStep) of \(totalSteps)")
                         .font(.headline)
                         .fontWeight(.semibold)
                         .foregroundColor(.primary)
                 }
-                
+
                 // Segmented progress bar
                 HStack(spacing: 3) {
                     ForEach(1...totalSteps, id: \.self) { step in
@@ -41,6 +42,18 @@ struct TransactionClaimExitBanner: View {
                             .fill(step <= currentStep ? progressTint : progressTint.opacity(0.15))
                             .frame(height: 10)
                     }
+                }
+
+                // Blocked explanation: the exit can't continue right now because
+                // fees can't be covered; progression retries automatically
+                if let blockedInfo {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "clock")
+                            .font(.caption)
+                        Text(blockedExplanationKey(for: blockedInfo.reason))
+                            .font(.caption)
+                    }
+                    .foregroundColor(.secondary)
                 }
                 /*
                 // Status row - step count and detailed status
@@ -69,7 +82,18 @@ struct TransactionClaimExitBanner: View {
     }
     
     // MARK: - Computed Properties
-    
+
+    private func blockedExplanationKey(for reason: ExitBlockedReason) -> LocalizedStringKey {
+        switch reason {
+        case .insufficientOnchainFunds:
+            return "exit_blocked_funds_explanation"
+        case .claimFeeExceedsOutput:
+            return "exit_blocked_fees_explanation"
+        case .other:
+            return "exit_blocked_other_explanation"
+        }
+    }
+
     /// Determine the current step based on transaction progress
     /// Steps: 1=Prepare, 2..k+1=Process transactions, k+2=Wait unlock, k+3=Claim, k+4=Complete
     private var currentStep: Int {

@@ -143,6 +143,7 @@
 				Data/BIP39Usage.swift,
 				Data/CacheManager.swift,
 				Data/ExitStatus/BlockRef.swift,
+				Data/ExitStatus/ExitBlockedInfo.swift,
 				Data/ExitStatus/ExitStatusParser.swift,
 				"Data/ExitStatus/ExitTransactionStatus+Parsing.swift",
 				Data/ExitStatus/ParsedExitState.swift,

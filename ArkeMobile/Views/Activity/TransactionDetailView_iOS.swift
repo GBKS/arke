@@ -477,7 +477,8 @@ struct TransactionDetailView_iOS: View {
         if let exitStatus = exitStatus {
             TransactionClaimExitBanner(
                 exitStatus: exitStatus,
-                currentBlockHeight: walletManager.estimatedBlockHeight.map { UInt32($0) }
+                currentBlockHeight: walletManager.estimatedBlockHeight.map { UInt32($0) },
+                blockedInfo: transaction.exitBlockedInfo
             )
         }
     }

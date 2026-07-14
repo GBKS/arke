@@ -89,4 +89,27 @@ extension TransactionModel {
     var isExitClaimed: Bool {
         currentExitStatus?.isClaimed ?? false
     }
+
+    /// Blocked info for this transaction's exit, if the exit can't currently
+    /// progress because fees can't be covered. Debounced: only non-nil once the
+    /// blockage has persisted for 2+ consecutive progression checks.
+    var exitBlockedInfo: ExitBlockedInfo? {
+        guard hasUnilateralExit else {
+            return nil
+        }
+
+        guard let walletManager = Self.walletManager as? WalletManager else {
+            return nil
+        }
+
+        // Exit transactions carry their VTXOs in inputVtxoIds (exitedVtxoIds is
+        // empty for them); check both to match currentExitStatus above
+        for vtxoId in inputVtxoIds + exitedVtxoIds {
+            if let info = walletManager.getExitBlockedInfo(for: vtxoId) {
+                return info
+            }
+        }
+
+        return nil
+    }
 }

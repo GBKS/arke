@@ -221,10 +221,21 @@ struct TransactionTechnicalDetailsView: View {
                     // Child Transaction IDs (only show if present)
                     if let childTxids = transaction.childTxids, !childTxids.isEmpty {
                         Divider()
-                        
+
                         TechnicalDetailRow(
                             label: "Child Transaction IDs",
                             value: childTxids.joined(separator: "\n")
+                        )
+                    }
+
+                    // Exit blocked error (only for exits currently blocked on fees/funding)
+                    if let blockedInfo = transaction.exitBlockedInfo {
+                        Divider()
+
+                        TechnicalDetailRow(
+                            label: "Exit Blocked (\(blockedInfo.reason.rawValue), \(blockedInfo.attemptCount) attempts)",
+                            value: blockedInfo.rawErrorMessage,
+                            showCopyButton: true
                         )
                     }
                     

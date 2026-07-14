@@ -36,6 +36,25 @@ struct TransactionListItem: View {
         return components.joined(separator: " · ")
     }
     
+    /// Blocked state for this transaction's exit (fees can't be covered right now)
+    private var exitBlockedReason: ExitBlockedReason? {
+        // Access dataVersion to create observation dependency
+        _ = walletManager.dataVersion
+
+        return transaction.exitBlockedInfo?.reason
+    }
+
+    private func exitBlockedBadgeKey(for reason: ExitBlockedReason) -> LocalizedStringKey {
+        switch reason {
+        case .insufficientOnchainFunds:
+            return "status_exit_paused_funds"
+        case .claimFeeExceedsOutput:
+            return "status_exit_paused_fees"
+        case .other:
+            return "status_exit_paused"
+        }
+    }
+
     /// Check if this is an exit transaction with claimable VTXOs
     private var hasClaimableExit: Bool {
         // Access dataVersion to create observation dependency
@@ -297,8 +316,25 @@ struct TransactionListItem: View {
                     .font(.body)
                     .foregroundColor(.arkeSecondary)
                 
-                // Claimable exit indicator
-                if hasClaimableExit {
+                // Exit progress indicators: blocked wins over claimable, since a
+                // blocked exit is technically still claimable but the claim
+                // keeps failing - "Ready to approve" would be misleading
+                if let blockedReason = exitBlockedReason {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                        Text(exitBlockedBadgeKey(for: blockedReason))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.Arke.orange)
+                    .cornerRadius(6)
+                    .padding(.top, 4)
+                } else if hasClaimableExit {
                     HStack(spacing: 4) {
                         Text("status_ready_approve")
                             .font(.caption)

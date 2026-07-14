@@ -149,23 +149,28 @@ class ExitProgressionService {
             // Claimable is NOT "pending". Claimable exits must be checked
             // separately, otherwise they are never auto-claimed (the bark
             // daemon usually performs the final AwaitingDelta -> Claimable
-            // transition and never claims).
+            // transition and never claims). Likewise, an exit whose claim tx
+            // has been broadcast (ClaimInProgress) is neither pending nor
+            // claimable, but still needs progressExits to be marked Claimed
+            // once the claim tx confirms.
             let hasPending = try await wallet.hasPendingExits()
             var claimableExits = try await wallet.listClaimableExits()
+            let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
 
-            if !hasPending && claimableExits.isEmpty {
-                print("✅ [ExitProgression] No pending or claimable exits - skipping progression")
+            if !hasPending && claimableExits.isEmpty && !hasClaimsInProgress {
+                print("✅ [ExitProgression] No pending, claimable, or claim-in-progress exits - skipping progression")
                 lastCheckTime = Date()
                 lastError = nil
                 return
             }
 
-            print("📋 [ExitProgression] Found \(hasPending ? "pending" : "claimable") exits - progressing...")
+            let kind = hasPending ? "pending" : (!claimableExits.isEmpty ? "claimable" : "claim-in-progress")
+            print("📋 [ExitProgression] Found \(kind) exits - progressing...")
 
             // Step 2: Progress all exits (broadcasts, fee bumps, state updates)
             let statuses = try await wallet.progressExits(feeRateSatPerVb: nil)
 
-            // Log what happened
+            // Log what happened and track per-VTXO blocked state
             if statuses.isEmpty {
                 print("   ℹ️ No exits progressed")
             } else {
@@ -173,8 +178,10 @@ class ExitProgressionService {
                 for (index, status) in statuses.enumerated() {
                     if let error = status.error {
                         print("      [\(index)] VTXO \(status.vtxoId): ❌ Error: \(error)")
+                        walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)
                     } else {
                         print("      [\(index)] VTXO \(status.vtxoId): ✅ Success")
+                        walletManager?.clearExitBlocked(vtxoId: status.vtxoId, phase: .progression)
                     }
                 }
             }
@@ -185,7 +192,20 @@ class ExitProgressionService {
 
             if !claimableExits.isEmpty {
                 print("   💰 Found \(claimableExits.count) claimable exit(s) - auto-claiming...")
-                try await autoClaimExits(claimableExits)
+                do {
+                    try await autoClaimExits(claimableExits)
+                    for exit in claimableExits {
+                        walletManager?.clearExitBlocked(vtxoId: exit.vtxoId, phase: .claim)
+                    }
+                } catch {
+                    // A failed claim (e.g. fees currently exceeding the exit's
+                    // value) must not abort the sync/cache steps below - record
+                    // it per VTXO and retry on the next interval
+                    print("   ❌ Auto-claim failed: \(error.localizedDescription)")
+                    for exit in claimableExits {
+                        walletManager?.recordExitBlocked(vtxoId: exit.vtxoId, phase: .claim, errorMessage: error.localizedDescription)
+                    }
+                }
             }
             
             // Step 4: Sync exit state with blockchain
@@ -255,18 +275,27 @@ class ExitProgressionService {
     func progressExitsManually() async throws {
         print("🔄 [ExitProgression] Manual progression requested")
         
-        // See checkAndProgressExits(): Claimable exits don't count as "pending"
+        // See checkAndProgressExits(): Claimable and ClaimInProgress exits
+        // don't count as "pending"
         let hasPending = try await wallet.hasPendingExits()
         let claimableExits = try await wallet.listClaimableExits()
-        guard hasPending || !claimableExits.isEmpty else {
-            print("   ℹ️ No pending or claimable exits to progress")
+        let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
+        guard hasPending || !claimableExits.isEmpty || hasClaimsInProgress else {
+            print("   ℹ️ No pending, claimable, or claim-in-progress exits to progress")
             return
         }
         
         let statuses = try await wallet.progressExits(feeRateSatPerVb: nil)
+        for status in statuses {
+            if let error = status.error {
+                walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)
+            } else {
+                walletManager?.clearExitBlocked(vtxoId: status.vtxoId, phase: .progression)
+            }
+        }
         try await wallet.syncExits()
         walletManager?.invalidateExitCache()
-        
+
         print("   ✅ Manually progressed \(statuses.count) exit(s)")
     }
 }

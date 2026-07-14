@@ -98,8 +98,14 @@ extension ExitProgressionService {
             return
         }
         
-        let contentState = buildContentState(from: status, needsCheckIn: false)
-        
+        var contentState = buildContentState(from: status, needsCheckIn: false)
+
+        // Surface a blocked exit (fees can't be covered right now) instead of
+        // the regular step description
+        if let blocked = walletManager?.getExitBlockedInfo(for: exitId) {
+            contentState.stepDescription = Self.pausedDescription(for: blocked.reason)
+        }
+
         await activity.update(
             ActivityContent(
                 state: contentState,
@@ -269,7 +275,21 @@ extension ExitProgressionService {
     }
     
     // MARK: - Content State Building
-    
+
+    /// Step description override for blocked exits. Plain English like the
+    /// other step descriptions in this file (Live Activity content isn't
+    /// routed through the localization catalogs yet).
+    private static func pausedDescription(for reason: ExitBlockedReason) -> String {
+        switch reason {
+        case .insufficientOnchainFunds:
+            return "Paused — add onchain funds to continue"
+        case .claimFeeExceedsOutput:
+            return "Paused — network fees too high"
+        case .other:
+            return "Paused — will retry automatically"
+        }
+    }
+
     /// Build ContentState from ExitTransactionStatus
     private func buildContentState(from status: Bark.ExitTransactionStatus, needsCheckIn: Bool) -> ExitProgressActivityAttributes.ContentState {
         let parsed = ExitStatusParser.parseState(status.state)
