@@ -27,11 +27,20 @@ class ExitProgressionNotifications {
         // Clear any existing notifications
         await cancelAllCheckInReminders()
         
+        // One global app setting covers push and local reminders alike
+        guard UserDefaults.standard.bool(forKey: UserDefaults.notificationsEnabledKey) else {
+            print("⚠️ [Notifications] Disabled in app settings - skipping schedule")
+            return
+        }
+
         // Check notification authorization first
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
-        
-        guard settings.authorizationStatus == .authorized else {
+
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            break
+        default:
             print("⚠️ [Notifications] Not authorized - skipping schedule")
             return
         }
@@ -135,6 +144,18 @@ class ExitProgressionNotifications {
         center.removePendingNotificationRequests(withIdentifiers: exitNotificationIds)
         print("🗑️ [Notifications] Cancelled \(exitNotificationIds.count) pending notifications")
     }
+
+    /// Schedule the check-in sequence only if no reminders are already pending.
+    /// Covers enable paths that bypass the exit-start flow, like returning from
+    /// system Settings after granting permission mid-exit.
+    func ensureCheckInSequenceScheduled() async {
+        let center = UNUserNotificationCenter.current()
+        let pending = await center.pendingNotificationRequests()
+        guard !pending.contains(where: { $0.content.categoryIdentifier == "EXIT_PROGRESS" }) else {
+            return
+        }
+        await scheduleCheckInSequence()
+    }
     
     // MARK: - Permission Checking
     
@@ -151,9 +172,9 @@ class ExitProgressionNotifications {
         let settings = await center.notificationSettings()
         
         switch settings.authorizationStatus {
-        case .authorized:
+        case .authorized, .provisional, .ephemeral:
             return true
-            
+
         case .notDetermined:
             // Request permission
             do {
@@ -169,8 +190,8 @@ class ExitProgressionNotifications {
                 return false
             }
             
-        case .denied, .provisional, .ephemeral:
-            print("⚠️ [Notifications] Permission denied or limited")
+        case .denied:
+            print("⚠️ [Notifications] Permission denied")
             return false
             
         @unknown default:

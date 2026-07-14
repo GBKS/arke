@@ -80,6 +80,9 @@ struct ExitView_iOS: View {
     @State private var isEstimatingCost = false
     @State private var reminderState: ForcedMoveReminderState = .enabled
 
+    @AppStorage(UserDefaults.notificationsEnabledKey)
+    private var notificationsEnabled: Bool = false
+
     private let forceMoveIntroSubtitles: [VideoSubtitle] = [
         VideoSubtitle(startTime: 0.001, endTime: 1.840, text: "Let's talk about the forced move."),
         VideoSubtitle(startTime: 1.840, endTime: 3.440, text: "This is your safety net."),
@@ -271,13 +274,20 @@ struct ExitView_iOS: View {
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
-            reminderState = .enabled
+            // The app-level toggle is one global setting covering push and
+            // local reminders alike, so it can veto an OS-level grant
+            reminderState = notificationsEnabled ? .enabled : .canAsk
         case .notDetermined:
             reminderState = .canAsk
         case .denied:
             reminderState = .denied
         @unknown default:
             reminderState = .denied
+        }
+        // Recover from enable paths that bypass this view's button, e.g.
+        // returning from system Settings after un-denying mid-exit
+        if reminderState == .enabled && hasActiveExit {
+            await ExitProgressionNotifications.shared.ensureCheckInSequenceScheduled()
         }
     }
 
@@ -286,8 +296,17 @@ struct ExitView_iOS: View {
             if reminderState == .canAsk {
                 let granted = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
                 if granted {
+                    // One global setting: turning on reminders here also
+                    // turns on payment notifications
+                    notificationsEnabled = true
                     // Scheduling was skipped at exit start without permission
                     await ExitProgressionNotifications.shared.scheduleCheckInSequence()
+                    await MainActor.run {
+                        UIApplication.shared.registerForRemoteNotifications()
+                    }
+                    // Wait a moment for the APNs token, then register with the relay
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    await manager.registerForPushNotifications()
                 }
                 await refreshReminderState()
             } else if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
@@ -496,8 +515,17 @@ struct ExitView_iOS: View {
             print("✅ Exit started: \(result)")
 
             // Ask for notification permission at the moment of commitment so
-            // the hourly check-in reminders can actually fire
-            _ = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
+            // the hourly check-in reminders can actually fire. Granting a
+            // fresh prompt is an opt-in, so it also flips the global setting;
+            // an explicit "off" in app settings stays respected.
+            let statusBefore = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+            let granted = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
+            if granted && statusBefore == .notDetermined {
+                notificationsEnabled = true
+                await MainActor.run {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            }
             await refreshReminderState()
 
             // Start Live Activity monitoring for this exit

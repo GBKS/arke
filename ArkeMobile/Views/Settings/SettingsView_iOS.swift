@@ -492,7 +492,13 @@ struct SettingsView_iOS: View {
                 
                 // Register with relay
                 await manager.registerForPushNotifications()
-                
+
+                // One global setting: restore exit check-in reminders
+                // if a forced move is underway
+                if let exits = try? await manager.getExitVtxos(), exits.contains(where: { $0.isActive }) {
+                    await ExitProgressionNotifications.shared.scheduleCheckInSequence()
+                }
+
                 print("✅ Successfully registered for notifications")
             } else {
                 // User denied permission
@@ -514,6 +520,8 @@ struct SettingsView_iOS: View {
     
     private func unregisterFromNotifications() async {
         await manager.unregisterFromPushNotifications()
+        // One global setting: silence exit check-in reminders too
+        await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
     }
 }
 
