@@ -68,33 +68,33 @@ struct UTXODetailView: View {
                     VStack(spacing: 12) {
                         // Outpoint
                         DetailRow(
-                            title: "Outpoint",
+                            title: "data_outpoint",
                             value: utxo.outpoint,
                             isCopyable: true
                         )
                         
                         // Transaction Hash
                         DetailRow(
-                            title: "Transaction Hash",
+                            title: "data_transaction_hash",
                             value: utxo.transactionHash,
                             isCopyable: true
                         )
                         
                         // Output Index
                         DetailRow(
-                            title: "Output Index",
+                            title: "data_output_index",
                             value: String(utxo.outputIndex)
                         )
                         
                         // Confirmation Height
                         DetailRow(
-                            title: "Confirmation Height",
+                            title: "data_confirmation_height",
                             value: utxo.confirmationHeight.map(String.init) ?? String(localized: "activity_unconfirmed")
                         )
                         
                         // Short Outpoint for Reference
                         DetailRow(
-                            title: "Short Reference",
+                            title: "data_short_reference",
                             value: utxo.shortOutpoint
                         )
                     }

@@ -129,7 +129,7 @@ struct TransactionDetailView: View {
                     VStack(spacing: 12) {
                         // Transaction ID
                         DetailRow(
-                            title: "Transaction ID",
+                            title: "activity_transaction_id",
                             value: transaction.txid,
                             isCopyable: true,
                             onCopy: { viewModel.copyToClipboard($0) }
@@ -151,27 +151,27 @@ struct TransactionDetailView: View {
                             if transaction.hasBothFeeTypes {
                                 if let offchainFee = transaction.formattedFee {
                                     DetailRow(
-                                        title: "Offchain Fee",
+                                        title: "activity_offchain_fee",
                                         value: offchainFee
                                     )
                                 }
                                 if let onchainFee = transaction.formattedOnchainFee {
                                     DetailRow(
-                                        title: "Onchain Fee",
+                                        title: "activity_onchain_fee",
                                         value: onchainFee
                                     )
                                 }
                                 // Show total
                                 if let totalFee = transaction.formattedTotalFees {
                                     DetailRow(
-                                        title: "Total Fee",
+                                        title: "activity_total_fee",
                                         value: totalFee
                                     )
                                 }
                             } else {
                                 // Show single fee line
                                 DetailRow(
-                                    title: "Fee",
+                                    title: "label_fee",
                                     value: transaction.formattedTotalFees ?? BitcoinFormatter.shared.formatAmount(0)
                                 )
                             }
@@ -179,7 +179,7 @@ struct TransactionDetailView: View {
                         
                         // Date
                         DetailRow(
-                            title: "Date",
+                            title: "label_date",
                             value: transaction.date.formatted(date: .abbreviated, time: .shortened)
                         )
                     }

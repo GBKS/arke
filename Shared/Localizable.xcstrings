@@ -57,16 +57,6 @@
         }
       }
     },
-    "%lld exit%@ • %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld exit%2$@ • %3$@"
-          }
-        }
-      }
-    },
     "%lld invoices generated" : {
       "localizations" : {
         "en" : {
@@ -89,42 +79,24 @@
         }
       }
     },
-    "%lld locked VTXO%@" : {
+    "%lld locked VTXOs" : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld locked VTXO%2$@"
-          }
-        }
-      }
-    },
-    "%lld other transaction%@ with this address will remain assigned" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld other transaction%2$@ with this address will remain assigned"
-          }
-        }
-      }
-    },
-    "%lld round%@ • %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld round%2$@ • %3$@"
-          }
-        }
-      }
-    },
-    "%lld transaction%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld transaction%2$@"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld locked VTXO"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld locked VTXOs"
+                }
+              }
+            }
           }
         }
       }
@@ -189,32 +161,10 @@
     "(%@)" : {
       "shouldTranslate" : false
     },
-    "(%lld block%@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "(%1$lld block%2$@)"
-          }
-        }
-      }
-    },
     "+%lld" : {
       "shouldTranslate" : false
     },
-    "Added" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added"
-          }
-        }
-      }
-    },
-    "Address" : {},
     "Address: %@" : {},
-    "Addresses" : {},
     "All Transaction IDs (%lld)" : {},
     "Also assigned '%@' to these %lld transactions:" : {
       "localizations" : {
@@ -227,26 +177,6 @@
       }
     },
     "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access." : {},
-    "Auto-assign to %lld other transaction%@ with this address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Auto-assign to %1$lld other transaction%2$@ with this address"
-          }
-        }
-      }
-    },
-    "Balance" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Balance"
-          }
-        }
-      }
-    },
     "Block %u" : {},
     "Change tags: %@" : {
       "localizations" : {
@@ -280,119 +210,11 @@
         }
       }
     },
-    "Confirmation Height" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmation Height"
-          }
-        }
-      }
-    },
     "Confirmed at block %u" : {},
     "Contact '%@' assigned" : {},
-    "Contact ID" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contact ID"
-          }
-        }
-      }
-    },
-    "Contact Type" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contact Type"
-          }
-        }
-      }
-    },
-    "Date" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Date"
-          }
-        }
-      }
-    },
-    "Exit Depth" : {},
-    "Exit Transaction Weight" : {},
-    "Expiry Height" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Expiry Height"
-          }
-        }
-      }
-    },
-    "Fee" : {},
-    "Fee Information Unavailable" : {},
     "From %@" : {},
     "Invoice #%lld" : {},
-    "Last Updated" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Updated"
-          }
-        }
-      }
-    },
     "Last synced %@" : {},
-    "Lightning" : {},
-    "NORMAL" : {},
-    "Offchain Fee" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offchain Fee"
-          }
-        }
-      }
-    },
-    "Onchain Fee" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onchain Fee"
-          }
-        }
-      }
-    },
-    "Outpoint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Outpoint"
-          }
-        }
-      }
-    },
-    "Output Index" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Output Index"
-          }
-        }
-      }
-    },
-    "Payments and Savings" : {},
-    "Ready" : {},
     "Refresh is disabled because the amount (%@) is smaller than the minimum required (%@)." : {
       "localizations" : {
         "en" : {
@@ -414,17 +236,6 @@
       }
     },
     "Round %u" : {},
-    "Short Reference" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Short Reference"
-          }
-        }
-      }
-    },
-    "State" : {},
     "Step %lld of %lld" : {
       "localizations" : {
         "en" : {
@@ -435,40 +246,7 @@
         }
       }
     },
-    "Tag" : {},
     "This will cancel round %u and release the locked VTXOs." : {},
-    "Total Amount" : {},
-    "Total Fee" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Total Fee"
-          }
-        }
-      }
-    },
-    "Transaction Hash" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transaction Hash"
-          }
-        }
-      }
-    },
-    "Transaction ID" : {},
-    "VTXO Kind" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VTXO Kind"
-          }
-        }
-      }
-    },
     "accessibility_audio_muted" : {
       "localizations" : {
         "en" : {
@@ -1349,26 +1127,6 @@
         }
       }
     },
-    "action_move_to_payments" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move funds to payments"
-          }
-        }
-      }
-    },
-    "action_move_to_savings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move funds to savings"
-          }
-        }
-      }
-    },
     "action_mute_audio" : {
       "localizations" : {
         "en" : {
@@ -1729,6 +1487,26 @@
         }
       }
     },
+    "activity_offchain_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offchain Fee"
+          }
+        }
+      }
+    },
+    "activity_onchain_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onchain Fee"
+          }
+        }
+      }
+    },
     "activity_onchain_transactions" : {
       "localizations" : {
         "en" : {
@@ -1785,6 +1563,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "To Address"
+          }
+        }
+      }
+    },
+    "activity_total_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total Fee"
           }
         }
       }
@@ -1855,16 +1643,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access."
-          }
-        }
-      }
-    },
-    "alert_delete_item" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete \"%@\""
           }
         }
       }
@@ -1946,16 +1724,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The backup file includes all transactions from your payments balance."
-          }
-        }
-      }
-    },
-    "backup_download" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download"
           }
         }
       }
@@ -3442,6 +3210,16 @@
         }
       }
     },
+    "contacts_added" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added"
+          }
+        }
+      }
+    },
     "contacts_address_stay" : {
       "localizations" : {
         "en" : {
@@ -3462,12 +3240,76 @@
         }
       }
     },
+    "contacts_auto_assign_preview %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auto-assign to %lld other transaction with this address"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Auto-assign to %lld other transactions with this address"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "contacts_auto_assign_remain %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld other transaction with this address will remain assigned"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld other transactions with this address will remain assigned"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "contacts_autoassigned_transactions" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auto-Assigned Transactions"
+          }
+        }
+      }
+    },
+    "contacts_contact_id" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact ID"
+          }
+        }
+      }
+    },
+    "contacts_contact_type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Type"
           }
         }
       }
@@ -3528,6 +3370,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "If left empty, the address format will be used as the label"
+          }
+        }
+      }
+    },
+    "contacts_last_updated" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Updated"
           }
         }
       }
@@ -3703,6 +3555,28 @@
         }
       }
     },
+    "data_blocks_remaining %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "(%lld block)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "(%lld blocks)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "data_board_confirmations_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3804,6 +3678,16 @@
         }
       }
     },
+    "data_confirmation_height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmation Height"
+          }
+        }
+      }
+    },
     "data_confirmed_block" : {
       "localizations" : {
         "en" : {
@@ -3867,6 +3751,38 @@
         }
       }
     },
+    "data_exit_count_summary %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld exit • %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld exits • %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "data_exit_depth" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Depth"
+          }
+        }
+      }
+    },
     "data_exit_margin_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3874,6 +3790,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Exit Margin (blocks)"
+          }
+        }
+      }
+    },
+    "data_exit_transaction_weight" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Transaction Weight"
+          }
+        }
+      }
+    },
+    "data_expiry_height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expiry Height"
           }
         }
       }
@@ -4143,6 +4079,26 @@
         }
       }
     },
+    "data_outpoint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outpoint"
+          }
+        }
+      }
+    },
+    "data_output_index" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Output Index"
+          }
+        }
+      }
+    },
     "data_pending_rounds" : {
       "localizations" : {
         "en" : {
@@ -4195,6 +4151,28 @@
         }
       }
     },
+    "data_round_count_summary %lld %@" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld round • %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld rounds • %@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "data_round_interval_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4238,6 +4216,16 @@
         }
       }
     },
+    "data_short_reference" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short Reference"
+          }
+        }
+      }
+    },
     "data_state_history" : {
       "localizations" : {
         "en" : {
@@ -4264,6 +4252,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tip Height"
+          }
+        }
+      }
+    },
+    "data_transaction_hash" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction Hash"
           }
         }
       }
@@ -4379,6 +4377,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "VTXO Expiry Delta (blocks)"
+          }
+        }
+      }
+    },
+    "data_vtxo_kind" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VTXO Kind"
           }
         }
       }
@@ -4733,6 +4741,16 @@
         }
       }
     },
+    "fee_information_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee Information Unavailable"
+          }
+        }
+      }
+    },
     "fee_maintenance" : {
       "localizations" : {
         "en" : {
@@ -5014,12 +5032,32 @@
         }
       }
     },
+    "label_date" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        }
+      }
+    },
     "label_details" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details"
+          }
+        }
+      }
+    },
+    "label_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fee"
           }
         }
       }
@@ -5140,6 +5178,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "State"
+          }
+        }
+      }
+    },
+    "label_tag" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag"
           }
         }
       }
@@ -6338,6 +6386,16 @@
         }
       }
     },
+    "receive_payments_and_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payments and Savings"
+          }
+        }
+      }
+    },
     "receive_request_a_payment" : {
       "localizations" : {
         "en" : {
@@ -7013,16 +7071,6 @@
         }
       }
     },
-    "settings_other_devices" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Other Devices (%lld)"
-          }
-        }
-      }
-    },
     "settings_other_devices_count" : {
       "localizations" : {
         "en" : {
@@ -7333,16 +7381,6 @@
         }
       }
     },
-    "status_loading_address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading address..."
-          }
-        }
-      }
-    },
     "status_loading_addresses" : {
       "localizations" : {
         "en" : {
@@ -7399,16 +7437,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Loading Tags"
-          }
-        }
-      }
-    },
-    "status_loading_transactions" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading transactions..."
           }
         }
       }
@@ -7764,16 +7792,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Create some tags and assign them to transactions to see the chart"
-          }
-        }
-      }
-    },
-    "tags_confirm_delete" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to delete this tag? This action cannot be undone."
           }
         }
       }

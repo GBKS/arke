@@ -151,7 +151,7 @@ struct AddressDisplayView: View {
                     )
                 }
             } else {
-                ProgressView(String(localized: "status_loading_address"))
+                ProgressView(String(localized: "progress_loading_address"))
             }
             
             Divider()
@@ -187,7 +187,7 @@ struct AddressDisplayView: View {
                     )
                 }
             } else {
-                ProgressView(String(localized: "status_loading_address"))
+                ProgressView(String(localized: "progress_loading_address"))
             }
         }
         .padding(.horizontal, 20)

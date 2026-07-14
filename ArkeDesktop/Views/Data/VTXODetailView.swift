@@ -81,51 +81,51 @@ struct VTXODetailView: View {
                     VStack(spacing: 12) {
                         // Outpoint (ID)
                         DetailRow(
-                            title: "Outpoint",
+                            title: "data_outpoint",
                             value: currentVtxo.outpoint,
                             isCopyable: true
                         )
                         
                         // Transaction ID
                         DetailRow(
-                            title: "Transaction ID",
+                            title: "activity_transaction_id",
                             value: currentVtxo.txid,
                             isCopyable: true
                         )
                         
                         // Output Index
                         DetailRow(
-                            title: "Output Index",
+                            title: "data_output_index",
                             value: String(currentVtxo.vout)
                         )
                         
                         // VTXO Kind
                         DetailRow(
-                            title: "VTXO Kind",
+                            title: "data_vtxo_kind",
                             value: currentVtxo.kind.displayName
                         )
                         
                         // State
                         DetailRow(
-                            title: "State",
+                            title: "label_state",
                             value: currentVtxo.state.displayName
                         )
                         
                         // Expiry Height (0 means unknown)
                         DetailRow(
-                            title: "Expiry Height",
+                            title: "data_expiry_height",
                             value: expiryHeightValue
                         )
 
                         // Exit Depth
                         DetailRow(
-                            title: "Exit Depth",
+                            title: "data_exit_depth",
                             value: currentVtxo.exitDepth.formatted()
                         )
 
                         // Exit Transaction Weight
                         DetailRow(
-                            title: "Exit Transaction Weight",
+                            title: "data_exit_transaction_weight",
                             value: "\(currentVtxo.exitTxWeightWu.formatted()) WU"
                         )
                     }

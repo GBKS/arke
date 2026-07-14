@@ -105,13 +105,13 @@ struct ContactRow_iOS: View {
                     Button {
                         onTransactionCountTap()
                     } label: {
-                        Text("\(transactionCount) transaction\(transactionCount == 1 ? "" : "s")")
+                        Text("\(transactionCount) transactions")
                             .font(.callout)
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    Text("\(transactionCount) transaction\(transactionCount == 1 ? "" : "s")")
+                    Text("\(transactionCount) transactions")
                         .font(.callout)
                         .foregroundColor(.secondary)
                 }

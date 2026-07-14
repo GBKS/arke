@@ -345,7 +345,7 @@ struct ContactPaymentView: View {
                         SheetDestinationDisplayView(
                             primaryDisplayDestination: primaryDisplayDestination,
                             alternativeDisplayDestinations: alternativeDisplayDestinations,
-                            primaryDestinationLabel: "Addresses",
+                            primaryDestinationLabel: String(localized: "label_addresses"),
                             isSimpleAddress: false,
                             showMatchedContact: false,
                             formatNameOverride: matchedContactAddress?.address,

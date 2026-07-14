@@ -39,7 +39,7 @@ struct TagRowContent: View {
             Spacer()
             
             // Transaction count
-            Text("\(statistic.transactionCount) transaction\(statistic.transactionCount == 1 ? "" : "s")")
+            Text("\(statistic.transactionCount) transactions")
                 .font(.body)
                 .foregroundColor(.secondary)
             

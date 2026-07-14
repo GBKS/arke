@@ -155,7 +155,7 @@ struct ManualSendView: View {
                 SheetDestinationDisplayView(
                     primaryDisplayDestination: primaryDisplay,
                     alternativeDisplayDestinations: alternativeDisplayDestinations,
-                    primaryDestinationLabel: "Address",
+                    primaryDestinationLabel: String(localized: "label_address"),
                     isSimpleAddress: false,
                     showMatchedContact: true,
                     formatNameOverride: originalBIP353Address,

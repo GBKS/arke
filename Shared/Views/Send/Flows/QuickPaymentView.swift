@@ -241,9 +241,9 @@ struct QuickPaymentView: View {
     /// Header label for the primary destination section
     private var primaryDestinationLabel: String {
         if primaryDisplayDestination?.balanceSourceName != nil {
-            return "Address"
+            return String(localized: "label_address")
         } else {
-            return "Address"
+            return String(localized: "label_address")
         }
     }
     

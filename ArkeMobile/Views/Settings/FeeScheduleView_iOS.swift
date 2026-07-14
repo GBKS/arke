@@ -98,7 +98,7 @@ struct FeeScheduleView_iOS: View {
                 }
             } else {
                 ContentUnavailableView(
-                    "Fee Information Unavailable",
+                    "fee_information_unavailable",
                     systemImage: "exclamationmark.triangle",
                     description: Text("fee_unable_to_load_fee_schedule")
                 )

@@ -48,7 +48,7 @@ struct UnilateralExitListView_iOS: View {
                         .font(.system(size: 24, design: .serif))
                     
                     if !exits.isEmpty {
-                        Text("\(activeExits.count) exit\(activeExits.count == 1 ? "" : "s") • \(formattedTotalAmount)")
+                        Text("data_exit_count_summary \(activeExits.count) \(formattedTotalAmount)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -139,7 +139,7 @@ struct UnilateralExitListView_iOS: View {
                         Text(String(localized: "balance_claimable_at_block", defaultValue: "All claimable at block \(height)"))
                         if let current = latestBlockHeight {
                             let remaining = Int(height) - current
-                            Text("(\(remaining) block\(remaining == 1 ? "" : "s"))")
+                            Text("data_blocks_remaining \(remaining)")
                                 .foregroundStyle(.secondary)
                         }
                     }

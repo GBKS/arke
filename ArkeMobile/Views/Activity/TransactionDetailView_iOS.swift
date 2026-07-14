@@ -493,14 +493,14 @@ struct TransactionDetailView_iOS: View {
                     /*
                     if let offchainFee = transaction.formattedFee {
                         DetailRow(
-                            title: "Offchain Fee",
+                            title: "activity_offchain_fee",
                             value: offchainFee
                         )
                     }
                     if let onchainFee = transaction.formattedOnchainFee {
                         Divider()
                         DetailRow(
-                            title: "Onchain Fee",
+                            title: "activity_onchain_fee",
                             value: onchainFee
                         )
                     }
@@ -509,14 +509,14 @@ struct TransactionDetailView_iOS: View {
                     if let totalFee = transaction.formattedTotalFees {
                         Divider()
                         DetailRow(
-                            title: "Fee",
+                            title: "label_fee",
                             value: totalFee
                         )
                     }
                 } else {
                     // Show single fee line
                     DetailRow(
-                        title: "Fee",
+                        title: "label_fee",
                         value: transaction.formattedTotalFees ?? BitcoinFormatter.shared.formatAmount(0)
                     )
                 }
@@ -584,7 +584,7 @@ struct TransactionDetailView_iOS: View {
             // Transaction ID
             Divider()
             DetailRow(
-                title: "Transaction ID",
+                title: "activity_transaction_id",
                 value: transaction.txid,
                 isCopyable: true,
                 onCopy: { viewModel?.copyToClipboard($0) }

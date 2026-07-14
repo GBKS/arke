@@ -42,7 +42,7 @@ struct PendingRoundsListView_iOS: View {
                         .font(.system(size: 24, design: .serif))
                     
                     if !rounds.isEmpty {
-                        Text("\(rounds.count) round\(rounds.count == 1 ? "" : "s") • \(formattedTotalAmount)")
+                        Text("data_round_count_summary \(rounds.count) \(formattedTotalAmount)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -206,7 +206,7 @@ private struct RoundRowView: View {
                 }
                 
                 if !lockedVtxos.isEmpty {
-                    Text("\(lockedVtxos.count) locked VTXO\(lockedVtxos.count == 1 ? "" : "s")")
+                    Text("\(lockedVtxos.count) locked VTXOs")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

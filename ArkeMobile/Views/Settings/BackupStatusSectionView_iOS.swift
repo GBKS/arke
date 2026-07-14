@@ -61,7 +61,7 @@ struct BackupStatusSectionView_iOS: View {
                             Image(systemName: "square.and.arrow.down")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.primary)
-                            Text(String(localized: "backup_download"))
+                            Text(String(localized: "button_download"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(.primary)
                         }

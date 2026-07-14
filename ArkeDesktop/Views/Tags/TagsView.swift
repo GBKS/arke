@@ -118,7 +118,7 @@ struct TagsView: View {
             ),
             presenting: viewModel.tagToDelete
         ) { (tag: TagModel) in
-            Button(String(format: NSLocalizedString("alert_delete_item", comment: ""), tag.name), role: .destructive) {
+            Button(String(localized: "button_delete_item", defaultValue: "Delete \"\(tag.name)\""), role: .destructive) {
                 Task {
                     await viewModel.deleteTag(tag)
                     viewModel.hideDeleteConfirmation()

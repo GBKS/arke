@@ -29,24 +29,24 @@ struct ContactDetailsDisclosure: View {
                     .padding(.vertical, 4)
                 
                 DetailRow(
-                    title: "Contact Type",
+                    title: "contacts_contact_type",
                     value: contact.contactType.displayName
                 )
                 
                 DetailRow(
-                    title: "Added",
+                    title: "contacts_added",
                     value: contact.createdAt.formatted(date: .abbreviated, time: .shortened)
                 )
                 
                 if contact.updatedAt != contact.createdAt {
                     DetailRow(
-                        title: "Last Updated",
+                        title: "contacts_last_updated",
                         value: contact.updatedAt.formatted(date: .abbreviated, time: .shortened)
                     )
                 }
                 
                 DetailRow(
-                    title: "Contact ID",
+                    title: "contacts_contact_id",
                     value: contact.id.uuidString
                 )
             }

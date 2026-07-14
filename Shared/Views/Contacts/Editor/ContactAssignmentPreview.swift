@@ -47,7 +47,7 @@ struct ContactAssignmentPreview: View {
                 }
                 
                 if previewAutoAssignCount > 0 {
-                    Label("Auto-assign to \(previewAutoAssignCount) other transaction\(previewAutoAssignCount == 1 ? "" : "s") with this address",
+                    Label("contacts_auto_assign_preview \(previewAutoAssignCount)",
                           systemImage: "arrow.triangle.branch")
                         .foregroundColor(.Arke.orange)
                 }
@@ -75,7 +75,7 @@ struct ContactAssignmentPreview: View {
                 
                 // Show info about other transactions if they exist
                 if previewAutoAssignCount > 0 {
-                    Label("\(previewAutoAssignCount) other transaction\(previewAutoAssignCount == 1 ? "" : "s") with this address will remain assigned",
+                    Label("contacts_auto_assign_remain \(previewAutoAssignCount)",
                           systemImage: "info.circle")
                         .foregroundColor(.secondary)
                 }

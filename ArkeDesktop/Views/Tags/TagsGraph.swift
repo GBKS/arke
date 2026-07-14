@@ -41,8 +41,8 @@ struct TagsGraph: View {
     private var chartView: some View {
         Chart(tagStatistics, id: \.tagId) { statistic in
             BarMark(
-                x: .value("Tag", statistic.tagName),
-                y: .value("Total Amount", statistic.totalAmount)
+                x: .value("label_tag", statistic.tagName),
+                y: .value("label_total_amount", statistic.totalAmount)
             )
             .foregroundStyle(colorForTag(statistic.tagName, amount: statistic.totalAmount))
             .cornerRadius(4)

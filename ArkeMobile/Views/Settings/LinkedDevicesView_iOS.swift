@@ -23,7 +23,7 @@ struct LinkedDevicesView_iOS: View {
     
     var body: some View {
         List {
-            Text(otherDevices.isEmpty ? NSLocalizedString("linked_devices_single_device_description", comment: "") : NSLocalizedString("linked_devices_multiple_devices_description", comment: ""))
+            Text(otherDevices.isEmpty ? String(localized: "linked_devices_single_device_description") : String(localized: "linked_devices_multiple_devices_description"))
                 .font(.title3)
                 .foregroundColor(.secondary)
                 .lineSpacing(6)
@@ -76,7 +76,7 @@ struct LinkedDevicesView_iOS: View {
                             .accessibilityHidden(true)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel(NSLocalizedString("accessibility_no_primary_device_alert", comment: ""))
+                    .accessibilityLabel(String(localized: "accessibility_no_primary_device_alert"))
                     .accessibilityAddTraits(.isStaticText)
                 }
             }
@@ -90,7 +90,7 @@ struct LinkedDevicesView_iOS: View {
                             Label("button_make_device_secondary", systemImage: "arrow.down.circle")
                                 .foregroundStyle(.primary)
                         }
-                        .accessibilityHint(NSLocalizedString("accessibility_make_secondary_hint", comment: ""))
+                        .accessibilityHint(String(localized: "accessibility_make_secondary_hint"))
                     }
                     
                     // Show "Make This Device Primary" if this is secondary and no primary exists
@@ -99,7 +99,7 @@ struct LinkedDevicesView_iOS: View {
                             Label("button_make_device_primary", systemImage: "arrow.up.circle")
                                 .foregroundStyle(Color.Arke.green)
                         }
-                        .accessibilityHint(NSLocalizedString("accessibility_make_primary_hint", comment: ""))
+                        .accessibilityHint(String(localized: "accessibility_make_primary_hint"))
                     }
                 } header: {
                     Text("section_device_role")
@@ -145,7 +145,7 @@ struct LinkedDevicesView_iOS: View {
             isPresented: $showingUnlinkConfirmation,
             presenting: deviceToUnlink
         ) { (device: DeviceRegistration) in
-            Button(String(format: NSLocalizedString("button_unlink_device_name", comment: ""), device.deviceName), role: .destructive) {
+            Button(String(format: String(localized: "button_unlink_device_name"), device.deviceName), role: .destructive) {
                 Task {
                     await unlinkDevice(device)
                 }
@@ -197,7 +197,7 @@ struct LinkedDevicesView_iOS: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = String(format: NSLocalizedString("error_unlink_device", comment: ""), error.localizedDescription)
+                errorMessage = String(format: String(localized: "error_unlink_device"), error.localizedDescription)
                 
                 // Announce error to VoiceOver users
                 UIAccessibility.post(notification: .announcement, argument: errorMessage)
@@ -289,13 +289,13 @@ struct DeviceRow_iOS: View {
                 // Status badges
                 HStack(spacing: 6) {
                     if device.isPrimaryDevice {
-                        StatusBadge_iOS(text: NSLocalizedString("status_full_wallet", comment: ""), color: .Arke.blue)
+                        StatusBadge_iOS(text: String(localized: "status_full_wallet"), color: .Arke.blue)
                     } else {
-                        StatusBadge_iOS(text: NSLocalizedString("status_metadata_only", comment: ""), color: .Arke.orange)
+                        StatusBadge_iOS(text: String(localized: "status_metadata_only"), color: .Arke.orange)
                     }
                     
                     if device.isStale {
-                        StatusBadge_iOS(text: NSLocalizedString("status_stale", comment: ""), color: .Arke.red)
+                        StatusBadge_iOS(text: String(localized: "status_stale"), color: .Arke.red)
                     }
                 }
                 .padding(.top, 4)
@@ -340,7 +340,7 @@ struct DeviceRow_iOS: View {
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(deviceAccessibilityLabel)
-        .accessibilityHint(isCurrent ? NSLocalizedString("accessibility_current_device_hint", comment: "") : NSLocalizedString("accessibility_other_device_hint", comment: ""))
+        .accessibilityHint(isCurrent ? String(localized: "accessibility_current_device_hint") : String(localized: "accessibility_other_device_hint"))
     }
     
     private var deviceAccessibilityLabel: String {
@@ -348,7 +348,7 @@ struct DeviceRow_iOS: View {
         
         // Device name and current status
         if isCurrent {
-            parts.append("\(device.deviceName), \(NSLocalizedString("settings_this_device_parentheses", comment: ""))")
+            parts.append("\(device.deviceName), \(String(localized: "settings_this_device_parentheses"))")
         } else {
             parts.append(device.deviceName)
         }
@@ -357,18 +357,18 @@ struct DeviceRow_iOS: View {
         parts.append(device.platformDisplayName)
         
         // Last seen
-        parts.append(NSLocalizedString("accessibility_last_seen", comment: "") + " \(device.lastSeenRelative)")
+        parts.append(String(localized: "accessibility_last_seen") + " \(device.lastSeenRelative)")
         
         // Primary/Secondary status
         if device.isPrimaryDevice {
-            parts.append(NSLocalizedString("status_full_wallet", comment: ""))
+            parts.append(String(localized: "status_full_wallet"))
         } else {
-            parts.append(NSLocalizedString("status_metadata_only", comment: ""))
+            parts.append(String(localized: "status_metadata_only"))
         }
         
         // Stale warning
         if device.isStale {
-            parts.append(NSLocalizedString("accessibility_device_stale_warning", comment: ""))
+            parts.append(String(localized: "accessibility_device_stale_warning"))
         }
         
         return parts.joined(separator: ", ")

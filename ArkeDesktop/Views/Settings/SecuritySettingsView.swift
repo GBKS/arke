@@ -97,7 +97,7 @@ struct SecuritySettingsView: View {
     private var otherDevicesSection: some View {
         if !otherDevices.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("settings_other_devices")
+                Text(String(localized: "settings_other_devices_count", defaultValue: "Other Devices (\(otherDevices.count))"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
                     .textCase(.uppercase)

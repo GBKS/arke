@@ -68,7 +68,7 @@ struct ReceiveModePicker_iOS: View {
             .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("balance_type")
-            .accessibilityValue(selectedBalance == .lightning ? "Lightning" : "Payments and Savings")
+            .accessibilityValue(selectedBalance == .lightning ? String(localized: "network_lightning") : String(localized: "receive_payments_and_savings"))
             .accessibilityHint("accessibility_hint_toggle_balance_type")
         }
     }

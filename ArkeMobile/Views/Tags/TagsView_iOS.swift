@@ -115,7 +115,7 @@ struct TagsView_iOS: View {
                 viewModel.hideDeleteConfirmation()
             }
         } message: { tag in
-            Text(String(localized: "tags_confirm_delete"))
+            Text(String(localized: "alert_confirm_delete_tag"))
         }
     }
     

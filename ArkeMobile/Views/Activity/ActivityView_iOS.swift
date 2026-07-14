@@ -186,7 +186,7 @@ struct ActivityView_iOS: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                                 .accessibilityLabel(String(localized: "accessibility_loading_label"))
-                            Text(String(localized: "status_loading_transactions"))
+                            Text(String(localized: "progress_loading_transactions"))
                                 .font(.system(size: 19, design: .serif))
                         }
                     }
