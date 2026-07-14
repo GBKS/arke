@@ -118,13 +118,13 @@ struct FeeScheduleView_iOS: View {
         let weeks = days / 7
         
         if weeks > 0 {
-            return "~\(weeks) week\(weeks == 1 ? "" : "s")"
+            return String(localized: "format_approx_weeks \(weeks)")
         } else if days > 0 {
-            return "~\(days) day\(days == 1 ? "" : "s")"
+            return String(localized: "format_approx_days \(days)")
         } else if hours > 0 {
-            return "~\(hours) hour\(hours == 1 ? "" : "s")"
+            return String(localized: "format_approx_hours \(hours)")
         } else {
-            return "~\(minutes) min\(minutes == 1 ? "" : "s")"
+            return String(localized: "format_approx_minutes \(minutes)")
         }
     }
     

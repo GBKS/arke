@@ -66,11 +66,11 @@ struct VTXOHealth: Sendable {
     
     var statusMessage: String? {
         if hasExpiredVTXOs && hasVTXOsExpiringSoon {
-            return "\(expiredCount) VTXO\(expiredCount == 1 ? "" : "s") expired, \(expiringSoonCount) expiring soon"
+            return String(localized: "balance_vtxos_expired_and_expiring \(expiredCount) \(expiringSoonCount)")
         } else if hasExpiredVTXOs {
-            return "\(expiredCount) VTXO\(expiredCount == 1 ? " has" : "s have") expired"
+            return String(localized: "balance_vtxos_have_expired \(expiredCount)")
         } else if hasVTXOsExpiringSoon {
-            return "\(expiringSoonCount) VTXO\(expiringSoonCount == 1 ? "" : "s") expiring soon"
+            return String(localized: "balance_vtxos_expiring_soon \(expiringSoonCount)")
         } else {
             return nil
         }
@@ -149,11 +149,11 @@ struct VTXOHealth: Sendable {
         
         if hours > 24 {
             let days = hours / 24
-            return "~\(days) day\(days == 1 ? "" : "s")"
+            return String(localized: "format_approx_days \(days)")
         } else if hours > 0 {
-            return "~\(hours) hour\(hours == 1 ? "" : "s")"
+            return String(localized: "format_approx_hours \(hours)")
         } else {
-            return "~\(minutes) minute\(minutes == 1 ? "" : "s")"
+            return String(localized: "format_approx_minutes \(minutes)")
         }
     }
 }

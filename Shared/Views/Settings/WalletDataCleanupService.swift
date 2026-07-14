@@ -628,31 +628,31 @@ struct DeletionSummary: Codable {
         var parts: [String] = []
         
         if transactionsDeleted > 0 {
-            parts.append("\(transactionsDeleted) transaction\(transactionsDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(transactionsDeleted) transactions"))
         }
         if tagsDeleted > 0 {
-            parts.append("\(tagsDeleted) tag\(tagsDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(tagsDeleted) tags"))
         }
         if contactsDeleted > 0 {
-            parts.append("\(contactsDeleted) contact\(contactsDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(contactsDeleted) contacts"))
         }
         if contactAddressesDeleted > 0 {
-            parts.append("\(contactAddressesDeleted) address\(contactAddressesDeleted == 1 ? "" : "es")")
+            parts.append(String(localized: "\(contactAddressesDeleted) addresses"))
         }
         if balanceCacheDeleted > 0 {
-            parts.append("\(balanceCacheDeleted) balance cache record\(balanceCacheDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(balanceCacheDeleted) balance cache records"))
         }
         if backupStatusDeleted > 0 {
-            parts.append("\(backupStatusDeleted) backup status record\(backupStatusDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(backupStatusDeleted) backup status records"))
         }
         if addressHistoryDeleted > 0 {
-            parts.append("\(addressHistoryDeleted) address history record\(addressHistoryDeleted == 1 ? "" : "s")")
+            parts.append(String(localized: "\(addressHistoryDeleted) address history records"))
         }
         
         if parts.isEmpty {
-            return "No cloud data deleted"
+            return String(localized: "settings_no_cloud_data_deleted")
         } else {
-            return "Deleted: " + parts.joined(separator: ", ")
+            return String(localized: "settings_deleted_summary \(parts.joined(separator: ", "))")
         }
     }
 }

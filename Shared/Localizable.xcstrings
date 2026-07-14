@@ -21,9 +21,6 @@
     "%@ ₿" : {
       "shouldTranslate" : false
     },
-    "%@%%" : {
-      "shouldTranslate" : false
-    },
     "%@... → %@" : {
       "localizations" : {
         "en" : {
@@ -53,6 +50,116 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld VTXOs • %2$@ ₿"
+          }
+        }
+      }
+    },
+    "%lld address history records" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld address history record"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld address history records"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld addresses" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld address"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld addresses"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld backup status records" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld backup status record"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld backup status records"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld balance cache records" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld balance cache record"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld balance cache records"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld contacts" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld contact"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld contacts"
+                }
+              }
+            }
           }
         }
       }
@@ -94,6 +201,28 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld locked VTXOs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld tags" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tags"
                 }
               }
             }
@@ -1858,6 +1987,28 @@
         }
       }
     },
+    "balance_active_exits_in_progress %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld active exit in progress"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld active exits in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "balance_all_claimable" : {
       "localizations" : {
         "en" : {
@@ -1964,6 +2115,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exiting VTXOs"
+          }
+        }
+      }
+    },
+    "balance_exits_ready_to_claim %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld exit ready to claim"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld exits ready to claim"
+                }
+              }
+            }
           }
         }
       }
@@ -2174,6 +2347,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can close this modal and the refresh will continue in the background."
+          }
+        }
+      }
+    },
+    "balance_refresh_in %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh in %@"
           }
         }
       }
@@ -2424,6 +2607,82 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "VTXOs Exiting"
+          }
+        }
+      }
+    },
+    "balance_vtxos_expired_and_expiring %lld %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@expired@, %2$lld expiring soon"
+          },
+          "substitutions" : {
+            "expired" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg VTXO expired"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg VTXOs expired"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "balance_vtxos_expiring_soon %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld VTXO expiring soon"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld VTXOs expiring soon"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "balance_vtxos_have_expired %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld VTXO has expired"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld VTXOs have expired"
+                }
+              }
+            }
           }
         }
       }
@@ -4541,6 +4800,50 @@
         }
       }
     },
+    "error_faucet_rate_limited_minutes %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rate Limited: Please wait %lld minute before trying again"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rate Limited: Please wait %lld minutes before trying again"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "error_faucet_rate_limited_seconds %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rate Limited: Please wait %lld second before trying again"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rate Limited: Please wait %lld seconds before trying again"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "error_file_picker" : {
       "localizations" : {
         "en" : {
@@ -4907,6 +5210,94 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Address #%lld"
+          }
+        }
+      }
+    },
+    "format_approx_days %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "format_approx_hours %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "format_approx_minutes %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld minute"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld minutes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "format_approx_weeks %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "~%lld weeks"
+                }
+              }
+            }
           }
         }
       }
@@ -5398,6 +5789,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refresh (%lld)"
+          }
+        }
+      }
+    },
+    "message_backup_your_wallet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup your wallet"
           }
         }
       }
@@ -6356,6 +6757,26 @@
         }
       }
     },
+    "receive_balance_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payments"
+          }
+        }
+      }
+    },
+    "receive_balance_savings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Savings"
+          }
+        }
+      }
+    },
     "receive_enter_amount" : {
       "localizations" : {
         "en" : {
@@ -6798,6 +7219,16 @@
         }
       }
     },
+    "settings_deleted_summary %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted: %@"
+          }
+        }
+      }
+    },
     "settings_devices_connected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7041,6 +7472,16 @@
         }
       }
     },
+    "settings_no_cloud_data_deleted" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cloud data deleted"
+          }
+        }
+      }
+    },
     "settings_notifications" : {
       "localizations" : {
         "en" : {
@@ -7237,6 +7678,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Checking for other devices..."
+          }
+        }
+      }
+    },
+    "status_complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete"
           }
         }
       }
@@ -7541,12 +7992,32 @@
         }
       }
     },
+    "status_ready" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        }
+      }
+    },
     "status_ready_approve" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ready to approve"
+          }
+        }
+      }
+    },
+    "status_ready_to_withdraw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to withdraw"
           }
         }
       }
@@ -7671,6 +8142,16 @@
         }
       }
     },
+    "status_starting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting"
+          }
+        }
+      }
+    },
     "status_starting_transfer" : {
       "localizations" : {
         "en" : {
@@ -7707,6 +8188,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wallet Imported!"
+          }
+        }
+      }
+    },
+    "status_withdrawing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Withdrawing"
           }
         }
       }

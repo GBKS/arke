@@ -84,11 +84,11 @@ class BalanceRefreshStatusViewModel {
     /// Simple status message based on three states
     var statusMessage: String {
         if hasActiveRefresh {
-            return "Refreshing"
+            return String(localized: "balance_refreshing")
         } else if hasVtxosToRefresh {
-            return "Refresh now"
+            return String(localized: "balance_refresh_now")
         } else if let blocks = blocksUntilPpmFree, blocks > 0 {
-            return "Refresh in \(formatBlocks(blocks))"
+            return String(localized: "balance_refresh_in \(formatBlocks(blocks))")
         } else {
             return ""
         }

@@ -158,7 +158,7 @@ private struct ServerCardCostSection: View {
             }
             
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text("\(String(format: "%.2f", comparison.estimate.effectiveRate(for: comparison.profile.monthlyVolume)))%")
+                Text((comparison.estimate.effectiveRate(for: comparison.profile.monthlyVolume) / 100).formatted(.percent.precision(.fractionLength(2))))
                     .font(.body)
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())

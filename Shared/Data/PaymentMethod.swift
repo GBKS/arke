@@ -92,7 +92,7 @@ enum PaymentMethod: Codable, Hashable, Sendable {
         case .offer: return "Lightning Offer"
         case .lightningAddress: return "Lightning Address"
         case .outputScript: return "Output Script"
-        case .unknown: return "Unknown"
+        case .unknown: return String(localized: "data_unknown")
         }
     }
     

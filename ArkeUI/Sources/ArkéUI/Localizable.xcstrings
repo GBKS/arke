@@ -11,6 +11,28 @@
         }
       }
     },
+    "%lld confirmations" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld confirmation"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld confirmations"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Cannot use: %@" : {
       "localizations" : {
         "en" : {
@@ -1827,6 +1849,16 @@
         }
       }
     },
+    "status_confirmed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed"
+          }
+        }
+      }
+    },
     "status_connected" : {
       "localizations" : {
         "en" : {
@@ -1953,6 +1985,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refreshing..."
+          }
+        }
+      }
+    },
+    "status_unconfirmed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unconfirmed"
           }
         }
       }

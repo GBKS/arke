@@ -119,16 +119,16 @@ extension WalletManager {
         
         if hasExitsRequiringAction {
             let count = exitsRequiringAction.count
-            messages.append("\(count) exit\(count == 1 ? "" : "s") ready to claim")
+            messages.append(String(localized: "balance_exits_ready_to_claim \(count)"))
         }
         
         if hasActiveUnilateralExits && !hasExitsRequiringAction {
             let count = activeUnilateralExits.count
-            messages.append("\(count) active exit\(count == 1 ? "" : "s") in progress")
+            messages.append(String(localized: "balance_active_exits_in_progress \(count)"))
         }
         
         if shouldShowBackupReminder {
-            messages.append("Backup your wallet")
+            messages.append(String(localized: "message_backup_your_wallet"))
         }
         
         if connectionStatus.showWarning {

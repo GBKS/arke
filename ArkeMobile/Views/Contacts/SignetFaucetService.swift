@@ -231,9 +231,9 @@ enum FaucetError: LocalizedError {
         case .rateLimited(let seconds):
             let minutes = seconds / 60
             if minutes > 0 {
-                return "Rate Limited: Please wait \(minutes) minute\(minutes == 1 ? "" : "s") before trying again"
+                return String(localized: "error_faucet_rate_limited_minutes \(minutes)")
             } else {
-                return "Rate Limited: Please wait \(seconds) second\(seconds == 1 ? "" : "s") before trying again"
+                return String(localized: "error_faucet_rate_limited_seconds \(seconds)")
             }
         case .insufficientFunds(let message):
             return "Faucet Empty: \(message)"

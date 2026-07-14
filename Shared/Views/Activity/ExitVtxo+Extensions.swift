@@ -54,17 +54,17 @@ extension ExitVtxo {
         
         switch caseName.lowercased() {
         case "start":
-            return "Starting"
+            return String(localized: "status_starting")
         case "processing":
-            return "Processing"
+            return String(localized: "data_processing")
         case "awaitingdelta":
-            return "Processing"
+            return String(localized: "data_processing")
         case "claimable":
-            return "Ready to withdraw"
+            return String(localized: "status_ready_to_withdraw")
         case "claiminprogress":
-            return "Withdrawing"
+            return String(localized: "status_withdrawing")
         case "claimed":
-            return "Complete"
+            return String(localized: "status_complete")
         default:
             // Return the case name if we don't have a mapping
             return caseName
@@ -169,13 +169,13 @@ extension ExitVtxo {
     /// - Returns: Human-readable time string (e.g., "~2 hours", "~3 days")
     func formattedTimeRemaining(currentHeight: Int, claimableHeight: Int) -> String {
         if isClaimable {
-            return "Ready"
+            return String(localized: "status_ready")
         }
         
         let timeInterval = estimatedTimeRemaining(currentHeight: currentHeight, claimableHeight: claimableHeight)
         
         if timeInterval <= 0 {
-            return "Ready"
+            return String(localized: "status_ready")
         }
         
         let hours = Int(timeInterval) / 3600
@@ -183,11 +183,11 @@ extension ExitVtxo {
         
         if hours > 24 {
             let days = hours / 24
-            return "~\(days) day\(days == 1 ? "" : "s")"
+            return String(localized: "format_approx_days \(days)")
         } else if hours > 0 {
-            return "~\(hours) hour\(hours == 1 ? "" : "s")"
+            return String(localized: "format_approx_hours \(hours)")
         } else {
-            return "~\(minutes) minute\(minutes == 1 ? "" : "s")"
+            return String(localized: "format_approx_minutes \(minutes)")
         }
     }
 }
@@ -202,17 +202,17 @@ extension ExitTransactionStatus {
         
         switch caseName.lowercased() {
         case "start":
-            return "Starting"
+            return String(localized: "status_starting")
         case "processing":
-            return "Processing"
+            return String(localized: "data_processing")
         case "awaitingdelta":
-            return "Processing"
+            return String(localized: "data_processing")
         case "claimable":
-            return "Ready to withdraw"
+            return String(localized: "status_ready_to_withdraw")
         case "claiminprogress":
-            return "Withdrawing"
+            return String(localized: "status_withdrawing")
         case "claimed":
-            return "Complete"
+            return String(localized: "status_complete")
         default:
             return caseName
         }
