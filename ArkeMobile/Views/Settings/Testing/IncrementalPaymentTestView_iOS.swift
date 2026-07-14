@@ -27,16 +27,16 @@ struct IncrementalPaymentTestView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Send incremental payments for testing. Enter an ark address, lightning offer, or lightning invoice.")
+                Text("testing_spam_payments_help")
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
             
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Recipient")
+                        Text("testing_recipient")
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("Ark address, Lightning invoice, or Lightning address", text: $recipient)
+                        TextField("placeholder_ark_or_lightning_address", text: $recipient)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .disabled(isRunning)
@@ -46,10 +46,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Count")
+                        Text("testing_count")
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("Number of payments to send", text: $count)
+                        TextField("placeholder_number_of_payments_to_send", text: $count)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -58,10 +58,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Start Amount (sats)")
+                        Text("testing_start_amount_sats")
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("Initial payment amount", text: $startAmount)
+                        TextField("placeholder_initial_payment_amount", text: $startAmount)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -70,10 +70,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Delay (ms)")
+                        Text("testing_delay_ms")
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("Delay between payments", text: $delayMs)
+                        TextField("placeholder_delay_between_payments", text: $delayMs)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -83,20 +83,20 @@ struct IncrementalPaymentTestView_iOS: View {
                 if isRunning {
                     VStack(spacing: 12) {
                         HStack {
-                            Text("Progress:")
+                            Text("testing_progress")
                             Spacer()
                             Text("\(sentCount)/\(Int(count) ?? 0) sent, \(failedCount) failed")
                                 .foregroundColor(.secondary)
                         }
                         
-                        Button("STOP", role: .destructive) {
+                        Button("testing_stop", role: .destructive) {
                             stopTest()
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.red)
                     }
                 } else {
-                    Button("Start Test") {
+                    Button("testing_start_test") {
                         startTest()
                     }
                     .buttonStyle(.borderedProminent)
@@ -105,7 +105,7 @@ struct IncrementalPaymentTestView_iOS: View {
             }
             .padding(.horizontal, 20)
         }
-        .navigationTitle("Spam Payments")
+        .navigationTitle("nav_title_spam_payments")
         .navigationBarTitleDisplayMode(.large)
     }
     

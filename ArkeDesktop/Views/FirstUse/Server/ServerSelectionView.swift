@@ -80,11 +80,11 @@ struct ServerSelectionView: View {
                 }
                 
                 VStack(spacing: 8) {
-                    Text("Select a Server")
+                    Text("onboarding_select_a_server")
                         .font(.system(size: 30, design: .serif))
                         .foregroundStyle(Color.Arke.gold)
                     
-                    Text("They route your payments for safe and fast transactions. Fees are based on usage.")
+                    Text("onboarding_server_role_help")
                         .font(.system(size: 17))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
@@ -117,7 +117,7 @@ struct ServerSelectionView: View {
                 .padding(.vertical, 8)
                 .frame(maxWidth: 600)
                 
-                Button("Continue") {
+                Button("onboarding_continue") {
                     onServerSelected()
                 }
                 .buttonStyle(ArkeButtonStyle(size: ArkeButtonSize.large))

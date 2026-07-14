@@ -18,7 +18,7 @@ struct ReceiveModePicker_iOS: View {
         if !isReadOnlyMode {
             GlassEffectContainer(spacing: 8.0) {
                 HStack(spacing: 0) {
-                    Label("Request a Payment", systemImage: "qrcode")
+                    Label("receive_request_a_payment", systemImage: "qrcode")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .fontWeight(selectedBalance == .lightning ? .semibold : .regular)
@@ -27,7 +27,7 @@ struct ReceiveModePicker_iOS: View {
                         .foregroundStyle(selectedBalance == .lightning ? Color.Arke.gold : .secondary)
                         .animation(nil, value: selectedBalance)
                     
-                    Label("Share your Addresses", systemImage: "list.dash")
+                    Label("receive_share_your_addresses", systemImage: "list.dash")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .fontWeight(selectedBalance == .paymentsAndSavings ? .semibold : .regular)
@@ -69,7 +69,7 @@ struct ReceiveModePicker_iOS: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("balance_type")
             .accessibilityValue(selectedBalance == .lightning ? "Lightning" : "Payments and Savings")
-            .accessibilityHint("Toggle between Lightning and Payments and Savings")
+            .accessibilityHint("accessibility_hint_toggle_balance_type")
         }
     }
 }

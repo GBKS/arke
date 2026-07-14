@@ -273,7 +273,7 @@ struct WalletView_iOS: View {
                                 activityNavPath.append(ActivityDestination.dataDetail(dataItem))
                             })
                         } else {
-                            Text("Data view not available in read-only mode")
+                            Text("data_readonly_unavailable")
                         }
                     case .console:
                         // Only show console in primary mode (requires ASP connection)
@@ -281,7 +281,7 @@ struct WalletView_iOS: View {
                             ConsoleView_iOS()
                                 .navigationTitle("console_title")
                         } else {
-                            Text("Console not available in read-only mode")
+                            Text("console_readonly_unavailable")
                         }
                     case .dataDetail(let dataItem):
                         switch dataItem {

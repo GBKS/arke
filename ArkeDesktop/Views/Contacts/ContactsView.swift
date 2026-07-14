@@ -163,7 +163,7 @@ struct ContactsView: View {
                 .symbolRenderingMode(.hierarchical)
             
             VStack(spacing: 8) {
-                Text("No Contacts Yet")
+                Text("contacts_no_contacts_yet")
                     .font(.title2)
                     .fontWeight(.semibold)
                 

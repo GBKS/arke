@@ -59,7 +59,7 @@ Defined in detail in `Accessibility.md`:
 
 Use these when the string belongs to one feature area:
 
-`activity_`, `backup_`, `balance_`, `console_`, `contacts_`, `data_`, `debug_logs_`, `fee_`, `firstuse_`, `linked_devices_`, `maintenance_`, `onboarding_`, `profile_`, `receive_`, `send_`, `settings_`, `tags_`, `transaction_list_`
+`activity_`, `backup_`, `balance_`, `console_`, `contacts_`, `data_`, `debug_logs_`, `fee_`, `firstuse_`, `linked_devices_`, `maintenance_`, `onboarding_`, `profile_`, `receive_`, `send_`, `settings_`, `tags_`, `testing_`, `transaction_list_`
 
 **Choosing a prefix:** prefer a generic prefix if the string is (or could be) reused across features; use a feature prefix for feature-specific copy. Before adding any key, search the catalog for an existing key with the same value — reuse it instead of creating a duplicate.
 

@@ -47,7 +47,7 @@ struct WalletImportedView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.right")
-                    Text("Let's go!")
+                    Text("onboarding_lets_go")
                 }
             }
             .buttonStyle(ArkeButtonStyle(size: .large))

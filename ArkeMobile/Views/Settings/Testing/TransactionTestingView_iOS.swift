@@ -15,7 +15,7 @@ struct TransactionTestingView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Play around and find out.")
+                Text("testing_play_around_and_find_out")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -24,10 +24,10 @@ struct TransactionTestingView_iOS: View {
                     NavigationLink(destination: IncrementalPaymentTestView_iOS()) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Spam Payments")
+                                Text("nav_title_spam_payments")
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("Send multiple payments with increasing amounts")
+                                Text("testing_spam_payments_subtitle")
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.leading)
@@ -49,10 +49,10 @@ struct TransactionTestingView_iOS: View {
                     NavigationLink(destination: InvoiceGenerationTestView_iOS()) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Generate Invoices")
+                                Text("testing_generate_invoices")
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("Create multiple Lightning invoices and copy to clipboard")
+                                Text("testing_invoice_generation_subtitle")
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.leading)
@@ -72,7 +72,7 @@ struct TransactionTestingView_iOS: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("Transaction Testing")
+        .navigationTitle("nav_title_transaction_testing")
         .navigationBarTitleDisplayMode(.large)
     }
 }

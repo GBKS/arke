@@ -202,17 +202,6 @@
     "+%lld" : {
       "shouldTranslate" : false
     },
-    "0" : {
-      "shouldTranslate" : false
-    },
-    "1. This device becomes view-only" : {},
-    "2. Open your other device" : {},
-    "3. Make that device primary" : {},
-    "A contact with this name already exists" : {},
-    "A tag with this name already exists" : {},
-    "Add default tags" : {},
-    "Add note" : {},
-    "Add to Contacts" : {},
     "Added" : {
       "localizations" : {
         "en" : {
@@ -223,14 +212,10 @@
         }
       }
     },
-    "Adding..." : {},
     "Address" : {},
     "Address: %@" : {},
     "Addresses" : {},
-    "Advertising" : {},
-    "After confirming:" : {},
     "All Transaction IDs (%lld)" : {},
-    "All invoices copied to clipboard" : {},
     "Also assigned '%@' to these %lld transactions:" : {
       "localizations" : {
         "en" : {
@@ -241,24 +226,7 @@
         }
       }
     },
-    "Amount" : {},
-    "Amount (sats)" : {},
-    "An offline backup needs both items below. Your recovery phrase alone won't recover your full balance. The backup file holds data that exists only on your device and in iCloud." : {},
     "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access." : {},
-    "Ark Address" : {},
-    "Ark address, Lightning invoice, or Lightning address" : {},
-    "Assign Contact" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Assign Contact"
-          }
-        }
-      }
-    },
-    "Assigned to this transaction" : {},
-    "Auto-Assigned Transactions" : {},
     "Auto-assign to %lld other transaction%@ with this address" : {
       "localizations" : {
         "en" : {
@@ -269,9 +237,6 @@
         }
       }
     },
-    "Awaiting Delta" : {},
-    "Awaiting Input Confirmation" : {},
-    "Backup File" : {},
     "Balance" : {
       "localizations" : {
         "en" : {
@@ -282,15 +247,7 @@
         }
       }
     },
-    "Bitcoin Address" : {},
-    "Block" : {},
     "Block %u" : {},
-    "Board Funds" : {},
-    "Broadcast with CPFP" : {},
-    "Browsing" : {},
-    "Cancel" : {},
-    "Cancel Round" : {},
-    "Cancel Round?" : {},
     "Change tags: %@" : {
       "localizations" : {
         "en" : {
@@ -323,14 +280,6 @@
         }
       }
     },
-    "Checking for wallet..." : {},
-    "Claim In Progress" : {},
-    "Claim TX" : {},
-    "Claimable" : {},
-    "Claimable Height" : {},
-    "Claimable Since" : {},
-    "Claimed" : {},
-    "Clear Results" : {},
     "Confirmation Height" : {
       "localizations" : {
         "en" : {
@@ -341,14 +290,7 @@
         }
       }
     },
-    "Confirmations" : {},
-    "Confirmed" : {},
-    "Confirmed Block" : {},
-    "Confirmed Transactions" : {},
     "Confirmed at block %u" : {},
-    "Confirming" : {},
-    "Console not available in read-only mode" : {},
-    "Contact" : {},
     "Contact '%@' assigned" : {},
     "Contact ID" : {
       "localizations" : {
@@ -370,16 +312,6 @@
         }
       }
     },
-    "Continue" : {},
-    "Copied!" : {},
-    "Copy All to Clipboard" : {},
-    "Copy Invoice" : {},
-    "Copy Transaction ID" : {},
-    "Count" : {},
-    "Create multiple Lightning invoices and copy to clipboard" : {},
-    "Create some tags and assign them to transactions to see the chart" : {},
-    "Current State" : {},
-    "Data view not available in read-only mode" : {},
     "Date" : {
       "localizations" : {
         "en" : {
@@ -390,11 +322,6 @@
         }
       }
     },
-    "Delay (ms)" : {},
-    "Delay between payments" : {},
-    "Delete" : {},
-    "Device Role" : {},
-    "Enter amount" : {},
     "Exit Depth" : {},
     "Exit Transaction Weight" : {},
     "Expiry Height" : {
@@ -409,36 +336,8 @@
     },
     "Fee" : {},
     "Fee Information Unavailable" : {},
-    "Fee Schedule" : {},
-    "Fees are charged by the Ark server and are separate from Bitcoin network fees." : {},
-    "Free" : {},
     "From %@" : {},
-    "From Address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "From Address"
-          }
-        }
-      }
-    },
-    "Generate Invoices" : {},
-    "Generate multiple lightning invoices for testing and copy them to the clipboard." : {},
-    "Generating invoice..." : {},
-    "How do you use bitcoin?" : {},
-    "How fast should the payment arrive?" : {},
-    "Import Wallet" : {},
-    "Importing..." : {},
-    "Initial payment amount" : {},
     "Invoice #%lld" : {},
-    "Invoice Generation" : {},
-    "Invoice amount" : {},
-    "Invoice copied to clipboard" : {},
-    "It will connect to the Ark Service Provider by second.tech." : {},
-    "It's going to be on signet. Not real bitcoin!" : {},
-    "Keep Round" : {},
-    "Label" : {},
     "Last Updated" : {
       "localizations" : {
         "en" : {
@@ -450,28 +349,8 @@
       }
     },
     "Last synced %@" : {},
-    "Let's go!" : {},
     "Lightning" : {},
-    "Loading..." : {},
-    "Make Primary" : {},
-    "Make Secondary" : {},
-    "Make This Device Primary?" : {},
-    "Make This Device Secondary?" : {},
-    "Manage devices that have access to your wallet" : {},
-    "Manual Backup" : {},
     "NORMAL" : {},
-    "Needs Broadcasting" : {},
-    "Needs Signed Package" : {},
-    "Network Fee" : {},
-    "Next round" : {},
-    "No Contacts Yet" : {},
-    "No Transaction Data" : {},
-    "No other transactions with this address" : {},
-    "No refresh needed" : {},
-    "Notes" : {},
-    "Number of invoices to generate" : {},
-    "Number of payments to send" : {},
-    "OK" : {},
     "Offchain Fee" : {
       "localizations" : {
         "en" : {
@@ -482,7 +361,6 @@
         }
       }
     },
-    "Once you have some funds in it, make sure to do a proper backup. You're in control of this wallet, and also responsible for it." : {},
     "Onchain Fee" : {
       "localizations" : {
         "en" : {
@@ -493,7 +371,6 @@
         }
       }
     },
-    "Onchain Transactions" : {},
     "Outpoint" : {
       "localizations" : {
         "en" : {
@@ -514,18 +391,8 @@
         }
       }
     },
-    "Parsed State" : {},
-    "Pay" : {},
-    "Payment Info Received" : {},
     "Payments and Savings" : {},
-    "Play around and find out." : {},
-    "Plus network fee." : {},
-    "Processing" : {},
-    "Progress:" : {},
-    "Raw State" : {},
     "Ready" : {},
-    "Receive Bitcoin" : {},
-    "Recipient" : {},
     "Refresh is disabled because the amount (%@) is smaller than the minimum required (%@)." : {
       "localizations" : {
         "en" : {
@@ -536,9 +403,6 @@
         }
       }
     },
-    "Refresh now" : {},
-    "Refreshing" : {},
-    "Remove" : {},
     "Replace '%@' with '%@'" : {
       "localizations" : {
         "en" : {
@@ -549,33 +413,7 @@
         }
       }
     },
-    "Request a Payment" : {},
-    "Required to recover funds" : {},
-    "Restore your existing wallet with your 12-word recovery phrase." : {},
-    "Results:" : {},
-    "Review address" : {},
     "Round %u" : {},
-    "STOP" : {},
-    "Scan to Pay" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scan to Pay"
-          }
-        }
-      }
-    },
-    "Select Payment Method" : {},
-    "Select a Server" : {},
-    "Select a VTXO or UTXO" : {},
-    "Select a contact" : {},
-    "Select a transaction" : {},
-    "Send incremental payments for testing. Enter an ark address, lightning offer, or lightning invoice." : {},
-    "Send multiple payments with increasing amounts" : {},
-    "Share Contact Card" : {},
-    "Share Payment Link" : {},
-    "Share your Addresses" : {},
     "Short Reference" : {
       "localizations" : {
         "en" : {
@@ -586,11 +424,6 @@
         }
       }
     },
-    "Show Recovery Phrase" : {},
-    "Spam Payments" : {},
-    "Start" : {},
-    "Start Amount (sats)" : {},
-    "Start Test" : {},
     "State" : {},
     "Step %lld of %lld" : {
       "localizations" : {
@@ -603,26 +436,7 @@
       }
     },
     "Tag" : {},
-    "Tag Transaction Amounts" : {},
-    "These are the fees charged by the server for different operations." : {},
-    "They route your payments for safe and fast transactions. Fees are based on usage." : {},
-    "This device will become your active wallet, able to send and receive payments." : {},
-    "This device will switch to view-only mode. Make sure you have your other device ready to make it primary." : {},
-    "This is all alpha and experimental. Play and have fun." : {},
-    "This takes about 10+ hours and cannot be cancelled." : {},
     "This will cancel round %u and release the locked VTXOs." : {},
-    "Tip Height" : {},
-    "To Address" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To Address"
-          }
-        }
-      }
-    },
-    "Toggle between Lightning and Payments and Savings" : {},
     "Total Amount" : {},
     "Total Fee" : {
       "localizations" : {
@@ -634,7 +448,6 @@
         }
       }
     },
-    "Transaction Chain" : {},
     "Transaction Hash" : {
       "localizations" : {
         "en" : {
@@ -646,19 +459,6 @@
       }
     },
     "Transaction ID" : {},
-    "Transaction IDs:" : {},
-    "Transaction Testing" : {},
-    "Transactions" : {},
-    "Type" : {},
-    "UNAVAILABLE" : {},
-    "Unable to load fee schedule from server." : {},
-    "Unconfirmed" : {},
-    "Unknown" : {},
-    "Unknown Status" : {},
-    "Unlink" : {},
-    "Usage Pattern" : {},
-    "VTXO Already Spent" : {},
-    "VTXO ID" : {},
     "VTXO Kind" : {
       "localizations" : {
         "en" : {
@@ -669,9 +469,6 @@
         }
       }
     },
-    "Verify Inputs" : {},
-    "View Contact" : {},
-    "We will use this in the next step to optimize your expected fees." : {},
     "accessibility_audio_muted" : {
       "localizations" : {
         "en" : {
@@ -918,6 +715,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Asks for permission to notify you when funds arrive"
+          }
+        }
+      }
+    },
+    "accessibility_hint_toggle_balance_type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toggle between Lightning and Payments and Savings"
           }
         }
       }
@@ -1752,12 +1559,92 @@
         }
       }
     },
+    "activity_add_to_contacts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Contacts"
+          }
+        }
+      }
+    },
+    "activity_adding" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adding..."
+          }
+        }
+      }
+    },
+    "activity_advertising" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertising"
+          }
+        }
+      }
+    },
+    "activity_ark_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark Address"
+          }
+        }
+      }
+    },
     "activity_assign_contact" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Assign '%@' to this transaction"
+          }
+        }
+      }
+    },
+    "activity_bitcoin_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitcoin Address"
+          }
+        }
+      }
+    },
+    "activity_browsing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browsing"
+          }
+        }
+      }
+    },
+    "activity_confirmations" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmations"
+          }
+        }
+      }
+    },
+    "activity_confirming" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirming"
           }
         }
       }
@@ -1802,6 +1689,86 @@
         }
       }
     },
+    "activity_from_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From Address"
+          }
+        }
+      }
+    },
+    "activity_generating_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating invoice..."
+          }
+        }
+      }
+    },
+    "activity_label" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Label"
+          }
+        }
+      }
+    },
+    "activity_network_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network Fee"
+          }
+        }
+      }
+    },
+    "activity_onchain_transactions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onchain Transactions"
+          }
+        }
+      }
+    },
+    "activity_pay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pay"
+          }
+        }
+      }
+    },
+    "activity_payment_info_received" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Payment Info Received"
+          }
+        }
+      }
+    },
+    "activity_receive_bitcoin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receive Bitcoin"
+          }
+        }
+      }
+    },
     "activity_remove_contact" : {
       "localizations" : {
         "en" : {
@@ -1812,12 +1779,62 @@
         }
       }
     },
+    "activity_to_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To Address"
+          }
+        }
+      }
+    },
     "activity_transaction_count" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transaction Count"
+          }
+        }
+      }
+    },
+    "activity_transaction_id" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction ID"
+          }
+        }
+      }
+    },
+    "activity_unconfirmed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unconfirmed"
+          }
+        }
+      }
+    },
+    "activity_view_contact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Contact"
+          }
+        }
+      }
+    },
+    "alert_cancel_round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Round?"
           }
         }
       }
@@ -2213,6 +2230,16 @@
         }
       }
     },
+    "balance_next_round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next round"
+          }
+        }
+      }
+    },
     "balance_no_exit_data" : {
       "localizations" : {
         "en" : {
@@ -2249,6 +2276,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No funds available in savings to move to payments"
+          }
+        }
+      }
+    },
+    "balance_no_refresh_needed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No refresh needed"
           }
         }
       }
@@ -2353,12 +2390,42 @@
         }
       }
     },
+    "balance_plus_network_fee" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus network fee."
+          }
+        }
+      }
+    },
     "balance_refresh_background" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "You can close this modal and the refresh will continue in the background."
+          }
+        }
+      }
+    },
+    "balance_refresh_now" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh now"
+          }
+        }
+      }
+    },
+    "balance_refreshing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshing"
           }
         }
       }
@@ -3345,6 +3412,16 @@
         }
       }
     },
+    "console_readonly_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Console not available in read-only mode"
+          }
+        }
+      }
+    },
     "console_title" : {
       "localizations" : {
         "en" : {
@@ -3371,6 +3448,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The address will stay in '%@'s contact card"
+          }
+        }
+      }
+    },
+    "contacts_assigned_to_this_transaction" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assigned to this transaction"
+          }
+        }
+      }
+    },
+    "contacts_autoassigned_transactions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-Assigned Transactions"
           }
         }
       }
@@ -3445,6 +3542,16 @@
         }
       }
     },
+    "contacts_name_exists" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A contact with this name already exists"
+          }
+        }
+      }
+    },
     "contacts_new_title" : {
       "localizations" : {
         "en" : {
@@ -3471,6 +3578,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No addresses added"
+          }
+        }
+      }
+    },
+    "contacts_no_contacts_yet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Contacts Yet"
+          }
+        }
+      }
+    },
+    "contacts_no_other_transactions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No other transactions with this address"
           }
         }
       }
@@ -3515,6 +3642,26 @@
         }
       }
     },
+    "data_awaiting_delta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Awaiting Delta"
+          }
+        }
+      }
+    },
+    "data_awaiting_input_confirmation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Awaiting Input Confirmation"
+          }
+        }
+      }
+    },
     "data_behind_curtain" : {
       "localizations" : {
         "en" : {
@@ -3532,6 +3679,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Bitcoin Core"
+          }
+        }
+      }
+    },
+    "data_block" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block"
           }
         }
       }
@@ -3557,12 +3714,122 @@
         }
       }
     },
+    "data_broadcast_with_cpfp" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcast with CPFP"
+          }
+        }
+      }
+    },
+    "data_cancel_round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Round"
+          }
+        }
+      }
+    },
+    "data_claim_in_progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claim In Progress"
+          }
+        }
+      }
+    },
+    "data_claim_tx" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claim TX"
+          }
+        }
+      }
+    },
+    "data_claimable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claimable"
+          }
+        }
+      }
+    },
+    "data_claimable_height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claimable Height"
+          }
+        }
+      }
+    },
+    "data_claimable_since" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claimable Since"
+          }
+        }
+      }
+    },
+    "data_claimed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claimed"
+          }
+        }
+      }
+    },
     "data_configuration" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Configuration"
+          }
+        }
+      }
+    },
+    "data_confirmed_block" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed Block"
+          }
+        }
+      }
+    },
+    "data_copy_transaction_id" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Transaction ID"
+          }
+        }
+      }
+    },
+    "data_current_state" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current State"
           }
         }
       }
@@ -3688,6 +3955,16 @@
         }
       }
     },
+    "data_keep_round" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Round"
+          }
+        }
+      }
+    },
     "data_last_loaded_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3760,6 +4037,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Min Board Amount (BTC)"
+          }
+        }
+      }
+    },
+    "data_needs_broadcasting" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Broadcasting"
+          }
+        }
+      }
+    },
+    "data_needs_signed_package" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Signed Package"
           }
         }
       }
@@ -3856,6 +4153,26 @@
         }
       }
     },
+    "data_processing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing"
+          }
+        }
+      }
+    },
+    "data_readonly_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data view not available in read-only mode"
+          }
+        }
+      }
+    },
     "data_refresh_threshold_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3900,6 +4217,16 @@
         }
       }
     },
+    "data_select_vtxo_or_utxo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a VTXO or UTXO"
+          }
+        }
+      }
+    },
     "data_server_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -3927,6 +4254,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details"
+          }
+        }
+      }
+    },
+    "data_tip_height" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tip Height"
+          }
+        }
+      }
+    },
+    "data_transaction_ids" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction IDs:"
+          }
+        }
+      }
+    },
+    "data_type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type"
+          }
+        }
+      }
+    },
+    "data_unknown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        }
+      }
+    },
+    "data_unknown_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown Status"
           }
         }
       }
@@ -3960,6 +4337,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Required"
+          }
+        }
+      }
+    },
+    "data_verify_inputs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verify Inputs"
+          }
+        }
+      }
+    },
+    "data_vtxo_already_spent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VTXO Already Spent"
           }
         }
       }
@@ -4326,6 +4723,16 @@
         }
       }
     },
+    "fee_free" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free"
+          }
+        }
+      }
+    },
     "fee_maintenance" : {
       "localizations" : {
         "en" : {
@@ -4366,12 +4773,42 @@
         }
       }
     },
+    "fee_schedule_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These are the fees charged by the server for different operations."
+          }
+        }
+      }
+    },
+    "fee_server_fees_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fees are charged by the Ark server and are separate from Bitcoin network fees."
+          }
+        }
+      }
+    },
     "fee_transactions" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transactions"
+          }
+        }
+      }
+    },
+    "fee_unable_to_load_fee_schedule" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unable to load fee schedule from server."
           }
         }
       }
@@ -4673,6 +5110,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Now Playing"
+          }
+        }
+      }
+    },
+    "label_select_a_contact" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a contact"
+          }
+        }
+      }
+    },
+    "label_select_a_transaction" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a transaction"
           }
         }
       }
@@ -5027,12 +5484,32 @@
         }
       }
     },
+    "nav_title_invoice_generation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice Generation"
+          }
+        }
+      }
+    },
     "nav_title_receive" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Receive bitcoin"
+          }
+        }
+      }
+    },
+    "nav_title_select_payment_method" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Payment Method"
           }
         }
       }
@@ -5047,12 +5524,32 @@
         }
       }
     },
+    "nav_title_spam_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam Payments"
+          }
+        }
+      }
+    },
     "nav_title_transaction" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transaction"
+          }
+        }
+      }
+    },
+    "nav_title_transaction_testing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction Testing"
           }
         }
       }
@@ -5161,6 +5658,16 @@
         }
       }
     },
+    "onboarding_alpha_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is all alpha and experimental. Play and have fun."
+          }
+        }
+      }
+    },
     "onboarding_ask_test_bitcoin" : {
       "localizations" : {
         "en" : {
@@ -5171,12 +5678,52 @@
         }
       }
     },
+    "onboarding_backup_advice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once you have some funds in it, make sure to do a proper backup. You're in control of this wallet, and also responsible for it."
+          }
+        }
+      }
+    },
     "onboarding_backup_reminder" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Make sure to make a backup. You're in control of this wallet, and also responsible for it."
+          }
+        }
+      }
+    },
+    "onboarding_continue" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "onboarding_cost_per_month" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per month"
+          }
+        }
+      }
+    },
+    "onboarding_cost_per_transaction" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per transaction"
           }
         }
       }
@@ -5221,6 +5768,16 @@
         }
       }
     },
+    "onboarding_how_do_you_use_bitcoin" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How do you use bitcoin?"
+          }
+        }
+      }
+    },
     "onboarding_how_test_bitcoin" : {
       "localizations" : {
         "en" : {
@@ -5257,6 +5814,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Intro Video"
+          }
+        }
+      }
+    },
+    "onboarding_lets_go" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let's go!"
           }
         }
       }
@@ -5301,6 +5868,56 @@
         }
       }
     },
+    "onboarding_select_a_server" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a Server"
+          }
+        }
+      }
+    },
+    "onboarding_server_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It will connect to the Ark Service Provider by second.tech."
+          }
+        }
+      }
+    },
+    "onboarding_server_role_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They route your payments for safe and fast transactions. Fees are based on usage."
+          }
+        }
+      }
+    },
+    "onboarding_server_unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UNAVAILABLE"
+          }
+        }
+      }
+    },
+    "onboarding_signet_notice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It's going to be on signet. Not real bitcoin!"
+          }
+        }
+      }
+    },
     "onboarding_step_in" : {
       "localizations" : {
         "en" : {
@@ -5341,6 +5958,26 @@
         }
       }
     },
+    "onboarding_usage_pattern" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usage Pattern"
+          }
+        }
+      }
+    },
+    "onboarding_usage_pattern_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We will use this in the next step to optimize your expected fees."
+          }
+        }
+      }
+    },
     "onboarding_wallet_awaits" : {
       "localizations" : {
         "en" : {
@@ -5361,7 +5998,6 @@
         }
       }
     },
-    "per transaction" : {},
     "placeholder_add_note" : {
       "localizations" : {
         "en" : {
@@ -5382,12 +6018,32 @@
         }
       }
     },
+    "placeholder_ark_or_lightning_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ark address, Lightning invoice, or Lightning address"
+          }
+        }
+      }
+    },
     "placeholder_contact_name" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enter contact name"
+          }
+        }
+      }
+    },
+    "placeholder_delay_between_payments" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delay between payments"
           }
         }
       }
@@ -5422,12 +6078,52 @@
         }
       }
     },
+    "placeholder_initial_payment_amount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Initial payment amount"
+          }
+        }
+      }
+    },
+    "placeholder_invoice_amount" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice amount"
+          }
+        }
+      }
+    },
     "placeholder_note_optional" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add note (optional)"
+          }
+        }
+      }
+    },
+    "placeholder_number_of_invoices_to_generate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of invoices to generate"
+          }
+        }
+      }
+    },
+    "placeholder_number_of_payments_to_send" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of payments to send"
           }
         }
       }
@@ -5502,6 +6198,16 @@
         }
       }
     },
+    "progress_checking_for_wallet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking for wallet..."
+          }
+        }
+      }
+    },
     "progress_creating_wallet" : {
       "localizations" : {
         "en" : {
@@ -5558,6 +6264,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Loading transactions..."
+          }
+        }
+      }
+    },
+    "receive_add_note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add note"
           }
         }
       }
@@ -5622,12 +6338,32 @@
         }
       }
     },
+    "receive_request_a_payment" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request a Payment"
+          }
+        }
+      }
+    },
     "receive_scan_to_pay_title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scan to Pay"
+          }
+        }
+      }
+    },
+    "receive_share_contact_card" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Contact Card"
           }
         }
       }
@@ -5642,12 +6378,32 @@
         }
       }
     },
+    "receive_share_payment_link" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Payment Link"
+          }
+        }
+      }
+    },
     "receive_share_request_title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Share your Request"
+          }
+        }
+      }
+    },
+    "receive_share_your_addresses" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share your Addresses"
           }
         }
       }
@@ -5662,12 +6418,52 @@
         }
       }
     },
+    "section_confirmed_transactions" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmed Transactions"
+          }
+        }
+      }
+    },
     "section_device_role" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Device Role"
+          }
+        }
+      }
+    },
+    "section_parsed_state" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parsed State"
+          }
+        }
+      }
+    },
+    "section_raw_state" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raw State"
+          }
+        }
+      }
+    },
+    "section_transaction_chain" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction Chain"
           }
         }
       }
@@ -5764,6 +6560,16 @@
         }
       }
     },
+    "send_payment_speed_question" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How fast should the payment arrive?"
+          }
+        }
+      }
+    },
     "send_recipient_address" : {
       "localizations" : {
         "en" : {
@@ -5774,22 +6580,22 @@
         }
       }
     },
+    "send_review_address" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review address"
+          }
+        }
+      }
+    },
     "send_sending_to" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sending to"
-          }
-        }
-      }
-    },
-    "server_cost_per_month" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "per month"
           }
         }
       }
@@ -5810,6 +6616,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Show unique visual patterns to help identify addresses"
+          }
+        }
+      }
+    },
+    "settings_after_confirming" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After confirming:"
+          }
+        }
+      }
+    },
+    "settings_backup_file" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup File"
           }
         }
       }
@@ -5840,6 +6666,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choose how bitcoin amounts are displayed throughout the app."
+          }
+        }
+      }
+    },
+    "settings_board_funds" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board Funds"
           }
         }
       }
@@ -5967,6 +6803,16 @@
         }
       }
     },
+    "settings_forced_move_duration_warning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This takes about 10+ hours and cannot be cancelled."
+          }
+        }
+      }
+    },
     "settings_general" : {
       "localizations" : {
         "en" : {
@@ -6003,6 +6849,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Devices"
+          }
+        }
+      }
+    },
+    "settings_make_primary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Primary"
+          }
+        }
+      }
+    },
+    "settings_make_primary_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device will become your active wallet, able to send and receive payments."
+          }
+        }
+      }
+    },
+    "settings_make_secondary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Secondary"
+          }
+        }
+      }
+    },
+    "settings_make_secondary_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device will switch to view-only mode. Make sure you have your other device ready to make it primary."
+          }
+        }
+      }
+    },
+    "settings_make_secondary_step_1" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. This device becomes view-only"
+          }
+        }
+      }
+    },
+    "settings_make_secondary_step_2" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Open your other device"
+          }
+        }
+      }
+    },
+    "settings_make_secondary_step_3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Make that device primary"
+          }
+        }
+      }
+    },
+    "settings_make_this_device_primary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make This Device Primary?"
+          }
+        }
+      }
+    },
+    "settings_make_this_device_secondary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make This Device Secondary?"
           }
         }
       }
@@ -6067,6 +7003,16 @@
         }
       }
     },
+    "settings_offline_backup_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An offline backup needs both items below. Your recovery phrase alone won't recover your full balance. The backup file holds data that exists only on your device and in iCloud."
+          }
+        }
+      }
+    },
     "settings_other_devices" : {
       "localizations" : {
         "en" : {
@@ -6127,12 +7073,32 @@
         }
       }
     },
+    "settings_required_to_recover_funds" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Required to recover funds"
+          }
+        }
+      }
+    },
     "settings_security" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Security"
+          }
+        }
+      }
+    },
+    "settings_show_recovery_phrase" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Recovery Phrase"
           }
         }
       }
@@ -6760,6 +7726,17 @@
       },
       "shouldTranslate" : false
     },
+    "symbol_em_dash" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "—"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "symbol_middot" : {
       "localizations" : {
         "en" : {
@@ -6770,6 +7747,26 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "tags_add_default_tags" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add default tags"
+          }
+        }
+      }
+    },
+    "tags_chart_empty_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create some tags and assign them to transactions to see the chart"
+          }
+        }
+      }
     },
     "tags_confirm_delete" : {
       "localizations" : {
@@ -6811,12 +7808,42 @@
         }
       }
     },
+    "tags_name_exists" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tag with this name already exists"
+          }
+        }
+      }
+    },
     "tags_new_title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "New Tag"
+          }
+        }
+      }
+    },
+    "tags_no_transaction_data" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Transaction Data"
+          }
+        }
+      }
+    },
+    "tags_tag_transaction_amounts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tag Transaction Amounts"
           }
         }
       }
@@ -6849,6 +7876,206 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "testing_all_invoices_copied_to_clipboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All invoices copied to clipboard"
+          }
+        }
+      }
+    },
+    "testing_amount_sats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount (sats)"
+          }
+        }
+      }
+    },
+    "testing_clear_results" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear Results"
+          }
+        }
+      }
+    },
+    "testing_copy_all_to_clipboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy All to Clipboard"
+          }
+        }
+      }
+    },
+    "testing_copy_invoice" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Invoice"
+          }
+        }
+      }
+    },
+    "testing_count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count"
+          }
+        }
+      }
+    },
+    "testing_delay_ms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delay (ms)"
+          }
+        }
+      }
+    },
+    "testing_generate_invoices" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate Invoices"
+          }
+        }
+      }
+    },
+    "testing_invoice_copied_to_clipboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invoice copied to clipboard"
+          }
+        }
+      }
+    },
+    "testing_invoice_generation_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate multiple lightning invoices for testing and copy them to the clipboard."
+          }
+        }
+      }
+    },
+    "testing_invoice_generation_subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create multiple Lightning invoices and copy to clipboard"
+          }
+        }
+      }
+    },
+    "testing_play_around_and_find_out" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play around and find out."
+          }
+        }
+      }
+    },
+    "testing_progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress:"
+          }
+        }
+      }
+    },
+    "testing_recipient" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recipient"
+          }
+        }
+      }
+    },
+    "testing_results" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results:"
+          }
+        }
+      }
+    },
+    "testing_spam_payments_help" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send incremental payments for testing. Enter an ark address, lightning offer, or lightning invoice."
+          }
+        }
+      }
+    },
+    "testing_spam_payments_subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send multiple payments with increasing amounts"
+          }
+        }
+      }
+    },
+    "testing_start_amount_sats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Amount (sats)"
+          }
+        }
+      }
+    },
+    "testing_start_test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Test"
+          }
+        }
+      }
+    },
+    "testing_stop" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "STOP"
           }
         }
       }
@@ -6916,9 +8143,6 @@
       }
     },
     "~%@" : {
-      "shouldTranslate" : false
-    },
-    "—" : {
       "shouldTranslate" : false
     },
     "⚠️ Insufficient onchain balance\n\nRequired: %@\nAvailable: %@\nNeed to board: %@\n\nPlease board more Bitcoin to your savings balance before starting." : {

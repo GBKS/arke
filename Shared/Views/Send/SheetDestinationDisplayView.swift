@@ -125,7 +125,7 @@ private struct DestinationSelectionSheet: View {
                 }
                 .padding()
             }
-            .navigationTitle("Select Payment Method")
+            .navigationTitle("nav_title_select_payment_method")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

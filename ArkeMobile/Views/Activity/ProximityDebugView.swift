@@ -34,7 +34,7 @@ struct ProximityDebugView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "dot.radiowaves.left.and.right")
                                 .font(.caption2)
-                            Text("Advertising")
+                            Text("activity_advertising")
                                 .font(.caption2)
                         }
                     }
@@ -42,7 +42,7 @@ struct ProximityDebugView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "magnifyingglass")
                                 .font(.caption2)
-                            Text("Browsing")
+                            Text("activity_browsing")
                                 .font(.caption2)
                         }
                     }

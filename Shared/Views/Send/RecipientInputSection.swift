@@ -44,7 +44,7 @@ struct RecipientInputSection: View {
                             .font(.body)
                     }
                     .buttonStyle(.plain)
-                    .help("Review address")
+                    .help("send_review_address")
                 } else if case .bip353Resolved = state {
                     Button(action: { showingAddressReview = true }) {
                         Image(systemName: "magnifyingglass")
@@ -52,7 +52,7 @@ struct RecipientInputSection: View {
                             .font(.body)
                     }
                     .buttonStyle(.plain)
-                    .help("Review address")
+                    .help("send_review_address")
                 }
                 
                 Spacer()

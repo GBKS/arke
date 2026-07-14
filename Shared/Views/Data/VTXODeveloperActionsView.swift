@@ -45,7 +45,7 @@ struct VTXODeveloperActionsView: View {
                             }
                             if let feeEstimate = refreshFeeEstimate {
                                 if feeEstimate.feeSats == 0 {
-                                    let freeText = String(localized: "Free")
+                                    let freeText = String(localized: "fee_free")
                                     Text("action_refresh_with_fee \(freeText)")
                                         .fontWeight(.medium)
                                         .foregroundStyle(Color.Arke.goldLabel)

@@ -15,7 +15,7 @@ struct TagsGraph: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Tag Transaction Amounts")
+            Text("tags_tag_transaction_amounts")
                 .font(.title2)
                 .fontWeight(.semibold)
             
@@ -82,11 +82,11 @@ struct TagsGraph: View {
                 .foregroundColor(.secondary)
                 .symbolRenderingMode(.hierarchical)
             
-            Text("No Transaction Data")
+            Text("tags_no_transaction_data")
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            Text("Create some tags and assign them to transactions to see the chart")
+            Text("tags_chart_empty_help")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

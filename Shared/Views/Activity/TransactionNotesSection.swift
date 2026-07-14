@@ -107,7 +107,7 @@ struct TransactionNotesSection: View {
             }
         }
         .alert("error_save_notes", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
+            Button("button_ok", role: .cancel) { }
         } message: {
             Text(errorMessage)
         }

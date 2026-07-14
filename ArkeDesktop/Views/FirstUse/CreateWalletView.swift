@@ -46,17 +46,17 @@ struct CreateWalletView: View {
             
             // TODO: Add wallet creation UI here
             VStack(spacing: 16) {
-                Text("It's going to be on signet. Not real bitcoin!")
+                Text("onboarding_signet_notice")
                     .fontWeight(.light)
                     .font(.system(size: 19))
                     .foregroundStyle(.white.opacity(0.7))
                 
-                Text("It will connect to the Ark Service Provider by second.tech.")
+                Text("onboarding_server_notice")
                     .fontWeight(.light)
                     .font(.system(size: 19))
                     .foregroundStyle(.white.opacity(0.7))
                 
-                Text("This is all alpha and experimental. Play and have fun.")
+                Text("onboarding_alpha_notice")
                     .fontWeight(.light)
                     .font(.system(size: 19))
                     .foregroundStyle(.white.opacity(0.7))

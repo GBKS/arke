@@ -118,7 +118,7 @@ struct BoardingModalFormView: View {
                                 return estimate.feeSats
                             }
                             
-                            Text("Plus network fee.")
+                            Text("balance_plus_network_fee")
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }

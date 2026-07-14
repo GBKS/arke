@@ -17,7 +17,7 @@ struct FeeSelectionSheet: View {
     var body: some View {
         VStack(spacing: 20) {
             // Header
-            Text("How fast should the payment arrive?")
+            Text("send_payment_speed_question")
                 .font(.system(size: 24, design: .serif))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)

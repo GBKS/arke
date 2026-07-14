@@ -90,7 +90,7 @@ struct TransactionExitDetailsView: View {
                                 .padding(.vertical, 8)
                             
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Onchain Transactions")
+                                Text("activity_onchain_transactions")
                                     .font(.body)
                                     .foregroundColor(.primary)
                                 

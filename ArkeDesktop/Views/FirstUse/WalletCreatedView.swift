@@ -39,7 +39,7 @@ struct WalletCreatedView: View {
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
                     
-                    Text("Once you have some funds in it, make sure to do a proper backup. You're in control of this wallet, and also responsible for it.")
+                    Text("onboarding_backup_advice")
                         .font(.system(size: 21))
                         .lineSpacing(6)
                         .foregroundStyle(.white)
@@ -55,7 +55,7 @@ struct WalletCreatedView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.right")
-                    Text("Let's go!")
+                    Text("onboarding_lets_go")
                 }
             }
             .buttonStyle(ArkeButtonStyle(size: .large))

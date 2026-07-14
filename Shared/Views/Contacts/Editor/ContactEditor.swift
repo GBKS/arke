@@ -109,7 +109,7 @@ struct ContactEditor: View {
                             }
 
                         if validation.nameExists {
-                            Label("A contact with this name already exists", systemImage: "exclamationmark.triangle")
+                            Label("contacts_name_exists", systemImage: "exclamationmark.triangle")
                                 .font(.caption)
                                 .foregroundColor(.Arke.red)
                         }
@@ -165,7 +165,7 @@ struct ContactEditor: View {
                 isPresented: $showingDeleteConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Delete", role: .destructive) {
+                Button("button_delete", role: .destructive) {
                     deleteContact()
                 }
                 Button(role: .cancel) {

@@ -42,14 +42,14 @@ struct ServerUsageProfilePicker: View {
                                 .foregroundStyle(.white.opacity(0.5))
                                 .rotationEffect(.degrees(isExpanded ? 180 : 0))
                             
-                            Text("Usage Pattern")
+                            Text("onboarding_usage_pattern")
                                 .font(.title3)
                                 .foregroundStyle(.white)
                         }
                     }
                     .buttonStyle(.plain)
                 } else {
-                    Text("Usage Pattern")
+                    Text("onboarding_usage_pattern")
                         .font(.title3)
                         .foregroundStyle(.white)
                 }

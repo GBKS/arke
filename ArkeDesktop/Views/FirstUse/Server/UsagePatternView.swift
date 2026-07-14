@@ -64,11 +64,11 @@ struct UsagePatternView: View {
                 }
                 
                 VStack(spacing: 8) {
-                    Text("How do you use bitcoin?")
+                    Text("onboarding_how_do_you_use_bitcoin")
                         .font(.system(size: 30, design: .serif))
                         .foregroundStyle(Color.Arke.gold)
                     
-                    Text("We will use this in the next step to optimize your expected fees.")
+                    Text("onboarding_usage_pattern_help")
                         .font(.system(size: 17))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
@@ -138,7 +138,7 @@ struct UsagePatternView: View {
                 }
                 .frame(maxWidth: 600)
                 
-                Button("Continue") {
+                Button("onboarding_continue") {
                     // Check if current values match any preset
                     let currentBalance = Int(averageBalance)
                     let currentVolume = Int(monthlyVolume)

@@ -98,7 +98,7 @@ struct LightningInvoiceFormView_iOS: View {
                             isNoteFocused = true
                         }
                     } label: {
-                        Text("Add note")
+                        Text("receive_add_note")
                             .font(.system(.body, weight: .medium))
                             .foregroundStyle(Color.secondary)
                     }

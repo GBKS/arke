@@ -156,7 +156,7 @@ struct RecoveryPhraseSettingView: View {
                         await loadMnemonic()
                     }
                 } label: {
-                    Text("Show Recovery Phrase")
+                    Text("settings_show_recovery_phrase")
                         .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)

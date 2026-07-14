@@ -238,7 +238,7 @@ struct ContactAddressEditor: View {
             Button(String(localized: "button_delete_address_only"), role: .destructive) {
                 onDelete?()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("button_cancel", role: .cancel) {}
         } message: {
             Text("contacts_remove_address_warning")
         }

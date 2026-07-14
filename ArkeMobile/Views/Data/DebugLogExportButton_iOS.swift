@@ -40,7 +40,7 @@ struct DebugLogExportButton_iOS: View {
         .padding(.horizontal)
         .padding(.bottom, 20)
         .alert("debug_logs_error_title", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
+            Button("button_ok", role: .cancel) { }
         } message: {
             Text(errorMessage ?? "")
         }

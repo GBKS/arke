@@ -331,7 +331,7 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Transaction Testing")
+                                Text("nav_title_transaction_testing")
                                     .font(.callout)
                                 Text("Developer stress tests")
                                     .font(.footnote)

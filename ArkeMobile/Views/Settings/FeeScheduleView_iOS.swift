@@ -16,7 +16,7 @@ struct FeeScheduleView_iOS: View {
             if let feeSchedule = manager.arkInfo?.feeSchedule {
                 ScrollView {
                     VStack(spacing: 20) {
-                        Text("These are the fees charged by the server for different operations.")
+                        Text("fee_schedule_help")
                             .font(.body)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,7 +87,7 @@ struct FeeScheduleView_iOS: View {
                         )
                         
                         // Footer note
-                        Text("Fees are charged by the Ark server and are separate from Bitcoin network fees.")
+                        Text("fee_server_fees_help")
                             .font(.body)
                             .foregroundColor(.secondary)
                             .padding(.top, 8)
@@ -100,11 +100,11 @@ struct FeeScheduleView_iOS: View {
                 ContentUnavailableView(
                     "Fee Information Unavailable",
                     systemImage: "exclamationmark.triangle",
-                    description: Text("Unable to load fee schedule from server.")
+                    description: Text("fee_unable_to_load_fee_schedule")
                 )
             }
         }
-        .navigationTitle("Fee Schedule")
+        .navigationTitle("settings_fee_schedule")
         .navigationBarTitleDisplayMode(.large)
     }
     
@@ -321,7 +321,7 @@ struct FeeCard: View {
                 
                 // Free indicator badge
                 if isFree {
-                    Text("Free")
+                    Text("fee_free")
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundColor(.Arke.green)
@@ -363,7 +363,7 @@ struct FeeCard: View {
                             
                             // Show value with free indicator if it's "0.00%" or formatted zero amount
                             if value == "0.00%" || value == BitcoinFormatter.shared.formatAmount(0) {
-                                Text("Free")
+                                Text("fee_free")
                                     .font(.body)
                                     .foregroundColor(.Arke.green)
                             } else {

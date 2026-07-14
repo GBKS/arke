@@ -137,7 +137,7 @@ struct WalletView: View {
                             Image(systemName: "list.bullet")
                                 .imageScale(.medium)
                                 .symbolVariant(.none)
-                            Text("Select a transaction")
+                            Text("label_select_a_transaction")
                                 .font(.system(size: 19, design: .serif))
                         }
                     }
@@ -169,7 +169,7 @@ struct WalletView: View {
                             Image(systemName: "list.bullet")
                                 .imageScale(.medium)
                                 .symbolVariant(.none)
-                            Text("Select a VTXO or UTXO")
+                            Text("data_select_vtxo_or_utxo")
                                 .font(.system(size: 19, design: .serif))
                         }
                     }
@@ -215,7 +215,7 @@ struct WalletView: View {
                             Image(systemName: "list.bullet")
                                 .imageScale(.medium)
                                 .symbolVariant(.none)
-                            Text("Select a contact")
+                            Text("label_select_a_contact")
                                 .font(.system(size: 19, design: .serif))
                         }
                     }

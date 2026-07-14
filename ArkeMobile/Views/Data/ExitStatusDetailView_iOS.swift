@@ -25,16 +25,16 @@ struct ExitStatusDetailView_iOS: View {
     var body: some View {
         List {
                 Section(String(localized: "label_basic_info")) {
-                    LabeledContent("VTXO ID") {
+                    LabeledContent("label_vtxo_id") {
                         Text(exitVtxo.vtxoId)
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
                     
-                    LabeledContent("Amount", value: "\(exitVtxo.amountSats) sats")
+                    LabeledContent("label_amount", value: "\(exitVtxo.amountSats) sats")
                     
                     /*
-                    LabeledContent("State") {
+                    LabeledContent("label_state") {
                         HStack {
                             Circle()
                                 .fill(exitVtxo.isClaimable ? Color.Arke.green : Color.Arke.orange)
@@ -89,8 +89,8 @@ struct ExitStatusDetailView_iOS: View {
                     }
                     
                     // Raw state (for debugging)
-                    Section("Raw State") {
-                        LabeledContent("Current State") {
+                    Section("section_raw_state") {
+                        LabeledContent("data_current_state") {
                             Text(status.state)
                                 .font(.system(.caption, design: .monospaced))
                         }
@@ -176,51 +176,51 @@ private struct ParsedStateSection: View {
     let parsed: ParsedExitState
     
     var body: some View {
-        Section("Parsed State") {
+        Section("section_parsed_state") {
             switch parsed {
             case .start(let data):
-                LabeledContent("Type", value: "Start")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
+                LabeledContent("data_type", value: "Start")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
                 
             case .processing(let data):
-                LabeledContent("Type", value: "Processing")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
-                LabeledContent("Transactions", value: "\(data.transactions.count)")
+                LabeledContent("data_type", value: "Processing")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
+                LabeledContent("fee_transactions", value: "\(data.transactions.count)")
                 
             case .awaitingDelta(let data):
-                LabeledContent("Type", value: "Awaiting Delta")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
-                LabeledContent("Confirmed Block", value: "\(data.confirmedBlock.height)")
-                LabeledContent("Claimable Height", value: "\(data.claimableHeight)")
+                LabeledContent("data_type", value: "Awaiting Delta")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
+                LabeledContent("data_confirmed_block", value: "\(data.confirmedBlock.height)")
+                LabeledContent("data_claimable_height", value: "\(data.claimableHeight)")
                 
             case .claimable(let data):
-                LabeledContent("Type", value: "Claimable")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
-                LabeledContent("Claimable Since", value: "\(data.claimableSince.height)")
+                LabeledContent("data_type", value: "Claimable")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
+                LabeledContent("data_claimable_since", value: "\(data.claimableSince.height)")
                 
             case .claimInProgress(let data):
-                LabeledContent("Type", value: "Claim In Progress")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
-                LabeledContent("Claim TX") {
+                LabeledContent("data_type", value: "Claim In Progress")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
+                LabeledContent("data_claim_tx") {
                     Text(data.claimTxid.prefix(8) + "..." + data.claimTxid.suffix(8))
                         .font(.system(.caption, design: .monospaced))
                 }
                 
             case .claimed(let data):
-                LabeledContent("Type", value: "Claimed")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
-                LabeledContent("Claim TX") {
+                LabeledContent("data_type", value: "Claimed")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
+                LabeledContent("data_claim_tx") {
                     Text(data.txid.prefix(8) + "..." + data.txid.suffix(8))
                         .font(.system(.caption, design: .monospaced))
                 }
-                LabeledContent("Block", value: "\(data.block.height)")
+                LabeledContent("data_block", value: "\(data.block.height)")
 
             case .vtxoAlreadySpent(let data):
-                LabeledContent("Type", value: "VTXO Already Spent")
-                LabeledContent("Tip Height", value: "\(data.tipHeight)")
+                LabeledContent("data_type", value: "VTXO Already Spent")
+                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
 
             case .unparsed(let str):
-                LabeledContent("Type", value: "Unparsed")
+                LabeledContent("data_type", value: "Unparsed")
                 Text(str)
                     .font(.system(.caption, design: .monospaced))
             }
@@ -234,7 +234,7 @@ private struct TransactionChainSection: View {
     var body: some View {
         let _ = logger.info("🎨 Rendering TransactionChainSection with \(transactions.count) transactions")
         
-        Section("Transaction Chain") {
+        Section("section_transaction_chain") {
             ForEach(Array(transactions.enumerated()), id: \.offset) { index, tx in
                 let _ = logger.debug("   Transaction #\(index + 1): \(tx.txid.prefix(16))... status: \(String(describing: tx.status))")
                 let childTxid = extractChildTxid(from: tx.status)
@@ -301,7 +301,7 @@ private struct TransactionIdsSection: View {
                         Button {
                             UIPasteboard.general.string = txid
                         } label: {
-                            Label("Copy Transaction ID", systemImage: "doc.on.doc")
+                            Label("data_copy_transaction_id", systemImage: "doc.on.doc")
                         }
                     }
             }
@@ -313,7 +313,7 @@ private struct ConfirmedTransactionsSection: View {
     let confirmed: [(txid: String, block: ArkeBlockRef)]
     
     var body: some View {
-        Section("Confirmed Transactions") {
+        Section("section_confirmed_transactions") {
             ForEach(confirmed, id: \.txid) { item in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
@@ -327,7 +327,7 @@ private struct ConfirmedTransactionsSection: View {
                                 Button {
                                     UIPasteboard.general.string = item.txid
                                 } label: {
-                                    Label("Copy Transaction ID", systemImage: "doc.on.doc")
+                                    Label("data_copy_transaction_id", systemImage: "doc.on.doc")
                                 }
                             }
                     }
@@ -347,21 +347,21 @@ private struct ParsedStateLabel: View {
     var body: some View {
         switch parsed {
         case .start:
-            Label("Start", systemImage: "flag")
+            Label("button_start", systemImage: "flag")
         case .processing:
-            Label("Processing", systemImage: "gearshape")
+            Label("data_processing", systemImage: "gearshape")
         case .awaitingDelta:
-            Label("Awaiting Delta", systemImage: "clock")
+            Label("data_awaiting_delta", systemImage: "clock")
         case .claimable:
-            Label("Claimable", systemImage: "checkmark.circle")
+            Label("data_claimable", systemImage: "checkmark.circle")
         case .claimInProgress:
-            Label("Claim In Progress", systemImage: "arrow.down.circle")
+            Label("data_claim_in_progress", systemImage: "arrow.down.circle")
         case .claimed:
-            Label("Claimed", systemImage: "checkmark.circle.fill")
+            Label("data_claimed", systemImage: "checkmark.circle.fill")
         case .vtxoAlreadySpent:
-            Label("VTXO Already Spent", systemImage: "xmark.circle")
+            Label("data_vtxo_already_spent", systemImage: "xmark.circle")
         case .unparsed:
-            Label("Unknown", systemImage: "questionmark.circle")
+            Label("data_unknown", systemImage: "questionmark.circle")
         }
     }
 }
@@ -372,23 +372,23 @@ private struct TransactionStatusLabel: View {
     var body: some View {
         switch status {
         case .verifyInputs:
-            Text("Verify Inputs")
+            Text("data_verify_inputs")
         case .needsSignedPackage:
-            Text("Needs Signed Package")
+            Text("data_needs_signed_package")
         case .needsBroadcasting:
-            Text("Needs Broadcasting")
+            Text("data_needs_broadcasting")
         case .broadcastWithCpfp:
-            Text("Broadcast with CPFP")
+            Text("data_broadcast_with_cpfp")
         case .awaitingInputConfirmation:
-            Text("Awaiting Input Confirmation")
+            Text("data_awaiting_input_confirmation")
         case .confirmed:
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(Color.Arke.green)
-                Text("Confirmed")
+                Text("status_confirmed")
             }
         case .unparsed:
-            Text("Unknown Status")
+            Text("data_unknown_status")
         }
     }
 }
@@ -451,7 +451,7 @@ private struct ParsedStateDetails: View {
                 
                 if !data.transactions.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Transaction IDs:")
+                        Text("data_transaction_ids")
                             .font(.caption2.bold())
                             .foregroundStyle(.secondary)
                         

@@ -24,7 +24,7 @@ struct AutoAssignDetailsSheet: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Auto-Assigned Transactions")
+                    Text("contacts_autoassigned_transactions")
                         .font(.title2)
                         .fontWeight(.semibold)
                     
@@ -57,7 +57,7 @@ struct AutoAssignDetailsSheet: View {
                         .foregroundColor(.Arke.green)
                     Text("Contact '\(contactName)' assigned")
                         .font(.headline)
-                    Text("No other transactions with this address")
+                    Text("contacts_no_other_transactions")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

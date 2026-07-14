@@ -65,7 +65,7 @@ struct VTXOListView_iOS: View {
                     } label: {
                         if let feeEstimate = refreshFeeEstimate {
                             if feeEstimate.feeSats == 0 {
-                                let freeText = String(localized: "Free")
+                                let freeText = String(localized: "fee_free")
                                 Text("action_get_new_ones_with_fee \(freeText)")
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.Arke.goldLabel)

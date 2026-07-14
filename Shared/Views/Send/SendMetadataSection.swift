@@ -123,7 +123,7 @@ public struct SendMetadataSection: View {
                         await applyContactSelectionAsync(contact)
                     }
                 )
-                .navigationTitle(LocalizedStringKey("Assign Contact"))
+                .navigationTitle(LocalizedStringKey("button_assign_contact"))
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif

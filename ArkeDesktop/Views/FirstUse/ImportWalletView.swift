@@ -39,7 +39,7 @@ struct ImportWalletView: View {
                     .font(.system(size: 40, design: .serif))
                     .foregroundStyle(Color.Arke.gold)
                 
-                Text("Restore your existing wallet with your 12-word recovery phrase.")
+                Text("onboarding_restore_wallet")
                     .fontWeight(.light)
                     .font(.system(size: 21))
                     .lineSpacing(6)
@@ -74,7 +74,7 @@ struct ImportWalletView: View {
             
             Spacer()            
             
-            Button(isImporting ? "Importing..." : "Import Wallet") {
+            Button(isImporting ? LocalizedStringKey("status_importing") : LocalizedStringKey("button_import_wallet")) {
                 Task {
                     await importWallet()
                 }

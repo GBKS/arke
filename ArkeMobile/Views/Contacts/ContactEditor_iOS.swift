@@ -27,7 +27,7 @@ struct ContactEditor_iOS: View {
         .navigationTitle(editingContact == nil ? "New Contact" : String(localized: "button_edit_contact"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel", action: onCancel)
+                Button("button_cancel", action: onCancel)
             }
             ToolbarItem(placement: .confirmationAction) {
                 Button("button_save") {

@@ -262,7 +262,7 @@ private struct TagRow: View {
             } else {
                 Spacer()
                 
-                Text("—")
+                Text("symbol_em_dash")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

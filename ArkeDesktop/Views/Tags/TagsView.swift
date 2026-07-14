@@ -268,7 +268,7 @@ struct TagsView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             
-            Button("Add default tags") {
+            Button("tags_add_default_tags") {
                 Task {
                     await viewModel.createDefaultTags()
                 }

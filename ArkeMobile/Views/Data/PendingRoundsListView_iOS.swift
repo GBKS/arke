@@ -245,13 +245,13 @@ private struct RoundRowView: View {
             */
         }
         .padding(.vertical, 12)
-        .alert("Cancel Round?", isPresented: $showCancelConfirmation) {
-            Button("Cancel Round", role: .destructive) {
+        .alert("alert_cancel_round", isPresented: $showCancelConfirmation) {
+            Button("data_cancel_round", role: .destructive) {
                 Task {
                     await cancelRound()
                 }
             }
-            Button("Keep Round", role: .cancel) { }
+            Button("data_keep_round", role: .cancel) { }
         } message: {
             Text("This will cancel round \(round.id) and release the locked VTXOs.")
         }

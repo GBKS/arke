@@ -136,7 +136,7 @@ struct ReceiveView_iOS: View {
                     Spacer()
                         .frame(height: 135)
                     
-                    Text("Share your Addresses")
+                    Text("receive_share_your_addresses")
                         .font(.system(size: 24, design: .serif))
                         .multilineTextAlignment(.center)
                     
@@ -156,7 +156,7 @@ struct ReceiveView_iOS: View {
                         VStack(spacing: 30) {
                             // Main share button - shares BIP-21 URI as text
                             ShareLink(item: shareContent) {
-                                Text("Share Payment Link")
+                                Text("receive_share_payment_link")
                                     .font(.system(size: 21, weight: .semibold))
                                     .foregroundStyle(Color.Arke.gold4)
                                     .frame(maxWidth: .infinity)
@@ -171,7 +171,7 @@ struct ReceiveView_iOS: View {
                             // vCard share button - only show if user has profile
                             if viewModel.hasUserProfile, let vcardURL = viewModel.getVCardData() {
                                 ShareButton(items: [vcardURL]) {
-                                    Text("Share Contact Card")
+                                    Text("receive_share_contact_card")
                                         .font(.system(size: 21, weight: .semibold))
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity)
@@ -202,7 +202,7 @@ struct ReceiveView_iOS: View {
             Spacer()
                 .frame(height: 135)
             
-            Text("Request a Payment")
+            Text("receive_request_a_payment")
                 .font(.system(size: 24, design: .serif))
                 .multilineTextAlignment(.center)
             

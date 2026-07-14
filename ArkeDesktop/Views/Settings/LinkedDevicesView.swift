@@ -23,7 +23,7 @@ struct LinkedDevicesView: View {
                 Text("settings_linked_devices")
                     .font(.system(size: 28, weight: .bold, design: .default))
                 
-                Text("Manage devices that have access to your wallet")
+                Text("settings_manage_devices")
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
@@ -126,8 +126,8 @@ struct LinkedDevicesView: View {
             await deviceService.loadRegisteredDevices()
         }
         .alert("settings_unlink_device", isPresented: $showingUnlinkConfirmation, presenting: deviceToUnlink) { device in
-            Button("Cancel", role: .cancel) { }
-            Button("Unlink", role: .destructive) {
+            Button("button_cancel", role: .cancel) { }
+            Button("button_unlink", role: .destructive) {
                 Task {
                     await unlinkDevice(device)
                 }
@@ -136,7 +136,7 @@ struct LinkedDevicesView: View {
             Text("Are you sure you want to unlink \(device.deviceName)? It will need to re-import the recovery phrase to regain access.")
         }
         .alert("button_unlink_all_others", isPresented: $showingUnlinkAllConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("button_cancel", role: .cancel) { }
             Button(String(localized: "button_unlink_all_devices", defaultValue: "Unlink All (\(otherDevices.count) devices)"), role: .destructive) {
                 Task {
                     await unlinkAllOtherDevices()

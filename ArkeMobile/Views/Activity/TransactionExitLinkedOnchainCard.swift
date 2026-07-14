@@ -21,7 +21,7 @@ struct TransactionExitLinkedOnchainCard: View {
         VStack(alignment: .leading, spacing: 8) {
             // Transaction ID
             HStack(spacing: 6) {
-                Text("Transaction ID")
+                Text("activity_transaction_id")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -45,7 +45,7 @@ struct TransactionExitLinkedOnchainCard: View {
             
             // Confirmation status
             HStack(spacing: 6) {
-                Text("Confirmations")
+                Text("activity_confirmations")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -65,7 +65,7 @@ struct TransactionExitLinkedOnchainCard: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.subheadline)
                             .foregroundColor(Color.Arke.green)
-                        Text("Confirmed")
+                        Text("status_confirmed")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -74,7 +74,7 @@ struct TransactionExitLinkedOnchainCard: View {
                         Image(systemName: "clock")
                             .font(.subheadline)
                             .foregroundColor(Color.Arke.orange)
-                        Text("Unconfirmed")
+                        Text("activity_unconfirmed")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -84,7 +84,7 @@ struct TransactionExitLinkedOnchainCard: View {
             // Amount (if applicable)
             if transaction.amount != 0 {
                 HStack {
-                    Text("Amount")
+                    Text("label_amount")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -97,7 +97,7 @@ struct TransactionExitLinkedOnchainCard: View {
             // Onchain fee
             if let onchainFee = transaction.onchainFeeSat, onchainFee > 0 {
                 HStack {
-                    Text("Network Fee")
+                    Text("activity_network_fee")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Spacer()
@@ -116,7 +116,7 @@ struct TransactionExitLinkedOnchainCard: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundColor(confirmations >= 6 ? Color.Arke.green : Color.Arke.orange)
-                Text(confirmations >= 6 ? "Confirmed" : "Confirming")
+                Text(confirmations >= 6 ? LocalizedStringKey("status_confirmed") : LocalizedStringKey("activity_confirming"))
                     .font(.caption)
                     .foregroundColor(confirmations >= 6 ? Color.Arke.green : Color.Arke.orange)
             }
@@ -129,7 +129,7 @@ struct TransactionExitLinkedOnchainCard: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundColor(Color.Arke.green)
-                Text("Confirmed")
+                Text("status_confirmed")
                     .font(.caption)
                     .foregroundColor(Color.Arke.green)
             }

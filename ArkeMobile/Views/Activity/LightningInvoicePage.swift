@@ -74,11 +74,11 @@ struct LightningInvoicePage: View {
                 // Header - context-aware
                 HStack(alignment: .center) {
                     if invoiceState == .qrDisplay {
-                        Text("Scan to Pay")
+                        Text("receive_scan_to_pay_title")
                             .font(.system(size: 36, weight: .semibold, design: .serif))
                             .foregroundStyle(.white)
                     } else {
-                        Text("Enter amount")
+                        Text("placeholder_enter_amount")
                             .font(.system(size: 36, weight: .semibold, design: .serif))
                             .foregroundStyle(.white)
                     }
@@ -165,7 +165,7 @@ struct LightningInvoicePage: View {
     private var amountDisplayView: some View {
         VStack(spacing: 8) {
             if amount.isEmpty {
-                Text("0")
+                Text("format_zero")
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.3))
                     .padding(.top, 30)
@@ -191,7 +191,7 @@ struct LightningInvoicePage: View {
                 .scaleEffect(1.5)
                 .tint(.black)
             
-            Text("Generating invoice...")
+            Text("activity_generating_invoice")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
         }

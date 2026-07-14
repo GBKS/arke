@@ -150,7 +150,7 @@ struct VTXODetailView: View {
 
     private var expiryHeightValue: String {
         guard currentVtxo.expiryHeight > 0 else {
-            return String(localized: "Unknown")
+            return String(localized: "data_unknown")
         }
         var value = currentVtxo.expiryHeight.formatted()
         if let blockHeight = currentBlockHeight {

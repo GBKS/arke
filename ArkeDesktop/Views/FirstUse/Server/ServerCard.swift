@@ -115,7 +115,7 @@ private struct ServerCardTitleSection: View {
                     .foregroundStyle(.white)
                 
                 if !isEnabled {
-                    Text("UNAVAILABLE")
+                    Text("onboarding_server_unavailable")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.6))
                         .padding(.horizontal, 8)
@@ -152,7 +152,7 @@ private struct ServerCardCostSection: View {
                     .foregroundStyle(Color.Arke.gold)
                     .contentTransition(.numericText())
                 
-                Text("server_cost_per_month")
+                Text("onboarding_cost_per_month")
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
             }
@@ -163,7 +163,7 @@ private struct ServerCardCostSection: View {
                     .foregroundStyle(.white)
                     .contentTransition(.numericText())
                 
-                Text("per transaction")
+                Text("onboarding_cost_per_transaction")
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.7))
             }

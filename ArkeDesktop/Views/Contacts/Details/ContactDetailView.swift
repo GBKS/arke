@@ -137,7 +137,7 @@ struct ContactDetailView: View {
             get: { viewModel.showingAlert },
             set: { viewModel.showingAlert = $0 }
         )) {
-            Button("OK", role: .cancel) { }
+            Button("button_ok", role: .cancel) { }
         } message: {
             if let alertMessage = viewModel.alertMessage {
                 Text(alertMessage)

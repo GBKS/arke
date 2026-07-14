@@ -78,7 +78,7 @@ struct OffboardingModalFormView: View {
                             .fontWeight(.medium)
                         */
                         
-                        TextField("Enter amount", text: $amountText)
+                        TextField("placeholder_enter_amount", text: $amountText)
                             .textFieldStyle(.plain)
                             .font(.title)
                             .padding(.horizontal, 16)

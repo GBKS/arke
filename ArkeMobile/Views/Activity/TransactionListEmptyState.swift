@@ -98,7 +98,7 @@ struct TransactionListEmptyState: View {
                 Button {
                     onNavigateToReceive()
                 } label: {
-                    Text("Receive Bitcoin")
+                    Text("activity_receive_bitcoin")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)

@@ -161,7 +161,7 @@ struct TiltShareOverlay_iOS: View {
                         .font(.system(size: 30, weight: .semibold, design: .serif))
                         .foregroundStyle(.white)
                 } else {
-                    Text("Scan to Pay")
+                    Text("receive_scan_to_pay_title")
                         .font(.system(size: 36, weight: .semibold, design: .serif))
                         .foregroundStyle(.white)
                 }

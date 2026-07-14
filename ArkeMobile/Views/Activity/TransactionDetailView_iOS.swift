@@ -556,7 +556,7 @@ struct TransactionDetailView_iOS: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         /*
-                        Text(transaction.transactionType == .received ? "From Address" : "To Address")
+                        Text(transaction.transactionType == .received ? LocalizedStringKey("activity_from_address") : LocalizedStringKey("activity_to_address"))
                             .font(.body)
                             .foregroundColor(.secondary)
                         */
@@ -564,7 +564,7 @@ struct TransactionDetailView_iOS: View {
                         AddressCardExpandable(
                             address: addressValue,
                             shareContent: addressValue,
-                            label: transaction.transactionType == .received ? "From Address" : "To Address"
+                            label: transaction.transactionType == .received ? String(localized: "activity_from_address") : String(localized: "activity_to_address")
                         )
                     }
                 }

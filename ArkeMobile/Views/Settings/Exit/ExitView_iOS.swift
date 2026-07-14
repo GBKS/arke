@@ -186,9 +186,9 @@ struct ExitView_iOS: View {
             }
         }
         .alert("action_start_forced_move", isPresented: $showingStartConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("button_cancel", role: .cancel) { }
             if let estimate = exitCostEstimate, !estimate.canAfford {
-                Button("Board Funds") {
+                Button("settings_board_funds") {
                     // TODO: Navigate to board flow
                 }
             } else {
@@ -211,7 +211,7 @@ struct ExitView_iOS: View {
                     This takes about 24 hours and cannot be cancelled.
                     """)
                     */
-                    Text("This takes about 10+ hours and cannot be cancelled.")
+                    Text("settings_forced_move_duration_warning")
                 } else {
                     Text("""
                     ⚠️ Insufficient onchain balance

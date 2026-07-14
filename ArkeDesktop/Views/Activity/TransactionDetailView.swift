@@ -138,7 +138,7 @@ struct TransactionDetailView: View {
                         // Address
                         if let address = transaction.address {
                             DetailRow(
-                                title: transaction.transactionType == .received ? "From Address" : "To Address",
+                                title: transaction.transactionType == .received ? LocalizedStringKey("activity_from_address") : LocalizedStringKey("activity_to_address"),
                                 value: address,
                                 isCopyable: true,
                                 onCopy: { viewModel.copyToClipboard($0) }

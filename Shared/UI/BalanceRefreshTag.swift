@@ -73,7 +73,7 @@ struct BalanceRefreshTag: View {
     @ViewBuilder
     private var contentView: some View {
         HStack(spacing: 8) {
-            Text("Refresh now")
+            Text("balance_refresh_now")
                 .font(.body)
                 .fontWeight(.medium)
                 .foregroundStyle(.white)
@@ -108,7 +108,7 @@ struct BalanceRefreshTag: View {
 private struct BalanceRefreshTagPreview: View {
     var body: some View {
         HStack(spacing: 8) {
-            Text("Refresh now")
+            Text("balance_refresh_now")
                 .font(.body)
                 .fontWeight(.medium)
                 .foregroundStyle(.white)

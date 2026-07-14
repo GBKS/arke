@@ -62,7 +62,7 @@ struct BalanceDetailCard: View {
                                     .fontWeight(.medium)
                                     .foregroundColor(.white)
                             } else {
-                                Text("—")
+                                Text("symbol_em_dash")
                                     .font(.body)
                                     .foregroundColor(.white)
                             }
@@ -100,7 +100,7 @@ struct BalanceDetailCard: View {
                                             .fontWeight(.medium)
                                             .foregroundColor(.white)
                                     } else {
-                                        Text("—")
+                                        Text("symbol_em_dash")
                                             .font(.body)
                                             .foregroundColor(.white)
                                     }
@@ -124,7 +124,7 @@ struct BalanceDetailCard: View {
                                         .fontWeight(.medium)
                                         .foregroundColor(.white)
                                 } else {
-                                    Text("—")
+                                    Text("symbol_em_dash")
                                         .font(.body)
                                         .foregroundColor(.white)
                                 }
@@ -146,7 +146,7 @@ struct BalanceDetailCard: View {
                                 .font(.title2)
                                 .foregroundColor(.white)
                         } else {
-                            Text("—")
+                            Text("symbol_em_dash")
                                 .font(.title2)
                                 .foregroundColor(.white)
                         }

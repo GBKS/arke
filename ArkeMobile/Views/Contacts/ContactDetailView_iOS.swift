@@ -53,11 +53,11 @@ struct ContactDetailView_iOS: View {
                 isPresented: $showDeleteConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("Delete", role: .destructive) {
+                Button("button_delete", role: .destructive) {
                     onDelete()
                     dismiss()
                 }
-                Button("Cancel", role: .cancel) {}
+                Button("button_cancel", role: .cancel) {}
             } message: {
                 Text(String(localized: "message_confirm_delete", defaultValue: "Are you sure you want to delete \(contact.displayName)?"))
             }
@@ -65,7 +65,7 @@ struct ContactDetailView_iOS: View {
                 contactImportSheetView
             }
             .alert("contacts_link", isPresented: alertBinding) {
-                Button("OK", role: .cancel) { }
+                Button("button_ok", role: .cancel) { }
             } message: {
                 if let alertMessage = viewModel?.alertMessage {
                     Text(alertMessage)
@@ -131,7 +131,7 @@ struct ContactDetailView_iOS: View {
     }
     
     private func notesSection(_ notes: String) -> some View {
-        Section("Notes") {
+        Section("label_notes") {
             Text(notes)
                 .font(.body)
                 .foregroundColor(.primary)
