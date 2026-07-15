@@ -198,7 +198,7 @@ struct TransactionClaimExitBanner: View {
             return "Waiting for unlock delay"
             
         case .claimable:
-            return "Ready to claim"
+            return "Claiming automatically"
             
         case .claimInProgress:
             return "Processing claim transaction"

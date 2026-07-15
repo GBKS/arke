@@ -17,6 +17,7 @@ extension ExitStatus {
         self.init(
             isClaimed: exitVtxo.isClaimed,
             isClaimable: exitVtxo.isClaimable,
+            isClaimInProgress: exitVtxo.isClaimInProgress,
             stateDisplayName: exitVtxo.stateDisplayName
         )
     }

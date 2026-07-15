@@ -223,7 +223,7 @@ extension ExitTransactionStatus {
         let caseName = extractStateCaseName(state)
         return caseName.lowercased() == "claimable"
     }
-    
+
     /// Check if this exit is complete (claimed)
     var isClaimed: Bool {
         let caseName = extractStateCaseName(state)

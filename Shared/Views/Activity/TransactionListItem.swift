@@ -55,33 +55,31 @@ struct TransactionListItem: View {
         }
     }
 
-    /// Check if this is an exit transaction with claimable VTXOs
-    private var hasClaimableExit: Bool {
+    /// Check if this is an exit transaction in its final stage (claimable or
+    /// claim in progress). Auto-claim handles both without user action.
+    private var isExitFinalizing: Bool {
         // Access dataVersion to create observation dependency
         _ = walletManager.dataVersion
-        
+
         // Only check for exit transactions
         guard transaction.hasUnilateralExit else {
             return false
         }
-        
+
         // Check current exit status
         if let exitStatus = transaction.currentExitStatus {
             // Don't show if already claimed
             if exitStatus.isClaimed {
                 return false
             }
-            // Show badge if claimable
-            return exitStatus.isClaimable
+            return exitStatus.isClaimable || exitStatus.isClaimInProgress
         }
-        
-        // Fallback: check if any of the exited VTXOs are in a claimable state
+
+        // Fallback: check if any of the exited VTXOs are in a finalizing state
         let exitedIds = Set(transaction.exitedVtxoIds)
-        let hasClaimable = walletManager.activeUnilateralExits.contains { exit in
-            exitedIds.contains(exit.vtxoId) && exit.isClaimable
+        return walletManager.activeUnilateralExits.contains { exit in
+            exitedIds.contains(exit.vtxoId) && (exit.isClaimable || exit.isClaimInProgress)
         }
-        
-        return hasClaimable
     }
     
     // MARK: - Icon and Color Helpers
@@ -316,9 +314,10 @@ struct TransactionListItem: View {
                     .font(.body)
                     .foregroundColor(.arkeSecondary)
                 
-                // Exit progress indicators: blocked wins over claimable, since a
-                // blocked exit is technically still claimable but the claim
-                // keeps failing - "Ready to approve" would be misleading
+                // Exit progress indicators: blocked wins over finalizing, since
+                // a blocked exit is technically still claimable but the claim
+                // keeps failing. No call-to-action here - auto-claim is the
+                // only claim path, so the badge is purely informational.
                 if let blockedReason = exitBlockedReason {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
@@ -334,21 +333,16 @@ struct TransactionListItem: View {
                     .background(Color.Arke.orange)
                     .cornerRadius(6)
                     .padding(.top, 4)
-                } else if hasClaimableExit {
-                    HStack(spacing: 4) {
-                        Text("status_ready_approve")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Image(systemName: "arrow.right")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.Arke.blue)
-                    .cornerRadius(6)
-                    .padding(.top, 4)
+                } else if isExitFinalizing {
+                    Text("status_exit_finalizing")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.Arke.blue)
+                        .cornerRadius(6)
+                        .padding(.top, 4)
                 }
                 
                 /*

@@ -93,11 +93,10 @@ clears any record (the exit is over).
 - [x] Parallel map on WalletManager alongside `cachedExitStatuses`:
       `exitBlockedInfoByVtxoId` (declared in `WalletManager.swift`, accessors in
       `WalletManager+Exits.swift`). Bumps `dataVersion` on change.
-- [ ] Persist in `PersistentExitCache` so the state survives relaunch (exit cache
+- [x] Persist in `PersistentExitCache` so the state survives relaunch (exit cache
       loads before wallet init — the misleading badge in the original session came
-      from cache). Schema check done: all existing fields are defaulted/optional,
-      so adding optional blocked fields (reason raw value, raw error string,
-      blockedSince, attempt count) is a lightweight migration.
+      from cache). Shipped as `blockedInfoJson` (JSON-encoded `ExitBlockedInfo`)
+      in commit 993884f; restored on load, stale records pruned on refresh.
 - [x] Accessor `getExitBlockedInfo(for:)` mirroring `getCachedExitStatus(for:)`,
       with the 2-consecutive-checks debounce applied there (via
       `ExitBlockedInfo.isSurfaceable`).
@@ -131,6 +130,30 @@ Skipped deliberately:
 - [ ] Record/clear semantics on WalletManager (phase scoping, count reset on
       reason change) — needs a WalletManager test seam or extraction; revisit
       with Phase 2 persistence.
+
+## Follow-up: "Ready to approve" CTA removed (2026-07-15)
+
+Auto-claim is the only claim path (verified in Phase 1) — there is nothing for
+the user to approve, so the blue CTA badge (`status_ready_approve` + arrow) was
+misleading even in the happy path. Replaced with a passive status badge
+**"Finalizing"** (`status_exit_finalizing`) in `TransactionListItem`:
+
+- No arrow icon (that was the CTA affordance); blue background kept — it's a
+  status, not a button. Blocked (orange) still wins over finalizing.
+- `hasClaimableExit` renamed to `isExitFinalizing` and extended to also cover
+  `ClaimInProgress` (via new `ExitTransactionStatus.isClaimInProgress`), so the
+  badge doesn't vanish while the claim tx awaits confirmation.
+- `status_ready_approve` removed from the Shared catalog.
+- Side benefit: during the 2-check debounce window before a blocked exit
+  surfaces, the list now shows a truthful "Finalizing" instead of a false CTA.
+- Same treatment for the two other user-facing "Ready to claim" strings:
+  `TransactionClaimExitBanner.detailedStatusText` (iOS detail view) and the
+  Live Activity `stepDescription` in `ExitProgressionService+LiveActivity` —
+  both now "Claiming automatically" (plain English; both bypass the catalogs,
+  matching their sibling strings). `ActiveExitAlertView_iOS`'s "Ready to
+  withdraw" left alone — dead code, see Phase 3 skip note.
+- Still open: `detailedStatusText` strings bypass localization catalogs
+  entirely (pre-existing; separate follow-up).
 
 ## Post-implementation observations (2026-07-14, second device run)
 

@@ -132,7 +132,7 @@ struct ExitView_iOS: View {
                     ) {
                         GeometryReader { geometry in
                             LoopingVideoPlayer_iOS.aspectFill(
-                                videoName: "force-move-progress",
+                                videoName: "force-move-progress-square",
                                 videoExtension: "mp4"
                             )
                             .frame(width: geometry.size.width, height: 300)

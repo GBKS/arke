@@ -13,11 +13,13 @@ import Foundation
 public struct ExitStatus: Hashable, Sendable {
     public let isClaimed: Bool
     public let isClaimable: Bool
+    public let isClaimInProgress: Bool
     public let stateDisplayName: String
 
-    public init(isClaimed: Bool, isClaimable: Bool, stateDisplayName: String) {
+    public init(isClaimed: Bool, isClaimable: Bool, isClaimInProgress: Bool = false, stateDisplayName: String) {
         self.isClaimed = isClaimed
         self.isClaimable = isClaimable
+        self.isClaimInProgress = isClaimInProgress
         self.stateDisplayName = stateDisplayName
     }
 }

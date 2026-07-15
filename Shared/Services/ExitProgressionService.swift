@@ -159,6 +159,15 @@ class ExitProgressionService {
 
             if !hasPending && claimableExits.isEmpty && !hasClaimsInProgress {
                 print("✅ [ExitProgression] No pending, claimable, or claim-in-progress exits - skipping progression")
+
+                // A Claimed exit is none of the above, so this early return
+                // is the steady state right after an exit completes - still
+                // sweep Live Activities here or finished exits keep their
+                // activity on the lock screen forever (iOS only)
+                #if os(iOS)
+                await updateAllLiveActivities()
+                #endif
+
                 lastCheckTime = Date()
                 lastError = nil
                 return

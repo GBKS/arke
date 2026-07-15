@@ -97,7 +97,21 @@ extension ExitProgressionService {
             print("⚠️ [LiveActivity] No active activity found for exit \(exitId)")
             return
         }
-        
+
+        // Claimed and cancelled exits stay in getExitVtxos(), so the
+        // "VTXO missing from exit list" completion check never fires for
+        // them - end the activity here based on the terminal status
+        switch ExitStatusParser.parseState(status.state) {
+        case .claimed:
+            await endLiveActivity(exitId: exitId, success: true)
+            return
+        case .vtxoAlreadySpent:
+            await endLiveActivity(exitId: exitId, success: false)
+            return
+        default:
+            break
+        }
+
         var contentState = buildContentState(from: status, needsCheckIn: false)
 
         // Surface a blocked exit (fees can't be covered right now) instead of
@@ -163,6 +177,10 @@ extension ExitProgressionService {
         
         // Then, check if we have active exits without Live Activities (e.g., after rebuild)
         await recreateMissingActivities()
+
+        // Bring reattached activities up to date and end any whose exits
+        // finished while the app wasn't running
+        await updateAllLiveActivities()
     }
     
     /// Recreate Live Activities for active exits that don't have them
@@ -175,8 +193,8 @@ extension ExitProgressionService {
                 return
             }
             
-            // Get all exit VTXOs
-            let exitVtxos = try await wallet.getExitVtxos()
+            // Get all exit VTXOs, ignoring ones that already finished
+            let exitVtxos = try await wallet.getExitVtxos().filter { $0.isActive }
             guard !exitVtxos.isEmpty else {
                 print("ℹ️ [LiveActivity] No exit VTXOs found")
                 return
@@ -232,48 +250,13 @@ extension ExitProgressionService {
         // Refresh balances and transactions to show latest exit state
         await walletManager?.refreshAfterVTXOChange()
         
-        // Update all Live Activities to "fresh" state
-        await updateAllLiveActivitiesAfterCheckIn()
-        
+        // Update all Live Activities to "fresh" state (ends any that finished)
+        await updateAllLiveActivities()
+
         // Reschedule notifications (reset the clock)
         await ExitProgressionNotifications.shared.scheduleCheckInSequence()
     }
-    
-    private func updateAllLiveActivitiesAfterCheckIn() async {
-        for (exitId, activity) in Self.activeActivities {
-            // Get latest exit status
-            do {
-                let exitVtxos = try await wallet.getExitVtxos()
-                guard let vtxo = exitVtxos.first(where: { $0.vtxoId == exitId }) else {
-                    continue
-                }
-                
-                guard let status = try await wallet.getExitStatus(
-                    vtxoId: vtxo.vtxoId,
-                    includeHistory: false,
-                    includeTransactions: true
-                ) else {
-                    print("⚠️ [LiveActivity] No status available for exit \(exitId)")
-                    continue
-                }
-                
-                let contentState = buildContentState(from: status, needsCheckIn: false)
-                
-                await activity.update(
-                    ActivityContent(
-                        state: contentState,
-                        staleDate: Date().addingTimeInterval(120 * 60) // Stale in 2 hours
-                    )
-                )
-                
-                print("✅ [LiveActivity] Updated activity \(exitId) after check-in")
-                
-            } catch {
-                print("❌ [LiveActivity] Failed to update activity \(exitId): \(error)")
-            }
-        }
-    }
-    
+
     // MARK: - Content State Building
 
     /// Step description override for blocked exits. Plain English like the
@@ -350,7 +333,7 @@ extension ExitProgressionService {
             
         case .claimable:
             let currentStep = transactionCount + 2
-            return (currentStep, .claimable, "Ready to claim", false, true, false)
+            return (currentStep, .claimable, "Claiming automatically", false, true, false)
             
         case .claimInProgress:
             let currentStep = transactionCount + 3
