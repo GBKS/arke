@@ -38,9 +38,7 @@ struct DataView_iOS: View {
                 )
                 .padding(.top, 15)
                 
-                UnilateralExitListView_iOS(reloadTrigger: reloadTrigger, onSelectItem: { exitVtxo in
-                    onNavigateToDetail?(.exitVtxo(exitVtxo))
-                })
+                UnilateralExitListView_iOS(reloadTrigger: reloadTrigger)
                 
                 PendingRoundsListView_iOS(reloadTrigger: reloadTrigger)
                 

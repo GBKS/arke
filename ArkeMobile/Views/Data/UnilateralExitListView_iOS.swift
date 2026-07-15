@@ -11,8 +11,8 @@ import Bark
 
 struct UnilateralExitListView_iOS: View {
     var reloadTrigger: Int = 0
-    var onSelectItem: ((ExitVtxo) -> Void)? = nil
     @Environment(WalletManager.self) private var walletManager
+    @State private var selectedExit: ExitVtxo?
     @State private var exits: [ExitVtxo] = []
     @State private var isLoadingExits = false
     @State private var error: String?
@@ -94,7 +94,7 @@ struct UnilateralExitListView_iOS: View {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(exits.enumerated()), id: \.element.vtxoId) { index, exit in
                         Button {
-                            onSelectItem?(exit)
+                            selectedExit = exit
                         } label: {
                             ExitVtxoRowView_iOS(
                                 exit: exit,
@@ -112,6 +112,9 @@ struct UnilateralExitListView_iOS: View {
                 }
                 .padding(.horizontal)
             }
+        }
+        .sheet(item: $selectedExit) { exit in
+            ExitStatusSheet(vtxoId: exit.vtxoId, exitVtxo: exit)
         }
         .task(id: reloadTrigger) {
             await loadExits()

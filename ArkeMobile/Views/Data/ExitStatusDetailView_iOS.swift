@@ -15,24 +15,33 @@ fileprivate let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.
 
 struct ExitStatusDetailView_iOS: View {
     @Environment(WalletManager.self) private var walletManager
-    
-    let exitVtxo: ExitVtxo
-    
+
+    /// Keyed by vtxoId so completed exits (no longer in the exit list)
+    /// can still show their full status and history.
+    let vtxoId: String
+    var exitVtxo: ExitVtxo? = nil
+
     @State private var status: ExitTransactionStatus?
     @State private var isLoading = true
     @State private var error: String?
-    
+
+    private var isClaimable: Bool {
+        exitVtxo?.isClaimable ?? status?.isClaimable ?? false
+    }
+
     var body: some View {
         List {
                 Section(String(localized: "label_basic_info")) {
                     LabeledContent("label_vtxo_id") {
-                        Text(exitVtxo.vtxoId)
+                        Text(vtxoId)
                             .font(.system(.caption, design: .monospaced))
                             .textSelection(.enabled)
                     }
-                    
-                    LabeledContent("label_amount", value: "\(exitVtxo.amountSats) sats")
-                    
+
+                    if let exitVtxo {
+                        LabeledContent("label_amount", value: "\(exitVtxo.amountSats) sats")
+                    }
+
                     /*
                     LabeledContent("label_state") {
                         HStack {
@@ -47,9 +56,9 @@ struct ExitStatusDetailView_iOS: View {
                     
                     LabeledContent(String(localized: "balance_is_claimable")) {
                         HStack {
-                            Image(systemName: exitVtxo.isClaimable ? "checkmark.circle.fill" : "clock")
-                                .foregroundStyle(exitVtxo.isClaimable ? Color.Arke.green : Color.Arke.orange)
-                            Text(exitVtxo.isClaimable ? String(localized: "button_yes") : String(localized: "button_no"))
+                            Image(systemName: isClaimable ? "checkmark.circle.fill" : "clock")
+                                .foregroundStyle(isClaimable ? Color.Arke.green : Color.Arke.orange)
+                            Text(isClaimable ? String(localized: "button_yes") : String(localized: "button_no"))
                         }
                     }
                 }
@@ -115,7 +124,7 @@ struct ExitStatusDetailView_iOS: View {
                     // Refresh the detailed exit status
                     Button {
                         Task {
-                            await loadStatus()
+                            await loadStatus(fullSync: true)
                         }
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -128,29 +137,32 @@ struct ExitStatusDetailView_iOS: View {
             }
     }
     
-    private func loadStatus() async {
+    private func loadStatus(fullSync: Bool = false) async {
         isLoading = true
         error = nil
-        
+
         do {
-            // Sync wallet and exit state before checking status
-            print("🔄 Syncing wallet state...")
-            try await walletManager.sync()
-            print("✅ Wallet synced")
-            
-            print("🔄 Syncing exit state...")
-            try await walletManager.syncExits()
-            print("✅ Exit state synced")
-            
+            // Full sync is expensive, so only do it on explicit refresh;
+            // the initial load just reads the current exit status
+            if fullSync {
+                print("🔄 Syncing wallet state...")
+                try await walletManager.sync()
+                print("✅ Wallet synced")
+
+                print("🔄 Syncing exit state...")
+                try await walletManager.syncExits()
+                print("✅ Exit state synced")
+            }
+
             // Now get the detailed exit status
             status = try await walletManager.getExitStatus(
-                vtxoId: exitVtxo.vtxoId,
+                vtxoId: vtxoId,
                 includeHistory: true,
                 includeTransactions: true
             )
-            
+
             if let status = status {
-                print("✅ Loaded exit status for \(exitVtxo.vtxoId)")
+                print("✅ Loaded exit status for \(vtxoId)")
                 print("🔍 DEBUG: Full status object: \(status)")
                 print("   State: \(status.state)")
                 print("   Transaction count: \(status.transactionCount)")
@@ -159,14 +171,40 @@ struct ExitStatusDetailView_iOS: View {
                 }
             } else {
                 error = "No detailed status available"
-                print("⚠️ No status returned for \(exitVtxo.vtxoId)")
+                print("⚠️ No status returned for \(vtxoId)")
             }
         } catch {
             self.error = "Failed to load status: \(error.localizedDescription)"
             print("❌ Failed to load exit status: \(error)")
         }
-        
+
         isLoading = false
+    }
+}
+
+// MARK: - Sheet Wrapper
+
+/// Slide-up presentation of the exit status detail, shared by the
+/// transaction detail view (Activity) and the X-Ray exit list.
+struct ExitStatusSheet: View {
+    let vtxoId: String
+    var exitVtxo: ExitVtxo? = nil
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ExitStatusDetailView_iOS(vtxoId: vtxoId, exitVtxo: exitVtxo)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("button_done") {
+                            dismiss()
+                        }
+                    }
+                }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

@@ -46,7 +46,6 @@ enum ActivityDestination: Hashable {
 enum DataDetailItem_iOS: Hashable {
     case vtxo(VTXOModel)
     case utxo(UTXOModel)
-    case exitVtxo(ExitVtxo)
 }
 
 struct WalletView_iOS: View {
@@ -289,8 +288,6 @@ struct WalletView_iOS: View {
                             VTXODetailView(vtxo: vtxo)
                         case .utxo(let utxo):
                             UTXODetailView(utxo: utxo)
-                        case .exitVtxo(let exitVtxo):
-                            ExitStatusDetailView_iOS(exitVtxo: exitVtxo)
                         }
                     }
                 }

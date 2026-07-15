@@ -28,6 +28,10 @@ private func extractStateCaseName<T>(_ state: T) -> String {
 
 // MARK: - ExitVtxo UI Helpers
 
+extension ExitVtxo: @retroactive Identifiable {
+    public var id: String { vtxoId }
+}
+
 extension ExitVtxo {
     
     // MARK: - Formatting
