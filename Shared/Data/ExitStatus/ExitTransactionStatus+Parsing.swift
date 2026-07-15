@@ -96,45 +96,37 @@ public extension ExitTransactionStatus {
         return nil
     }
     
-    /// Get transaction chain for UI display
-    /// Includes transactions from both current state and history
+    /// Get transaction chain for UI display.
+    /// Includes transactions from both current state and history. Each txid
+    /// keeps its position from when it first appeared (chain order), but its
+    /// LATEST status: history is oldest-first and a transaction shows up
+    /// repeatedly as it progresses (VerifyInputs → ... → Confirmed), so once
+    /// an exit moves past Processing only the newest occurrence is accurate.
     var transactionChain: [ExitTransaction] {
-        var transactions: [ExitTransaction] = []
-        var seenTxids = Set<String>()
-        
-        logger.debug("🔗 Building transaction chain for VTXO: \(self.vtxoId)")
-        logger.debug("   Current state type: \(String(describing: self.parsedState))")
-        logger.debug("   History count: \(self.parsedHistory.count)")
-        
-        // First, get transactions from current state
-        if case .processing(let data) = parsedState {
-            logger.debug("   Found \(data.transactions.count) transactions in current state")
-            for tx in data.transactions {
-                if !seenTxids.contains(tx.txid) {
-                    transactions.append(tx)
-                    seenTxids.insert(tx.txid)
-                    logger.debug("      - Added tx: \(tx.txid.prefix(16))... status: \(String(describing: tx.status))")
+        var order: [String] = []
+        var latestByTxid: [String: ExitTransaction] = [:]
+
+        func absorb(_ transactions: [ExitTransaction]) {
+            for tx in transactions {
+                if latestByTxid[tx.txid] == nil {
+                    order.append(tx.txid)
                 }
+                latestByTxid[tx.txid] = tx
             }
-        } else {
-            logger.debug("   Current state is not Processing, checking history...")
         }
-        
-        // Also check history for transactions (exits progress through states)
-        for (index, historyState) in parsedHistory.enumerated() {
+
+        // Oldest first; the current state (if Processing) is freshest and wins
+        for historyState in parsedHistory {
             if case .processing(let data) = historyState {
-                logger.debug("   Found \(data.transactions.count) transactions in history[\(index)]")
-                for tx in data.transactions {
-                    if !seenTxids.contains(tx.txid) {
-                        transactions.append(tx)
-                        seenTxids.insert(tx.txid)
-                        logger.debug("      - Added tx: \(tx.txid.prefix(16))... status: \(String(describing: tx.status))")
-                    }
-                }
+                absorb(data.transactions)
             }
         }
-        
-        logger.info("🔗 Transaction chain built: \(transactions.count) total transactions")
+        if case .processing(let data) = parsedState {
+            absorb(data.transactions)
+        }
+
+        let transactions = order.compactMap { latestByTxid[$0] }
+        logger.debug("🔗 Transaction chain for \(self.vtxoId.prefix(16))...: \(transactions.count) transactions")
         return transactions
     }
 }

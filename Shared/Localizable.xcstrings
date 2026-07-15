@@ -1765,9 +1765,6 @@
         }
       }
     },
-    "All Transaction IDs (%lld)" : {
-
-    },
     "Also assigned '%@' to these %lld transactions:" : {
       "localizations" : {
         "en" : {
@@ -2059,7 +2056,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exit Status"
+            "value" : "Force Move Status"
           }
         }
       }
@@ -2097,6 +2094,7 @@
       }
     },
     "balance_is_claimable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3760,6 +3758,7 @@
       }
     },
     "data_awaiting_input_confirmation" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3844,6 +3843,7 @@
       }
     },
     "data_broadcast_with_cpfp" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3904,6 +3904,7 @@
       }
     },
     "data_claimable_since" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4233,6 +4234,7 @@
       }
     },
     "data_needs_broadcasting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4243,6 +4245,7 @@
       }
     },
     "data_needs_signed_package" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4502,6 +4505,7 @@
       }
     },
     "data_tip_height" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4532,6 +4536,7 @@
       }
     },
     "data_type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4595,6 +4600,7 @@
       }
     },
     "data_verify_inputs" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5006,6 +5012,179 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "There is a temporary problem. It will be retried automatically."
+          }
+        }
+      }
+    },
+    "exit_cancelled_explanation" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This move was cancelled because the funds were already moved another way. Nothing was lost."
+          }
+        }
+      }
+    },
+    "exit_fees_so_far" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network Fees So Far"
+          }
+        }
+      }
+    },
+    "exit_fees_total" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network Fees"
+          }
+        }
+      }
+    },
+    "exit_step_claim" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claim"
+          }
+        }
+      }
+    },
+    "exit_step_claim_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcasting claim transaction"
+          }
+        }
+      }
+    },
+    "exit_step_complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete"
+          }
+        }
+      }
+    },
+    "exit_step_confirm_transaction %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction %lld"
+          }
+        }
+      }
+    },
+    "exit_step_confirm_transaction_single" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction"
+          }
+        }
+      }
+    },
+    "exit_step_prepare" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "exit_step_prepare_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing transactions"
+          }
+        }
+      }
+    },
+    "exit_step_wait_blocks %lld" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld block remaining"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld blocks remaining"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "exit_step_wait_unlock" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait for unlock"
+          }
+        }
+      }
+    },
+    "exit_steps_section" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress"
+          }
+        }
+      }
+    },
+    "exit_tx_status_awaiting_parent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for an earlier transaction to confirm"
+          }
+        }
+      }
+    },
+    "exit_tx_status_broadcast" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcast — waiting for confirmation"
+          }
+        }
+      }
+    },
+    "exit_tx_status_preparing" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing to broadcast"
           }
         }
       }
@@ -5426,6 +5605,7 @@
       }
     },
     "label_basic_info" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5601,6 +5781,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "State"
+          }
+        }
+      }
+    },
+    "label_status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
           }
         }
       }
@@ -6956,6 +7146,7 @@
 
     },
     "section_confirmed_transactions" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6976,6 +7167,7 @@
       }
     },
     "section_parsed_state" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6986,6 +7178,7 @@
       }
     },
     "section_raw_state" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6996,6 +7189,7 @@
       }
     },
     "section_transaction_chain" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

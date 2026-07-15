@@ -1,11 +1,12 @@
 //
 //  ExitStatusDetailView_iOS.swift
-//  Arké
+//  Arké
 //
 //  Created by Christoph on 1/8/26.
 //
 
 import SwiftUI
+import SwiftData
 import UIKit
 import Bark
 import ArkeUI
@@ -13,8 +14,12 @@ import os
 
 fileprivate let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitStatusDetailView")
 
+/// Full status of a unilateral exit, organized as the same step timeline the
+/// exit banner shows as a segmented bar (via the shared ExitProgress model):
+/// prepare, one step per exit transaction, unlock wait, claim, complete.
 struct ExitStatusDetailView_iOS: View {
     @Environment(WalletManager.self) private var walletManager
+    @Environment(\.modelContext) private var modelContext
 
     /// Keyed by vtxoId so completed exits (no longer in the exit list)
     /// can still show their full status and history.
@@ -25,118 +30,93 @@ struct ExitStatusDetailView_iOS: View {
     @State private var isLoading = true
     @State private var error: String?
 
-    private var isClaimable: Bool {
-        exitVtxo?.isClaimable ?? status?.isClaimable ?? false
+    /// Onchain wallet records for the exit's transactions, keyed by the exit
+    /// txid of each step. The onchain wallet usually knows the CPFP child
+    /// (it pays the fee), so lookup tries the child txid first.
+    @State private var linkedTransactions: [String: TransactionModel] = [:]
+
+    private var currentBlockHeight: UInt32? {
+        walletManager.estimatedBlockHeight.map { UInt32($0) }
     }
 
     var body: some View {
         List {
-                Section(String(localized: "label_basic_info")) {
-                    LabeledContent("label_vtxo_id") {
-                        Text(vtxoId)
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                    }
+            if let status {
+                let progress = ExitProgress(status: status)
 
-                    if let exitVtxo {
-                        LabeledContent("label_amount", value: "\(exitVtxo.amountSats) sats")
-                    }
+                Section {
+                    ExitProgressHeaderView(
+                        progress: progress,
+                        exitVtxo: exitVtxo,
+                        totalFeesPaid: totalFeesPaid
+                    )
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            }
+            .listRowBackground(Color.clear)
 
-                    /*
-                    LabeledContent("label_state") {
-                        HStack {
-                            Circle()
-                                .fill(exitVtxo.isClaimable ? Color.Arke.green : Color.Arke.orange)
-                                .frame(width: 8, height: 8)
-                            Text(exitVtxo.state)
-                                .font(.system(.body, design: .monospaced))
-                        }
-                    }
-                    */
-                    
-                    LabeledContent(String(localized: "balance_is_claimable")) {
-                        HStack {
-                            Image(systemName: isClaimable ? "checkmark.circle.fill" : "clock")
-                                .foregroundStyle(isClaimable ? Color.Arke.green : Color.Arke.orange)
-                            Text(isClaimable ? String(localized: "button_yes") : String(localized: "button_no"))
-                        }
-                    }
-                }
-                
-                if isLoading {
+                if progress.isCancelled {
                     Section {
-                        HStack {
-                            ProgressView()
-                            Text(String(localized: "status_loading_status"))
-                                .foregroundStyle(.secondary)
-                        }
+                        Label("exit_cancelled_explanation", systemImage: "xmark.circle")
+                            .foregroundStyle(.secondary)
                     }
-                } else if let error = error {
-                    Section {
-                        Label(error, systemImage: "exclamationmark.triangle")
-                            .foregroundStyle(Color.Arke.red)
-                    }
-                } else if let status = status {
-                    // Parsed state information
-                    if let parsed = status.parsedState {
-                        ParsedStateSection(parsed: parsed)
-                    }
-                    
-                    // Transaction chain
-                    if !status.transactionChain.isEmpty {
-                        TransactionChainSection(transactions: status.transactionChain)
-                    }
-                    
-                    // All extracted transaction IDs
-                    if !status.allTransactionIds.isEmpty {
-                        TransactionIdsSection(txids: status.allTransactionIds)
-                    }
-                    
-                    // Confirmed transactions
-                    if !status.confirmedTransactions.isEmpty {
-                        ConfirmedTransactionsSection(confirmed: status.confirmedTransactions)
-                    }
-                    
-                    // Raw state (for debugging)
-                    Section("section_raw_state") {
-                        LabeledContent("data_current_state") {
-                            Text(status.state)
-                                .font(.system(.caption, design: .monospaced))
-                        }
-                        
-                        LabeledContent(String(localized: "activity_transaction_count"), value: "\(status.transactionCount)")
-                    }
-                    
-                    // State history
-                    if let history = status.history, !history.isEmpty {
-                        Section(String(localized: "data_state_history")) {
-                            ForEach(Array(history.enumerated()), id: \.offset) { index, state in
-                                StateHistoryRow(index: index, state: state)
-                            }
+                } else {
+                    Section("Step \(progress.currentStep) of \(progress.totalSteps)") {
+                        ForEach(progress.steps) { step in
+                            ExitStepRow(
+                                step: step,
+                                tint: progress.tint,
+                                blocksUntilUnlock: progress.blocksUntilUnlock(currentHeight: currentBlockHeight),
+                                blockedInfo: walletManager.getExitBlockedInfo(for: vtxoId),
+                                linkedTransaction: linkedTransaction(for: step)
+                            )
                         }
                     }
                 }
-            }
-            .navigationTitle("balance_exit_status")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    // Refresh the detailed exit status
-                    Button {
-                        Task {
-                            await loadStatus(fullSync: true)
+
+                if let history = status.history, !history.isEmpty {
+                    Section(String(localized: "data_state_history")) {
+                        ForEach(Array(history.enumerated()), id: \.offset) { index, state in
+                            StateHistoryRow(index: index, state: state)
                         }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
                     }
-                    .disabled(isLoading)
+                }
+
+                TechnicalDetailsSection(vtxoId: vtxoId, status: status)
+            } else if isLoading {
+                Section {
+                    HStack {
+                        ProgressView()
+                        Text(String(localized: "status_loading_status"))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else if let error = error {
+                Section {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(Color.Arke.red)
                 }
             }
-            .task {
-                await loadStatus()
+        }
+        .navigationTitle("balance_exit_status")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                // Refresh the detailed exit status
+                Button {
+                    Task {
+                        await loadStatus(fullSync: true)
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isLoading)
             }
+        }
+        .task {
+            await loadStatus()
+        }
     }
-    
+
     private func loadStatus(fullSync: Bool = false) async {
         isLoading = true
         error = nil
@@ -163,12 +143,12 @@ struct ExitStatusDetailView_iOS: View {
 
             if let status = status {
                 print("✅ Loaded exit status for \(vtxoId)")
-                print("🔍 DEBUG: Full status object: \(status)")
                 print("   State: \(status.state)")
                 print("   Transaction count: \(status.transactionCount)")
                 if let history = status.history {
                     print("   History: \(history.joined(separator: " → "))")
                 }
+                loadLinkedTransactions(for: status)
             } else {
                 error = "No detailed status available"
                 print("⚠️ No status returned for \(vtxoId)")
@@ -179,6 +159,96 @@ struct ExitStatusDetailView_iOS: View {
         }
 
         isLoading = false
+    }
+
+    /// Sum of the onchain fees the wallet knows about across the exit's
+    /// transactions, deduplicated by txid (the claim and complete steps
+    /// share the same onchain record).
+    private var totalFeesPaid: Int {
+        var seenTxids = Set<String>()
+        var total = 0
+        for model in linkedTransactions.values {
+            guard seenTxids.insert(model.txid).inserted else { continue }
+            total += model.onchainFeeSat ?? 0
+        }
+        return total
+    }
+
+    private func linkedTransaction(for step: ExitProgress.Step) -> TransactionModel? {
+        switch step.kind {
+        case .confirmTransaction(_, _, let transaction):
+            guard let transaction else { return nil }
+            return linkedTransactions[transaction.txid]
+        case .claim(let claimTxid):
+            guard let claimTxid else { return nil }
+            return linkedTransactions[claimTxid]
+        case .complete(let txid, _):
+            guard let txid else { return nil }
+            return linkedTransactions[txid]
+        case .prepare, .waitForUnlock:
+            return nil
+        }
+    }
+
+    /// Match the exit's transactions against the onchain wallet's records so
+    /// the steps can show confirmations, amount and fee. The CPFP child is
+    /// what the onchain wallet actually tracks (it pays the fee), so it takes
+    /// precedence over the exit txid itself.
+    private func loadLinkedTransactions(for status: ExitTransactionStatus) {
+        let progress = ExitProgress(status: status)
+        var linked: [String: TransactionModel] = [:]
+
+        for transaction in progress.steps.compactMap(transactionInStep) {
+            let candidates = [childTxid(of: transaction.status), transaction.txid].compactMap { $0 }
+            for candidate in candidates {
+                if let model = fetchTransactionModel(txid: candidate) {
+                    linked[transaction.txid] = model
+                    break
+                }
+            }
+        }
+
+        // The claim transaction pays back into the onchain wallet, so it
+        // usually has a record of its own (also keys the complete step)
+        for step in progress.steps {
+            if case .claim(let claimTxid?) = step.kind, linked[claimTxid] == nil,
+               let model = fetchTransactionModel(txid: claimTxid) {
+                linked[claimTxid] = model
+            }
+        }
+
+        linkedTransactions = linked
+        print("🔗 [Exit Status] Matched \(linked.count) onchain transactions for \(vtxoId)")
+    }
+
+    private func transactionInStep(_ step: ExitProgress.Step) -> ExitTransaction? {
+        guard case .confirmTransaction(_, _, let transaction) = step.kind else { return nil }
+        return transaction
+    }
+
+    private func fetchTransactionModel(txid: String) -> TransactionModel? {
+        // Onchain wallet records are stored with a namespaced txid
+        // ("onchain_<txid>") to avoid collisions with ark txids
+        let onchainTxid = "onchain_\(txid)"
+        let descriptor = FetchDescriptor<PersistentTransaction>(
+            predicate: #Predicate { $0.txid == txid || $0.txid == onchainTxid }
+        )
+        guard let persistentTx = try? modelContext.fetch(descriptor).first else { return nil }
+        return TransactionModel(from: persistentTx)
+    }
+}
+
+/// Extract the CPFP child txid from a transaction status, if present.
+private func childTxid(of status: ExitTxStatus) -> String? {
+    switch status {
+    case .needsBroadcasting(let data):
+        return data.childTxid
+    case .broadcastWithCpfp(let data):
+        return data.childTxid
+    case .confirmed(let data):
+        return data.childTxid
+    default:
+        return nil
     }
 }
 
@@ -203,185 +273,404 @@ struct ExitStatusSheet: View {
                     }
                 }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Header
 
-private struct ParsedStateSection: View {
-    let parsed: ParsedExitState
-    
+/// Key figures of the exit as label/value rows: the amount being exited and
+/// the onchain fees paid so far ("Network Fees" once the exit is complete).
+private struct ExitProgressHeaderView: View {
+    let progress: ExitProgress
+    let exitVtxo: ExitVtxo?
+    /// Sum of onchain fees across the exit's linked wallet transactions.
+    let totalFeesPaid: Int
+
     var body: some View {
-        Section("section_parsed_state") {
-            switch parsed {
-            case .start(let data):
-                LabeledContent("data_type", value: "Start")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                
-            case .processing(let data):
-                LabeledContent("data_type", value: "Processing")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                LabeledContent("fee_transactions", value: "\(data.transactions.count)")
-                
-            case .awaitingDelta(let data):
-                LabeledContent("data_type", value: "Awaiting Delta")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                LabeledContent("data_confirmed_block", value: "\(data.confirmedBlock.height)")
-                LabeledContent("data_claimable_height", value: "\(data.claimableHeight)")
-                
-            case .claimable(let data):
-                LabeledContent("data_type", value: "Claimable")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                LabeledContent("data_claimable_since", value: "\(data.claimableSince.height)")
-                
-            case .claimInProgress(let data):
-                LabeledContent("data_type", value: "Claim In Progress")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                LabeledContent("data_claim_tx") {
-                    Text(data.claimTxid.prefix(8) + "..." + data.claimTxid.suffix(8))
-                        .font(.system(.caption, design: .monospaced))
-                }
-                
-            case .claimed(let data):
-                LabeledContent("data_type", value: "Claimed")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-                LabeledContent("data_claim_tx") {
-                    Text(data.txid.prefix(8) + "..." + data.txid.suffix(8))
-                        .font(.system(.caption, design: .monospaced))
-                }
-                LabeledContent("data_block", value: "\(data.block.height)")
+        Group {
+            if let exitVtxo {
+                HeaderRow(labelKey: "label_amount", value: BitcoinFormatter.shared.formatAmount(Int(exitVtxo.amountSats)))
+            }
 
-            case .vtxoAlreadySpent(let data):
-                LabeledContent("data_type", value: "VTXO Already Spent")
-                LabeledContent("data_tip_height", value: "\(data.tipHeight)")
-
-            case .unparsed(let str):
-                LabeledContent("data_type", value: "Unparsed")
-                Text(str)
-                    .font(.system(.caption, design: .monospaced))
+            if progress.isCancelled {
+                Label("data_vtxo_already_spent", systemImage: "xmark.circle")
+                    .foregroundStyle(.secondary)
+            } else if totalFeesPaid > 0 {
+                if progress.phase == .complete {
+                    HeaderRow(labelKey: "exit_fees_total", value: BitcoinFormatter.shared.formatAmount(totalFeesPaid))
+                } else {
+                    HeaderRow(labelKey: "exit_fees_so_far", value: BitcoinFormatter.shared.formatAmount(totalFeesPaid))
+                }
             }
         }
     }
 }
 
-private struct TransactionChainSection: View {
-    let transactions: [ExitTransaction]
-    
+private struct HeaderRow: View {
+    let labelKey: LocalizedStringKey
+    let value: String
+
     var body: some View {
-        let _ = logger.info("🎨 Rendering TransactionChainSection with \(transactions.count) transactions")
-        
-        Section("section_transaction_chain") {
-            ForEach(Array(transactions.enumerated()), id: \.offset) { index, tx in
-                let _ = logger.debug("   Transaction #\(index + 1): \(tx.txid.prefix(16))... status: \(String(describing: tx.status))")
-                let childTxid = extractChildTxid(from: tx.status)
-                let _ = childTxid.map { logger.info("      ✅ Has child_txid: \($0.prefix(16))...") }
-                    ?? logger.debug("      ℹ️ No child_txid for this transaction")
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("#\(index + 1)")
-                            .font(.caption.bold())
-                            .foregroundStyle(.secondary)
-                            .frame(width: 30)
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(tx.txid.prefix(8) + "..." + tx.txid.suffix(8))
-                                .font(.system(.caption, design: .monospaced))
-                            
-                            TransactionStatusLabel(status: tx.status)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            
-                            // Display child_txid if present in status
-                            if let childTxid = childTxid {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "arrow.turn.down.right")
-                                        .font(.caption2)
-                                        .foregroundStyle(.tertiary)
-                                    Text("Child: " + childTxid.prefix(8) + "..." + childTxid.suffix(8))
-                                        .font(.system(.caption2, design: .monospaced))
-                                        .foregroundStyle(.tertiary)
-                                }
-                            }
+        HStack {
+            Text(labelKey)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+        }
+    }
+}
+
+// MARK: - Step Rows
+
+/// One step of the exit timeline. Expandable when the step carries details
+/// (txids, blocks); the current step starts expanded.
+private struct ExitStepRow: View {
+    let step: ExitProgress.Step
+    let tint: Color
+    let blocksUntilUnlock: Int?
+    let blockedInfo: ExitBlockedInfo?
+    /// Onchain wallet record for this step's transaction, when it has one.
+    let linkedTransaction: TransactionModel?
+
+    @State private var isExpanded: Bool
+
+    init(
+        step: ExitProgress.Step,
+        tint: Color,
+        blocksUntilUnlock: Int?,
+        blockedInfo: ExitBlockedInfo?,
+        linkedTransaction: TransactionModel? = nil
+    ) {
+        self.step = step
+        self.tint = tint
+        self.blocksUntilUnlock = blocksUntilUnlock
+        self.blockedInfo = blockedInfo
+        self.linkedTransaction = linkedTransaction
+        _isExpanded = State(initialValue: step.state == .current)
+    }
+
+    var body: some View {
+        if hasDetails {
+            DisclosureGroup(isExpanded: $isExpanded) {
+                details
+                    .padding(.top, 4)
+            } label: {
+                label
+            }
+        } else {
+            label
+        }
+    }
+
+    private var label: some View {
+        HStack(alignment: .center, spacing: 10) {
+            stepNumberBadge
+
+            VStack(alignment: .leading, spacing: 2) {
+                title
+                    .font(.body)
+                    .foregroundStyle(step.state == .upcoming ? .secondary : .primary)
+
+                if step.state == .current {
+                    if let blockedInfo {
+                        Label {
+                            Text(ExitProgress.blockedExplanationKey(for: blockedInfo.reason))
+                        } icon: {
+                            Image(systemName: "clock")
                         }
-                    }
-                }
-            }
-        }
-    }
-    
-    // Extract child_txid from status if present
-    private func extractChildTxid(from status: ExitTxStatus) -> String? {
-        switch status {
-        case .needsBroadcasting(let data):
-            return data.childTxid
-        case .broadcastWithCpfp(let data):
-            return data.childTxid
-        case .confirmed(let data):
-            return data.childTxid
-        default:
-            return nil
-        }
-    }
-}
-
-private struct TransactionIdsSection: View {
-    let txids: [String]
-    
-    var body: some View {
-        Section("All Transaction IDs (\(txids.count))") {
-            ForEach(txids, id: \.self) { txid in
-                Text(txid.prefix(8) + "..." + txid.suffix(8))
-                    .font(.system(.caption, design: .monospaced))
-                    .contextMenu {
-                        Button {
-                            UIPasteboard.general.string = txid
-                        } label: {
-                            Label("data_copy_transaction_id", systemImage: "doc.on.doc")
-                        }
-                    }
-            }
-        }
-    }
-}
-
-private struct ConfirmedTransactionsSection: View {
-    let confirmed: [(txid: String, block: ArkeBlockRef)]
-    
-    var body: some View {
-        Section("section_confirmed_transactions") {
-            ForEach(confirmed, id: \.txid) { item in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(Color.Arke.green)
+                        .font(.caption)
+                        .foregroundStyle(Color.Arke.orange)
+                    } else if let statusText {
+                        statusText
                             .font(.caption)
-                        
-                        Text(item.txid.prefix(8) + "..." + item.txid.suffix(8))
-                            .font(.system(.caption, design: .monospaced))
-                            .contextMenu {
-                                Button {
-                                    UIPasteboard.general.string = item.txid
-                                } label: {
-                                    Label("data_copy_transaction_id", systemImage: "doc.on.doc")
-                                }
-                            }
+                            .foregroundStyle(.secondary)
                     }
-
-                    Text("Block \(item.block.height)")
-                        .font(.caption2)
+                } else if let doneSubtitle {
+                    doneSubtitle
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
     }
+
+    /// Step number in a filled circle; the fill carries the state color the
+    /// icon used to (green done, tint current, tertiary upcoming).
+    private var stepNumberBadge: some View {
+        Text("\(step.id)")
+            .font(.body.weight(.semibold))
+            .monospacedDigit()
+            .foregroundStyle(step.state == .upcoming ? AnyShapeStyle(.secondary) : AnyShapeStyle(.white))
+            .frame(width: 36, height: 36)
+            .background(badgeBackground, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var badgeBackground: AnyShapeStyle {
+        switch step.state {
+        case .done:
+            AnyShapeStyle(Color.Arke.green)
+        case .current:
+            AnyShapeStyle(tint)
+        case .upcoming:
+            AnyShapeStyle(.tertiary)
+        }
+    }
+
+    private var title: Text {
+        switch step.kind {
+        case .prepare:
+            return Text("exit_step_prepare")
+        case .confirmTransaction(let index, let total, _):
+            if total > 1 {
+                return Text("exit_step_confirm_transaction \(index)")
+            } else {
+                return Text("exit_step_confirm_transaction_single")
+            }
+        case .waitForUnlock:
+            return Text("exit_step_wait_unlock")
+        case .claim:
+            return Text("exit_step_claim")
+        case .complete:
+            return Text("exit_step_complete")
+        }
+    }
+
+    /// One-line status under a finished step's title. Transaction steps show
+    /// their final status ("Confirmed"), so the collapsed list reads as a
+    /// timeline; other steps stay quiet once done.
+    private var doneSubtitle: Text? {
+        guard step.state == .done, case .confirmTransaction = step.kind else { return nil }
+        return statusText
+    }
+
+    /// One-line status under the current step's title.
+    private var statusText: Text? {
+        switch step.kind {
+        case .prepare:
+            return Text("exit_step_prepare_status")
+        case .confirmTransaction(_, _, let transaction):
+            guard let transaction else { return nil }
+            return transactionStatusText(transaction.status)
+        case .waitForUnlock:
+            if let blocksUntilUnlock, blocksUntilUnlock > 0 {
+                return Text("exit_step_wait_blocks \(blocksUntilUnlock)")
+            }
+            return Text("status_exit_finalizing")
+        case .claim:
+            return Text("exit_step_claim_status")
+        case .complete:
+            return nil
+        }
+    }
+
+    private var hasDetails: Bool {
+        switch step.kind {
+        case .prepare:
+            return false
+        case .confirmTransaction(_, _, let transaction):
+            return transaction != nil
+        case .waitForUnlock(let confirmedBlock, let claimableHeight):
+            return confirmedBlock != nil || claimableHeight != nil
+        case .claim(let claimTxid):
+            return claimTxid != nil
+        case .complete(let txid, _):
+            return txid != nil
+        }
+    }
+
+    @ViewBuilder
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            switch step.kind {
+            case .prepare:
+                EmptyView()
+
+            case .confirmTransaction(_, _, let transaction):
+                if let transaction {
+                    LabeledTxidRow(labelKey: "activity_transaction_id", txid: transaction.txid)
+                    StepDetailTextRow(labelKey: "label_status", value: transactionStatusText(transaction.status))
+
+                    if case .confirmed(let data) = transaction.status {
+                        StepDetailRow(labelKey: "data_confirmed_block", value: "\(data.block.height)")
+                    }
+
+                    // Onchain wallet view of this transaction: confirmations,
+                    // date, amount and the fee actually paid
+                    if let linkedTransaction {
+                        ExitOnchainInfoRows(transaction: linkedTransaction)
+                    }
+                }
+
+            case .waitForUnlock(let confirmedBlock, let claimableHeight):
+                if let confirmedBlock {
+                    StepDetailRow(labelKey: "data_confirmed_block", value: "\(confirmedBlock.height)")
+                }
+                if let claimableHeight {
+                    StepDetailRow(labelKey: "data_claimable_height", value: "\(claimableHeight)")
+                }
+                if let blocksUntilUnlock, blocksUntilUnlock > 0 {
+                    Text("exit_step_wait_blocks \(blocksUntilUnlock)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+            case .claim(let claimTxid):
+                if let claimTxid {
+                    LabeledTxidRow(labelKey: "data_claim_tx", txid: claimTxid)
+
+                    // While the claim is in flight, its onchain record shows
+                    // live confirmations; once done, the complete step owns it
+                    if step.state == .current, let linkedTransaction {
+                        ExitOnchainInfoRows(transaction: linkedTransaction)
+                    } else if let fee = linkedTransaction?.onchainFeeSat, fee > 0 {
+                        StepDetailRow(labelKey: "activity_network_fee", value: BitcoinFormatter.shared.formatAmount(fee))
+                    }
+                }
+
+            case .complete(let txid, let block):
+                if let txid {
+                    LabeledTxidRow(labelKey: "data_claim_tx", txid: txid)
+                }
+                if let block {
+                    StepDetailRow(labelKey: "data_block", value: "\(block.height)")
+                }
+                if let linkedTransaction {
+                    ExitOnchainInfoRows(transaction: linkedTransaction)
+                }
+            }
+        }
+    }
+
+    /// Plain-language version of bark's transaction status; the raw case
+    /// names stay visible in Technical Details and the state history.
+    private func transactionStatusText(_ status: ExitTxStatus) -> Text {
+        switch status {
+        case .verifyInputs, .needsSignedPackage, .needsBroadcasting:
+            return Text("exit_tx_status_preparing")
+        case .broadcastWithCpfp:
+            return Text("exit_tx_status_broadcast")
+        case .awaitingInputConfirmation:
+            return Text("exit_tx_status_awaiting_parent")
+        case .confirmed:
+            return Text("status_confirmed")
+        case .unparsed:
+            return Text("data_unknown_status")
+        }
+    }
 }
+
+private struct CopyableTxidRow: View {
+    let txid: String
+
+    var body: some View {
+        Text(txid.prefix(5) + "..." + txid.suffix(5))
+            .font(.system(.subheadline, design: .monospaced))
+            .contextMenu {
+                Button {
+                    UIPasteboard.general.string = txid
+                } label: {
+                    Label("data_copy_transaction_id", systemImage: "doc.on.doc")
+                }
+            }
+    }
+}
+
+private struct LabeledTxidRow: View {
+    let labelKey: LocalizedStringKey
+    let txid: String
+
+    var body: some View {
+        HStack {
+            Text(labelKey)
+                .foregroundStyle(.secondary)
+            Spacer()
+            CopyableTxidRow(txid: txid)
+        }
+        .font(.subheadline)
+    }
+}
+
+/// Like StepDetailRow, but for localized (non-monospaced) values.
+private struct StepDetailTextRow: View {
+    let labelKey: LocalizedStringKey
+    let value: Text
+
+    var body: some View {
+        HStack {
+            Text(labelKey)
+                .foregroundStyle(.secondary)
+            Spacer()
+            value
+        }
+        .font(.subheadline)
+    }
+}
+
+private struct StepDetailRow: View {
+    let labelKey: LocalizedStringKey
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(labelKey)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(value)
+                .font(.system(.subheadline, design: .monospaced))
+        }
+        .font(.subheadline)
+    }
+}
+
+// MARK: - Technical Details
+
+/// Raw data kept for debugging (X-Ray): identifiers, raw state string and
+/// every txid the parser extracted.
+private struct TechnicalDetailsSection: View {
+    let vtxoId: String
+    let status: ExitTransactionStatus
+
+    var body: some View {
+        Section("data_technical_details") {
+            LabeledContent("label_vtxo_id") {
+                Text(vtxoId)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+            }
+
+            LabeledContent("data_current_state") {
+                Text(status.state)
+                    .font(.system(.caption, design: .monospaced))
+            }
+
+            LabeledContent(String(localized: "activity_transaction_count"), value: "\(status.transactionCount)")
+
+            let txids = status.allTransactionIds
+            if !txids.isEmpty {
+                DisclosureGroup {
+                    ForEach(txids, id: \.self) { txid in
+                        CopyableTxidRow(txid: txid)
+                    }
+                } label: {
+                    HStack {
+                        Text("data_transaction_ids")
+                        Spacer()
+                        Text("\(txids.count)")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - State History
 
 private struct ParsedStateLabel: View {
     let parsed: ParsedExitState
-    
+
     var body: some View {
         switch parsed {
         case .start:
@@ -404,39 +693,12 @@ private struct ParsedStateLabel: View {
     }
 }
 
-private struct TransactionStatusLabel: View {
-    let status: ExitTxStatus
-    
-    var body: some View {
-        switch status {
-        case .verifyInputs:
-            Text("data_verify_inputs")
-        case .needsSignedPackage:
-            Text("data_needs_signed_package")
-        case .needsBroadcasting:
-            Text("data_needs_broadcasting")
-        case .broadcastWithCpfp:
-            Text("data_broadcast_with_cpfp")
-        case .awaitingInputConfirmation:
-            Text("data_awaiting_input_confirmation")
-        case .confirmed:
-            HStack {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(Color.Arke.green)
-                Text("status_confirmed")
-            }
-        case .unparsed:
-            Text("data_unknown_status")
-        }
-    }
-}
-
 private struct StateHistoryRow: View {
     let index: Int
     let state: String
-    
+
     @State private var isExpanded = false
-    
+
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             VStack(alignment: .leading, spacing: 8) {
@@ -445,7 +707,7 @@ private struct StateHistoryRow: View {
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
                     .padding(.vertical, 4)
-                
+
                 // Detailed parsed state info if available
                 if let parsed = ExitStatusParser.parseState(state) {
                     Divider()
@@ -459,7 +721,7 @@ private struct StateHistoryRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 30, alignment: .leading)
-                
+
                 if let parsed = ExitStatusParser.parseState(state) {
                     ParsedStateLabel(parsed: parsed)
                 } else {
@@ -474,25 +736,25 @@ private struct StateHistoryRow: View {
 
 private struct ParsedStateDetails: View {
     let parsed: ParsedExitState
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             switch parsed {
             case .start(let data):
                 StateDetailRow(label: "Type", value: "Start")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
-                
+
             case .processing(let data):
                 StateDetailRow(label: "Type", value: "Processing")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
                 StateDetailRow(label: "Transactions", value: "\(data.transactions.count)")
-                
+
                 if !data.transactions.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("data_transaction_ids")
                             .font(.caption2.bold())
                             .foregroundStyle(.secondary)
-                        
+
                         ForEach(Array(data.transactions.enumerated()), id: \.offset) { _, tx in
                             Text(tx.txid.prefix(8) + "..." + tx.txid.suffix(8))
                                 .font(.system(.caption2, design: .monospaced))
@@ -500,23 +762,23 @@ private struct ParsedStateDetails: View {
                         }
                     }
                 }
-                
+
             case .awaitingDelta(let data):
                 StateDetailRow(label: "Type", value: "Awaiting Delta")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
                 StateDetailRow(label: "Confirmed Block", value: "\(data.confirmedBlock.height)")
                 StateDetailRow(label: "Claimable Height", value: "\(data.claimableHeight)")
-                
+
             case .claimable(let data):
                 StateDetailRow(label: "Type", value: "Claimable")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
                 StateDetailRow(label: "Claimable Since", value: "\(data.claimableSince.height)")
-                
+
             case .claimInProgress(let data):
                 StateDetailRow(label: "Type", value: "Claim In Progress")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
                 StateDetailRow(label: "Claim TX", value: data.claimTxid.prefix(8) + "..." + data.claimTxid.suffix(8))
-                
+
             case .claimed(let data):
                 StateDetailRow(label: "Type", value: "Claimed")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
@@ -541,7 +803,7 @@ private struct ParsedStateDetails: View {
 private struct StateDetailRow: View {
     let label: String
     let value: String
-    
+
     var body: some View {
         HStack {
             Text(label)

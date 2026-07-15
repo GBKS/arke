@@ -6,21 +6,19 @@
 //
 
 import SwiftUI
-import SwiftData
 import Bark
 import ArkeUI
 
 /// Expandable exit details section for unilateral exit transactions.
-/// Shows a summary of the VTXOs in the exit process and linked onchain
-/// transactions; tapping a VTXO opens the shared ExitStatusSheet.
+/// Shows a summary of the VTXOs in the exit process; tapping a VTXO opens
+/// the shared ExitStatusSheet, which carries the full step timeline
+/// including each transaction's onchain details.
 struct TransactionExitDetailsView: View {
     let transaction: TransactionModel
 
     @Environment(WalletManager.self) private var walletManager
-    @Environment(\.modelContext) private var modelContext
     @State private var isExpanded = false
     @State private var exitVtxos: [ExitVtxo] = []
-    @State private var linkedTransactions: [TransactionModel] = []
     @State private var selectedExit: ExitVtxo?
 
     var body: some View {
@@ -96,29 +94,6 @@ struct TransactionExitDetailsView: View {
                         }
                     }
 
-                    // Linked onchain transactions section
-                    if !linkedTransactions.isEmpty {
-                        Divider()
-                            .padding(.vertical, 8)
-
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("activity_onchain_transactions")
-                                .font(.body)
-                                .foregroundColor(.primary)
-
-                            VStack {
-                                // Linked transaction cards
-                                ForEach(Array(linkedTransactions.enumerated()), id: \.element.id) { index, linkedTx in
-                                    if index > 0 {
-                                        Divider()
-                                    }
-
-                                    TransactionExitLinkedOnchainCard(transaction: linkedTx)
-                                }
-                            }
-                            .padding(.leading)
-                        }
-                    }
                 }
                 .padding()
                 .background(.ultraThinMaterial)
@@ -132,7 +107,6 @@ struct TransactionExitDetailsView: View {
         }
         .onAppear {
             loadExitData()
-            loadLinkedTransactions()
         }
     }
 
@@ -148,23 +122,6 @@ struct TransactionExitDetailsView: View {
         for exit in exitVtxos {
             print("   - VTXO: \(exit.vtxoId), Amount: \(exit.amountSats) sats, State: \(exit.state), Claimable: \(exit.isClaimable)")
         }
-    }
-
-    private func loadLinkedTransactions() {
-        guard let childTxids = transaction.childTxids else { return }
-
-        var loaded: [TransactionModel] = []
-        for txid in childTxids {
-            let descriptor = FetchDescriptor<PersistentTransaction>(
-                predicate: #Predicate { $0.txid == txid }
-            )
-            if let persistentTx = try? modelContext.fetch(descriptor).first {
-                loaded.append(TransactionModel(from: persistentTx))
-            }
-        }
-        linkedTransactions = loaded.sorted { $0.date < $1.date }
-
-        print("🔗 [Exit Details] Found \(linkedTransactions.count) linked onchain transactions")
     }
 }
 

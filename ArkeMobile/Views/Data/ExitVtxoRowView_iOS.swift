@@ -75,10 +75,13 @@ struct ExitVtxoRowView_iOS: View {
                 
                 Text(formattedAmount)
                     .font(.system(.body, design: .monospaced))
+
+                Image(systemName: "info.circle")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 12)
-        .padding(.horizontal, 12)
         .background(isSelected ? Color.accentColor.opacity(0.1) : Color.clear)
         .cornerRadius(8)
     }
