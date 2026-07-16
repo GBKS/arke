@@ -1765,6 +1765,9 @@
         }
       }
     },
+    "All %lld steps complete" : {
+
+    },
     "Also assigned '%@' to these %lld transactions:" : {
       "localizations" : {
         "en" : {

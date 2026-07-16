@@ -23,12 +23,19 @@ struct TransactionClaimExitBanner: View {
     }
 
     var body: some View {
-        if !exitStatus.isClaimed {
+        //if !exitStatus.isClaimed {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Step \(progress.currentStep) of \(progress.totalSteps)")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
+                HStack(spacing: 5) {
+                    Text(progress.phase == .complete
+                        ? "All \(progress.totalSteps) steps complete"
+                        : "Step \(progress.currentStep) of \(progress.totalSteps)")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    Image(systemName: "info.circle")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
 
                 ExitSegmentedProgressBar(progress: progress)
 
@@ -37,14 +44,14 @@ struct TransactionClaimExitBanner: View {
                 if let blockedInfo {
                     HStack(alignment: .top, spacing: 6) {
                         Image(systemName: "clock")
-                            .font(.caption)
+                            .font(.subheadline)
                         Text(ExitProgress.blockedExplanationKey(for: blockedInfo.reason))
-                            .font(.caption)
+                            .font(.subheadline)
                     }
                     .foregroundColor(.secondary)
                 }
             }
-        }
+        //}
     }
 }
 

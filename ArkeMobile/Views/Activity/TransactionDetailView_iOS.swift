@@ -24,6 +24,7 @@ struct TransactionDetailView_iOS: View {
     // Exit state
     @State private var exitVtxos: [ExitVtxo] = []
     @State private var exitStatus: ExitTransactionStatus?
+    @State private var showExitStatusSheet = false
     
     var body: some View {
         Group {
@@ -76,8 +77,18 @@ struct TransactionDetailView_iOS: View {
                 headerView
                 
                 // Claimable Exit Banner
-                claimableExitBanner
-                    .padding(.horizontal)
+                Button {
+                    showExitStatusSheet = true
+                } label: {
+                    claimableExitBanner
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal)
+                .sheet(isPresented: $showExitStatusSheet) {
+                    if let firstVtxo = exitVtxos.first {
+                        ExitStatusSheet(vtxoId: firstVtxo.vtxoId, exitVtxo: firstVtxo)
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 20) {
                     // Contact
@@ -102,8 +113,8 @@ struct TransactionDetailView_iOS: View {
                 
                 // Exit details (for unilateral exit transactions)
                 // Now includes linked onchain transactions
-                TransactionExitDetailsView(transaction: transaction)
-                    .padding(.horizontal)
+                //TransactionExitDetailsView(transaction: transaction)
+                //    .padding(.horizontal)
                 
                 // Technical details (for testing/debugging)
                 TransactionTechnicalDetailsView(transaction: transaction)

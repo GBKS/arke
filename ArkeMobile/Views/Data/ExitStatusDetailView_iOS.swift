@@ -297,11 +297,14 @@ private struct ExitProgressHeaderView: View {
             if progress.isCancelled {
                 Label("data_vtxo_already_spent", systemImage: "xmark.circle")
                     .foregroundStyle(.secondary)
-            } else if totalFeesPaid > 0 {
+            } else {
+                // Always show the fee row so users know where to expect fee
+                // information; "—" stands in until the first fee is known
+                let feeValue = totalFeesPaid > 0 ? BitcoinFormatter.shared.formatAmount(totalFeesPaid) : "—"
                 if progress.phase == .complete {
-                    HeaderRow(labelKey: "exit_fees_total", value: BitcoinFormatter.shared.formatAmount(totalFeesPaid))
+                    HeaderRow(labelKey: "exit_fees_total", value: feeValue)
                 } else {
-                    HeaderRow(labelKey: "exit_fees_so_far", value: BitcoinFormatter.shared.formatAmount(totalFeesPaid))
+                    HeaderRow(labelKey: "exit_fees_so_far", value: feeValue)
                 }
             }
         }
