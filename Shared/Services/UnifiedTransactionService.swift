@@ -387,9 +387,11 @@ class UnifiedTransactionService {
             }
         }
         
-        // Update fee data if changed
+        // Update fee data if changed. Never overwrite a known fee with nil:
+        // exit claim fees are persisted from bark (recordClaimFee) and BDK
+        // reports no fee for them, since the wallet owns none of their inputs
         let newFee = onchain.fee.map { Int($0) }
-        if persistent.onchainFeeSat != newFee {
+        if let newFee, persistent.onchainFeeSat != newFee {
             persistent.onchainFeeSat = newFee
             hasChanges = true
         }

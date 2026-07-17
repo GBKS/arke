@@ -117,16 +117,17 @@ extension TransactionModel {
         // Start with direct fees
         var total = totalFees
 
-        // For exit transactions, add fees from linked onchain transactions
+        // For exit transactions, add fees from linked onchain transactions.
+        // userPaidOnchainFeeSat guards against fees the user didn't pay
+        // (third-party spends of the exit's anyone-can-spend anchors).
         if subsystemName == "bark.exit", let childTxids = childTxids, !childTxids.isEmpty, let modelContext = modelContext {
-            // Fetch and sum fees from all linked onchain transactions
             for childTxid in childTxids {
                 let descriptor = FetchDescriptor<PersistentTransaction>(
                     predicate: #Predicate { $0.txid == childTxid }
                 )
 
                 if let childTx = try? modelContext.fetch(descriptor).first,
-                   let childFee = childTx.onchainFeeSat {
+                   let childFee = childTx.userPaidOnchainFeeSat {
                     total += childFee
                 }
             }

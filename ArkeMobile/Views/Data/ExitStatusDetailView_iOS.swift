@@ -35,6 +35,10 @@ struct ExitStatusDetailView_iOS: View {
     /// (it pays the fee), so lookup tries the child txid first.
     @State private var linkedTransactions: [String: TransactionModel] = [:]
 
+    /// Claim fee derived from exit amount − claimed amount, for claims whose
+    /// record carries no fee (see deriveClaimFee).
+    @State private var derivedClaimFeeSat: Int?
+
     private var currentBlockHeight: UInt32? {
         walletManager.estimatedBlockHeight.map { UInt32($0) }
     }
@@ -163,7 +167,8 @@ struct ExitStatusDetailView_iOS: View {
 
     /// Sum of the onchain fees the wallet knows about across the exit's
     /// transactions, deduplicated by txid (the claim and complete steps
-    /// share the same onchain record).
+    /// share the same onchain record). Third-party anchor spends never
+    /// appear here: childTxid(of:) only matches wallet-origin children.
     private var totalFeesPaid: Int {
         var seenTxids = Set<String>()
         var total = 0
@@ -171,7 +176,39 @@ struct ExitStatusDetailView_iOS: View {
             guard seenTxids.insert(model.txid).inserted else { continue }
             total += model.onchainFeeSat ?? 0
         }
-        return total
+        return total + (derivedClaimFeeSat ?? 0)
+    }
+
+    /// The claim's fee is paid from the exit output itself, so the onchain
+    /// wallet sees the claim as a pure receive and records no fee. Newer
+    /// claims persist the fee at claim time (WalletManager.recordClaimFee);
+    /// for older ones derive it as exit amount − claimed amount. Only valid
+    /// when the claim swept this exit alone — a claim that drained several
+    /// exits receives more than this exit's amount and is skipped.
+    private func deriveClaimFee(progress: ExitProgress) -> Int? {
+        guard let exitVtxo else { return nil }
+
+        var claimTxid: String?
+        for step in progress.steps {
+            if case .claim(let txid?) = step.kind {
+                claimTxid = txid
+                break
+            }
+        }
+        guard let claimTxid else { return nil }
+
+        let onchainTxid = "onchain_\(claimTxid)"
+        let descriptor = FetchDescriptor<PersistentTransaction>(
+            predicate: #Predicate { $0.txid == claimTxid || $0.txid == onchainTxid }
+        )
+        guard let record = try? modelContext.fetch(descriptor).first else { return nil }
+
+        // Fee already known — it is counted via the linked record
+        if let fee = record.onchainFeeSat, fee > 0 { return nil }
+
+        guard let received = record.onchainReceived, received > 0,
+              received < exitVtxo.amountSats else { return nil }
+        return Int(exitVtxo.amountSats - received)
     }
 
     private func linkedTransaction(for step: ExitProgress.Step) -> TransactionModel? {
@@ -218,7 +255,24 @@ struct ExitStatusDetailView_iOS: View {
         }
 
         linkedTransactions = linked
+        derivedClaimFeeSat = deriveClaimFee(progress: progress)
         print("🔗 [Exit Status] Matched \(linked.count) onchain transactions for \(vtxoId)")
+
+        // Break down what "Network Fees So Far" will sum, so misattributed
+        // fees (e.g. third-party CPFPs on our anchors) can be traced
+        var seenTxids = Set<String>()
+        var total = 0
+        for (stepTxid, model) in linked {
+            guard seenTxids.insert(model.txid).inserted else { continue }
+            let fee = model.onchainFeeSat ?? 0
+            total += fee
+            print("💰 [Exit Fees] Step \(stepTxid.prefix(16))… → record \(model.txid.prefix(28))… contributes \(fee) sats")
+        }
+        if let derivedClaimFeeSat {
+            total += derivedClaimFeeSat
+            print("💰 [Exit Fees] Derived claim fee (amount − claimed): \(derivedClaimFeeSat) sats")
+        }
+        print("💰 [Exit Fees] Total fees shown for \(vtxoId.prefix(16))…: \(total) sats")
     }
 
     private func transactionInStep(_ step: ExitProgress.Step) -> ExitTransaction? {
@@ -233,23 +287,36 @@ struct ExitStatusDetailView_iOS: View {
         let descriptor = FetchDescriptor<PersistentTransaction>(
             predicate: #Predicate { $0.txid == txid || $0.txid == onchainTxid }
         )
-        guard let persistentTx = try? modelContext.fetch(descriptor).first else { return nil }
+        guard let persistentTx = try? modelContext.fetch(descriptor).first else {
+            print("🔎 [Exit Fees] No wallet record for candidate \(txid.prefix(16))…")
+            return nil
+        }
+        print("""
+        🔎 [Exit Fees] Record \(persistentTx.txid.prefix(28))…: \
+        fee=\(persistentTx.onchainFeeSat.map(String.init) ?? "nil"), \
+        sent=\(persistentTx.onchainSent.map(String.init) ?? "nil"), \
+        received=\(persistentTx.onchainReceived.map(String.init) ?? "nil"), \
+        source=\(persistentTx.sourceType), status=\(persistentTx.status)
+        """)
         return TransactionModel(from: persistentTx)
     }
 }
 
-/// Extract the CPFP child txid from a transaction status, if present.
+/// Extract the CPFP child txid from a transaction status — only when this
+/// wallet created it. Anchors are anyone-can-spend, so a child with a
+/// Mempool/Block origin was funded by a third party and must not be matched
+/// against (or fee-attributed to) the user's wallet records.
 private func childTxid(of status: ExitTxStatus) -> String? {
-    switch status {
-    case .needsBroadcasting(let data):
-        return data.childTxid
-    case .broadcastWithCpfp(let data):
-        return data.childTxid
-    case .confirmed(let data):
-        return data.childTxid
-    default:
-        return nil
-    }
+    guard let child = status.cpfpChild, child.origin.isWallet else { return nil }
+    return child.txid
+}
+
+/// The CPFP child that spent this transaction's anchor but was created by
+/// someone else (bark reports origin Mempool/Block). Shown as an
+/// "externally fee-bumped" note, never counted toward the user's fees.
+private func externalBumpChild(of status: ExitTxStatus) -> String? {
+    guard let child = status.cpfpChild, !child.origin.isWallet else { return nil }
+    return child.txid
 }
 
 // MARK: - Sheet Wrapper
@@ -504,6 +571,14 @@ private struct ExitStepRow: View {
                     if let linkedTransaction {
                         ExitOnchainInfoRows(transaction: linkedTransaction)
                     }
+
+                    // A third party spent this transaction's anchor to speed
+                    // it up — their fee, not ours
+                    if externalBumpChild(of: transaction.status) != nil {
+                        Label("exit_fee_bumped_externally", systemImage: "person.2")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
             case .waitForUnlock(let confirmedBlock, let claimableHeight):
@@ -563,7 +638,7 @@ private struct ExitStepRow: View {
     /// names stay visible in Technical Details and the state history.
     private func transactionStatusText(_ status: ExitTxStatus) -> Text {
         switch status {
-        case .verifyInputs, .needsSignedPackage, .needsBroadcasting:
+        case .verifyInputs, .needsSignedPackage, .awaitingCpfpBroadcast, .needsBroadcasting:
             return Text("exit_tx_status_preparing")
         case .broadcastWithCpfp:
             return Text("exit_tx_status_broadcast")

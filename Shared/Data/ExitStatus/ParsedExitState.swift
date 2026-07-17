@@ -112,11 +112,33 @@ public struct ExitTransaction: Equatable {
 public enum ExitTxStatus: Equatable {
     case verifyInputs
     case needsSignedPackage
+    /// Bark 0.11: the CPFP child for this transaction has not been created
+    /// or broadcast yet. Carries no payload.
+    case awaitingCpfpBroadcast
     case needsBroadcasting(NeedsBroadcastingData)
+    /// A CPFP child spending this transaction's anchor has been broadcast and
+    /// is awaiting confirmation. Covers bark's `BroadcastWithCpfp` (≤0.10)
+    /// and `AwaitingConfirmation` (0.11+) debug variants.
     case broadcastWithCpfp(BroadcastWithCpfpData)
     case awaitingInputConfirmation(AwaitingInputData)
     case confirmed(ConfirmedData)
     case unparsed(String)
+
+    /// The CPFP child that spent this transaction's anchor, if known.
+    /// Anchors are anyone-can-spend, so check `origin` before attributing
+    /// the child's fee to the user.
+    public var cpfpChild: (txid: String, origin: TxOrigin)? {
+        switch self {
+        case .needsBroadcasting(let data):
+            return (data.childTxid, data.origin)
+        case .broadcastWithCpfp(let data):
+            return (data.childTxid, data.origin)
+        case .confirmed(let data):
+            return (data.childTxid, data.origin)
+        default:
+            return nil
+        }
+    }
     
     public struct NeedsBroadcastingData: Equatable {
         public let childTxid: String
@@ -159,14 +181,29 @@ public enum ExitTxStatus: Equatable {
     }
 }
 
-/// Origin of a transaction
+/// Origin of a CPFP transaction spending an exit anchor. Anchors are
+/// anyone-can-spend, so bark distinguishes children it created itself
+/// (`Wallet`) from ones it merely observed onchain (`Mempool`/`Block`) —
+/// the latter were funded and paid for by a third party.
 public enum TxOrigin: Equatable {
     case wallet(WalletOrigin)
+    /// Third-party anchor spend observed in the mempool.
+    case mempool
+    /// Third-party anchor spend observed in a block.
+    case block(confirmedIn: ArkeBlockRef?)
     case unparsed(String)
-    
+
+    /// Whether this wallet created (and funded) the transaction.
+    /// Unparsed origins count as not ours, so fees are never attributed
+    /// to the user on a parsing gap.
+    public var isWallet: Bool {
+        if case .wallet = self { return true }
+        return false
+    }
+
     public struct WalletOrigin: Equatable {
         public let confirmedIn: ArkeBlockRef?
-        
+
         public init(confirmedIn: ArkeBlockRef?) {
             self.confirmedIn = confirmedIn
         }

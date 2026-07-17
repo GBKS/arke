@@ -149,6 +149,23 @@ final class PersistentTransaction {
         let total = offchain + onchain
         return total > 0 ? total : nil
     }
+
+    /// Onchain fee attributable to the user, for summing into fee totals.
+    /// Guards against counting fees the user didn't pay: a record only
+    /// contributes when the wallet funded the transaction (onchainSent > 0)
+    /// or when the fee was explicitly persisted from bark for an exit claim
+    /// (paid from the exit output, so BDK sees no wallet-funded inputs).
+    /// Exit anchors are anyone-can-spend — a third party's CPFP on our
+    /// anchor must never fold its fee into the user's totals.
+    var userPaidOnchainFeeSat: Int? {
+        guard let fee = onchainFeeSat, fee > 0 else { return nil }
+        // Only demote when the wallet is positively known not to have funded
+        // the tx — records predating onchainSent tracking keep their fee
+        if let sent = onchainSent, sent == 0, subsystemKind != "exit_claim" {
+            return nil
+        }
+        return fee
+    }
     
     /// Whether this transaction involved Lightning Network
     var isLightning: Bool {

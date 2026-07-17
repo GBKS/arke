@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import Bark
+import ArkeUI
 import OSLog
 
 extension WalletManager {
@@ -189,12 +190,15 @@ extension WalletManager {
         // Save to persistent storage for next app launch
         await saveExitCacheToDisk()
         
-        // Also fetch and cache exit statuses for all active exits
+        // Also fetch and cache exit statuses for all exits — including
+        // claimed ones, whose movements still need their claim/CPFP
+        // transactions linked (relinkExitMovements reads this cache; without
+        // claimed statuses a completed exit's movement never gets childTxids)
         var newExitStatuses: [String: ExitTransactionStatus] = [:]
         var statusCount = 0
         var totalTxids = 0
-        
-        for exitVtxo in cachedExitVtxos where !exitVtxo.isClaimed {
+
+        for exitVtxo in cachedExitVtxos {
             if let status = try? await getExitStatus(
                 vtxoId: exitVtxo.vtxoId,
                 includeHistory: true,
@@ -247,6 +251,53 @@ extension WalletManager {
     /// Returns nil if not in cache
     func getCachedExitStatus(for vtxoId: String) -> ExitTransactionStatus? {
         return cachedExitStatuses[vtxoId]
+    }
+
+    /// Persist the fee of an exit claim transaction, reported by bark when
+    /// the claim is created (drainExits). The claim pays into the onchain
+    /// wallet from the exit output, so BDK sees it as a pure receive and can
+    /// never compute its fee — this is the only fee source for claims.
+    /// Marked with subsystemKind "exit_claim" so fee attribution can trust
+    /// the fee despite the record having no wallet-funded inputs.
+    func recordClaimFee(claimTxid: String, feeSats: UInt64) {
+        guard let context = modelContext else {
+            Self.logger.warning("[Exit Claim] Cannot record claim fee - no model context")
+            return
+        }
+
+        let onchainTxid = "onchain_\(claimTxid)"
+        let descriptor = FetchDescriptor<PersistentTransaction>(
+            predicate: #Predicate { $0.txid == onchainTxid }
+        )
+
+        do {
+            let record: PersistentTransaction
+            if let existing = try context.fetch(descriptor).first {
+                record = existing
+            } else {
+                record = PersistentTransaction(
+                    txid: onchainTxid,
+                    movementId: nil,
+                    type: .received,
+                    amount: 0,
+                    date: Date(),
+                    status: .pending,
+                    address: nil,
+                    subsystemCategory: "onchain_transaction"
+                )
+                record.sourceType = "onchain"
+                record.subsystemName = "bitcoin.core"
+                record.paymentMethodType = "bitcoin"
+                context.insert(record)
+            }
+
+            record.onchainFeeSat = Int(feeSats)
+            record.subsystemKind = "exit_claim"
+            try context.save()
+            Self.logger.info("[Exit Claim] Recorded claim fee \(feeSats) sats for \(claimTxid.prefix(16))...")
+        } catch {
+            Self.logger.error("[Exit Claim] Failed to record claim fee: \(error)")
+        }
     }
 
     // MARK: - Blocked Exits

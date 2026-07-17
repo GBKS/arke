@@ -67,8 +67,11 @@ class TransactionLinkingService {
                 var allTxids = Set<String>()
                 for vtxoId in vtxoIds {
                     if let status = walletManager?.getCachedExitStatus(for: vtxoId) {
-                        let txids = ExitStatusParser.extractAllTransactionIds(from: status)
-                        Self.logger.debug("      📋 VTXO \(vtxoId.prefix(16))... has \(txids.count) txid(s): \(txids.map { $0.prefix(16) }.joined(separator: ", "))")
+                        // User-funded only: CPFP children a third party created
+                        // by spending our anchor must not be linked into the
+                        // user's history or fee totals
+                        let txids = ExitStatusParser.extractUserFundedTransactionIds(from: status)
+                        Self.logger.debug("      📋 VTXO \(vtxoId.prefix(16))... has \(txids.count) user-funded txid(s): \(txids.map { $0.prefix(16) }.joined(separator: ", "))")
                         allTxids.formUnion(txids)
                     } else {
                         Self.logger.warning("      ⚠️ No cached exit status for VTXO \(vtxoId.prefix(16))...")
@@ -87,6 +90,19 @@ class TransactionLinkingService {
                 let currentlyLinked = Set(movement.childTxids ?? [])
                 if !currentlyLinked.isEmpty {
                     Self.logger.debug("   🔗 Already linked: \(currentlyLinked.map { $0.replacingOccurrences(of: "onchain_", with: "").prefix(16) }.joined(separator: ", "))")
+                    // Diagnostic: dump fee attribution of existing children so
+                    // misattributed fees (e.g. third-party anchor spends) show
+                    // up even when no new links are created
+                    for childTxid in currentlyLinked.sorted() {
+                        let childDescriptor = FetchDescriptor<PersistentTransaction>(
+                            predicate: #Predicate { $0.txid == childTxid }
+                        )
+                        if let child = try? context.fetch(childDescriptor).first {
+                            Self.logger.info("   🔎 Child \(childTxid.prefix(28))...: fee=\(child.onchainFeeSat.map(String.init) ?? "nil"), sent=\(child.onchainSent.map(String.init) ?? "nil"), received=\(child.onchainReceived.map(String.init) ?? "nil"), source=\(child.sourceType)")
+                        } else {
+                            Self.logger.info("   🔎 Child \(childTxid.prefix(28))...: no wallet record")
+                        }
+                    }
                 }
                 
                 // Find new txids to link
@@ -111,7 +127,7 @@ class TransactionLinkingService {
                     
                     if let onchainTx = try context.fetch(onchainDescriptor).first {
                         linkParentToChild(parent: movement, child: onchainTx, onchainTxid: onchainTxid)
-                        Self.logger.info("      ✅ Linked exit movement \(movement.txid) -> onchain \(txid.prefix(16))...")
+                        Self.logger.info("      ✅ Linked exit movement \(movement.txid) -> onchain \(txid.prefix(16))... (fee: \(onchainTx.onchainFeeSat.map(String.init) ?? "nil"), sent: \(onchainTx.onchainSent.map(String.init) ?? "nil"), received: \(onchainTx.onchainReceived.map(String.init) ?? "nil"), source: \(onchainTx.sourceType))")
                         totalLinked += 1
                     } else {
                         Self.logger.debug("      ⚠️ Onchain transaction \(onchainTxid) not found in database")
@@ -197,7 +213,7 @@ class TransactionLinkingService {
                 
                 if let onchainTx = try context.fetch(onchainDescriptor).first {
                     linkParentToChild(parent: movement, child: onchainTx, onchainTxid: onchainTxid)
-                    Self.logger.info("      ✅ Linked movement \(movementTxid) -> onchain \(txid.prefix(16))...")
+                    Self.logger.info("      ✅ Linked movement \(movementTxid) -> onchain \(txid.prefix(16))... (fee: \(onchainTx.onchainFeeSat.map(String.init) ?? "nil"), sent: \(onchainTx.onchainSent.map(String.init) ?? "nil"), source: \(onchainTx.sourceType))")
                     linkedCount += 1
                 } else {
                     Self.logger.debug("      ⚠️ Onchain transaction \(onchainTxid) not found in database")
@@ -287,7 +303,8 @@ class TransactionLinkingService {
                 Self.logger.debug("   🔍 Extracting txids from \(exitedVtxoIds.count) input VTXO(s)")
                 for vtxoId in exitedVtxoIds {
                     if let status = walletManager?.getCachedExitStatus(for: vtxoId) {
-                        let exitTxids = ExitStatusParser.extractAllTransactionIds(from: status)
+                        // User-funded only — see relinkExitMovements
+                        let exitTxids = ExitStatusParser.extractUserFundedTransactionIds(from: status)
                         if !exitTxids.isEmpty {
                             Self.logger.debug("      📋 VTXO \(vtxoId.prefix(16))... yielded \(exitTxids.count) txid(s)")
                             txids.append(contentsOf: exitTxids)

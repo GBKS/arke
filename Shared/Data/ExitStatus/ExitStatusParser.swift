@@ -55,24 +55,39 @@ public struct ExitStatusParser {
         return history.compactMap { parseState($0) }
     }
     
-    /// Extract all transaction IDs from status (state + history)
+    /// Extract all transaction IDs from status (state + history), including
+    /// CPFP children created by third parties (anchors are anyone-can-spend).
+    /// Use `extractUserFundedTransactionIds` when attributing fees or linking
+    /// transactions into the user's history.
     public static func extractAllTransactionIds(from status: Bark.ExitTransactionStatus) -> [String] {
+        extractTransactionIds(from: status, onlyUserFunded: false)
+    }
+
+    /// Extract the transaction IDs that belong to the user: the exit package
+    /// transactions, their dependencies, the claim, and only those CPFP
+    /// children bark reports as `origin: Wallet`. Children with `Mempool`/
+    /// `Block` origin were fee-bumped by a third party and are excluded.
+    public static func extractUserFundedTransactionIds(from status: Bark.ExitTransactionStatus) -> [String] {
+        extractTransactionIds(from: status, onlyUserFunded: true)
+    }
+
+    private static func extractTransactionIds(from status: Bark.ExitTransactionStatus, onlyUserFunded: Bool) -> [String] {
         var txids = Set<String>()
-        
+
         // Parse current state
         if let parsed = parseState(status.state) {
-            txids.formUnion(extractTxids(from: parsed))
+            txids.formUnion(extractTxids(from: parsed, onlyUserFunded: onlyUserFunded))
         }
-        
+
         // Parse history
         if let history = status.history {
             for historyItem in history {
                 if let parsed = parseState(historyItem) {
-                    txids.formUnion(extractTxids(from: parsed))
+                    txids.formUnion(extractTxids(from: parsed, onlyUserFunded: onlyUserFunded))
                 }
             }
         }
-        
+
         return Array(txids).sorted()
     }
     
@@ -228,6 +243,9 @@ public struct ExitStatusParser {
             return .verifyInputs
         } else if statusContent.hasPrefix("NeedsSignedPackage") {
             return .needsSignedPackage
+        } else if statusContent.hasPrefix("AwaitingCpfpBroadcast") {
+            // Bark 0.11: CPFP child not yet created/broadcast; no payload
+            return .awaitingCpfpBroadcast
         } else if statusContent.hasPrefix("NeedsBroadcasting") {
             let childTxid = extractHexString(from: statusContent, field: "child_txid")
             let origin = parseTxOrigin(from: statusContent)
@@ -253,6 +271,19 @@ public struct ExitStatusParser {
         } else if statusContent.hasPrefix("AwaitingInputConfirmation") {
             let txids = extractTxidSet(from: statusContent, field: "txids")
             return .awaitingInputConfirmation(.init(dependencyTxids: txids))
+        } else if statusContent.hasPrefix("AwaitingConfirmation") {
+            // Bark 0.11 rename of BroadcastWithCpfp: a CPFP child spending
+            // this tx's anchor is out, awaiting confirmation
+            let childTxid = extractHexString(from: statusContent, field: "child_txid")
+            let origin = parseTxOrigin(from: statusContent)
+            log(.debug, "   AwaitingConfirmation: child_txid=\(childTxid?.prefix(16) ?? "nil"), origin=\(String(describing: origin))")
+
+            if let childTxid = childTxid, let origin = origin {
+                log(.info, "✅ Parsed AwaitingConfirmation with child_txid: \(childTxid.prefix(16))...")
+                return .broadcastWithCpfp(.init(childTxid: childTxid, origin: origin))
+            } else {
+                log(.default, "⚠️ Failed to parse AwaitingConfirmation - missing child_txid or origin")
+            }
         } else if statusContent.hasPrefix("Confirmed") {
             let childTxid = extractHexString(from: statusContent, field: "child_txid")
             let block = extractBlockRef(from: statusContent, field: "block")
@@ -283,6 +314,17 @@ public struct ExitStatusParser {
         if originContent.hasPrefix("Wallet") {
             let confirmedIn = extractOptionalBlockRef(from: originContent, field: "confirmed_in")
             return .wallet(.init(confirmedIn: confirmedIn))
+        }
+
+        // Third-party anchor spends: "Mempool" or "Block { confirmed_in: 313395:... }"
+        if originContent.hasPrefix("Mempool") {
+            return .mempool
+        }
+        if originContent.hasPrefix("Block") {
+            // confirmed_in appears bare in Block origins (not Some-wrapped)
+            let confirmedIn = extractBlockRef(from: originContent, field: "confirmed_in")
+                ?? extractOptionalBlockRef(from: originContent, field: "confirmed_in")
+            return .block(confirmedIn: confirmedIn)
         }
 
         return .unparsed(originContent)
@@ -456,27 +498,27 @@ public struct ExitStatusParser {
     
     // MARK: - Transaction ID Extraction
     
-    private static func extractTxids(from state: ParsedExitState) -> Set<String> {
+    private static func extractTxids(from state: ParsedExitState, onlyUserFunded: Bool = false) -> Set<String> {
         var txids = Set<String>()
-        
+
         switch state {
         case .start:
             break
         case .processing(let data):
             for tx in data.transactions {
                 txids.insert(tx.txid)
-                // Also extract child txids from status
+                // Also extract child txids from status. Anchors are
+                // anyone-can-spend, so a child may have been created by a
+                // third party — skip those when only user-funded txids
+                // are wanted (fee attribution, transaction linking).
                 switch tx.status {
-                case .needsBroadcasting(let data):
-                    txids.insert(data.childTxid)
-                case .broadcastWithCpfp(let data):
-                    txids.insert(data.childTxid)
                 case .awaitingInputConfirmation(let data):
                     txids.formUnion(data.dependencyTxids)
-                case .confirmed(let data):
-                    txids.insert(data.childTxid)
                 default:
-                    break
+                    if let child = tx.status.cpfpChild,
+                       !onlyUserFunded || child.origin.isWallet {
+                        txids.insert(child.txid)
+                    }
                 }
             }
         case .awaitingDelta:

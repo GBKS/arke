@@ -215,14 +215,15 @@ final class FeeSummaryViewModel {
             let offchainFee = tx.fees ?? 0
             var onchainFee = tx.onchainFeeSat ?? 0
             
-            // For exits, add linked onchain transaction fees to the onchain fee total
+            // For exits, add linked onchain transaction fees to the onchain
+            // fee total (userPaidOnchainFeeSat excludes third-party bumps)
             if tx.subsystemName == "bark.exit", let childTxids = tx.childTxids, !childTxids.isEmpty, let modelContext = modelContext {
                 for childTxid in childTxids {
                     let descriptor = FetchDescriptor<PersistentTransaction>(
                         predicate: #Predicate { $0.txid == childTxid }
                     )
                     if let childTx = try? modelContext.fetch(descriptor).first,
-                       let childFee = childTx.onchainFeeSat {
+                       let childFee = childTx.userPaidOnchainFeeSat {
                         onchainFee += childFee
                     }
                 }
@@ -317,6 +318,7 @@ final class FeeSummaryViewModel {
             offchainFees += tx.fees ?? 0
             
             // Onchain fees include linked child transaction fees for exits
+            // (userPaidOnchainFeeSat excludes third-party bumps)
             var txOnchainFees = tx.onchainFeeSat ?? 0
             if tx.subsystemName == "bark.exit", let childTxids = tx.childTxids, !childTxids.isEmpty, let modelContext = modelContext {
                 for childTxid in childTxids {
@@ -324,7 +326,7 @@ final class FeeSummaryViewModel {
                         predicate: #Predicate { $0.txid == childTxid }
                     )
                     if let childTx = try? modelContext.fetch(descriptor).first,
-                       let childFee = childTx.onchainFeeSat {
+                       let childFee = childTx.userPaidOnchainFeeSat {
                         txOnchainFees += childFee
                     }
                 }

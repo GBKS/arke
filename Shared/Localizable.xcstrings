@@ -5043,6 +5043,16 @@
         }
       }
     },
+    "exit_fee_bumped_externally" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sped up by a third party \u2014 their fee, not yours"
+          }
+        }
+      }
+    },
     "exit_fees_so_far" : {
       "localizations" : {
         "en" : {

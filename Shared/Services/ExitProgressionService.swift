@@ -272,6 +272,10 @@ class ExitProgressionService {
         // Step 3: Broadcast the transaction
         let txid = try await wallet.broadcastTx(txHex: txHex)
         print("      ✅ Claim transaction broadcast! TXID: \(txid)")
+
+        // Persist the claim fee now — bark is the only source for it (BDK
+        // sees the claim as a pure receive and never computes its fee)
+        walletManager?.recordClaimFee(claimTxid: txid, feeSats: claimTx.feeSats)
         
         // Step 4: Progress exits to sync state (updates to ClaimInProgress)
         let _ = try await wallet.progressExits(feeRateSatPerVb: nil as UInt64?)
