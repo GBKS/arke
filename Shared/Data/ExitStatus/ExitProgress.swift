@@ -52,11 +52,10 @@ public struct ExitProgress: Equatable {
     public let steps: [Step]
     /// 1-based; equals the number of filled segments in the bar.
     public let currentStep: Int
+    public let totalSteps: Int
     public let phase: Phase
     /// Block height at which the exit becomes claimable, once known.
     public let claimableHeight: UInt32?
-
-    public var totalSteps: Int { steps.count }
     public var isCancelled: Bool { phase == .cancelled }
 
     /// Blocks left until the exit timelock expires, clamped to zero.
@@ -171,8 +170,54 @@ public struct ExitProgress: Equatable {
         ))
 
         self.steps = steps
+        self.totalSteps = steps.count
         self.currentStep = clampedCurrent
         self.phase = phase
         self.claimableHeight = claimableHeight
+    }
+
+    /// Aggregate progress across multiple concurrent exits. Cancelled movements
+    /// (vtxoAlreadySpent) are excluded. Claimed movements contribute their full
+    /// step count so the bar advances monotonically as each finishes.
+    public init(statuses: [ExitTransactionStatus]) {
+        let active = statuses.filter { status in
+            guard let parsed = status.parsedState else { return true }
+            if case .vtxoAlreadySpent = parsed { return false }
+            return true
+        }
+
+        guard !active.isEmpty else {
+            self.steps = []
+            self.totalSteps = 0
+            self.currentStep = 0
+            self.phase = .cancelled
+            self.claimableHeight = nil
+            return
+        }
+
+        let progresses = active.map { ExitProgress(status: $0) }
+
+        self.steps = []
+        self.totalSteps = progresses.reduce(0) { $0 + $1.totalSteps }
+        self.currentStep = progresses.reduce(0) { $0 + $1.currentStep }
+        // Phase = earliest (slowest) among exits still in flight;
+        // falls back to .complete when every active exit is done.
+        let inFlight = progresses.filter { $0.phase != .complete }
+        self.phase = inFlight.min { $0.phase.order < $1.phase.order }?.phase ?? .complete
+        // Latest claimable height — all exits must unlock before claiming can proceed.
+        self.claimableHeight = progresses.compactMap(\.claimableHeight).max()
+    }
+}
+
+private extension ExitProgress.Phase {
+    var order: Int {
+        switch self {
+        case .preparing:  return 0
+        case .confirming: return 1
+        case .waiting:    return 2
+        case .claiming:   return 3
+        case .complete:   return 4
+        case .cancelled:  return 5
+        }
     }
 }

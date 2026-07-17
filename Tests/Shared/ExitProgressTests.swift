@@ -241,4 +241,100 @@ struct ExitProgressTests {
         #expect(progress.claimableHeight == nil)
         #expect(progress.blocksUntilUnlock(currentHeight: 301545) == nil)
     }
+
+    // MARK: - Aggregate (multi-VTXO)
+
+    @Test("Single-element aggregate matches single-status init")
+    func testAggregateOfOne() {
+        let status = makeStatus(state: Self.processingOneOfTwoConfirmed)
+        let single = ExitProgress(status: status)
+        let aggregate = ExitProgress(statuses: [status])
+
+        #expect(aggregate.currentStep == single.currentStep)
+        #expect(aggregate.totalSteps == single.totalSteps)
+        #expect(aggregate.phase == single.phase)
+    }
+
+    @Test("Aggregate sums steps across two exits")
+    func testAggregateSumsSteps() {
+        let statusA = makeStatus(state: Self.processingTwoUnconfirmed)
+        let statusB = makeStatus(state: Self.awaitingDeltaState, history: [Self.startState, Self.processingOneOfTwoConfirmed])
+        let a = ExitProgress(status: statusA)
+        let b = ExitProgress(status: statusB)
+        let aggregate = ExitProgress(statuses: [statusA, statusB])
+
+        #expect(aggregate.totalSteps == a.totalSteps + b.totalSteps)
+        #expect(aggregate.currentStep == a.currentStep + b.currentStep)
+    }
+
+    @Test("Aggregate phase = slowest phase across all exits")
+    func testAggregatePhaseIsSlowest() {
+        // A is still confirming, B is waiting — aggregate should be confirming
+        let statusA = makeStatus(state: Self.processingTwoUnconfirmed)
+        let statusB = makeStatus(state: Self.awaitingDeltaState, history: [Self.startState, Self.processingOneOfTwoConfirmed])
+        let aggregate = ExitProgress(statuses: [statusA, statusB])
+
+        #expect(aggregate.phase == .confirming)
+    }
+
+    @Test("Aggregate claimable height = max across all exits")
+    func testAggregateClaimableHeightIsMax() {
+        let statusA = makeStatus(state: Self.awaitingDeltaState, history: [Self.startState, Self.processingOneOfTwoConfirmed])
+        let statusB = makeStatus(state: Self.claimableState)
+        let aggregate = ExitProgress(statuses: [statusA, statusB])
+
+        // awaitingDeltaState has claimableHeight 301555; claimableState also 301555
+        #expect(aggregate.claimableHeight == 301555)
+    }
+
+    @Test("Cancelled VTXO excluded from aggregate")
+    func testAggregateCancelledExcluded() {
+        let active = makeStatus(state: Self.processingTwoUnconfirmed)
+        let cancelled = makeStatus(state: Self.alreadySpentState)
+        let single = ExitProgress(status: active)
+        let aggregate = ExitProgress(statuses: [active, cancelled])
+
+        // Cancelled exit contributes nothing
+        #expect(aggregate.totalSteps == single.totalSteps)
+        #expect(aggregate.currentStep == single.currentStep)
+        #expect(aggregate.phase == .confirming)
+    }
+
+    @Test("All-cancelled aggregate is cancelled phase with zero steps")
+    func testAggregateAllCancelled() {
+        let aggregate = ExitProgress(statuses: [makeStatus(state: Self.alreadySpentState)])
+
+        #expect(aggregate.phase == .cancelled)
+        #expect(aggregate.totalSteps == 0)
+        #expect(aggregate.currentStep == 0)
+    }
+
+    @Test("Claimed exit contributes full steps to keep bar monotonic")
+    func testAggregateClaimedContributesFullSteps() {
+        let claimed = makeStatus(state: Self.claimedState)
+        let active = makeStatus(state: Self.processingTwoUnconfirmed)
+        let claimedProgress = ExitProgress(status: claimed)
+        let activeProgress = ExitProgress(status: active)
+        let aggregate = ExitProgress(statuses: [claimed, active])
+
+        // Claimed exit is at its full step count; active drives the phase
+        #expect(aggregate.totalSteps == claimedProgress.totalSteps + activeProgress.totalSteps)
+        #expect(aggregate.currentStep == claimedProgress.currentStep + activeProgress.currentStep)
+        #expect(aggregate.phase == .confirming) // slowest in-flight phase
+    }
+
+    @Test("All claimed aggregate is complete phase")
+    func testAggregateAllClaimedIsComplete() {
+        let aggregate = ExitProgress(statuses: [makeStatus(state: Self.claimedState)])
+
+        #expect(aggregate.phase == .complete)
+    }
+
+    @Test("Empty aggregate is cancelled")
+    func testAggregateEmpty() {
+        let aggregate = ExitProgress(statuses: [])
+
+        #expect(aggregate.phase == .cancelled)
+        #expect(aggregate.totalSteps == 0)
+    }
 }

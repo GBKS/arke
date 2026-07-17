@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "—" : {
+
+    },
     "(%@)" : {
       "shouldTranslate" : false
     },
@@ -3906,6 +3909,16 @@
         }
       }
     },
+    "data_estimated_time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimated time"
+          }
+        }
+      }
+    },
     "data_claimable_since" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4560,6 +4573,7 @@
       }
     },
     "data_unknown_status" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5114,12 +5128,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preparing transactions"
+            "value" : "Preparing"
           }
         }
       }
     },
     "exit_step_wait_blocks %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -5134,6 +5149,29 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld blocks remaining"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "exit_step_wait_status %lld %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld block remaining · %@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld blocks remaining · %@"
                 }
               }
             }
@@ -5163,11 +5201,12 @@
       }
     },
     "exit_tx_status_awaiting_parent" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Waiting for an earlier transaction to confirm"
+            "value" : "Waiting"
           }
         }
       }
@@ -5177,7 +5216,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Broadcast — waiting for confirmation"
+            "value" : "Confirming"
           }
         }
       }
@@ -5187,7 +5226,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preparing to broadcast"
+            "value" : "Preparing"
           }
         }
       }
@@ -9617,6 +9656,9 @@
           }
         }
       }
+    },
+    "Waiting" : {
+
     }
   },
   "version" : "1.1"

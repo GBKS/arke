@@ -99,17 +99,14 @@ struct ExitProgressLockScreenView: View {
     // MARK: - Helper Properties
     
     private var progressTint: Color {
-        if context.state.needsCheckIn {
-            return .orange
-        } else if context.state.hasError {
-            return .red
-        } else if context.state.isClaimed {
+        if context.state.needsCheckIn { return .orange }
+        if context.state.hasError { return .red }
+        switch context.state.exitState {
+        case .claimed:
             return .Arke.green
-        } else if context.state.currentStep >= context.state.totalTransactions + 2 {
-            // Waiting for unlock or claiming
+        case .awaitingDelta, .claimable, .claimInProgress:
             return .Arke.orange
-        } else {
-            // Processing transactions
+        default:
             return .Arke.purple
         }
     }

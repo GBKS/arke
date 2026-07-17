@@ -458,7 +458,7 @@ private struct ExitStepRow: View {
             return transactionStatusText(transaction.status)
         case .waitForUnlock:
             if let blocksUntilUnlock, blocksUntilUnlock > 0 {
-                return Text("exit_step_wait_blocks \(blocksUntilUnlock)")
+                return Text(verbatim: estimatedUnlockTime(blocks: blocksUntilUnlock))
             }
             return Text("status_exit_finalizing")
         case .claim:
@@ -514,9 +514,7 @@ private struct ExitStepRow: View {
                     StepDetailRow(labelKey: "data_claimable_height", value: "\(claimableHeight)")
                 }
                 if let blocksUntilUnlock, blocksUntilUnlock > 0 {
-                    Text("exit_step_wait_blocks \(blocksUntilUnlock)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    StepDetailRow(labelKey: "data_estimated_time", value: estimatedUnlockTime(blocks: blocksUntilUnlock))
                 }
 
             case .claim(let claimTxid):
@@ -546,6 +544,21 @@ private struct ExitStepRow: View {
         }
     }
 
+    private func estimatedUnlockTime(blocks: Int) -> String {
+        let totalMinutes = blocks * 10
+        if totalMinutes < 60 {
+            return "~\(totalMinutes)m"
+        }
+        let hours = totalMinutes / 60
+        if hours < 24 {
+            let minutes = totalMinutes % 60
+            return minutes == 0 ? "~\(hours)h" : "~\(hours)h \(minutes)m"
+        }
+        let days = hours / 24
+        let remainingHours = hours % 24
+        return remainingHours == 0 ? "~\(days)d" : "~\(days)d \(remainingHours)h"
+    }
+
     /// Plain-language version of bark's transaction status; the raw case
     /// names stay visible in Technical Details and the state history.
     private func transactionStatusText(_ status: ExitTxStatus) -> Text {
@@ -555,11 +568,11 @@ private struct ExitStepRow: View {
         case .broadcastWithCpfp:
             return Text("exit_tx_status_broadcast")
         case .awaitingInputConfirmation:
-            return Text("exit_tx_status_awaiting_parent")
+            return Text("Waiting")
         case .confirmed:
             return Text("status_confirmed")
         case .unparsed:
-            return Text("data_unknown_status")
+            return Text("—")
         }
     }
 }

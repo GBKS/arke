@@ -12,64 +12,57 @@ import ActivityKit
 import Bark
 
 extension ExitProgressionService {
-    
+
     // MARK: - Live Activity Management
-    
-    /// Active Live Activities tracked by exit ID
-    private static var activeActivities: [String: Activity<ExitProgressActivityAttributes>] = [:]
-    
-    /// Scheduled notification IDs for cleanup
-    private static var scheduledNotificationIds: [String] = []
-    
+
+    /// The single Live Activity tracking all concurrent exit movements.
+    private static var activeActivity: Activity<ExitProgressActivityAttributes>?
+
     // MARK: - Start Exit Monitoring
-    
-    /// Start Live Activity and notification schedule when exit begins
+
+    /// Start the Live Activity and schedule check-in notifications when an exit begins.
     func startExitMonitoring(for exitVtxos: [ExitVtxo]) async {
         print("🚀 [LiveActivity] Starting exit monitoring for \(exitVtxos.count) VTXO(s)")
-        
-        // Start Live Activity
         await startLiveActivity(for: exitVtxos)
-        
-        // Schedule check-in notifications
         await ExitProgressionNotifications.shared.scheduleCheckInSequence()
     }
-    
+
     // MARK: - Live Activity Lifecycle
-    
-    /// Start a new Live Activity for an exit batch
+
+    /// Ensure one Live Activity exists for the current exit batch. If an activity
+    /// is already running, refreshes it instead of creating a duplicate.
     func startLiveActivity(for exitVtxos: [ExitVtxo]) async {
         guard !exitVtxos.isEmpty else {
-            print("⚠️ [LiveActivity] No VTXOs provided, cannot start activity")
+            print("⚠️ [LiveActivity] No VTXOs provided, skipping start")
             return
         }
-        
-        // Check if Live Activities are enabled
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             print("⚠️ [LiveActivity] Live Activities not enabled by user")
             return
         }
-        
-        // Use first VTXO ID as the exit identifier
-        let exitId = exitVtxos.first?.vtxoId ?? UUID().uuidString
-        
-        // Check if we already have an activity for this exit
-        if Self.activeActivities[exitId] != nil {
-            print("⚠️ [LiveActivity] Activity already exists for exit \(exitId)")
+
+        if Self.activeActivity != nil {
+            print("ℹ️ [LiveActivity] Activity already running — refreshing instead")
+            await updateAllLiveActivities()
             return
         }
-        
+
+        let exitCount = exitVtxos.count
         let attributes = ExitProgressActivityAttributes(
-            exitId: exitId,
-            exitCount: exitVtxos.count,
+            exitId: UUID().uuidString,
+            exitCount: exitCount,
             startTime: Date()
         )
-        
+
+        // Initial estimate: each exit starts at step 1 of ~5 steps.
+        // Will be updated immediately by the next updateAllLiveActivities call.
+        let estimatedTotal = max(1, exitCount * 5)
         let initialState = ExitProgressActivityAttributes.ContentState(
-            currentStep: 1,
-            totalSteps: 5, // Will be updated when we get transaction count (1 tx + 4 steps)
-            stepDescription: exitVtxos.count > 1 ? "Moving \(exitVtxos.count) outputs" : "Moving to savings",
+            currentStep: exitCount,
+            totalSteps: estimatedTotal,
+            stepDescription: exitCount > 1 ? "Moving \(exitCount) outputs to savings" : "Moving to savings",
             transactionsConfirmed: 0,
-            totalTransactions: 0,
+            totalTransactions: exitCount,
             exitState: .start,
             lastUpdated: Date(),
             needsCheckIn: false,
@@ -78,71 +71,33 @@ extension ExitProgressionService {
             isClaimed: false,
             hasError: false
         )
-        
+
         do {
             let activity = try Activity.request(
                 attributes: attributes,
                 content: .init(state: initialState, staleDate: nil)
             )
-            Self.activeActivities[exitId] = activity
-            print("✅ [LiveActivity] Started activity for exit \(exitId)")
+            Self.activeActivity = activity
+            print("✅ [LiveActivity] Started activity for \(exitCount) VTXO(s)")
         } catch {
             print("❌ [LiveActivity] Failed to start activity: \(error)")
         }
     }
-    
-    /// Update Live Activity with current exit status
-    func updateLiveActivity(exitId: String, with status: Bark.ExitTransactionStatus) async {
-        guard let activity = Self.activeActivities[exitId] else {
-            print("⚠️ [LiveActivity] No active activity found for exit \(exitId)")
+
+    /// End the Live Activity with a final summary state.
+    func endLiveActivity(success: Bool) async {
+        guard let activity = Self.activeActivity else {
+            print("⚠️ [LiveActivity] No active activity to end")
             return
         }
 
-        // Claimed and cancelled exits stay in getExitVtxos(), so the
-        // "VTXO missing from exit list" completion check never fires for
-        // them - end the activity here based on the terminal status
-        switch ExitStatusParser.parseState(status.state) {
-        case .claimed:
-            await endLiveActivity(exitId: exitId, success: true)
-            return
-        case .vtxoAlreadySpent:
-            await endLiveActivity(exitId: exitId, success: false)
-            return
-        default:
-            break
-        }
-
-        var contentState = buildContentState(from: status, needsCheckIn: false)
-
-        // Surface a blocked exit (fees can't be covered right now) instead of
-        // the regular step description
-        if let blocked = walletManager?.getExitBlockedInfo(for: exitId) {
-            contentState.stepDescription = Self.pausedDescription(for: blocked.reason)
-        }
-
-        await activity.update(
-            ActivityContent(
-                state: contentState,
-                staleDate: Date().addingTimeInterval(120 * 60) // Stale in 2 hours
-            )
-        )
-        
-        print("✅ [LiveActivity] Updated activity for exit \(exitId)")
-    }
-    
-    /// End Live Activity when exit completes or fails
-    func endLiveActivity(exitId: String, success: Bool) async {
-        guard let activity = Self.activeActivities[exitId] else {
-            print("⚠️ [LiveActivity] No active activity found for exit \(exitId)")
-            return
-        }
-        
+        let current = activity.content.state
         let finalState = ExitProgressActivityAttributes.ContentState(
-            currentStep: success ? 5 : 1, // Assuming minimal 1 tx (5 total steps)
-            totalSteps: 5,
-            stepDescription: success ? "Move completed!" : "Move stopped",
-            transactionsConfirmed: 0,
-            totalTransactions: 1,
+            currentStep: success ? current.totalSteps : current.currentStep,
+            totalSteps: current.totalSteps,
+            stepDescription: success ? "Move complete!" : "Move stopped",
+            transactionsConfirmed: current.totalTransactions,
+            totalTransactions: current.totalTransactions,
             exitState: success ? .claimed : .start,
             lastUpdated: Date(),
             needsCheckIn: false,
@@ -151,310 +106,233 @@ extension ExitProgressionService {
             isClaimed: success,
             hasError: !success
         )
-        
+
         await activity.end(
             ActivityContent(state: finalState, staleDate: nil),
-            dismissalPolicy: .after(.now + 3600) // Dismiss after 1 hour
+            dismissalPolicy: .after(.now + 3600)
         )
-        
-        Self.activeActivities.removeValue(forKey: exitId)
-        print("✅ [LiveActivity] Ended activity for exit \(exitId)")
-        
-        // Cancel notifications if this was the last active exit
-        if Self.activeActivities.isEmpty {
-            await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
-        }
+
+        Self.activeActivity = nil
+        print("✅ [LiveActivity] Ended activity (success: \(success))")
+
+        await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
     }
-    
-    /// Reattach to existing activities on app launch
+
+    // MARK: - Relaunch Reattachment
+
+    /// Reattach to any surviving Live Activity on app launch and bring it up to date.
     func reattachToExistingActivities() async {
-        // First, reattach to any existing Live Activities that survived
-        for activity in Activity<ExitProgressActivityAttributes>.activities {
-            let exitId = activity.attributes.exitId
-            Self.activeActivities[exitId] = activity
-            print("✅ [LiveActivity] Reattached to existing activity for exit \(exitId)")
+        if let existing = Activity<ExitProgressActivityAttributes>.activities.first {
+            Self.activeActivity = existing
+            print("✅ [LiveActivity] Reattached to existing activity")
         }
-        
-        // Then, check if we have active exits without Live Activities (e.g., after rebuild)
         await recreateMissingActivities()
-
-        // Bring reattached activities up to date and end any whose exits
-        // finished while the app wasn't running
         await updateAllLiveActivities()
     }
-    
-    /// Recreate Live Activities for active exits that don't have them
+
+    /// Create a Live Activity if exits are active but no activity is running
+    /// (e.g. after an app rebuild or a crash mid-exit).
     private func recreateMissingActivities() async {
+        guard Self.activeActivity == nil else { return }
         do {
-            // Check if we have any pending exits
-            let hasPending = try await wallet.hasPendingExits()
-            guard hasPending else {
-                print("ℹ️ [LiveActivity] No pending exits found")
-                return
-            }
-            
-            // Get all exit VTXOs, ignoring ones that already finished
             let exitVtxos = try await wallet.getExitVtxos().filter { $0.isActive }
-            guard !exitVtxos.isEmpty else {
-                print("ℹ️ [LiveActivity] No exit VTXOs found")
-                return
-            }
-            
-            print("🔄 [LiveActivity] Found \(exitVtxos.count) active exit(s) without Live Activities")
-            
-            // For each exit, create a Live Activity if it doesn't have one
-            for vtxo in exitVtxos {
-                let exitId = vtxo.vtxoId
-                
-                // Skip if we already have an activity for this exit
-                if Self.activeActivities[exitId] != nil {
-                    continue
-                }
-                
-                // Create a new Live Activity for this exit
-                print("🆕 [LiveActivity] Recreating Live Activity for exit \(exitId)")
-                await startLiveActivity(for: [vtxo])
-            }
-            
+            guard !exitVtxos.isEmpty else { return }
+            print("🆕 [LiveActivity] Recreating missing activity for \(exitVtxos.count) exit(s)")
+            await startLiveActivity(for: exitVtxos)
         } catch {
-            print("⚠️ [LiveActivity] Failed to recreate activities: \(error)")
-        }
-    }
-    
-    /// Clean up dismissed activities
-    func cleanupDismissedActivities() async {
-        let currentActivityIds = Set(Activity<ExitProgressActivityAttributes>.activities.map { $0.attributes.exitId })
-        
-        for (exitId, _) in Self.activeActivities {
-            if !currentActivityIds.contains(exitId) {
-                Self.activeActivities.removeValue(forKey: exitId)
-                print("🗑️ [LiveActivity] Removed dismissed activity for exit \(exitId)")
-            }
-        }
-    }
-    
-    /// Check if there are any active exits being monitored
-    func hasActiveExits() async -> Bool {
-        return !Self.activeActivities.isEmpty
-    }
-    
-    // MARK: - User Check-In Handler
-    
-    /// Called when user checks in (taps notification or opens app)
-    func userCheckedIn() async {
-        print("👤 [LiveActivity] User checked in")
-        
-        // Progress exits
-        await checkAndProgressExits()
-        
-        // Refresh balances and transactions to show latest exit state
-        await walletManager?.refreshAfterVTXOChange()
-        
-        // Update all Live Activities to "fresh" state (ends any that finished)
-        await updateAllLiveActivities()
-
-        // Reschedule notifications (reset the clock)
-        await ExitProgressionNotifications.shared.scheduleCheckInSequence()
-    }
-
-    // MARK: - Content State Building
-
-    /// Step description override for blocked exits. Plain English like the
-    /// other step descriptions in this file (Live Activity content isn't
-    /// routed through the localization catalogs yet).
-    private static func pausedDescription(for reason: ExitBlockedReason) -> String {
-        switch reason {
-        case .insufficientOnchainFunds:
-            return "Paused — add onchain funds to continue"
-        case .claimFeeExceedsOutput:
-            return "Paused — network fees too high"
-        case .other:
-            return "Paused — will retry automatically"
+            print("⚠️ [LiveActivity] Failed to recreate missing activity: \(error)")
         }
     }
 
-    /// Build ContentState from ExitTransactionStatus
-    private func buildContentState(from status: Bark.ExitTransactionStatus, needsCheckIn: Bool) -> ExitProgressActivityAttributes.ContentState {
-        let parsed = ExitStatusParser.parseState(status.state)
-        let transactionCount = max(1, Int(status.transactionCount))
-        let totalSteps = transactionCount + 4
-        let (currentStep, exitState, description, isWaiting, isClaimable, isClaimed) = parseExitState(parsed, transactionCount: transactionCount)
-        
-        return ExitProgressActivityAttributes.ContentState(
-            currentStep: currentStep,
-            totalSteps: totalSteps,
-            stepDescription: description,
-            transactionsConfirmed: countConfirmedTransactions(status),
-            totalTransactions: transactionCount,
-            exitState: exitState,
-            lastUpdated: Date(),
-            needsCheckIn: needsCheckIn,
-            currentBlockHeight: extractCurrentBlockHeight(parsed),
-            targetBlockHeight: extractTargetBlockHeight(parsed),
-            blocksRemaining: extractBlocksRemaining(parsed),
-            isWaitingForBlocks: isWaiting,
-            isClaimable: isClaimable,
-            isClaimed: isClaimed,
-            hasError: false
-        )
-    }
-    
-    /// Parse exit state into step number, state, description, and flags
-    /// Steps: 1=Prepare, 2..k+1=Process transactions, k+2=Wait unlock, k+3=Claim, k+4=Complete
-    private func parseExitState(_ parsed: ParsedExitState?, transactionCount: Int) -> (Int, ExitState, String, Bool, Bool, Bool) {
-        guard let parsed = parsed else {
-            return (1, .unparsed, "Processing...", false, false, false)
-        }
-        
-        switch parsed {
-        case .start:
-            return (1, .start, "Starting move to savings", false, false, false)
-            
-        case .processing(let state):
-            let confirmedCount = state.transactions.filter { tx in
-                if case .confirmed = tx.status {
-                    return true
-                }
-                return false
-            }.count
-            let currentStep = 2 + confirmedCount
-            
-            if state.transactions.isEmpty {
-                return (currentStep, .processing, "Broadcasting transactions", false, false, false)
-            } else {
-                return (currentStep, .processing, "Confirming transactions", false, false, false)
-            }
-            
-        case .awaitingDelta(let data):
-            let blocksLeft = data.claimableHeight > data.tipHeight ? 
-                data.claimableHeight - data.tipHeight : 0
-            let currentStep = transactionCount + 2
-            return (currentStep, .awaitingDelta, "Waiting for \(blocksLeft) blocks", true, false, false)
-            
-        case .claimable:
-            let currentStep = transactionCount + 2
-            return (currentStep, .claimable, "Claiming automatically", false, true, false)
-            
-        case .claimInProgress:
-            let currentStep = transactionCount + 3
-            return (currentStep, .claimInProgress, "Claim transaction confirming", false, false, false)
-            
-        case .claimed:
-            let currentStep = transactionCount + 4
-            return (currentStep, .claimed, "Move complete", false, false, true)
+    // MARK: - Aggregate Update
 
-        case .vtxoAlreadySpent:
-            // Terminal: exit cancelled because the VTXO was spent elsewhere.
-            // No dedicated Live Activity state yet — surface as a terminal message.
-            return (transactionCount + 4, .unparsed, "Exit cancelled — funds already spent", false, false, true)
-
-        case .unparsed:
-            return (1, .unparsed, "Processing...", false, false, false)
-        }
-    }
-    
-    /// Count confirmed transactions from status
-    private func countConfirmedTransactions(_ status: Bark.ExitTransactionStatus) -> Int {
-        guard let parsed = ExitStatusParser.parseState(status.state) else {
-            return 0
-        }
-        
-        if case .processing(let state) = parsed {
-            return state.transactions.filter { tx in
-                if case .confirmed = tx.status {
-                    return true
-                }
-                return false
-            }.count
-        }
-        
-        return 0
-    }
-    
-    /// Extract current block height from parsed state
-    private func extractCurrentBlockHeight(_ parsed: ParsedExitState?) -> UInt32? {
-        guard let parsed = parsed else { return nil }
-        
-        switch parsed {
-        case .start(let state):
-            return state.tipHeight
-        case .processing(let state):
-            return state.tipHeight
-        case .awaitingDelta(let state):
-            return state.tipHeight
-        case .claimable(let state):
-            return state.tipHeight
-        case .claimInProgress(let state):
-            return state.tipHeight
-        case .claimed(let state):
-            return state.tipHeight
-        case .vtxoAlreadySpent(let state):
-            return state.tipHeight
-        case .unparsed:
-            return nil
-        }
-    }
-    
-    /// Extract target block height from parsed state
-    private func extractTargetBlockHeight(_ parsed: ParsedExitState?) -> UInt32? {
-        guard let parsed = parsed else { return nil }
-        
-        if case .awaitingDelta(let state) = parsed {
-            return state.claimableHeight
-        }
-        
-        return nil
-    }
-    
-    /// Extract blocks remaining from parsed state
-    private func extractBlocksRemaining(_ parsed: ParsedExitState?) -> Int? {
-        guard let parsed = parsed else { return nil }
-        
-        if case .awaitingDelta(let state) = parsed {
-            if state.claimableHeight > state.tipHeight {
-                return Int(state.claimableHeight - state.tipHeight)
-            } else {
-                return 0
-            }
-        }
-        
-        return nil
-    }
-    
-    // MARK: - Integration with Existing checkAndProgressExits
-    
-    /// Update all active Live Activities (called from checkAndProgressExits)
+    /// Fetch all exit statuses, build an aggregate progress, and push one update
+    /// to the single Live Activity. Ends the activity when all exits are terminal.
     func updateAllLiveActivities() async {
-        guard !Self.activeActivities.isEmpty else { return }
-        
+        guard Self.activeActivity != nil else { return }
+
         do {
             let exitVtxos = try await wallet.getExitVtxos()
-            
-            // Update each active Live Activity
-            for (exitId, _) in Self.activeActivities {
-                guard let vtxo = exitVtxos.first(where: { $0.vtxoId == exitId }) else {
-                    // Exit is complete (VTXO no longer in exit list)
-                    await endLiveActivity(exitId: exitId, success: true)
-                    continue
-                }
-                
-                // Get status and update activity
+
+            var statuses: [ExitTransactionStatus] = []
+            for vtxo in exitVtxos {
                 guard let status = try await wallet.getExitStatus(
                     vtxoId: vtxo.vtxoId,
                     includeHistory: false,
                     includeTransactions: true
-                ) else {
-                    continue
-                }
-                
-                await updateLiveActivity(exitId: exitId, with: status)
+                ) else { continue }
+                statuses.append(status)
             }
-            
-            // Clean up any dismissed activities
+
+            let aggregate = ExitProgress(statuses: statuses)
+
+            switch aggregate.phase {
+            case .complete:
+                await endLiveActivity(success: true)
+            case .cancelled where exitVtxos.isEmpty:
+                // All VTXOs gone from exit list — treat as complete
+                await endLiveActivity(success: true)
+            case .cancelled:
+                // All remaining exits cancelled (vtxoAlreadySpent)
+                await endLiveActivity(success: false)
+            default:
+                let activeCount = statuses.filter { status in
+                    guard let parsed = status.parsedState else { return true }
+                    if case .vtxoAlreadySpent = parsed { return false }
+                    return true
+                }.count
+
+                var contentState = buildContentState(
+                    from: statuses,
+                    exitCount: activeCount,
+                    needsCheckIn: false
+                )
+
+                // Override description if any movement is fee-blocked
+                if let blocked = statuses.compactMap({ walletManager?.getExitBlockedInfo(for: $0.vtxoId) }).first {
+                    contentState.stepDescription = Self.pausedDescription(for: blocked.reason)
+                }
+
+                await Self.activeActivity?.update(
+                    ActivityContent(
+                        state: contentState,
+                        staleDate: Date().addingTimeInterval(120 * 60)
+                    )
+                )
+                print("✅ [LiveActivity] Updated (step \(aggregate.currentStep)/\(aggregate.totalSteps), phase: \(aggregate.phase))")
+            }
+
             await cleanupDismissedActivities()
-            
+
         } catch {
-            print("❌ [LiveActivity] Failed to update activities: \(error)")
+            print("❌ [LiveActivity] Failed to update activity: \(error)")
+        }
+    }
+
+    // MARK: - User Check-In Handler
+
+    /// Called when the user taps a check-in notification or opens the app.
+    func userCheckedIn() async {
+        print("👤 [LiveActivity] User checked in")
+        await checkAndProgressExits()
+        await walletManager?.refreshAfterVTXOChange()
+        await updateAllLiveActivities()
+        await ExitProgressionNotifications.shared.scheduleCheckInSequence()
+    }
+
+    // MARK: - Cleanup
+
+    /// Remove the activity reference if the user dismissed it from the lock screen.
+    func cleanupDismissedActivities() async {
+        guard let current = Self.activeActivity else { return }
+        let stillActive = Activity<ExitProgressActivityAttributes>.activities
+        if !stillActive.contains(where: { $0.id == current.id }) {
+            Self.activeActivity = nil
+            print("🗑️ [LiveActivity] Activity dismissed by user")
+        }
+    }
+
+    /// Whether there is currently a Live Activity running.
+    func hasActiveExits() async -> Bool {
+        return Self.activeActivity != nil
+    }
+
+    // MARK: - Content State Building
+
+    private func buildContentState(
+        from statuses: [ExitTransactionStatus],
+        exitCount: Int,
+        needsCheckIn: Bool
+    ) -> ExitProgressActivityAttributes.ContentState {
+        let aggregate = ExitProgress(statuses: statuses)
+
+        let totalTransactions = statuses.reduce(0) { $0 + max(1, Int($1.transactionCount)) }
+        let transactionsConfirmed = statuses.reduce(0) { $0 + countConfirmedTransactions($1) }
+
+        let currentBlockHeight = statuses.compactMap { extractCurrentBlockHeight($0.parsedState) }.max()
+        let targetBlockHeight = aggregate.claimableHeight
+        let blocksRemaining: Int? = {
+            guard let target = targetBlockHeight, let current = currentBlockHeight else { return nil }
+            return max(0, Int(target) - Int(current))
+        }()
+
+        return ExitProgressActivityAttributes.ContentState(
+            currentStep: aggregate.currentStep,
+            totalSteps: max(1, aggregate.totalSteps),
+            stepDescription: stepDescription(for: aggregate, exitCount: exitCount),
+            transactionsConfirmed: transactionsConfirmed,
+            totalTransactions: totalTransactions,
+            exitState: Self.exitState(for: aggregate.phase),
+            lastUpdated: Date(),
+            needsCheckIn: needsCheckIn,
+            currentBlockHeight: currentBlockHeight,
+            targetBlockHeight: targetBlockHeight,
+            blocksRemaining: blocksRemaining,
+            isWaitingForBlocks: aggregate.phase == .waiting,
+            isClaimable: aggregate.phase == .waiting,
+            isClaimed: aggregate.phase == .complete,
+            hasError: false
+        )
+    }
+
+    private func stepDescription(for progress: ExitProgress, exitCount: Int) -> String {
+        switch progress.phase {
+        case .preparing:
+            return exitCount > 1 ? "Moving \(exitCount) outputs to savings" : "Moving to savings"
+        case .confirming:
+            return "Confirming transactions"
+        case .waiting:
+            return "Waiting for timelock"
+        case .claiming:
+            return "Claiming automatically"
+        case .complete:
+            return exitCount > 1 ? "Moves complete" : "Move complete"
+        case .cancelled:
+            return "Move stopped"
+        }
+    }
+
+    private static func exitState(for phase: ExitProgress.Phase) -> ExitState {
+        switch phase {
+        case .preparing:  return .start
+        case .confirming: return .processing
+        case .waiting:    return .awaitingDelta
+        case .claiming:   return .claimInProgress
+        case .complete:   return .claimed
+        case .cancelled:  return .start
+        }
+    }
+
+    private static func pausedDescription(for reason: ExitBlockedReason) -> String {
+        switch reason {
+        case .insufficientOnchainFunds: return "Paused — add onchain funds to continue"
+        case .claimFeeExceedsOutput:    return "Paused — network fees too high"
+        case .other:                    return "Paused — will retry automatically"
+        }
+    }
+
+    private func countConfirmedTransactions(_ status: ExitTransactionStatus) -> Int {
+        guard let parsed = ExitStatusParser.parseState(status.state) else { return 0 }
+        if case .processing(let state) = parsed {
+            return state.transactions.filter {
+                if case .confirmed = $0.status { return true }
+                return false
+            }.count
+        }
+        return 0
+    }
+
+    private func extractCurrentBlockHeight(_ parsed: ParsedExitState?) -> UInt32? {
+        guard let parsed else { return nil }
+        switch parsed {
+        case .start(let s):          return s.tipHeight
+        case .processing(let s):     return s.tipHeight
+        case .awaitingDelta(let s):  return s.tipHeight
+        case .claimable(let s):      return s.tipHeight
+        case .claimInProgress(let s): return s.tipHeight
+        case .claimed(let s):        return s.tipHeight
+        case .vtxoAlreadySpent(let s): return s.tipHeight
+        case .unparsed:              return nil
         }
     }
 }

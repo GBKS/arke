@@ -103,17 +103,14 @@ struct ExitProgressLiveActivity: Widget {
     // MARK: - Helper Functions
     
     private func progressTint(_ state: ExitProgressActivityAttributes.ContentState) -> Color {
-        if state.needsCheckIn {
-            return .orange
-        } else if state.hasError {
-            return .red
-        } else if state.isClaimed {
+        if state.needsCheckIn { return .orange }
+        if state.hasError { return .red }
+        switch state.exitState {
+        case .claimed:
             return .Arke.green
-        } else if state.currentStep >= state.totalTransactions + 2 {
-            // Waiting for unlock or claiming
+        case .awaitingDelta, .claimable, .claimInProgress:
             return .Arke.orange
-        } else {
-            // Processing transactions
+        default:
             return .Arke.purple
         }
     }

@@ -535,15 +535,18 @@ struct TransactionDetailView_iOS: View {
             }
             */
             
-            // Address (hide for lightning payments and received offchain transfers)
+            // Address (hide for lightning payments, received offchain transfers, and unilateral exits)
             if let address = transaction.address {
                 // Don't show address for lightning payments (invoices aren't useful to users)
                 let isLightning = transaction.category?.isLightning ?? false
-                
+
                 // Don't show address for received offchain transfers (users would just see their own address)
                 let isReceivedOffchainTransfer = transaction.category == .offchainTransfer && transaction.transactionType == .received
-                
-                if !isLightning && !isReceivedOffchainTransfer {
+
+                // Don't show address for unilateral exits (always goes to user's own address)
+                let isUnilateralExit = transaction.category == .exit
+
+                if !isLightning && !isReceivedOffchainTransfer && !isUnilateralExit {
                     // Extract the actual address value if it's a PaymentMethod JSON object
                     let addressValue: String = {
                         if let data = address.data(using: .utf8),
