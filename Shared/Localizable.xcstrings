@@ -7384,12 +7384,34 @@
         }
       }
     },
+    "settings_address_patterns_explainer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every address gets its own unique pattern, generated from the address itself. A glance is enough to tell whether two addresses match, without comparing them character by character."
+          }
+        }
+      }
+    },
     "settings_address_patterns_hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Show unique visual patterns to help identify addresses"
+          }
+        }
+      }
+    },
+    "settings_address_patterns_toggle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show address patterns"
           }
         }
       }

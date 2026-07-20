@@ -50,7 +50,7 @@ struct TransactionTechnicalDetailsView: View {
                     // Payment Preimage (only show if present - Lightning receives)
                     if let paymentPreimage = transaction.paymentPreimage {
                         HStack(spacing: 12) {
-                            AddressPattern(address: paymentPreimage)
+                            AddressHallmark(address: paymentPreimage)
                                 .frame(width: 40)
                                 .padding(2)
                                 .background(Color.systemBackground)

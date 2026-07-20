@@ -29,6 +29,15 @@
       }
     },
     {
+      "identity" : "hallmarks",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/GBKS/hallmarks",
+      "state" : {
+        "revision" : "98fecb6d459d5832c14130fccd26205b078301e4",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "qrcode",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/dagronf/qrcode.git",

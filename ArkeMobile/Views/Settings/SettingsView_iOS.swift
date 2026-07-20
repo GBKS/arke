@@ -27,9 +27,6 @@ struct SettingsView_iOS: View {
     
     @AppStorage(UserDefaults.proximityPermissionKey)
     private var proximityEnabled: Bool = false
-    
-    @AppStorage(UserDefaults.showAddressIconsKey)
-    private var showAddressIcons: Bool = true
 
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 24
     @ScaledMetric(relativeTo: .body) private var avatarSize: CGFloat = 40
@@ -388,7 +385,7 @@ struct SettingsView_iOS: View {
                 .padding(.vertical, 2)
 
                 // Address Icons
-                Toggle(isOn: $showAddressIcons) {
+                NavigationLink(destination: AddressPatternsSettingView_iOS()) {
                     HStack(spacing: 12) {
                         Image(systemName: "square.grid.2x2.fill")
                             .foregroundColor(.Arke.teal)

@@ -123,7 +123,7 @@ struct AddressDisplayView: View {
                 HStack(spacing: 12) {
                     /*
                     if showAddressIcons {
-                        AddressPattern(address: manager.arkAddress)
+                        AddressHallmark(address: manager.arkAddress)
                             .frame(width: 26)
                             .padding(2)
                             .background(Color.systemBackground)
@@ -160,7 +160,7 @@ struct AddressDisplayView: View {
                 HStack(spacing: 12) {
                     /*
                     if showAddressIcons {
-                        AddressPattern(address: manager.onchainAddress)
+                        AddressHallmark(address: manager.onchainAddress)
                             .frame(width: 26)
                             .padding(2)
                             .background(Color.systemBackground)
