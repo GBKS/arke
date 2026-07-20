@@ -289,6 +289,9 @@
     "%u+ confirmations" : {
 
     },
+    "•" : {
+
+    },
     "+%lld" : {
       "shouldTranslate" : false
     },
@@ -7384,6 +7387,17 @@
         }
       }
     },
+    "settings_address_patterns_experimental" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This is an experimental feature. Patterns are most useful when you can compare them across apps — and for now, Arké is the first wallet to show them. Think of it as a preview of what address checking could feel like."
+          }
+        }
+      }
+    },
     "settings_address_patterns_explainer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -7401,6 +7415,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Show unique visual patterns to help identify addresses"
+          }
+        }
+      }
+    },
+    "settings_address_patterns_learn_more" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Learn more at hallmarks.info"
           }
         }
       }
@@ -7809,12 +7834,78 @@
         }
       }
     },
+    "settings_notifications_explainer_intro" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "There are several time-sensitive activities:"
+          }
+        }
+      }
+    },
+    "settings_notifications_explainer_item_exit" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Force moving funds to savings"
+          }
+        }
+      }
+    },
+    "settings_notifications_explainer_item_receive" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Receiving payments"
+          }
+        }
+      }
+    },
+    "settings_notifications_explainer_item_refresh" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refreshing your payments balance"
+          }
+        }
+      }
+    },
+    "settings_notifications_explainer_outro" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arké can only remind you of these when notifications are enabled."
+          }
+        }
+      }
+    },
     "settings_notifications_hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Get notified when funds arrive"
+          }
+        }
+      }
+    },
+    "settings_notifications_toggle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enable notifications"
           }
         }
       }

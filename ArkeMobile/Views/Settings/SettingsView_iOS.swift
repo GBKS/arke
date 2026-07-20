@@ -22,9 +22,6 @@ struct SettingsView_iOS: View {
     @AppStorage(UserDefaults.balancePrivacyKey)
     private var balancePrivacyEnabled: Bool = false
     
-    @AppStorage(UserDefaults.notificationsEnabledKey)
-    private var notificationsEnabled: Bool = false
-    
     @AppStorage(UserDefaults.proximityPermissionKey)
     private var proximityEnabled: Bool = false
 
@@ -33,9 +30,7 @@ struct SettingsView_iOS: View {
 
     @State private var navPath = NavigationPath()
     @State private var defaultAvatarImage: String = Bool.random() ? "avatar-silhouette-male" : "avatar-silhouette-female"
-    @State private var showNotificationError: Bool = false
-    @State private var notificationErrorMessage: String = ""
-    
+
     @Query private var profiles: [UserProfile]
     
     private var userProfile: UserProfile? {
@@ -138,30 +133,19 @@ struct SettingsView_iOS: View {
                 
                 // Notifications (only in primary mode - requires ASP connection)
                 if !manager.isReadOnlyMode {
-                    Toggle(isOn: $notificationsEnabled) {
+                    NavigationLink(destination: NotificationsSettingView_iOS()) {
                         HStack(spacing: 12) {
                             Image(systemName: "bell.fill")
                                 .foregroundColor(.Arke.orange)
                                 .accessibilityHidden(true)
                                 .frame(width: iconSize, height: iconSize)
-                            
+
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("settings_notifications")
                                     .font(.body)
                                 Text("settings_notifications_hint")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .onChange(of: notificationsEnabled) { oldValue, newValue in
-                        if newValue {
-                            Task {
-                                await registerForNotifications()
-                            }
-                        } else {
-                            Task {
-                                await unregisterFromNotifications()
                             }
                         }
                     }
@@ -458,11 +442,6 @@ struct SettingsView_iOS: View {
         .contentMargins(.top, 12, for: .scrollContent)
         .navigationTitle("settings_title")
         .navigationBarTitleDisplayMode(.large)
-        .alert("notification_error_title", isPresented: $showNotificationError) {
-            Button("button_ok", role: .cancel) { }
-        } message: {
-            Text(notificationErrorMessage)
-        }
         .task {
             await deviceService.loadRegisteredDevices()
         }
@@ -470,56 +449,6 @@ struct SettingsView_iOS: View {
     
     private var deviceCount: Int {
         deviceService.registeredDevices.filter { $0.isActive && !$0.isStale }.count
-    }
-    
-    // MARK: - Notification Management
-    
-    private func registerForNotifications() async {
-        do {
-            // Request notification permission
-            let center = UNUserNotificationCenter.current()
-            let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            
-            if granted {
-                await MainActor.run {
-                    UIApplication.shared.registerForRemoteNotifications()
-                }
-                
-                // Wait a moment for token to be received
-                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-                
-                // Register with relay
-                await manager.registerForPushNotifications()
-
-                // One global setting: restore exit check-in reminders
-                // if a forced move is underway
-                if let exits = try? await manager.getExitVtxos(), exits.contains(where: { $0.isActive }) {
-                    await ExitProgressionNotifications.shared.scheduleCheckInSequence()
-                }
-
-                print("✅ Successfully registered for notifications")
-            } else {
-                // User denied permission
-                await MainActor.run {
-                    notificationsEnabled = false
-                    notificationErrorMessage = String(localized: "notification_error_permission_denied", defaultValue: "Notification permission denied. Please enable in Settings.")
-                    showNotificationError = true
-                }
-            }
-        } catch {
-            // Error requesting permission
-            await MainActor.run {
-                notificationsEnabled = false
-                notificationErrorMessage = String(localized: "notification_error_registration_failed", defaultValue: "Failed to register: \(error.localizedDescription)")
-                showNotificationError = true
-            }
-        }
-    }
-    
-    private func unregisterFromNotifications() async {
-        await manager.unregisterFromPushNotifications()
-        // One global setting: silence exit check-in reminders too
-        await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
     }
 }
 

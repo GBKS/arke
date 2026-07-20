@@ -250,6 +250,7 @@
 				"Images/puppy-idle.mp4",
 				"Images/puppy-thumbs-up.mp4",
 				"Images/scratch-surface.jpg",
+				"Images/settings-notification-header.jpg",
 				"Images/tai-chi-seated.mp4",
 				"Images/tai-chi.mp4",
 				"Images/thumbs-up-animation.mp4",

@@ -30,24 +30,38 @@ struct AddressPatternsSettingView_iOS: View {
             VStack(alignment: .leading, spacing: 25) {
                 headerView
 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 20) {
                     Text("settings_address_patterns")
                         .font(.system(.title, design: .serif))
+                    
+                    Toggle(isOn: $showAddressIcons) {
+                        Text(String(localized: "settings_address_patterns_toggle", defaultValue: "Show address patterns"))
+                            .font(.body)
+                            .fontWeight(.semibold)
+                    }
+                    .padding()
+                    .background {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.secondary.opacity(0.08))
+                    }
 
                     Text(String(localized: "settings_address_patterns_explainer", defaultValue: "Every address gets its own unique pattern, generated from the address itself. A glance is enough to tell whether two addresses match, without comparing them character by character."))
-                        .font(.title3)
+                        .font(.body)
                         .lineSpacing(6)
                         .foregroundColor(.secondary)
-                }
 
-                Toggle(isOn: $showAddressIcons) {
-                    Text(String(localized: "settings_address_patterns_toggle", defaultValue: "Show address patterns"))
+                    Text(String(localized: "settings_address_patterns_experimental", defaultValue: "This is an experimental feature. Patterns are most useful when you can compare them across apps — and for now, Arké is the first wallet to show them. Think of it as a preview of what address checking could feel like."))
                         .font(.body)
-                }
-                .padding()
-                .background {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.secondary.opacity(0.08))
+                        .lineSpacing(6)
+                        .foregroundColor(.secondary)
+
+                    if let hallmarksURL = URL(string: "https://hallmarks.info") {
+                        Link(destination: hallmarksURL) {
+                            Text(String(localized: "settings_address_patterns_learn_more", defaultValue: "Learn more at hallmarks.info"))
+                                .font(.body)
+                                .fontWeight(.semibold)
+                        }
+                    }
                 }
             }
             .padding()
