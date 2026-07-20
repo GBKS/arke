@@ -413,7 +413,10 @@ struct SettingsView_iOS: View {
             //if !manager.isReadOnlyMode {
                 Section {
                     // Exit
-                    NavigationLink(destination: ExitView_iOS(onNavigateToBalance: onNavigateToBalance)) {
+                    NavigationLink(destination: ExitView_iOS(
+                        onNavigateToBalance: onNavigateToBalance,
+                        onNavigateToActivity: onNavigateToActivity
+                    )) {
                         HStack(spacing: 12) {
                             Image(systemName: "light.beacon.max.fill")
                                 .foregroundColor(.Arke.orange)
@@ -423,15 +426,13 @@ struct SettingsView_iOS: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("button_force_move_savings")
                                     .font(.body)
-                                Text(manager.hasActiveUnilateralExits ? String(localized: "status_in_progress") : String(localized: "balance_transfer_independently"))
+                                Text("balance_transfer_independently")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
                         .padding(.vertical, 2)
                     }
-                    .disabled(manager.hasActiveUnilateralExits)
-                    .opacity(manager.hasActiveUnilateralExits ? 0.5 : 1.0)
 
                     // Delete Wallet
                     NavigationLink(destination: DeleteWalletView(onWalletDeleted: onWalletDeleted)) {

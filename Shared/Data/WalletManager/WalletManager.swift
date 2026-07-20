@@ -323,9 +323,16 @@ class WalletManager {
         // Initialize all services with shared task manager and cache manager
         transactionService = TransactionService(wallet: wallet, taskManager: taskManager)
         balanceService = BalanceService(wallet: wallet, taskManager: taskManager, cacheManager: cacheManager)
-        feeRateService = FeeRateService(taskManager: taskManager) { [weak self] in
-            self?.networkConfig?.esploraBaseURL
-        }
+        feeRateService = FeeRateService(
+            taskManager: taskManager,
+            esploraBaseURL: { [weak self] in
+                self?.networkConfig?.esploraBaseURL
+            },
+            maxRateSatPerVb: { [weak self] in
+                guard let self, !self.isMainnet else { return nil }
+                return FeeRateService.nonMainnetMaxRateSatPerVb
+            }
+        )
         // AddressService requires ModelContext, so it will be initialized later in setModelContext()
         addressService = nil
         walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)

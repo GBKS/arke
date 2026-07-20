@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Bark
+import ArkeUI
 
 /// Service responsible for automatically progressing unilateral exits in the background
 /// 
@@ -135,8 +136,25 @@ class ExitProgressionService {
         }
     }
     
+    // MARK: - Fee Rates
+
+    /// Explicit fee rate override for exit operations.
+    ///
+    /// On mainnet this is nil: bark resolves rates internally from its chain
+    /// source (fast tier for CPFP progression, regular for the claim), and
+    /// second-guessing that risks underpaying a real exit. Off mainnet the
+    /// same estimator gets poisoned by fee spam (signet estimates in the
+    /// six-digit sat/vB range), which makes bark's CPFP funding fail — so
+    /// pass the app-side rate, which FeeRateService sanity-caps on
+    /// non-mainnet networks. Fast tier for everything: it matches what
+    /// progression pays, and only overshoots the claim's regular tier.
+    private func exitFeeRateOverride() async -> UInt64? {
+        guard let walletManager, !walletManager.isMainnet else { return nil }
+        return await walletManager.currentFeeRates().fast
+    }
+
     // MARK: - Exit Progression Logic
-    
+
     /// Check for active exits and progress them if needed
     internal func checkAndProgressExits() async {
         let startTime = Date()
@@ -177,7 +195,7 @@ class ExitProgressionService {
             print("📋 [ExitProgression] Found \(kind) exits - progressing...")
 
             // Step 2: Progress all exits (broadcasts, fee bumps, state updates)
-            let statuses = try await wallet.progressExits(feeRateSatPerVb: nil)
+            let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
 
             // Log what happened and track per-VTXO blocked state
             if statuses.isEmpty {
@@ -255,12 +273,14 @@ class ExitProgressionService {
         let claimableVtxoIds = claimableExits.map { $0.vtxoId }
         
         print("      Creating claim transaction for \(claimableVtxoIds.count) VTXO(s)...")
-        
+
+        let feeRateOverride = await exitFeeRateOverride()
+
         // Step 1: Create the claim transaction
         let claimTx = try await wallet.drainExits(
             vtxoIds: claimableVtxoIds,
             address: address,
-            feeRateSatPerVb: nil as UInt64?
+            feeRateSatPerVb: feeRateOverride
         )
         
         let totalAmount = claimableExits.reduce(0) { $0 + $1.amountSats }
@@ -278,7 +298,7 @@ class ExitProgressionService {
         walletManager?.recordClaimFee(claimTxid: txid, feeSats: claimTx.feeSats)
         
         // Step 4: Progress exits to sync state (updates to ClaimInProgress)
-        let _ = try await wallet.progressExits(feeRateSatPerVb: nil as UInt64?)
+        let _ = try await wallet.progressExits(feeRateSatPerVb: feeRateOverride)
         print("      ✅ Exit states updated to ClaimInProgress")
     }
     
@@ -298,7 +318,7 @@ class ExitProgressionService {
             return
         }
         
-        let statuses = try await wallet.progressExits(feeRateSatPerVb: nil)
+        let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
         for status in statuses {
             if let error = status.error {
                 walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)

@@ -3909,16 +3909,6 @@
         }
       }
     },
-    "data_estimated_time" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estimated time"
-          }
-        }
-      }
-    },
     "data_claimable_since" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4019,6 +4009,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Estimated Current"
+          }
+        }
+      }
+    },
+    "data_estimated_time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estimated time"
           }
         }
       }
@@ -5048,7 +5048,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sped up by a third party \u2014 their fee, not yours"
+            "value" : "Sped up by a third party — their fee, not yours"
           }
         }
       }
@@ -8147,6 +8147,7 @@
       }
     },
     "status_in_progress" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

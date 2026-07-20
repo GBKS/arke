@@ -38,14 +38,17 @@
 // - Total with 15% margin: ~147,150 sats
 
 // NOTE: Fee Rates for progressExits()/drainExits() (verified against bark 0.3.0 sources)
-// Passing nil is correct and intentional: Bark resolves nil internally from its
-// chain source (the same Esplora backend this app configures, cached 30s):
+// On mainnet, nil is passed and Bark resolves it internally from its chain
+// source (the same Esplora backend this app configures, cached 30s):
 // - progressExits: uses the FAST tier (1-block target) for CPFP fee bumping
 // - drainExits: uses the REGULAR tier (3-block target) for the claim tx
-// Do NOT replace nil with a hardcoded rate — Bark's RBF guard rejects rates below
-// the RBF minimum. Only pass a value if a user-facing urgency picker is added.
+// Do NOT replace nil with a hardcoded rate on mainnet — Bark's RBF guard rejects
+// rates below the RBF minimum. Off mainnet, ExitProgressionService passes the
+// app-side rate instead (see exitFeeRateOverride), because signet fee spam
+// poisons the estimator with six-digit sat/vB values that make CPFP funding fail.
 // The cost *estimate* shown to the user comes from FeeRateService (fast tier),
-// which queries the same endpoint, so preview and broadcast rates agree.
+// which queries the same endpoint and is sanity-capped off mainnet, so preview
+// and broadcast rates agree.
 
 // TODO: Offline Claim Broadcast Fallback (LOW PRIORITY)
 // Currently, drainExits() creates a signed PSBT and progressExits() broadcasts it
@@ -66,19 +69,19 @@ import UserNotifications
 
 struct ExitView_iOS: View {
     var onNavigateToBalance: (() -> Void)? = nil
+    var onNavigateToActivity: (() -> Void)? = nil
 
     @Environment(WalletManager.self) var manager
-    @Environment(\.scenePhase) private var scenePhase
 
     @State private var isProcessing = false
     @State private var errorMessage: String?
     @State private var showingStartConfirmation = false
     @State private var showingError = false
-    @State private var activeExits: [ExitVtxo] = []
-    @State private var claimableHeight: UInt32?
+    @State private var inFlightExits: [ExitVtxo] = []
+    @State private var uncoveredVtxos: [VTXOModel] = []
+    @State private var hasLoadedExitData = false
     @State private var exitCostEstimate: ExitCostEstimate?
     @State private var isEstimatingCost = false
-    @State private var reminderState: ForcedMoveReminderState = .enabled
 
     @AppStorage(UserDefaults.notificationsEnabledKey)
     private var notificationsEnabled: Bool = false
@@ -102,18 +105,13 @@ struct ExitView_iOS: View {
     ]
     
     // Computed properties
-    private var hasActiveExit: Bool {
-        !activeExits.isEmpty
+
+    /// Sum of spendable VTXOs that are not part of any in-flight exit —
+    /// the amount a newly started forced move would actually cover.
+    private var uncoveredBalance: UInt64 {
+        UInt64(uncoveredVtxos.reduce(0) { $0 + $1.amountSat })
     }
 
-    private var currentBlockHeight: Int {
-        manager.estimatedBlockHeight ?? 0
-    }
-    
-    private var spendableBalance: Int {
-        manager.arkBalance?.spendableSat ?? 0
-    }
-    
     private var onchainBalance: UInt64 {
         UInt64(manager.onchainBalance?.totalSat ?? 0)
     }
@@ -121,15 +119,16 @@ struct ExitView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                if hasActiveExit {
-                    // State B: Forced move underway. Progression and the final
-                    // claim are fully automatic (ExitProgressionService), so
-                    // this is purely informational.
-                    ForcedMoveProgressView(
-                        phase: movePhase,
-                        reminderState: reminderState,
-                        onEnableReminders: enableReminders
-                    ) {
+                if !hasLoadedExitData {
+                    ProgressView()
+                        .controlSize(.large)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 120)
+                } else if uncoveredVtxos.isEmpty && !inFlightExits.isEmpty {
+                    // Everything spendable is already part of an in-flight
+                    // forced move — nothing new to start. Progress lives in
+                    // the activity view, not here.
+                    ForcedMoveUnderwayView(onGoToActivity: onNavigateToActivity) {
                         GeometryReader { geometry in
                             LoopingVideoPlayer_iOS.aspectFill(
                                 videoName: "force-move-progress-square",
@@ -140,11 +139,14 @@ struct ExitView_iOS: View {
                         .frame(height: 300)
                     }
                 } else {
-                    // State A: No active exit
+                    // Start flow, scoped to the VTXOs no exit covers yet.
+                    // With no exits in flight that is simply everything
+                    // spendable; NoExitView also renders the zero-balance
+                    // empty state.
                     NoExitView(
-                        spendableBalance: UInt64(spendableBalance),
+                        spendableBalance: uncoveredBalance,
                         isProcessing: isProcessing || isEstimatingCost,
-                        onStartExit: { 
+                        onStartExit: {
                             Task {
                                 await estimateExitCost()
                                 showingStartConfirmation = true
@@ -170,22 +172,14 @@ struct ExitView_iOS: View {
         }
         .task {
             await loadExitData()
-            await refreshReminderState()
-            if !hasActiveExit && spendableBalance > 0 {
+            if !uncoveredVtxos.isEmpty {
                 await estimateExitCost()
             }
         }
         .refreshable {
             await loadExitData()
-            await refreshReminderState()
-            if !hasActiveExit && spendableBalance > 0 {
+            if !uncoveredVtxos.isEmpty {
                 await estimateExitCost()
-            }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            // Re-check after a round trip to the system notification settings
-            if newPhase == .active {
-                Task { await refreshReminderState() }
             }
         }
         .alert("action_start_forced_move", isPresented: $showingStartConfirmation) {
@@ -227,7 +221,7 @@ struct ExitView_iOS: View {
                     """)
                 }
             } else {
-                Text(String(localized: "balance_confirm_recover", defaultValue: "Move \(BitcoinFormatter.shared.formatAmount(spendableBalance)) to Savings? It takes 10+ hours and cannot be cancelled."))
+                Text(String(localized: "balance_confirm_recover", defaultValue: "Move \(BitcoinFormatter.shared.formatAmount(Int(uncoveredBalance))) to Savings? It takes 10+ hours and cannot be cancelled."))
             }
         }
         .tint(Color.Arke.gold4)
@@ -251,108 +245,35 @@ struct ExitView_iOS: View {
         }
     }
     
-    // MARK: - Forced Move Phase
-
-    private var movePhase: ForcedMovePhase {
-        // A forced move exits every spendable VTXO individually, so only report
-        // "finishing" once all of them are claimable or being claimed
-        if !activeExits.isEmpty, activeExits.allSatisfy({ $0.isClaimable || $0.isClaimInProgress }) {
-            return .finishing
-        }
-        // claimableHeight is allExitsClaimableAtHeight(), so the countdown
-        // covers the last VTXO to mature
-        if let claimableHeight, claimableHeight > 0 {
-            let blocksRemaining = max(0, Int(claimableHeight) - currentBlockHeight)
-            return .waiting(hoursRemaining: blocksRemaining * 10 / 60)
-        }
-        return .starting
-    }
-
-    // MARK: - Check-in Reminders
-
-    private func refreshReminderState() async {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        switch settings.authorizationStatus {
-        case .authorized, .provisional, .ephemeral:
-            // The app-level toggle is one global setting covering push and
-            // local reminders alike, so it can veto an OS-level grant
-            reminderState = notificationsEnabled ? .enabled : .canAsk
-        case .notDetermined:
-            reminderState = .canAsk
-        case .denied:
-            reminderState = .denied
-        @unknown default:
-            reminderState = .denied
-        }
-        // Recover from enable paths that bypass this view's button, e.g.
-        // returning from system Settings after un-denying mid-exit
-        if reminderState == .enabled && hasActiveExit {
-            await ExitProgressionNotifications.shared.ensureCheckInSequenceScheduled()
-        }
-    }
-
-    private func enableReminders() {
-        Task {
-            if reminderState == .canAsk {
-                let granted = await ExitProgressionNotifications.shared.requestPermissionIfNeeded()
-                if granted {
-                    // One global setting: turning on reminders here also
-                    // turns on payment notifications
-                    notificationsEnabled = true
-                    // Scheduling was skipped at exit start without permission
-                    await ExitProgressionNotifications.shared.scheduleCheckInSequence()
-                    await MainActor.run {
-                        UIApplication.shared.registerForRemoteNotifications()
-                    }
-                    // Wait a moment for the APNs token, then register with the relay
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
-                    await manager.registerForPushNotifications()
-                }
-                await refreshReminderState()
-            } else if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
-                await UIApplication.shared.open(url)
-            }
-        }
-    }
-
     // MARK: - Actions
 
     private func estimateExitCost() async {
-        guard spendableBalance > 0 else { return }
-        
+        guard !uncoveredVtxos.isEmpty else { return }
+
         isEstimatingCost = true
         defer { isEstimatingCost = false }
-        
-        do {
-            print("💰 Estimating exit cost...")
-            
-            // Get current fee rate (Esplora-backed, falls back to defaults)
-            let feeRate = await estimateCurrentFeeRate()
-            print("   Fee rate: \(feeRate) sat/vB")
-            
-            // Get spendable VTXOs count (approximate - we'll exit all of them)
-            let vtxos = try await manager.getVTXOs()
-            // Count only spendable ones (not locked in pending operations)
-            let vtxoCount = vtxos.filter { $0.state == .spendable }.count
-            print("   VTXOs to exit: \(vtxoCount)")
-            
-            // Estimate transaction costs
-            let estimate = calculateExitCost(
-                vtxoCount: vtxoCount,
-                feeRateSatPerVb: feeRate,
-                onchainBalance: onchainBalance
-            )
-            
-            print("   Estimated cost: \(estimate.totalCost) sats")
-            print("   Can afford: \(estimate.canAfford)")
-            
-            exitCostEstimate = estimate
-            
-        } catch {
-            print("⚠️ Failed to estimate exit cost: \(error)")
-            // Don't block the user - just skip the estimate
-            exitCostEstimate = nil
-        }
+
+        print("💰 Estimating exit cost...")
+
+        // Get current fee rate (Esplora-backed, falls back to defaults)
+        let feeRate = await estimateCurrentFeeRate()
+        print("   Fee rate: \(feeRate) sat/vB")
+
+        // Only the VTXOs a new forced move would actually cover
+        let vtxoCount = uncoveredVtxos.count
+        print("   VTXOs to exit: \(vtxoCount)")
+
+        // Estimate transaction costs
+        let estimate = calculateExitCost(
+            vtxoCount: vtxoCount,
+            feeRateSatPerVb: feeRate,
+            onchainBalance: onchainBalance
+        )
+
+        print("   Estimated cost: \(estimate.totalCost) sats")
+        print("   Can afford: \(estimate.canAfford)")
+
+        exitCostEstimate = estimate
     }
     
     private func estimateCurrentFeeRate() async -> UInt64 {
@@ -438,69 +359,31 @@ struct ExitView_iOS: View {
     
     private func loadExitData() async {
         do {
-            // Load active exits from Bark SDK (filter out completed/claimed exits)
+            // In-flight exits (not claimed, not cancelled) — cancelled exits
+            // stay in bark's exit list forever and must not count here, or a
+            // wallet with only a cancelled exit could never start a new move
             let allExits = try await manager.getExitVtxos()
-            
-            print("📊 All Exit VTXOs from getExitVtxos():")
-            print("   Count: \(allExits.count)")
-            for (index, exit) in allExits.enumerated() {
-                print("\n   [\(index)] Full Object Dump:")
-                
-                // Use Mirror to inspect all properties
-                let mirror = Mirror(reflecting: exit)
-                for child in mirror.children {
-                    if let label = child.label {
-                        print("       \(label): \(child.value)")
-                    }
-                }
-                
-                // Print the computed/extension properties we know about
-                print("\n       Computed Properties:")
-                print("       vtxoId: \(exit.vtxoId)")
-                print("       amountSats: \(exit.amountSats)")
-                print("       formattedAmount: \(exit.formattedAmount)")
-                print("       shortVtxoId: \(exit.shortVtxoId)")
-                print("       state: \(exit.state)")
-                print("       stateDisplayName: \(exit.stateDisplayName)")
-                print("       isActive: \(exit.isActive)")
-                print("       isClaimable: \(exit.isClaimable)")
-                print("       isClaimed: \(exit.isClaimed)")
-                print("       stateIcon: \(exit.stateIcon)")
-                print("       stateColor: \(exit.stateColor)")
+            inFlightExits = allExits.filter { $0.isInFlight }
+
+            // Spendable VTXOs no exit covers yet. Exiting VTXOs can still
+            // report as spendable during the early exit phase, so membership
+            // in the in-flight exit set is what decides coverage, not state.
+            let inFlightIds = Set(inFlightExits.map(\.vtxoId))
+            let vtxos = try await manager.getVTXOs()
+            uncoveredVtxos = vtxos.filter {
+                $0.state == .spendable && !inFlightIds.contains($0.id)
             }
-            
-            activeExits = allExits.filter { $0.isActive }
-            
-            print("\n🔍 Filtered Active Exits:")
-            print("   Count: \(activeExits.count)")
-            for (index, exit) in activeExits.enumerated() {
-                print("   [\(index)] VTXO ID: \(exit.vtxoId)")
-                print("       Amount: \(exit.amountSats) sats (\(exit.formattedAmount))")
-                print("       State: \(exit.state)")
-                print("       State Display: \(exit.stateDisplayName)")
-                print("       isClaimable: \(exit.isClaimable)")
-            }
-            
-            // Get claimable height if there are exits
-            if !activeExits.isEmpty {
-                claimableHeight = try await manager.allExitsClaimableAtHeight()
-            }
-            
-            print("   claimableHeight: \(claimableHeight.map(String.init) ?? "nil")")
-            
-            // Progress exits (broadcast, fee bump, advance state machine)
-            if !activeExits.isEmpty {
-                let statuses = try await manager.progressExits(feeRateSatPerVb: nil as UInt64?)
-                print("✅ Progressed \(statuses.count) exit(s)")
-            }
-            
+
+            print("📊 Exit data loaded: \(inFlightExits.count) in-flight exit(s), \(uncoveredVtxos.count) uncovered VTXO(s)")
+
             // Sync exit state
             try await manager.syncExits()
-            
+
         } catch {
             print("⚠️ Failed to load exit data: \(error)")
             // Don't show error to user for background refresh failures
         }
+        hasLoadedExitData = true
     }
     
     private func startExit() async {
@@ -509,9 +392,18 @@ struct ExitView_iOS: View {
         
         do {
             print("🚪 Starting unilateral exit...")
-            
-            // Start exit via wallet manager (Bark SDK handles all tracking)
-            let result = try await manager.startExit()
+
+            // Start exit via wallet manager (Bark SDK handles all tracking).
+            // With exits already in flight, pass the uncovered VTXO ids
+            // explicitly so what the user confirmed is exactly what exits —
+            // exiting VTXOs can still read as spendable early on, and an
+            // "entire wallet" call must not depend on bark deduplicating them.
+            let result: String
+            if inFlightExits.isEmpty {
+                result = try await manager.startExit()
+            } else {
+                result = try await manager.startExitForVTXOs(vtxo_ids: uncoveredVtxos.map(\.id))
+            }
             print("✅ Exit started: \(result)")
 
             // Ask for notification permission at the moment of commitment so
@@ -526,7 +418,6 @@ struct ExitView_iOS: View {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
             }
-            await refreshReminderState()
 
             // Start Live Activity monitoring for this exit
             if let exitVtxos = try? await manager.getExitVtxos() {

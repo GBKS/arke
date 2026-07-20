@@ -87,6 +87,49 @@ struct FeeRateServiceTests {
         #expect(rates?.slow == 1)
     }
 
+    // MARK: - Sanity Cap
+
+    @Test("Cap clamps all tiers when every target is garbage")
+    func testCapClampsAllTiers() {
+        // Observed on signet under fee spam: even target 1 reports six digits
+        let estimates = ["1": 314697.0, "3": 314697.0, "6": 250000.0]
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: 50)
+
+        #expect(rates?.fast == 50)
+        #expect(rates?.medium == 50)
+        #expect(rates?.slow == 50)
+    }
+
+    @Test("Cap leaves sane rates untouched")
+    func testCapLeavesSaneRatesUntouched() {
+        let estimates = ["1": 42.0, "3": 20.0, "6": 8.0]
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: 50)
+
+        #expect(rates?.fast == 42)
+        #expect(rates?.medium == 20)
+        #expect(rates?.slow == 8)
+    }
+
+    @Test("Cap applies per tier when only some targets are garbage")
+    func testCapAppliesPerTier() {
+        let estimates = ["1": 120000.0, "3": 30.0, "6": 8.0]
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: 50)
+
+        #expect(rates?.fast == 50)
+        #expect(rates?.medium == 30)
+        #expect(rates?.slow == 8)
+    }
+
+    @Test("Nil cap (mainnet) passes high rates through")
+    func testNilCapPassesHighRatesThrough() {
+        let estimates = ["1": 800.0, "3": 500.0, "6": 300.0]
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: nil)
+
+        #expect(rates?.fast == 800)
+        #expect(rates?.medium == 500)
+        #expect(rates?.slow == 300)
+    }
+
     // MARK: - Invalid Input
 
     @Test("Empty map returns nil")

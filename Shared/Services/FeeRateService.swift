@@ -41,6 +41,7 @@ class FeeRateService {
 
     private let taskManager: TaskDeduplicationManager
     private let esploraBaseURL: @MainActor () -> String?
+    private let maxRateSatPerVb: @MainActor () -> UInt64?
 
     /// Esplora confirmation targets (in blocks) for each priority tier,
     /// matching Bark's fast/regular/slow targets.
@@ -48,15 +49,29 @@ class FeeRateService {
     private nonisolated static let mediumTarget = 3
     private nonisolated static let slowTarget = 6
 
+    /// Sanity cap for networks whose coins are worthless (signet/regtest):
+    /// spam with enormous attached fees regularly drives their estimators to
+    /// six-digit sat/vB, which would block exits and sends entirely. High
+    /// enough to be invisible when the network is quiet. Mainnet is NEVER
+    /// capped — a real fee spike there is information, not noise.
+    nonisolated static let nonMainnetMaxRateSatPerVb: UInt64 = 50
+
     // MARK: - Initialization
 
     /// - Parameters:
     ///   - taskManager: Shared deduplication manager
     ///   - esploraBaseURL: Provider for the currently active Esplora base URL,
     ///     evaluated on every fetch so runtime network switches are picked up
-    init(taskManager: TaskDeduplicationManager, esploraBaseURL: @escaping @MainActor () -> String?) {
+    ///   - maxRateSatPerVb: Provider for a network-dependent sanity cap on
+    ///     all tiers; nil means uncapped. Evaluated on every fetch.
+    init(
+        taskManager: TaskDeduplicationManager,
+        esploraBaseURL: @escaping @MainActor () -> String?,
+        maxRateSatPerVb: @escaping @MainActor () -> UInt64? = { nil }
+    ) {
         self.taskManager = taskManager
         self.esploraBaseURL = esploraBaseURL
+        self.maxRateSatPerVb = maxRateSatPerVb
     }
 
     // MARK: - Access
@@ -101,7 +116,7 @@ class FeeRateService {
 
             let estimates = try JSONDecoder().decode([String: Double].self, from: data)
 
-            guard let rates = Self.parse(esploraEstimates: estimates) else {
+            guard let rates = Self.parse(esploraEstimates: estimates, maxRate: maxRateSatPerVb()) else {
                 Self.logger.warning("Fee estimates response could not be parsed into rates")
                 return
             }
@@ -130,7 +145,11 @@ class FeeRateService {
     /// esplora estimators have been observed returning garbage for
     /// individual targets (e.g. signet reporting 27k sat/vB at target 6
     /// while targets 1-3 sit at 1.8).
-    nonisolated static func parse(esploraEstimates: [String: Double]) -> OnchainFeeRates? {
+    ///
+    /// `maxRate` additionally caps every tier — the monotonic clamp can't
+    /// help when ALL targets are garbage (signet fee spam pushing even
+    /// target 1 to six-digit sat/vB).
+    nonisolated static func parse(esploraEstimates: [String: Double], maxRate: UInt64? = nil) -> OnchainFeeRates? {
         let entries = esploraEstimates
             .compactMap { key, value -> (target: Int, rate: Double)? in
                 guard let target = Int(key), target > 0, value > 0, value.isFinite else { return nil }
@@ -142,7 +161,8 @@ class FeeRateService {
 
         func rate(forTarget target: Int) -> UInt64 {
             let entry = entries.last { $0.target <= target } ?? entries[0]
-            return max(1, UInt64(entry.rate.rounded(.up)))
+            let rounded = max(1, UInt64(entry.rate.rounded(.up)))
+            return min(rounded, maxRate ?? UInt64.max)
         }
 
         let fast = rate(forTarget: fastTarget)
