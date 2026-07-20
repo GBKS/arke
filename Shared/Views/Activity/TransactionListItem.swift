@@ -109,30 +109,19 @@ struct TransactionListItem: View {
             return .gray
         }
 
-        // Special case for unilateral exits: only complete when claimed
+        // Special case for unilateral exits: only complete when claimed.
+        // isExitComplete reads the persisted movement status first, so
+        // completed exits render correctly at launch before the in-memory
+        // exit caches are populated.
         if transaction.hasUnilateralExit {
-            // Check current exit status
-            if let exitStatus = transaction.currentExitStatus {
-                if exitStatus.isClaimed {
-                    // Exit is complete
-                    if transaction.isInternalTransfer {
-                        return .gray
-                    }
-                    return transaction.transactionType.iconColor
-                } else {
-                    // Exit is still pending (not yet claimed)
-                    return .Arke.blue
-                }
-            }
-            // Fallback to subsystemKind if wallet manager unavailable
-            else if transaction.subsystemKind == "claimed" {
+            if transaction.isExitComplete {
                 if transaction.isInternalTransfer {
                     return .gray
                 }
                 return transaction.transactionType.iconColor
-            } else {
-                return .Arke.blue
             }
+            // Exit is still in progress (not yet claimed)
+            return .Arke.blue
         }
         
         switch transaction.transactionStatus {
@@ -162,31 +151,20 @@ struct TransactionListItem: View {
             return .gray
         }
 
-        // Special case for unilateral exits: only complete when claimed
+        // Special case for unilateral exits: only complete when claimed.
+        // isExitComplete reads the persisted movement status first, so
+        // completed exits render correctly at launch before the in-memory
+        // exit caches are populated.
         if transaction.hasUnilateralExit {
-            // Check current exit status
-            if let exitStatus = transaction.currentExitStatus {
-                if exitStatus.isClaimed {
-                    // Exit is complete
-                    if transaction.isInternalTransfer {
-                        // Internal transfers show fees as negative (like sends)
-                        return .primary
-                    }
-                    return transaction.transactionType.amountColor
-                } else {
-                    // Exit is still pending (not yet claimed)
-                    return .Arke.blue
-                }
-            }
-            // Fallback to subsystemKind if wallet manager unavailable
-            else if transaction.subsystemKind == "claimed" {
+            if transaction.isExitComplete {
                 if transaction.isInternalTransfer {
+                    // Internal transfers show fees as negative (like sends)
                     return .primary
                 }
                 return transaction.transactionType.amountColor
-            } else {
-                return .Arke.blue
             }
+            // Exit is still in progress (not yet claimed)
+            return .Arke.blue
         }
         
         switch transaction.transactionStatus {

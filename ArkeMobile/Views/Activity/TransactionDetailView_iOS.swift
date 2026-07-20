@@ -331,18 +331,19 @@ struct TransactionDetailView_iOS: View {
             return .gray
         }
 
-        // Special case for unilateral exits: only complete when claimed
-        if transaction.subsystemName == "bark.exit" {
-            if transaction.subsystemKind == "claimed" {
-                // Exit is complete
+        // Special case for unilateral exits: only complete when claimed.
+        // isExitComplete reads the persisted movement status first, so
+        // completed exits render correctly at launch before the in-memory
+        // exit caches are populated.
+        if transaction.hasUnilateralExit {
+            if transaction.isExitComplete {
                 if transaction.isInternalTransfer {
                     return .gray
                 }
                 return transaction.transactionType.iconColor
-            } else {
-                // Exit is still pending (not yet claimed)
-                return .Arke.blue
             }
+            // Exit is still in progress (not yet claimed)
+            return .Arke.blue
         }
         
         switch transaction.transactionStatus {
@@ -372,18 +373,19 @@ struct TransactionDetailView_iOS: View {
             return .gray
         }
 
-        // Special case for unilateral exits: only complete when claimed
-        if transaction.subsystemName == "bark.exit" {
-            if transaction.subsystemKind == "claimed" {
-                // Exit is complete
+        // Special case for unilateral exits: only complete when claimed.
+        // isExitComplete reads the persisted movement status first, so
+        // completed exits render correctly at launch before the in-memory
+        // exit caches are populated.
+        if transaction.hasUnilateralExit {
+            if transaction.isExitComplete {
                 if transaction.isInternalTransfer {
                     return .primary
                 }
                 return transaction.transactionType.amountColor
-            } else {
-                // Exit is still pending (not yet claimed)
-                return .Arke.blue
             }
+            // Exit is still in progress (not yet claimed)
+            return .Arke.blue
         }
         
         switch transaction.transactionStatus {

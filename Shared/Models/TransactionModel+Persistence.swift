@@ -120,7 +120,16 @@ extension TransactionModel {
         // For exit transactions, add fees from linked onchain transactions.
         // userPaidOnchainFeeSat guards against fees the user didn't pay
         // (third-party spends of the exit's anyone-can-spend anchors).
+        //
+        // A child can be legitimately linked to several exit movements: sibling
+        // VTXOs from the same round share exit-package ancestors, and one claim
+        // transaction drains every claimable exit at once. The wallet paid each
+        // such fee once, so each movement shows only its share — fee divided by
+        // the number of linking movements, remainder to the first movement by
+        // txid — and the shares sum exactly to what was paid.
         if subsystemName == "bark.exit", let childTxids = childTxids, !childTxids.isEmpty, let modelContext = modelContext {
+            let linkingMovements = Self.exitMovementsByChildTxid(modelContext: modelContext)
+
             for childTxid in childTxids {
                 let descriptor = FetchDescriptor<PersistentTransaction>(
                     predicate: #Predicate { $0.txid == childTxid }
@@ -128,12 +137,45 @@ extension TransactionModel {
 
                 if let childTx = try? modelContext.fetch(descriptor).first,
                    let childFee = childTx.userPaidOnchainFeeSat {
-                    total += childFee
+                    // Ensure this movement counts itself even if its persisted
+                    // record wasn't matched by the movement fetch
+                    var movements = linkingMovements[childTxid] ?? []
+                    if !movements.contains(txid) {
+                        movements.append(txid)
+                    }
+                    movements.sort()
+
+                    var share = childFee / movements.count
+                    if movements.first == txid {
+                        share += childFee % movements.count
+                    }
+                    total += share
                 }
             }
         }
 
         return total
+    }
+
+    /// Map each linked onchain child txid to the exit movements linking it.
+    /// Exit movements are rare, so fetching them all and grouping in memory is
+    /// cheap (childTxids is JSON-encoded in the store, so a "contains"
+    /// predicate isn't expressible anyway).
+    private static func exitMovementsByChildTxid(modelContext: ModelContext) -> [String: [String]] {
+        let descriptor = FetchDescriptor<PersistentTransaction>(
+            predicate: #Predicate { transaction in
+                transaction.sourceType == "ark" && transaction.subsystemCategory == "exit"
+            }
+        )
+        guard let exitMovements = try? modelContext.fetch(descriptor) else { return [:] }
+
+        var result: [String: [String]] = [:]
+        for movement in exitMovements {
+            for childTxid in movement.childTxids ?? [] {
+                result[childTxid, default: []].append(movement.txid)
+            }
+        }
+        return result
     }
 
     /// Formatted total fees including linked transactions (for exits)

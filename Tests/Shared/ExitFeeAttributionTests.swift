@@ -279,4 +279,87 @@ struct ExitFeeAttributionTotalsTests {
         // the third party's 9,896)
         #expect(total == 31625)
     }
+
+    // MARK: - Fee shares for children linked by multiple exit movements
+
+    /// Insert an exit movement like the ones bark creates (one per exiting VTXO)
+    private func makeExitMovement(
+        txid: String,
+        movementId: Int,
+        children: [String],
+        context: ModelContext
+    ) -> PersistentTransaction {
+        let movement = PersistentTransaction(
+            txid: txid,
+            movementId: movementId,
+            type: .transfer,
+            amount: 10000,
+            date: Date(),
+            status: .confirmed,
+            address: nil,
+            fees: 0,
+            subsystemCategory: "exit",
+            subsystemName: "bark.exit",
+            subsystemKind: "start"
+        )
+        movement.childTxids = children.map { "onchain_\($0)" }
+        context.insert(movement)
+        return movement
+    }
+
+    @Test("Shared children split fees across linking movements; totals sum to what was paid")
+    func testSharedChildFeeShares() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        // Two sibling exits: cpfp1 bumps a shared exit-package ancestor and the
+        // claim tx drains both VTXOs, so both movements link them. cpfp2
+        // belongs to movement A alone.
+        insertOnchainRecord(txid: Fixture.cpfp1, fee: 9901, sent: 50000, subsystemKind: "self_transfer", context: context)
+        insertOnchainRecord(txid: Fixture.cpfp2, fee: 9785, sent: 40099, subsystemKind: "self_transfer", context: context)
+        insertOnchainRecord(txid: Fixture.claim, fee: 3376, sent: 0, subsystemKind: "exit_claim", context: context)
+
+        let movementA = makeExitMovement(
+            txid: "movement_10",
+            movementId: 10,
+            children: [Fixture.cpfp1, Fixture.cpfp2, Fixture.claim],
+            context: context
+        )
+        let movementB = makeExitMovement(
+            txid: "movement_11",
+            movementId: 11,
+            children: [Fixture.cpfp1, Fixture.claim],
+            context: context
+        )
+        try context.save()
+
+        let totalA = TransactionModel(from: movementA).totalFeesIncludingLinked(modelContext: context)
+        let totalB = TransactionModel(from: movementB).totalFeesIncludingLinked(modelContext: context)
+
+        // cpfp1 splits 4,951/4,950 (odd fee, remainder to movement_10),
+        // the claim splits 1,688/1,688, cpfp2 stays whole with movement A
+        #expect(totalA == 4951 + 1688 + 9785)
+        #expect(totalB == 4950 + 1688)
+        // Combined: exactly what the wallet paid, nothing counted twice
+        #expect(totalA + totalB == 9901 + 9785 + 3376)
+    }
+
+    @Test("Odd shared fee: remainder goes to the first movement by txid")
+    func testSharedFeeRemainderDeterministic() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        insertOnchainRecord(txid: Fixture.claim, fee: 3377, sent: 0, subsystemKind: "exit_claim", context: context)
+
+        let movementA = makeExitMovement(txid: "movement_20", movementId: 20, children: [Fixture.claim], context: context)
+        let movementB = makeExitMovement(txid: "movement_21", movementId: 21, children: [Fixture.claim], context: context)
+        try context.save()
+
+        let totalA = TransactionModel(from: movementA).totalFeesIncludingLinked(modelContext: context)
+        let totalB = TransactionModel(from: movementB).totalFeesIncludingLinked(modelContext: context)
+
+        #expect(totalA == 1689)
+        #expect(totalB == 1688)
+        #expect(totalA + totalB == 3377)
+    }
 }

@@ -130,12 +130,15 @@ extension ExitProgressionService {
         await updateAllLiveActivities()
     }
 
-    /// Create a Live Activity if exits are active but no activity is running
-    /// (e.g. after an app rebuild or a crash mid-exit).
+    /// Create a Live Activity if exits are in flight but no activity is running
+    /// (e.g. after an app rebuild or a crash mid-exit). Must filter with
+    /// `isInFlight`, not `isActive`: claimed and cancelled exits stay in bark's
+    /// exit list forever, so an already-finished batch would otherwise respawn
+    /// a "complete" activity on every launch.
     private func recreateMissingActivities() async {
         guard Self.activeActivity == nil else { return }
         do {
-            let exitVtxos = try await wallet.getExitVtxos().filter { $0.isActive }
+            let exitVtxos = try await wallet.getExitVtxos().filter { $0.isInFlight }
             guard !exitVtxos.isEmpty else { return }
             print("🆕 [LiveActivity] Recreating missing activity for \(exitVtxos.count) exit(s)")
             await startLiveActivity(for: exitVtxos)

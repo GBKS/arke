@@ -206,23 +206,33 @@ extension TransactionService {
         with transactionData: TransactionData
     ) -> Bool {
         var hasChanges = false
-        
+
+        // Bark re-finishes cancelled exit movements on every sync in which the
+        // chain tip advanced, bumping their completed_at each time (see
+        // Docs/Features/Exit_Completion_Issues.md §2a). Freeze the date once a
+        // movement is cancelled and stays cancelled, so it doesn't resurface
+        // at the top of the date-sorted list; the initial transition into
+        // cancelled still updates the date once. Captured before the status
+        // update below overwrites the previous status.
+        let dateIsFrozen = existingTransaction.transactionStatus == .cancelled
+            && transactionData.status == .cancelled
+
         if existingTransaction.amount != transactionData.amount {
             existingTransaction.amount = transactionData.amount
             hasChanges = true
         }
-        
+
         if existingTransaction.transactionStatus != transactionData.status {
             existingTransaction.status = Self.stringValue(for: transactionData.status)
             hasChanges = true
         }
-        
+
         if existingTransaction.transactionType != transactionData.type {
             existingTransaction.type = Self.stringValue(for: transactionData.type)
             hasChanges = true
         }
-        
-        if existingTransaction.date != transactionData.date {
+
+        if !dateIsFrozen && existingTransaction.date != transactionData.date {
             existingTransaction.date = transactionData.date
             hasChanges = true
         }

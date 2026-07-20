@@ -90,6 +90,22 @@ extension TransactionModel {
         currentExitStatus?.isClaimed ?? false
     }
 
+    /// Whether this transaction's unilateral exit has completed (claimed).
+    ///
+    /// Checks the persisted movement status first: bark finishes the exit
+    /// movement as Successful exactly when the exit reaches Claimed (and the
+    /// movement stays Pending the whole exit otherwise), so `.confirmed` is a
+    /// terminal signal that survives relaunch. The in-memory exit caches are
+    /// empty until the first refresh completes, so relying on them alone makes
+    /// completed exits flash as in-progress at launch. The cache check remains
+    /// as a fallback for a claim that happened in this session before the next
+    /// movement sync.
+    var isExitComplete: Bool {
+        guard hasUnilateralExit else { return false }
+        if transactionStatus == .confirmed { return true }
+        return isExitClaimed
+    }
+
     /// Blocked info for this transaction's exit, if the exit can't currently
     /// progress because fees can't be covered. Debounced: only non-nil once the
     /// blockage has persisted for 2+ consecutive progression checks.

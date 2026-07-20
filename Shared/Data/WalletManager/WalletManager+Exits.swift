@@ -14,16 +14,17 @@ import OSLog
 extension WalletManager {
     
     /// Active unilateral exits (from Bark SDK)
-    /// Note: Filters out claimed exits, as they are no longer active
+    /// Note: Filters out terminal exits — claimed (complete) and cancelled
+    /// (VtxoAlreadySpent). Both stay in bark's exit list forever, so filtering
+    /// only claimed ones would report cancelled exits as "in progress"
+    /// indefinitely (blocking the settings exit action, inflating attention
+    /// counts).
     var activeUnilateralExits: [ExitVtxo] {
         // Return cached exits - no automatic refresh during access
         // Refresh is triggered explicitly after wallet initialization
         let allExits = cachedExitVtxos
-        
-        // Filter out claimed exits - they're complete and no longer active
-        let activeExits = allExits.filter { !$0.isClaimed }
-        
-        return activeExits
+
+        return allExits.filter { $0.isInFlight }
     }
     
     /// Get all unilateral exits including claimed/completed ones
@@ -175,9 +176,10 @@ extension WalletManager {
         exitVtxosCacheTime = Date()
         Self.logger.info("[Exit Cache] Fetched \(self.cachedExitVtxos.count) exit VTXO(s)")
 
-        // Prune blocked records for exits that are claimed or no longer exist,
-        // before they get persisted below
-        let activeVtxoIds = Set(cachedExitVtxos.filter { !$0.isClaimed }.map { $0.vtxoId })
+        // Prune blocked records for exits that are terminal (claimed or
+        // cancelled) or no longer exist, before they get persisted below — a
+        // cancelled exit can't progress, so its blocked banner is stale
+        let activeVtxoIds = Set(cachedExitVtxos.filter { $0.isInFlight }.map { $0.vtxoId })
         let staleBlockedIds = exitBlockedInfoByVtxoId.keys.filter { !activeVtxoIds.contains($0) }
         if !staleBlockedIds.isEmpty {
             for vtxoId in staleBlockedIds {

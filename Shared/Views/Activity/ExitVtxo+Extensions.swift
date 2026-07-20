@@ -82,10 +82,26 @@ extension ExitVtxo {
     }
     
     /// Check if this exit is active (not yet claimed)
+    /// Note: cancelled exits (VtxoAlreadySpent) count as active here; use
+    /// `isInFlight` when you need "still has work to do"
     var isActive: Bool {
         return !isClaimed
     }
-    
+
+    /// Check if this exit was cancelled because the VTXO was spent elsewhere
+    /// (e.g. a refresh won the race before the exit chain broadcast)
+    var isCancelled: Bool {
+        let caseName = extractStateCaseName(state)
+        return caseName.lowercased() == "vtxoalreadyspent"
+    }
+
+    /// Check if this exit still has work to do: neither claimed nor cancelled.
+    /// Terminal exits stay in bark's exit list forever, so `isActive` alone
+    /// misclassifies cancelled ones.
+    var isInFlight: Bool {
+        return !isClaimed && !isCancelled
+    }
+
     /// Check if claim is in progress (transaction broadcast but not confirmed)
     var isClaimInProgress: Bool {
         let caseName = extractStateCaseName(state)
