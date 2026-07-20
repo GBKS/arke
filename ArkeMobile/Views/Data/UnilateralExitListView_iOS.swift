@@ -149,6 +149,7 @@ struct UnilateralExitListView_iOS: View {
                     .font(.caption)
                 }
                 
+                /*
                 if !progressResults.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("data_last_progress")
@@ -176,6 +177,7 @@ struct UnilateralExitListView_iOS: View {
                     .background(Color(.systemGray5))
                     .cornerRadius(15)
                 }
+                */
             }
             .padding(.horizontal)
             .padding(.vertical, 8)

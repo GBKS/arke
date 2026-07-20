@@ -34,6 +34,7 @@ extension TransactionModel {
                     confirmed: String(localized: "transaction_forced_move"),
                     pending: String(localized: "transaction_forcing_move"),
                     failed: String(localized: "transaction_failed_forced_move"),
+                    cancelled: String(localized: "transaction_cancelled_forced_move"),
                     includePrefix: includeStatusPrefix
                 )
             case .offboarding:
@@ -186,6 +187,7 @@ extension TransactionModel {
                     confirmed: String(localized: "transaction_force_moved_amount \(amountText)"),
                     pending: String(localized: "transaction_force_moving_amount \(amountText)"),
                     failed: String(localized: "transaction_failed_forced_move"),
+                    cancelled: String(localized: "transaction_cancelled_force_move_amount \(amountText)"),
                     includePrefix: includeStatusPrefix
                 )
             case .offboarding:
