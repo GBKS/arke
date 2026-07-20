@@ -452,7 +452,6 @@
 				Views/Settings/WalletDataCleanupService.swift,
 				Views/Tags/Editor/TagEditor.swift,
 				Views/Tags/Editor/TagValidation.swift,
-				Views/Tags/PreviewHelper.swift,
 				Views/Tags/TagSelectorSheet.swift,
 				Views/Tags/TagsViewModel.swift,
 			);

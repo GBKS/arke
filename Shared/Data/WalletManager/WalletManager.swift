@@ -305,15 +305,17 @@ class WalletManager {
     }
     
     private func setupWallet(useMock: Bool, networkConfig: NetworkConfig) {
+        #if DEBUG
         if useMock {
             wallet = MockBarkWallet()
+            return
+        }
+        #endif
+        wallet = BarkWalletFFI(networkConfig: networkConfig, securityService: securityService)
+        if wallet == nil {
+            Self.logger.error("❌ Failed to initialize BarkWalletFFI with network config: \(networkConfig.name)")
         } else {
-            wallet = BarkWalletFFI(networkConfig: networkConfig, securityService: securityService)
-            if wallet == nil {
-                Self.logger.error("❌ Failed to initialize BarkWalletFFI with network config: \(networkConfig.name)")
-            } else {
-                Self.logger.info("✅ Using BarkWalletFFI implementation")
-            }
+            Self.logger.info("✅ Using BarkWalletFFI implementation")
         }
     }
     

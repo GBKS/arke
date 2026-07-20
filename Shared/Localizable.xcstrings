@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "—" : {
+
+    },
+    "(%@)" : {
+      "shouldTranslate" : false
+    },
     "#%lld" : {
       "shouldTranslate" : false
     },
@@ -17,42 +23,14 @@
         }
       }
     },
-    "%@ ago" : {},
     "%@ ₿" : {
       "shouldTranslate" : false
     },
-    "%@... → %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@... → %2$@"
-          }
-        }
-      }
+    "%@ ago" : {
+
     },
     "%lld" : {
       "shouldTranslate" : false
-    },
-    "%lld UTXOs • %@ ₿" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld UTXOs • %2$@ ₿"
-          }
-        }
-      }
-    },
-    "%lld VTXOs • %@ ₿" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld VTXOs • %2$@ ₿"
-          }
-        }
-      }
     },
     "%lld address history records" : {
       "localizations" : {
@@ -252,6 +230,26 @@
         }
       }
     },
+    "%lld UTXOs • %@ ₿" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld UTXOs • %2$@ ₿"
+          }
+        }
+      }
+    },
+    "%lld VTXOs • %@ ₿" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld VTXOs • %2$@ ₿"
+          }
+        }
+      }
+    },
     "%lld/%lld generated, %lld failed" : {
       "localizations" : {
         "en" : {
@@ -272,7 +270,9 @@
         }
       }
     },
-    "%llu sat/vB" : {},
+    "%llu sat/vB" : {
+
+    },
     "%u" : {
       "shouldTranslate" : false
     },
@@ -286,97 +286,25 @@
         }
       }
     },
-    "%u+ confirmations" : {},
-    "(%@)" : {
-      "shouldTranslate" : false
+    "%u+ confirmations" : {
+
     },
     "+%lld" : {
       "shouldTranslate" : false
     },
-    "Address: %@" : {},
-    "All %lld steps complete" : {},
-    "Also assigned '%@' to these %lld transactions:" : {
+    "~%@" : {
+      "shouldTranslate" : false
+    },
+    "⚠️ Insufficient onchain balance\n\nRequired: %@\nAvailable: %@\nNeed to board: %@\n\nPlease board more Bitcoin to your savings balance before starting." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Also assigned '%1$@' to these %2$lld transactions:"
+            "value" : "⚠️ Insufficient onchain balance\n\nRequired: %1$@\nAvailable: %2$@\nNeed to board: %3$@\n\nPlease board more Bitcoin to your savings balance before starting."
           }
         }
       }
     },
-    "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access." : {},
-    "Block %u" : {},
-    "Change tags: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change tags: %@"
-          }
-        }
-      }
-    },
-    "Change tags: %lld tags selected" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Change tags: %lld tag selected"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Change tags: %lld tags selected"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Confirmed at block %u" : {},
-    "Contact '%@' assigned" : {},
-    "From %@" : {},
-    "Invoice #%lld" : {},
-    "Last synced %@" : {},
-    "Refresh is disabled because the amount (%@) is smaller than the minimum required (%@)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Refresh is disabled because the amount (%1$@) is smaller than the minimum required (%2$@)."
-          }
-        }
-      }
-    },
-    "Replace '%@' with '%@'" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Replace '%1$@' with '%2$@'"
-          }
-        }
-      }
-    },
-    "Round %u" : {},
-    "Step %lld of %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Step %1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "This will cancel round %u and release the locked VTXOs." : {},
-    "Waiting" : {},
     "accessibility_audio_muted" : {
       "localizations" : {
         "en" : {
@@ -1747,6 +1675,9 @@
         }
       }
     },
+    "Address: %@" : {
+
+    },
     "alert_cancel_round" : {
       "localizations" : {
         "en" : {
@@ -1827,6 +1758,19 @@
         }
       }
     },
+    "All %lld steps complete" : {
+
+    },
+    "Also assigned '%@' to these %lld transactions:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Also assigned '%1$@' to these %2$lld transactions:"
+          }
+        }
+      }
+    },
     "app_name" : {
       "localizations" : {
         "en" : {
@@ -1837,6 +1781,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access." : {
+
     },
     "backup_already_up_to_date" : {
       "localizations" : {
@@ -2699,6 +2646,9 @@
         }
       }
     },
+    "Block %u" : {
+
+    },
     "button_add_address" : {
       "localizations" : {
         "en" : {
@@ -3411,6 +3361,41 @@
         }
       }
     },
+    "Change tags: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change tags: %@"
+          }
+        }
+      }
+    },
+    "Change tags: %lld tags selected" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Change tags: %lld tag selected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Change tags: %lld tags selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Confirmed at block %u" : {
+
+    },
     "console_help_hint" : {
       "localizations" : {
         "en" : {
@@ -3460,6 +3445,9 @@
           }
         }
       }
+    },
+    "Contact '%@' assigned" : {
+
     },
     "contacts_add_addresses_help" : {
       "localizations" : {
@@ -4187,6 +4175,7 @@
       }
     },
     "data_last_progress" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5592,6 +5581,9 @@
       },
       "shouldTranslate" : false
     },
+    "From %@" : {
+
+    },
     "help_clear_filter" : {
       "localizations" : {
         "en" : {
@@ -5611,6 +5603,9 @@
           }
         }
       }
+    },
+    "Invoice #%lld" : {
+
     },
     "label_address" : {
       "localizations" : {
@@ -5942,6 +5937,9 @@
           }
         }
       }
+    },
+    "Last synced %@" : {
+
     },
     "linked_devices_multiple_devices_description" : {
       "localizations" : {
@@ -7166,6 +7164,29 @@
           }
         }
       }
+    },
+    "Refresh is disabled because the amount (%@) is smaller than the minimum required (%@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refresh is disabled because the amount (%1$@) is smaller than the minimum required (%2$@)."
+          }
+        }
+      }
+    },
+    "Replace '%@' with '%@'" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Replace '%1$@' with '%2$@'"
+          }
+        }
+      }
+    },
+    "Round %u" : {
+
     },
     "section_confirmed_transactions" : {
       "extractionState" : "stale",
@@ -8507,6 +8528,16 @@
         }
       }
     },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "suffix_minimum" : {
       "localizations" : {
         "en" : {
@@ -8893,6 +8924,9 @@
           }
         }
       }
+    },
+    "This will cancel round %u and release the locked VTXOs." : {
+
     },
     "transaction_bitcoin" : {
       "localizations" : {
@@ -9645,19 +9679,8 @@
         }
       }
     },
-    "~%@" : {
-      "shouldTranslate" : false
-    },
-    "—" : {},
-    "⚠️ Insufficient onchain balance\n\nRequired: %@\nAvailable: %@\nNeed to board: %@\n\nPlease board more Bitcoin to your savings balance before starting." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "⚠️ Insufficient onchain balance\n\nRequired: %1$@\nAvailable: %2$@\nNeed to board: %3$@\n\nPlease board more Bitcoin to your savings balance before starting."
-          }
-        }
-      }
+    "Waiting" : {
+
     }
   },
   "version" : "1.1"

@@ -9,6 +9,11 @@ import Foundation
 import ArkeUI
 import Bark
 
+#if DEBUG
+/// Minimal stub conformance of `BarkWalletProtocol` for unit tests and the
+/// `-skipWalletOpen` / `SKIP_WALLET_OPEN=1` fast-launch debugging path.
+/// Canned responses are not kept in sync with the real wallet's output —
+/// don't rely on them for realistic data. Debug builds only.
 class MockBarkWallet: BarkWalletProtocol {
     let walletDir: URL
     var networkConfig: NetworkConfig
@@ -860,5 +865,6 @@ class MockBarkWallet: BarkWalletProtocol {
         self.networkConfig = newConfig
     }
 }
+#endif
 
 
