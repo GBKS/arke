@@ -4626,7 +4626,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VTXO Already Spent"
+            "value" : "Funds Already Spent"
           }
         }
       }

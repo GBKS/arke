@@ -60,8 +60,10 @@ class WalletBackupService {
     }
 
     /// One-time normalization to the bark 0.11 database name.
-    /// A `bark.sqlite` next to a live `db.sqlite` can only be pre-rename residue
-    /// or a stale backup restore, so `db.sqlite` always wins.
+    /// When `bark.sqlite` sits next to a live `db.sqlite`, `db.sqlite` wins,
+    /// but the legacy file is archived rather than deleted: builds from the
+    /// 0.11 transition window could create a fresh `db.sqlite` alongside a
+    /// `bark.sqlite` that still holds the real pre-0.11 wallet state.
     static func migrateLegacyDatabaseFileIfNeeded() {
         let walletDirectory = getWalletDirectory()
         let legacyFile = walletDirectory.appendingPathComponent(legacyDatabaseFileName)
@@ -70,8 +72,10 @@ class WalletBackupService {
         let currentFile = walletDirectory.appendingPathComponent(currentDatabaseFileName)
         do {
             if FileManager.default.fileExists(atPath: currentFile.path) {
-                try FileManager.default.removeItem(at: legacyFile)
-                logger.info("🧹 Removed stale \(legacyDatabaseFileName) next to live \(currentDatabaseFileName)")
+                let timestamp = ISO8601DateFormatter().string(from: Date())
+                let archiveFile = walletDirectory.appendingPathComponent("\(legacyDatabaseFileName).archived-\(timestamp)")
+                try FileManager.default.moveItem(at: legacyFile, to: archiveFile)
+                logger.info("📦 Archived \(legacyDatabaseFileName) next to live \(currentDatabaseFileName) as \(archiveFile.lastPathComponent)")
             } else {
                 try FileManager.default.moveItem(at: legacyFile, to: currentFile)
                 logger.info("📦 Renamed legacy \(legacyDatabaseFileName) to \(currentDatabaseFileName)")

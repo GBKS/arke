@@ -87,7 +87,7 @@ Text("status_last_synced \(date)", bundle: .module)
 
 ### 1. Every key must have an explicit English value
 
-A key referenced in code but lacking an `en` value renders as the raw key in the UI (e.g. users literally see "button_go_back").
+A key referenced in code but lacking an `en` value renders as the raw key in the UI (e.g. users literally see "button_go_back"). Call sites using `defaultValue:` (see Usage in Code) satisfy this rule automatically — extraction fills the `en` value from the code.
 
 ```json
 // ❌ WRONG — renders the key itself
@@ -157,6 +157,40 @@ Short strings like "Change", "State", or "Input" are ambiguous without context. 
 
 ## Usage in Code
 
+### Preferred: `defaultValue:` for new strings
+
+New strings should use `String(localized:defaultValue:)`, keeping the English copy in code next to the key:
+
+```swift
+Text(String(localized: "settings_address_patterns_toggle",
+            defaultValue: "Show address patterns"))
+
+// Interpolation works inside defaultValue
+Text(String(localized: "settings_devices_connected",
+            defaultValue: "\(deviceCount) devices connected"))
+
+// ArkéUI package views — bundle is still required
+String(localized: "key_name", defaultValue: "Value", bundle: .module)
+```
+
+Why this is preferred:
+
+- **Survives catalog rewrites.** Xcode regenerates the catalog on every build (see Catalog Maintenance); with `defaultValue:` the English copy lives in code and re-extraction repopulates the catalog instead of potentially emptying it.
+- **No raw-key failure mode.** A missing catalog entry falls back to correct English instead of rendering the key (Rule 1 becomes impossible to violate for `en`).
+- **Readable call sites.** Reviewers see the actual copy without cross-referencing the catalog.
+
+The trade-off: **English copy edits must be made in code.** Hand-editing the `en` value in the catalog editor for a `defaultValue:`-backed key gets overwritten by the next build's extraction.
+
+**Adoption path:**
+
+1. All **new** strings use `defaultValue:` — mandatory for anything with interpolation.
+2. Migrate existing bare keys **opportunistically** when touching a file (keep it consistent per file), not in a big sweep.
+3. Key naming rules above apply unchanged; `defaultValue:` does not excuse plain-English keys.
+
+### Legacy: bare keys (catalog holds the value)
+
+Most existing call sites still use bare keys, where the `en` value lives only in the catalog:
+
 ```swift
 // SwiftUI views — string literals are LocalizedStringKey automatically
 Text("balance_total")
@@ -190,7 +224,8 @@ String(localized: "key_name", bundle: .module)
 **Xcode rewrites `Localizable.xcstrings` on every build.** Re-extraction re-sorts the file, marks keys it no longer finds in code as `"extractionState" : "stale"`, and can empty hand-added values for keys it cannot match to a call site. Consequences:
 
 - After hand-editing the catalog, **build and re-verify** that your values survived.
-- Prefer fixing the code side (pointing call sites at existing keys) over hand-adding values.
+- Prefer fixing the code side (pointing call sites at existing keys, or adding `defaultValue:`) over hand-adding values.
+- For `defaultValue:`-backed keys, code is the source of truth for `en` — edit the copy in code, never in the catalog editor.
 - Periodically purge stale entries in Xcode's catalog editor (filter by "Stale", then delete). Confirm a key is not constructed dynamically before deleting it.
 
 ### Audit Checklist

@@ -165,22 +165,42 @@ already-finished movements.
 
 The notification stream emits three events: `movementCreated`,
 `movementUpdated`, `channelLagging`. Everything else is polled. Our current
-standing inventory on iOS:
+standing inventory on iOS, split by what each timer is actually for —
+*observing* state changes (a missing event) vs. *driving* work the daemon
+doesn't do (a missing daemon capability):
 
-| Poller | Interval | Exists because there's no event for… |
-|---|---|---|
-| `LightningClaimService` | 30 s | a receive becoming claimable |
-| `RoundProgressionService` | 60 s | round progress / completion |
-| `ExitProgressionService` | 5 min | exit state transitions |
-| `VTXORefreshService` | 60 min | approaching refresh/expiry heights |
-| `pollLightningPaymentStatus` (ad hoc) | 1 s × 60 | send settlement after `.inProgress` |
-| `waitForServerConnection` (ad hoc) | 1 s, 20 s timeout | connection state changes |
+| Poller | Interval | Observes (no event for…) | Drives (daemon doesn't…) |
+|---|---|---|---|
+| `LightningClaimService` | 30 s | a receive becoming claimable | claim the receive |
+| `RoundProgressionService` | 60 s | round progress / completion | — (safety net behind movement events) |
+| `ExitProgressionService` | 5 min | exit state transitions | claim (`drainExits`); progress with an explicit fee rate off-mainnet |
+| `VTXORefreshService` | 60 min | approaching refresh/expiry heights | refresh when the fee schedule makes it free |
+| `pollLightningPaymentStatus` (ad hoc) | 1 s × 60 | send settlement after `.inProgress` | — |
+| `waitForServerConnection` (ad hoc) | 1 s, 20 s timeout | connection state changes | — |
 
-That's four permanent timers plus two ad-hoc loops on a phone, all doing
-FFI round-trips that are usually no-ops. Events for **exit state
-transitions, round phase changes, lightning receive claimable, lightning
-send settled/failed, connection state, and new chain tip** would let us
-delete most of this.
+**Relationship to the daemon.** We run `runDaemon` whenever the wallet is
+open, and it's good (see "What's working well"). But its documented contract
+is one line — it "performs periodic syncs, exit progression and other
+background work" — and everything else we know about it, we learned by
+observing behavior: it usually performs the final AwaitingDelta → Claimable
+exit transition but never claims (so Claimable exits sit forever unless the
+client drains them — the reason `ExitProgressionService` exists), and its
+internal fee estimation is unusable on fee-spammed signet, so we drive
+progression ourselves with an explicit rate there. The net effect is that
+the daemon syncs and progresses state internally, and our pollers then make
+FFI round-trips just to find out what it did — four permanent timers plus
+two ad-hoc loops on a phone, paying for the work twice.
+
+**Ask, in two parts:**
+
+1. **Events** for exit state transitions, round phase changes, lightning
+   receive claimable, lightning send settled/failed, connection state, and
+   new chain tip. That deletes the entire "observes" column; the "drives"
+   work then runs on-event instead of on-timer.
+2. **A documented daemon contract** — exactly which operations the daemon
+   performs, on what cadence, and which it never will. Ideally plus opt-in
+   daemon auto-claim for exits (with fee-policy control); combined with
+   exit events that would delete `ExitProgressionService` outright.
 
 **Stream ergonomics:** the pull model
 (`nextNotification()` / `cancelNextNotificationWait()`) forces every client

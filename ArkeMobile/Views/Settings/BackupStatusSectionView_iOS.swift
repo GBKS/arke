@@ -35,16 +35,6 @@ struct BackupStatusSectionView_iOS: View {
                             Text(info.formattedSize)
                                 .font(.body)
                         }
-                        
-                        if let result = lastBackupResult {
-                            HStack {
-                                Image(systemName: result == .failed ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                                    .foregroundColor(result == .failed ? .red : .green)
-                                Text(result == .success ? String(localized: "backup_successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date") : String(localized: "backup_failed"))
-                                    .foregroundColor(result == .failed ? .red : .green)
-                            }
-                            .font(.body)
-                        }
                     }
                     .font(.subheadline)
                 } else {
@@ -52,7 +42,17 @@ struct BackupStatusSectionView_iOS: View {
                         .foregroundColor(.secondary)
                         .font(.body)
                 }
-                
+
+                if let result = lastBackupResult {
+                    HStack {
+                        Image(systemName: result == .failed ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                            .foregroundColor(result == .failed ? .red : .green)
+                        Text(result == .success ? String(localized: "backup_successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date") : String(localized: "backup_failed"))
+                            .foregroundColor(result == .failed ? .red : .green)
+                    }
+                    .font(.body)
+                }
+
                 VStack(spacing: 20) {
                     Button(action: {
                         exportBackupFile()

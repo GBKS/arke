@@ -877,7 +877,7 @@ private struct ParsedStateDetails: View {
                 StateDetailRow(label: "Block", value: "\(data.block.height)")
 
             case .vtxoAlreadySpent(let data):
-                StateDetailRow(label: "Type", value: "VTXO Already Spent")
+                StateDetailRow(label: "Type", value: "Funds Already Spent")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
 
             case .unparsed(let str):
