@@ -1,7 +1,7 @@
 # Bark FFI Bindings Migration: v0.11.3 → v0.12.1
 
 **Date:** 2026-07-24
-**Status:** 🟡 Planned — code not yet changed (see [02-migration-plan.md](./02-migration-plan.md))
+**Status:** ✅ Completed 2026-07-24 — build green, mobile tests green; on-device smoke pending (see [04-completion-report.md](./04-completion-report.md))
 **Bark Version:** v0.3.0 → v0.4.0
 **FFI Bindings Version:** v0.11.3 → v0.12.1 (rust FFI layer: bark-ffi v0.16.0)
 
@@ -64,7 +64,7 @@ No database filename change, no data migration.
 - **User experience:** No visible changes expected. All internal plumbing.
 - **Code changes:** ~10 files. Mostly mechanical argument/signature edits; the
   one judgement call is `BDKOnchainWallet` (update vs. delete).
-- **Build result:** ⬜ Not yet attempted.
+- **Build result:** ✅ iOS build green; full mobile test suite green (2026-07-24).
 
 ## Documents
 
@@ -72,6 +72,8 @@ No database filename change, no data migration.
    upstream (rust-side) findings that don't appear in the Swift binding diff.
 2. **[02-migration-plan.md](02-migration-plan.md)** — Step-by-step plan with
    concrete file/line targets and the open decisions.
+3. **[04-completion-report.md](04-completion-report.md)** — What was done,
+   verification results, and follow-ups.
 
 ## Verification note (important)
 

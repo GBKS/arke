@@ -62,7 +62,7 @@ struct DataView_iOS: View {
                 VStack {
                     Button(action: {
                         Task {
-                            try? await manager.maintenanceWithOnchainDelegated()
+                            try? await manager.maintenanceDelegated()
                         }
                     }) {
                         Text("Run maintenance")

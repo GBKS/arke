@@ -150,17 +150,17 @@ extension BarkWalletFFI {
                 var status = "Invoice Status:\n"
                 status += "  Payment Hash: \(receiveStatus.paymentHash)\n"
                 status += "  Amount: \(receiveStatus.amountSats) sats\n"
-                status += "  Has HTLC VTXOs: \(receiveStatus.hasHtlcVtxos ? String(localized: "button_yes") : String(localized: "button_no"))\n"
-                status += "  Preimage Revealed: \(receiveStatus.preimageRevealed ? String(localized: "button_yes") : String(localized: "button_no"))\n"
-                
-                if receiveStatus.hasHtlcVtxos && !receiveStatus.preimageRevealed {
+                status += "  State: \(receiveStatus.state)\n"
+
+                switch receiveStatus.state {
+                case "htlcs-ready":
                     status += "  Status: Pending (ready to claim)"
-                } else if receiveStatus.preimageRevealed {
+                case "preimage-revealed", "settled":
                     status += "  Status: Claimed"
-                } else {
+                default: // "awaiting-payment"
                     status += "  Status: Waiting for payment"
                 }
-                
+
                 return status
             } else {
                 // Invoice not found in pending receives
@@ -202,14 +202,19 @@ extension BarkWalletFFI {
             
             // Convert to JSON array
             let invoiceList: [[String: Any]] = pendingReceives.map { receive in
+                let status: String
+                switch receive.state {
+                case "htlcs-ready": status = "ready_to_claim"
+                case "preimage-revealed", "settled": status = "claimed"
+                default: status = "waiting" // "awaiting-payment"
+                }
                 return [
                     "payment_hash": receive.paymentHash,
                     "invoice": receive.invoice,
                     "amount_sats": receive.amountSats,
-                    "has_htlc_vtxos": receive.hasHtlcVtxos,
-                    "preimage_revealed": receive.preimageRevealed,
-                    "status": receive.hasHtlcVtxos && !receive.preimageRevealed ? "ready_to_claim" :
-                             (receive.preimageRevealed ? "claimed" : "waiting")
+                    "state": receive.state,
+                    "settled_at": receive.settledAt as Any,
+                    "status": status
                 ]
             }
             
@@ -477,44 +482,61 @@ extension BarkWalletFFI {
         }
     }
     
-    func lightningReceiveStatus(paymentHash: String) async throws -> LightningReceive? {
-        // Get lightning receive status by payment hash
-        
+    func lightningReceiveState(paymentHash: String) async throws -> LightningReceive {
+        // Get lightning receive state by payment hash
+        // Throws if the payment hash is unknown (v0.12+ replaces the old optional return)
+
         if isPreview {
-            return nil
+            return LightningReceive(
+                paymentHash: paymentHash,
+                invoice: "lnbc1preview...",
+                amountSats: 0,
+                state: "awaiting-payment",
+                paymentPreimage: nil,
+                settledAt: nil
+            )
         }
-        
+
         guard let wallet = wallet else {
             throw BarkWalletFFIError.walletNotInitialized
         }
-        
+
         do {
-            return try await wallet.lightningReceiveStatus(paymentHash: paymentHash)
+            return try await wallet.lightningReceiveState(paymentHash: paymentHash)
         } catch let error as Bark.Error {
-            Self.logger.error("FFI Error getting lightning receive status: \(error)")
-            throw BarkWalletFFIError.configurationError("Failed to get lightning receive status: \(error.localizedDescription)")
+            Self.logger.error("FFI Error getting lightning receive state: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to get lightning receive state: \(error.localizedDescription)")
         } catch {
-            Self.logger.error("Error getting lightning receive status: \(error)")
+            Self.logger.error("Error getting lightning receive state: \(error)")
             throw error
         }
     }
-    
-    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws {
+
+    @discardableResult
+    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws -> LightningReceive {
         // Try to claim a specific lightning receive by payment hash
-        
+
         if isPreview {
-            return
+            return LightningReceive(
+                paymentHash: paymentHash,
+                invoice: "lnbc1preview...",
+                amountSats: 0,
+                state: "settled",
+                paymentPreimage: nil,
+                settledAt: Int64(Date().timeIntervalSince1970)
+            )
         }
-        
+
         guard let wallet = wallet else {
             throw BarkWalletFFIError.walletNotInitialized
         }
-        
+
         Self.logger.debug("Claiming specific Lightning receive via FFI, Payment hash: \(String(paymentHash.prefix(16)))...")
-        
+
         do {
-            try await wallet.tryClaimLightningReceive(paymentHash: paymentHash, wait: wait)
-            Self.logger.info("Lightning receive claimed")
+            let receive = try await wallet.tryClaimLightningReceive(paymentHash: paymentHash, wait: wait)
+            Self.logger.info("Lightning receive claimed, state: \(receive.state)")
+            return receive
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error claiming lightning receive: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to claim lightning receive: \(error.localizedDescription)")

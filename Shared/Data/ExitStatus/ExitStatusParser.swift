@@ -45,6 +45,8 @@ public struct ExitStatusParser {
             return parseClaimed(stateString)
         case "vtxoalreadyspent":
             return parseVtxoAlreadySpent(stateString)
+        case "canceled":
+            return parseCanceled(stateString)
         default:
             return .unparsed(stateString)
         }
@@ -174,6 +176,14 @@ public struct ExitStatusParser {
             return nil
         }
         return .vtxoAlreadySpent(.init(tipHeight: tipHeight))
+    }
+
+    private static func parseCanceled(_ str: String) -> ParsedExitState? {
+        // "Canceled(ExitCanceledState { tip_height: 301492 })" (bark 0.4+)
+        guard let tipHeight = extractUInt32(from: str, field: "tip_height") else {
+            return nil
+        }
+        return .canceled(.init(tipHeight: tipHeight))
     }
 
     // MARK: - Transaction Parsing
@@ -529,8 +539,8 @@ public struct ExitStatusParser {
             txids.insert(data.claimTxid)
         case .claimed(let data):
             txids.insert(data.txid)
-        case .vtxoAlreadySpent:
-            // Terminal state carries no exit transactions.
+        case .vtxoAlreadySpent, .canceled:
+            // Terminal states carry no exit transactions.
             break
         case .unparsed:
             break

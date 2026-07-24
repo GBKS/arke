@@ -254,14 +254,14 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.walletNotInitialized
         }
         
-        guard let onchainWallet = onchainWallet else {
+        guard onchainWallet != nil else {
             throw BarkWalletFFIError.configurationError("Onchain wallet not initialized")
         }
-        
+
         Self.logger.debug("Progressing exits via FFI...")
-        
+
         do {
-            let statuses = try await wallet.progressExits(onchainWallet: onchainWallet, feeRateSatPerVb: feeRateSatPerVb)
+            let statuses = try await wallet.progressExits(feeRateSatPerVb: feeRateSatPerVb)
             
             Self.logger.info("Progressed \(statuses.count) exits")
             for status in statuses {
@@ -302,14 +302,14 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.walletNotInitialized
         }
         
-        guard let onchainWallet = onchainWallet else {
+        guard onchainWallet != nil else {
             throw BarkWalletFFIError.configurationError("Onchain wallet not initialized")
         }
-        
+
         Self.logger.debug("Syncing exits via FFI...")
-        
+
         do {
-            try await wallet.syncExits(onchainWallet: onchainWallet)
+            try await wallet.syncExits()
             Self.logger.info("Exits synced")
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error syncing exits: \(error)")

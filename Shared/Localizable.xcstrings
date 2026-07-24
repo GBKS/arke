@@ -3073,6 +3073,7 @@
       }
     },
     "button_no" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3355,6 +3356,7 @@
       }
     },
     "button_yes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

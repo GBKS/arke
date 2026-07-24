@@ -60,6 +60,18 @@ struct ExitStatusParserTests {
         }
     }
 
+    @Test("Parse Canceled state (bark 0.4+)")
+    func testParseCanceledState() async throws {
+        let input = "Canceled(ExitCanceledState { tip_height: 301492 })"
+        let result = ExitStatusParser.parseState(input)
+
+        if case .canceled(let data) = result {
+            #expect(data.tipHeight == 301492)
+        } else {
+            Issue.record("Failed to parse Canceled state, got: \(String(describing: result))")
+        }
+    }
+
     @Test("Parse AwaitingDelta state")
     func testParseAwaitingDeltaState() async throws {
         let input = "AwaitingDelta(ExitAwaitingDeltaState { tip_height: 301587, confirmed_block: 301543:000000094dd54e6609ccbfd6af266066e6e088f426b0c6d8f8990ffa2fee4e0d, claimable_height: 301555 })"

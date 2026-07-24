@@ -18,7 +18,7 @@ import Bark
 /// Lightning Receive Flow:
 /// 1. User generates Lightning invoice
 /// 2. External user pays the invoice → Payment sits in "pending" state
-/// 3. Service detects pending receive (hasHtlcVtxos && !preimageRevealed)
+/// 3. Service detects pending receive (state == "htlcs-ready")
 /// 4. Service auto-claims → SDK creates Movement → Notification fires → Transaction appears
 ///
 /// Design:
@@ -159,8 +159,7 @@ class LightningClaimService {
             for (index, receive) in pendingReceives.enumerated() {
                 print("   [LightningClaim] Receive #\(index + 1):")
                 print("      Amount: \(receive.amountSats) sats")
-                print("      Has HTLC VTXOs: \(receive.hasHtlcVtxos)")
-                print("      Preimage Revealed: \(receive.preimageRevealed)")
+                print("      State: \(receive.state)")
                 print("      Payment Hash: \(String(receive.paymentHash.prefix(16)))...")
             }
             
@@ -175,8 +174,8 @@ class LightningClaimService {
             
             print("🔍 [LightningClaim] Found \(claimableBalance) sats to claim")
             
-            let claimableReceives = pendingReceives.filter { $0.hasHtlcVtxos && !$0.preimageRevealed }
-            
+            let claimableReceives = pendingReceives.filter { $0.state == "htlcs-ready" }
+
             if claimableReceives.isEmpty {
                 print("⚠️ [LightningClaim] Claimable balance reported but no claimable receives found")
                 lastCheckTime = Date()
@@ -233,7 +232,7 @@ class LightningClaimService {
         }
         
         let pendingReceives = try await wallet.pendingLightningReceives()
-        let claimableReceives = pendingReceives.filter { $0.hasHtlcVtxos && !$0.preimageRevealed }
+        let claimableReceives = pendingReceives.filter { $0.state == "htlcs-ready" }
         
         guard !claimableReceives.isEmpty else {
             print("   ⚠️ Claimable balance reported but no claimable receives found")

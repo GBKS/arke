@@ -17,6 +17,7 @@ public enum ParsedExitState: Equatable {
     case claimInProgress(ClaimInProgressState)
     case claimed(ClaimedState)
     case vtxoAlreadySpent(VtxoAlreadySpentState)
+    case canceled(CanceledState)
     case unparsed(String) // Fallback for unknown states
     
     public struct StartState: Equatable {
@@ -89,6 +90,17 @@ public enum ParsedExitState: Equatable {
     /// consumed by something other than this exit (e.g. spent via refresh/arkoor,
     /// or forfeited by the server in a round). No exit transactions get broadcast.
     public struct VtxoAlreadySpentState: Equatable {
+        public let tipHeight: UInt32
+
+        public init(tipHeight: UInt32) {
+            self.tipHeight = tipHeight
+        }
+    }
+
+    /// The exit was cancelled before its transactions were broadcast (bark 0.4+).
+    /// Not producible via this app's bindings yet (no cancel-exit API), but can
+    /// appear if the datadir was driven by bark-cli or a future bindings bump.
+    public struct CanceledState: Equatable {
         public let tipHeight: UInt32
 
         public init(tipHeight: UInt32) {

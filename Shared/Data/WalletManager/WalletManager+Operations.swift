@@ -313,14 +313,6 @@ extension WalletManager {
         try await wallet.maintenanceDelegated()
     }
     
-    /// Perform maintenance refresh including onchain wallet in delegated mode
-    func maintenanceWithOnchainDelegated() async throws {
-        guard let wallet = wallet else {
-            throw BarkErrorArke.commandFailed("Wallet not initialized")
-        }
-        try await wallet.maintenanceWithOnchainDelegated()
-    }
-    
     /// Refresh specific VTXOs (delegated/non-interactive)
     /// - Parameter vtxoIds: Array of VTXO IDs to refresh
     /// - Returns: The round state if a refresh round was created, nil otherwise

@@ -778,6 +778,8 @@ private struct ParsedStateLabel: View {
             Label("data_claimed", systemImage: "checkmark.circle.fill")
         case .vtxoAlreadySpent:
             Label("data_vtxo_already_spent", systemImage: "xmark.circle")
+        case .canceled:
+            Label("transaction_cancelled", systemImage: "xmark.circle")
         case .unparsed:
             Label("data_unknown", systemImage: "questionmark.circle")
         }
@@ -878,6 +880,10 @@ private struct ParsedStateDetails: View {
 
             case .vtxoAlreadySpent(let data):
                 StateDetailRow(label: "Type", value: "Funds Already Spent")
+                StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
+
+            case .canceled(let data):
+                StateDetailRow(label: "Type", value: "Cancelled")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
 
             case .unparsed(let str):

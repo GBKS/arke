@@ -83,6 +83,8 @@ public extension ExitTransactionStatus {
             return data.tipHeight
         case .vtxoAlreadySpent(let data):
             return data.tipHeight
+        case .canceled(let data):
+            return data.tipHeight
         case .unparsed, .none:
             return nil
         }

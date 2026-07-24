@@ -597,21 +597,12 @@ class MockBarkWallet: BarkWalletProtocol {
         return nil
     }
     
-    func maintenanceWithOnchain() async throws {
-        try await Task.sleep(nanoseconds: 1_500_000_000)
-        print("🔧 Mock: Performing full maintenance with onchain sync")
-    }
-    
     // MARK: - Delegated / Non-interactive Operations
-    
+
     func maintenanceDelegated() async throws {
         print("🔧 Mock: Scheduling delegated maintenance (non-blocking)")
     }
-    
-    func maintenanceWithOnchainDelegated() async throws {
-        print("🔧 Mock: Scheduling delegated maintenance with onchain sync (non-blocking)")
-    }
-    
+
     func refreshVtxosDelegated(vtxoIds: [String]) async throws -> RoundState? {
         print("🔄 Mock: Scheduling delegated VTXO refresh for \(vtxoIds.count) VTXOs (non-blocking)")
         // Return nil to indicate no refresh was needed
@@ -717,15 +708,25 @@ class MockBarkWallet: BarkWalletProtocol {
         return .unknown
     }
     
-    func lightningReceiveStatus(paymentHash: String) async throws -> LightningReceive? {
+    func lightningReceiveState(paymentHash: String) async throws -> LightningReceive {
         try await Task.sleep(nanoseconds: 500_000_000)
-        print("🔍 Mock: Getting Lightning receive status for \(String(paymentHash.prefix(16)))...")
-        return nil
+        print("🔍 Mock: Getting Lightning receive state for \(String(paymentHash.prefix(16)))...")
+        // The mock tracks no receives, so every hash is unknown (v0.12+ throws instead of returning nil)
+        throw BarkErrorArke.commandFailed("Mock: unknown payment hash")
     }
-    
-    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws {
+
+    @discardableResult
+    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws -> LightningReceive {
         try await Task.sleep(nanoseconds: wait ? 1_500_000_000 : 500_000_000)
         print("💰 Mock: Claiming Lightning receive for \(String(paymentHash.prefix(16)))...")
+        return LightningReceive(
+            paymentHash: paymentHash,
+            invoice: "lnbc1mock...",
+            amountSats: 0,
+            state: "settled",
+            paymentPreimage: nil,
+            settledAt: Int64(Date().timeIntervalSince1970)
+        )
     }
     
     func claimableLightningReceiveBalanceSats() async throws -> UInt64 {
@@ -853,8 +854,8 @@ class MockBarkWallet: BarkWalletProtocol {
         fatalError("Mock implementation does not support notifications")
     }
     
-    func runDaemon(onchainWallet: OnchainWallet?) async throws {
-        print("🤖 Mock: Starting wallet daemon (onchain: \(onchainWallet != nil))")
+    func runDaemon() async throws {
+        print("🤖 Mock: Starting wallet daemon")
     }
     
     func stopDaemon() async throws {

@@ -106,7 +106,7 @@ public struct ExitProgress: Equatable {
             current = transactionCount + 4
             phase = .complete
 
-        case .vtxoAlreadySpent:
+        case .vtxoAlreadySpent, .canceled:
             current = 1
             phase = .cancelled
         }
@@ -177,12 +177,13 @@ public struct ExitProgress: Equatable {
     }
 
     /// Aggregate progress across multiple concurrent exits. Cancelled movements
-    /// (vtxoAlreadySpent) are excluded. Claimed movements contribute their full
-    /// step count so the bar advances monotonically as each finishes.
+    /// (vtxoAlreadySpent, canceled) are excluded. Claimed movements contribute
+    /// their full step count so the bar advances monotonically as each finishes.
     public init(statuses: [ExitTransactionStatus]) {
         let active = statuses.filter { status in
             guard let parsed = status.parsedState else { return true }
             if case .vtxoAlreadySpent = parsed { return false }
+            if case .canceled = parsed { return false }
             return true
         }
 

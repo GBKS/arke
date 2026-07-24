@@ -106,12 +106,10 @@ protocol BarkWalletProtocol {
     
     func sync() async throws
     func maintenanceRefresh() async throws -> String?
-    func maintenanceWithOnchain() async throws
-    
+
     // MARK: - Delegated / Non-interactive Operations
 
     func maintenanceDelegated() async throws
-    func maintenanceWithOnchainDelegated() async throws
     func refreshVtxosDelegated(vtxoIds: [String]) async throws -> RoundState?
     
     // MARK: - Server Connection
@@ -164,8 +162,10 @@ protocol BarkWalletProtocol {
     func checkLightningPayment(paymentHash: String, wait: Bool) async throws -> LightningSendStatus
     func isInvoicePaid(paymentHash: String) async throws -> Bool
     func lightningSendState(paymentHash: String) async throws -> LightningSendStatus
-    func lightningReceiveStatus(paymentHash: String) async throws -> LightningReceive?
-    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws
+    /// Throws if the payment hash is unknown (v0.12+ replaces the old optional return)
+    func lightningReceiveState(paymentHash: String) async throws -> LightningReceive
+    @discardableResult
+    func tryClaimLightningReceive(paymentHash: String, wait: Bool) async throws -> LightningReceive
     func claimableLightningReceiveBalanceSats() async throws -> UInt64
     func pendingLightningReceives() async throws  -> [LightningReceive]
     func cancelLightningReceive(paymentHash: String) async throws
@@ -207,12 +207,11 @@ protocol BarkWalletProtocol {
      * Start a background daemon for the wallet.
      *
      * The daemon performs periodic syncs, exit progression and other
-     * background work. It is stopped automatically when the wallet is dropped.
-     * Callback-based onchain wallets are not supported for daemon mode and the
-     * daemon will run without onchain capabilities in that case.
+     * background work, using the onchain wallet bound at `Wallet.open()`.
+     * It is stopped automatically when the wallet is dropped.
      * Calling this multiple times stops the previous daemon and starts a new one.
      */
-    func runDaemon(onchainWallet: OnchainWallet?) async throws
+    func runDaemon() async throws
     
     /**
      * Stop the wallet daemon.

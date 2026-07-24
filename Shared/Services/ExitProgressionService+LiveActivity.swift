@@ -176,12 +176,13 @@ extension ExitProgressionService {
                 // All VTXOs gone from exit list — treat as complete
                 await endLiveActivity(success: true)
             case .cancelled:
-                // All remaining exits cancelled (vtxoAlreadySpent)
+                // All remaining exits cancelled (vtxoAlreadySpent/canceled)
                 await endLiveActivity(success: false)
             default:
                 let activeCount = statuses.filter { status in
                     guard let parsed = status.parsedState else { return true }
                     if case .vtxoAlreadySpent = parsed { return false }
+                    if case .canceled = parsed { return false }
                     return true
                 }.count
 
@@ -335,6 +336,7 @@ extension ExitProgressionService {
         case .claimInProgress(let s): return s.tipHeight
         case .claimed(let s):        return s.tipHeight
         case .vtxoAlreadySpent(let s): return s.tipHeight
+        case .canceled(let s):       return s.tipHeight
         case .unparsed:              return nil
         }
     }

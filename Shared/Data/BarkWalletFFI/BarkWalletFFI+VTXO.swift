@@ -211,24 +211,24 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.walletNotInitialized
         }
         
-        // Ensure onchain wallet is initialized
-        guard let onchainWallet = onchainWallet else {
+        // Ensure onchain wallet is initialized (bound at Wallet.open via WalletOpenArgs.onchain)
+        guard onchainWallet != nil else {
             throw BarkWalletFFIError.configurationError("Onchain wallet not initialized")
         }
-        
+
         // Validate amount
         guard amount > 0 else {
             throw BarkWalletFFIError.configurationError("Amount must be greater than 0")
         }
-        
+
         // Convert Int to UInt64 for FFI
         let amountSats = UInt64(amount)
-        
+
         Self.logger.debug("Boarding \(amount) sats via FFI, Converting onchain Bitcoin to Ark VTXOs")
-        
+
         do {
             // Call FFI boardAmount method
-            let roundId = try await wallet.boardAmount(onchainWallet: onchainWallet, amountSats: amountSats)
+            let roundId = try await wallet.boardAmount(amountSats: amountSats)
             
             Self.logger.info("Board transaction initiated, VTXO ID: \(roundId.vtxoId), Amount: \(amount) sats, Txid: \(roundId.txid), Waiting for confirmations...")
             
@@ -253,16 +253,16 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.walletNotInitialized
         }
         
-        // Ensure onchain wallet is initialized
-        guard let onchainWallet = onchainWallet else {
+        // Ensure onchain wallet is initialized (bound at Wallet.open via WalletOpenArgs.onchain)
+        guard onchainWallet != nil else {
             throw BarkWalletFFIError.configurationError("Onchain wallet not initialized")
         }
-        
+
         Self.logger.debug("Boarding all available onchain funds via FFI...")
-        
+
         do {
             // Call FFI boardAll method
-            let roundId = try await wallet.boardAll(onchainWallet: onchainWallet)
+            let roundId = try await wallet.boardAll()
             
             Self.logger.info("Board all transaction initiated, VTXO ID: \(roundId.vtxoId), Txid: \(roundId.txid), All available onchain funds being boarded...")
             

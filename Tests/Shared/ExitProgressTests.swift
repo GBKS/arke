@@ -37,6 +37,8 @@ struct ExitProgressTests {
 
     private static let alreadySpentState = "VtxoAlreadySpent(ExitVtxoAlreadySpentState { tip_height: 301492 })"
 
+    private static let canceledState = "Canceled(ExitCanceledState { tip_height: 301492 })"
+
     private func makeStatus(state: String, history: [String]? = nil, transactionCount: UInt32 = 0) -> ExitTransactionStatus {
         ExitTransactionStatus(
             vtxoId: "test-vtxo-id",
@@ -167,6 +169,15 @@ struct ExitProgressTests {
     @Test("VtxoAlreadySpent is cancelled")
     func testAlreadySpent() {
         let progress = ExitProgress(status: makeStatus(state: Self.alreadySpentState))
+
+        #expect(progress.phase == .cancelled)
+        #expect(progress.isCancelled)
+        #expect(progress.currentStep == 1)
+    }
+
+    @Test("Canceled (bark 0.4+) is cancelled")
+    func testCanceled() {
+        let progress = ExitProgress(status: makeStatus(state: Self.canceledState))
 
         #expect(progress.phase == .cancelled)
         #expect(progress.isCancelled)
@@ -307,6 +318,18 @@ struct ExitProgressTests {
         #expect(aggregate.phase == .cancelled)
         #expect(aggregate.totalSteps == 0)
         #expect(aggregate.currentStep == 0)
+    }
+
+    @Test("Canceled (bark 0.4+) excluded from aggregate")
+    func testAggregateCanceledExcluded() {
+        let active = makeStatus(state: Self.processingTwoUnconfirmed)
+        let canceled = makeStatus(state: Self.canceledState)
+        let single = ExitProgress(status: active)
+        let aggregate = ExitProgress(statuses: [active, canceled])
+
+        #expect(aggregate.totalSteps == single.totalSteps)
+        #expect(aggregate.currentStep == single.currentStep)
+        #expect(aggregate.phase == .confirming)
     }
 
     @Test("Claimed exit contributes full steps to keep bar monotonic")

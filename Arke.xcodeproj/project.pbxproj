@@ -137,8 +137,6 @@
 				"Data/BarkWalletFFI/BarkWalletFFI+WalletCreation.swift",
 				"Data/BarkWalletFFI/BarkWalletFFI+WalletLifecycle.swift",
 				Data/BarkWalletProtocol.swift,
-				Data/BDKCpfpHelper.swift,
-				Data/BDKOnchainWallet.swift,
 				Data/BDKTransactionReader.swift,
 				Data/BIP39Usage.swift,
 				Data/CacheManager.swift,

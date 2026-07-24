@@ -568,7 +568,7 @@ class WalletManager {
             
             // Start the daemon for background operations (syncs, exit progression, etc.)
             do {
-                try await ffiWallet.runDaemon(onchainWallet: ffiWallet.onchainWallet)
+                try await ffiWallet.runDaemon()
                 Self.logger.info("🤖 Wallet daemon started")
             } catch {
                 Self.logger.warning("⚠️ Failed to start wallet daemon: \(error.localizedDescription)")

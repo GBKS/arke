@@ -123,10 +123,29 @@ it. It is **not** sent to the server at invoice-generation time.
 
 **No change needed** — defaults to `nil`; with no token, claims authenticate
 via VTXO attestation, which works whenever the wallet already holds funds
-(same behaviour as 0.11.3, which never exposed a token at all). Implication to
-remember: Lightning receive into a *completely empty* wallet may be rejected by
-server anti-DoS until we have a token source (e.g. an onboarding voucher from
-the server operator) to thread through `getLightningInvoice`.
+(same behaviour as 0.11.3, which never exposed a token at all).
+
+**How token acquisition actually works** (verified in `bark_server.proto`,
+`intman.proto`, and `server/src/ln/mod.rs` at bark-0.4.0):
+
+- `ArkInfo.lnReceiveAntiDosRequired` (already present in 0.11.3; the app
+  plumbs it into `ArkInfoModel` and shows it in the debug Ark Info view)
+  advertises whether the server enforces anti-DoS on lightning receives at
+  all. When `false`, an empty wallet can claim with no token and no
+  attestation — no limitation exists.
+- When `true`, the wallet-facing ark protocol has **no RPC to request a
+  token**. The token field in `PrepareLightningReceiveClaimRequest` is
+  validated server-side as a single-use, expiring **integration token** in the
+  server's database. Tokens are issued through the operator's
+  integration/management API (`GetTokens` in `intman.proto`, API-key gated) —
+  i.e. by the server operator or a partner integration, out-of-band from the
+  wallet's perspective.
+
+Implication: Lightning receive into a *completely empty* wallet is only
+blocked on servers that set `lnReceiveAntiDosRequired = true`, and unblocking
+it requires an operator-issued token delivered through some app-level channel
+(e.g. an onboarding voucher), then threaded through `getLightningInvoice`.
+The app can detect the situation today via `ArkInfoModel.lnReceiveAntiDosRequired`.
 
 ---
 

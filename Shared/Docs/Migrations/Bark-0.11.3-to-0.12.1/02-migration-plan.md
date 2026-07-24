@@ -34,15 +34,14 @@ Verified against `Bark.swift` in DerivedData SourcePackages (v0.12.1, `8f9c899`)
   changes, and every changed declaration is covered by Phases 1–5. Nothing
   else changed (`WalletNotificationsExtension.swift` untouched).
 
-## Open decisions (settle before/at Phase 4)
+## Open decisions ✅ SETTLED (2026-07-24)
 
-1. **`BDKOnchainWallet`: update or delete?** It's dead code (instantiated
-   nowhere). Update = mechanical (Phase 4a); delete = also remove
-   `BDKCpfpHelper` if orphaned (Phase 4b) — check `BDKTransactionReader` and
-   others for shared use first.
-2. **`Canceled` parser hardening (Phase 6):** include or defer. Recommended:
-   include (~10 lines + test); closes a live-activity-respawn gap before it
-   can bite.
+1. **`BDKOnchainWallet`: DELETE (Phase 4b).** Historical context from
+   Christoph: it was an experiment that didn't work out due to the
+   complexities of CPFP; `BDKTransactionReader` was introduced later to cover
+   the history-reading need. Also remove `BDKCpfpHelper` if orphaned — check
+   `BDKTransactionReader` and others for shared use first.
+2. **`Canceled` parser hardening (Phase 6): INCLUDE.**
 
 ---
 
