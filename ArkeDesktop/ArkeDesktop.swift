@@ -53,6 +53,9 @@ struct Arke_desktop: App {
     /// Performs lightweight wallet check before app initialization
     /// This determines whether to activate services and sync
     init() {
+        // Anchor the launch-timing clock before any other work (see LaunchTiming)
+        LaunchTiming.anchor()
+
         // Early check is a fast-path hint only: a positive result is trustworthy, a
         // negative one is not (keychain may be transiently unreadable). MainView's
         // deeper detection re-checks with retries whenever this is false.

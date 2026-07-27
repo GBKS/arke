@@ -318,6 +318,7 @@
 				Services/ExitProgressionService.swift,
 				"Services/ExitProgressionService+LiveActivity.swift",
 				Services/FeeRateService.swift,
+				Services/LaunchTiming.swift,
 				Services/LightningClaimService.swift,
 				Services/MotionManager.swift,
 				Services/NativeContactService.swift,

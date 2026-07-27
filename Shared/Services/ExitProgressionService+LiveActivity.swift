@@ -10,6 +10,7 @@
 import Foundation
 import ActivityKit
 import Bark
+import OSLog
 
 extension ExitProgressionService {
 
@@ -22,7 +23,7 @@ extension ExitProgressionService {
 
     /// Start the Live Activity and schedule check-in notifications when an exit begins.
     func startExitMonitoring(for exitVtxos: [ExitVtxo]) async {
-        print("🚀 [LiveActivity] Starting exit monitoring for \(exitVtxos.count) VTXO(s)")
+        Self.logger.info("🚀 [LiveActivity] Starting exit monitoring for \(exitVtxos.count) VTXO(s)")
         await startLiveActivity(for: exitVtxos)
         await ExitProgressionNotifications.shared.scheduleCheckInSequence()
     }
@@ -33,16 +34,16 @@ extension ExitProgressionService {
     /// is already running, refreshes it instead of creating a duplicate.
     func startLiveActivity(for exitVtxos: [ExitVtxo]) async {
         guard !exitVtxos.isEmpty else {
-            print("⚠️ [LiveActivity] No VTXOs provided, skipping start")
+            Self.logger.warning("⚠️ [LiveActivity] No VTXOs provided, skipping start")
             return
         }
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            print("⚠️ [LiveActivity] Live Activities not enabled by user")
+            Self.logger.info("⚠️ [LiveActivity] Live Activities not enabled by user")
             return
         }
 
         if Self.activeActivity != nil {
-            print("ℹ️ [LiveActivity] Activity already running — refreshing instead")
+            Self.logger.info("ℹ️ [LiveActivity] Activity already running — refreshing instead")
             await updateAllLiveActivities()
             return
         }
@@ -78,16 +79,16 @@ extension ExitProgressionService {
                 content: .init(state: initialState, staleDate: nil)
             )
             Self.activeActivity = activity
-            print("✅ [LiveActivity] Started activity for \(exitCount) VTXO(s)")
+            Self.logger.info("✅ [LiveActivity] Started activity for \(exitCount) VTXO(s)")
         } catch {
-            print("❌ [LiveActivity] Failed to start activity: \(error)")
+            Self.logger.error("❌ [LiveActivity] Failed to start activity: \(error)")
         }
     }
 
     /// End the Live Activity with a final summary state.
     func endLiveActivity(success: Bool) async {
         guard let activity = Self.activeActivity else {
-            print("⚠️ [LiveActivity] No active activity to end")
+            Self.logger.debug("⚠️ [LiveActivity] No active activity to end")
             return
         }
 
@@ -113,7 +114,7 @@ extension ExitProgressionService {
         )
 
         Self.activeActivity = nil
-        print("✅ [LiveActivity] Ended activity (success: \(success))")
+        Self.logger.info("✅ [LiveActivity] Ended activity (success: \(success))")
 
         await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
     }
@@ -124,7 +125,7 @@ extension ExitProgressionService {
     func reattachToExistingActivities() async {
         if let existing = Activity<ExitProgressActivityAttributes>.activities.first {
             Self.activeActivity = existing
-            print("✅ [LiveActivity] Reattached to existing activity")
+            Self.logger.info("✅ [LiveActivity] Reattached to existing activity")
         }
         await recreateMissingActivities()
         await updateAllLiveActivities()
@@ -140,10 +141,10 @@ extension ExitProgressionService {
         do {
             let exitVtxos = try await wallet.getExitVtxos().filter { $0.isInFlight }
             guard !exitVtxos.isEmpty else { return }
-            print("🆕 [LiveActivity] Recreating missing activity for \(exitVtxos.count) exit(s)")
+            Self.logger.info("🆕 [LiveActivity] Recreating missing activity for \(exitVtxos.count) exit(s)")
             await startLiveActivity(for: exitVtxos)
         } catch {
-            print("⚠️ [LiveActivity] Failed to recreate missing activity: \(error)")
+            Self.logger.warning("⚠️ [LiveActivity] Failed to recreate missing activity: \(error)")
         }
     }
 
@@ -203,13 +204,13 @@ extension ExitProgressionService {
                         staleDate: Date().addingTimeInterval(120 * 60)
                     )
                 )
-                print("✅ [LiveActivity] Updated (step \(aggregate.currentStep)/\(aggregate.totalSteps), phase: \(aggregate.phase))")
+                Self.logger.debug("✅ [LiveActivity] Updated (step \(aggregate.currentStep)/\(aggregate.totalSteps), phase: \(String(describing: aggregate.phase)))")
             }
 
             await cleanupDismissedActivities()
 
         } catch {
-            print("❌ [LiveActivity] Failed to update activity: \(error)")
+            Self.logger.error("❌ [LiveActivity] Failed to update activity: \(error)")
         }
     }
 
@@ -217,7 +218,7 @@ extension ExitProgressionService {
 
     /// Called when the user taps a check-in notification or opens the app.
     func userCheckedIn() async {
-        print("👤 [LiveActivity] User checked in")
+        Self.logger.info("👤 [LiveActivity] User checked in")
         await checkAndProgressExits()
         await walletManager?.refreshAfterVTXOChange()
         await updateAllLiveActivities()
@@ -232,7 +233,7 @@ extension ExitProgressionService {
         let stillActive = Activity<ExitProgressActivityAttributes>.activities
         if !stillActive.contains(where: { $0.id == current.id }) {
             Self.activeActivity = nil
-            print("🗑️ [LiveActivity] Activity dismissed by user")
+            Self.logger.info("🗑️ [LiveActivity] Activity dismissed by user")
         }
     }
 

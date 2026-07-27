@@ -60,6 +60,10 @@ struct Arke_mobile: App {
     /// Performs lightweight wallet check before app initialization
     /// This determines whether to activate services and sync
     init() {
+        // Anchor the launch-timing clock before any other work (Background_Execution.md
+        // Phase 1 field data: cold launch → wallet ready).
+        LaunchTiming.anchor()
+
         // Early check is a fast-path hint only: a positive result is trustworthy, a
         // negative one is not (keychain may be unavailable at cold launch/prewarming).
         // MainView's deeper detection re-checks with retries whenever this is false.

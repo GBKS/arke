@@ -409,6 +409,18 @@ timing of cold launch → wallet ready → pass complete, and a per-wake-source
 log line — this is the field data that tells us how much background time
 iOS actually grants and whether the 30s budget is workable.
 
+*OSLog groundwork done 2026-07-27:* `RelayRegistrationService`,
+`LightningClaimService`, `ExitProgressionService` (+LiveActivity
+extension), and `RoundProgressionService` converted from `print` to
+`Logger` (categories match the old bracket prefixes; per-tick chatter at
+debug, actions at info, money-moving/summary lines at notice with
+`privacy: .public` so they persist for TestFlight field data).
+`LaunchTiming` (Shared/Services/) anchors at both apps' `init()` and logs
+cold launch → wallet ready (notice) from the end of
+`WalletManager.initialize()`. Still to come with the coordinator
+(steps 3–4): pass-complete timing and the per-BGTask-wake-source lines;
+remote-push wake logging already existed in `AppDelegate_iOS`.
+
 Also in Phase 1: **migrate the mnemonic keychain item to
 `AfterFirstUnlock`** (decided) — in-place re-add with the new
 accessibility attribute, plus verification that iCloud Keychain sync

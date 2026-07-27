@@ -461,6 +461,7 @@ class WalletManager {
             Self.logger.info("🔧 [WalletManager] initialize execute at \(Date())")
             await self.performInitialization(forceReadOnly: forceReadOnly)
             Self.logger.info("🔧 [WalletManager] initialize execute done at \(Date())")
+            LaunchTiming.logWalletReady(initialized: self.isInitialized)
         }
     }
     

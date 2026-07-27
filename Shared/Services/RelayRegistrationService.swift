@@ -7,6 +7,7 @@
 
 import Foundation
 import CryptoKit
+import OSLog
 
 // MARK: - Request/Response Types
 
@@ -40,6 +41,10 @@ struct RelayErrorResponse: Codable {
 
 @MainActor
 class RelayRegistrationService {
+    // MARK: - Logging
+
+    nonisolated static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "RelayRegistration")
+
     // MARK: - Configuration
     
     private let relayBaseURL: String
@@ -100,7 +105,7 @@ class RelayRegistrationService {
         // Check if we need to re-register based on auth hash
         let authHash = hashAuthorization(authorizationHex)
         if authHash == lastAuthHash, let expiresAt = authExpiresAt, Date() < expiresAt {
-            print("ℹ️ [RelayRegistration] Skipping registration - auth unchanged and not expired")
+            Self.logger.info("ℹ️ Skipping registration - auth unchanged and not expired")
             return
         }
         
@@ -122,7 +127,7 @@ class RelayRegistrationService {
                 body: request
             )
             
-            print("✅ [RelayRegistration] Device registered: \(response.status)")
+            Self.logger.notice("✅ Device registered: \(response.status, privacy: .public)")
             
             // Update state
             lastAuthHash = authHash
@@ -131,7 +136,7 @@ class RelayRegistrationService {
             // Schedule refresh
             scheduleAuthRefresh()
         } catch let error as RelayError {
-            print("❌ [RelayRegistration] Registration failed: \(error.localizedDescription)")
+            Self.logger.error("❌ Registration failed: \(error.localizedDescription, privacy: .public)")
             
             // On auth error, clear cached state to force fresh registration next time
             if case .unauthorized = error {
@@ -157,14 +162,14 @@ class RelayRegistrationService {
                 body: request
             )
             
-            print("✅ [RelayRegistration] Device unregistered: \(response.status)")
+            Self.logger.notice("✅ Device unregistered: \(response.status, privacy: .public)")
             
             // Clear state
             lastAuthHash = nil
             authExpiresAt = nil
             refreshTimer?.cancel()
         } catch let error as RelayError {
-            print("❌ [RelayRegistration] Unregistration failed: \(error.localizedDescription)")
+            Self.logger.error("❌ Unregistration failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
     }
@@ -209,7 +214,7 @@ class RelayRegistrationService {
 
             guard let self, !Task.isCancelled else { return }
 
-            print("🔄 [RelayRegistration] Auto-refreshing authorization")
+            Self.logger.notice("🔄 Auto-refreshing authorization (foreground timer fired)")
 
             // Clear cached state so the upcoming registerDevice() call (made
             // by the handler with access to the wallet) isn't skipped as a
@@ -269,7 +274,7 @@ class RelayRegistrationService {
         // Handle retryable errors
         if case .rateLimited(let retryAfter) = error {
             if retryCount < 1 {
-                print("⏳ [RelayRegistration] Rate limited, retrying after \(retryAfter)s")
+                Self.logger.warning("⏳ Rate limited, retrying after \(retryAfter)s")
                 try await Task.sleep(nanoseconds: UInt64(retryAfter * 1_000_000_000))
                 return try await performRequestWithRetry(request: request, retryCount: retryCount + 1)
             }
@@ -278,7 +283,7 @@ class RelayRegistrationService {
         if case .serverError = error {
             if retryCount < 2 {
                 let backoffDelay = min(pow(2.0, Double(retryCount)) * 1.0, 10.0)
-                print("⏳ [RelayRegistration] Server error, retrying after \(backoffDelay)s")
+                Self.logger.warning("⏳ Server error, retrying after \(backoffDelay)s")
                 try await Task.sleep(nanoseconds: UInt64(backoffDelay * 1_000_000_000))
                 return try await performRequestWithRetry(request: request, retryCount: retryCount + 1)
             }
@@ -290,7 +295,7 @@ class RelayRegistrationService {
     private func parseErrorResponse(data: Data, statusCode: Int, response: HTTPURLResponse) throws -> RelayError {
         // Debug: Log raw error response for 400 errors
         if statusCode == 400, let rawError = String(data: data, encoding: .utf8) {
-            print("📥 [RelayRegistration] Raw 400 error response: \(rawError)")
+            Self.logger.debug("📥 Raw 400 error response: \(rawError)")
         }
         
         // Try to decode structured error response

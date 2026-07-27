@@ -9,9 +9,10 @@ import Foundation
 import SwiftUI
 import Bark
 import ArkeUI
+import OSLog
 
 /// Service responsible for automatically progressing unilateral exits in the background
-/// 
+///
 /// This service runs a timer that periodically checks for active exits and progresses them
 /// through their state machine. The Bark SDK handles all the complex exit logic - this
 /// service just polls it regularly and triggers progression.
@@ -30,37 +31,41 @@ import ArkeUI
 @MainActor
 @Observable
 class ExitProgressionService {
-    
+
+    // MARK: - Logging
+
+    nonisolated static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitProgression")
+
     // MARK: - Configuration
-    
+
     /// How often to check for exit progression (in seconds)
     private let checkInterval: TimeInterval = 5 * 60 // 5 minutes
-    
+
     // MARK: - State
-    
+
     /// Whether the service is currently running
     private(set) var isRunning: Bool = false
-    
+
     /// Last time exits were checked/progressed
     private(set) var lastCheckTime: Date?
-    
+
     /// Last error encountered (for debugging)
     private(set) var lastError: String?
-    
+
     // MARK: - Dependencies
-    
+
     internal let wallet: BarkWalletProtocol
     internal weak var walletManager: WalletManager?
-    
+
     // MARK: - Timer
-    
+
     private var timer: Timer?
-    
+
     // MARK: - Initialization
-    
+
     init(wallet: BarkWalletProtocol) {
         self.wallet = wallet
-        
+
         // Listen for exit check-in notifications (iOS only)
         #if os(iOS)
         NotificationCenter.default.addObserver(
@@ -74,24 +79,24 @@ class ExitProgressionService {
         }
         #endif
     }
-    
+
     /// Set the wallet manager reference (needed for cache invalidation)
     func setWalletManager(_ manager: WalletManager) {
         self.walletManager = manager
     }
-    
+
     // MARK: - Lifecycle
-    
+
     /// Start the exit progression service
     func start() {
         guard !isRunning else {
-            print("⚠️ [ExitProgression] Service already running")
+            Self.logger.warning("⚠️ Service already running")
             return
         }
-        
-        print("▶️ [ExitProgression] Starting service (check interval: \(Int(checkInterval))s)")
+
+        Self.logger.info("▶️ Starting service (check interval: \(Int(self.checkInterval))s)")
         isRunning = true
-        
+
         // Clean up any stale notifications and reattach to existing Live Activities (iOS only)
         #if os(iOS)
         Task {
@@ -99,12 +104,12 @@ class ExitProgressionService {
             await reattachToExistingActivities()
         }
         #endif
-        
+
         // Run initial check immediately
         Task {
             await checkAndProgressExits()
         }
-        
+
         // Schedule timer for periodic checks
         timer = Timer.scheduledTimer(withTimeInterval: checkInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -112,30 +117,30 @@ class ExitProgressionService {
             }
         }
     }
-    
+
     /// Stop the exit progression service
     func stop() {
         guard isRunning else { return }
-        
-        print("⏹️ [ExitProgression] Stopping service")
+
+        Self.logger.info("⏹️ Stopping service")
         isRunning = false
         timer?.invalidate()
         timer = nil
     }
-    
+
     /// Manually trigger an immediate check (in addition to scheduled checks)
     func triggerImmediateCheck() {
         guard isRunning else {
-            print("⚠️ [ExitProgression] Cannot trigger check - service not running")
+            Self.logger.warning("⚠️ Cannot trigger check - service not running")
             return
         }
-        
-        print("🔄 [ExitProgression] Manual check triggered")
+
+        Self.logger.info("🔄 Manual check triggered")
         Task {
             await checkAndProgressExits()
         }
     }
-    
+
     // MARK: - Fee Rates
 
     /// Explicit fee rate override for exit operations.
@@ -158,8 +163,8 @@ class ExitProgressionService {
     /// Check for active exits and progress them if needed
     internal func checkAndProgressExits() async {
         let startTime = Date()
-        print("🔍 [ExitProgression] Starting check at \(startTime)")
-        
+        Self.logger.debug("🔍 Starting check")
+
         do {
             // Step 1: Quick check - do we have any exits that need work?
             // IMPORTANT: Bark's hasPendingExits() only counts exits in the
@@ -176,7 +181,7 @@ class ExitProgressionService {
             let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
 
             if !hasPending && claimableExits.isEmpty && !hasClaimsInProgress {
-                print("✅ [ExitProgression] No pending, claimable, or claim-in-progress exits - skipping progression")
+                Self.logger.debug("✅ No pending, claimable, or claim-in-progress exits - skipping progression")
 
                 // A Claimed exit is none of the above, so this early return
                 // is the steady state right after an exit completes - still
@@ -192,22 +197,22 @@ class ExitProgressionService {
             }
 
             let kind = hasPending ? "pending" : (!claimableExits.isEmpty ? "claimable" : "claim-in-progress")
-            print("📋 [ExitProgression] Found \(kind) exits - progressing...")
+            Self.logger.info("📋 Found \(kind, privacy: .public) exits - progressing...")
 
             // Step 2: Progress all exits (broadcasts, fee bumps, state updates)
             let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
 
             // Log what happened and track per-VTXO blocked state
             if statuses.isEmpty {
-                print("   ℹ️ No exits progressed")
+                Self.logger.debug("ℹ️ No exits progressed")
             } else {
-                print("   ✅ Progressed \(statuses.count) exit(s):")
+                Self.logger.info("✅ Progressed \(statuses.count, privacy: .public) exit(s)")
                 for (index, status) in statuses.enumerated() {
                     if let error = status.error {
-                        print("      [\(index)] VTXO \(status.vtxoId): ❌ Error: \(error)")
+                        Self.logger.warning("[\(index)] VTXO \(status.vtxoId): ❌ Error: \(error, privacy: .public)")
                         walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)
                     } else {
-                        print("      [\(index)] VTXO \(status.vtxoId): ✅ Success")
+                        Self.logger.info("[\(index)] VTXO \(status.vtxoId): ✅ Success")
                         walletManager?.clearExitBlocked(vtxoId: status.vtxoId, phase: .progression)
                     }
                 }
@@ -218,7 +223,7 @@ class ExitProgressionService {
             claimableExits = try await wallet.listClaimableExits()
 
             if !claimableExits.isEmpty {
-                print("   💰 Found \(claimableExits.count) claimable exit(s) - auto-claiming...")
+                Self.logger.notice("💰 Found \(claimableExits.count, privacy: .public) claimable exit(s) - auto-claiming...")
                 do {
                     try await autoClaimExits(claimableExits)
                     for exit in claimableExits {
@@ -228,51 +233,51 @@ class ExitProgressionService {
                     // A failed claim (e.g. fees currently exceeding the exit's
                     // value) must not abort the sync/cache steps below - record
                     // it per VTXO and retry on the next interval
-                    print("   ❌ Auto-claim failed: \(error.localizedDescription)")
+                    Self.logger.error("❌ Auto-claim failed: \(error.localizedDescription, privacy: .public)")
                     for exit in claimableExits {
                         walletManager?.recordExitBlocked(vtxoId: exit.vtxoId, phase: .claim, errorMessage: error.localizedDescription)
                     }
                 }
             }
-            
+
             // Step 4: Sync exit state with blockchain
             try await wallet.syncExits()
-            print("   ✅ Synced exit state")
-            
+            Self.logger.debug("✅ Synced exit state")
+
             // Step 5: Invalidate cache to trigger UI updates
             walletManager?.invalidateExitCache()
-            print("   ✅ Invalidated exit cache")
-            
+            Self.logger.debug("✅ Invalidated exit cache")
+
             // Step 6: Update Live Activities (iOS only)
             #if os(iOS)
             await updateAllLiveActivities()
             #endif
-            
+
             // Success
             lastCheckTime = Date()
             lastError = nil
-            
+
             let duration = Date().timeIntervalSince(startTime)
-            print("✅ [ExitProgression] Check completed in \(String(format: "%.2f", duration))s")
-            
+            Self.logger.notice("✅ Check completed in \(String(format: "%.2f", duration), privacy: .public)s")
+
         } catch {
             // Log error but don't stop the service
             let errorMessage = error.localizedDescription
-            print("❌ [ExitProgression] Error during check: \(errorMessage)")
+            Self.logger.error("❌ Error during check: \(errorMessage, privacy: .public)")
             lastError = errorMessage
             lastCheckTime = Date()
-            
+
             // Continue running despite errors - will retry on next interval
         }
     }
-    
+
     /// Automatically claim exits that have become claimable
     private func autoClaimExits(_ claimableExits: [ExitVtxo]) async throws {
         // Get the onchain address to send claimed funds to
         let address = try await wallet.getOnchainAddress()
         let claimableVtxoIds = claimableExits.map { $0.vtxoId }
-        
-        print("      Creating claim transaction for \(claimableVtxoIds.count) VTXO(s)...")
+
+        Self.logger.info("Creating claim transaction for \(claimableVtxoIds.count, privacy: .public) VTXO(s)...")
 
         let feeRateOverride = await exitFeeRateOverride()
 
@@ -282,42 +287,42 @@ class ExitProgressionService {
             address: address,
             feeRateSatPerVb: feeRateOverride
         )
-        
+
         let totalAmount = claimableExits.reduce(0) { $0 + $1.amountSats }
-        print("      ✅ Claim transaction created (Amount: \(totalAmount) sats, Fee: \(claimTx.feeSats) sats)")
-        
+        Self.logger.notice("✅ Claim transaction created (Amount: \(totalAmount) sats, Fee: \(claimTx.feeSats) sats)")
+
         // Step 2: Extract the raw transaction from PSBT
         let txHex = try wallet.extractTxFromPsbt(psbtBase64: claimTx.psbtBase64)
-        
+
         // Step 3: Broadcast the transaction
         let txid = try await wallet.broadcastTx(txHex: txHex)
-        print("      ✅ Claim transaction broadcast! TXID: \(txid)")
+        Self.logger.notice("✅ Claim transaction broadcast! TXID: \(txid)")
 
         // Persist the claim fee now — bark is the only source for it (BDK
         // sees the claim as a pure receive and never computes its fee)
         walletManager?.recordClaimFee(claimTxid: txid, feeSats: claimTx.feeSats)
-        
+
         // Step 4: Progress exits to sync state (updates to ClaimInProgress)
         let _ = try await wallet.progressExits(feeRateSatPerVb: feeRateOverride)
-        print("      ✅ Exit states updated to ClaimInProgress")
+        Self.logger.info("✅ Exit states updated to ClaimInProgress")
     }
-    
+
     // MARK: - Manual Operations
-    
+
     /// Manually progress exits (exposed for UI triggers)
     func progressExitsManually() async throws {
-        print("🔄 [ExitProgression] Manual progression requested")
-        
+        Self.logger.info("🔄 Manual progression requested")
+
         // See checkAndProgressExits(): Claimable and ClaimInProgress exits
         // don't count as "pending"
         let hasPending = try await wallet.hasPendingExits()
         let claimableExits = try await wallet.listClaimableExits()
         let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
         guard hasPending || !claimableExits.isEmpty || hasClaimsInProgress else {
-            print("   ℹ️ No pending, claimable, or claim-in-progress exits to progress")
+            Self.logger.info("ℹ️ No pending, claimable, or claim-in-progress exits to progress")
             return
         }
-        
+
         let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
         for status in statuses {
             if let error = status.error {
@@ -329,6 +334,6 @@ class ExitProgressionService {
         try await wallet.syncExits()
         walletManager?.invalidateExitCache()
 
-        print("   ✅ Manually progressed \(statuses.count) exit(s)")
+        Self.logger.notice("✅ Manually progressed \(statuses.count, privacy: .public) exit(s)")
     }
 }
