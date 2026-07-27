@@ -1,5 +1,13 @@
 # Relay Authorization Background Refresh Plan
 
+> **Amended 2026-07-27** to match the superseding decisions in
+> [Background_Execution.md](Features/Background_Execution.md) (this plan is
+> its Phase 1): the BGTask identifier is the shared `cash.arke.refresh`
+> (not a relay-auth-only `cash.arke.relayAuthRefresh`), and the
+> scheduling/registration plumbing lives in a standalone
+> `BackgroundTaskCoordinator` (not a `WalletManager` extension), so later
+> phases plug into the same coordinator.
+
 ## Goal
 
 Keep the mailbox relay (`relay.arke.cash`) supplied with a non-expired
@@ -43,14 +51,19 @@ complementary silent-push approach that doesn't have this problem.
 
 1. **Register the task identifier early.** In
    `ArkeMobile/AppDelegate_iOS.swift`, call
-   `BGTaskScheduler.shared.register(forTaskWithIdentifier: "cash.arke.relayAuthRefresh", using: nil) { task in ... }`
+   `BGTaskScheduler.shared.register(forTaskWithIdentifier: "cash.arke.refresh", using: nil) { task in ... }`
    before `application(_:didFinishLaunchingWithOptions:)` returns (required
-   by the API — registering later is a no-op).
+   by the API — registering later is a no-op). `cash.arke.refresh` is the
+   shared short-pass (`BGAppRefreshTask`) identifier from
+   Background_Execution.md; relay auth is its first tenant.
 2. **Declare capabilities in Info.plist** (`ArkeMobile/Info.plist`):
-   - Add `fetch` to the existing `UIBackgroundModes` array (currently only
-     `remote-notification`).
+   - Add `fetch` and `processing` to the existing `UIBackgroundModes`
+     array (currently only `remote-notification`).
    - Add a new `BGTaskSchedulerPermittedIdentifiers` array containing
-     `cash.arke.relayAuthRefresh`.
+     **both** `cash.arke.refresh` and `cash.arke.maintenance` — permitted
+     identifiers ship baked into the app's Info.plist, so declaring the
+     Phase 4 processing-task identifier now avoids a later plist change.
+     Only `cash.arke.refresh` gets a handler in this plan.
 3. **Task handler** does the same work `onNeedsRefresh` already does today —
    mint a fresh `mailboxAuthorization()` from the wallet and re-POST
    `/v1/register` — via `WalletManager.registerForPushNotifications()`.
@@ -78,14 +91,18 @@ complementary silent-push approach that doesn't have this problem.
 
 ## Work Items
 
-1. Add `BGTaskSchedulerPermittedIdentifiers` + `fetch` background mode to
-   `ArkeMobile/Info.plist`.
+1. Add `BGTaskSchedulerPermittedIdentifiers` (both identifiers) + `fetch`
+   and `processing` background modes to `ArkeMobile/Info.plist`.
 2. Register the task handler in `AppDelegate_iOS.swift` at launch.
-3. Add a small coordinator (e.g. `WalletManager+BackgroundRefresh.swift`,
-   mirroring the existing `WalletManager+Notifications.swift` pattern) that:
+3. Add a standalone `BackgroundTaskCoordinator` (iOS-only — `ArkeMobile/`
+   or `Shared/Services/` with `#if os(iOS)`; see the Architecture section
+   of Background_Execution.md) that:
    - Submits/cancels `BGAppRefreshTaskRequest`s.
    - Implements the launch handler: mint auth, re-register, complete task,
      reschedule.
+   - Is where later phases plug in (mailbox-push entry point, maintenance
+     pass, `BGProcessingTask`) — services keep owning "what", the
+     coordinator owns "when".
 4. Call the "submit next refresh" entry point from:
    - `RelayRegistrationService.scheduleAuthRefresh()` success path (or a
      sibling hook alongside `onNeedsRefresh`), so foreground and background
@@ -98,7 +115,7 @@ complementary silent-push approach that doesn't have this problem.
    often enough in practice.
 6. Manually verify via Xcode's debugger simulation command:
    ```
-   e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"cash.arke.relayAuthRefresh"]
+   e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"cash.arke.refresh"]
    ```
 
 ## Acceptance Criteria
@@ -117,17 +134,15 @@ complementary silent-push approach that doesn't have this problem.
 
 ## Open Questions
 
-- **Is `BGAppRefreshTask` reliable enough on its own?** Given it's
-  opportunistic, consider whether the relay should additionally send a
-  silent push (`content-available: 1`, no alert) to the registered device
-  some time before its stored authorization expires, as a more reliable
-  wake signal — the app already declares the `remote-notification`
-  background mode and already has a working APNs send path
-  (`arke-apns-relay-node/src/apns-sender.js`) it could reuse for this. This
-  would need a small relay-side addition (a "your auth is about to expire,
-  wake up" push) rather than being purely a client-side fix, so it's a
-  separate, bigger-scoped follow-up if the field data from this plan shows
-  `BGAppRefreshTask` isn't firing often enough.
+- **Is `BGAppRefreshTask` reliable enough on its own?** Open, answered by
+  this plan's field-data logging. The fallback shape is decided, though:
+  per Background_Execution.md Decision 2 (the relay never acts on its own
+  initiative), a relay-decided "your auth is about to expire" push is
+  ruled out. Instead the contingent Phase 6 **app-requested wake-up API**
+  covers this case uniformly — the app POSTs a wake for
+  expiry-minus-buffer, the relay just delivers a silent push at that
+  time. Build only if the field data shows BGTasks don't fire often
+  enough.
 - Do we need a `BGProcessingTask` instead/in addition, if minting +
   registering ever needs more time/resources than `BGAppRefreshTask`'s
   short execution window allows? Current work (one wallet call + one HTTP

@@ -119,7 +119,7 @@ the other maintenance passes.
 
 ### 1. Keychain accessibility gates everything
 
-The mnemonic is currently stored with `kSecAttrAccessibleWhenUnlocked`
+The mnemonic was stored with `kSecAttrAccessibleWhenUnlocked`
 (`SecurityService.swift`, chosen to allow iCloud Keychain sync). Most
 background wakes fire while the device is **locked** — and in that state
 the wallet cannot be opened at all.
@@ -127,13 +127,21 @@ the wallet cannot be opened at all.
 **Decided (see Decisions above): migrate to
 `kSecAttrAccessibleAfterFirstUnlock`** in Phase 1. This is standard for
 wallets doing background work; it slightly weakens at-rest protection
-(readable after first unlock post-boot, even while re-locked). Two
-follow-ups the migration must cover:
+(readable after first unlock post-boot, even while re-locked).
 
-- Verify iCloud Keychain sync still works with the new class (the reason
-  `WhenUnlocked` was chosen).
-- Migrate the existing item in place on first launch after update
-  (read + re-add with the new accessibility attribute).
+**Status 2026-07-27: implemented and verified on device.** `saveMnemonic`
+now writes `AfterFirstUnlock`, and
+`SecurityService.migrateMnemonicAccessibilityIfNeeded()` migrates existing
+items in place (atomic `SecItemUpdate` carrying the data, verified
+delete+re-add fallback, read-back verification), called from the `.found`
+branch of wallet state detection — the one spot where the keychain is
+provably readable. Unit-tested in
+`Tests/Shared/KeychainAccessibilityMigrationTests.swift`. iCloud Keychain
+sync verified with a two-device clean-room test (2026-07-27): fresh wallet
+on the old build synced to the second device; after migrating the primary,
+the second device kept the seed, and on update it logged "item already
+kSecAttrAccessibleAfterFirstUnlock" — i.e. the accessibility change itself
+propagated via iCloud Keychain sync.
 
 Even after the migration, the background entry point must treat "keychain
 unavailable" as a normal branch — it still happens between reboot and
@@ -405,7 +413,9 @@ Also in Phase 1: **migrate the mnemonic keychain item to
 `AfterFirstUnlock`** (decided) — in-place re-add with the new
 accessibility attribute, plus verification that iCloud Keychain sync
 still works. Without this, every locked-device wake in later phases is a
-no-op.
+no-op. *Done and device-verified 2026-07-27 (see the keychain constraint
+section above) — iCloud Keychain sync confirmed working with the new
+class, including propagation of the attribute change itself.*
 
 ### Phase 2 — Widen the mailbox push wake into a full pass
 
@@ -462,9 +472,11 @@ the deadline it would send.
 
 ## Open questions
 
-- **iCloud Keychain sync with `AfterFirstUnlock`**: confirm the sync
-  behavior that motivated `WhenUnlocked` is preserved after the
-  migration (Phase 1).
+- ~~**iCloud Keychain sync with `AfterFirstUnlock`**~~: RESOLVED
+  2026-07-27 — verified on device with a two-device clean-room test; sync
+  works, and the migrated accessibility attribute propagates to other
+  devices on its own (secondary logged "already migrated" without having
+  run the migration locally first).
 - **HTLC hold window**: how long does the Ark server hold an incoming
   HTLC before it fails, and does the `IncomingLightningPaymentMessage`
   fire early enough in that window to claim from a background wake?

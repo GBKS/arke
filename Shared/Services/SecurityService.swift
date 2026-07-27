@@ -231,6 +231,11 @@ class SecurityService {
         case .found:
             lastDetectionWasDefinitive = true
 
+            // The keychain is provably readable at this point — migrate the mnemonic
+            // to AfterFirstUnlock if it still has the old accessibility class
+            // (background wakes on a locked device need it; Background_Execution.md).
+            _ = Self.migrateMnemonicAccessibilityIfNeeded()
+
             // Self-healing breadcrumb for installs that predate the evidence flag
             Self.recordLocalWalletEvidence()
 
@@ -329,10 +334,12 @@ class SecurityService {
             kSecAttrSynchronizable as String: true  // Sync via iCloud Keychain
         ]
 
-        // Use kSecAttrAccessibleWhenUnlocked (not ThisDeviceOnly) to allow iCloud Keychain sync
+        // kSecAttrAccessibleAfterFirstUnlock so background wakes on a locked device can
+        // open the wallet (Background_Execution.md Phase 1). Not a ThisDeviceOnly class,
+        // so iCloud Keychain sync keeps working.
         let attributes: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
 
         let writeStartTime = CFAbsoluteTimeGetCurrent()
@@ -368,6 +375,122 @@ class SecurityService {
         #endif
     }
     
+    // MARK: - Keychain Accessibility Migration
+
+    /// Migrates the mnemonic keychain item from `WhenUnlocked` to `AfterFirstUnlock`
+    /// so background wakes on a locked device can open the wallet
+    /// (Background_Execution.md, Phase 1). Idempotent; call whenever the keychain is
+    /// known to be readable. `.keychainUnavailable` means "retry on a later launch",
+    /// never "give up".
+    nonisolated static func migrateMnemonicAccessibilityIfNeeded() -> KeychainAccessibilityMigrationResult {
+        return migrateItemToAfterFirstUnlock(service: "com.arke.wallet", account: "mnemonic")
+    }
+
+    /// Core of the accessibility migration, parametrized so tests can run it against a
+    /// scratch item instead of the real mnemonic.
+    nonisolated static func migrateItemToAfterFirstUnlock(service: String, account: String) -> KeychainAccessibilityMigrationResult {
+        let baseQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: true
+        ]
+
+        // Attributes-only read first: the (usual) already-migrated path never pulls
+        // the secret into memory.
+        var attributesQuery = baseQuery
+        attributesQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+        attributesQuery[kSecReturnAttributes as String] = true
+
+        var attributesResult: AnyObject?
+        let attributesStatus = SecItemCopyMatching(attributesQuery as CFDictionary, &attributesResult)
+
+        switch attributesStatus {
+        case errSecSuccess:
+            break
+        case errSecItemNotFound:
+            return .noItem
+        default:
+            logger.warning("Accessibility migration: keychain unreadable (OSStatus \(attributesStatus)), retrying next launch")
+            return .keychainUnavailable(attributesStatus)
+        }
+
+        if let attributes = attributesResult as? [String: Any],
+           let accessible = attributes[kSecAttrAccessible as String] as? String,
+           accessible == kSecAttrAccessibleAfterFirstUnlock as String {
+            // Info-level on purpose: on a secondary device this line vs "item now..."
+            // distinguishes "attribute change arrived via iCloud Keychain sync" from
+            // "this device migrated its own copy locally".
+            logger.info("Accessibility migration: item already kSecAttrAccessibleAfterFirstUnlock")
+            return .alreadyMigrated
+        }
+
+        // Changing kSecAttrAccessible re-encrypts the item, so the update must carry
+        // the data — read it now; nothing is modified unless this read succeeds.
+        var dataQuery = baseQuery
+        dataQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+        dataQuery[kSecReturnData as String] = true
+
+        var dataResult: AnyObject?
+        let dataStatus = SecItemCopyMatching(dataQuery as CFDictionary, &dataResult)
+        guard dataStatus == errSecSuccess, let data = dataResult as? Data, !data.isEmpty else {
+            logger.warning("Accessibility migration: item present but value unreadable (OSStatus \(dataStatus)), retrying next launch")
+            return .keychainUnavailable(dataStatus)
+        }
+
+        // Preferred path: atomic in-place update — the item never leaves the keychain.
+        let update: [String: Any] = [
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecValueData as String: data
+        ]
+        let updateStatus = SecItemUpdate(baseQuery as CFDictionary, update as CFDictionary)
+
+        if updateStatus != errSecSuccess {
+            // Fallback for OS versions that reject in-place accessibility changes on
+            // synchronizable items: delete + re-add, with the value held in memory.
+            logger.warning("Accessibility migration: in-place update failed (OSStatus \(updateStatus)), falling back to delete + re-add")
+
+            let deleteStatus = SecItemDelete(baseQuery as CFDictionary)
+            guard deleteStatus == errSecSuccess || deleteStatus == errSecItemNotFound else {
+                logger.error("Accessibility migration: fallback delete failed (OSStatus \(deleteStatus)) — item left untouched")
+                return .failed(deleteStatus)
+            }
+
+            var addQuery = baseQuery
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            addQuery[kSecValueData as String] = data
+            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+
+            if addStatus != errSecSuccess {
+                // Put the item back under its original class rather than leave none.
+                addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+                let restoreStatus = SecItemAdd(addQuery as CFDictionary, nil)
+                logger.error("Accessibility migration: re-add failed (OSStatus \(addStatus)); restore with original class returned OSStatus \(restoreStatus)")
+                return .failed(addStatus)
+            }
+        }
+
+        // A lost or corrupted mnemonic is unrecoverable — verify the item reads back
+        // with the same value and the new class before declaring success.
+        var verifyQuery = baseQuery
+        verifyQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+        verifyQuery[kSecReturnAttributes as String] = true
+        verifyQuery[kSecReturnData as String] = true
+
+        var verifyResult: AnyObject?
+        let verifyStatus = SecItemCopyMatching(verifyQuery as CFDictionary, &verifyResult)
+        guard verifyStatus == errSecSuccess,
+              let verified = verifyResult as? [String: Any],
+              verified[kSecValueData as String] as? Data == data,
+              verified[kSecAttrAccessible as String] as? String == kSecAttrAccessibleAfterFirstUnlock as String else {
+            logger.error("Accessibility migration: post-migration verification failed (OSStatus \(verifyStatus))")
+            return .failed(verifyStatus)
+        }
+
+        logger.info("Accessibility migration: item now kSecAttrAccessibleAfterFirstUnlock")
+        return .migrated
+    }
+
     /// Loads mnemonic from keychain
     func loadMnemonic() throws -> String? {
         let query: [String: Any] = [
@@ -896,6 +1019,17 @@ enum MnemonicKeychainStatus: Equatable {
     case found
     case notFound              // errSecItemNotFound — definitively absent
     case unavailable(OSStatus) // any other error — answer unknown right now
+}
+
+/// Outcome of migrating the mnemonic keychain item to `kSecAttrAccessibleAfterFirstUnlock`.
+/// `.keychainUnavailable` and `.failed` both leave a readable item in place (in the
+/// worst case restored under its original class); the migration retries on a later launch.
+enum KeychainAccessibilityMigrationResult: Equatable {
+    case migrated               // accessibility updated and verified by read-back
+    case alreadyMigrated        // item already has the new class — no-op
+    case noItem                 // no mnemonic in the keychain (fresh install) — no-op
+    case keychainUnavailable(OSStatus) // couldn't read; nothing was modified
+    case failed(OSStatus)       // migration attempted but not completed
 }
 
 enum WalletState: Equatable {
