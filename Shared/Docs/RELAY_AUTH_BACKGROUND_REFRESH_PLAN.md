@@ -7,6 +7,23 @@
 > scheduling/registration plumbing lives in a standalone
 > `BackgroundTaskCoordinator` (not a `WalletManager` extension), so later
 > phases plug into the same coordinator.
+>
+> **Status 2026-07-27: implemented** (work items 1–5). The handler runs
+> `WalletManager.refreshRelayAuthInBackground()` — settings/keychain gating
+> (keychain-unavailable = retry, never "no wallet"), minimal
+> `openWalletIfNeeded` on cold background launches, then the same
+> mint + `/v1/register` core as the foreground path
+> (`mintAndRegisterWithRelay()`). `RelayRegistrationService.nextRefreshDate`
+> (expiry − buffer) is the single timing source: the in-process timer, the
+> BGTask request submitted on every successful registration, and the
+> backgrounding safety net all use it. `expirationHandler` cancels the
+> in-flight Task (propagates into URLSession); reschedule always happens —
+> chain-preserving submit at wake, accurate-deadline replace on completion.
+> Device-verified 2026-07-27 via `_simulateLaunchForTaskWithIdentifier`:
+> the background pass re-registered with the relay and rescheduled at the
+> fresh token's expiry-minus-buffer (0.06s warm; cold-launch timing comes
+> from Phase 1 field data). Also verified: the opted-out branch
+> (notifications disabled → "nothing to do", success, no relay call).
 
 ## Goal
 

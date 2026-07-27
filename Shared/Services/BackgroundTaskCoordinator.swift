@@ -15,11 +15,12 @@ import OSLog
 /// here so services keep owning "what" while this coordinator owns "when"
 /// (Background_Execution.md, Architecture).
 ///
-/// Phase 1 scope: the `cash.arke.refresh` BGAppRefreshTask with a log-only
-/// handler that reschedules itself — the field data instrument for how often
-/// iOS grants us background time. Relay auth work plugs into the handler
-/// next; `cash.arke.maintenance` (BGProcessingTask) is declared in Info.plist
-/// but gets no handler until exit progression moves here (Phase 4).
+/// Phase 1 scope: the `cash.arke.refresh` BGAppRefreshTask runs the relay
+/// auth refresh (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) and always
+/// reschedules itself — the wake/timing lines double as field data for how
+/// often iOS grants us background time. `cash.arke.maintenance`
+/// (BGProcessingTask) is declared in Info.plist but gets no handler until
+/// exit progression moves here (Phase 4).
 final class BackgroundTaskCoordinator: Sendable {
 
     // MARK: - Logging
@@ -37,6 +38,11 @@ final class BackgroundTaskCoordinator: Sendable {
     static let maintenanceTaskIdentifier = "cash.arke.maintenance"
 
     static let shared = BackgroundTaskCoordinator()
+
+    /// The wallet manager background passes run against. Set once during app
+    /// init (before any BGTask can fire); weak because the App owns the
+    /// manager's lifecycle.
+    @MainActor static weak var walletManager: WalletManager?
 
     private init() {}
 
@@ -74,19 +80,44 @@ final class BackgroundTaskCoordinator: Sendable {
         // Per-wake-source field data line (Background_Execution.md, Phase 1)
         Self.logger.notice("⏰ Woke via BGAppRefreshTask (\(Self.refreshTaskIdentifier, privacy: .public))")
 
-        // Reschedule before doing anything else — a missed or expired run
-        // must never end the wake chain.
+        // Chain-preserving reschedule before any work — a crashed or expired
+        // run must never end the wake cycle. Replaced with the accurate
+        // deadline below once the pass finishes (submit = replace semantics).
         scheduleRefresh()
 
-        task.expirationHandler = {
-            Self.logger.warning("⏳ BGAppRefreshTask expired before completion")
-            task.setTaskCompleted(success: false)
+        let started = Date()
+        let work = Task { @MainActor () -> Bool in
+            guard let manager = Self.walletManager else {
+                Self.logger.warning("⚠️ No WalletManager wired to coordinator — skipping pass")
+                return false
+            }
+            return await manager.refreshRelayAuthInBackground()
         }
 
-        // Phase 1 step 3 skeleton: no wallet work yet. The relay auth refresh
-        // plugs in here next (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md).
-        Self.logger.notice("✅ BGAppRefreshTask pass complete (skeleton — no work performed)")
-        task.setTaskCompleted(success: true)
+        // Cancel cleanly if iOS revokes the window mid-request; cancellation
+        // propagates into URLSession, and the awaiting completion block below
+        // still runs and reports + reschedules. Single owner of
+        // setTaskCompleted: the completion block, never this handler.
+        task.expirationHandler = {
+            Self.logger.warning("⏳ BGAppRefreshTask expired — cancelling in-flight relay auth refresh")
+            work.cancel()
+        }
+
+        Task {
+            let success = await work.value
+
+            // Re-submit with the real deadline now that registration state is
+            // fresh (registerDevice's success path also submits — a harmless
+            // double-replace with the same date)
+            if let deadline = await MainActor.run(body: { Self.walletManager?.relayAuthNextRefreshDate }) {
+                self.scheduleRefresh(earliestBeginDate: deadline)
+            }
+
+            // Pass-complete field data line (Background_Execution.md, Phase 1)
+            let elapsed = String(format: "%.2f", Date().timeIntervalSince(started))
+            Self.logger.notice("✅ BGAppRefreshTask relay auth pass complete (success: \(success), \(elapsed, privacy: .public)s)")
+            task.setTaskCompleted(success: success)
+        }
     }
 
     // MARK: - Scheduling

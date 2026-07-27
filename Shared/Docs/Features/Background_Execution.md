@@ -431,9 +431,16 @@ completes — no wallet work yet. A safety-net `scheduleRefresh()` fires
 on scenePhase → background. Verified on simulator (registration at
 launch, no crash, submit hits the expected `unavailable` branch) and
 **on device** (2026-07-27): `_simulateLaunchForTaskWithIdentifier` fires
-the handler — wake logged, rescheduled, completed. Remaining for step 4:
-wire the relay auth refresh into the handler and drive
-`earliestBeginDate` from the real token expiry.
+the handler — wake logged, rescheduled, completed.
+
+*Relay auth wired into the handler 2026-07-27 (step 4), device-verified
+same day:* see the status note at the top of
+RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md. A simulated BGTask wake
+re-registered with the relay and rescheduled at the fresh token's
+deadline. Phase 1 is done except the telemetry soak (step 5): watch the
+notice-level lines (⏰ wake / ⏱️ wallet ready / ✅ pass complete) over
+days of normal use to answer the cold-launch-budget and
+BGTask-grant-frequency open questions.
 
 Also in Phase 1: **migrate the mnemonic keychain item to
 `AfterFirstUnlock`** (decided) — in-place re-add with the new

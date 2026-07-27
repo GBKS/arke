@@ -69,6 +69,14 @@ class RelayRegistrationService {
     /// Timer for scheduled authorization refresh
     private var refreshTimer: Task<Void, Never>?
 
+    /// When the next auth refresh should run (expiry minus buffer); nil until a
+    /// successful registration. Single source of truth for refresh timing: the
+    /// in-process timer and the BGTask request both derive from this, so the
+    /// two paths can't drift if the TTL policy changes.
+    var nextRefreshDate: Date? {
+        authExpiresAt?.addingTimeInterval(-authRefreshBuffer)
+    }
+
     /// Called shortly before the current authorization expires so the caller
     /// can mint a fresh one (via the wallet) and re-register. Without this,
     /// a registered mailbox goes silently stale once its token expires and
@@ -135,6 +143,13 @@ class RelayRegistrationService {
 
             // Schedule refresh
             scheduleAuthRefresh()
+
+            // Mirror the in-process timer with a BGTask request at the same
+            // deadline — the fallback for when the process is suspended or
+            // killed before the timer can fire
+            #if os(iOS)
+            BackgroundTaskCoordinator.shared.scheduleRefresh(earliestBeginDate: nextRefreshDate)
+            #endif
         } catch let error as RelayError {
             Self.logger.error("❌ Registration failed: \(error.localizedDescription, privacy: .public)")
             
@@ -163,11 +178,16 @@ class RelayRegistrationService {
             )
             
             Self.logger.notice("✅ Device unregistered: \(response.status, privacy: .public)")
-            
+
             // Clear state
             lastAuthHash = nil
             authExpiresAt = nil
             refreshTimer?.cancel()
+
+            // No registration left to keep fresh
+            #if os(iOS)
+            BackgroundTaskCoordinator.shared.cancelRefresh()
+            #endif
         } catch let error as RelayError {
             Self.logger.error("❌ Unregistration failed: \(error.localizedDescription, privacy: .public)")
             throw error

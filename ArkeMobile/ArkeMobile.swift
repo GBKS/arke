@@ -78,7 +78,12 @@ struct Arke_mobile: App {
         
         // Create WalletManager once during init
         Self.logger.debug("Creating WalletManager (init)")
-        self._walletManager = State(initialValue: WalletManager())
+        let manager = WalletManager()
+        self._walletManager = State(initialValue: manager)
+
+        // Wire the manager to the BGTask coordinator before any background
+        // wake can fire (a BGTask launch runs this init but never the UI flow)
+        BackgroundTaskCoordinator.walletManager = manager
 
         if hasWallet {
             Self.logger.info("Wallet detected - services will be activated")
@@ -147,8 +152,11 @@ struct Arke_mobile: App {
             if newPhase == .background {
                 // Safety-net BGTask submit: guarantees a pending refresh
                 // request exists even if no foreground path scheduled one
-                // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4)
-                BackgroundTaskCoordinator.shared.scheduleRefresh()
+                // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4).
+                // Uses the real auth deadline when a registration is active.
+                BackgroundTaskCoordinator.shared.scheduleRefresh(
+                    earliestBeginDate: walletManager.relayAuthNextRefreshDate
+                )
 
                 Task {
                     await (walletManager.wallet as? BarkWalletFFI)?.backupWallet()
