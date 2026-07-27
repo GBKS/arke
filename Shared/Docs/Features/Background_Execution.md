@@ -421,6 +421,20 @@ cold launch → wallet ready (notice) from the end of
 (steps 3–4): pass-complete timing and the per-BGTask-wake-source lines;
 remote-push wake logging already existed in `AppDelegate_iOS`.
 
+*Coordinator skeleton done 2026-07-27:*
+`Shared/Services/BackgroundTaskCoordinator.swift` (`#if os(iOS)`), with
+both identifiers + `fetch`/`processing` modes declared in
+`ArkeMobile/Info.plist`. The `cash.arke.refresh` handler is registered
+from `application(_:didFinishLaunchingWithOptions:)` and currently logs
+its wake (notice), reschedules first, honors `expirationHandler`, and
+completes — no wallet work yet. A safety-net `scheduleRefresh()` fires
+on scenePhase → background. Verified on simulator (registration at
+launch, no crash, submit hits the expected `unavailable` branch) and
+**on device** (2026-07-27): `_simulateLaunchForTaskWithIdentifier` fires
+the handler — wake logged, rescheduled, completed. Remaining for step 4:
+wire the relay auth refresh into the handler and drive
+`earliestBeginDate` from the real token expiry.
+
 Also in Phase 1: **migrate the mnemonic keychain item to
 `AfterFirstUnlock`** (decided) — in-place re-add with the new
 accessibility attribute, plus verification that iCloud Keychain sync

@@ -299,6 +299,7 @@
 				Services/AddressGenerationStrategy.swift,
 				Services/AddressService.swift,
 				Services/AddressType.swift,
+				Services/BackgroundTaskCoordinator.swift,
 				Services/BalanceService.swift,
 				Services/ContactAddressService.swift,
 				Services/ContactService.swift,

@@ -20,7 +20,19 @@ class AppDelegate_iOS: NSObject, UIApplicationDelegate, UNUserNotificationCenter
         UNUserNotificationCenter.current().delegate = self
         Self.logger.info("UNUserNotificationCenter delegate set")
     }
-    
+
+    // MARK: - Launch
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        // BGTask handlers must be registered before this method returns —
+        // later registrations are silently ignored by the API
+        BackgroundTaskCoordinator.shared.registerTasks()
+        return true
+    }
+
     // MARK: - APNs Token Management
     
     /// Called when APNs successfully registers and returns a device token

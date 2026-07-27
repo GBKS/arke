@@ -9,7 +9,14 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
+		<string>processing</string>
 		<string>remote-notification</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>cash.arke.refresh</string>
+		<string>cash.arke.maintenance</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>

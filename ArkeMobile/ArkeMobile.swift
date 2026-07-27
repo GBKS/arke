@@ -145,6 +145,11 @@ struct Arke_mobile: App {
         .modelContainer(modelContainer)
         .onChange(of: scenePhase) { oldPhase, newPhase in
             if newPhase == .background {
+                // Safety-net BGTask submit: guarantees a pending refresh
+                // request exists even if no foreground path scheduled one
+                // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4)
+                BackgroundTaskCoordinator.shared.scheduleRefresh()
+
                 Task {
                     await (walletManager.wallet as? BarkWalletFFI)?.backupWallet()
                 }
