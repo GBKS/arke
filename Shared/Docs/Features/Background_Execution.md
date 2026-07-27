@@ -4,7 +4,11 @@ Plan for running time-sensitive wallet work while the app is backgrounded or
 terminated: accepting incoming Lightning payments, starting delegated
 refreshes, and progressing unilateral exits.
 
-Status: **PLANNING** — big-picture design, no implementation yet.
+Status: **PHASE 1 DONE** (2026-07-27, device-verified) — keychain
+migration, OSLog groundwork, `BackgroundTaskCoordinator`, and the relay
+auth BGTask pass are all shipped; see the status notes inside Phase 1
+below. The telemetry soak is running to answer the cold-launch-budget
+and grant-frequency open questions. Phases 2–6 remain planning.
 Companion doc: [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md)
 (the relay auth token refresh is Phase 1 of this plan and has its own
 detailed work items there).
@@ -106,8 +110,11 @@ the other maintenance passes.
 
 ### What does NOT exist
 
-- No `BGTaskScheduler` usage anywhere. No `fetch`/`processing` background
-  modes declared. No `BGTaskSchedulerPermittedIdentifiers`.
+- ~~No `BGTaskScheduler` usage anywhere.~~ **Since Phase 1 (2026-07-27):**
+  both background modes and identifiers are declared, and
+  `BackgroundTaskCoordinator` runs the relay auth pass from
+  `cash.arke.refresh`. Still true: no `cash.arke.maintenance` handler,
+  and no maintenance-pass steps beyond relay auth.
 - No client-side differentiation of mailbox push types — every
   `mailbox_*` push funnels into the same `refresh()`, which does not
   claim Lightning receives or progress exits.
