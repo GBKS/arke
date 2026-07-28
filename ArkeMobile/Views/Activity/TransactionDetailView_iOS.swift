@@ -142,28 +142,10 @@ struct TransactionDetailView_iOS: View {
     @ViewBuilder
     private var headerView: some View {
         VStack(spacing: 25) {
-            // Transaction Icon and Type (or Contact Avatar if contact exists)
-            Group {
-                if let contact = transaction.associatedContacts.first {
-                    // Show contact avatar
-                    ContactAvatarView(
-                        avatarData: contact.avatarData,
-                        size: 75,
-                        fallbackText: contact.displayName
-                    )
-                    .padding(.top, 120)
-                } else {
-                    // Show transaction icon
-                    transactionIcon
-                        .font(.system(size: 32))
-                        //.foregroundColor(transaction.transactionType.iconColor)
-                        .foregroundColor(.white)
-                        .frame(width: 75, height: 75)
-                        .background(transactionIconColor)
-                        .cornerRadius(15)
-                        .padding(.top, 120)
-                }
-            }
+            // Transaction icon (contact avatar, category artwork, tag emoji,
+            // or tinted type symbol)
+            TransactionIconView(transaction: transaction, size: 75, onDark: true)
+                .padding(.top, 120)
             
             VStack(alignment: .center, spacing: 0) {
                 Text(transaction.shortDisplayText(includeStatusPrefix: true))
@@ -253,118 +235,6 @@ struct TransactionDetailView_iOS: View {
         }
     }
     
-    // MARK: - Icon and Color Helpers
-    
-    /// Returns the appropriate icon Image view based on transaction category or type
-    @ViewBuilder
-    private var transactionIcon: some View {
-        let iconName = transactionIconName
-        
-        // Check if it's a system symbol (contains dots or common SF Symbol patterns)
-        // Asset names we use are: "wallet", "safe"
-        // System symbols are: "arrow.up", "arrow.down", "repeat", "clock"
-        if iconName.contains(".") || ["repeat", "clock"].contains(iconName) {
-            Image(systemName: iconName)
-        } else {
-            Image(iconName)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-        }
-    }
-    
-    /// Returns the appropriate icon name based on transaction category or type
-    private var transactionIconName: String {
-        // For internal transfers, use category-specific icons
-        if transaction.isInternalTransfer, let _ = transaction.category {
-            /*
-            // Special case: onchain_send with bark.offboard subsystem should use offboarding icon
-            // TODO: This needs a more elegant solution
-            if category == .onchainSend, transaction.subsystemName == "bark.offboard" {
-                return MovementCategory.offboarding.icon
-            }
-            
-            return category.icon
-             */
-            
-            let imageName: String = {
-                if let category = transaction.category {
-                    // Special case: onchain_send with bark.offboard subsystem should use offboarding logic
-                    if category == .onchainSend, transaction.subsystemName == "bark.offboard" {
-                        return "safe"
-                    }
-                    
-                    switch category {
-                    case .boarding, .refresh:
-                        return "wallet"
-                    case .offboarding:
-                        return "safe"
-                    case .onchainTransaction:
-                        // Onchain self-transfers use safe image
-                        if transaction.subsystemKind == "self_transfer" {
-                            return "safe"
-                        }
-                        return "wallet"
-                    default:
-                        return "wallet" // fallback
-                    }
-                }
-                
-                // Check for exit subsystem
-                if transaction.subsystemName == "bark.exit" {
-                    return "safe"
-                }
-                
-                return "wallet" // fallback
-            }()
-            return imageName
-        }
-        
-        // For other transactions, use type-based icons
-        return transaction.transactionType.iconName
-    }
-    
-    /// Returns the appropriate icon color based on transaction status
-    private var transactionIconColor: Color {
-        // Cancelled is terminal and wins over the exit-progress check below,
-        // which would otherwise show a never-completing pending state.
-        if transaction.transactionStatus == .cancelled {
-            return .gray
-        }
-
-        // Special case for unilateral exits: only complete when claimed.
-        // isExitComplete reads the persisted movement status first, so
-        // completed exits render correctly at launch before the in-memory
-        // exit caches are populated.
-        if transaction.hasUnilateralExit {
-            if transaction.isExitComplete {
-                if transaction.isInternalTransfer {
-                    return .gray
-                }
-                return transaction.transactionType.iconColor
-            }
-            // Exit is still in progress (not yet claimed)
-            return .Arke.blue
-        }
-        
-        switch transaction.transactionStatus {
-        case .confirmed:
-            // For confirmed transactions, use semantic colors
-            if transaction.isInternalTransfer {
-                return .gray
-            }
-            return transaction.transactionType.iconColor
-            
-        case .pending:
-            return .Arke.blue
-
-        case .failed:
-            return .Arke.red
-
-        case .cancelled:
-            return .gray
-        }
-    }
-
     /// Returns the appropriate amount text color based on transaction status
     private var amountTextColor: Color {
         // Cancelled is terminal and wins over the exit-progress check below,

@@ -353,6 +353,7 @@
 				Views/Activity/PersistentTransactionListItem.swift,
 				Views/Activity/TransactionContactView.swift,
 				Views/Activity/TransactionDetailViewModel.swift,
+				Views/Activity/TransactionIconView.swift,
 				Views/Activity/TransactionListItem.swift,
 				Views/Activity/TransactionListModel.swift,
 				Views/Activity/TransactionNotesSection.swift,

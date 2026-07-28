@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 import ArkeUI
 
 struct TransactionList_iOS: View {
@@ -26,7 +27,15 @@ struct TransactionList_iOS: View {
     private var allTransactions: [PersistentTransaction]
     
     @State private var previousTransactionIds: Set<String> = []
-    
+
+    // Card stack overlay prototype: taps open a swipeable card stack instead
+    // of pushing the detail view directly. The overlay handles its own
+    // entrance/exit animation, so the cover transition is disabled.
+    @State private var cardStackSelection: TransactionModel?
+    @State private var stackTransactions: [PersistentTransaction] = []
+    @State private var stackInitialIndex = 0
+    @State private var showCardStack = false
+
     let filterTag: PersistentTag?
     let filterContact: PersistentContact?
     let onShowFaucet: (() -> Void)?
@@ -95,7 +104,7 @@ struct TransactionList_iOS: View {
                         ForEach(filteredTransactions, id: \.txid) { persistentTransaction in
                             PersistentTransactionListItem(
                                 persistentTransaction: persistentTransaction,
-                                selectedTransaction: $selectedTransaction
+                                selectedTransaction: $cardStackSelection
                             )
                             .transition(.asymmetric(
                                 insertion: .scale(scale: 0.95).combined(with: .opacity),
@@ -120,6 +129,29 @@ struct TransactionList_iOS: View {
                     previousTransactionIds = Set(filteredTransactions.map { $0.txid })
                 }
             }
+        }
+        .onChange(of: cardStackSelection) { _, newValue in
+            guard let transaction = newValue else { return }
+            // Snapshot the filtered list so refreshes underneath don't shift the stack
+            stackTransactions = filteredTransactions
+            stackInitialIndex = stackTransactions.firstIndex { $0.txid == transaction.txid } ?? 0
+            // The overlay animates its own entrance. The cover's slide-up is a
+            // UIKit presentation that ignores SwiftUI's disablesAnimations, so
+            // UIView animations are switched off around the presentation; the
+            // overlay re-enables them in onAppear.
+            UIView.setAnimationsEnabled(false)
+            showCardStack = true
+            cardStackSelection = nil
+        }
+        .fullScreenCover(isPresented: $showCardStack, onDismiss: {
+            UIView.setAnimationsEnabled(true)
+        }) {
+            TransactionCardStackView_iOS(
+                transactions: stackTransactions,
+                initialIndex: stackInitialIndex
+            )
+            .environment(walletManager)
+            .presentationBackground(.clear)
         }
     }
     
