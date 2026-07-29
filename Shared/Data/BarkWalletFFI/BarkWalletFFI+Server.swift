@@ -73,7 +73,7 @@ extension BarkWalletFFI {
             // Try to fetch ArkInfo to check connection
             if let arkInfo = await wallet.arkInfo() {
                 let totalTime = Date().timeIntervalSince(startTime)
-                Self.logger.info("[waitForServerConnection] Connection established, Total time: \(String(format: "%.2f", totalTime))s, Attempts: \(attemptCount), Round interval: \(arkInfo.roundIntervalSecs)s, VTXO expiry: \(arkInfo.vtxoExpiryDelta) blocks")
+                Self.logger.info("[waitForServerConnection] Connection established, Total time: \(String(format: "%.2f", totalTime), privacy: .public)s, Attempts: \(attemptCount), Round interval: \(arkInfo.roundIntervalSecs)s, VTXO expiry: \(arkInfo.vtxoExpiryDelta) blocks")
                 return true
             }
             
@@ -84,7 +84,7 @@ extension BarkWalletFFI {
         
         // Timeout reached
         let totalTime = Date().timeIntervalSince(startTime)
-        Self.logger.error("[waitForServerConnection] Timeout reached after \(String(format: "%.2f", totalTime))s, Total attempts: \(attemptCount), Server may be unreachable or wallet needs explicit connection step")
+        Self.logger.error("[waitForServerConnection] Timeout reached after \(String(format: "%.2f", totalTime), privacy: .public)s, Total attempts: \(attemptCount), Server may be unreachable or wallet needs explicit connection step")
         
         return false
     }

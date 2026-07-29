@@ -9,27 +9,30 @@
 #if os(iOS)
 import Foundation
 import UserNotifications
+import OSLog
 
 /// Manages local notification scheduling for exit progression check-ins
 class ExitProgressionNotifications {
-    
+
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitNotifications")
+
     /// Shared instance for notification management
     static let shared = ExitProgressionNotifications()
-    
+
     private init() {}
     
     // MARK: - Notification Scheduling
     
     /// Schedule a sequence of check-in reminders at 90-minute intervals
     func scheduleCheckInSequence() async {
-        print("📅 [Notifications] Scheduling check-in sequence...")
-        
+        Self.logger.info("📅 [Notifications] Scheduling check-in sequence...")
+
         // Clear any existing notifications
         await cancelAllCheckInReminders()
-        
+
         // One global app setting covers push and local reminders alike
         guard UserDefaults.standard.bool(forKey: UserDefaults.notificationsEnabledKey) else {
-            print("⚠️ [Notifications] Disabled in app settings - skipping schedule")
+            Self.logger.notice("⚠️ [Notifications] Disabled in app settings - skipping schedule")
             return
         }
 
@@ -41,7 +44,7 @@ class ExitProgressionNotifications {
         case .authorized, .provisional, .ephemeral:
             break
         default:
-            print("⚠️ [Notifications] Not authorized - skipping schedule")
+            Self.logger.notice("⚠️ [Notifications] Not authorized - skipping schedule")
             return
         }
         
@@ -65,7 +68,7 @@ class ExitProgressionNotifications {
             )
         }
         
-        print("✅ [Notifications] Scheduled \(intervals.count) check-in reminders")
+        Self.logger.notice("✅ [Notifications] Scheduled \(intervals.count) check-in reminders")
     }
     
     /// Schedule a single check-in notification
@@ -94,7 +97,7 @@ class ExitProgressionNotifications {
         
         // Don't schedule if time is in the past (shouldn't happen, but safety check)
         guard timeInterval > 0 else {
-            print("⚠️ [Notifications] Skipping notification #\(checkNumber) - time is in the past")
+            Self.logger.warning("⚠️ [Notifications] Skipping notification #\(checkNumber) - time is in the past")
             return
         }
         
@@ -118,9 +121,9 @@ class ExitProgressionNotifications {
             formatter.dateStyle = .none
             let timeString = formatter.string(from: date)
             
-            print("📅 [Notifications] Scheduled check-in #\(checkNumber) for \(timeString) (\(Int(timeInterval/60)) min from now)")
+            Self.logger.info("📅 [Notifications] Scheduled check-in #\(checkNumber) for \(timeString, privacy: .public) (\(Int(timeInterval/60)) min from now)")
         } catch {
-            print("❌ [Notifications] Failed to schedule notification: \(error)")
+            Self.logger.error("❌ [Notifications] Failed to schedule notification: \(String(describing: error), privacy: .public)")
         }
     }
     
@@ -137,12 +140,12 @@ class ExitProgressionNotifications {
             .map { $0.identifier }
         
         guard !exitNotificationIds.isEmpty else {
-            print("ℹ️ [Notifications] No notifications to cancel")
+            Self.logger.notice("ℹ️ [Notifications] No notifications to cancel")
             return
         }
-        
+
         center.removePendingNotificationRequests(withIdentifiers: exitNotificationIds)
-        print("🗑️ [Notifications] Cancelled \(exitNotificationIds.count) pending notifications")
+        Self.logger.notice("🗑️ [Notifications] Cancelled \(exitNotificationIds.count) pending notifications")
     }
 
     /// Schedule the check-in sequence only if no reminders are already pending.
@@ -180,18 +183,18 @@ class ExitProgressionNotifications {
             do {
                 let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
                 if granted {
-                    print("✅ [Notifications] Permission granted")
+                    Self.logger.notice("✅ [Notifications] Permission granted")
                 } else {
-                    print("⚠️ [Notifications] Permission denied by user")
+                    Self.logger.notice("⚠️ [Notifications] Permission denied by user")
                 }
                 return granted
             } catch {
-                print("❌ [Notifications] Permission request failed: \(error)")
+                Self.logger.error("❌ [Notifications] Permission request failed: \(String(describing: error), privacy: .public)")
                 return false
             }
-            
+
         case .denied:
-            print("⚠️ [Notifications] Permission denied")
+            Self.logger.notice("⚠️ [Notifications] Permission denied")
             return false
             
         @unknown default:
@@ -213,14 +216,14 @@ class ExitProgressionNotifications {
             return false
         }
         
-        print("📋 [Notifications] \(exitNotifications.count) pending exit notifications:")
+        Self.logger.debug("📋 [Notifications] \(exitNotifications.count) pending exit notifications:")
         for request in exitNotifications {
             if let trigger = request.trigger as? UNTimeIntervalNotificationTrigger {
                 let fireDate = Date().addingTimeInterval(trigger.timeInterval)
                 let formatter = DateFormatter()
                 formatter.timeStyle = .short
                 formatter.dateStyle = .short
-                print("   • \(request.identifier): \(formatter.string(from: fireDate))")
+                Self.logger.debug("   • \(request.identifier): \(formatter.string(from: fireDate))")
             }
         }
     }

@@ -220,7 +220,7 @@ class SecurityService {
     private func performWalletStateDetection() async -> WalletState {
         let startTime = CFAbsoluteTimeGetCurrent()
         defer {
-            Self.logger.info("⏱️ Wallet state detection took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime))s")
+            Self.logger.info("⏱️ Wallet state detection took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
         }
         Self.logger.debug("Wallet state detection: checking local keychain...")
 

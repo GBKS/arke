@@ -63,7 +63,7 @@ struct MainView_iOS: View {
                 hasSeed: hasSeed
             )
 
-            Self.logger.info("Device registered with hasSeed=\(hasSeed) in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime))s")
+            Self.logger.info("Device registered with hasSeed=\(hasSeed) in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
         } catch {
             // Log but don't fail - device registration is not critical
             Self.logger.error("Device registration failed: \(error.localizedDescription)")
@@ -544,7 +544,7 @@ struct MainView_iOS: View {
         } else {
             route = "onboarding"
         }
-        Self.logger.info("🔍 Launch verdict: earlyDetected=\(initialWalletDetected), state=\(String(describing: walletState)), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route), took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime))s")
+        Self.logger.info("🔍 Launch verdict: earlyDetected=\(initialWalletDetected), state=\(String(describing: walletState), privacy: .public), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route, privacy: .public), took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime), privacy: .public)s")
     }
 }
 

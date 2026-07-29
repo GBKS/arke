@@ -21,7 +21,7 @@ extension WalletManager {
     func registerForPushNotifications() async {
         // Ensure wallet is initialized before attempting registration
         guard isInitialized else {
-            Self.logger.warning("Cannot register for push - wallet not yet initialized (normal during app startup; registration will be retried after initialization)")
+            Self.logger.info("Cannot register for push - wallet not yet initialized (normal during app startup; registration will be retried after initialization)")
             return
         }
 

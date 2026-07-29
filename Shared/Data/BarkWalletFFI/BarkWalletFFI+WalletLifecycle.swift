@@ -304,6 +304,7 @@ extension BarkWalletFFI {
             self.onchainWallet = builtInWallet
             self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
+            secureWalletFilePermissions()
             
             // Perform initial transaction reader sync in background (non-blocking)
             // This proactively syncs transaction history without blocking wallet opening
@@ -467,7 +468,23 @@ extension BarkWalletFFI {
         // Additional delay to ensure Rust has fully released database handles
         // SQLite may need time to close connections properly
         try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
-        
+
         Self.logger.info("Wallet shutdown complete")
+    }
+
+    /// Tighten wallet data files to owner-only (0600). bark's fs_perms check
+    /// logs an error for any database file left at the default 0644, and
+    /// sqlite recreates sidecar files (-wal/-shm) with default permissions,
+    /// so this runs after every successful open, not just at creation.
+    func secureWalletFilePermissions() {
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(atPath: datadir) else { return }
+        for case let relativePath as String in enumerator {
+            let fullPath = (datadir as NSString).appendingPathComponent(relativePath)
+            var isDirectory: ObjCBool = false
+            guard fileManager.fileExists(atPath: fullPath, isDirectory: &isDirectory),
+                  !isDirectory.boolValue else { continue }
+            try? fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fullPath)
+        }
     }
 }

@@ -194,6 +194,7 @@ extension BarkWalletFFI {
             self.onchainWallet = builtInWallet
             self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
+            secureWalletFilePermissions()
             
             // Check if Bark wallet data exists
             let barkWalletFiles = ["bark.sqlite", "db.sqlite"]
@@ -498,6 +499,7 @@ extension BarkWalletFFI {
             self.onchainWallet = builtInWallet
             self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
+            secureWalletFilePermissions()
             
             // Perform initial transaction reader sync in background
             // This is especially important for imported wallets to discover transaction history
