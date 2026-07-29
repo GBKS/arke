@@ -34,6 +34,13 @@ struct TransactionCardStackView_iOS: View {
     // a released (uncommitted) downward drag — the dragOffset state value
     // jumps to 0 immediately, which would otherwise remove it mid-screen
     @State private var returningPreviousCard = false
+    // Touch-down state for the press feedback on the top card; GestureState
+    // resets automatically on release or cancellation
+    @GestureState private var isCardPressed = false
+    // While the top card's note field is focused, the keyboard-shortened top
+    // card would sit smaller than the full-height peeks behind it, so those
+    // fade out for the duration of editing
+    @State private var isEditingNote = false
 
     // Drag distance over which cards behind fully promote to their next slot
     private let promoteDistance: CGFloat = 300
@@ -43,6 +50,9 @@ struct TransactionCardStackView_iOS: View {
     private let peekOffset: CGFloat = 18
     // Scale reduction per depth level
     private let depthScale: CGFloat = 0.05
+    // Top card scale while a touch is down — kept above the first peek's 0.95
+    // so the press reads as tactile rather than the card receding into the stack
+    private let pressedScale: CGFloat = 0.98
 
     // Converted models for the rendered window, keyed by index. Conversion
     // reads SwiftData properties, so doing it in the card builder would redo
@@ -204,6 +214,11 @@ struct TransactionCardStackView_iOS: View {
                     onShowDetails: {
                         detailTransaction = model(at: index)
                         showDetailSheet = true
+                    },
+                    onNoteFocusChange: { focused in
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            isEditingNote = focused
+                        }
                     }
                 )
                 .equatable()
@@ -222,12 +237,23 @@ struct TransactionCardStackView_iOS: View {
                     }
                     .allowsHitTesting(false)
                 }
+                // Press feedback: the top card dips slightly on touch-down,
+                // filling the dead zone before the drag's minimumDistance is
+                // reached. Scoped by the .animation's value so nothing else
+                // picks up this transition.
+                .scaleEffect(depth == 0 && isCardPressed ? pressedScale : 1, anchor: .bottom)
+                .animation(
+                    isCardPressed
+                        ? .easeOut(duration: 0.15)
+                        : .spring(duration: 0.3, bounce: 0.3),
+                    value: isCardPressed
+                )
                 // Anchoring at the bottom keeps the full peekOffset visible
                 // below the card in front instead of losing most of it to
                 // center-anchored shrinking
                 .scaleEffect(cardScale(depth: depth), anchor: .bottom)
                 .offset(y: cardOffset(depth: depth, height: geo.size.height))
-                .opacity(cardOpacity(depth: depth))
+                .opacity(isEditingNote && depth != 0 ? 0 : cardOpacity(depth: depth))
                 .zIndex(Double(-depth))
                 .allowsHitTesting(depth == 0)
             }
@@ -235,6 +261,7 @@ struct TransactionCardStackView_iOS: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         .padding(.bottom, 56)
         .gesture(dragGesture(height: geo.size.height))
+        .simultaneousGesture(pressGesture)
     }
 
     private func effectiveDepth(_ depth: Int) -> CGFloat {
@@ -290,6 +317,15 @@ struct TransactionCardStackView_iOS: View {
     }
 
     // MARK: - Gesture
+
+    // The main drag gesture only fires after minimumDistance, so touch-down
+    // needs its own zero-distance gesture running simultaneously
+    private var pressGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .updating($isCardPressed) { _, state, _ in
+                state = true
+            }
+    }
 
     private func dragGesture(height: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 15)

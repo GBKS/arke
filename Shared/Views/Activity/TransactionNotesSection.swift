@@ -10,7 +10,10 @@ import ArkeUI
 
 struct TransactionNotesSection: View {
     let transaction: TransactionModel
-    
+    /// Reports focus changes of the note field so containers can react to the
+    /// keyboard appearing (the focus state itself is private to this view).
+    var onFocusChange: ((Bool) -> Void)? = nil
+
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.scenePhase) private var scenePhase
     @State private var notesText: String = ""
@@ -82,6 +85,7 @@ struct TransactionNotesSection: View {
             debouncedSave()
         }
         .onChange(of: isNotesFocused) { oldValue, newValue in
+            onFocusChange?(newValue)
             if oldValue == true && newValue == false {
                 // Lost focus - save immediately if changed
                 saveTask?.cancel()

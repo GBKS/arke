@@ -16,6 +16,9 @@ import ArkeUI
 struct TransactionSwipeCard: View, Equatable {
     let transaction: TransactionModel
     let onShowDetails: () -> Void
+    /// Bubbles the note field's focus up to the card stack, which hides the
+    /// peek cards behind this one while the keyboard is up
+    var onNoteFocusChange: ((Bool) -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
 
@@ -23,6 +26,11 @@ struct TransactionSwipeCard: View, Equatable {
     // once on appear so drag-frame re-renders don't repeat it
     @State private var feeText: String?
     @State private var hasFees = false
+
+    // While the note field has focus the keyboard shrinks the card, which
+    // would otherwise squeeze the amount via minimumScaleFactor; instead the
+    // header collapses to a compact variant that fits the reduced height
+    @State private var isEditingNote = false
 
     // Skips body re-evaluation during drags, where only the offset/scale
     // modifiers outside this view change. Contacts and tags feed the header
@@ -55,57 +63,63 @@ struct TransactionSwipeCard: View, Equatable {
 
     private var headerView: some View {
         VStack(spacing: 8) {
-            TransactionIconView(transaction: transaction, size: 72, onDark: true)
-                .padding(.bottom, 8)
-            
+            if !isEditingNote {
+                TransactionIconView(transaction: transaction, size: 72, onDark: true)
+                    .padding(.bottom, 8)
+                    .transition(.scale(scale: 0.5).combined(with: .opacity))
+            }
+
             VStack(alignment: .center, spacing: 0) {
                 Text(transaction.shortDisplayText(includeStatusPrefix: true))
-                    .font(.system(.title2, design: .serif))
+                    .font(.system(isEditingNote ? .headline : .title2, design: .serif))
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.5)
-                
+                    .minimumScaleFactor(0.75)
+
                 if transaction.category != .refresh {
                     Text(transaction.formattedDisplayAmount)
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .font(.system(size: isEditingNote ? 26 : 40, weight: .bold, design: .rounded))
                         .foregroundColor(headerAmountColor)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.5)
+                        .minimumScaleFactor(0.75)
                 }
             }
 
-            VStack(spacing: 4) {
-                if transaction.isInternalTransfer {
-                    Text(transaction.detailedDisplayText(includeStatusPrefix: true))
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(.white.opacity(0.75))
-                        .multilineTextAlignment(.center)
-                }
-
-                HStack(spacing: 4) {
-                    if let feeText {
-                        Text(hasFees ? "\(feeText) fee" : String(localized: "label_no_fee"))
+            if !isEditingNote {
+                VStack(spacing: 4) {
+                    if transaction.isInternalTransfer {
+                        Text(transaction.detailedDisplayText(includeStatusPrefix: true))
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundColor(.white.opacity(0.75))
-
-                        Text("symbol_middot")
-                            .font(.body)
-                            .foregroundColor(.white.opacity(0.75))
+                            .multilineTextAlignment(.center)
                     }
 
-                    Text(transaction.formattedDate)
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundColor(.white.opacity(0.75))
+                    HStack(spacing: 4) {
+                        if let feeText {
+                            Text(hasFees ? "\(feeText) fee" : String(localized: "label_no_fee"))
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .foregroundColor(.white.opacity(0.75))
+
+                            Text("symbol_middot")
+                                .font(.body)
+                                .foregroundColor(.white.opacity(0.75))
+                        }
+
+                        Text(transaction.formattedDate)
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundColor(.white.opacity(0.75))
+                    }
                 }
+                .transition(.opacity)
             }
         }
-        .padding(.top, 28)
+        .padding(.top, isEditingNote ? 16 : 28)
         .padding(.horizontal, 20)
-        .padding(.bottom, 28)
+        .padding(.bottom, isEditingNote ? 16 : 28)
         .frame(maxWidth: .infinity)
         .background {
             Color(hex: "#1C1C1C")
@@ -128,8 +142,13 @@ struct TransactionSwipeCard: View, Equatable {
 
     private var lowerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            TransactionNotesSection(transaction: transaction)
-            
+            TransactionNotesSection(transaction: transaction) { focused in
+                withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
+                    isEditingNote = focused
+                }
+                onNoteFocusChange?(focused)
+            }
+
             TransactionContactView(
                 transaction: transaction,
                 onNavigateToContact: nil
