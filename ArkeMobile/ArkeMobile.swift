@@ -161,6 +161,12 @@ struct Arke_mobile: App {
                 Task {
                     await (walletManager.wallet as? BarkWalletFFI)?.backupWallet()
                 }
+
+                // Re-arm exit check-in reminders while exits are in flight —
+                // interim fix for the reminder gap in Background_Execution.md
+                Task {
+                    await walletManager.exitProgressionService?.rescheduleCheckInRemindersIfNeeded()
+                }
             } else if newPhase == .active && oldPhase == .background {
                 // User brought app to foreground - check if we have active exits
                 Task {

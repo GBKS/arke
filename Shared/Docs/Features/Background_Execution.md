@@ -391,6 +391,38 @@ notifications are deadline reminders and failure escalations from
 inside. Same UI surface, different jobs — and only the local ones are
 part of the wake-layer scheduling above.
 
+**Known gap (2026-07-29, observed on device during a live exit):** the
+current exit check-in reminders do not survive an app relaunch, so the
+"guaranteed floor" is broken for exactly the multi-day case it exists
+for. The sequence is only scheduled at exit start
+(`startExitMonitoring`, from the exit flow) and on check-in
+(`userCheckedIn`), while `ExitProgressionService.start()` cancels all
+pending reminders on every launch with **no** matching reschedule when
+the app backgrounds — cancel-on-start is one-way, not the
+self-cancelling-nag model above. Two compounding holes: the Live
+Activity relaunch path (`recreateMissingActivities()`) calls
+`startLiveActivity` directly, recreating the activity but not the
+reminders; and the background→active revival (`userCheckedIn` from
+scenePhase) is gated on the in-memory activity reference, so it never
+runs on a fresh launch. Net effect: any relaunch mid-exit permanently
+disarms the reminder layer (verified: relaunch with an `AwaitingDelta`
+exit in flight logged "No notifications to cancel"). Phase 4's
+deadline + grace / reschedule-every-pass model fixes this structurally.
+
+*Interim fix shipped 2026-07-29:*
+`ExitProgressionService.rescheduleCheckInRemindersIfNeeded()` checks for
+in-flight exits (`getExitVtxos().filter { $0.isInFlight }`) and either
+schedules a fresh sequence or clears leftovers. Called from two places:
+`start()` (replacing the unconditional cancel — launch now re-arms
+instead of disarming, which also covers the `recreateMissingActivities`
+and crash/jetsam cases) and scenePhase → background in `ArkeMobile.swift`
+(so the 90-min clock restarts from the moment the user leaves, keeping
+reminders behind active use). Net behavior: while an exit is in flight
+the sequence is always pending, reset by every launch and every
+backgrounding; the first banner fires 90 minutes after the user last
+had the app open. Still fixed-interval and capped at 7.5h of coverage —
+Phase 4 replaces it with height-derived deadlines.
+
 ### Concurrency and safety notes
 
 - A background wake can race a foreground launch or another wake. The
@@ -488,7 +520,9 @@ Progress + claim from the processing task, adaptively rescheduled against
 the exit's block heights (see the exit use-case section). Update the Live
 Activity locally on each run. Move the check-in reminders to the
 T + grace / self-cancelling model in the same phase — this is also when
-"reminders only appear when automation failed" becomes true for exits.
+"reminders only appear when automation failed" becomes true for exits,
+and what closes the known gap above (reminders currently don't survive
+an app relaunch).
 
 ### Phase 5 — Lightning receive polish
 

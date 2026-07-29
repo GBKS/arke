@@ -28,6 +28,26 @@ extension ExitProgressionService {
         await ExitProgressionNotifications.shared.scheduleCheckInSequence()
     }
 
+    /// Re-arm the check-in reminder backstop while exits are in flight, or
+    /// clear leftovers when none are. Interim fix for the known gap in
+    /// Background_Execution.md: reminders used to be scheduled only at exit
+    /// start and cancelled on every launch, so any relaunch mid-exit
+    /// permanently disarmed them. Called on launch (from `start()`) and on
+    /// scenePhase → background; Phase 4's deadline + grace model replaces this.
+    func rescheduleCheckInRemindersIfNeeded() async {
+        do {
+            let inFlight = try await wallet.getExitVtxos().filter { $0.isInFlight }
+            if inFlight.isEmpty {
+                await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
+            } else {
+                Self.logger.notice("🔁 Re-arming check-in reminders for \(inFlight.count) in-flight exit(s)")
+                await ExitProgressionNotifications.shared.scheduleCheckInSequence()
+            }
+        } catch {
+            Self.logger.warning("⚠️ Could not evaluate exits for reminder rescheduling: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Live Activity Lifecycle
 
     /// Ensure one Live Activity exists for the current exit batch. If an activity

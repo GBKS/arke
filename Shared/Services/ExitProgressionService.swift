@@ -97,11 +97,13 @@ class ExitProgressionService {
         Self.logger.info("▶️ Starting service (check interval: \(Int(self.checkInterval))s)")
         isRunning = true
 
-        // Clean up any stale notifications and reattach to existing Live Activities (iOS only)
+        // Reattach to existing Live Activities, then re-arm the check-in
+        // reminder backstop if exits are in flight (or clear stale reminders
+        // if none are) — see rescheduleCheckInRemindersIfNeeded (iOS only)
         #if os(iOS)
         Task {
-            await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
             await reattachToExistingActivities()
+            await rescheduleCheckInRemindersIfNeeded()
         }
         #endif
 
