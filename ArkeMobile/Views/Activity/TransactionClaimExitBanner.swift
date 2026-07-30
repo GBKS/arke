@@ -23,35 +23,33 @@ struct TransactionClaimExitBanner: View {
     }
 
     var body: some View {
-        //if !exitStatus.isClaimed {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 5) {
-                    Text(progress.phase == .complete
-                        ? "All \(progress.totalSteps) steps complete"
-                        : "Step \(progress.currentStep) of \(progress.totalSteps)")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    Image(systemName: "info.circle")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                ExitSegmentedProgressBar(progress: progress)
-
-                // Blocked explanation: the exit can't continue right now because
-                // fees can't be covered; progression retries automatically
-                if let blockedInfo {
-                    HStack(alignment: .top, spacing: 6) {
-                        Image(systemName: "clock")
-                            .font(.subheadline)
-                        Text(ExitProgress.blockedExplanationKey(for: blockedInfo.reason))
-                            .font(.subheadline)
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 5) {
+                Text(progress.phase == .complete
+                    ? "All \(progress.totalSteps) steps complete"
+                    : "Step \(progress.currentStep) of \(progress.totalSteps)")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
+                Image(systemName: "info.circle")
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
-                }
             }
-        //}
+
+            ExitSegmentedProgressBar(progress: progress)
+
+            // Blocked explanation: the exit can't continue right now because
+            // fees can't be covered; progression retries automatically
+            if let blockedInfo {
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "clock")
+                        .font(.subheadline)
+                    Text(ExitProgress.blockedExplanationKey(for: blockedInfo.reason))
+                        .font(.subheadline)
+                }
+                .foregroundColor(.secondary)
+            }
+        }
     }
 }
 

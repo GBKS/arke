@@ -110,12 +110,7 @@ struct TransactionDetailView_iOS: View {
                 
                 detailsView
                     .padding(.horizontal)
-                
-                // Exit details (for unilateral exit transactions)
-                // Now includes linked onchain transactions
-                //TransactionExitDetailsView(transaction: transaction)
-                //    .padding(.horizontal)
-                
+
                 // Technical details (for testing/debugging)
                 TransactionTechnicalDetailsView(transaction: transaction)
                     .padding(.horizontal)
@@ -331,25 +326,10 @@ struct TransactionDetailView_iOS: View {
         guard transaction.subsystemName == "bark.exit" else {
             return
         }
-        
-        let inputIds = Set(transaction.inputVtxoIds)
-        exitVtxos = walletManager.allUnilateralExits.filter { exit in
-            inputIds.contains(exit.vtxoId)
-        }
-        
-        // Fetch exit status for the first VTXO (they should all be part of the same exit)
-        if let firstVtxo = exitVtxos.first {
-            Task {
-                do {
-                    exitStatus = try await walletManager.getExitStatus(
-                        vtxoId: firstVtxo.vtxoId,
-                        includeHistory: true,
-                        includeTransactions: true
-                    )
-                } catch {
-                    print("Failed to fetch exit status: \(error)")
-                }
-            }
+        Task {
+            let data = await walletManager.exitData(forInputVtxoIds: transaction.inputVtxoIds)
+            exitVtxos = data.exitVtxos
+            exitStatus = data.status
         }
     }
     

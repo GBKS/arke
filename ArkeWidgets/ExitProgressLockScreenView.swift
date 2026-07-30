@@ -66,31 +66,10 @@ struct ExitProgressLockScreenView: View {
                     Text("Tap notification to update")
                         .font(.caption2)
                         .foregroundColor(.secondary)
-                    
+
                     Spacer()
                 }
             }
-            
-            /*
-            // Time since last update
-            HStack {
-                Image(systemName: "clock")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Text("Updated \(context.state.lastUpdated, style: .relative) ago")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                if context.state.needsCheckIn {
-                    Text("Tap notification to update")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-            */
         }
         .padding()
         .activityBackgroundTint(Color(white: 0.1))

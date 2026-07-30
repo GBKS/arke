@@ -1971,6 +1971,7 @@
       }
     },
     "balance_all_claimable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2051,6 +2052,7 @@
       }
     },
     "balance_exit_details" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2144,6 +2146,7 @@
       }
     },
     "balance_no_exit_data" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2554,6 +2557,7 @@
       }
     },
     "balance_vtxos_claimed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2564,6 +2568,7 @@
       }
     },
     "balance_vtxos_exiting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

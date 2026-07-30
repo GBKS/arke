@@ -456,6 +456,18 @@ extension WalletManager {
         }
     }
 
+    /// Exit VTXOs and status for an exit transaction, matched by its input
+    /// VTXO ids — the shared load behind the swipe card's and the detail
+    /// view's exit progress banner. The status comes from the first matched
+    /// VTXO (a movement's VTXOs all belong to the same exit).
+    func exitData(forInputVtxoIds inputVtxoIds: [String]) async -> (exitVtxos: [ExitVtxo], status: ExitTransactionStatus?) {
+        let inputIds = Set(inputVtxoIds)
+        let matched = allUnilateralExits.filter { inputIds.contains($0.vtxoId) }
+        guard let first = matched.first else { return (matched, nil) }
+        let status = try? await getExitStatus(vtxoId: first.vtxoId, includeHistory: true, includeTransactions: true)
+        return (matched, status)
+    }
+
     /// Get cached exit status for a VTXO
     /// Returns nil if not in cache
     func getCachedExitStatus(for vtxoId: String) -> ExitTransactionStatus? {

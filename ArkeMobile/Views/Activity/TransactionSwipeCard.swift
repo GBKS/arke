@@ -253,19 +253,10 @@ struct TransactionSwipeCard: View, Equatable {
         guard transaction.subsystemName == "bark.exit" else {
             return
         }
-
-        let inputIds = Set(transaction.inputVtxoIds)
-        exitVtxos = walletManager.allUnilateralExits.filter { exit in
-            inputIds.contains(exit.vtxoId)
-        }
-
-        guard let firstVtxo = exitVtxos.first else { return }
         Task {
-            exitStatus = try? await walletManager.getExitStatus(
-                vtxoId: firstVtxo.vtxoId,
-                includeHistory: true,
-                includeTransactions: true
-            )
+            let data = await walletManager.exitData(forInputVtxoIds: transaction.inputVtxoIds)
+            exitVtxos = data.exitVtxos
+            exitStatus = data.status
         }
     }
 

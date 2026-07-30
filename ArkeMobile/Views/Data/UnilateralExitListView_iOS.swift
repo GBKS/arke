@@ -28,7 +28,6 @@ struct UnilateralExitListView_iOS: View {
     @State private var claimableHeight: UInt32?
     @State private var hasPendingExits: Bool?
     @State private var pendingExitsTotal: UInt64?
-    @State private var progressResults: [ExitProgressStatus] = []
     
     private var totalExitAmount: UInt64 {
         activeExits.reduce(into: 0) { $0 += $1.amountSats }
@@ -68,7 +67,7 @@ struct UnilateralExitListView_iOS: View {
                 .padding(.horizontal)
             
             // Status Indicators Section
-            if claimableHeight != nil || pendingExitsTotal != nil || !progressResults.isEmpty {
+            if claimableHeight != nil {
                 statusIndicatorsSection
             }
             
@@ -142,53 +141,18 @@ struct UnilateralExitListView_iOS: View {
     
     @ViewBuilder
     private var statusIndicatorsSection: some View {
-        // Only show section if there's actual content to display
-        if claimableHeight != nil || !progressResults.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                if let height = claimableHeight {
-                    HStack {
-                        Image(systemName: "clock.badge.checkmark")
-                            .foregroundStyle(Color.Arke.green)
-                        Text(String(localized: "balance_claimable_at_block", defaultValue: "All claimable at block \(height)"))
-                        if let current = latestBlockHeight {
-                            let remaining = Int(height) - current
-                            Text("data_blocks_remaining \(remaining)")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .font(.caption)
+        if let height = claimableHeight {
+            HStack {
+                Image(systemName: "clock.badge.checkmark")
+                    .foregroundStyle(Color.Arke.green)
+                Text(String(localized: "balance_claimable_at_block", defaultValue: "All claimable at block \(height)"))
+                if let current = latestBlockHeight {
+                    let remaining = Int(height) - current
+                    Text("data_blocks_remaining \(remaining)")
+                        .foregroundStyle(.secondary)
                 }
-                
-                /*
-                if !progressResults.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("data_last_progress")
-                            .font(.body)
-                            .fontWeight(.semibold)
-                        
-                        ForEach(Array(progressResults.enumerated()), id: \.offset) { _, result in
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Image(systemName: result.error == nil ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                        .foregroundStyle(result.error == nil ? Color.Arke.green : Color.Arke.red)
-                                    Text("\(result.vtxoId.prefix(8))... → \(result.state)")
-                                        .font(.system(.body, design: .monospaced))
-                                }
-                                if let error = result.error {
-                                    Text("(\(error))")
-                                        .font(.body)
-                                        .foregroundStyle(Color.Arke.red)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 15)
-                    .background(Color(.systemGray5))
-                    .cornerRadius(15)
-                }
-                */
             }
+            .font(.caption)
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
@@ -271,8 +235,7 @@ struct UnilateralExitListView_iOS: View {
             
             // Then progress all exits
             let statuses = try await walletManager.progressExits(feeRateSatPerVb: nil)
-            progressResults = statuses
-            
+
             print("✅ Progressed \(statuses.count) exit(s)")
             for status in statuses {
                 print("  - VTXO \(status.vtxoId): \(status.state)")
