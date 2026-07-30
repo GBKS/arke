@@ -8,6 +8,8 @@
 
 import Testing
 import Foundation
+import SwiftData
+import Bark
 
 #if os(iOS)
 @testable import ArkeMobile
@@ -94,5 +96,158 @@ struct ExitBlockedInfoTests {
 
         #expect(decoded == original)
         #expect(decoded.isSurfaceable)
+    }
+}
+
+// MARK: - Exit Store
+
+/// Tests for ExitStore, the single owner of unilateral-exit state.
+/// Wallet access is injected via WalletHooks, so these run against canned
+/// responses and count hook invocations.
+@Suite("Exit Store")
+@MainActor
+struct ExitStoreTests {
+
+    /// Counts hook invocations across a store's lifetime
+    private final class HookCounter {
+        var fetchVtxosCalls = 0
+        var relinkCalls = 0
+    }
+
+    private func makeContainer() throws -> ModelContainer {
+        let schema = Schema([PersistentExitCache.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        return try ModelContainer(for: schema, configurations: configuration)
+    }
+
+    /// Store wired to canned wallet responses. `exits` is re-evaluated per
+    /// refresh so tests can change what bark "returns" between refreshes.
+    private func makeStore(
+        context: ModelContext?,
+        counter: HookCounter,
+        statuses: [String: ExitTransactionStatus] = [:],
+        exits: @escaping () -> [ExitVtxo]
+    ) -> ExitStore {
+        let store = ExitStore()
+        store.modelContext = context
+        store.hooks = ExitStore.WalletHooks(
+            fetchExitVtxos: {
+                counter.fetchVtxosCalls += 1
+                return exits()
+            },
+            fetchExitStatus: { vtxoId in statuses[vtxoId] },
+            relinkMovements: { counter.relinkCalls += 1 }
+        )
+        return store
+    }
+
+    private func liveExit(_ vtxoId: String, amount: UInt64 = 10_000) -> ExitVtxo {
+        ExitVtxo(vtxoId: vtxoId, amountSats: amount, state: "Claimable", isClaimable: true)
+    }
+
+    @Test("A refresh triggers movement re-linking exactly once")
+    func testRefreshRelinksOnce() async throws {
+        // Regression: invalidateExitCache used to run the relink twice per
+        // refresh (once itself, once via the refresh it triggered)
+        let counter = HookCounter()
+        let store = makeStore(context: nil, counter: counter) { [self] in [liveExit("vtxo_a")] }
+
+        await store.refresh()
+
+        #expect(counter.relinkCalls == 1)
+        #expect(counter.fetchVtxosCalls == 1)
+    }
+
+    @Test("Concurrent refresh calls join one in-flight refresh")
+    func testConcurrentRefreshJoins() async throws {
+        let counter = HookCounter()
+        let store = makeStore(context: nil, counter: counter) { [self] in [liveExit("vtxo_a")] }
+
+        async let first: Void = store.refresh()
+        async let second: Void = store.refresh()
+        _ = await (first, second)
+
+        #expect(counter.fetchVtxosCalls == 1)
+        #expect(counter.relinkCalls == 1)
+    }
+
+    @Test("An exit that vanishes mid-claim is finalized as claimed on disk")
+    func testVanishedClaimInProgressFinalized() async throws {
+        // bark purges claimed exits from getExitVtxos(), usually before a
+        // refresh ever observes "Claimed" — the persisted entry is the only
+        // surviving record and must be kept and marked complete
+        let container = try makeContainer()
+        let context = container.mainContext
+        let counter = HookCounter()
+
+        let status = ExitTransactionStatus(
+            vtxoId: "vtxo_a",
+            state: "ClaimInProgress(ExitClaimInProgressState { tip_height: 301627, claimable_since: 301555:00000001, claim_txid: dc2b6f00 })",
+            history: nil,
+            transactionCount: 1
+        )
+        var barkList = [ExitVtxo(vtxoId: "vtxo_a", amountSats: 25_000, state: "ClaimInProgress", isClaimable: false)]
+        let store = makeStore(context: context, counter: counter, statuses: ["vtxo_a": status]) { barkList }
+        store.recordBlocked(vtxoId: "vtxo_a", phase: .claim, errorMessage: "Claim Fee Exceeds Output")
+
+        await store.refresh()   // persists the live exit with its status
+        barkList = []
+        await store.refresh()   // bark has purged it
+
+        let entries = try context.fetch(FetchDescriptor<PersistentExitCache>())
+        let entry = try #require(entries.first { $0.vtxoId == "vtxo_a" })
+        #expect(entry.isClaimed)
+        #expect(!entry.isClaimable)
+        #expect(entry.blockedInfoJson == nil)
+        // The snapshot survives for the detail view
+        #expect(store.persistedStatus(for: "vtxo_a")?.state == status.state)
+    }
+
+    @Test("Blocked records for exits gone from bark's list are pruned on refresh")
+    func testBlockedPruning() async throws {
+        let counter = HookCounter()
+        let store = makeStore(context: nil, counter: counter) { [self] in [liveExit("vtxo_live")] }
+
+        store.recordBlocked(vtxoId: "vtxo_gone", phase: .progression, errorMessage: "Insufficient Confirmed Funds")
+        store.recordBlocked(vtxoId: "vtxo_live", phase: .progression, errorMessage: "Insufficient Confirmed Funds")
+
+        await store.refresh()
+
+        #expect(store.blockedInfoByVtxoId["vtxo_gone"] == nil)
+        #expect(store.blockedInfoByVtxoId["vtxo_live"] != nil)
+    }
+
+    @Test("Clearing progression-phase blockage leaves a claim-phase record intact")
+    func testClearRespectsPhase() {
+        // Progression succeeds on every check while an exit sits at
+        // Claimable; clearing the claim record would reset its debounce
+        let store = ExitStore()
+
+        store.recordBlocked(vtxoId: "vtxo_a", phase: .claim, errorMessage: "Claim Fee Exceeds Output")
+        store.clearBlocked(vtxoId: "vtxo_a", phase: .progression)
+        #expect(store.blockedInfoByVtxoId["vtxo_a"] != nil)
+
+        store.clearBlocked(vtxoId: "vtxo_a", phase: .claim)
+        #expect(store.blockedInfoByVtxoId["vtxo_a"] == nil)
+    }
+
+    @Test("Snapshotted statuses round-trip through persistence")
+    func testSnapshotRoundTrip() async throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let counter = HookCounter()
+
+        let status = ExitTransactionStatus(
+            vtxoId: "vtxo_a",
+            state: "ClaimInProgress(ExitClaimInProgressState { tip_height: 1, claimable_since: 1:00, claim_txid: ab })",
+            history: ["Start(ExitStartState { tip_height: 0 })"],
+            transactionCount: 1
+        )
+        let store = makeStore(context: context, counter: counter, statuses: ["vtxo_a": status]) { [] }
+
+        await store.snapshotStatuses(vtxoIds: ["vtxo_a"])
+
+        #expect(store.persistedStatus(for: "vtxo_a") == status)
+        #expect(store.cachedStatus(for: "vtxo_a") == status)
     }
 }

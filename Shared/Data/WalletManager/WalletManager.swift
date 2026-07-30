@@ -139,18 +139,10 @@ class WalletManager {
     var contactService: ContactService { ServiceContainer.shared.contactService }
     var contactAddressService: ContactAddressService { ServiceContainer.shared.contactAddressService }
     
-    /// Cached exit VTXOs
-    var cachedExitVtxos: [ExitVtxo] = []
-    var exitVtxosCacheTime: Date?
-    let exitCacheTimeout: TimeInterval = 30 // 30 seconds
-    
-    /// Cached exit statuses for linking
-    var cachedExitStatuses: [String: ExitTransactionStatus] = [:]  // vtxoId -> status
-    var exitStatusesCacheTime: Date?
-
-    /// Exits currently blocked because fees can't be covered (vtxoId -> info)
-    /// In-memory only for now; persistence lands with Exit_Blocked_State Phase 2
-    var exitBlockedInfoByVtxoId: [String: ExitBlockedInfo] = [:]
+    /// Single owner of unilateral-exit state (live exits, statuses, blocked
+    /// records, persistent history). The exit members on WalletManager are
+    /// a facade over this store — see WalletManager+Exits.swift.
+    let exitStore = ExitStore()
     
     // MARK: - Network Info Properties
     var currentNetworkName: String {
@@ -361,9 +353,24 @@ class WalletManager {
         
         // Initialize transaction linking service (for movement-onchain linking)
         transactionLinkingService = TransactionLinkingService(walletManager: self)
-        
+
         // Set linking service on transaction service
         transactionService?.setLinkingService(transactionLinkingService)
+
+        // Give the exit store wallet access now that the wallet exists
+        exitStore.hooks = ExitStore.WalletHooks(
+            fetchExitVtxos: { [weak self] in
+                try await self?.getExitVtxos() ?? []
+            },
+            fetchExitStatus: { [weak self] vtxoId in
+                try await self?.getExitStatus(vtxoId: vtxoId, includeHistory: true, includeTransactions: true)
+            },
+            relinkMovements: { [weak self] in
+                guard let self, let context = self.modelContext,
+                      let linkingService = self.transactionLinkingService else { return }
+                await linkingService.relinkExitMovements(context: context)
+            }
+        )
         
         // Initialize unified transaction service (merges ark + onchain)
         if let transactionService = transactionService,
@@ -438,7 +445,12 @@ class WalletManager {
         unifiedTransactionService?.setModelContext(context)  // Set context on unified service
         // Services are configured through ServiceContainer
         ServiceContainer.shared.configureServices(with: context)
-        
+
+        exitStore.modelContext = context
+        exitStore.onStateChange = { [weak self] in
+            self?.dataVersion += 1
+        }
+
         // Load exit cache from persistent storage (before wallet initialization)
         // This allows UI to render with cached exit data immediately
         Task {
