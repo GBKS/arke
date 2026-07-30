@@ -19,7 +19,7 @@ struct TransactionReceiptSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text("data_technical_details")
-                    .font(.system(.title3, design: .serif))
+                    .font(.system(.title3))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .center)
 

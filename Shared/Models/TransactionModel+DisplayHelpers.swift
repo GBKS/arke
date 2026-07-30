@@ -513,26 +513,13 @@ extension TransactionModel {
             return cancelled
         }
 
-        // Special case for unilateral exits: check live exit status
-        // Only consider exit complete when it's been claimed
+        // Special case for unilateral exits: only complete when claimed.
+        // isExitComplete reads the persisted movement status first (bark marks
+        // the movement Successful exactly when the exit reaches Claimed), so
+        // completed exits are titled correctly even while the in-memory exit
+        // caches are empty or stale. See Exit_Completion_Issues.md.
         if hasUnilateralExit {
-            // Try to get current exit status from wallet manager
-            if let exitStatus = currentExitStatus {
-                if exitStatus.isClaimed {
-                    return confirmed
-                } else {
-                    // Exit is still pending (not yet claimed)
-                    return pending
-                }
-            }
-            // Fallback to subsystemKind if wallet manager unavailable
-            else {
-                if subsystemKind == "claimed" {
-                    return confirmed
-                } else {
-                    return pending
-                }
-            }
+            return isExitComplete ? confirmed : pending
         }
         
         switch transactionStatus {

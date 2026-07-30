@@ -140,13 +140,14 @@ struct TransactionCardStackView_iOS: View {
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold)
-                                .frame(width: 44, height: 44)
-                                .background(.ultraThinMaterial, in: Circle())
+                                .frame(width: 30, height: 30)
                         }
+                        .buttonStyle(.glass)
+                        .tint(Color.Arke.gold)
                         .accessibilityLabel("button_close")
 
                         Spacer()
+                        
                     }
                     Spacer()
                 }

@@ -180,9 +180,14 @@ extension ExitProgressionService {
 
             var statuses: [ExitTransactionStatus] = []
             for vtxo in exitVtxos {
+                // History is required: once an exit moves past Processing,
+                // ExitProgress reconstructs the transaction chain from history
+                // (transactionChain), so without it every exit collapses to a
+                // single-transaction 5-step estimate and the step count
+                // disagrees with the transaction detail views.
                 guard let status = try await wallet.getExitStatus(
                     vtxoId: vtxo.vtxoId,
-                    includeHistory: false,
+                    includeHistory: true,
                     includeTransactions: true
                 ) else { continue }
                 statuses.append(status)
