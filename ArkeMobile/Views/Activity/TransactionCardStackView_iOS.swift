@@ -175,12 +175,7 @@ struct TransactionCardStackView_iOS: View {
         }
         .sheet(isPresented: $showDetailSheet) {
             if let detailTransaction {
-                TransactionDetailView_iOS(
-                    transaction: detailTransaction,
-                    onNavigateToContact: nil,
-                    onNavigateToTag: nil
-                )
-                .environment(walletManager)
+                TransactionReceiptSheet(transaction: detailTransaction)
             }
         }
     }

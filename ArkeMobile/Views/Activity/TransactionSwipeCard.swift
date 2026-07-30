@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import UIKit
 import ArkeUI
+import Bark
 
 /// A single card in the transaction card stack: dark patterned header with
 /// amount and date, light lower section with contact, tags, notes, and a
@@ -21,11 +22,18 @@ struct TransactionSwipeCard: View, Equatable {
     var onNoteFocusChange: ((Bool) -> Void)? = nil
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(WalletManager.self) private var walletManager
 
     // Fee lookup queries linked transactions via the model context; resolved
     // once on appear so drag-frame re-renders don't repeat it
     @State private var feeText: String?
     @State private var hasFees = false
+
+    // Unilateral exit progress, resolved on appear for exit transactions;
+    // the banner opens the full exit status timeline
+    @State private var exitVtxos: [ExitVtxo] = []
+    @State private var exitStatus: ExitTransactionStatus?
+    @State private var showExitStatusSheet = false
 
     // While the note field has focus the keyboard shrinks the card, which
     // would otherwise squeeze the amount via minimumScaleFactor; instead the
@@ -48,6 +56,10 @@ struct TransactionSwipeCard: View, Equatable {
             lowerSection
         }
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        // Clipping is visual only; without an explicit content shape the
+        // header's overflowing fill-mode pattern image would keep hit-testing
+        // above the card and swallow backdrop taps meant to dismiss the stack
+        .contentShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .onTapGesture {
             hideKeyboard()
         }
@@ -55,6 +67,13 @@ struct TransactionSwipeCard: View, Equatable {
             if transaction.transactionType == .sent || transaction.transactionType == .transfer {
                 hasFees = transaction.totalFeesIncludingLinked(modelContext: modelContext) > 0
                 feeText = transaction.formattedTotalFeesIncludingLinked(modelContext: modelContext) ?? BitcoinFormatter.shared.formatAmount(0)
+            }
+            loadExitData()
+        }
+        .sheet(isPresented: $showExitStatusSheet) {
+            if let firstVtxo = exitVtxos.first {
+                ExitStatusSheet(vtxoId: firstVtxo.vtxoId, exitVtxo: firstVtxo)
+                    .environment(walletManager)
             }
         }
     }
@@ -122,19 +141,23 @@ struct TransactionSwipeCard: View, Equatable {
         .padding(.bottom, isEditingNote ? 16 : 28)
         .frame(maxWidth: .infinity)
         .background {
-            Color(hex: "#1C1C1C")
+            ZStack {
+                Color(hex: "#1C1C1C")
 
-            Image(patternImageName)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity)
-                .clipped()
-                .opacity(0.15)
+                Image(patternImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+                    .opacity(0.15)
 
-            // Subtle edge highlight against the dark backdrop; the bottom
-            // edge is open where the light section begins
-            TopEdgeBorder(cornerRadius: 28)
-                .stroke(.white.opacity(0.25), lineWidth: 1)
+                // Subtle edge highlight against the dark backdrop; the bottom
+                // edge is open where the light section begins
+                TopEdgeBorder(cornerRadius: 28)
+                    .stroke(.white.opacity(0.25), lineWidth: 1)
+            }
+            // Decorative only; the card's contentShape handles hit testing
+            .allowsHitTesting(false)
         }
     }
 
@@ -142,6 +165,19 @@ struct TransactionSwipeCard: View, Equatable {
 
     private var lowerSection: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if let exitStatus {
+                Button {
+                    showExitStatusSheet = true
+                } label: {
+                    TransactionClaimExitBanner(
+                        exitStatus: exitStatus,
+                        currentBlockHeight: walletManager.estimatedBlockHeight.map { UInt32($0) },
+                        blockedInfo: transaction.exitBlockedInfo
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
             TransactionNotesSection(transaction: transaction) { focused in
                 withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
                     isEditingNote = focused
@@ -208,6 +244,28 @@ struct TransactionSwipeCard: View, Equatable {
             return .Arke.red
         case .cancelled:
             return .gray
+        }
+    }
+
+    // Matches the exit transaction to its exit VTXOs and fetches the exit
+    // status that drives the progress banner
+    private func loadExitData() {
+        guard transaction.subsystemName == "bark.exit" else {
+            return
+        }
+
+        let inputIds = Set(transaction.inputVtxoIds)
+        exitVtxos = walletManager.allUnilateralExits.filter { exit in
+            inputIds.contains(exit.vtxoId)
+        }
+
+        guard let firstVtxo = exitVtxos.first else { return }
+        Task {
+            exitStatus = try? await walletManager.getExitStatus(
+                vtxoId: firstVtxo.vtxoId,
+                includeHistory: true,
+                includeTransactions: true
+            )
         }
     }
 
