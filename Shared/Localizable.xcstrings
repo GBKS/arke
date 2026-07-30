@@ -29,6 +29,16 @@
     "%@ ago" : {
 
     },
+    "%@...%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@...%2$@"
+          }
+        }
+      }
+    },
     "%lld" : {
       "shouldTranslate" : false
     },
@@ -3925,6 +3935,16 @@
         }
       }
     },
+    "data_completed_exits" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed Exits"
+          }
+        }
+      }
+    },
     "data_configuration" : {
       "localizations" : {
         "en" : {
@@ -5065,6 +5085,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Network Fees"
+          }
+        }
+      }
+    },
+    "exit_state_claim_in_progress" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claiming"
+          }
+        }
+      }
+    },
+    "exit_state_complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complete"
           }
         }
       }

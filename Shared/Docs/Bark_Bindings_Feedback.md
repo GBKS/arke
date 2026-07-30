@@ -157,6 +157,35 @@ the spent-guard (it's terminal), compare state *kinds* rather than full state
 values for `state_changed`, or make `finish_movement` idempotent for
 already-finished movements.
 
+### 1.5 Claimed exits are purged from `getExitVtxos()` with no history API
+
+Found in the field (2026-07-30). Once an exit completes, it disappears from
+`getExitVtxos()` — and with it, any way to retrieve its status/history over
+the FFI. (Cancelled `VtxoAlreadySpent` exits, by contrast, linger in the
+list — see 1.4.) The purge is quick enough that a client polling on any
+reasonable interval can miss the `ClaimInProgress`/`Claimed` states
+entirely.
+
+That cost us correctness: our transaction linking extracted the claim txid
+from exit statuses, so when both exits of a batch claim were purged before
+our next status poll, the claim transaction was never associated with its
+exits and surfaced in the user's history as an unexplained onchain receive.
+It also costs users auditability — a unilateral exit is precisely the event
+a user may need to inspect after the fact (which txids, what fees, what
+timeline), and after completion nothing in the API can answer that.
+
+We now work around it by capturing everything at drain time — linking the
+claim tx to its movements the moment `drainExits` returns, and snapshotting
+each exit's final status into our own persistence before bark forgets it
+(`Shared/Data/WalletManager/WalletManager+Exits.swift`,
+`Shared/Services/TransactionService/TransactionLinkingService.swift`).
+
+**Ask:** keep completed exits queryable — either retain them in
+`getExitVtxos()` with their terminal state (mirroring cancelled ones), keep
+`getExitStatus(vtxoId:)` answering for completed exits, or add an explicit
+exit-history API. At minimum, document when the purge happens so clients
+know the capture window.
+
 ---
 
 ## Priority 2 — costs us reliability and battery
@@ -353,3 +382,4 @@ pattern we're asking you to extend everywhere:
 | 9 | Richer `RoundState`; enum `Vtxo`/`Movement` fields | Guesswork UI and undocumented string matching |
 | 10 | Upstream migration notes per release | Hand-written binding-diff docs |
 | 11 | Stop re-finishing cancelled exit movements (`completed_at` churn) | Date-freeze workaround in transaction upsert |
+| 12 | Keep completed exits queryable (or an exit-history API) | Drain-time status snapshots + claim-tx capture window |

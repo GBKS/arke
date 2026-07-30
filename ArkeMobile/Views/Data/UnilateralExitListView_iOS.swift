@@ -6,14 +6,18 @@
 //
 
 import SwiftUI
+import SwiftData
 import ArkeUI
 import Bark
 
 struct UnilateralExitListView_iOS: View {
     var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedExit: ExitVtxo?
     @State private var exits: [ExitVtxo] = []
+    @State private var completedExits: [PersistentExitCache] = []
+    @State private var selectedCompletedExit: PersistentExitCache?
     @State private var isLoadingExits = false
     @State private var error: String?
     @State private var latestBlockHeight: Int?
@@ -27,16 +31,17 @@ struct UnilateralExitListView_iOS: View {
     @State private var progressResults: [ExitProgressStatus] = []
     
     private var totalExitAmount: UInt64 {
-        exits.reduce(into: 0) { $0 += $1.amountSats }
+        activeExits.reduce(into: 0) { $0 += $1.amountSats }
     }
-    
+
     private var formattedTotalAmount: String {
         BitcoinFormatter.shared.formatAmount(Int(totalExitAmount))
     }
-    
+
     private var activeExits: [ExitVtxo] {
-        // All exits from getExitVtxos are considered "active" (in progress)
-        exits
+        // Claimed exits get purged from bark's list, but cancelled ones
+        // (VtxoAlreadySpent) linger there — don't count those as active
+        exits.filter { $0.isInFlight }
     }
     
     var body: some View {
@@ -80,7 +85,7 @@ struct UnilateralExitListView_iOS: View {
             } else if let error = error {
                 ErrorBox(errorMessage: error)
                     .padding(.horizontal)
-            } else if exits.isEmpty {
+            } else if exits.isEmpty && completedExits.isEmpty {
                 HStack(spacing: 10) {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
@@ -103,7 +108,7 @@ struct UnilateralExitListView_iOS: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        
+
                         if index < exits.count - 1 {
                             Divider()
                                 .padding(.horizontal, 12)
@@ -111,10 +116,15 @@ struct UnilateralExitListView_iOS: View {
                     }
                 }
                 .padding(.horizontal)
+
+                completedExitsSection
             }
         }
         .sheet(item: $selectedExit) { exit in
             ExitStatusSheet(vtxoId: exit.vtxoId, exitVtxo: exit)
+        }
+        .sheet(item: $selectedCompletedExit) { entry in
+            ExitStatusSheet(vtxoId: entry.vtxoId)
         }
         .task(id: reloadTrigger) {
             await loadExits()
@@ -184,6 +194,68 @@ struct UnilateralExitListView_iOS: View {
         }
     }
     
+    // MARK: - Completed Exits Section
+
+    /// Exits bark no longer tracks, rendered from the app's persisted
+    /// snapshots — the detail sheet works for these because getExitStatus
+    /// falls back to the same snapshots
+    @ViewBuilder
+    private var completedExitsSection: some View {
+        if !completedExits.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("data_completed_exits")
+                    .font(.headline)
+                    .padding(.top, 20)
+                    .padding(.bottom, 8)
+
+                ForEach(Array(completedExits.enumerated()), id: \.element.vtxoId) { index, entry in
+                    Button {
+                        selectedCompletedExit = entry
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("\(entry.vtxoId.prefix(8))...\(entry.vtxoId.suffix(8))")
+                                    .font(.system(.body, design: .monospaced))
+                                Text(entry.stateDisplayName)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text(BitcoinFormatter.shared.formatAmount(Int(entry.amountSats)))
+                                Text(entry.lastRefreshedAt, format: .dateTime.day().month().year())
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    if index < completedExits.count - 1 {
+                        Divider()
+                            .padding(.horizontal, 12)
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    /// Load persisted exit records that are no longer in bark's exit list
+    /// (bark purges claimed exits; these entries are the surviving history)
+    private func loadCompletedExits() {
+        let liveVtxoIds = Set(exits.map { $0.vtxoId })
+        let descriptor = FetchDescriptor<PersistentExitCache>(
+            sortBy: [SortDescriptor(\.lastRefreshedAt, order: .reverse)]
+        )
+        let allEntries = (try? modelContext.fetch(descriptor)) ?? []
+        completedExits = allEntries.filter { !liveVtxoIds.contains($0.vtxoId) }
+    }
+
     // MARK: - Action Methods
     
     private func syncAndProgressExits() async {
@@ -263,10 +335,12 @@ struct UnilateralExitListView_iOS: View {
             // Get all VTXOs currently in exit process
             exits = try await walletManager.getExitVtxos()
             latestBlockHeight = await walletManager.getEstimatedBlockHeight()
-            
+
             print("exits: \(exits)")
             print("latestBlockHeight: \(latestBlockHeight ?? -1)")
-            
+
+            loadCompletedExits()
+
             // Load debug info
             await loadDebugInfo()
         } catch {

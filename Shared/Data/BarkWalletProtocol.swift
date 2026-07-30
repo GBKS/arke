@@ -9,8 +9,10 @@ import Foundation
 import ArkeUI
 import Bark
 
-// Protocol so both real and mock wallets can be used interchangeably
-protocol BarkWalletProtocol {
+// Protocol so both real and mock wallets can be used interchangeably.
+// Refines ExitClaimWallet (the narrow surface ExitClaimSequence needs),
+// so any wallet can be handed to the tested claim sequence directly.
+protocol BarkWalletProtocol: ExitClaimWallet {
     var walletDir: URL { get }
     var networkConfig: NetworkConfig { get }
     var isMainnet: Bool { get }

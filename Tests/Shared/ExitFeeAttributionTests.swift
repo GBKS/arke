@@ -363,3 +363,148 @@ struct ExitFeeAttributionTotalsTests {
         #expect(totalA + totalB == 3377)
     }
 }
+
+// MARK: - Claim-time linking (drainExits → movements)
+
+/// linkClaimTransaction runs the moment a claim is broadcast, with the
+/// drained VTXO ids in hand — bark purges claimed exits from its exit list,
+/// so the status-cache relink can miss the claim txid entirely. These tests
+/// pin the drain-time path: every drained movement gets the claim as a
+/// child, unrelated movements stay untouched, and re-runs don't duplicate.
+@Suite("Exit Claim Linking")
+@MainActor
+struct ExitClaimLinkingTests {
+
+    private func createTestContainer() throws -> ModelContainer {
+        let schema = Schema([
+            PersistentTransaction.self,
+            PendingPaymentMetadata.self,
+            PendingTagAssignment.self,
+            PersistentTag.self,
+            PersistentContact.self,
+            TransactionTagAssignment.self,
+            TransactionContactAssignment.self
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        return try ModelContainer(for: schema, configurations: configuration)
+    }
+
+    private func insertExitMovement(txid: String, movementId: Int, vtxoId: String, context: ModelContext) -> PersistentTransaction {
+        let movement = PersistentTransaction(
+            txid: txid,
+            movementId: movementId,
+            type: .transfer,
+            amount: 10000,
+            date: Date(),
+            status: .confirmed,
+            address: nil,
+            subsystemCategory: "exit",
+            subsystemName: "bark.exit",
+            inputVtxoIds: [vtxoId]
+        )
+        movement.sourceType = "ark"
+        context.insert(movement)
+        return movement
+    }
+
+    private func insertClaimRecord(context: ModelContext) -> PersistentTransaction {
+        let record = PersistentTransaction(
+            txid: "onchain_\(Fixture.claim)",
+            movementId: nil,
+            type: .received,
+            amount: 0,
+            date: Date(),
+            status: .pending,
+            address: nil,
+            subsystemCategory: "onchain_transaction",
+            subsystemKind: "exit_claim"
+        )
+        record.sourceType = "onchain"
+        context.insert(record)
+        return record
+    }
+
+    @Test("Batch claim links to every drained movement, not others")
+    func testClaimLinksToAllDrainedMovements() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let movementA = insertExitMovement(txid: "movement_1", movementId: 1, vtxoId: "\(Fixture.tx4):0", context: context)
+        let movementB = insertExitMovement(txid: "movement_2", movementId: 2, vtxoId: "\(Fixture.tx3):1", context: context)
+        let unrelated = insertExitMovement(txid: "movement_3", movementId: 3, vtxoId: "\(Fixture.tx1):0", context: context)
+        let claim = insertClaimRecord(context: context)
+        try context.save()
+
+        TransactionLinkingService().linkClaimTransaction(
+            claimTxid: Fixture.claim,
+            drainedVtxoIds: ["\(Fixture.tx4):0", "\(Fixture.tx3):1"],
+            context: context
+        )
+
+        let onchainTxid = "onchain_\(Fixture.claim)"
+        #expect(movementA.childTxids == [onchainTxid])
+        #expect(movementB.childTxids == [onchainTxid])
+        #expect(unrelated.childTxids == nil)
+        #expect(claim.parentTxid != nil)
+    }
+
+    @Test("Re-running the link does not duplicate children")
+    func testClaimLinkIdempotent() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let movement = insertExitMovement(txid: "movement_1", movementId: 1, vtxoId: "\(Fixture.tx4):0", context: context)
+        _ = insertClaimRecord(context: context)
+        try context.save()
+
+        let service = TransactionLinkingService()
+        service.linkClaimTransaction(claimTxid: Fixture.claim, drainedVtxoIds: ["\(Fixture.tx4):0"], context: context)
+        service.linkClaimTransaction(claimTxid: Fixture.claim, drainedVtxoIds: ["\(Fixture.tx4):0"], context: context)
+
+        #expect(movement.childTxids == ["onchain_\(Fixture.claim)"])
+    }
+
+    @Test("Missing claim record leaves movements untouched")
+    func testMissingClaimRecordIsSafe() throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let movement = insertExitMovement(txid: "movement_1", movementId: 1, vtxoId: "\(Fixture.tx4):0", context: context)
+        try context.save()
+
+        TransactionLinkingService().linkClaimTransaction(
+            claimTxid: Fixture.claim,
+            drainedVtxoIds: ["\(Fixture.tx4):0"],
+            context: context
+        )
+
+        #expect(movement.childTxids == nil)
+    }
+}
+
+// MARK: - Exit status snapshot round-trip
+
+@Suite("Exit Status Snapshot")
+struct ExitStatusSnapshotTests {
+
+    @Test("Snapshot JSON round-trips to an equal status")
+    func testSnapshotRoundTrip() throws {
+        let original = Fixture.status()
+
+        let json = try #require(ExitStatusSnapshot.encodeJson(from: original))
+        let data = try #require(json.data(using: .utf8))
+        let decoded = try JSONDecoder().decode(ExitStatusSnapshot.self, from: data)
+
+        #expect(decoded.status == original)
+    }
+
+    @Test("Claim txid stays extractable from a decoded snapshot")
+    func testClaimTxidSurvivesSnapshot() throws {
+        let json = try #require(ExitStatusSnapshot.encodeJson(from: Fixture.status()))
+        let data = try #require(json.data(using: .utf8))
+        let restored = try JSONDecoder().decode(ExitStatusSnapshot.self, from: data).status
+
+        let txids = ExitStatusParser.extractUserFundedTransactionIds(from: restored)
+        #expect(txids.contains(Fixture.claim))
+    }
+}

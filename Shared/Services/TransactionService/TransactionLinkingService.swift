@@ -144,6 +144,53 @@ class TransactionLinkingService {
         }
     }
     
+    /// Link a just-broadcast claim transaction to its exit movement(s).
+    /// Called at drain time with the exact VTXO ids being claimed — bark
+    /// purges completed exits from its exit list, so the status-cache
+    /// relink above can miss the claim txid entirely if no refresh lands
+    /// in the window between broadcast and purge. This path has no such
+    /// window: everything needed is known the moment the claim exists.
+    /// A single claim can drain multiple exits; all matching movements get
+    /// the claim tx in childTxids (parentTxid points to the last one, which
+    /// is enough to hide the claim from the activity list).
+    func linkClaimTransaction(claimTxid: String, drainedVtxoIds: [String], context: ModelContext) {
+        do {
+            let descriptor = FetchDescriptor<PersistentTransaction>(
+                predicate: #Predicate { transaction in
+                    transaction.sourceType == "ark" && transaction.subsystemCategory == "exit"
+                }
+            )
+            let drained = Set(drainedVtxoIds)
+            let parents = try context.fetch(descriptor).filter { movement in
+                !drained.isDisjoint(with: movement.inputVtxoIds)
+            }
+
+            guard !parents.isEmpty else {
+                Self.logger.warning("🔗 No exit movement found for claim \(claimTxid.prefix(16))... (\(drainedVtxoIds.count) VTXO(s))")
+                return
+            }
+
+            let onchainTxid = "onchain_\(claimTxid)"
+            let onchainDescriptor = FetchDescriptor<PersistentTransaction>(
+                predicate: #Predicate { $0.txid == onchainTxid }
+            )
+            guard let onchainTx = try context.fetch(onchainDescriptor).first else {
+                Self.logger.warning("🔗 Claim onchain record \(onchainTxid) not found - cannot link")
+                return
+            }
+
+            for parent in parents {
+                linkParentToChild(parent: parent, child: onchainTx, onchainTxid: onchainTxid)
+            }
+            try context.save()
+
+            Self.logger.info("🔗 Linked claim \(claimTxid.prefix(16))... to \(parents.count) exit movement(s)")
+
+        } catch {
+            Self.logger.error("❌ Failed to link claim transaction: \(error)")
+        }
+    }
+
     /// Establish links when a movement transaction is upserted
     /// Searches for matching onchain transactions and links them if found
     /// - Parameters:

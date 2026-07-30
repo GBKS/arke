@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import Bark
 
 /// Persistent cache entry for a single exit VTXO
 /// Allows transaction list to render immediately with cached exit status data
@@ -55,9 +56,55 @@ final class PersistentExitCache {
     }
 }
 
+// MARK: - Exit Status Snapshot
+
+/// Codable mirror of Bark.ExitTransactionStatus, stored in
+/// `PersistentExitCache.exitStatusJson`. bark purges completed exits from
+/// its exit list (and their statuses with them), so this snapshot is the
+/// app's only durable record of an exit's history once it's claimed.
+nonisolated struct ExitStatusSnapshot: Codable {
+    let vtxoId: String
+    let state: String
+    let history: [String]?
+    let transactionCount: UInt32
+
+    init(status: ExitTransactionStatus) {
+        self.vtxoId = status.vtxoId
+        self.state = status.state
+        self.history = status.history
+        self.transactionCount = status.transactionCount
+    }
+
+    var status: ExitTransactionStatus {
+        ExitTransactionStatus(
+            vtxoId: vtxoId,
+            state: state,
+            history: history,
+            transactionCount: transactionCount
+        )
+    }
+
+    static func encodeJson(from status: ExitTransactionStatus) -> String? {
+        guard let data = try? JSONEncoder().encode(ExitStatusSnapshot(status: status)) else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
+    }
+}
+
 // MARK: - Helper Extensions
 
 extension PersistentExitCache {
+    /// Last known exit status decoded from the persisted snapshot, if any
+    var snapshotStatus: ExitTransactionStatus? {
+        guard let json = exitStatusJson,
+              let data = json.data(using: .utf8),
+              let snapshot = try? JSONDecoder().decode(ExitStatusSnapshot.self, from: data) else {
+            return nil
+        }
+        return snapshot.status
+    }
+
     /// Check if cache entry is fresh (less than 5 minutes old)
     var isFresh: Bool {
         Date().timeIntervalSince(lastRefreshedAt) < 300 // 5 minutes

@@ -14,9 +14,11 @@ import OSLog
 extension WalletManager {
     
     /// Active unilateral exits (from Bark SDK)
-    /// Note: Filters out terminal exits — claimed (complete) and cancelled
-    /// (VtxoAlreadySpent). Both stay in bark's exit list forever, so filtering
-    /// only claimed ones would report cancelled exits as "in progress"
+    /// Note: Filters out terminal exits. Claimed (complete) exits get purged
+    /// from bark's exit list shortly after the claim (observed with bark
+    /// 0.11 — we once assumed they stayed forever), but cancelled ones
+    /// (VtxoAlreadySpent) linger there, so filtering by isInFlight is still
+    /// needed to keep cancelled exits from reporting as "in progress"
     /// indefinitely (blocking the settings exit action, inflating attention
     /// counts).
     var activeUnilateralExits: [ExitVtxo] {
@@ -26,9 +28,11 @@ extension WalletManager {
 
         return allExits.filter { $0.isInFlight }
     }
-    
-    /// Get all unilateral exits including claimed/completed ones
-    /// Use this when you need to display complete exit history
+
+    /// All unilateral exits bark still tracks — claimed exits get purged
+    /// from bark's list, so completed exits are usually absent here.
+    /// For completed exit history use the PersistentExitCache snapshots
+    /// (persistedExitStatus / the X-Ray completed section).
     /// Uses cached data - refresh is triggered explicitly after wallet initialization
     var allUnilateralExits: [ExitVtxo] {
         return cachedExitVtxos
@@ -107,17 +111,19 @@ extension WalletManager {
     
     /// Save exit cache to persistent storage
     /// Called after successful refresh from wallet
+    /// Merges into existing entries rather than wiping: bark purges claimed
+    /// exits from its exit list, so entries that vanish from the list are the
+    /// app's only remaining record of those exits and must be kept.
     private func saveExitCacheToDisk() async {
         guard let context = modelContext else { return }
-        
+
         do {
-            // Clear old cache entries
-            let oldEntries = try context.fetch(FetchDescriptor<PersistentExitCache>())
-            for entry in oldEntries {
-                context.delete(entry)
+            let existingEntries = try context.fetch(FetchDescriptor<PersistentExitCache>())
+            var entriesByVtxoId: [String: PersistentExitCache] = [:]
+            for entry in existingEntries {
+                entriesByVtxoId[entry.vtxoId] = entry
             }
-            
-            // Save new cache entries
+
             let now = Date()
             for exitVtxo in cachedExitVtxos {
                 var blockedInfoJson: String?
@@ -126,25 +132,105 @@ extension WalletManager {
                     blockedInfoJson = String(data: data, encoding: .utf8)
                 }
 
-                let cacheEntry = PersistentExitCache(
-                    vtxoId: exitVtxo.vtxoId,
-                    amountSats: exitVtxo.amountSats,
-                    isClaimed: exitVtxo.isClaimed,
-                    isClaimable: exitVtxo.isClaimable,
-                    stateDisplayName: exitVtxo.stateDisplayName,
-                    exitStatusJson: nil, // Could serialize full status here if needed
-                    blockedInfoJson: blockedInfoJson,
-                    cachedAt: now,
-                    lastRefreshedAt: now
-                )
-                context.insert(cacheEntry)
+                // Keep an existing snapshot when this refresh has no status
+                // for the VTXO (statuses are fetched after this save runs on
+                // the first refresh)
+                let statusJson = cachedExitStatuses[exitVtxo.vtxoId]
+                    .flatMap { ExitStatusSnapshot.encodeJson(from: $0) }
+
+                if let entry = entriesByVtxoId[exitVtxo.vtxoId] {
+                    entry.amountSats = exitVtxo.amountSats
+                    entry.isClaimed = exitVtxo.isClaimed
+                    entry.isClaimable = exitVtxo.isClaimable
+                    entry.stateDisplayName = exitVtxo.stateDisplayName
+                    entry.blockedInfoJson = blockedInfoJson
+                    if let statusJson {
+                        entry.exitStatusJson = statusJson
+                    }
+                    entry.lastRefreshedAt = now
+                } else {
+                    context.insert(PersistentExitCache(
+                        vtxoId: exitVtxo.vtxoId,
+                        amountSats: exitVtxo.amountSats,
+                        isClaimed: exitVtxo.isClaimed,
+                        isClaimable: exitVtxo.isClaimable,
+                        stateDisplayName: exitVtxo.stateDisplayName,
+                        exitStatusJson: statusJson,
+                        blockedInfoJson: blockedInfoJson,
+                        cachedAt: now,
+                        lastRefreshedAt: now
+                    ))
+                }
             }
-            
+
+            // Entries no longer in bark's list: the exit is over. Clear any
+            // blocked info (a finished exit can't be blocked, and startup
+            // restores blocked banners from these entries) and finalize ones
+            // whose last known state shows the claim was underway — bark
+            // usually purges before a refresh ever observes "Claimed".
+            let liveVtxoIds = Set(cachedExitVtxos.map { $0.vtxoId })
+            for entry in existingEntries where !liveVtxoIds.contains(entry.vtxoId) {
+                entry.blockedInfoJson = nil
+                entry.isClaimable = false
+                if !entry.isClaimed, let state = entry.snapshotStatus?.state,
+                   state.hasPrefix("Claimed") || state.hasPrefix("ClaimInProgress") {
+                    entry.isClaimed = true
+                    entry.stateDisplayName = String(localized: "exit_state_complete", defaultValue: "Complete")
+                }
+            }
+
+            let historicalCount = existingEntries.count(where: { !liveVtxoIds.contains($0.vtxoId) })
             try context.save()
-            Self.logger.info("[Exit Cache] Saved \(self.cachedExitVtxos.count) exit(s) to persistent storage")
+            Self.logger.info("[Exit Cache] Saved \(self.cachedExitVtxos.count) live exit(s), kept \(historicalCount) historical")
 
         } catch {
             Self.logger.warning("[Exit Cache] Failed to save to disk: \(error)")
+        }
+    }
+
+    /// Snapshot current exit statuses for the given VTXOs into persistent
+    /// storage (and the in-memory status cache). Called right after a claim
+    /// is broadcast: bark purges claimed exits from its exit list shortly
+    /// after, and this is the last reliable chance to capture their history.
+    func snapshotExitStatuses(vtxoIds: [String]) async {
+        guard let context = modelContext else { return }
+
+        for vtxoId in vtxoIds {
+            guard let status = try? await getExitStatus(
+                vtxoId: vtxoId,
+                includeHistory: true,
+                includeTransactions: true
+            ) else {
+                Self.logger.warning("[Exit Cache] No status to snapshot for VTXO \(vtxoId.prefix(16))...")
+                continue
+            }
+
+            cachedExitStatuses[vtxoId] = status
+
+            guard let statusJson = ExitStatusSnapshot.encodeJson(from: status) else { continue }
+            let descriptor = FetchDescriptor<PersistentExitCache>(
+                predicate: #Predicate { $0.vtxoId == vtxoId }
+            )
+            do {
+                if let entry = try context.fetch(descriptor).first {
+                    entry.exitStatusJson = statusJson
+                    entry.lastRefreshedAt = Date()
+                } else {
+                    let amount = cachedExitVtxos.first { $0.vtxoId == vtxoId }?.amountSats ?? 0
+                    context.insert(PersistentExitCache(
+                        vtxoId: vtxoId,
+                        amountSats: amount,
+                        isClaimed: false,
+                        isClaimable: false,
+                        stateDisplayName: String(localized: "exit_state_claim_in_progress", defaultValue: "Claiming"),
+                        exitStatusJson: statusJson
+                    ))
+                }
+                try context.save()
+                Self.logger.info("[Exit Cache] Snapshotted status for VTXO \(vtxoId.prefix(16))...")
+            } catch {
+                Self.logger.warning("[Exit Cache] Failed to snapshot status: \(error)")
+            }
         }
     }
     
@@ -189,13 +275,11 @@ extension WalletManager {
             dataVersion += 1
         }
 
-        // Save to persistent storage for next app launch
-        await saveExitCacheToDisk()
-        
-        // Also fetch and cache exit statuses for all exits — including
-        // claimed ones, whose movements still need their claim/CPFP
-        // transactions linked (relinkExitMovements reads this cache; without
-        // claimed statuses a completed exit's movement never gets childTxids)
+        // Also fetch and cache exit statuses for all exits still in bark's
+        // list (relinkExitMovements reads this cache to link exit/CPFP
+        // transactions). Claimed exits get purged from the list, so their
+        // claim tx is linked at drain time instead (recordClaimFee) and
+        // their last status survives via the persisted snapshot.
         var newExitStatuses: [String: ExitTransactionStatus] = [:]
         var statusCount = 0
         var totalTxids = 0
@@ -219,6 +303,10 @@ extension WalletManager {
         }
         cachedExitStatuses = newExitStatuses
         exitStatusesCacheTime = Date()
+
+        // Save to persistent storage for next app launch — after the status
+        // fetch, so each entry's snapshot reflects this refresh
+        await saveExitCacheToDisk()
 
         Self.logger.info("[Exit Cache] Cached \(statusCount) exit status(es) with \(totalTxids) total txid(s)")
 
@@ -255,13 +343,27 @@ extension WalletManager {
         return cachedExitStatuses[vtxoId]
     }
 
+    /// Last persisted status snapshot for a VTXO — the only source once
+    /// bark has purged the completed exit
+    func persistedExitStatus(for vtxoId: String) -> ExitTransactionStatus? {
+        guard let context = modelContext else { return nil }
+        let descriptor = FetchDescriptor<PersistentExitCache>(
+            predicate: #Predicate { $0.vtxoId == vtxoId }
+        )
+        return (try? context.fetch(descriptor).first)?.snapshotStatus
+    }
+
     /// Persist the fee of an exit claim transaction, reported by bark when
     /// the claim is created (drainExits). The claim pays into the onchain
     /// wallet from the exit output, so BDK sees it as a pure receive and can
     /// never compute its fee — this is the only fee source for claims.
     /// Marked with subsystemKind "exit_claim" so fee attribution can trust
     /// the fee despite the record having no wallet-funded inputs.
-    func recordClaimFee(claimTxid: String, feeSats: UInt64) {
+    /// Also links the claim record to its exit movement(s) right here —
+    /// bark purges claimed exits from its exit list, so waiting for the
+    /// status-cache relink can miss the claim txid permanently, leaving the
+    /// claim visible as an unexplained onchain receive in the activity list.
+    func recordClaimFee(claimTxid: String, feeSats: UInt64, drainedVtxoIds: [String]) {
         guard let context = modelContext else {
             Self.logger.warning("[Exit Claim] Cannot record claim fee - no model context")
             return
@@ -297,6 +399,12 @@ extension WalletManager {
             record.subsystemKind = "exit_claim"
             try context.save()
             Self.logger.info("[Exit Claim] Recorded claim fee \(feeSats) sats for \(claimTxid.prefix(16))...")
+
+            transactionLinkingService?.linkClaimTransaction(
+                claimTxid: claimTxid,
+                drainedVtxoIds: drainedVtxoIds,
+                context: context
+            )
         } catch {
             Self.logger.error("[Exit Claim] Failed to record claim fee: \(error)")
         }

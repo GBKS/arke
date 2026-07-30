@@ -162,27 +162,27 @@ class ExitProgressionService {
 
     // MARK: - Exit Progression Logic
 
-    /// Check for active exits and progress them if needed
+    /// Check for active exits and progress them if needed.
+    /// The decisions live in ExitProgressionLogic (unit-tested); this
+    /// method fetches state and performs the effects.
     internal func checkAndProgressExits() async {
         let startTime = Date()
         Self.logger.debug("🔍 Starting check")
 
         do {
             // Step 1: Quick check - do we have any exits that need work?
-            // IMPORTANT: Bark's hasPendingExits() only counts exits in the
-            // Start/Processing/AwaitingDelta states - an exit sitting at
-            // Claimable is NOT "pending". Claimable exits must be checked
-            // separately, otherwise they are never auto-claimed (the bark
-            // daemon usually performs the final AwaitingDelta -> Claimable
-            // transition and never claims). Likewise, an exit whose claim tx
-            // has been broadcast (ClaimInProgress) is neither pending nor
-            // claimable, but still needs progressExits to be marked Claimed
-            // once the claim tx confirms.
+            // Three separate probes because bark has no single "needs work"
+            // query — see ExitProgressionLogic.requiredWork for why each
+            // strand matters.
             let hasPending = try await wallet.hasPendingExits()
             var claimableExits = try await wallet.listClaimableExits()
             let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
 
-            if !hasPending && claimableExits.isEmpty && !hasClaimsInProgress {
+            guard let work = ExitProgressionLogic.requiredWork(
+                hasPending: hasPending,
+                claimableCount: claimableExits.count,
+                hasClaimsInProgress: hasClaimsInProgress
+            ) else {
                 Self.logger.debug("✅ No pending, claimable, or claim-in-progress exits - skipping progression")
 
                 // A Claimed exit is none of the above, so this early return
@@ -198,8 +198,7 @@ class ExitProgressionService {
                 return
             }
 
-            let kind = hasPending ? "pending" : (!claimableExits.isEmpty ? "claimable" : "claim-in-progress")
-            Self.logger.info("📋 Found \(kind, privacy: .public) exits - progressing...")
+            Self.logger.info("📋 Found \(work.rawValue, privacy: .public) exits - progressing...")
 
             // Step 2: Progress all exits (broadcasts, fee bumps, state updates)
             let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
@@ -212,12 +211,11 @@ class ExitProgressionService {
                 for (index, status) in statuses.enumerated() {
                     if let error = status.error {
                         Self.logger.warning("[\(index)] VTXO \(status.vtxoId): ❌ Error: \(error, privacy: .public)")
-                        walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)
                     } else {
                         Self.logger.info("[\(index)] VTXO \(status.vtxoId): ✅ Success")
-                        walletManager?.clearExitBlocked(vtxoId: status.vtxoId, phase: .progression)
                     }
                 }
+                apply(ExitProgressionLogic.progressionBlockedUpdates(statuses: statuses))
             }
 
             // Step 3: Check for claimable exits and auto-claim them
@@ -226,19 +224,16 @@ class ExitProgressionService {
 
             if !claimableExits.isEmpty {
                 Self.logger.notice("💰 Found \(claimableExits.count, privacy: .public) claimable exit(s) - auto-claiming...")
+                let claimedVtxoIds = claimableExits.map { $0.vtxoId }
                 do {
                     try await autoClaimExits(claimableExits)
-                    for exit in claimableExits {
-                        walletManager?.clearExitBlocked(vtxoId: exit.vtxoId, phase: .claim)
-                    }
+                    apply(ExitProgressionLogic.claimBlockedUpdates(claimedVtxoIds: claimedVtxoIds, errorMessage: nil))
                 } catch {
                     // A failed claim (e.g. fees currently exceeding the exit's
                     // value) must not abort the sync/cache steps below - record
                     // it per VTXO and retry on the next interval
                     Self.logger.error("❌ Auto-claim failed: \(error.localizedDescription, privacy: .public)")
-                    for exit in claimableExits {
-                        walletManager?.recordExitBlocked(vtxoId: exit.vtxoId, phase: .claim, errorMessage: error.localizedDescription)
-                    }
+                    apply(ExitProgressionLogic.claimBlockedUpdates(claimedVtxoIds: claimedVtxoIds, errorMessage: error.localizedDescription))
                 }
             }
 
@@ -273,40 +268,46 @@ class ExitProgressionService {
         }
     }
 
-    /// Automatically claim exits that have become claimable
+    /// Automatically claim exits that have become claimable.
+    /// The fund-moving steps and their load-bearing order live in
+    /// ExitClaimSequence (unit-tested); this wires in the wallet and the
+    /// persistence effects.
     private func autoClaimExits(_ claimableExits: [ExitVtxo]) async throws {
-        // Get the onchain address to send claimed funds to
-        let address = try await wallet.getOnchainAddress()
         let claimableVtxoIds = claimableExits.map { $0.vtxoId }
-
-        Self.logger.info("Creating claim transaction for \(claimableVtxoIds.count, privacy: .public) VTXO(s)...")
-
-        let feeRateOverride = await exitFeeRateOverride()
-
-        // Step 1: Create the claim transaction
-        let claimTx = try await wallet.drainExits(
-            vtxoIds: claimableVtxoIds,
-            address: address,
-            feeRateSatPerVb: feeRateOverride
-        )
-
         let totalAmount = claimableExits.reduce(0) { $0 + $1.amountSats }
-        Self.logger.notice("✅ Claim transaction created (Amount: \(totalAmount) sats, Fee: \(claimTx.feeSats) sats)")
+        Self.logger.info("Creating claim transaction for \(claimableVtxoIds.count, privacy: .public) VTXO(s) (\(totalAmount) sats)...")
 
-        // Step 2: Extract the raw transaction from PSBT
-        let txHex = try wallet.extractTxFromPsbt(psbtBase64: claimTx.psbtBase64)
+        try await ExitClaimSequence.run(
+            claimableVtxoIds: claimableVtxoIds,
+            wallet: wallet,
+            feeRateSatPerVb: await exitFeeRateOverride(),
+            effects: ExitClaimSequence.Effects(
+                recordClaim: { [weak walletManager] txid, feeSats, vtxoIds in
+                    // Persist the claim fee (bark is the only source for it;
+                    // BDK sees the claim as a pure receive) and link the claim
+                    // to its exit movement(s) while the drained VTXO ids are
+                    // known — bark purges these exits from its list after claim
+                    walletManager?.recordClaimFee(claimTxid: txid, feeSats: feeSats, drainedVtxoIds: vtxoIds)
+                },
+                snapshotStatuses: { [weak walletManager] vtxoIds in
+                    // Now ClaimInProgress, carrying the claim txid — the last
+                    // reliable state before the purge
+                    await walletManager?.snapshotExitStatuses(vtxoIds: vtxoIds)
+                }
+            )
+        )
+    }
 
-        // Step 3: Broadcast the transaction
-        let txid = try await wallet.broadcastTx(txHex: txHex)
-        Self.logger.notice("✅ Claim transaction broadcast! TXID: \(txid)")
-
-        // Persist the claim fee now — bark is the only source for it (BDK
-        // sees the claim as a pure receive and never computes its fee)
-        walletManager?.recordClaimFee(claimTxid: txid, feeSats: claimTx.feeSats)
-
-        // Step 4: Progress exits to sync state (updates to ClaimInProgress)
-        let _ = try await wallet.progressExits(feeRateSatPerVb: feeRateOverride)
-        Self.logger.info("✅ Exit states updated to ClaimInProgress")
+    /// Apply blocked-state bookkeeping decided by ExitProgressionLogic
+    private func apply(_ updates: [ExitProgressionLogic.BlockedUpdate]) {
+        for update in updates {
+            switch update {
+            case .record(let vtxoId, let phase, let message):
+                walletManager?.recordExitBlocked(vtxoId: vtxoId, phase: phase, errorMessage: message)
+            case .clear(let vtxoId, let phase):
+                walletManager?.clearExitBlocked(vtxoId: vtxoId, phase: phase)
+            }
+        }
     }
 
     // MARK: - Manual Operations
@@ -315,24 +316,22 @@ class ExitProgressionService {
     func progressExitsManually() async throws {
         Self.logger.info("🔄 Manual progression requested")
 
-        // See checkAndProgressExits(): Claimable and ClaimInProgress exits
-        // don't count as "pending"
+        // Same gate as checkAndProgressExits() — see
+        // ExitProgressionLogic.requiredWork
         let hasPending = try await wallet.hasPendingExits()
         let claimableExits = try await wallet.listClaimableExits()
         let hasClaimsInProgress = try await wallet.getExitVtxos().contains { $0.isClaimInProgress }
-        guard hasPending || !claimableExits.isEmpty || hasClaimsInProgress else {
+        guard ExitProgressionLogic.requiredWork(
+            hasPending: hasPending,
+            claimableCount: claimableExits.count,
+            hasClaimsInProgress: hasClaimsInProgress
+        ) != nil else {
             Self.logger.info("ℹ️ No pending, claimable, or claim-in-progress exits to progress")
             return
         }
 
         let statuses = try await wallet.progressExits(feeRateSatPerVb: await exitFeeRateOverride())
-        for status in statuses {
-            if let error = status.error {
-                walletManager?.recordExitBlocked(vtxoId: status.vtxoId, phase: .progression, errorMessage: error)
-            } else {
-                walletManager?.clearExitBlocked(vtxoId: status.vtxoId, phase: .progression)
-            }
-        }
+        apply(ExitProgressionLogic.progressionBlockedUpdates(statuses: statuses))
         try await wallet.syncExits()
         walletManager?.invalidateExitCache()
 

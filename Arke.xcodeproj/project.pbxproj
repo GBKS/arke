@@ -315,6 +315,7 @@
 				Services/ContactService/ContactStatistic.swift,
 				Services/DebugLogExporter.swift,
 				Services/DeviceRegistrationService.swift,
+				Services/ExitProgressionLogic.swift,
 				Services/ExitProgressionNotifications.swift,
 				Services/ExitProgressionService.swift,
 				"Services/ExitProgressionService+LiveActivity.swift",

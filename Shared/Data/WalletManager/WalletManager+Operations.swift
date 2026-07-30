@@ -144,12 +144,25 @@ extension WalletManager {
         return try await wallet.pendingExitsTotalSats()
     }
     
-    /// Get detailed status for a specific exit
+    /// Get detailed status for a specific exit.
+    /// Falls back to the persisted snapshot when bark no longer tracks the
+    /// exit — completed exits get purged from bark's exit list, and the
+    /// snapshot is what keeps them inspectable afterwards.
     func getExitStatus(vtxoId: String, includeHistory: Bool, includeTransactions: Bool) async throws -> ExitTransactionStatus? {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
-        return try await wallet.getExitStatus(vtxoId: vtxoId, includeHistory: includeHistory, includeTransactions: includeTransactions)
+        do {
+            if let status = try await wallet.getExitStatus(vtxoId: vtxoId, includeHistory: includeHistory, includeTransactions: includeTransactions) {
+                return status
+            }
+        } catch {
+            if let snapshot = persistedExitStatus(for: vtxoId) {
+                return snapshot
+            }
+            throw error
+        }
+        return persistedExitStatus(for: vtxoId)
     }
     
     /// Get the block height at which all exits will be claimable

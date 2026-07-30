@@ -361,3 +361,221 @@ struct ExitProgressTests {
         #expect(aggregate.totalSteps == 0)
     }
 }
+
+// MARK: - Progression gate (ExitProgressionLogic.requiredWork)
+
+/// bark has no single "needs work" query; the gate combines three probes.
+/// Each single-strand case below is a real bug class: an exit sitting at
+/// Claimable is not "pending" (and the daemon never claims), and a
+/// broadcast claim is neither pending nor claimable but must still be
+/// progressed to Claimed.
+@Suite("Exit Progression Gate")
+struct ExitProgressionGateTests {
+
+    @Test("Nothing to do → no work")
+    func testNoWork() {
+        let work = ExitProgressionLogic.requiredWork(hasPending: false, claimableCount: 0, hasClaimsInProgress: false)
+        #expect(work == nil)
+    }
+
+    @Test("Pending exits alone demand work")
+    func testPendingOnly() {
+        let work = ExitProgressionLogic.requiredWork(hasPending: true, claimableCount: 0, hasClaimsInProgress: false)
+        #expect(work == .pending)
+    }
+
+    @Test("Claimable exits alone demand work — they are not 'pending'")
+    func testClaimableOnly() {
+        let work = ExitProgressionLogic.requiredWork(hasPending: false, claimableCount: 2, hasClaimsInProgress: false)
+        #expect(work == .claimable)
+    }
+
+    @Test("A broadcast claim alone demands work — it must reach Claimed")
+    func testClaimInProgressOnly() {
+        let work = ExitProgressionLogic.requiredWork(hasPending: false, claimableCount: 0, hasClaimsInProgress: true)
+        #expect(work == .claimInProgress)
+    }
+
+    @Test("Pending outranks the other strands in the label")
+    func testPrecedence() {
+        let work = ExitProgressionLogic.requiredWork(hasPending: true, claimableCount: 1, hasClaimsInProgress: true)
+        #expect(work == .pending)
+    }
+}
+
+// MARK: - Blocked-state bookkeeping (ExitProgressionLogic)
+
+@Suite("Exit Blocked Bookkeeping")
+struct ExitBlockedBookkeepingTests {
+
+    @Test("Progression errors record progression-phase blockage per VTXO")
+    func testProgressionErrorsRecorded() {
+        let statuses = [
+            ExitProgressStatus(vtxoId: "vtxo_a", state: "Processing", error: "Insufficient Confirmed Funds"),
+            ExitProgressStatus(vtxoId: "vtxo_b", state: "AwaitingDelta", error: nil)
+        ]
+
+        let updates = ExitProgressionLogic.progressionBlockedUpdates(statuses: statuses)
+
+        #expect(updates == [
+            .record(vtxoId: "vtxo_a", phase: .progression, message: "Insufficient Confirmed Funds"),
+            .clear(vtxoId: "vtxo_b", phase: .progression)
+        ])
+    }
+
+    @Test("Progression success clears progression phase only, never claim")
+    func testProgressionClearsOwnPhase() {
+        let updates = ExitProgressionLogic.progressionBlockedUpdates(statuses: [
+            ExitProgressStatus(vtxoId: "vtxo_a", state: "Claimable", error: nil)
+        ])
+
+        #expect(updates == [.clear(vtxoId: "vtxo_a", phase: .progression)])
+    }
+
+    @Test("A failed claim records claim-phase blockage for every drained VTXO")
+    func testClaimFailureRecordsAll() {
+        let updates = ExitProgressionLogic.claimBlockedUpdates(
+            claimedVtxoIds: ["vtxo_a", "vtxo_b"],
+            errorMessage: "Claim Fee Exceeds Output"
+        )
+
+        #expect(updates == [
+            .record(vtxoId: "vtxo_a", phase: .claim, message: "Claim Fee Exceeds Output"),
+            .record(vtxoId: "vtxo_b", phase: .claim, message: "Claim Fee Exceeds Output")
+        ])
+    }
+
+    @Test("A successful claim clears claim-phase blockage for every drained VTXO")
+    func testClaimSuccessClearsAll() {
+        let updates = ExitProgressionLogic.claimBlockedUpdates(
+            claimedVtxoIds: ["vtxo_a", "vtxo_b"],
+            errorMessage: nil
+        )
+
+        #expect(updates == [
+            .clear(vtxoId: "vtxo_a", phase: .claim),
+            .clear(vtxoId: "vtxo_b", phase: .claim)
+        ])
+    }
+}
+
+// MARK: - Claim sequence order (ExitClaimSequence)
+
+/// Pins the fund-moving order: drain → extract → broadcast → recordClaim →
+/// progressExits → snapshot. recordClaim must run right after broadcast
+/// (bark purges claimed exits, so the drain-time link is the only reliable
+/// one) and the snapshot must run after progressExits so it captures
+/// ClaimInProgress with the claim txid.
+@Suite("Exit Claim Sequence")
+@MainActor
+struct ExitClaimSequenceTests {
+
+    private struct TestError: Swift.Error {}
+
+    /// Records every wallet call and effect in one ordered log
+    final class RecordingClaimWallet: ExitClaimWallet {
+        var log: [String] = []
+        var drainedVtxoIds: [String]?
+        var drainedFeeRate: UInt64??
+        var failBroadcast = false
+
+        func getOnchainAddress() async throws -> String {
+            log.append("getOnchainAddress")
+            return "bcrt1q_test_address"
+        }
+
+        func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
+            log.append("drainExits")
+            drainedVtxoIds = vtxoIds
+            drainedFeeRate = feeRateSatPerVb
+            return ExitClaimTransaction(psbtBase64: "cHNidP_test", feeSats: 3376)
+        }
+
+        func extractTxFromPsbt(psbtBase64: String) throws -> String {
+            log.append("extractTxFromPsbt")
+            return "rawtxhex"
+        }
+
+        func broadcastTx(txHex: String) async throws -> String {
+            log.append("broadcastTx")
+            if failBroadcast { throw TestError() }
+            return "claim_txid_123"
+        }
+
+        func progressExits(feeRateSatPerVb: UInt64?) async throws -> [ExitProgressStatus] {
+            log.append("progressExits")
+            return []
+        }
+    }
+
+    @Test("Steps run in the load-bearing order")
+    func testSequenceOrder() async throws {
+        let wallet = RecordingClaimWallet()
+
+        let txid = try await ExitClaimSequence.run(
+            claimableVtxoIds: ["vtxo_a", "vtxo_b"],
+            wallet: wallet,
+            feeRateSatPerVb: 42,
+            effects: ExitClaimSequence.Effects(
+                recordClaim: { _, _, _ in wallet.log.append("recordClaim") },
+                snapshotStatuses: { _ in wallet.log.append("snapshotStatuses") }
+            )
+        )
+
+        #expect(wallet.log == [
+            "getOnchainAddress",
+            "drainExits",
+            "extractTxFromPsbt",
+            "broadcastTx",
+            "recordClaim",
+            "progressExits",
+            "snapshotStatuses"
+        ])
+        #expect(txid == "claim_txid_123")
+    }
+
+    @Test("recordClaim receives the broadcast txid, bark's fee, and the drained ids")
+    func testRecordClaimPayload() async throws {
+        let wallet = RecordingClaimWallet()
+        var recorded: (txid: String, feeSats: UInt64, vtxoIds: [String])?
+
+        try await ExitClaimSequence.run(
+            claimableVtxoIds: ["vtxo_a", "vtxo_b"],
+            wallet: wallet,
+            feeRateSatPerVb: nil,
+            effects: ExitClaimSequence.Effects(
+                recordClaim: { txid, feeSats, vtxoIds in recorded = (txid, feeSats, vtxoIds) },
+                snapshotStatuses: { _ in }
+            )
+        )
+
+        #expect(recorded?.txid == "claim_txid_123")
+        #expect(recorded?.feeSats == 3376)
+        #expect(recorded?.vtxoIds == ["vtxo_a", "vtxo_b"])
+        // The drain sees the same ids and the fee override passed in
+        #expect(wallet.drainedVtxoIds == ["vtxo_a", "vtxo_b"])
+        #expect(wallet.drainedFeeRate == .some(nil))
+    }
+
+    @Test("Broadcast failure stops the sequence before any persistence effect")
+    func testBroadcastFailureRunsNoEffects() async {
+        let wallet = RecordingClaimWallet()
+        wallet.failBroadcast = true
+        var effectsRan = false
+
+        await #expect(throws: TestError.self) {
+            try await ExitClaimSequence.run(
+                claimableVtxoIds: ["vtxo_a"],
+                wallet: wallet,
+                feeRateSatPerVb: nil,
+                effects: ExitClaimSequence.Effects(
+                    recordClaim: { _, _, _ in effectsRan = true },
+                    snapshotStatuses: { _ in effectsRan = true }
+                )
+            )
+        }
+
+        #expect(!effectsRan)
+        #expect(wallet.log == ["getOnchainAddress", "drainExits", "extractTxFromPsbt", "broadcastTx"])
+    }
+}
