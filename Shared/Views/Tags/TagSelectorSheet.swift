@@ -54,6 +54,10 @@ struct TagSelectorSheet: View {
             }
         }
         .navigationTitle("button_assign_tags")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .presentationDetents([.medium])
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button {
