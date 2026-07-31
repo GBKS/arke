@@ -254,6 +254,14 @@ class WalletDataCleanupService {
         summary.transactionTagAssignmentsDeleted = tagAssignmentCount
         summary.transactionContactAssignmentsDeleted = contactAssignmentCount
         
+        // 1b. Delete exit history — PersistentExitCache is merge-saved and
+        // never pruned by refreshes (it preserves exit history past bark's
+        // purge), so wallet deletion is the only place it gets cleared;
+        // leftovers would show the OLD wallet's completed exits in the
+        // X-Ray of a newly created/imported wallet
+        updateProgress(.deletingTransactions, message: "Deleting exit history...")
+        summary.exitHistoryDeleted = try await deleteExitHistory(modelContext: modelContext)
+
         // 2. Delete tags
         updateProgress(.deletingTags, message: "Deleting tags...")
         summary.tagsDeleted = try await deleteTags(modelContext: modelContext)
@@ -340,6 +348,21 @@ class WalletDataCleanupService {
         return (transactions.count, tagAssignmentCount, contactAssignmentCount)
     }
     
+    private func deleteExitHistory(modelContext: ModelContext) async throws -> Int {
+        let descriptor = FetchDescriptor<PersistentExitCache>()
+        let entries = try modelContext.fetch(descriptor)
+
+        for entry in entries {
+            modelContext.delete(entry)
+        }
+
+        #if DEBUG
+        print("🗑️ [WalletDataCleanupService] Queued \(entries.count) exit history entries for deletion")
+        #endif
+
+        return entries.count
+    }
+
     private func deleteTags(modelContext: ModelContext) async throws -> Int {
         let descriptor = FetchDescriptor<PersistentTag>()
         let tags = try modelContext.fetch(descriptor)
@@ -570,6 +593,7 @@ struct DeletionSummary: Codable {
     var transactionsDeleted: Int = 0
     var transactionTagAssignmentsDeleted: Int = 0
     var transactionContactAssignmentsDeleted: Int = 0
+    var exitHistoryDeleted: Int = 0
     var tagsDeleted: Int = 0
     var contactsDeleted: Int = 0
     var contactAddressesDeleted: Int = 0
@@ -583,10 +607,11 @@ struct DeletionSummary: Codable {
     let timestamp: Date
     
     var totalItemsDeleted: Int {
-        transactionsDeleted + 
-        transactionTagAssignmentsDeleted + 
-        transactionContactAssignmentsDeleted + 
-        tagsDeleted + 
+        transactionsDeleted +
+        transactionTagAssignmentsDeleted +
+        transactionContactAssignmentsDeleted +
+        exitHistoryDeleted +
+        tagsDeleted +
         contactsDeleted + 
         contactAddressesDeleted + 
         balanceCacheDeleted + 
@@ -612,6 +637,7 @@ struct DeletionSummary: Codable {
         transactionsDeleted += other.transactionsDeleted
         transactionTagAssignmentsDeleted += other.transactionTagAssignmentsDeleted
         transactionContactAssignmentsDeleted += other.transactionContactAssignmentsDeleted
+        exitHistoryDeleted += other.exitHistoryDeleted
         tagsDeleted += other.tagsDeleted
         contactsDeleted += other.contactsDeleted
         contactAddressesDeleted += other.contactAddressesDeleted

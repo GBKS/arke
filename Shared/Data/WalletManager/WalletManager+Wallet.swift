@@ -496,14 +496,18 @@ extension WalletManager {
         await transactionService?.clearTransactionModels()
         transactionService?.error = nil
         transactionService?.hasLoadedTransactions = false
-        
+
         // Reset address service state
         addressService?.arkAddress = ""
         addressService?.onchainAddress = ""
         addressService?.error = nil
-        
+
         // Clear persisted balance data (full deletion for wallet removal)
         balanceService?.resetBalancesAndDeletePersisted()
+
+        // Clear in-memory exit state (persistent exit history is cleared by
+        // WalletDataCleanupService during wallet deletion)
+        exitStore.clear()
         
         Self.logger.info("🔄 All manager and service state reset")
     }

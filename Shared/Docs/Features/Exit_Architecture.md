@@ -112,9 +112,38 @@ Untested by design choice: `ExitProgressionService`'s shell (timer/Live
 Activity wiring) — its decisions and sequences are the extracted, tested
 parts.
 
-## Fragility to keep in mind
+## Fragility and accepted trade-offs
 
-`ExitStatusParser` reverse-engineers Rust `Debug` strings; every bark
-release can silently change the format (it did in 0.11). The parser
-defaults to `.unparsed` rather than failing. The real fix is typed exit
-states over the FFI — feedback doc §1.1.
+- **The parser is sand.** `ExitStatusParser` reverse-engineers Rust `Debug`
+  strings; every bark release can silently change the format (it did in
+  0.11). The parser defaults to `.unparsed` rather than failing. The real
+  fix is typed exit states over the FFI — feedback doc §1.1.
+- **Relink cost grows with history.** Each relink resolves a status per
+  exit movement; for completed exits that's a per-id lookup/snapshot
+  decode on every app start and refresh, O(all exits ever) with no
+  retirement. Cheap per call; if it ever matters, add a "fully linked"
+  flag per movement and skip terminal ones.
+- **`getExitStatus` silently serves snapshots.** Callers can't distinguish
+  live bark data from a frozen snapshot (which may be stuck at
+  ClaimInProgress if the purge beat the last refresh), and FFI errors are
+  masked when a snapshot exists. Fine for display/linking/fees; do NOT use
+  it for live decisions ("is this claimable now?") — split into live vs.
+  history-tolerant variants if that need appears.
+- **`isClaimed` is inferred for vanished exits.** An entry that disappears
+  from bark's list while ClaimInProgress is finalized as claimed. A
+  transient list dropout would mislabel it; it self-corrects if the exit
+  reappears, silently stays wrong if not. No such dropout observed.
+- **Drain-time capture trusts the broadcast claim txid.** If bark ever
+  re-bumps/replaces a claim (new txid), the recorded fee and link point at
+  a tx that never confirms — a hidden record whose fee still counts in
+  totals. bark doesn't replace claims today; predates these changes.
+- **Healing is launch/refresh-scoped.** Once all exits are terminal, the
+  5-minute check early-returns, so a late-appearing orphan record stays
+  visible until the next app start or wallet refresh relinks it. If
+  same-session healing is ever wanted, implement the exit case of
+  `establishLinksForOnchain` so new onchain records trigger their own
+  relink.
+- **Exit history intentionally outlives refreshes, not the wallet.**
+  Refreshes never prune `PersistentExitCache`; wallet deletion clears it
+  (`WalletDataCleanupService.deleteExitHistory`) — without that, a new
+  wallet would show the previous wallet's completed exits.

@@ -77,6 +77,16 @@ final class ExitStore {
         activeExits.filter { $0.isClaimable }
     }
 
+    /// Reset in-memory state, e.g. after wallet deletion. The persistent
+    /// history is cleared separately (WalletDataCleanupService).
+    func clear() {
+        exitVtxos = []
+        exitStatuses = [:]
+        blockedInfoByVtxoId = [:]
+        lastRefreshedAt = nil
+        onStateChange?()
+    }
+
     // MARK: Disk cache
 
     /// Load exit cache metadata from persistent storage.
