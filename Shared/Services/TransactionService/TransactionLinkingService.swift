@@ -31,8 +31,30 @@ class TransactionLinkingService {
     // MARK: - Public Methods
     
     /// Re-link all unlinked or partially linked exit movements
-    /// Called when exit status cache is refreshed to pick up new transactions
-    func relinkExitMovements(context: ModelContext) async {
+    /// Called when exit status cache is refreshed to pick up new transactions.
+    ///
+    /// `statusFor` resolves a VTXO's exit status; tests inject it. The
+    /// default tries the in-memory cache and falls back to
+    /// getExitStatus(vtxoId:) — bark purges completed exits from its exit
+    /// list (which scopes the in-memory cache) but per-id lookups and the
+    /// persisted snapshots still answer. Without the fallback, an onchain
+    /// record that appears after the purge (e.g. a late CPFP re-bump synced
+    /// by BDK) could never be linked (field case 2026-07-30, txid 0dc9ffa0…).
+    func relinkExitMovements(
+        context: ModelContext,
+        statusFor: ((String) async -> ExitTransactionStatus?)? = nil
+    ) async {
+        let statusFor = statusFor ?? { [weak walletManager] vtxoId in
+            if let cached = walletManager?.getCachedExitStatus(for: vtxoId) {
+                return cached
+            }
+            return try? await walletManager?.getExitStatus(
+                vtxoId: vtxoId,
+                includeHistory: true,
+                includeTransactions: true
+            )
+        }
+
         do {
             // Find all exit movements (linked or unlinked)
             let descriptor = FetchDescriptor<PersistentTransaction>(
@@ -66,7 +88,7 @@ class TransactionLinkingService {
                 
                 var allTxids = Set<String>()
                 for vtxoId in vtxoIds {
-                    if let status = walletManager?.getCachedExitStatus(for: vtxoId) {
+                    if let status = await statusFor(vtxoId) {
                         // User-funded only: CPFP children a third party created
                         // by spending our anchor must not be linked into the
                         // user's history or fee totals
@@ -74,7 +96,7 @@ class TransactionLinkingService {
                         Self.logger.debug("      📋 VTXO \(vtxoId.prefix(16))... has \(txids.count) user-funded txid(s): \(txids.map { $0.prefix(16) }.joined(separator: ", "))")
                         allTxids.formUnion(txids)
                     } else {
-                        Self.logger.warning("      ⚠️ No cached exit status for VTXO \(vtxoId.prefix(16))...")
+                        Self.logger.warning("      ⚠️ No exit status available for VTXO \(vtxoId.prefix(16))...")
                     }
                 }
                 

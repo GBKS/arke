@@ -480,6 +480,60 @@ struct ExitClaimLinkingTests {
 
         #expect(movement.childTxids == nil)
     }
+
+    @Test("Relink links a late CPFP record from the status resolver, not just the cache")
+    func testRelinkUsesStatusResolverForPurgedExit() async throws {
+        // Field case 2026-07-30 (txid 0dc9ffa0…): a CPFP re-bump's wallet
+        // record appeared only after bark purged the completed exit from its
+        // list, so the in-memory status cache could never link it. The
+        // relink must work from whatever the resolver provides (per-id
+        // lookup / persisted snapshot). cpfp4 in the fixture has exactly the
+        // field shape: AwaitingConfirmation, wallet origin, never confirmed.
+        let container = try createTestContainer()
+        let context = container.mainContext
+
+        let movement = insertExitMovement(txid: "movement_1", movementId: 1, vtxoId: "\(Fixture.tx4):0", context: context)
+
+        let lateCpfp = PersistentTransaction(
+            txid: "onchain_\(Fixture.cpfp4)",
+            movementId: nil,
+            type: .sent,
+            amount: 0,
+            date: Date(),
+            status: .confirmed,
+            address: nil,
+            subsystemCategory: "onchain_transaction"
+        )
+        lateCpfp.sourceType = "onchain"
+        context.insert(lateCpfp)
+
+        // A third party's CPFP record must stay unlinked even when present
+        let thirdPartyCpfp = PersistentTransaction(
+            txid: "onchain_\(Fixture.cpfp3)",
+            movementId: nil,
+            type: .received,
+            amount: 0,
+            date: Date(),
+            status: .confirmed,
+            address: nil,
+            subsystemCategory: "onchain_transaction"
+        )
+        thirdPartyCpfp.sourceType = "onchain"
+        context.insert(thirdPartyCpfp)
+        try context.save()
+
+        // No walletManager, empty cache — the resolver is the only source
+        await TransactionLinkingService().relinkExitMovements(
+            context: context,
+            statusFor: { vtxoId in
+                vtxoId == "\(Fixture.tx4):0" ? Fixture.status() : nil
+            }
+        )
+
+        #expect(movement.childTxids == ["onchain_\(Fixture.cpfp4)"])
+        #expect(lateCpfp.parentTxid == "movement_1")
+        #expect(thirdPartyCpfp.parentTxid == nil)
+    }
 }
 
 // MARK: - Exit status snapshot round-trip

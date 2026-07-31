@@ -45,7 +45,10 @@ user-visible changes through `onStateChange` (bumps `dataVersion`).
 
 Once an exit completes, bark removes it from `getExitVtxos()` — fast enough
 that polling can miss ClaimInProgress/Claimed entirely (observed on device
-2026-07-30; feedback doc §1.5). Everything below follows from this:
+2026-07-30; feedback doc §1.5). Per-id `getExitStatus(vtxoId:)` appears to
+keep answering, so the loss is enumeration — but the in-memory status cache
+is scoped to the list, so anything reading only that cache goes blind after
+the purge. Everything below follows from this:
 
 - **Capture at drain time.** The moment `drainExits` returns,
   `ExitClaimSequence` records the claim fee, links the claim tx to its exit
@@ -56,6 +59,11 @@ that polling can miss ClaimInProgress/Claimed entirely (observed on device
   ClaimInProgress entry is finalized as claimed.
 - **`getExitStatus` falls back to the persisted snapshot**, which keeps
   completed exits inspectable (X-Ray completed section, exit detail sheet).
+- **The movement relink resolves statuses with the same fallback** (cache →
+  per-id lookup/snapshot), so an onchain record that appears only after the
+  purge — e.g. a late CPFP re-bump synced by BDK — still gets linked on the
+  next relink instead of stranding in the activity list (field case
+  2026-07-30, txid 0dc9ffa0…).
 
 Cancelled exits (`VtxoAlreadySpent`) are the opposite: they linger in
 bark's list forever, so "active" filtering must use `isInFlight`.

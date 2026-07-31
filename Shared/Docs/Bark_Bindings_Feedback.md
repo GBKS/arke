@@ -160,11 +160,14 @@ already-finished movements.
 ### 1.5 Claimed exits are purged from `getExitVtxos()` with no history API
 
 Found in the field (2026-07-30). Once an exit completes, it disappears from
-`getExitVtxos()` — and with it, any way to retrieve its status/history over
-the FFI. (Cancelled `VtxoAlreadySpent` exits, by contrast, linger in the
-list — see 1.4.) The purge is quick enough that a client polling on any
-reasonable interval can miss the `ClaimInProgress`/`Claimed` states
-entirely.
+`getExitVtxos()`. Per-id `getExitStatus(vtxoId:)` appears to keep answering
+with full history afterwards (we retrieved complete `Claimed` histories for
+purged exits — though our own snapshot fallback makes it hard to attribute
+with certainty), so the loss is **enumeration**: nothing lists completed
+exits, and a client that didn't remember the vtxoIds itself can never ask.
+(Cancelled `VtxoAlreadySpent` exits, by contrast, linger in the list — see
+1.4.) The purge is quick enough that a client polling on any reasonable
+interval can miss the `ClaimInProgress`/`Claimed` states entirely.
 
 That cost us correctness: our transaction linking extracted the claim txid
 from exit statuses, so when both exits of a batch claim were purged before
@@ -180,11 +183,11 @@ each exit's final status into our own persistence before bark forgets it
 (`Shared/Data/WalletManager/WalletManager+Exits.swift`,
 `Shared/Services/TransactionService/TransactionLinkingService.swift`).
 
-**Ask:** keep completed exits queryable — either retain them in
-`getExitVtxos()` with their terminal state (mirroring cancelled ones), keep
-`getExitStatus(vtxoId:)` answering for completed exits, or add an explicit
-exit-history API. At minimum, document when the purge happens so clients
-know the capture window.
+**Ask:** keep completed exits enumerable — either retain them in
+`getExitVtxos()` with their terminal state (mirroring cancelled ones) or
+add an explicit exit-history listing. Also confirm/document that
+`getExitStatus(vtxoId:)` is guaranteed to answer for completed exits and
+when exactly the list purge happens, so clients know the capture window.
 
 ---
 
