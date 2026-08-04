@@ -2,7 +2,7 @@
 
 **Audience:** Second team (bark + bark-ffi-bindings)
 **From:** Arké — iOS/macOS wallet built on the Swift bindings
-**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3
+**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3 and notes through bindings 0.13.0
 **Date:** July 2026
 
 Arké exercises nearly the entire binding surface: arkoor sends, boarding,
@@ -342,6 +342,44 @@ deleting the datadir.
 
 ---
 
+## Roadmap question — seed-only recovery and the 0.13 additions
+
+Added 2026-08-04, after adopting bindings 0.13.0.
+
+0.13 added `Wallet.vtxoEncoded(vtxoId:)` and relaxed `importVtxo` to accept
+the hex it produces — the same hex bark-rest's `GET /vtxos/{id}/encoded`
+serves. To us this reads as the two ends of the seed-only recovery pipe we
+discussed with you in April 2026: the server-side recovery mailbox already
+stores round/board VTXO IDs, arkoor-received VTXOs already auto-recover via
+the main mailbox, and full VTXO data can now round-trip by ID without
+transcoding.
+
+What we still can't assemble client-side is the middle step: nothing in the
+FFI reads the recovery mailbox (only `mailboxIdentifier()` /
+`mailboxAuthorization()` are exposed), so a restored-from-seed wallet has no
+way to learn its round/board VTXO IDs. (`vtxoEncoded` itself is local-db-
+backed, so on a fresh wallet it can't be the retrieval half — we read it as
+the export/donor half, e.g. a healthy linked device serving a recovering
+one.)
+
+**Question:** is the recovery-mailbox reader planned to surface via FFI
+(e.g. `recoveryVtxoIds()`), or will `sync()` eventually process the recovery
+mailbox automatically the way it does the main mailbox? The answer decides
+whether we build a recovery step into our wallet-import flow or nothing at
+all — and until we know, we're deliberately **not** building client-side
+VTXO backup to avoid duplicating it.
+
+Two adjacent things worth documenting either way:
+
+- Import validation semantics: does `importVtxo` verify the genesis chain
+  against the on-chain anchor, and is importing an already-spent VTXO safe
+  (i.e. guaranteed to reconcile as spent on next sync rather than surface as
+  claimable)?
+- Recovery-mailbox retention: how long do IDs stay retrievable (until VTXO
+  expiry?), given the purge behavior we've seen elsewhere (see 1.5).
+
+---
+
 ## Release process
 
 0.10 → 0.11 landed the create/open restructure, `Config.network` removal,
@@ -386,3 +424,4 @@ pattern we're asking you to extend everywhere:
 | 10 | Upstream migration notes per release | Hand-written binding-diff docs |
 | 11 | Stop re-finishing cancelled exit movements (`completed_at` churn) | Date-freeze workaround in transaction upsert |
 | 12 | Keep completed exits queryable (or an exit-history API) | Drain-time status snapshots + claim-tx capture window |
+| 13 | Recovery-mailbox reader via FFI (or auto-processing in `sync()`) | Any need for client-side VTXO backup |

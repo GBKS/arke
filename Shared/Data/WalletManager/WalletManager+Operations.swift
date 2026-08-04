@@ -344,7 +344,7 @@ extension WalletManager {
     }
     
     /// Import a serialized VTXO into the wallet
-    /// - Parameter vtxoBase64: Base64-encoded serialized VTXO
+    /// - Parameter vtxoBase64: Serialized VTXO, hex or base64-encoded
     func importVtxo(vtxoBase64: String) async throws {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")

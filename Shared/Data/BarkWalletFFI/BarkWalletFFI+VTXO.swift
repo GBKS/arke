@@ -441,6 +441,28 @@ extension BarkWalletFFI {
         }
     }
     
+    func vtxoEncoded(vtxoId: String) async throws -> String {
+        // Hex-encoded serialization of the full VTXO (genesis chain included)
+
+        if isPreview {
+            return "deadbeef"
+        }
+
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        do {
+            return try await wallet.vtxoEncoded(vtxoId: vtxoId)
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error encoding VTXO: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to encode VTXO: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error encoding VTXO: \(error)")
+            throw error
+        }
+    }
+
     func importVtxo(vtxoBase64: String) async throws {
         // Import a serialized VTXO into the wallet
         
