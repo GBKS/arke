@@ -692,7 +692,7 @@ The implementation is broken into phases to minimize risk and allow for independ
 - ✅ No regressions in send flow behavior
 - ✅ Empty metadata section placeholder in place
 - ✅ Code is cleaner and more maintainable (40+ lines → 15 lines in SendModalView)
-- ✅ Easy rollback possible (old views still exist: SendModalSendingView, SendModalSuccessView)
+- ✅ Easy rollback possible (old views SendModalSendingView and SendModalSuccessView were kept temporarily, then removed 2026-08-04 once the unified view was confirmed stable)
 
 **Key Benefits**:
 - **Structural risk isolated**: Unified view proven to work before adding features

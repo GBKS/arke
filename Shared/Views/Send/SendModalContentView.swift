@@ -14,6 +14,10 @@ struct SendModalContentView: View {
     @Binding var pendingMetadata: PendingPaymentMetadata?
     let onDismiss: () -> Void
     let onDismissEntireView: (() -> Void)?
+
+    // Picked once per modal presentation so the character stays
+    // consistent across the sending/success/error states
+    @State private var videoPair = ReactionVideoPair.random()
     
     var body: some View {
         VStack(spacing: 25) {
@@ -96,29 +100,23 @@ struct SendModalContentView: View {
     
     @ViewBuilder
     private var videoBackground: some View {
+        #if os(iOS)
+        LoopingVideoPlayer_iOS.aspectFill(videoName: stateVideoName, videoExtension: "mp4")
+        #elseif os(macOS)
+        LoopingVideoPlayer.aspectFill(videoName: stateVideoName, videoExtension: "mp4")
+        #endif
+    }
+
+    private var stateVideoName: String {
         switch state {
         case .sending:
-            #if os(iOS)
-            LoopingVideoPlayer_iOS.aspectFill(videoName: "puppy-idle", videoExtension: "mp4")
-            #elseif os(macOS)
-            LoopingVideoPlayer.aspectFill(videoName: "puppy-idle", videoExtension: "mp4")
-            #endif
-            
+            return videoPair.idle
         case .success:
-            #if os(iOS)
-            LoopingVideoPlayer_iOS.aspectFill(videoName: "puppy-thumbs-up", videoExtension: "mp4")
-            #elseif os(macOS)
-            LoopingVideoPlayer.aspectFill(videoName: "puppy-thumbs-up", videoExtension: "mp4")
-            #endif
-            
+            return videoPair.thumbsUp
         case .error:
             // For now, use the same video as sending state
             // Phase 3b will add an error-specific video
-            #if os(iOS)
-            LoopingVideoPlayer_iOS.aspectFill(videoName: "puppy-idle", videoExtension: "mp4")
-            #elseif os(macOS)
-            LoopingVideoPlayer.aspectFill(videoName: "puppy-idle", videoExtension: "mp4")
-            #endif
+            return videoPair.idle
         }
     }
     

@@ -19,6 +19,10 @@ struct BoardingModalView: View {
     let manager: WalletManager
     @Environment(\.dismiss) private var dismiss
     @State private var state: BoardingModalState = .form
+
+    // Picked once per modal presentation so the character stays
+    // consistent across the boarding/success states
+    @State private var videoPair = ReactionVideoPair.random()
     
     var body: some View {
         ZStack {
@@ -40,13 +44,13 @@ struct BoardingModalView: View {
                     removal: .move(edge: .leading)
                 ))
             case .boarding:
-                BoardingModalBoardingView()
+                BoardingModalBoardingView(videoName: videoPair.idle)
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing),
                         removal: .move(edge: .leading)
                     ))
             case .success:
-                BoardingModalSuccessView {
+                BoardingModalSuccessView(videoName: videoPair.thumbsUp) {
                     dismiss()
                 }
                 .transition(.asymmetric(

@@ -8,15 +8,17 @@
 import SwiftUI
 
 struct BoardingModalBoardingView: View {
+    let videoName: String
+
     var body: some View {
         VStack(spacing: 25) {
             #if os(iOS)
-            LoopingVideoPlayer_iOS.aspectFill(videoName: "xerxes", videoExtension: "mp4")
+            LoopingVideoPlayer_iOS.aspectFill(videoName: videoName, videoExtension: "mp4")
                 .frame(maxWidth: .infinity, maxHeight: 250)
                 .cornerRadius(25)
                 .clipped()
             #elseif os(macOS)
-            LoopingVideoPlayer.aspectFill(videoName: "xerxes", videoExtension: "mp4")
+            LoopingVideoPlayer.aspectFill(videoName: videoName, videoExtension: "mp4")
                 .frame(maxWidth: .infinity, maxHeight: 250)
                 .cornerRadius(15)
                 .clipped()

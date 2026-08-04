@@ -35,7 +35,7 @@ struct LightningInvoiceSheet_iOS: View {
     @State private var subscriptionId: UUID?
     @State private var paymentHash: String?
     @State private var paymentReceived = false
-    @State private var successVideoName: String = Bool.random() ? "chilean-lad-thumbs-up-small" : "nigerian-lady-thumbs-up-small"
+    @State private var successVideoName: String = ReactionVideoPair.random().thumbsUp
     
     // Notification state
     @AppStorage(UserDefaults.notificationsEnabledKey)
