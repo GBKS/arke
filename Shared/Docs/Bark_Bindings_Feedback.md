@@ -2,7 +2,7 @@
 
 **Audience:** Second team (bark + bark-ffi-bindings)
 **From:** Arké — iOS/macOS wallet built on the Swift bindings
-**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3 and notes through bindings 0.13.0
+**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3 and notes through bindings 0.15.0 (bark v0.6.0)
 **Date:** July 2026
 
 Arké exercises nearly the entire binding surface: arkoor sends, boarding,
@@ -188,6 +188,57 @@ each exit's final status into our own persistence before bark forgets it
 add an explicit exit-history listing. Also confirm/document that
 `getExitStatus(vtxoId:)` is guaranteed to answer for completed exits and
 when exactly the list purge happens, so clients know the capture window.
+
+### 1.6 A delegated round that fails client validation is a permanent poison pill
+
+Found in the field (2026-08-05), on signet, across the bindings 0.14.0 →
+0.15.0 / bark 0.5.0 → 0.6.0 emergency upgrade. A delegated refresh round
+(funding txid
+`ed11b285912907259547789326ce4b2857ae1ce66782df75571e9ddad9965892`,
+7 input VTXOs) was submitted before we rebuilt onto 0.6.0. The replacement
+VTXO the server returned fails client-side validation, on every sync,
+forever:
+
+```
+error progressing delegated round: new VTXOs received from server don't match
+our participation: new VTXO 1cc30c9c82a3dab7ffeb7ec231addb472593d28c71d310428b1a845393f6f23d:0
+failed validation: error verifying one of the genesis transitions
+(idx=0/2 type=cosigned): invalid signature
+```
+
+The round straddled the 0.5 → 0.6 boundary (participation signed by the old
+client and/or against an upgraded server), which we suspect is the origin of
+the cosign signature disagreement — but we can't tell from the client side,
+and upgrading to 0.6.0 does not repair it: the stored participation in
+`db.sqlite` is re-validated and re-rejected on every sync.
+
+Three compounding problems:
+
+- **The funds are deadlocked.** The server considers the 7 input VTXOs spent
+  by this round — a fresh refresh attempt is rejected with
+  `unusable inputs: […]: bad user input: input vtxo(s) unusable` — while the
+  client refuses the replacement. The inputs have since crossed their refresh
+  threshold (`is expired, must be refreshed`), so ~30,000 sats are now
+  unrefreshable on one side and unacceptable on the other.
+- **There is no escape hatch.** Nothing in the FFI can abandon, discard, or
+  re-fetch a pending round. The poisoned state lives in the wallet DB
+  permanently; the only client-side remedy we can see is deleting the datadir.
+- **Retry churn.** `progressPendingRounds` and `sync` retry the round on
+  every cycle and fail identically; the associated movement sits in `pending`
+  forever, and the wallet does redundant validation work on every sync.
+
+**Ask:** three things, any of which helps:
+
+1. Treat repeated deterministic validation failure as terminal — surface the
+   round (and its movement) as *failed* with the validation error attached,
+   instead of retrying silently forever.
+2. An explicit recovery API: abandon/discard a pending round, or re-request
+   the round result from the server so a fixed client can re-validate fresh
+   data rather than stored participation.
+3. If this is a known 0.5 → 0.6 cross-version artifact, document the recovery
+   path for rounds created across the boundary — including how/when the
+   server releases the inputs of a round whose result the client never
+   accepted.
 
 ---
 
@@ -425,3 +476,4 @@ pattern we're asking you to extend everywhere:
 | 11 | Stop re-finishing cancelled exit movements (`completed_at` churn) | Date-freeze workaround in transaction upsert |
 | 12 | Keep completed exits queryable (or an exit-history API) | Drain-time status snapshots + claim-tx capture window |
 | 13 | Recovery-mailbox reader via FFI (or auto-processing in `sync()`) | Any need for client-side VTXO backup |
+| 14 | Terminal failure + abandon API for rounds that fail validation | Nothing yet — the affected funds are simply stuck |
