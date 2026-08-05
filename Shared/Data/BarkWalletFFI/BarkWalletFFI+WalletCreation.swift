@@ -52,7 +52,7 @@ extension BarkWalletFFI {
             }
         }
         
-        // Generate a new mnemonic (24 words)
+        // Generate a new mnemonic (12 words)
         let mnemonic = try generateMnemonic()
         
         // DEBUG: Print mnemonic
@@ -186,7 +186,10 @@ extension BarkWalletFFI {
                 args: WalletOpenArgs(
                     datadir: datadir,
                     onchain: builtInWallet,
-                    createIfNotExists: true
+                    createIfNotExists: true,
+                    // Freshly generated seed - nothing to recover, and the scan
+                    // would block creation on a network round-trip.
+                    skipRecovery: true
                 )
             )
             
@@ -490,9 +493,12 @@ extension BarkWalletFFI {
                         datadir: datadir,
                         onchain: builtInWallet,
                         createIfNotExists: true
+                        // skipRecovery stays false: this is a seed import, so the
+                        // recovery mailbox scan is what restores existing VTXOs.
                     )
                 )
                 print("✅ New wallet created successfully")
+                logRecoveryReport(for: restoredWallet)
             }
             
             self.wallet = restoredWallet
@@ -549,8 +555,34 @@ extension BarkWalletFFI {
         }
     }
     
+    // MARK: - Recovery Report
+
+    /// Logs the seed-recovery scan result bark produces on the open that creates
+    /// the wallet locally (bark 0.14). A nil report means the scan failed or was
+    /// skipped, so an empty result does NOT prove no funds are missing.
+    private func logRecoveryReport(for wallet: Wallet) {
+        guard let report = wallet.recoveryReport() else {
+            Self.logger.warning("Recovery scan produced no report (scan failed or was skipped)")
+            return
+        }
+        Self.logger.info("""
+            Recovery scan complete=\(report.isComplete): \
+            recovered \(report.recovered.vtxoIds.count) (\(report.recovered.totalSats) sats), \
+            skipped \(report.skipped.vtxoIds.count), \
+            foreign \(report.foreign.vtxoIds.count), \
+            failed \(report.failed.vtxoIds.count), \
+            exited \(report.exited.vtxoIds.count)
+            """)
+        if !report.failed.vtxoIds.isEmpty {
+            Self.logger.warning("Recovery scan failed VTXO ids (retryable via recoverVtxos): \(report.failed.vtxoIds)")
+        }
+        if !report.foreign.vtxoIds.isEmpty {
+            Self.logger.warning("Recovery scan foreign VTXO ids (possibly beyond gap limit): \(report.foreign.vtxoIds)")
+        }
+    }
+
     // MARK: - Wallet Deletion
-    
+
     func deleteWallet() async throws -> String {
         // Preview mode handling
         if isPreview {

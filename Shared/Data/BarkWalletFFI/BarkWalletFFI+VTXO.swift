@@ -379,7 +379,7 @@ extension BarkWalletFFI {
         // Get a specific VTXO by ID
         
         if isPreview {
-            return Vtxo(id: vtxoId, amountSats: 10000, expiryHeight: 0, kind: "mock", state: "spendable", exitDepth: 1, exitTxWeightWu: 500)
+            return Vtxo(id: vtxoId, amountSats: 10000, expiryHeight: 0, kind: "mock", state: "spendable", exitDepth: 1, exitTxWeightWu: 500, registered: true)
         }
         
         guard let wallet = wallet else {

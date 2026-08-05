@@ -155,7 +155,7 @@ extension BarkWalletFFI {
                 switch receiveStatus.state {
                 case "htlcs-ready":
                     status += "  Status: Pending (ready to claim)"
-                case "preimage-revealed", "settled":
+                case "preimage-revealed", "delivering", "settled":
                     status += "  Status: Claimed"
                 default: // "awaiting-payment"
                     status += "  Status: Waiting for payment"
@@ -205,7 +205,7 @@ extension BarkWalletFFI {
                 let status: String
                 switch receive.state {
                 case "htlcs-ready": status = "ready_to_claim"
-                case "preimage-revealed", "settled": status = "claimed"
+                case "preimage-revealed", "delivering", "settled": status = "claimed"
                 default: status = "waiting" // "awaiting-payment"
                 }
                 return [
@@ -493,7 +493,8 @@ extension BarkWalletFFI {
                 amountSats: 0,
                 state: "awaiting-payment",
                 paymentPreimage: nil,
-                settledAt: nil
+                settledAt: nil,
+                claimDestination: nil
             )
         }
 
@@ -523,7 +524,8 @@ extension BarkWalletFFI {
                 amountSats: 0,
                 state: "settled",
                 paymentPreimage: nil,
-                settledAt: Int64(Date().timeIntervalSince1970)
+                settledAt: Int64(Date().timeIntervalSince1970),
+                claimDestination: nil
             )
         }
 

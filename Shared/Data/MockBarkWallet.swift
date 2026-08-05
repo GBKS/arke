@@ -448,7 +448,8 @@ class MockBarkWallet: BarkWalletProtocol {
                 kind: "pubkey",
                 state: "spendable",
                 exitDepth: 1,
-                exitTxWeightWu: 500
+                exitTxWeightWu: 500,
+                registered: true
             ),
             Vtxo(
                 id: "def456abc123789012345678901234567890abcdef123456789012345678901234:1",
@@ -457,7 +458,8 @@ class MockBarkWallet: BarkWalletProtocol {
                 kind: "pubkey",
                 state: "spent",
                 exitDepth: 2,
-                exitTxWeightWu: 750
+                exitTxWeightWu: 750,
+                registered: true
             )
         ]
     }
@@ -473,11 +475,12 @@ class MockBarkWallet: BarkWalletProtocol {
                 kind: "pubkey",
                 state: "spendable",
                 exitDepth: 1,
-                exitTxWeightWu: 500
+                exitTxWeightWu: 500,
+                registered: true
             )
         ]
     }
-    
+
     func getExpiringVtxos(thresholdBlocks: UInt32) async throws -> [Vtxo] {
         try await Task.sleep(nanoseconds: 500_000_000)
         print("⏰ Mock: Returning VTXOs expiring within \(thresholdBlocks) blocks")
@@ -501,7 +504,8 @@ class MockBarkWallet: BarkWalletProtocol {
             kind: "pubkey",
             state: "spendable",
             exitDepth: 1,
-            exitTxWeightWu: 500
+            exitTxWeightWu: 500,
+            registered: true
         )
     }
     
@@ -731,7 +735,8 @@ class MockBarkWallet: BarkWalletProtocol {
             amountSats: 0,
             state: "settled",
             paymentPreimage: nil,
-            settledAt: Int64(Date().timeIntervalSince1970)
+            settledAt: Int64(Date().timeIntervalSince1970),
+            claimDestination: nil
         )
     }
     
