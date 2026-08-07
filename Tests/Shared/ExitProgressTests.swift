@@ -39,11 +39,14 @@ struct ExitProgressTests {
 
     private static let canceledState = "Canceled(ExitCanceledState { tip_height: 301492 })"
 
+    /// Build a status from the legacy string fixtures: parse with the v1
+    /// parser, reconstruct the typed state via the reverse mapper — the same
+    /// pipeline persisted v1 snapshots go through.
     private func makeStatus(state: String, history: [String]? = nil, transactionCount: UInt32 = 0) -> ExitTransactionStatus {
         ExitTransactionStatus(
             vtxoId: "test-vtxo-id",
-            state: state,
-            history: history,
+            state: Bark.ExitState(from: ExitStatusParser.parseState(state) ?? .unparsed(state)),
+            history: history.map { $0.map { Bark.ExitState(from: ExitStatusParser.parseState($0) ?? .unparsed($0)) } },
             transactionCount: transactionCount
         )
     }
@@ -411,8 +414,8 @@ struct ExitBlockedBookkeepingTests {
     @Test("Progression errors record progression-phase blockage per VTXO")
     func testProgressionErrorsRecorded() {
         let statuses = [
-            ExitProgressStatus(vtxoId: "vtxo_a", state: "Processing", error: "Insufficient Confirmed Funds"),
-            ExitProgressStatus(vtxoId: "vtxo_b", state: "AwaitingDelta", error: nil)
+            ExitProgressStatus(vtxoId: "vtxo_a", state: .processing(tipHeight: 0, transactions: []), error: "Insufficient Confirmed Funds"),
+            ExitProgressStatus(vtxoId: "vtxo_b", state: .awaitingDelta(tipHeight: 0, confirmedBlock: BlockRef(height: 0, hash: ""), claimableHeight: 0), error: nil)
         ]
 
         let updates = ExitProgressionLogic.progressionBlockedUpdates(statuses: statuses)
@@ -426,7 +429,7 @@ struct ExitBlockedBookkeepingTests {
     @Test("Progression success clears progression phase only, never claim")
     func testProgressionClearsOwnPhase() {
         let updates = ExitProgressionLogic.progressionBlockedUpdates(statuses: [
-            ExitProgressStatus(vtxoId: "vtxo_a", state: "Claimable", error: nil)
+            ExitProgressStatus(vtxoId: "vtxo_a", state: .claimable(tipHeight: 0, claimableSince: BlockRef(height: 0, hash: ""), lastScannedBlock: nil), error: nil)
         ])
 
         #expect(updates == [.clear(vtxoId: "vtxo_a", phase: .progression)])

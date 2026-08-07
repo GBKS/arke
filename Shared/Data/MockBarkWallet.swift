@@ -115,7 +115,7 @@ class MockBarkWallet: BarkWalletProtocol {
             minBoardAmount: 1000,
             maxVtxoExitDepth: 10,
             lnReceiveAntiDosRequired: false,
-            feeSchedule: FeeSchedule(
+            feeSchedule: ArkeUI.FeeSchedule(
                 board: BoardFeeStructure(minFeeSat: 0, baseFeeSat: 0, ppm: 0),
                 offboard: OffboardFeeStructure(
                     baseFeeSat: 0,
@@ -446,7 +446,7 @@ class MockBarkWallet: BarkWalletProtocol {
                 amountSats: 25000,
                 expiryHeight: 274500,
                 kind: "pubkey",
-                state: "spendable",
+                state: .spendable,
                 exitDepth: 1,
                 exitTxWeightWu: 500,
                 registered: true
@@ -456,7 +456,7 @@ class MockBarkWallet: BarkWalletProtocol {
                 amountSats: 15000,
                 expiryHeight: 274600,
                 kind: "pubkey",
-                state: "spent",
+                state: .spent,
                 exitDepth: 2,
                 exitTxWeightWu: 750,
                 registered: true
@@ -473,7 +473,7 @@ class MockBarkWallet: BarkWalletProtocol {
                 amountSats: 25000,
                 expiryHeight: 274500,
                 kind: "pubkey",
-                state: "spendable",
+                state: .spendable,
                 exitDepth: 1,
                 exitTxWeightWu: 500,
                 registered: true
@@ -502,7 +502,7 @@ class MockBarkWallet: BarkWalletProtocol {
             amountSats: 10000,
             expiryHeight: 274500,
             kind: "pubkey",
-            state: "spendable",
+            state: .spendable,
             exitDepth: 1,
             exitTxWeightWu: 500,
             registered: true

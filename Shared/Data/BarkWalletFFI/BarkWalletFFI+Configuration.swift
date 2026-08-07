@@ -94,7 +94,7 @@ extension BarkWalletFFI {
         
         if isPreview {
             // Create a sample fee schedule for preview
-            let sampleFeeSchedule = FeeSchedule(
+            let sampleFeeSchedule = ArkeUI.FeeSchedule(
                 board: BoardFeeStructure(minFeeSat: 0, baseFeeSat: 0, ppm: 0),
                 offboard: OffboardFeeStructure(
                     baseFeeSat: 0,
@@ -170,16 +170,10 @@ extension BarkWalletFFI {
         // FFI ArkInfo provides all fields we need - 1:1 mapping
         
         // Log the FFI ArkInfo fields
-        Self.logger.debug("FFI ArkInfo fields: roundIntervalSecs: \(ffiArkInfo.roundIntervalSecs), nbRoundNonces: \(ffiArkInfo.nbRoundNonces), vtxoExitDelta: \(ffiArkInfo.vtxoExitDelta), vtxoExpiryDelta: \(ffiArkInfo.vtxoExpiryDelta), htlcSendExpiryDelta: \(ffiArkInfo.htlcSendExpiryDelta), htlcExpiryDelta: \(ffiArkInfo.htlcExpiryDelta), maxVtxoAmountSats: \(ffiArkInfo.maxVtxoAmountSats.map { String($0) } ?? "nil"), requiredBoardConfirmations: \(ffiArkInfo.requiredBoardConfirmations), maxUserInvoiceCltvDelta: \(ffiArkInfo.maxUserInvoiceCltvDelta), minBoardAmountSats: \(ffiArkInfo.minBoardAmountSats), maxVtxoExitDepth: \(ffiArkInfo.maxVtxoExitDepth), lnReceiveAntiDosRequired: \(ffiArkInfo.lnReceiveAntiDosRequired), feeScheduleJson: \(ffiArkInfo.feeScheduleJson)")
-        
-        // Parse fee schedule from JSON string
-        let feeSchedule = FeeSchedule.from(jsonString: ffiArkInfo.feeScheduleJson)
-        if feeSchedule != nil {
-            Self.logger.info("Fee schedule parsed successfully")
-        } else {
-            Self.logger.warning("Failed to parse fee schedule JSON")
-        }
-        
+        Self.logger.debug("FFI ArkInfo fields: roundIntervalSecs: \(ffiArkInfo.roundIntervalSecs), nbRoundNonces: \(ffiArkInfo.nbRoundNonces), vtxoExitDelta: \(ffiArkInfo.vtxoExitDelta), vtxoExpiryDelta: \(ffiArkInfo.vtxoExpiryDelta), htlcSendExpiryDelta: \(ffiArkInfo.htlcSendExpiryDelta), htlcExpiryDelta: \(ffiArkInfo.htlcExpiryDelta), maxVtxoAmountSats: \(ffiArkInfo.maxVtxoAmountSats.map { String($0) } ?? "nil"), requiredBoardConfirmations: \(ffiArkInfo.requiredBoardConfirmations), maxUserInvoiceCltvDelta: \(ffiArkInfo.maxUserInvoiceCltvDelta), minBoardAmountSats: \(ffiArkInfo.minBoardAmountSats), maxVtxoExitDepth: \(ffiArkInfo.maxVtxoExitDepth), lnReceiveAntiDosRequired: \(ffiArkInfo.lnReceiveAntiDosRequired), feeSchedule: \(String(describing: ffiArkInfo.feeSchedule))")
+
+        let feeSchedule = ArkeUI.FeeSchedule(from: ffiArkInfo.feeSchedule)
+
         let arkInfoModel = ArkInfoModel(
             network: networkString,
             serverPubkey: ffiArkInfo.serverPubkey,
@@ -249,6 +243,49 @@ extension BarkWalletFFI {
             daemonManualSync: nil,  // Use default (v0.6.3+)
             lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
             userAgent: userAgent  // e.g. "arke-ios/17" (v0.11+)
+        )
+    }
+}
+
+// MARK: - Fee Schedule Mapping
+
+extension ArkeUI.FeeSchedule {
+    /// Map bark's typed fee schedule (v0.16+) onto the app's Bark-free
+    /// presentation model.
+    init(from ffi: Bark.FeeSchedule) {
+        self.init(
+            board: BoardFeeStructure(
+                minFeeSat: Int(ffi.board.minFeeSats),
+                baseFeeSat: Int(ffi.board.baseFeeSats),
+                ppm: Int(ffi.board.ppm)
+            ),
+            offboard: OffboardFeeStructure(
+                baseFeeSat: Int(ffi.offboard.baseFeeSats),
+                fixedAdditionalVb: Int(ffi.offboard.fixedAdditionalVb),
+                ppmExpiryTable: ffi.offboard.ppmExpiryTable.map { PpmExpiryEntry(from: $0) }
+            ),
+            refresh: RefreshFeeStructure(
+                baseFeeSat: Int(ffi.refresh.baseFeeSats),
+                ppmExpiryTable: ffi.refresh.ppmExpiryTable.map { PpmExpiryEntry(from: $0) }
+            ),
+            lightningReceive: LightningReceiveFeeStructure(
+                baseFeeSat: Int(ffi.lightningReceive.baseFeeSats),
+                ppm: Int(ffi.lightningReceive.ppm)
+            ),
+            lightningSend: LightningSendFeeStructure(
+                minFeeSat: Int(ffi.lightningSend.minFeeSats),
+                baseFeeSat: Int(ffi.lightningSend.baseFeeSats),
+                ppmExpiryTable: ffi.lightningSend.ppmExpiryTable.map { PpmExpiryEntry(from: $0) }
+            )
+        )
+    }
+}
+
+private extension PpmExpiryEntry {
+    init(from ffi: Bark.PpmExpiryFeeEntry) {
+        self.init(
+            expiryBlocksThreshold: Int(ffi.expiryBlocksThreshold),
+            ppm: Int(ffi.ppm)
         )
     }
 }

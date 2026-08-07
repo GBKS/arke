@@ -206,7 +206,7 @@ extension ExitProgressionService {
                 await endLiveActivity(success: false)
             default:
                 let activeCount = statuses.filter { status in
-                    guard let parsed = status.parsedState else { return true }
+                    let parsed = status.parsedState
                     if case .vtxoAlreadySpent = parsed { return false }
                     if case .canceled = parsed { return false }
                     return true
@@ -342,8 +342,7 @@ extension ExitProgressionService {
     }
 
     private func countConfirmedTransactions(_ status: ExitTransactionStatus) -> Int {
-        guard let parsed = ExitStatusParser.parseState(status.state) else { return 0 }
-        if case .processing(let state) = parsed {
+        if case .processing(let state) = status.parsedState {
             return state.transactions.filter {
                 if case .confirmed = $0.status { return true }
                 return false

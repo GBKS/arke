@@ -200,8 +200,8 @@ final class ExitStore {
             for entry in existingEntries where !liveVtxoIds.contains(entry.vtxoId) {
                 entry.blockedInfoJson = nil
                 entry.isClaimable = false
-                if !entry.isClaimed, let state = entry.snapshotStatus?.state,
-                   state.hasPrefix("Claimed") || state.hasPrefix("ClaimInProgress") {
+                if !entry.isClaimed, let status = entry.snapshotStatus,
+                   status.isClaimed || status.isClaimInProgress {
                     entry.isClaimed = true
                     entry.stateDisplayName = String(localized: "exit_state_complete", defaultValue: "Complete")
                 }

@@ -138,7 +138,7 @@ struct PendingRoundsListView_iOS: View {
             
             // Get all VTXOs and filter for locked ones
             let allVtxos = try await walletManager.allVtxos()
-            lockedVtxos = allVtxos.filter { $0.state == "locked" }
+            lockedVtxos = allVtxos.filter { if case .locked = $0.state { return true } else { return false } }
             
             print("pending rounds: \(rounds.count)")
             print("locked VTXOs: \(lockedVtxos.count)")

@@ -15,14 +15,15 @@ import ArkeUI
 extension VTXOModel {
     /// Initialize from SDK's Vtxo type
     init(from vtxo: Vtxo) {
-        // Map SDK state string to VTXOState enum
+        // Map bark's VtxoState onto the VTXOState enum. Exhaustive: the old
+        // string version defaulted unknowns (including "exited") to .pending,
+        // silently mislabeling exited VTXOs.
         let state: VTXOState = {
-            switch vtxo.state.lowercased() {
-            case "spendable": return .spendable
-            case "spent": return .spent
-            case "locked": return .locked
-            case "pending": return .pending
-            default: return .pending
+            switch vtxo.state {
+            case .spendable: return .spendable
+            case .spent: return .spent
+            case .locked: return .locked
+            case .exited: return .exited
             }
         }()
 

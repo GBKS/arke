@@ -379,7 +379,7 @@ extension BarkWalletFFI {
         // Get a specific VTXO by ID
         
         if isPreview {
-            return Vtxo(id: vtxoId, amountSats: 10000, expiryHeight: 0, kind: "mock", state: "spendable", exitDepth: 1, exitTxWeightWu: 500, registered: true)
+            return Vtxo(id: vtxoId, amountSats: 10000, expiryHeight: 0, kind: "mock", state: .spendable, exitDepth: 1, exitTxWeightWu: 500, registered: true)
         }
         
         guard let wallet = wallet else {
@@ -520,29 +520,20 @@ extension BarkWalletFFI {
         }
     }
     
-    /// Map FFI VTXO state string to our VTXOState enum
-    private func mapFFIStateToVTXOState(_ stateString: String) -> VTXOState {
-        // FFI states: "spendable", "spent", "locked", etc.
-        // Our states: unregisteredBoard, registeredBoard, spent, pending, spendable, locked
-        
-        switch stateString.lowercased() {
-        case "spendable":
+    /// Map bark's VtxoState onto our VTXOState enum
+    private func mapFFIStateToVTXOState(_ state: VtxoState) -> VTXOState {
+        switch state {
+        case .spendable:
             return .spendable
-        case "spent":
+        case .spent:
             return .spent
-        case "locked":
+        case .locked:
             return .locked
-        case "pending":
-            return .pending
-        case "exited":
-            // Bark's VtxoState::Exited (serde kebab-case "exited"): the VTXO was
-            // moved onchain via a unilateral exit rather than forfeited. Distinct
-            // from "spent" — see Docs/Migrations/Bark-0.10.0-to-0.11.3/05-vtxo-exited-and-already-spent.md
+        case .exited:
+            // Bark's VtxoState.exited: the VTXO was moved onchain via a
+            // unilateral exit rather than forfeited. Distinct from "spent" —
+            // see Docs/Migrations/Bark-0.10.0-to-0.11.3/05-vtxo-exited-and-already-spent.md
             return .exited
-        default:
-            // If we can't map it, default to pending
-            Self.logger.warning("Unknown VTXO state: '\(stateString)', defaulting to pending")
-            return .pending
         }
     }
 }

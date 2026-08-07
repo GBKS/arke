@@ -65,7 +65,7 @@ public struct ExitProgress: Equatable {
     }
 
     public init(status: ExitTransactionStatus) {
-        let parsed = status.parsedState ?? .unparsed(status.state)
+        let parsed = status.parsedState
 
         // Transactions in chain order: the live Processing state is freshest,
         // otherwise fall back to the chain reconstructed from history.
@@ -181,7 +181,7 @@ public struct ExitProgress: Equatable {
     /// their full step count so the bar advances monotonically as each finishes.
     public init(statuses: [ExitTransactionStatus]) {
         let active = statuses.filter { status in
-            guard let parsed = status.parsedState else { return true }
+            let parsed = status.parsedState
             if case .vtxoAlreadySpent = parsed { return false }
             if case .canceled = parsed { return false }
             return true

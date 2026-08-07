@@ -259,14 +259,6 @@ public struct FeeSchedule: Codable, Sendable, Equatable {
         self.lightningSend = lightningSend
     }
 
-    /// Parse fee schedule from JSON string
-    /// - Parameter jsonString: JSON string from the server
-    /// - Returns: Parsed FeeSchedule or nil if parsing fails
-    public static func from(jsonString: String) -> FeeSchedule? {
-        guard let data = jsonString.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode(FeeSchedule.self, from: data)
-    }
-
     // MARK: - Convenience methods for checking free operations
 
     /// Check if boarding is free for the given amount

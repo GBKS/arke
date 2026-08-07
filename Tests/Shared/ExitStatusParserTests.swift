@@ -279,11 +279,13 @@ struct ExitStatusParserTests {
     
     // MARK: - Helper Methods
     
+    /// Build a status from legacy string fixtures via the v1 parse +
+    /// reverse-map pipeline (same as persisted v1 snapshots)
     private func createMockStatus(state: String, history: [String]?) -> Bark.ExitTransactionStatus {
         return Bark.ExitTransactionStatus(
             vtxoId: "test:0",
-            state: state,
-            history: history,
+            state: Bark.ExitState(from: ExitStatusParser.parseState(state) ?? .unparsed(state)),
+            history: history.map { $0.map { Bark.ExitState(from: ExitStatusParser.parseState($0) ?? .unparsed($0)) } },
             transactionCount: 1
         )
     }

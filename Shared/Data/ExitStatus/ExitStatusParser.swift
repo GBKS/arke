@@ -5,13 +5,21 @@
 //  Parser for Rust Debug format exit status strings
 //  Created by Christoph on 4/27/26.
 //
+//  Since bark 0.16 the bindings deliver exit state as a typed enum
+//  (mapped via ParsedExitState+Bark), so live statuses never pass through
+//  here. This parser survives as the decoder for legacy v1 snapshots in
+//  PersistentExitCache — Rust-Debug strings written by pre-0.16 builds,
+//  including pre-0.11 case names (NeedsSignedPackage, NeedsBroadcasting,
+//  BroadcastWithCpfp). Do not delete.
+//
 
 import Foundation
 import Bark
 import os
 
-/// Parser for Bark SDK exit status strings (Rust Debug format)
-public struct ExitStatusParser {
+/// Parser for legacy exit status strings (Rust Debug format) persisted by
+/// pre-0.16 builds. Live statuses are typed — see ParsedExitState+Bark.
+nonisolated public struct ExitStatusParser {
     
     private static let enableLogging = false
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitStatusParser")
@@ -76,18 +84,10 @@ public struct ExitStatusParser {
     private static func extractTransactionIds(from status: Bark.ExitTransactionStatus, onlyUserFunded: Bool) -> [String] {
         var txids = Set<String>()
 
-        // Parse current state
-        if let parsed = parseState(status.state) {
-            txids.formUnion(extractTxids(from: parsed, onlyUserFunded: onlyUserFunded))
-        }
+        txids.formUnion(extractTxids(from: status.parsedState, onlyUserFunded: onlyUserFunded))
 
-        // Parse history
-        if let history = status.history {
-            for historyItem in history {
-                if let parsed = parseState(historyItem) {
-                    txids.formUnion(extractTxids(from: parsed, onlyUserFunded: onlyUserFunded))
-                }
-            }
+        for historyItem in status.parsedHistory {
+            txids.formUnion(extractTxids(from: historyItem, onlyUserFunded: onlyUserFunded))
         }
 
         return Array(txids).sorted()

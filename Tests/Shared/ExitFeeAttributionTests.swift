@@ -58,15 +58,21 @@ private enum Fixture {
 
     static let claimedState = "Claimed(ExitClaimedState { tip_height: 313418, txid: \(claim), block: \(claimBlock) })"
 
+    /// Legacy string fixture → typed state, via the v1 parse + reverse-map
+    /// pipeline (same as persisted v1 snapshots)
+    static func barkState(_ str: String) -> Bark.ExitState {
+        Bark.ExitState(from: ExitStatusParser.parseState(str) ?? .unparsed(str))
+    }
+
     static func status() -> ExitTransactionStatus {
         ExitTransactionStatus(
             vtxoId: "\(tx4):0",
-            state: claimedState,
+            state: barkState(claimedState),
             history: [
                 "Start(ExitStartState { tip_height: 313389 })",
                 finalProcessing,
                 "ClaimInProgress(ExitClaimInProgressState { tip_height: 313408, claimable_since: 313408:0000000e22c16b0092658a78a3791dba2c9a111b1bdbb66821c9257cc995916a, claim_txid: \(claim) })"
-            ],
+            ].map { barkState($0) },
             transactionCount: 4
         )
     }

@@ -9,7 +9,7 @@
 import Foundation
 
 /// Parsed exit state with structured data
-public enum ParsedExitState: Equatable {
+nonisolated public enum ParsedExitState: Equatable, Codable {
     case start(StartState)
     case processing(ProcessingState)
     case awaitingDelta(AwaitingDeltaState)
@@ -20,7 +20,7 @@ public enum ParsedExitState: Equatable {
     case canceled(CanceledState)
     case unparsed(String) // Fallback for unknown states
     
-    public struct StartState: Equatable {
+    nonisolated public struct StartState: Equatable, Codable {
         public let tipHeight: UInt32
         
         public init(tipHeight: UInt32) {
@@ -28,7 +28,7 @@ public enum ParsedExitState: Equatable {
         }
     }
     
-    public struct ProcessingState: Equatable {
+    nonisolated public struct ProcessingState: Equatable, Codable {
         public let tipHeight: UInt32
         public let transactions: [ExitTransaction]
         
@@ -38,7 +38,7 @@ public enum ParsedExitState: Equatable {
         }
     }
     
-    public struct AwaitingDeltaState: Equatable {
+    nonisolated public struct AwaitingDeltaState: Equatable, Codable {
         public let tipHeight: UInt32
         public let confirmedBlock: ArkeBlockRef
         public let claimableHeight: UInt32
@@ -50,7 +50,7 @@ public enum ParsedExitState: Equatable {
         }
     }
     
-    public struct ClaimableState: Equatable {
+    nonisolated public struct ClaimableState: Equatable, Codable {
         public let tipHeight: UInt32
         public let claimableSince: ArkeBlockRef
         public let lastScannedBlock: ArkeBlockRef?
@@ -62,7 +62,7 @@ public enum ParsedExitState: Equatable {
         }
     }
     
-    public struct ClaimInProgressState: Equatable {
+    nonisolated public struct ClaimInProgressState: Equatable, Codable {
         public let tipHeight: UInt32
         public let claimableSince: ArkeBlockRef
         public let claimTxid: String
@@ -74,7 +74,7 @@ public enum ParsedExitState: Equatable {
         }
     }
     
-    public struct ClaimedState: Equatable {
+    nonisolated public struct ClaimedState: Equatable, Codable {
         public let tipHeight: UInt32
         public let txid: String
         public let block: ArkeBlockRef
@@ -89,7 +89,7 @@ public enum ParsedExitState: Equatable {
     /// Terminal state: the exit cannot proceed because the VTXO was already
     /// consumed by something other than this exit (e.g. spent via refresh/arkoor,
     /// or forfeited by the server in a round). No exit transactions get broadcast.
-    public struct VtxoAlreadySpentState: Equatable {
+    nonisolated public struct VtxoAlreadySpentState: Equatable, Codable {
         public let tipHeight: UInt32
 
         public init(tipHeight: UInt32) {
@@ -100,7 +100,7 @@ public enum ParsedExitState: Equatable {
     /// The exit was cancelled before its transactions were broadcast (bark 0.4+).
     /// Not producible via this app's bindings yet (no cancel-exit API), but can
     /// appear if the datadir was driven by bark-cli or a future bindings bump.
-    public struct CanceledState: Equatable {
+    nonisolated public struct CanceledState: Equatable, Codable {
         public let tipHeight: UInt32
 
         public init(tipHeight: UInt32) {
@@ -110,7 +110,7 @@ public enum ParsedExitState: Equatable {
 }
 
 /// Individual exit transaction in the chain
-public struct ExitTransaction: Equatable {
+nonisolated public struct ExitTransaction: Equatable, Codable {
     public let txid: String
     public let status: ExitTxStatus
     
@@ -121,7 +121,7 @@ public struct ExitTransaction: Equatable {
 }
 
 /// Status of an exit transaction
-public enum ExitTxStatus: Equatable {
+nonisolated public enum ExitTxStatus: Equatable, Codable {
     case verifyInputs
     case needsSignedPackage
     /// Bark 0.11: the CPFP child for this transaction has not been created
@@ -152,7 +152,7 @@ public enum ExitTxStatus: Equatable {
         }
     }
     
-    public struct NeedsBroadcastingData: Equatable {
+    nonisolated public struct NeedsBroadcastingData: Equatable, Codable {
         public let childTxid: String
         public let origin: TxOrigin
         
@@ -162,7 +162,7 @@ public enum ExitTxStatus: Equatable {
         }
     }
     
-    public struct BroadcastWithCpfpData: Equatable {
+    nonisolated public struct BroadcastWithCpfpData: Equatable, Codable {
         public let childTxid: String
         public let origin: TxOrigin
         
@@ -172,7 +172,7 @@ public enum ExitTxStatus: Equatable {
         }
     }
     
-    public struct AwaitingInputData: Equatable {
+    nonisolated public struct AwaitingInputData: Equatable, Codable {
         public let dependencyTxids: Set<String>
         
         public init(dependencyTxids: Set<String>) {
@@ -180,7 +180,7 @@ public enum ExitTxStatus: Equatable {
         }
     }
     
-    public struct ConfirmedData: Equatable {
+    nonisolated public struct ConfirmedData: Equatable, Codable {
         public let childTxid: String
         public let block: ArkeBlockRef
         public let origin: TxOrigin
@@ -197,7 +197,7 @@ public enum ExitTxStatus: Equatable {
 /// anyone-can-spend, so bark distinguishes children it created itself
 /// (`Wallet`) from ones it merely observed onchain (`Mempool`/`Block`) —
 /// the latter were funded and paid for by a third party.
-public enum TxOrigin: Equatable {
+nonisolated public enum TxOrigin: Equatable, Codable {
     case wallet(WalletOrigin)
     /// Third-party anchor spend observed in the mempool.
     case mempool
@@ -213,7 +213,7 @@ public enum TxOrigin: Equatable {
         return false
     }
 
-    public struct WalletOrigin: Equatable {
+    nonisolated public struct WalletOrigin: Equatable, Codable {
         public let confirmedIn: ArkeBlockRef?
 
         public init(confirmedIn: ArkeBlockRef?) {

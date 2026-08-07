@@ -10,19 +10,19 @@ import Foundation
 import Bark
 import os
 
-fileprivate let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitTransactionStatus")
+nonisolated fileprivate let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitTransactionStatus")
 
-public extension ExitTransactionStatus {
+nonisolated public extension ExitTransactionStatus {
     
-    /// Parse the current state into structured data
-    var parsedState: ParsedExitState? {
-        ExitStatusParser.parseState(state)
+    /// The current state mapped onto the app's domain model
+    var parsedState: ParsedExitState {
+        ParsedExitState(from: state)
     }
-    
-    /// Parse history into structured data
+
+    /// History mapped onto the app's domain model
     var parsedHistory: [ParsedExitState] {
         guard let history = history else { return [] }
-        return ExitStatusParser.parseHistory(history)
+        return history.map { ParsedExitState(from: $0) }
     }
     
     /// Extract all transaction IDs from state and history
@@ -85,7 +85,7 @@ public extension ExitTransactionStatus {
             return data.tipHeight
         case .canceled(let data):
             return data.tipHeight
-        case .unparsed, .none:
+        case .unparsed:
             return nil
         }
     }

@@ -142,7 +142,12 @@ struct ExitStoreTests {
     }
 
     private func liveExit(_ vtxoId: String, amount: UInt64 = 10_000) -> ExitVtxo {
-        ExitVtxo(vtxoId: vtxoId, amountSats: amount, state: "Claimable", isClaimable: true)
+        ExitVtxo(
+            vtxoId: vtxoId,
+            amountSats: amount,
+            state: .claimable(tipHeight: 0, claimableSince: BlockRef(height: 0, hash: ""), lastScannedBlock: nil),
+            isClaimable: true
+        )
     }
 
     @Test("A refresh triggers movement re-linking exactly once")
@@ -182,11 +187,24 @@ struct ExitStoreTests {
 
         let status = ExitTransactionStatus(
             vtxoId: "vtxo_a",
-            state: "ClaimInProgress(ExitClaimInProgressState { tip_height: 301627, claimable_since: 301555:00000001, claim_txid: dc2b6f00 })",
+            state: .claimInProgress(
+                tipHeight: 301627,
+                claimableSince: BlockRef(height: 301555, hash: "00000001"),
+                claimTxid: "dc2b6f00"
+            ),
             history: nil,
             transactionCount: 1
         )
-        var barkList = [ExitVtxo(vtxoId: "vtxo_a", amountSats: 25_000, state: "ClaimInProgress", isClaimable: false)]
+        var barkList = [ExitVtxo(
+            vtxoId: "vtxo_a",
+            amountSats: 25_000,
+            state: .claimInProgress(
+                tipHeight: 301627,
+                claimableSince: BlockRef(height: 301555, hash: "00000001"),
+                claimTxid: "dc2b6f00"
+            ),
+            isClaimable: false
+        )]
         let store = makeStore(context: context, counter: counter, statuses: ["vtxo_a": status]) { barkList }
         store.recordBlocked(vtxoId: "vtxo_a", phase: .claim, errorMessage: "Claim Fee Exceeds Output")
 
@@ -239,8 +257,12 @@ struct ExitStoreTests {
 
         let status = ExitTransactionStatus(
             vtxoId: "vtxo_a",
-            state: "ClaimInProgress(ExitClaimInProgressState { tip_height: 1, claimable_since: 1:00, claim_txid: ab })",
-            history: ["Start(ExitStartState { tip_height: 0 })"],
+            state: .claimInProgress(
+                tipHeight: 1,
+                claimableSince: BlockRef(height: 1, hash: "00"),
+                claimTxid: "ab"
+            ),
+            history: [.start(tipHeight: 0)],
             transactionCount: 1
         )
         let store = makeStore(context: context, counter: counter, statuses: ["vtxo_a": status]) { [] }

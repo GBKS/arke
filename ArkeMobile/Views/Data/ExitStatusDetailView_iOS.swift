@@ -150,7 +150,7 @@ struct ExitStatusDetailView_iOS: View {
                 print("   State: \(status.state)")
                 print("   Transaction count: \(status.transactionCount)")
                 if let history = status.history {
-                    print("   History: \(history.joined(separator: " → "))")
+                    print("   History: \(history.map { String(describing: $0) }.joined(separator: " → "))")
                 }
                 loadLinkedTransactions(for: status)
             } else {
@@ -732,7 +732,7 @@ private struct TechnicalDetailsSection: View {
             }
 
             LabeledContent("data_current_state") {
-                Text(status.state)
+                Text(String(describing: status.state))
                     .font(.system(.caption, design: .monospaced))
             }
 
@@ -788,24 +788,25 @@ private struct ParsedStateLabel: View {
 
 private struct StateHistoryRow: View {
     let index: Int
-    let state: String
+    let state: Bark.ExitState
 
     @State private var isExpanded = false
+
+    private var parsed: ParsedExitState {
+        ParsedExitState(from: state)
+    }
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
             VStack(alignment: .leading, spacing: 8) {
                 // Full raw state
-                Text(state)
+                Text(String(describing: state))
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
                     .padding(.vertical, 4)
 
-                // Detailed parsed state info if available
-                if let parsed = ExitStatusParser.parseState(state) {
-                    Divider()
-                    ParsedStateDetails(parsed: parsed)
-                }
+                Divider()
+                ParsedStateDetails(parsed: parsed)
             }
             .padding(.top, 4)
         } label: {
@@ -815,13 +816,7 @@ private struct StateHistoryRow: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 30, alignment: .leading)
 
-                if let parsed = ExitStatusParser.parseState(state) {
-                    ParsedStateLabel(parsed: parsed)
-                } else {
-                    Text(state)
-                        .font(.system(.caption, design: .monospaced))
-                        .lineLimit(1)
-                }
+                ParsedStateLabel(parsed: parsed)
             }
         }
     }

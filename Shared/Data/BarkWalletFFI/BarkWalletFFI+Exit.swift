@@ -143,7 +143,7 @@ extension BarkWalletFFI {
         Self.logger.debug("Found \(failedExits.count) failed exit(s)")
         
         for (index, status) in failedExits.enumerated() {
-            Self.logger.debug("Failed Exit #\(index + 1): VTXO ID: \(status.vtxoId), State: \(status.state), Error: \(status.error ?? "unknown")")
+            Self.logger.debug("Failed Exit #\(index + 1): VTXO ID: \(status.vtxoId), State: \(String(describing: status.state)), Error: \(status.error ?? "unknown")")
             
             // Get detailed exit status
             do {
@@ -152,7 +152,7 @@ extension BarkWalletFFI {
                     includeHistory: true,
                     includeTransactions: true
                 ) {
-                    Self.logger.debug("Detailed Exit Status: State: \(exitStatus.state), Transaction count: \(exitStatus.transactionCount)")
+                    Self.logger.debug("Detailed Exit Status: State: \(String(describing: exitStatus.state)), Transaction count: \(exitStatus.transactionCount)")
                     
                     // Check if error message contains transaction IDs
                     if let errorMsg = status.error {
@@ -266,9 +266,9 @@ extension BarkWalletFFI {
             Self.logger.info("Progressed \(statuses.count) exits")
             for status in statuses {
                 if let error = status.error {
-                    Self.logger.debug("VTXO \(status.vtxoId): \(status.state), Error: \(error)")
+                    Self.logger.debug("VTXO \(status.vtxoId): \(String(describing: status.state)), Error: \(error)")
                 } else {
-                    Self.logger.debug("VTXO \(status.vtxoId): \(status.state)")
+                    Self.logger.debug("VTXO \(status.vtxoId): \(String(describing: status.state))")
                 }
             }
             

@@ -27,7 +27,7 @@ struct RoundStateDebugger {
         }
         
         // Group locked VTXOs by their details
-        let lockedVtxos = vtxos?.filter { $0.state == "locked" } ?? []
+        let lockedVtxos = vtxos?.filter { if case .locked = $0.state { return true } else { return false } } ?? []
         let totalLockedSats = lockedVtxos.reduce(0) { $0 + $1.amountSats }
         
         if !lockedVtxos.isEmpty {

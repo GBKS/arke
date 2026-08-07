@@ -219,7 +219,7 @@ struct TransactionCardStackView_iOS: View {
                 )
                 .equatable()
                 .frame(
-                    width: geo.size.width - 48,
+                    width: max(geo.size.width - 48, 0),
                     height: min(geo.size.height * 0.72, 640)
                 )
                 // Depth cues in place of a drop shadow: cards behind darken

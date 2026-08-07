@@ -286,7 +286,7 @@ class VTXORefreshService {
         vtxos: [Vtxo],
         currentBlockHeight: Int,
         vtxoLifespan: Int,
-        feeSchedule: FeeSchedule,
+        feeSchedule: ArkeUI.FeeSchedule,
         network: String
     ) -> [Vtxo] {
         return vtxos.filter { vtxo in
@@ -332,7 +332,7 @@ class VTXORefreshService {
         vtxos: [Vtxo],
         currentBlockHeight: Int,
         vtxoLifespan: Int,
-        feeSchedule: FeeSchedule,
+        feeSchedule: ArkeUI.FeeSchedule,
         network: String
     ) -> Int? {
         // Find the threshold where ppm is 0

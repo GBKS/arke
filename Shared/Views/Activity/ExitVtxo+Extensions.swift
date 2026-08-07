@@ -10,19 +10,29 @@ import SwiftUI
 import Bark
 import ArkeUI
 
-// MARK: - Helper Functions
+// MARK: - ExitState Display
 
-/// Extract the enum case name from a state description
-/// The Bark SDK uses enums with associated values (e.g., "Claimable(ExitClaimableState {...})")
-/// This function extracts just the case name (e.g., "Claimable")
-private func extractStateCaseName<T>(_ state: T) -> String {
-    let stateString = String(describing: state)
-    
-    // Extract the enum case name (before any parentheses)
-    if let parenIndex = stateString.firstIndex(of: "(") {
-        return String(stateString[..<parenIndex])
-    } else {
-        return stateString
+extension Bark.ExitState {
+
+    /// User-friendly display name, shared by ExitVtxo and
+    /// ExitTransactionStatus (bark reports the same state through both)
+    var displayName: String {
+        switch self {
+        case .start:
+            return String(localized: "status_starting")
+        case .processing:
+            return String(localized: "data_processing")
+        case .awaitingDelta:
+            return String(localized: "data_processing")
+        case .claimable:
+            return String(localized: "status_ready_to_withdraw")
+        case .claimInProgress:
+            return String(localized: "status_withdrawing")
+        case .claimed:
+            return String(localized: "status_complete")
+        case .vtxoAlreadySpent, .canceled:
+            return String(localized: "transaction_cancelled")
+        }
     }
 }
 
@@ -50,37 +60,18 @@ extension ExitVtxo {
     }
     
     // MARK: - State Display
-    
+
     /// User-friendly display name for the current state
     var stateDisplayName: String {
-        // Map Bark SDK state enum to user-friendly names
-        let caseName = extractStateCaseName(state)
-        
-        switch caseName.lowercased() {
-        case "start":
-            return String(localized: "status_starting")
-        case "processing":
-            return String(localized: "data_processing")
-        case "awaitingdelta":
-            return String(localized: "data_processing")
-        case "claimable":
-            return String(localized: "status_ready_to_withdraw")
-        case "claiminprogress":
-            return String(localized: "status_withdrawing")
-        case "claimed":
-            return String(localized: "status_complete")
-        default:
-            // Return the case name if we don't have a mapping
-            return caseName
-        }
+        state.displayName
     }
-    
+
     /// Check if this exit is complete (claimed)
     var isClaimed: Bool {
-        let caseName = extractStateCaseName(state)
-        return caseName.lowercased() == "claimed"
+        if case .claimed = state { return true }
+        return false
     }
-    
+
     /// Check if this exit is active (not yet claimed)
     /// Note: cancelled exits (VtxoAlreadySpent) count as active here; use
     /// `isInFlight` when you need "still has work to do"
@@ -91,8 +82,8 @@ extension ExitVtxo {
     /// Check if this exit was cancelled because the VTXO was spent elsewhere
     /// (e.g. a refresh won the race before the exit chain broadcast)
     var isCancelled: Bool {
-        let caseName = extractStateCaseName(state)
-        return caseName.lowercased() == "vtxoalreadyspent"
+        if case .vtxoAlreadySpent = state { return true }
+        return false
     }
 
     /// Check if this exit still has work to do: neither claimed nor cancelled.
@@ -104,50 +95,10 @@ extension ExitVtxo {
 
     /// Check if claim is in progress (transaction broadcast but not confirmed)
     var isClaimInProgress: Bool {
-        let caseName = extractStateCaseName(state)
-        return caseName.lowercased() == "claiminprogress"
+        if case .claimInProgress = state { return true }
+        return false
     }
-    
-    /// Icon name (SF Symbol) for the current state
-    var stateIcon: String {
-        if isClaimable {
-            return "repeat"
-        }
-        
-        let caseName = extractStateCaseName(state)
-        
-        switch caseName.lowercased() {
-        case "start", "processing":
-            return "repeat"
-        case "awaitingdelta":
-            return "repeat"
-        case "claiminprogress":
-            return "repeat"
-        case "claimed":
-            return "checkmark.circle.fill"
-        default:
-            return "repeat"
-        }
-    }
-    
-    /// Color for the current state
-    var stateColor: Color {
-        if isClaimable {
-            return .Arke.green
-        }
-        
-        let caseName = extractStateCaseName(state)
-        
-        switch caseName.lowercased() {
-        case "claimed":
-            return .gray
-        case "awaitingdelta":
-            return .Arke.blue
-        default:
-            return .Arke.blue
-        }
-    }
-    
+
     // MARK: - Block Height Calculations
     
     /// Calculate blocks remaining until claimable
@@ -215,51 +166,32 @@ extension ExitVtxo {
 // MARK: - ExitTransactionStatus Helpers
 
 extension ExitTransactionStatus {
-    
+
     /// User-friendly display name for the current state
     var stateDisplayName: String {
-        let caseName = extractStateCaseName(state)
-        
-        switch caseName.lowercased() {
-        case "start":
-            return String(localized: "status_starting")
-        case "processing":
-            return String(localized: "data_processing")
-        case "awaitingdelta":
-            return String(localized: "data_processing")
-        case "claimable":
-            return String(localized: "status_ready_to_withdraw")
-        case "claiminprogress":
-            return String(localized: "status_withdrawing")
-        case "claimed":
-            return String(localized: "status_complete")
-        default:
-            return caseName
-        }
+        state.displayName
     }
-    
+
     /// Check if this exit is in a claimable state
     var isClaimable: Bool {
-        let caseName = extractStateCaseName(state)
-        return caseName.lowercased() == "claimable"
+        if case .claimable = state { return true }
+        return false
     }
 
     /// Check if this exit is complete (claimed)
     var isClaimed: Bool {
-        let caseName = extractStateCaseName(state)
-        return caseName.lowercased() == "claimed"
+        if case .claimed = state { return true }
+        return false
     }
-    
+
+    /// Check if claim is in progress (transaction broadcast but not confirmed)
+    var isClaimInProgress: Bool {
+        if case .claimInProgress = state { return true }
+        return false
+    }
+
     /// Check if this exit is active (not yet claimed)
     var isActive: Bool {
         return !isClaimed
-    }
-    
-    /// Formatted history as a single string
-    var formattedHistory: String? {
-        guard let history = history, !history.isEmpty else {
-            return nil
-        }
-        return history.joined(separator: " → ")
     }
 }

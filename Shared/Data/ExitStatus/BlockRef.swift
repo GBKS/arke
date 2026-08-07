@@ -9,7 +9,7 @@
 import Foundation
 
 /// Reference to a block in the Bitcoin blockchain
-public struct ArkeBlockRef: Equatable, Hashable {
+nonisolated public struct ArkeBlockRef: Equatable, Hashable, Codable {
     public let height: UInt32
     public let hash: String
     
