@@ -32,40 +32,6 @@ class MockBarkWallet: BarkWalletProtocol {
         self.networkConfig = networkConfig
     }
     
-    func executeCommand(_ args: [String]) async throws -> String {
-        // Simulate delay
-        try await Task.sleep(nanoseconds: 500_000_000)
-        
-        let command = args.first ?? ""
-        
-        switch command {
-        case "balance":
-            return """
-            {
-              "spendable_sat": 50000,
-              "pending_lightning_send_sat": 0,
-              "pending_in_round_sat": 10000,
-              "pending_exit_sat": 0,
-              "pending_board_sat": 0
-            }
-            """
-        case "address":
-            return "ark1qxyz123mockaddress456"
-        case "onchain":
-            if args.contains("address") {
-                return "tb1qmockaddress789xyz"
-            }
-        case "vtxos":
-            return "2 VTXOs found"
-        case "create":
-            return "Wallet created successfully"
-        default:
-            break
-        }
-        
-        return "Mock command executed: \(args.joined(separator: " "))"
-    }
-    
     func createWallet(network: String?, arkServer: String?) async throws -> String {
         try await Task.sleep(nanoseconds: 500_000_000)
         let networkName = network ?? currentNetworkName
@@ -400,14 +366,6 @@ class MockBarkWallet: BarkWalletProtocol {
     func sendOnchainWithSafetyCheck(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String {
         try validateMainnetOperation()
         return try await sendOnchain(to: address, amount: amount, feeRateSatPerVb: feeRateSatPerVb)
-    }
-    
-    // MARK: - Development Methods
-    
-    func executeCustomCommand(_ commandString: String) async throws -> String {
-        try await Task.sleep(nanoseconds: 500_000_000)
-        print("🔧 Mock: Executing custom command: \(commandString)")
-        return "Mock: Custom command executed successfully"
     }
     
     // MARK: - Wallet Lifecycle (New)

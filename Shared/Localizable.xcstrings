@@ -3416,56 +3416,6 @@
     "Confirmed at block %u" : {
 
     },
-    "console_help_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Type 'help' to see available commands..."
-          }
-        }
-      }
-    },
-    "console_name" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Consolé"
-          }
-        }
-      }
-    },
-    "console_placeholder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Type command here..."
-          }
-        }
-      }
-    },
-    "console_readonly_unavailable" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Console not available in read-only mode"
-          }
-        }
-      }
-    },
-    "console_title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Console"
-          }
-        }
-      }
-    },
     "Contact '%@' assigned" : {
 
     },
@@ -8209,6 +8159,7 @@
       }
     },
     "status_executing" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8721,6 +8672,7 @@
       "shouldTranslate" : false
     },
     "symbol_chevron" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

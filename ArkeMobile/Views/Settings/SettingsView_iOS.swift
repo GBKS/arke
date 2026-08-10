@@ -322,26 +322,6 @@ struct SettingsView_iOS: View {
                         .padding(.vertical, 4)
                     }
                     */
-                
-                    /*
-                    // Console
-                    NavigationLink(destination: ConsoleView_iOS()) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "arcade.stick.console.fill")
-                                .foregroundColor(.orange)
-                                .frame(width: iconSize, height: iconSize)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("console_title")
-                                    .font(.callout)
-                                Text("Debug logs and diagnostics")
-                                    .font(.footnote)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    */
                 }
             } header: {
                 Text("data_behind_curtain")

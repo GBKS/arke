@@ -298,9 +298,9 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### Console/ (3 files) ✅ KEEP
+### Console/ — REMOVED 2026-08-10
 
-- `CONSOLE_COMMANDS.md`, `CONSOLE_OPTIMIZATION.md`, `CONSOLE_REFACTOR.md`
+- Console UI and `executeCommand`/`executeCustomCommand` passthrough deleted along with the feature (pre-FFI leftover); docs removed with it.
 
 ---
 
@@ -344,7 +344,7 @@ Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual prim
 
 ### Data samples/ (3 md files + JSON files)
 
-- `Movements.md`, `ExitTransactionStatus_History.md`, `ExitTransactionStatus_State.md` (the latter two are raw exit-state dumps, moved from root 2026-07-08) + JSON samples in CLI/. Keep.
+- `Movements.md`, `ExitTransactionStatus_History.md`, `ExitTransactionStatus_State.md` (the latter two are raw exit-state dumps, moved from root 2026-07-08). Keep. The `CLI/` JSON samples (bark CLI output dumps) were removed 2026-08-10 with the console feature.
 
 ---
 

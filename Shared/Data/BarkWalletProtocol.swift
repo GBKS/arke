@@ -23,7 +23,6 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     
     // MARK: - Wallet Lifecycle
     
-    func executeCommand(_ args: [String]) async throws -> String
     func createWallet(network: String?, arkServer: String?) async throws -> String
     func importWallet(network: String?, arkServer: String?, mnemonic: String) async throws -> String
     func deleteWallet() async throws -> String
@@ -191,10 +190,6 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     func validateMainnetOperation() throws
     func sendWithSafetyCheck(to address: String, amount: Int) async throws -> String
     func sendOnchainWithSafetyCheck(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String
-    
-    // MARK: - Development
-    
-    func executeCustomCommand(_ commandString: String) async throws -> String
     
     // MARK: - Utilities
     

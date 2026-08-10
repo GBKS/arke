@@ -17,7 +17,6 @@
 //  📁 Extensions (see individual files):
 //     - BarkWalletFFI+Balance.swift - Ark & onchain balance, address generation
 //     - BarkWalletFFI+Configuration.swift - Config, ArkInfo, network conversion
-//     - BarkWalletFFI+Console.swift - Custom command execution (not supported)
 //     - BarkWalletFFI+Exit.swift - Unilateral exit system (11 methods)
 //     - BarkWalletFFI+Fees.swift - Fee estimation (6 methods)
 //     - BarkWalletFFI+Lightning.swift - Lightning operations, invoices, BOLT12

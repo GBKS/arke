@@ -38,7 +38,6 @@ enum ActivityDestination: Hashable {
     case contacts
     case tags
     case data
-    case console
     case dataDetail(DataDetailItem_iOS)
 }
 
@@ -281,14 +280,6 @@ struct WalletView_iOS: View {
                             })
                         } else {
                             Text("data_readonly_unavailable")
-                        }
-                    case .console:
-                        // Only show console in primary mode (requires ASP connection)
-                        if !manager.isReadOnlyMode {
-                            ConsoleView_iOS()
-                                .navigationTitle("console_title")
-                        } else {
-                            Text("console_readonly_unavailable")
                         }
                     case .dataDetail(let dataItem):
                         switch dataItem {

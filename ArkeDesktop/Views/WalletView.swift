@@ -18,7 +18,6 @@ enum NavigationItem: String, CaseIterable {
     case tags = "Tágs"
     case settings = "Séttings"
     case data = "X-Ráy"
-    case console = "Consolé"
     
     var systemImage: String {
         switch self {
@@ -30,7 +29,6 @@ enum NavigationItem: String, CaseIterable {
         case .tags: return "tag.fill"
         case .settings: return "gearshape.fill"
         case .data: return "brain.head.profile.fill"
-        case .console: return "arcade.stick.console.fill"
         }
     }
 }
@@ -251,8 +249,6 @@ struct WalletView: View {
                     EmptyView() // This case shouldn't be reached now
                 case .activity:
                     EmptyView() // This case shouldn't be reached
-                case .console:
-                    ConsoleView()
                 }
             }
             }

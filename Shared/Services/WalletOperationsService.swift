@@ -213,20 +213,6 @@ class WalletOperationsService {
         }
     }
     
-    // MARK: - Custom Command Execution
-    
-    /// Execute a custom bark CLI command
-    /// - Parameter commandString: The command to execute (e.g., "balance", "vtxos --limit 5")
-    /// - Returns: Raw command output
-    /// - Note: For development and debugging purposes
-    func executeCustomCommand(_ commandString: String) async throws -> String {
-        // Use timestamp to ensure commands aren't deduplicated
-        let key = "customCommand-\(Date().timeIntervalSince1970)"
-        return try await taskManager.execute(key: key) {
-            return try await self.wallet.executeCustomCommand(commandString)
-        }
-    }
-    
     // MARK: - Utility Methods
     
     /// Set the callback for post-transaction operations
