@@ -55,9 +55,8 @@ extension BarkWalletFFI {
         // Generate a new mnemonic (12 words)
         let mnemonic = try generateMnemonic()
         
-        // DEBUG: Print mnemonic
-        print("🔍 [DEBUG] Generated mnemonic: \(mnemonic)")
-        print("🔍 [DEBUG] Mnemonic word count: \(mnemonic.split(separator: " ").count)")
+        // Never log the mnemonic itself - debug logs get exported and shared.
+        print("🔍 [DEBUG] Generated mnemonic word count: \(mnemonic.split(separator: " ").count)")
         
         // Use the provided config or override with custom params.
         // Network is passed separately to the FFI as of Bark 0.11.
@@ -127,7 +126,7 @@ extension BarkWalletFFI {
         // Create wallet using FFI
         print("🔍 Step 2: Creating wallet with FFI...")
         do {
-            print("   About to call initWallet() + Wallet.open()...")
+            print("   About to call Wallet.open()...")
 
             // Create onchain wallet directory
             print("   Creating onchain wallet...")
@@ -171,14 +170,12 @@ extension BarkWalletFFI {
             print("   ✅ Transaction reader created")
 
             // Create Bark wallet with built-in onchain capabilities.
-            // Bark 0.11 splits create into initWallet (writes on-disk state) + Wallet.open.
-            try await initWallet(
-                network: net,
-                mnemonicOrSeed: mnemonic,
-                config: finalConfig,
-                datadir: datadir,
-                allowUnreachableServer: true
-            )
+            // A single Wallet.open must perform the local creation itself: a
+            // prior initWallet() call writes the properties row first, which
+            // makes this a "subsequent" open and permanently disables bark's
+            // seed-recovery scan (gated on the open that creates the wallet).
+            // createWithoutServer keeps creation working when the server is
+            // unreachable, as initWallet's allowUnreachableServer did.
             let newWallet = try await Wallet.open(
                 network: net,
                 mnemonicOrSeed: mnemonic,
@@ -187,6 +184,7 @@ extension BarkWalletFFI {
                     datadir: datadir,
                     onchain: builtInWallet,
                     createIfNotExists: true,
+                    createWithoutServer: true,
                     // Freshly generated seed - nothing to recover, and the scan
                     // would block creation on a network round-trip.
                     skipRecovery: true
@@ -339,9 +337,8 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.invalidMnemonic
         }
         
-        // DEBUG: Print mnemonic
-        print("🔍 [DEBUG] Importing with mnemonic: \(mnemonic)")
-        print("🔍 [DEBUG] Mnemonic word count: \(words.count)")
+        // Never log the mnemonic itself - debug logs get exported and shared.
+        print("🔍 [DEBUG] Importing mnemonic word count: \(words.count)")
         
         // Use the provided config or override with custom params.
         // Network is passed separately to the FFI as of Bark 0.11.
@@ -478,27 +475,13 @@ extension BarkWalletFFI {
                 print("✅ Existing wallet opened successfully")
             } else {
                 print("🆕 No wallet database found - creating new wallet...")
-                try await initWallet(
+                restoredWallet = try await openImportedWallet(
                     network: net,
-                    mnemonicOrSeed: mnemonic,
+                    mnemonic: mnemonic,
                     config: finalConfig,
-                    datadir: datadir,
-                    allowUnreachableServer: true
-                )
-                restoredWallet = try await Wallet.open(
-                    network: net,
-                    mnemonicOrSeed: mnemonic,
-                    config: finalConfig,
-                    args: WalletOpenArgs(
-                        datadir: datadir,
-                        onchain: builtInWallet,
-                        createIfNotExists: true
-                        // skipRecovery stays false: this is a seed import, so the
-                        // recovery mailbox scan is what restores existing VTXOs.
-                    )
+                    onchain: builtInWallet
                 )
                 print("✅ New wallet created successfully")
-                logRecoveryReport(for: restoredWallet)
             }
             
             self.wallet = restoredWallet
@@ -557,14 +540,84 @@ extension BarkWalletFFI {
     
     // MARK: - Recovery Report
 
-    /// Logs the seed-recovery scan result bark produces on the open that creates
-    /// the wallet locally (bark 0.14). A nil report means the scan failed or was
-    /// skipped, so an empty result does NOT prove no funds are missing.
-    private func logRecoveryReport(for wallet: Wallet) {
-        guard let report = wallet.recoveryReport() else {
-            Self.logger.warning("Recovery scan produced no report (scan failed or was skipped)")
-            return
+    /// Opens the wallet for a seed-only import, creating it locally.
+    ///
+    /// bark runs the seed-recovery mailbox scan only on the open that performs
+    /// the local creation, and a scan that errors out (e.g. the server was
+    /// unreachable in that window) is swallowed into a nil report with no API
+    /// to re-run it. The database is seconds old at that point, so the retry
+    /// for a nil report is to wipe it and redo the creating open.
+    private func openImportedWallet(
+        network net: Network,
+        mnemonic: String,
+        config finalConfig: Config,
+        onchain builtInWallet: OnchainWallet
+    ) async throws -> Wallet {
+        let maxAttempts = 3
+        for attempt in 1...maxAttempts {
+            let wallet = try await Wallet.open(
+                network: net,
+                mnemonicOrSeed: mnemonic,
+                config: finalConfig,
+                args: WalletOpenArgs(
+                    datadir: datadir,
+                    onchain: builtInWallet,
+                    createIfNotExists: true,
+                    // Import must succeed even when the server is briefly
+                    // unreachable; unlike an initWallet-then-open split, this
+                    // flag does not suppress the recovery scan.
+                    createWithoutServer: true,
+                    // skipRecovery stays false: this is a seed import, so the
+                    // recovery mailbox scan is what restores existing VTXOs.
+                    skipRecovery: false
+                )
+            )
+
+            if let report = wallet.recoveryReport() {
+                logRecoveryReport(report)
+                await retryFailedRecoveries(from: report, wallet: wallet)
+                return wallet
+            }
+
+            Self.logger.warning("Recovery scan produced no report (attempt \(attempt)/\(maxAttempts)) - the scan errored before completing")
+            if attempt == maxAttempts {
+                Self.logger.error("Recovery scan never completed after \(maxAttempts) attempts - continuing import; VTXOs still pending in the regular mailbox arrive via sync, but round-received VTXOs may be missing until a future recovery succeeds")
+                return wallet
+            }
+
+            // The scan only runs on the open that creates the wallet locally,
+            // so retrying requires wiping the seconds-old database first.
+            try? await wallet.stopDaemon()
+            try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
+            removeBarkDatabase()
         }
+        throw BarkWalletFFIError.configurationError("Wallet open retry loop exited unexpectedly")
+    }
+
+    /// Removes the bark database (and sqlite sidecars) so the next open
+    /// re-creates the wallet and re-runs the recovery scan.
+    private func removeBarkDatabase() {
+        let fileManager = FileManager.default
+        let base = (datadir as NSString).appendingPathComponent(WalletBackupService.currentDatabaseFileName)
+        for path in [base, base + "-wal", base + "-shm"] where fileManager.fileExists(atPath: path) {
+            try? fileManager.removeItem(atPath: path)
+        }
+    }
+
+    /// Retries the VTXO ids a recovery scan bucketed as `failed` (per-VTXO
+    /// transient errors; the scan itself still completed).
+    private func retryFailedRecoveries(from report: RecoveryReport, wallet: Wallet) async {
+        guard !report.failed.vtxoIds.isEmpty else { return }
+        do {
+            let retried = try await wallet.recoverVtxos(vtxoIds: report.failed.vtxoIds)
+            Self.logger.info("Recovery retry of \(report.failed.vtxoIds.count) failed id(s): recovered \(retried.recovered.vtxoIds.count) (\(retried.recovered.totalSats) sats), still failed \(retried.failed.vtxoIds.count)")
+        } catch {
+            Self.logger.warning("Recovery retry of failed ids errored: \(error)")
+        }
+    }
+
+    /// Logs the seed-recovery scan result bark produced on the creating open.
+    private func logRecoveryReport(_ report: RecoveryReport) {
         Self.logger.info("""
             Recovery scan complete=\(report.isComplete): \
             recovered \(report.recovered.vtxoIds.count) (\(report.recovered.totalSats) sats), \

@@ -2,8 +2,8 @@
 
 **Audience:** Second team (bark + bark-ffi-bindings)
 **From:** Arké — iOS/macOS wallet built on the Swift bindings
-**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3 and notes through bindings 0.15.0 (bark v0.6.0)
-**Date:** July 2026
+**Versions reviewed:** bark 0.11.3 bindings (bark v0.3.0), with migration history back to bindings 0.6.3, notes through bindings 0.16, and source verification against bark `master` (`73e8fcfa3`) for §1.7
+**Date:** July 2026 (updated 2026-08-10 with §1.7, §1.8)
 
 Arké exercises nearly the entire binding surface: arkoor sends, boarding,
 offboarding, unilateral exits (including fee-blocked recovery UX), BOLT11/
@@ -240,6 +240,94 @@ Three compounding problems:
    server releases the inputs of a round whose result the client never
    accepted.
 
+### 1.7 Seed-recovery scan: silently disabled by init-then-open, unobservable failure, no re-scan
+
+Found in the field (2026-08-10) during a seed-only import on signet; all four
+points verified against bark source at `master` (`73e8fcfa3`). The scan itself
+(`recover_from_mailbox`) is exactly what seed-only recovery needs — but four
+compounding issues around *when it runs and how it fails* meant our imports
+never benefited from it:
+
+1. **Splitting init from open permanently disables recovery.** The scan is
+   gated on the local `created_now` flag, set only when `Wallet::open` itself
+   finds no properties row and calls `Wallet::create`
+   (`bark/src/lib.rs:1104-1117`, `1169-1189`). Any client that calls the FFI's
+   free function `initWallet()` before `Wallet.open` — the shape the 0.11
+   create/open restructure pushed us into, and which we shipped for months —
+   writes the properties row first, so the open never scans and
+   `recoveryReport()` is deterministically nil. No error, no log hinting at
+   the cause. We've now collapsed to a single
+   `Wallet.open(createIfNotExists: true, createWithoutServer: true)`
+   (`Shared/Data/BarkWalletFFI/BarkWalletFFI+WalletCreation.swift`), but
+   nothing documents the footgun. **Ask:** run the scan whenever recovery has
+   never completed (persist a "recovery done" flag instead of gating on the
+   in-call `created_now`), or deprecate `initWallet` from the FFI, or at
+   minimum document loudly that it disables the scan.
+
+2. **A failed scan is indistinguishable from a skipped one.** Only the `Ok`
+   arm delivers a report (`lib.rs:1175-1185`); an up-front infra failure —
+   the scan's very first call is `require_server()`
+   (`bark/src/recovery.rs:236`) — is error-logged and swallowed, and `open`
+   succeeds. From the client, `recoveryReport() == nil` conflates "scan
+   skipped," "scan errored," and (pre-0.16 bindings) "no callback wired." A
+   server hiccup during open therefore makes recoverable funds silently
+   invisible. **Ask:** surface the outcome explicitly — e.g.
+   `RecoveryStatus { notRun | failed(reason) | completed(report) }`.
+
+3. **The open-time server connect is cold and non-retried.** `open` builds a
+   fresh `OnceCell` and dials a brand-new TLS/gRPC channel with no reuse of
+   the create-time connection that succeeded moments earlier and no
+   backoff/retry (`lib.rs:1151`, `1244-1258`). We hit exactly this transient
+   in the field: create connected fine, open's probe failed (the wrapper's
+   `[OPEN] Server connection FAILED` log), and the daemon's self-healing
+   channel reconnected seconds later. In a single-open flow that one
+   transient dial aborts the scan (via point 2). **Ask:** a bounded retry on
+   the open-time connect, or reuse of the create-time connection.
+
+4. **A missed scan can strand funds, and there is no re-scan API.**
+   `recover_from_mailbox` is `pub(crate)` with exactly one caller
+   (`recovery.rs:537`); `sync()`'s catch-up (`catchup_recovery_vtxos`,
+   `lib.rs:2215-2244`) is **upload-only** over locally-known rows — it
+   discovers nothing — and `recoverVtxos(ids)` needs explicit ids the client
+   doesn't have when the report is nil. So VTXOs that exist only in the
+   recovery mailbox (round-received, regular-mailbox deliveries already
+   consumed on another device, `failed`, or `foreign`/beyond `STOP_GAP = 50`)
+   are unreachable until a *creating* open — i.e. until the client wipes the
+   datadir. In our field import the 3 VTXOs came back only because they
+   happened to be still-undelivered arkoors in the *regular* mailbox. Our
+   workaround: when the creating open yields a nil report, we stop the
+   daemon, wipe the seconds-old database, and redo the creating open (bounded
+   retries) — client-side surgery that a public API should replace. **Ask:**
+   expose a re-runnable `wallet.recoverFromMailbox()` (or run it from
+   `maintenance()` when recovery never completed).
+
+### 1.8 Field question: repaired wallet's VTXOs re-delivered with long-expired heights
+
+Follow-up on the wallet your team recently repaired for us (we believe the
+one from 1.6). A fresh seed-only import on 2026-08-10 recovered its 3 VTXOs
+via the regular mailbox:
+
+| VTXO | Amount | Expiry height | Blocks past expiry at import (tip 317051) |
+|---|---|---|---|
+| `3fd23d08…93d9:0` | 100 sats | 316301 | 750 |
+| `434a217c…cbc6:0` | 9,900 sats | 316337 | 714 |
+| `4cd0752f…27e4:0` | 10,000 sats | 316425 | 626 |
+
+Refresh is rejected by the server — correctly, we assume —
+with `unusable inputs: […]: bad user input: input vtxo(s) unusable`. Three
+questions:
+
+1. Is **unilateral exit still viable** for VTXOs this far past expiry, or has
+   the server already swept the round outputs? (Our stuck-wallet report's
+   finding that the exit-package txs never appeared on the network may make
+   this moot — happy to test whatever you recommend.)
+2. When re-delivering repaired VTXOs, should they have been **re-issued
+   fresh** rather than re-sent with their original, long-dead expiry heights?
+3. What should a client do with an expired VTXO that bark still reports as
+   `state=Spendable` and counts in the spendable balance? Users currently see
+   funds they may not be able to move; an explicit expired state (or
+   documented client-side rule) would let us render this honestly.
+
 ---
 
 ## Priority 2 — costs us reliability and battery
@@ -429,6 +517,13 @@ Two adjacent things worth documenting either way:
 - Recovery-mailbox retention: how long do IDs stay retrievable (until VTXO
   expiry?), given the purge behavior we've seen elsewhere (see 1.5).
 
+**Update 2026-08-10:** bark 0.16 largely answered this — the seed-recovery
+mailbox scan now runs at the creating open, with `recoveryReport()` /
+`recoverVtxos()` exposed via FFI and per-VTXO registration catch-up in
+`sync()`. We've built our import flow on it. The gaps we then hit in the
+field (scan silently disabled by init-then-open, unobservable failure, no
+re-scan API) are now §1.7.
+
 ---
 
 ## Release process
@@ -477,3 +572,5 @@ pattern we're asking you to extend everywhere:
 | 12 | Keep completed exits queryable (or an exit-history API) | Drain-time status snapshots + claim-tx capture window |
 | 13 | Recovery-mailbox reader via FFI (or auto-processing in `sync()`) | Any need for client-side VTXO backup |
 | 14 | Terminal failure + abandon API for rounds that fail validation | Nothing yet — the affected funds are simply stuck |
+| 15 | Recovery scan: run whenever never-completed, explicit outcome, retried connect, public re-scan | Wipe-and-reopen retry loop in wallet import |
+| 16 | Expired-VTXO semantics: exit viability, re-issue policy, explicit state | Users seeing "spendable" balance they can't move |
