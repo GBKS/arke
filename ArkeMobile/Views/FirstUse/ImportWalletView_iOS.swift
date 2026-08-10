@@ -180,8 +180,7 @@ struct ImportWalletView_iOS: View {
                     .controlSize(.large)
                     .tint(Color.Arke.gold)
                     .disabled(
-                        mnemonicPhrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || 
-                        backupFileURL == nil || 
+                        mnemonicPhrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                         isImporting
                     )
                     .padding(.bottom, 30)
@@ -232,26 +231,31 @@ struct ImportWalletView_iOS: View {
             showError(NSLocalizedString("error_enter_recovery_phrase", comment: ""))
             return
         }
-        
-        // Validate backup file
-        guard let backupURL = backupFileURL else {
-            showError(NSLocalizedString("error_select_backup_file", comment: ""))
-            return
-        }
-        
+
         isImporting = true
-        
+
         do {
             // Select network configuration based on isMainnet flag
             let networkConfig = isMainnet ? NetworkConfig.mainnet : NetworkConfig.signet
-            
-            // Use WalletManager to import the wallet with backup
-            let result = try await walletManager.importWalletWithBackup(
-                mnemonic: trimmedMnemonic,
-                backupFileURL: backupURL,
-                networkConfig: networkConfig
-            )
-            Self.logger.info("✅ Wallet imported successfully with backup: \(result)")
+
+            // The backup file is optional: with one, the wallet database is
+            // restored directly; without one, bark recovers funds from the
+            // network via its seed-recovery scan (local history is not restored)
+            let result: String
+            if let backupURL = backupFileURL {
+                result = try await walletManager.importWalletWithBackup(
+                    mnemonic: trimmedMnemonic,
+                    backupFileURL: backupURL,
+                    networkConfig: networkConfig
+                )
+                Self.logger.info("✅ Wallet imported successfully with backup: \(result)")
+            } else {
+                result = try await walletManager.importWallet(
+                    mnemonic: trimmedMnemonic,
+                    networkConfig: networkConfig
+                )
+                Self.logger.info("✅ Wallet imported successfully from recovery phrase only: \(result)")
+            }
             
             // Success - call the completion handler
             onWalletImported()

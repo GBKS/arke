@@ -1,1 +1,554 @@
+Reading from public effective user settings.
+UIKeyboardLayoutStar implements focusItemsInRect: - caching for linear focus movement is limited as long as this view is on screen.
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected. { function=sendMessage, reporterID=326241420836866 }
+Reporter disconnected or already stopped. { func=stop, reporterID=326241420836866 }
+⚠️ [SecurityService] No hash found in NSUbiquitousKeyValueStore
+✅ Mnemonic is valid, proceeding with first-time import
+🔍 [DEBUG] Importing with mnemonic: resource galaxy envelope property kit vocal slogan candy identify mixed screen thunder
+🔍 [DEBUG] Mnemonic word count: 12
+🔧 Importing wallet with FFI...
+   Network: bitcoin
+   Ark server: https://ark.second.tech
+   Data dir: /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi
+✅ iCloud available for wallet backup
+📦 iCloud backup detected - database restore available if needed
+✅ iCloud available for wallet backup
+   Last backup: 4 minutes ago
+   Size: 279 KB
+✅ Data directory is confirmed writable
+🔧 Creating onchain wallet for import...
+   Created BDK data directory: /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/bdk
+[DB] Opening new connection for /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/bdk/db.sqlite
+Opening database at /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/bdk/db.sqlite
+/var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/bdk/db.sqlite is accessible by other users (mode 644); run `chmod 600 /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/bdk/db.sqlite` to secure it
+Performing migration 0->1:'Create initial tables'
+Performing migration 1->2:'Create wallet meta tables'
+Performing migration 2->3:'Create tables for movement history'
+Performing migration 3->4:'Updating the VtxoState'
+Performing migration 4->5:'Add table to support lightning receives'
+Performing migration 5->6:'Update the exit system to be a state machine'
+Performing migration 6->7:'Rename vtxo_refresh_threshold to vtxo_refresh_expiry_threshold'
+Performing migration 7->8:'Add fallback_fee column to bark_config'
+Performing migration 8->9:'Add kind column to bark_movement'
+Performing migration 9->10:'remove keychain column from vtxo table'
+Performing migration 10->11:'Add tx_origin to bark_exit_child_transactions'
+Performing migration 11->12:'Create table to keep track of rounds'
+Performing migration 12->13:'Create table to keep track of rounds'
+Performing migration 13->14:'drop last round synced'
+Performing migration 14->15:'Make round_seq and attempt_seq optional'
+Performing migration 15->16:'No config in database'
+Performing migration 16->17:'Add unregistered board table'
+Performing migration 17->18:'Add htlc_recv_cltv_delta column to lightning receives'
+Performing migration 18->19:'No config in database'
+Performing migration 19->20:'New movements API'
+Performing migration 20->21:'Fix lightning movements'
+Performing migration 21->22:'Fix movement date fields'
+Performing migration 22->23:'mailbox checkpoint system'
+Performing migration 23->24:'Add server pubkey to properties'
+Performing migration 24->25:'Implement fees'
+Performing migration 25->26:'pending offboard tracking'
+Performing migration 26->27:'split payment method destination into type and value columns'
+Performing migration 27->28:'Add server mailbox pubkey to properties'
+Performing migration 28->29:'Split bark_vtxo.raw_vtxo into bare + genesis with cached refresh-strategy summaries'
+Performing migration 29->30:'Add wallet action checkpoint table'
+Performing migration 30->31:'Rewrite locked vtxo state from movement_id to holder enum'
+Performing migration 31->32:'Rewrite persisted ExitTxStatus variants for the unilateral exit refactor'
+Performing migration 32->33:'Add paid invoice fact table and backfill settled lightning sends'
+Performing migration 33->34:'Unlock input vtxos stuck in Locked state for failed offboard movements'
+Performing migration 34->35:'Track exit progress on VTXO/movement: add bark_exit_states.movement_id and reconcile in-progress exits'
+Performing migration 35->36:'Revert in-progress exit movements from Successful back to Pending so the new progress code can finalize them onchain'
+Performing migration 36->37:'Add settled lightning receive fact table and backfill settled lightning receives'
+Performing migration 37->38:'Migrate pending boards into board wallet action checkpoints'
+Performing migration 38->39:'Link movements to their owning wallet action for idempotent creation'
+Performing migration 39->40:'Unlock input vtxos stuck in Locked state for failed offboard movements, again'
+Performing migration 40->41:'Move pending offboards into wallet action checkpoint table'
+Performing migration 41->42:'Track per-vtxo recovery registration so sync only catches up unregistered vtxos'
+[ONCHAIN] Creating onchain wallet for Bitcoin network
+[ONCHAIN] Using Esplora at https://mempool.second.tech/api
+starting new connection: https://mempool.second.tech/
+No cached session for DnsName("mempool.second.tech")
+Not resuming any session
+Using ciphersuite TLS13_AES_128_GCM_SHA256
+Not resuming
+TLS1.3 encrypted extensions: ServerExtensions { server_name_ack: (), selected_protocol: SingleProtocolName(ProtocolName(687474702f312e31)), unknown_extensions: {}, .. }
+ALPN protocol is Some(b"http/1.1")
+✅ Built-in onchain wallet created
+🔧 Creating transaction history reader...
+📜 Initializing BDKTransactionReader...
+   📋 Descriptor: tr([dcb03828/86'/0'/0']xpub6C4cjuwYKE1oaZoZuK6AWoJi8rvCfAvWXLe8euY5mTc4c7Gf4W6Ym7mNQn1WSPobs5yFLH4bsAXHNvTeWM9XQYZV6QwsrvgQKbmu3bAb7XJ/0/*)#8zp5hk4f
+   Loading existing single-descriptor transaction database...
+   ⚠️ Failed to load existing database, recreating: CouldNotLoad
+✅ BDKTransactionReader initialized
+✅ Transaction reader created
+🆕 No wallet database found - creating new wallet...
+[DB] Opening new connection for /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite
+Opening database at /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite
+/var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite is accessible by other users (mode 644); run `chmod 600 /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite` to secure it
+Performing migration 0->1:'Create initial tables'
+Performing migration 1->2:'Create wallet meta tables'
+Performing migration 2->3:'Create tables for movement history'
+Performing migration 3->4:'Updating the VtxoState'
+Performing migration 4->5:'Add table to support lightning receives'
+Performing migration 5->6:'Update the exit system to be a state machine'
+Performing migration 6->7:'Rename vtxo_refresh_threshold to vtxo_refresh_expiry_threshold'
+Performing migration 7->8:'Add fallback_fee column to bark_config'
+Performing migration 8->9:'Add kind column to bark_movement'
+Performing migration 9->10:'remove keychain column from vtxo table'
+Performing migration 10->11:'Add tx_origin to bark_exit_child_transactions'
+Performing migration 11->12:'Create table to keep track of rounds'
+Performing migration 12->13:'Create table to keep track of rounds'
+Performing migration 13->14:'drop last round synced'
+Performing migration 14->15:'Make round_seq and attempt_seq optional'
+Performing migration 15->16:'No config in database'
+Performing migration 16->17:'Add unregistered board table'
+Performing migration 17->18:'Add htlc_recv_cltv_delta column to lightning receives'
+Performing migration 18->19:'No config in database'
+Performing migration 19->20:'New movements API'
+Performing migration 20->21:'Fix lightning movements'
+Performing migration 21->22:'Fix movement date fields'
+Performing migration 22->23:'mailbox checkpoint system'
+Performing migration 23->24:'Add server pubkey to properties'
+Performing migration 24->25:'Implement fees'
+Performing migration 25->26:'pending offboard tracking'
+Performing migration 26->27:'split payment method destination into type and value columns'
+Performing migration 27->28:'Add server mailbox pubkey to properties'
+Performing migration 28->29:'Split bark_vtxo.raw_vtxo into bare + genesis with cached refresh-strategy summaries'
+Performing migration 29->30:'Add wallet action checkpoint table'
+Performing migration 30->31:'Rewrite locked vtxo state from movement_id to holder enum'
+Performing migration 31->32:'Rewrite persisted ExitTxStatus variants for the unilateral exit refactor'
+Performing migration 32->33:'Add paid invoice fact table and backfill settled lightning sends'
+Performing migration 33->34:'Unlock input vtxos stuck in Locked state for failed offboard movements'
+Performing migration 34->35:'Track exit progress on VTXO/movement: add bark_exit_states.movement_id and reconcile in-progress exits'
+Performing migration 35->36:'Revert in-progress exit movements from Successful back to Pending so the new progress code can finalize them onchain'
+Performing migration 36->37:'Add settled lightning receive fact table and backfill settled lightning receives'
+Performing migration 37->38:'Migrate pending boards into board wallet action checkpoints'
+Performing migration 38->39:'Link movements to their owning wallet action for idempotent creation'
+Performing migration 39->40:'Unlock input vtxos stuck in Locked state for failed offboard movements, again'
+Performing migration 40->41:'Move pending offboards into wallet action checkpoint table'
+Performing migration 41->42:'Track per-vtxo recovery registration so sync only catches up unregistered vtxos'
+Connecting to Ark server at https://ark.second.tech using TLS...
+No cached session for DnsName("ark.second.tech")
+Not resuming any session
+Using ciphersuite TLS13_AES_128_GCM_SHA256
+Not resuming
+TLS1.3 encrypted extensions: ServerExtensions { server_name_ack: (), selected_protocol: SingleProtocolName(ProtocolName(6832)), unknown_extensions: {}, .. }
+ALPN protocol is Some(b"h2")
+Created wallet with fingerprint: 555a86b1
+Stored server pubkey: 0375b2e4f6abe5b00736359de211c35d9e72b615e5fd424d8ad1e68a8b300b97b5
+Sending warning alert CloseNotify
+[DB] Opening new connection for /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite
+Opening database at /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite
+/var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite is accessible by other users (mode 644); run `chmod 600 /var/mobile/Containers/Data/Application/74EAD7CE-8E9D-4C9B-BADC-958F96174524/Library/Application Support/GBKS.Arke/bark-data-ffi/db.sqlite` to secure it
+starting new connection: https://mempool.second.tech/
+No cached session for DnsName("mempool.second.tech")
+Not resuming any session
+Using ciphersuite TLS13_AES_128_GCM_SHA256
+Not resuming
+TLS1.3 encrypted extensions: ServerExtensions { server_name_ack: (), selected_protocol: SingleProtocolName(ProtocolName(687474702f312e31)), unknown_extensions: {}, .. }
+ALPN protocol is Some(b"http/1.1")
+[OPEN] Server connection FAILED - Lightning and Ark operations will not work!
+✅ New wallet created successfully
+Starting daemon for wallet 555a86b1
+Recovery scan produced no report (scan failed or was skipped)
+Connecting to Ark server at https://ark.second.tech using TLS...
+✅ [BarkWalletFFI] Wallet imported - mnemonic storage handled by WalletManager
+   ⏭️  Skipping storeMnemonic() to prevent duplication
+Found Bark file: db.sqlite (208896 bytes)
+✅ iCloud available for wallet backup
+✅ Wallet backup completed
+Created timestamped backup: 2026-08-10T07:32:04Z
+✅ Wallet imported successfully
+Updating network configuration to: Bitcoin Mainnet
+Network configuration saved: Bitcoin Mainnet (ID: mainnet)
+No cached session for DnsName("ark.second.tech")
+Not resuming any session
+⏱️ [PROFILE] Keychain write took 0.016s
+Using ciphersuite TLS13_AES_128_GCM_SHA256
+Not resuming
+TLS1.3 encrypted extensions: ServerExtensions { server_name_ack: (), selected_protocol: SingleProtocolName(ProtocolName(6832)), unknown_extensions: {}, .. }
+ALPN protocol is Some(b"h2")
+✅ [SecurityService] Saved hash to NSUbiquitousKeyValueStore at 2026-08-10 07:32:04 +0000
+⏱️ [PROFILE] Hash generation and ubiquitous store save took 0.030s
+⏱️ [PROFILE] Total saveMnemonic() took 0.047s
+✅ [SecurityService] Mnemonic saved to keychain and hash saved to ubiquitous store
+   ℹ️  Coordinator should call DeviceRegistrationService.registerCurrentDevice() next
+✅ [SecurityService] Seed imported - coordinator should update device registration
+✅ Mnemonic saved to keychain and device updated
+🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes
+✅ [SecurityService] Retrieved hash from NSUbiquitousKeyValueStore: yMOAWgzZ...
+🔄 Starting background transaction sync for imported wallet...
+Loaded existing device ID: 52819905-F829-4EA8-8EA0-997CAFB5B04F
+Retrieved isPrimary=true from KV store for device: 52819905-F829-4EA8-8EA0-997CAFB5B04F
+Using KV store primary status: true
+Registered device in KV store: 52819905-F829-4EA8-8EA0-997CAFB5B04F
+Created new device registration (isPrimary=true, SwiftData:0, KVStore:0)
+CoreData: debug: PostSaveMaintenance: incremental_vacuum with freelist_count - 31 and pages_to_free 6
+Loaded 1 registered devices
+✅ Device registered after wallet import
+▶️ Starting service (check interval: 300s)
+▶️ Starting service (check interval: 60s)
+Starting notification listener
+Creating notification holder...
+Notification holder created successfully
+✅ Wallet imported successfully from recovery phrase only: Wallet imported successfully. Syncing with network...
+🔍 Starting check
+🔍 Starting check
+Health check started (every 5s)
+Retrieved 0 VTXOs in exit process
+CoreData: debug: PostSaveMaintenance: incremental_vacuum with freelist_count - 25 and pages_to_free 5
+Retrieved 0 pending round states
+✅ No pending rounds - skipping progression
+Retrieved 0 VTXOs in exit process
+Retrieved 0 claimable exits
+Retrieved 0 VTXOs in exit process
+✅ No pending, claimable, or claim-in-progress exits - skipping progression
+ℹ️ [Notifications] No notifications to cancel
+starting new connection: https://mempool.second.tech/
+Resuming session
+Ark server has 0 mailbox messages for us
+Starting wallet sync...
+Starting balance: { immature: 0 BTC, trusted_pending: 0 BTC, untrusted_pending: 0 BTC, confirmed: 0 BTC }
+Syncing with esplora...
+Using ciphersuite TLS13_AES_128_GCM_SHA256
+Resuming using PSK
+TLS1.3 encrypted extensions: ServerExtensions { selected_protocol: SingleProtocolName(ProtocolName(687474702f312e31)), unknown_extensions: {}, .. }
+ALPN protocol is Some(b"http/1.1")
+Finished syncing with esplora
+Current balance: { immature: 0 BTC, trusted_pending: 0 BTC, untrusted_pending: 0 BTC, confirmed: 0 BTC }
+✅ Background transaction sync complete - history ready
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 5s ago
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 10s ago
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 15s ago
+{"msg":"#Warning Error reading file", "file":"\/\/private\/var\/Managed Preferences\/mobile\/com.apple.CoreMotion.plist", "error":"Error Domain=NSCocoaErrorDomain Code=257 \"The file “com.apple.CoreMotion.plist” couldn’t be opened because you don’t have permission to view it.\" UserInfo={NSFilePath=\/\/private\/var\/Managed Preferences\/mobile\/com.apple.CoreMotion.plist, NSURL=file:\/\/\/\/private\/var\/Managed%20Preferences\/mobile\/com.apple.CoreMotion.plist, NSUnderlyingError=0x1107f8930 {Error Domain=NSPOSIXErrorDomain Code=1 \"Operation not permitted\"}}"}
+⏭️ [WalletView_iOS] 📍 SKIP: Skipping refresh (hasAppearedBefore=false)
+   └─ Data already loaded by MainView_iOS initialization
+✅ [MotionManager] Started monitoring device motion
+Visibility check: hasCompletedInitialLoad=false, hasVtxosToRefresh=false, shouldShow=false
+.task modifier triggered
+.onAppear triggered
+Visibility check: hasCompletedInitialLoad=false, hasVtxosToRefresh=false, shouldShow=false
+Visibility check: hasCompletedInitialLoad=false, hasVtxosToRefresh=false, shouldShow=false
+✅ ServiceContainer activated - services will load and sync data
+Calling serviceContainer.configureServices()...
+🔧 [ServiceContainer] 📞 configureServices() CALLED
+   ├─ From: MainView_iOS.swift:137
+   └─ Function: body
+⏭️ [TagService] Already observing CloudKit changes
+⏭️ [ContactService] Already observing CloudKit changes
+🌥️ Starting CloudKit sync...
+🌥️ [CloudKit] Started observing remote changes (debounced: 1.5s)
+📡 [CloudKit] Listening for: NSPersistentStoreRemoteChangeNotification
+<0x105f76bc0> Gesture: System gesture gate timed out.
+Fetching VTXOs via FFI...
+📋 Loaded 0 tags from SwiftData
+👥 Loaded 0 contacts with addresses from SwiftData
+Loaded 1 registered devices
+CALL #3: Initializing newly created wallet from onWalletReady callback
+🔧 [WalletManager] 📞 initialize() CALLED
+   ├─ Time: 2026-08-10 07:32:24 +0000
+   ├─ From: MainView_iOS.swift:144
+   └─ Function: body
+Registered for remote notifications
+✅ [SecurityService] Retrieved hash from NSUbiquitousKeyValueStore: yMOAWgzZ...
+Keychain mnemonic check: found
+Device registration starting...
+Retrieved 0 VTXOs
+VTXOs: []
+🔧 [WalletManager] initialize execute at 2026-08-10 07:32:24 +0000
+🔧 [WalletManager] Starting initialization...
+Registered device in KV store: 52819905-F829-4EA8-8EA0-997CAFB5B04F
+Updated existing device registration
+Loaded 1 registered devices
+✅ [WalletManager] Device is primary - full wallet mode
+ℹ️ [WalletManager] Wallet is open - skipping backup restore check
+🔧 [WalletManager] Initializing in PRIMARY mode (full wallet access)
+Wallet already open
+✅ Wallet opened successfully
+Starting wallet daemon - Onchain support: true
+Device registered with hasSeed=true in 0.02s
+Called Wallet::start_daemon while daemon was already running.
+Fetching latest block height from esplora, URL: https://mempool.second.tech/api/blocks/tip/height
+updateTaskRequest called for a pre-running task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+Visibility check: hasCompletedInitialLoad=false, hasVtxosToRefresh=false, shouldShow=false
+APNs device token received: b74b723749ef222c3dfceed90ea0ede91c6a95034359acd929017ef74e372f16
+Wallet daemon started successfully
+🤖 Wallet daemon started
+Keychain mnemonic check: found
+✅ Wallet mnemonic found in Keychain - wallet exists on Bitcoin Mainnet
+📍 [ADDRESS TRACE] performInitialization() about to call refresh()
+   This will trigger address generation
+🔄 [WalletManager] 📞 refresh() CALLED
+   ├─ From: WalletManager.swift:605
+   └─ Function: initializePrimaryMode()
+🔄 [REFRESH STATE] Active refresh count: 1, refresh #1
+🔄 [REFRESH STATE] Setting isRefreshing = true (first active refresh)
+APNs token received, registering with relay...
+Notifications disabled in settings
+WalletManager.performRefresh
+📍 [ADDRESS TRACE] WalletManager.performRefresh() starting address load
+   📞 Called from:
+      0: 0   ArkeMobile.debug.dylib              0x0000000107e66108 $s10ArkeMobile13WalletManagerC14performRefresh33_0921B8C1DC84F23D983A7EC7DA2FF341LLyyYaFTY0_ + 2032
+      1: 1   ArkeMobile.debug.dylib              0x0000000107e655c9 $s10ArkeMobile13WalletManagerC7refresh6caller4file4lineySS_SSSitYaFyyYacfU_TQ1_ + 1
+      2: 2   ArkeMobile.debug.dylib              0x0000000107e81cd9 $s10ArkeMobile13WalletManagerC7refresh6caller4file4lineySS_SSSitYaFyyYacfU_TATQ0_ + 1
+      3: 3   ArkeMobile.debug.dylib              0x0000000107e50f99 $sIegH_BAytIegHgILr_TRTQ0_ + 1
+      4: 4   ArkeMobile.debug.dylib              0x0000000107e81e21 $sIegH_BAytIegHgILr_TRTA.604TQ0_ + 1
+      5: 5   ArkeMobile.debug.dylib              0x0000000107f60209 $s10ArkeMobile24TaskDeduplicationManagerC7execute3key9operationxSS_xyYaYCctYalFxyYacfU_TQ1_ + 1
+🔄 [Refresh] Step 1: Refreshing server connection...
+Refreshing server connection via FFI...
+Visibility check: hasCompletedInitialLoad=false, hasVtxosToRefresh=false, shouldShow=false
+Server connection refreshed
+✅ [Refresh] Server connection successful
+🔄 [Refresh] Step 2: Syncing wallet state with server...
+Syncing wallet with ASP server...
+Starting wallet sync...
+Starting balance: { immature: 0 BTC, trusted_pending: 0 BTC, untrusted_pending: 0 BTC, confirmed: 0 BTC }
+Syncing with esplora...
+Finished syncing with esplora
+Current balance: { immature: 0 BTC, trusted_pending: 0 BTC, untrusted_pending: 0 BTC, confirmed: 0 BTC }
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 21s ago
+Onchain wallet synced successfully
+[SYNC] Starting sync...
+Latest block height: 961847
+Fetched latest block height: 961847
+Fetching Ark server info via FFI...
+Ark server has 0 mailbox messages for us
+[SYNC] Sync completed
+Ark server info retrieved
+[SYNC] Balance after sync: spendable=0, pending_board=0
+[SYNC] VTXOs after sync: 0 total
+FFI ArkInfo fields: roundIntervalSecs: 3600, nbRoundNonces: 10, vtxoExitDelta: 144, vtxoExpiryDelta: 4032, htlcSendExpiryDelta: 1008, htlcExpiryDelta: 12, maxVtxoAmountSats: 10000000, requiredBoardConfirmations: 6, maxUserInvoiceCltvDelta: 250, minBoardAmountSats: 50000, maxVtxoExitDepth: 100, lnReceiveAntiDosRequired: false, feeSchedule: FeeSchedule(board: Bark.BoardFees(minFeeSats: 0, baseFeeSats: 0, ppm: 0), offboard: Bark.OffboardFees(baseFeeSats: 0, fixedAdditionalVb: 380, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), refresh: Bark.RefreshFees(baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 0), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 288, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), lightningReceive: Bark.LightningReceiveFees(baseFeeSats: 0, ppm: 0), lightningSend: Bark.LightningSendFees(minFeeSats: 20, baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]))
+ArkInfoModel constructed from FFI data, all fields mapped directly from FFI ArkInfo
+✅ ArkInfo cached - round interval: 3600s
+Wallet synced successfully
+✅ [Refresh] Wallet state synced successfully
+🔄 [Refresh] Step 3: Refreshing wallet data (balances, addresses, transactions, block height)...
+📍 [ADDRESS TRACE] Task group calling addressService.loadAddresses()
+Using cached block height: 961847
+📍 [ADDRESS TRACE] AddressService.loadAddresses() CALLED
+   📞 Call stack:
+      0: 0   ArkeMobile.debug.dylib              0x00000001080e31a8 $s10ArkeMobile14AddressServiceC13loadAddressesyyYaFTY0_ + 408
+      1: 1   ArkeMobile.debug.dylib              0x0000000107e6ee8d $s10ArkeMobile13WalletManagerC14performRefresh33_0921B8C1DC84F23D983A7EC7DA2FF341LLyyYaFyScGyytGzYaXEfU0_yyYacfU0_TQ3_ + 1
+      2: 2   ArkeMobile.debug.dylib              0x0000000107e88fcd $s10ArkeMobile13WalletManagerC14performRefresh33_0921B8C1DC84F23D983A7EC7DA2FF341LLyyYaFyScGyytGzYaXEfU0_yyYacfU0_TATQ0_ + 1
+      3: 3   ArkeMobile.debug.dylib              0x0000000107e7e635 $sxIeAgHr_xs5Error_pIegHrzo_s8SendableRzlTRTQ0_ + 1
+      4: 4   ArkeMobile.debug.dylib              0x0000000107e8978d $sxIeAgHr_xs5Error_pIegHrzo_s8SendableRzlTRTATQ0_ + 1
+      5: 5   libswift_Concurrency.dylib          0x000000019f351385 70E4FD9F-9BAA-38D3-9127-4B5194AD41EB + 21381
+[ADDRESS TRACE] getArkAddress() CALLED
+Call stack:
+  0: 0   ArkeMobile.debug.dylib              0x0000000107c5bf90 $s10ArkeMobile13BarkWalletFFIC13getArkAddressSSyYaKFTY0_ + 1408
+  1: 1   ArkeMobile.debug.dylib              0x0000000107c4dc39 $s10ArkeMobile13BarkWalletFFICAA0cD8ProtocolA2aDP13getArkAddressSSyYaKFTWTQ0_ + 1
+  2: 2   ArkeMobile.debug.dylib              0x00000001080e4831 $s10ArkeMobile14AddressServiceC011generateNewC04type8strategyAA010PersistentC0CAA0C4TypeO_AA0C18GenerationStrategyOtYaKFTQ1_ + 1
+  3: 3   ArkeMobile.debug.dylib              0x00000001080e4001 $s10ArkeMobile14AddressServiceC017getCurrentReceiveC04typeAA010PersistentC0CAA0C4TypeO_tYaKFTQ1_ + 1
+  4: 4   ArkeMobile.debug.dylib              0x00000001080e7a25 $s10ArkeMobile14AddressServiceC20performLoadAddresses33_5CCE0CA8977E400AFC258B82BE4B3822LLyyYaFTQ1_ + 1
+  5: 5   ArkeMobile.debug.dylib              0x00000001080e382d $s10ArkeMobile14AddressServiceC13loadAddressesyyYaFyyYacfU0_TQ1_ + 1
+Generating new address via FFI
+Current wallet state - Wallet exists: true, Server: https://ark.second.tech, Esplora: https://mempool.second.tech/api
+Attempting to fetch server info before address generation
+Fetching onchain transaction history...
+Fetching wallet movements via FFI...
+Wallet initialized: true at 2026-08-10 07:32:25 +0000
+Fetching balance via FFI
+Fetching onchain balance via FFI
+Server connected! ArkInfo available - Round interval: 3600s, VTXO expiry: 4032 blocks
+Onchain balance retrieved - Total: 0 sats
+Confirmed: 0 sats, Pending: 0 sats
+📊 Onchain balance: 0 sats total, 0 sats spendable
+Retrieved 0 movements
+Movements converted to JSON
+Transactions output: [
 
+]
+💾 Successfully saved 0 new, 0 updated transactions
+🏷️ Preserved 0 tag assignments across updates
+Next round start time: 1786348431
+Retrieved 0 VTXOs needing refresh
+New address generated - Address: ark1pu6h30w3zqqpmy9p06cmlynyz6af9e8azty7cvj08yxkmeq7jknazywr7kx8uc4pzqypkqzzrd42pfc8rxu7sjpyrlar2a8hfdxtrtze4qfw4d0c0x38u9qgghsjnc, Index: 0
+✅ Generated new Ark address: ark1pu6h30w3zqqpmy9p06cmlynyz6af9e8azty7cvj08yxkmeq7jknazywr7kx8uc4pzqypkqzzrd42pfc8rxu7sjpyrlar2a8hfdxtrtze4qfw4d0c0x38u9qgghsjnc
+✅ Ark address loaded: ark1pu6h30w3zqqpmy9p06cmlynyz6af9e8azty7cvj08yxkmeq7jknazywr7kx8uc4pzqypkqzzrd42pfc8rxu7sjpyrlar2a8hfdxtrtze4qfw4d0c0x38u9qgghsjnc
+Generating onchain address from built-in wallet
+Balance retrieved - Spendable: 0 sats
+Pending Lightning Send: 0 sats
+Pending in round: 0 sats
+Pending exit: 0 sats
+Pending board: 0 sats
+📊 Ark balance: 0 sats spendable, 0 sats pending
+Fee rates updated: fast 2, medium 1, slow 1 sat/vB
+Visibility check: hasCompletedInitialLoad=true, hasVtxosToRefresh=false, shouldShow=false
+[TiltShareOverlay] Generated BIP21 URI for QR code: bitcoin:?ark=ark1pu6h30w3zqqpmy9p06cmlynyz6af9e8azty7cvj08yxkmeq7jknazywr7kx8uc4pzqypkqzzrd42pfc8rxu7sjpyrlar2a8hfdxtrtze4qfw4d0c0x38u9qgghsjnc
+arkInfo changed, newArkInfo exists: true
+Visibility check: hasCompletedInitialLoad=true, hasVtxosToRefresh=false, shouldShow=false
+Onchain address generated: bc1pseclpqdrpunw2p943m2959dwzvpu76ng5nnng9c0grl5mreug78q83lqwh
+✅ Generated new onchain address: bc1pseclpqdrpunw2p943m2959dwzvpu76ng5nnng9c0grl5mreug78q83lqwh (index: 0)
+✅ Onchain address loaded: bc1pseclpqdrpunw2p943m2959dwzvpu76ng5nnng9c0grl5mreug78q83lqwh
+🔍 BDKTransactionReader analyzing 0 transactions...
+Retrieved 0 onchain transactions
+Total transactions: 0, Confirmed: 0, Pending: 0
+📊 [OnchainTxService] Fetched 0 onchain transactions
+updateTaskRequest failed for com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+Error updating background task request: Error Domain=BGSystemTaskSchedulerErrorDomain Code=3 "(null)"
+[TiltShareOverlay] Generated BIP21 URI for QR code: bitcoin:bc1pseclpqdrpunw2p943m2959dwzvpu76ng5nnng9c0grl5mreug78q83lqwh?ark=ark1pu6h30w3zqqpmy9p06cmlynyz6af9e8azty7cvj08yxkmeq7jknazywr7kx8uc4pzqypkqzzrd42pfc8rxu7sjpyrlar2a8hfdxtrtze4qfw4d0c0x38u9qgghsjnc
+💾 Created new persisted Ark balance
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+💾 Created new persisted Onchain balance
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+📊 Total balance: 0 sats (0 spendable)
+✅ All balances refreshed successfully 2026-08-10 07:32:30 +0000
+💾 [OnchainTxService] Persisted 0 transactions
+✅ [OnchainTxService] Refreshed 0 transactions
+🔄 [Refresh] Step 3.1: Merging ark + onchain transactions...
+📊 [UnifiedTxService] Merged 0 ark + 0 onchain = 0 total (deduped from 0)
+🔄 [Refresh] Step 4: Updating process states and exit cache...
+Loaded 1 registered devices
+Fetching VTXOs via FFI...
+Retrieved 0 VTXOs
+VTXOs: []
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 26s ago
+[Exit Cache] Refreshing exit cache...
+Retrieved 0 VTXOs in exit process
+[Exit Cache] Fetched 0 exit VTXO(s)
+[Exit Cache] Saved 0 live exit(s), kept 0 historical
+[Exit Cache] Cached 0 exit status(es) with 0 total txid(s)
+[Exit Cache] Triggering exit transaction re-linking...
+🔗 No exit movements found to re-link
+✅ All wallet data refreshed successfully on Bitcoin Mainnet
+📌 First successful sync recorded - future launches will trust an empty transaction cache
+📊 DataVersion incremented to 1 after refresh (triggers UI update)
+🔄 [REFRESH STATE] refresh() #1 returning
+🔄 [REFRESH STATE] Refresh #1 completed. Active count now: 0
+🔄 [REFRESH STATE] Setting isRefreshing = false (all refreshes complete)
+[Exit Cache] Refreshing exit cache...
+Retrieved 0 VTXOs in exit process
+[Exit Cache] Fetched 0 exit VTXO(s)
+[Exit Cache] Saved 0 live exit(s), kept 0 historical
+[Exit Cache] Cached 0 exit status(es) with 0 total txid(s)
+[Exit Cache] Triggering exit transaction re-linking...
+🔗 No exit movements found to re-link
+✅ Created tag: Savings
+✅ Created tag: Food
+✅ Created tag: Transport
+✅ Created tag: Shopping
+✅ Created tag: Bills
+✅ Created tag: Income
+✅ Created tag: Investment
+✅ Created tag: Gift
+✅ Created tag: Balance
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+updateTaskRequest called for an already running/updated task com.apple.coredata.cloudkit.activity.export.BDCA2175-76E4-4EFB-9E5D-0C50FF807BEB
+✅ Created 9 default tags in batch
+📋 Loaded 9 tags from SwiftData
+⚠️ Service already running
+⚠️ Service already running
+Starting service (check interval: 3600s)
+Service already running
+🔧 [WalletManager] initialize execute done at 2026-08-10 07:32:30 +0000
+⏱️ Wallet ready (success: true) 213.68s after launch anchor
+Starting check at 2026-08-10 07:32:30 +0000
+Notifications disabled in settings
+CALL #3: New wallet initialization complete
+Retrieved 0 VTXOs in exit process
+Retrieved 0 spendable VTXOs
+No spendable VTXOs - skipping
+Retrieved 0 spendable VTXOs
+No spendable VTXOs - not scheduling notification
+.onDisappear triggered
+.task modifier triggered
+.onAppear triggered
+Fetching VTXOs via FFI...
+Retrieved 0 VTXOs
+VTXOs: []
+Next round start time: 1786348431
+Retrieved 0 VTXOs needing refresh
+Loaded 1 registered devices
+Failed to create 1206x0 image slot (alpha=1 wide=1) (client=0x87a475f9) [0x5 (os/kern) failure]
+🌥️ [CloudKit] Remote change detected - refreshing data
+📦 [CloudKit] Notification object: Optional(<NSPersistentStoreCoordinator: 0x105c26e00>)
+✅ [CloudKit] Data refreshed from remote changes
+📢 [CloudKit] Posted cloudKitDataDidChange notification
+.onDisappear triggered
+📋 [TagService] CloudKit change detected - reloading tags
+📋 Loaded 9 tags from SwiftData
+👥 [ContactService] CloudKit change detected - reloading contacts
+👥 Loaded 0 contacts with addresses from SwiftData
+loadBlockHeightData
+Using cached block height: 961847
+Last loaded block height: Optional(961847)
+Estimated block height: Optional(961847)
+loadArkInfoData
+loadConfigData
+loadPendingRounds
+loadUnilateralExits
+loadVTXOs
+Fetching Ark server info via FFI...
+Fetching wallet config via FFI...
+Fetching VTXOs via FFI...
+Retrieved 0 VTXOs in exit process
+exits: []
+latestBlockHeight: 961847
+🔍 Loading debug info...
+Retrieved 0 pending round states
+Ark server info retrieved
+FFI ArkInfo fields: roundIntervalSecs: 3600, nbRoundNonces: 10, vtxoExitDelta: 144, vtxoExpiryDelta: 4032, htlcSendExpiryDelta: 1008, htlcExpiryDelta: 12, maxVtxoAmountSats: 10000000, requiredBoardConfirmations: 6, maxUserInvoiceCltvDelta: 250, minBoardAmountSats: 50000, maxVtxoExitDepth: 100, lnReceiveAntiDosRequired: false, feeSchedule: FeeSchedule(board: Bark.BoardFees(minFeeSats: 0, baseFeeSats: 0, ppm: 0), offboard: Bark.OffboardFees(baseFeeSats: 0, fixedAdditionalVb: 380, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), refresh: Bark.RefreshFees(baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 0), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 288, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), lightningReceive: Bark.LightningReceiveFees(baseFeeSats: 0, ppm: 0), lightningSend: Bark.LightningSendFees(minFeeSats: 20, baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]))
+ArkInfoModel constructed from FFI data, all fields mapped directly from FFI ArkInfo
+Full Config Object: Server Address: https://ark.second.tech, Esplora Address: https://mempool.second.tech/api, Bitcoind Address: nil, Bitcoind Cookie File: nil, Bitcoind User: nil, Bitcoind Pass: nil, Network: bitcoin, VTXO Refresh Expiry Threshold: nil, VTXO Exit Margin: nil, HTLC Recv Claim Delta: nil, Fallback Fee Rate: 10, Round Tx Required Confirmations: nil
+Retrieved 0 VTXOs
+VTXOs: []
+arkInfoData: Optional(ArkeUI.ArkInfoModel(network: "bitcoin", serverPubkey: "0375b2e4f6abe5b00736359de211c35d9e72b615e5fd424d8ad1e68a8b300b97b5", roundInterval: "3600s", nbRoundNonces: 10, vtxoExitDelta: 144, vtxoExpiryDelta: 4032, htlcSendExpiryDelta: 1008, htlcExpiryDelta: 12, maxVtxoAmount: Optional(10000000), requiredBoardConfirmations: 6, maxUserInvoiceCltvDelta: 250, minBoardAmount: 50000, maxVtxoExitDepth: 100, lnReceiveAntiDosRequired: false, feeSchedule: Optional(ArkeUI.FeeSchedule(board: ArkeUI.BoardFeeStructure(minFeeSat: 0, baseFeeSat: 0, ppm: 0), offboard: ArkeUI.OffboardFeeStructure(baseFeeSat: 0, fixedAdditionalVb: 380, ppmExpiryTable: [ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 0, ppm: 2000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 1008, ppm: 4000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), refresh: ArkeUI.RefreshFeeStructure(baseFeeSat: 0, ppmExpiryTable: [ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 0, ppm: 0), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 288, ppm: 2000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 1008, ppm: 4000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), lightningReceive: ArkeUI.LightningReceiveFeeStructure(baseFeeSat: 0, ppm: 0), lightningSend: ArkeUI.LightningSendFeeStructure(minFeeSat: 20, baseFeeSat: 0, ppmExpiryTable: [ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 0, ppm: 2000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 1008, ppm: 4000), ArkeUI.PpmExpiryEntry(expiryBlocksThreshold: 2016, ppm: 5000)])))))
+configData: Optional(ArkeUI.ArkConfigModel(serverAddress: "https://ark.second.tech", esploraAddress: Optional("https://mempool.second.tech/api"), bitcoindAddress: nil, bitcoindCookiefile: nil, bitcoindUser: nil, bitcoindPass: nil, network: "bitcoin", vtxoRefreshExpiryThreshold: Optional(144), vtxoExitMargin: Optional(12), htlcRecvClaimDelta: Optional(18), fallbackFeeRate: Optional(10), roundTxRequiredConfirmations: Optional(1), daemonSyncIntervalSecs: Optional(60), offboardRequiredConfirmations: Optional(2), daemonManualSync: Optional(false), lightningReceiveClaimRetries: Optional(5)))
+Retrieved 0 VTXOs (all)
+pending rounds: 0
+locked VTXOs: 0
+✅ Debug info loaded:
+   Claimable height: 0
+   Has pending: false
+   Pending total: 0 sats
+🔄 Syncing and progressing all exits...
+Syncing exits via FFI...
+Fetching Ark server info via FFI...
+[EXIT] Syncing exits...
+Ark server info retrieved
+FFI ArkInfo fields: roundIntervalSecs: 3600, nbRoundNonces: 10, vtxoExitDelta: 144, vtxoExpiryDelta: 4032, htlcSendExpiryDelta: 1008, htlcExpiryDelta: 12, maxVtxoAmountSats: 10000000, requiredBoardConfirmations: 6, maxUserInvoiceCltvDelta: 250, minBoardAmountSats: 50000, maxVtxoExitDepth: 100, lnReceiveAntiDosRequired: false, feeSchedule: FeeSchedule(board: Bark.BoardFees(minFeeSats: 0, baseFeeSats: 0, ppm: 0), offboard: Bark.OffboardFees(baseFeeSats: 0, fixedAdditionalVb: 380, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), refresh: Bark.RefreshFees(baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 0), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 288, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]), lightningReceive: Bark.LightningReceiveFees(baseFeeSats: 0, ppm: 0), lightningSend: Bark.LightningSendFees(minFeeSats: 20, baseFeeSats: 0, ppmExpiryTable: [Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 0, ppm: 2000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 1008, ppm: 4000), Bark.PpmExpiryFeeEntry(expiryBlocksThreshold: 2016, ppm: 5000)]))
+ArkInfoModel constructed from FFI data, all fields mapped directly from FFI ArkInfo
+vtxos: []
+latestBlockHeight: 961847
+No VTXOs to refresh
+[EXIT] Exits synced
+Exits synced
+✅ Exit state fetched from server
+Progressing exits via FFI...
+[EXIT] Progressing exits...
+[EXIT] Exits progressed
+Progressed 0 exits
+✅ Progressed 0 exit(s)
+🔍 Loading debug info...
+✅ Debug info loaded:
+   Claimable height: 0
+   Has pending: false
+   Pending total: 0 sats
+loadUnilateralExits
+Retrieved 0 VTXOs in exit process
+exits: []
+latestBlockHeight: 961847
+🔍 Loading debug info...
+✅ Debug info loaded:
+   Claimable height: 0
+   Has pending: false
+   Pending total: 0 sats
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 31s ago
+Loaded 1 registered devices
+.task modifier triggered
+.onAppear triggered
+Fetching VTXOs via FFI...
+Retrieved 0 VTXOs
+VTXOs: []
+Next round start time: 1786348431
+Retrieved 0 VTXOs needing refresh
+[Health Check] ✅ Healthy | Task: ALIVE | Holder: OK | Last notif: 0m 36s ago

@@ -246,17 +246,19 @@ extension WalletManager {
         
         // Use provided networkConfig or fall back to wallet's current config
         let config = networkConfig ?? wallet.networkConfig
-        
+
+        // Update the wallet's network configuration BEFORE importing: the FFI
+        // derives its esplora URL from the stored config, so importing first
+        // pairs the new network with the old network's esplora endpoint
+        wallet.updateNetworkConfig(config)
+
         // Import the wallet
         let result = try await wallet.importWallet(
             network: config.networkType,
             arkServer: config.arkServerBaseURL,
             mnemonic: trimmedMnemonic
         )
-        
-        // Update the wallet's network configuration to match what was actually imported
-        wallet.updateNetworkConfig(config)
-        
+
         // Persist the network configuration so it's restored on next app launch
         NetworkConfigPersistence.save(config)
         
@@ -273,6 +275,21 @@ extension WalletManager {
         isInitialized = true
         freshWalletOrigin = .imported
         Self.logger.info("🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes")
+
+        // Register device after wallet import (handleSeedImport saves the mnemonic
+        // but leaves device registration to the coordinator)
+        do {
+            if let walletHash = securityService.getUbiquitousHash() {
+                let deviceService = ServiceContainer.shared.deviceRegistrationService
+                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true)
+                Self.logger.info("✅ Device registered after wallet import")
+            } else {
+                Self.logger.warning("⚠️ Could not get wallet hash for device registration")
+            }
+        } catch {
+            Self.logger.warning("⚠️ Failed to register device (non-critical): \(error)")
+            // Continue anyway - device registration can be retried
+        }
 
         // Start background progression services for imported wallet
         exitProgressionService?.start()
