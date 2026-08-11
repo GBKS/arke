@@ -27,6 +27,7 @@ struct OnboardingFlow: View {
     @State private var currentState: OnboardingState = .firstUse
     @State private var navigationDirection: NavigationDirection = .forward
     @State private var usagePattern: ServerUsageProfile = .casual
+    @State private var isMainnet: Bool = true
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
     
@@ -46,6 +47,7 @@ struct OnboardingFlow: View {
                     switch currentState {
                     case .firstUse:
                         FirstUseView(
+                            isMainnet: $isMainnet,
                             onCreateWallet: {
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
@@ -71,6 +73,7 @@ struct OnboardingFlow: View {
                         
                     case .importWallet:
                         ImportWalletView(
+                            isMainnet: isMainnet,
                             onBack: {
                                 navigationDirection = .backward
                                 withAnimation(.smooth(duration: 0.4)) {
@@ -171,6 +174,7 @@ struct OnboardingFlow: View {
                         
                     case .createWallet:
                         CreateWalletView(
+                            isMainnet: isMainnet,
                             onBack: {
                                 navigationDirection = .backward
                                 withAnimation(.smooth(duration: 0.4)) {

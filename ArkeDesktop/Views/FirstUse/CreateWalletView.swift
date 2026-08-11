@@ -9,6 +9,7 @@ import SwiftUI
 import ArkeUI
 
 struct CreateWalletView: View {
+    let isMainnet: Bool
     let onBack: () -> Void
     let onWalletCreated: () -> Void
     let walletManager: WalletManager
@@ -46,11 +47,13 @@ struct CreateWalletView: View {
             
             // TODO: Add wallet creation UI here
             VStack(spacing: 16) {
-                Text("onboarding_signet_notice")
-                    .fontWeight(.light)
-                    .font(.system(size: 19))
-                    .foregroundStyle(.white.opacity(0.7))
-                
+                if !isMainnet {
+                    Text("onboarding_signet_notice")
+                        .fontWeight(.light)
+                        .font(.system(size: 19))
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+
                 Text("onboarding_server_notice")
                     .fontWeight(.light)
                     .font(.system(size: 19))
@@ -78,8 +81,9 @@ struct CreateWalletView: View {
                         errorMessage = nil
                         
                         do {
-                            let result = try await walletManager.createWallet()
-                            print("✅ Wallet created: \(result)")
+                            let networkConfig = isMainnet ? NetworkConfig.mainnet : NetworkConfig.signet
+                            let result = try await walletManager.createWallet(networkConfig: networkConfig)
+                            print("✅ Wallet created on \(networkConfig.name): \(result)")
                             onWalletCreated()
                         } catch {
                             print("❌ Failed to create wallet: \(error)")

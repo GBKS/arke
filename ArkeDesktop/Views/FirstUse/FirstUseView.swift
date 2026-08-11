@@ -9,9 +9,10 @@ import SwiftUI
 import ArkeUI
 
 struct FirstUseView: View {
+    @Binding var isMainnet: Bool
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 0) {
             VStack {
@@ -55,8 +56,16 @@ struct FirstUseView: View {
                 }
                 
                 Spacer()
-                
+
                 VStack(spacing: 16) {
+                    if !isMainnet {
+                        Text("onboarding_test_wallet_notice")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
+
                     Button("button_create_wallet") {
                         onCreateWallet()
                     }
@@ -73,5 +82,22 @@ struct FirstUseView: View {
             .frame(maxWidth: .infinity)
         }
         .background(Color.Arke.gold4)
+        .animation(.smooth(duration: 0.5), value: isMainnet)
+        .overlay(alignment: .topLeading) {
+            Button {
+                isMainnet.toggle()
+            } label: {
+                Image(systemName: "testtube.2")
+                    .font(.system(size: 16))
+                    .foregroundStyle(isMainnet ? Color.Arke.gold.opacity(0.5) : Color.Arke.gold)
+                    .frame(width: 32, height: 32)
+                    .background(Color.white.opacity(0.05))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet") : String(localized: "accessibility_switch_to_mainnet"))
+            .accessibilityHint(String(localized: "accessibility_network_toggle_hint"))
+            .padding(20)
+        }
     }
 }
