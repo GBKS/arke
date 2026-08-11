@@ -1,5 +1,5 @@
 //
-//  FeeDetailCardView_iOS.swift
+//  FeeDetailCardView.swift
 //  Arké
 //
 //  Created by Christoph on 1/12/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Detailed card view for displaying fee statistics with sections
-struct FeeDetailCardView_iOS: View {
+struct FeeDetailCardView: View {
     let title: String
     let subtitle: String?
     let prominentMetric: String?
@@ -175,7 +175,7 @@ struct FeeDetailCardView_iOS: View {
 
 // MARK: - Convenience Initializers
 
-extension FeeDetailCardView_iOS {
+extension FeeDetailCardView {
     /// Simple card with just title and sections
     init(title: String, subtitle: String? = nil, sections: [Section], iconSymbol: String? = nil, iconBackgroundImage: String? = nil) {
         self.title = title

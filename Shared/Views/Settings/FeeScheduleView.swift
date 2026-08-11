@@ -1,5 +1,5 @@
 //
-//  FeeScheduleView_iOS.swift
+//  FeeScheduleView.swift
 //  Arké
 //
 //  Created by Claude on 04/17/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import ArkeUI
 
-struct FeeScheduleView_iOS: View {
+struct FeeScheduleView: View {
     @Environment(WalletManager.self) private var manager
     
     var body: some View {
@@ -105,7 +105,9 @@ struct FeeScheduleView_iOS: View {
             }
         }
         .navigationTitle("settings_fee_schedule")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
     }
     
     // MARK: - Fee Details Helpers

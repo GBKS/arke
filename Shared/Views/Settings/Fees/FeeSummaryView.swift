@@ -1,5 +1,5 @@
 //
-//  FeeSummaryView_iOS.swift
+//  FeeSummaryView.swift
 //  Arké
 //
 //  Created by Christoph on 1/11/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import ArkeUI
 
-struct FeeSummaryView_iOS: View {
+struct FeeSummaryView: View {
     @Environment(WalletManager.self) private var walletManager
     @State private var statistics: FeeStatistics = .empty
     
@@ -18,7 +18,9 @@ struct FeeSummaryView_iOS: View {
                 loadStatistics()
             }
             //.navigationTitle("activity_fee_summary")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .refreshable {
                 loadStatistics()
             }
@@ -90,14 +92,14 @@ struct FeeSummaryView_iOS: View {
             percentageString = "—"
         }
         
-        let keyMetrics: [FeeDetailCardView_iOS.KeyMetric] = [
+        let keyMetrics: [FeeDetailCardView.KeyMetric] = [
             .init(label: String(localized: "fee_transactions"), value: "\(sendStats.count)"),
             .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(sendStats.totalFees, hasData: hasData)),
             .init(label: String(localized: "fee_amount_sent"), value: formatAmountOrDash(sendStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = sendStats.networkBreakdown
-        let networkSection = FeeDetailCardView_iOS.Section(
+        let networkSection = FeeDetailCardView.Section(
             title: String(localized: "fee_by_network"),
             items: [
                 .init(
@@ -121,7 +123,7 @@ struct FeeSummaryView_iOS: View {
             ]
         )
         
-        return FeeDetailCardView_iOS(
+        return FeeDetailCardView(
             title: String(localized: "fee_average_send"),
             subtitle: nil,
             prominentMetric: percentageString,
@@ -158,7 +160,7 @@ struct FeeSummaryView_iOS: View {
         let recoveryFees = exitStats?.fees ?? 0
         let recoveryCount = exitStats?.count ?? 0
         
-        let keyMetrics: [FeeDetailCardView_iOS.KeyMetric] = [
+        let keyMetrics: [FeeDetailCardView.KeyMetric] = [
             .init(
                 label: refreshStats?.count ?? 0 > 0 
                     ? String(format: String(localized: "maintenance_refresh_with_count"), refreshStats!.count)
@@ -185,7 +187,7 @@ struct FeeSummaryView_iOS: View {
             )
         ]
         
-        return FeeDetailCardView_iOS(
+        return FeeDetailCardView(
             title: String(localized: "fee_maintenance"),
             subtitle: String(localized: "fee_maintenance_subtitle"),
             prominentMetric: formatAmountOrDash(internalStats.totalFees, hasData: hasData),
@@ -212,14 +214,14 @@ struct FeeSummaryView_iOS: View {
             percentageString = "—"
         }
         
-        let keyMetrics: [FeeDetailCardView_iOS.KeyMetric] = [
+        let keyMetrics: [FeeDetailCardView.KeyMetric] = [
             .init(label: String(localized: "fee_transactions"), value: "\(receiveStats.count)"),
             .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(receiveStats.totalFees, hasData: hasData)),
             .init(label: String(localized: "fee_amount_received"), value: formatAmountOrDash(receiveStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = receiveStats.networkBreakdown
-        let networkSection = FeeDetailCardView_iOS.Section(
+        let networkSection = FeeDetailCardView.Section(
             title: String(localized: "fee_network_breakdown"),
             items: [
                 .init(
@@ -243,7 +245,7 @@ struct FeeSummaryView_iOS: View {
             ]
         )
         
-        return FeeDetailCardView_iOS(
+        return FeeDetailCardView(
             title: String(localized: "fee_average_receive"),
             subtitle: nil,
             prominentMetric: percentageString,

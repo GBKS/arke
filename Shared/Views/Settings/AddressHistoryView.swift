@@ -1,5 +1,5 @@
 //
-//  AddressHistoryView_iOS.swift
+//  AddressHistoryView.swift
 //  Arké
 //
 //  Created by Christoph on 01/12/26.
@@ -9,31 +9,31 @@ import SwiftUI
 import SwiftData
 import ArkeUI
 
-struct AddressHistoryView_iOS: View {
+struct AddressHistoryView: View {
     @Query(
         filter: #Predicate<PersistentAddress> { $0.isActive },
         sort: \PersistentAddress.generatedAt,
         order: .reverse
     )
     private var allAddresses: [PersistentAddress]
-    
+
     @Environment(WalletManager.self) private var walletManager
-    
+
     @State private var copiedAddress: String?
     @State private var isGeneratingArk = false
     @State private var isGeneratingBitcoin = false
     @State private var errorMessage: String?
     @State private var showError = false
-    
+
     // Computed properties to filter by type
     private var arkAddresses: [PersistentAddress] {
         allAddresses.filter { $0.addressType == "ark" }
     }
-    
+
     private var bitcoinAddresses: [PersistentAddress] {
         allAddresses.filter { $0.addressType == "onchain" }
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             List {
@@ -57,7 +57,7 @@ struct AddressHistoryView_iOS: View {
                     }
                     .padding(.vertical, 8)
                 }
-                
+
                 // Bitcoin Addresses Section
                 if !bitcoinAddresses.isEmpty {
                     Section {
@@ -78,7 +78,7 @@ struct AddressHistoryView_iOS: View {
                     }
                     .padding(.vertical, 8)
                 }
-                
+
                 // Empty State
                 if allAddresses.isEmpty {
                     Section {
@@ -101,16 +101,18 @@ struct AddressHistoryView_iOS: View {
             }
         }
         .navigationTitle("receive_address_history")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
+        #endif
         .alert("error_title", isPresented: $showError) {
             Button("button_ok") { }
         } message: {
             Text(errorMessage ?? "Unknown error")
         }
     }
-    
+
     // MARK: - Section Header
-    
+
     @ViewBuilder
     private func sectionHeader(title: String, description: String, isGenerating: Bool, onAdd: @escaping () -> Void) -> some View {
         HStack {
@@ -122,7 +124,7 @@ struct AddressHistoryView_iOS: View {
                     .foregroundColor(.secondary)
             }
             Spacer()
-            
+
             Button {
                 onAdd()
             } label: {
@@ -146,9 +148,9 @@ struct AddressHistoryView_iOS: View {
             .disabled(isGenerating)
         }
     }
-    
+
     // MARK: - Address Generation
-    
+
     private func generateAddress(type: AddressType) {
         Task {
             // Set loading state
@@ -157,17 +159,18 @@ struct AddressHistoryView_iOS: View {
             } else {
                 isGeneratingBitcoin = true
             }
-            
+
             do {
                 let newAddress = try await walletManager.generateNewAddress(
                     type: type,
                     strategy: .userRequested
                 )
-                
-                // Success haptic feedback
+
+                #if os(iOS)
                 let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
                 impactFeedback.impactOccurred()
-                
+                #endif
+
                 print("✅ Successfully generated \(type.displayName): \(newAddress.address)")
             } catch let error as AddressError {
                 handleAddressError(error, type: type)
@@ -175,7 +178,7 @@ struct AddressHistoryView_iOS: View {
                 errorMessage = "Failed to generate address: \(error.localizedDescription)"
                 showError = true
             }
-            
+
             // Clear loading state
             if type == .ark {
                 isGeneratingArk = false
@@ -184,13 +187,13 @@ struct AddressHistoryView_iOS: View {
             }
         }
     }
-    
+
     private func handleAddressError(_ error: AddressError, type: AddressType) {
         switch error {
         case .gapLimitExceeded(let unusedCount):
             errorMessage = """
             Cannot generate new Bitcoin address. You have \(unusedCount) unused addresses.
-            
+
             For privacy and wallet recovery, please use your existing unused addresses before generating new ones.
             """
             showError = true
@@ -214,20 +217,20 @@ struct AddressHistoryRowView: View {
     @Binding var copiedAddress: String?
     @State private var isExpanded = false
     @State private var showingCopied = false
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 // Address string with expandable view
                 ExpandableAddressView(address: address.address, isExpanded: $isExpanded, animated: false)
-                
+
                 // Additional info row
                 HStack(spacing: 4) {
                     Text(address.generatedAt, style: .relative)
                         .font(.caption)
                     Text("label_ago")
                         .font(.caption)
-                    
+
                     if let index = address.derivationIndex {
                         Text("symbol_bullet")
                             .foregroundColor(.secondary)
@@ -238,9 +241,9 @@ struct AddressHistoryRowView: View {
                 }
                 .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             // Dedicated copy button
             Button {
                 copyAddress()
@@ -259,18 +262,23 @@ struct AddressHistoryRowView: View {
         .frame(maxWidth: .infinity, alignment: .top)
         .sensoryFeedback(.success, trigger: showingCopied)
     }
-    
+
     // MARK: - Actions
-    
+
     private func copyAddress() {
+        #if os(iOS)
         UIPasteboard.general.string = address.address
-        
+        #else
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(address.address, forType: .string)
+        #endif
+
         // Show copied feedback
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             showingCopied = true
             copiedAddress = address.address
         }
-        
+
         // Clear feedback after delay
         Task {
             try? await Task.sleep(nanoseconds: 1_500_000_000)

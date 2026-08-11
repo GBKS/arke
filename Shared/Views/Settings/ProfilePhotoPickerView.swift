@@ -14,16 +14,16 @@ struct ProfilePhotoPickerView: View {
     @Binding var avatarData: Data?
     let size: CGFloat
     let showEditButton: Bool
-    
+
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var showingRemoveConfirmation = false
-    
+
     init(avatarData: Binding<Data?>, size: CGFloat = 120, showEditButton: Bool = true) {
         self._avatarData = avatarData
         self.size = size
         self.showEditButton = showEditButton
     }
-    
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             // Avatar display
@@ -34,7 +34,7 @@ struct ProfilePhotoPickerView: View {
                     Circle()
                         .stroke(Color.secondary.opacity(0.2), lineWidth: 2)
                 )
-            
+
             // Action buttons
             if showEditButton {
                 if avatarData != nil {
@@ -50,48 +50,59 @@ struct ProfilePhotoPickerView: View {
             }
         }
     }
-    
+
     // MARK: - Avatar Display
-    
+
     @ViewBuilder
     private var avatarImage: some View {
         if let avatarData = avatarData,
-           let uiImage = UIImage(data: avatarData) {
-            Image(uiImage: uiImage)
+           let image = platformImage(from: avatarData) {
+            image
                 .resizable()
                 .aspectRatio(contentMode: .fill)
         } else {
             // Randomly select between male and female silhouette
             let defaultAvatar = Bool.random() ? "avatar-silhouette-male" : "avatar-silhouette-female"
-            
+
             ZStack {
                 Image(defaultAvatar)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                
+
                 Circle()
                     .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
             }
         }
     }
-    
+
+    private func platformImage(from data: Data) -> Image? {
+        #if os(iOS)
+        guard let uiImage = UIImage(data: data) else { return nil }
+        return Image(uiImage: uiImage)
+        #else
+        guard let nsImage = NSImage(data: data) else { return nil }
+        return Image(nsImage: nsImage)
+        #endif
+    }
+
     // MARK: - Action Buttons
-    
+
     private var addButton: some View {
         PhotosPicker(selection: $selectedPhoto, matching: .images) {
             ZStack {
                 Circle()
                     .fill(Color.black)
                     .frame(width: 36, height: 36)
-                
+
                 Image(systemName: "camera.fill")
                     .font(.system(size: 16))
                     .foregroundColor(.white)
             }
         }
+        .buttonStyle(.plain)
         .offset(x: 4, y: 4)
     }
-    
+
     private var removeButton: some View {
         Button {
             showingRemoveConfirmation = true
@@ -100,12 +111,13 @@ struct ProfilePhotoPickerView: View {
                 Circle()
                     .fill(Color.black)
                     .frame(width: 36, height: 36)
-                
+
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
             }
         }
+        .buttonStyle(.plain)
         .offset(x: 4, y: 4)
         .confirmationDialog(
             "action_remove_photo",
@@ -122,18 +134,17 @@ struct ProfilePhotoPickerView: View {
             Text("profile_remove_photo_confirm")
         }
     }
-    
+
     // MARK: - Photo Loading
-    
+
     private func loadPhoto(from item: PhotosPickerItem?) async {
         guard let item = item else { return }
-        
+
         do {
             // Load transferable data
             if let data = try await item.loadTransferable(type: Data.self) {
                 // Compress and resize if needed
-                if let uiImage = UIImage(data: data) {
-                    let processedData = processImage(uiImage)
+                if let processedData = processImageData(data) {
                     await MainActor.run {
                         withAnimation {
                             avatarData = processedData
@@ -145,23 +156,48 @@ struct ProfilePhotoPickerView: View {
             print("❌ [ProfilePhotoPickerView] Error loading photo: \(error)")
         }
     }
-    
-    /// Process image to reasonable size and quality
-    private func processImage(_ image: UIImage) -> Data? {
+
+    /// Process image to reasonable size and quality (max 512px, JPEG 80%)
+    private func processImageData(_ data: Data) -> Data? {
         let maxDimension: CGFloat = 512
+
+        #if os(iOS)
+        guard let image = UIImage(data: data) else { return nil }
         let scale = min(maxDimension / image.size.width, maxDimension / image.size.height, 1.0)
-        
+
         let newSize = CGSize(
             width: image.size.width * scale,
             height: image.size.height * scale
         )
-        
+
         let renderer = UIGraphicsImageRenderer(size: newSize)
         let resizedImage = renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }
-        
-        // Compress to JPEG with 80% quality
+
         return resizedImage.jpegData(compressionQuality: 0.8)
+        #else
+        guard let image = NSImage(data: data) else { return nil }
+        let scale = min(maxDimension / image.size.width, maxDimension / image.size.height, 1.0)
+
+        let newSize = NSSize(
+            width: image.size.width * scale,
+            height: image.size.height * scale
+        )
+
+        let resized = NSImage(size: newSize)
+        resized.lockFocus()
+        image.draw(
+            in: NSRect(origin: .zero, size: newSize),
+            from: .zero,
+            operation: .copy,
+            fraction: 1.0
+        )
+        resized.unlockFocus()
+
+        guard let tiffData = resized.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
+        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
+        #endif
     }
 }

@@ -1712,6 +1712,7 @@
       }
     },
     "alert_confirm_unlink_device" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7593,6 +7594,7 @@
       }
     },
     "settings_display" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

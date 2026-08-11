@@ -43,6 +43,7 @@ struct WalletView: View {
     @State private var activityFilterTag: PersistentTag? = nil
     @State private var prefilledSendAddress: String?
     @State private var prefilledSendContact: ContactModel?
+    @State private var selectedSetting: SettingsDetailItem?
     @Environment(WalletManager.self) private var manager
     
     let onWalletDeleted: (() -> Void)?
@@ -220,6 +221,25 @@ struct WalletView: View {
                     .navigationSplitViewColumnWidth(min: 300, ideal: 300, max: 400)
                 }
             }
+            } else if selectedItem == .settings {
+            // Three-column layout for settings view
+            NavigationSplitView {
+                // Sidebar
+                WalletSidebar(selectedItem: $selectedItem)
+                    .navigationSplitViewColumnWidth(min: 250, ideal: 250)
+            } content: {
+                SettingsView(
+                    selectedItem: $selectedSetting,
+                    onNavigateToData: { selectedItem = .data }
+                )
+                .navigationSplitViewColumnWidth(min: 300, ideal: 340)
+            } detail: {
+                SettingsDetailView(
+                    item: selectedSetting,
+                    onWalletDeleted: onWalletDeleted
+                )
+                .navigationSplitViewColumnWidth(min: 350, ideal: 500)
+            }
             } else {
                 // Two-column layout for other views
             NavigationSplitView {
@@ -244,7 +264,7 @@ struct WalletView: View {
                 case .tags:
                     TagsView(onNavigateToActivity: navigateToFilteredActivityByTag)
                 case .settings:
-                    SettingsView(onWalletDeleted: onWalletDeleted)
+                    EmptyView() // This case shouldn't be reached now
                 case .data:
                     EmptyView() // This case shouldn't be reached now
                 case .activity:

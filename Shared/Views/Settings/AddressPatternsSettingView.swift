@@ -1,5 +1,5 @@
 //
-//  AddressPatternsSettingView_iOS.swift
+//  AddressPatternsSettingView.swift
 //  Ark wallet prototype
 //
 //  Settings sub-page explaining address patterns (Hallmarks), with the
@@ -9,7 +9,7 @@
 import SwiftUI
 import ArkeUI
 
-struct AddressPatternsSettingView_iOS: View {
+struct AddressPatternsSettingView: View {
     @AppStorage(UserDefaults.showAddressIconsKey)
     private var showAddressIcons: Bool = true
 
@@ -33,12 +33,14 @@ struct AddressPatternsSettingView_iOS: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("settings_address_patterns")
                         .font(.system(.title, design: .serif))
-                    
+
                     Toggle(isOn: $showAddressIcons) {
                         Text(String(localized: "settings_address_patterns_toggle", defaultValue: "Show address patterns"))
                             .font(.body)
                             .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .toggleStyle(.switch)
                     .padding()
                     .background {
                         RoundedRectangle(cornerRadius: 12)
@@ -65,6 +67,10 @@ struct AddressPatternsSettingView_iOS: View {
                 }
             }
             .padding()
+            #if os(macOS)
+            .frame(maxWidth: 500)
+            .frame(maxWidth: .infinity)
+            #endif
         }
         .contentMargins(.top, 0, for: .scrollContent)
     }
@@ -92,7 +98,5 @@ struct AddressPatternsSettingView_iOS: View {
 }
 
 #Preview {
-    NavigationStack {
-        AddressPatternsSettingView_iOS()
-    }
+    AddressPatternsSettingView()
 }

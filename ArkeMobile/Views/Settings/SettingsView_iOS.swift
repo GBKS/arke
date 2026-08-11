@@ -45,7 +45,7 @@ struct SettingsView_iOS: View {
         List {
             // Profile Section
             Section {
-                NavigationLink(destination: UserProfileSettingView_iOS()) {
+                NavigationLink(destination: UserProfileSettingView()) {
                     HStack(spacing: 12) {
                         // Avatar preview
                         if let avatarData = userProfile?.avatarData,
@@ -226,7 +226,7 @@ struct SettingsView_iOS: View {
             // Behind the Curtain Section
             Section {
                 // Fee Summary
-                NavigationLink(destination: FeeSummaryView_iOS()) {
+                NavigationLink(destination: FeeSummaryView()) {
                     HStack(spacing: 12) {
                         Image(systemName: "chart.bar.fill")
                             .foregroundColor(.Arke.green)
@@ -247,7 +247,7 @@ struct SettingsView_iOS: View {
                 // ASP-dependent rows (only in primary mode)
                 if !manager.isReadOnlyMode {
                     // Server Fee Schedule
-                    NavigationLink(destination: FeeScheduleView_iOS()) {
+                    NavigationLink(destination: FeeScheduleView()) {
                         HStack(spacing: 12) {
                             Image(systemName: "list.bullet.rectangle.fill")
                                 .foregroundColor(.Arke.teal)
@@ -266,7 +266,7 @@ struct SettingsView_iOS: View {
                     }
                     
                     // Address History
-                    NavigationLink(destination: AddressHistoryView_iOS()) {
+                    NavigationLink(destination: AddressHistoryView()) {
                         HStack(spacing: 12) {
                             Image(systemName: "building.columns.fill")
                                 .foregroundColor(.Arke.blue)
@@ -349,7 +349,7 @@ struct SettingsView_iOS: View {
                 .padding(.vertical, 2)
 
                 // Address Icons
-                NavigationLink(destination: AddressPatternsSettingView_iOS()) {
+                NavigationLink(destination: AddressPatternsSettingView()) {
                     HStack(spacing: 12) {
                         Image(systemName: "square.grid.2x2.fill")
                             .foregroundColor(.Arke.teal)
