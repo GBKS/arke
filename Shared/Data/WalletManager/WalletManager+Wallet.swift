@@ -112,7 +112,9 @@ extension WalletManager {
             // Step 5: Update the wallet's network configuration
             wallet.updateNetworkConfig(config)
             
-            // Step 6: Import the wallet (it will now open the restored database)
+            // Step 6: Import the wallet (it will now open the restored database).
+            // A network mismatch here means the backup file belongs to another
+            // network than the user selected - surface it, never wipe the restore.
             let result = try await wallet.importWallet(
                 network: config.networkType,
                 arkServer: config.arkServerBaseURL,
@@ -252,12 +254,32 @@ extension WalletManager {
         // pairs the new network with the old network's esplora endpoint
         wallet.updateNetworkConfig(config)
 
-        // Import the wallet
-        let result = try await wallet.importWallet(
-            network: config.networkType,
-            arkServer: config.arkServerBaseURL,
-            mnemonic: trimmedMnemonic
-        )
+        // Import the wallet. Seed-only import: leftover wallet data from another
+        // network is stale (nothing restored it deliberately - common on macOS,
+        // where the container survives app reinstalls), and data from another
+        // network cannot be the wallet being imported, so wipe it and retry
+        // once; the fresh creating open recovers funds via the seed-recovery
+        // scan. importWalletWithBackup deliberately does NOT do this: there a
+        // mismatch means the user picked the wrong network for their backup
+        // file and needs to see the error, not lose the restored copy.
+        let result: String
+        do {
+            result = try await wallet.importWallet(
+                network: config.networkType,
+                arkServer: config.arkServerBaseURL,
+                mnemonic: trimmedMnemonic
+            )
+        } catch BarkWalletFFIError.networkMismatch(let message) {
+            Self.logger.warning("⚠️ Existing wallet data belongs to another network (\(message)) - wiping stale data and retrying import")
+            try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
+            try? FileManager.default.removeItem(at: wallet.walletDir)
+            // Not caught again: a second mismatch surfaces as an error
+            result = try await wallet.importWallet(
+                network: config.networkType,
+                arkServer: config.arkServerBaseURL,
+                mnemonic: trimmedMnemonic
+            )
+        }
 
         // Persist the network configuration so it's restored on next app launch
         NetworkConfigPersistence.save(config)

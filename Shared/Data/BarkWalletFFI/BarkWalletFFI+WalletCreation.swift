@@ -531,6 +531,12 @@ extension BarkWalletFFI {
             
         } catch let error as Bark.Error {
             print("❌ FFI Error importing wallet: \(error)")
+            // Existing wallet data from another network fails the bdk or bark
+            // open with a network mismatch. Surface it as a typed error so the
+            // caller can decide whether the data is stale and may be wiped.
+            if String(describing: error).contains("Network mismatch") {
+                throw BarkWalletFFIError.networkMismatch(error.localizedDescription)
+            }
             throw BarkWalletFFIError.configurationError("Failed to import wallet: \(error.localizedDescription)")
         } catch {
             print("❌ Error importing wallet: \(error)")

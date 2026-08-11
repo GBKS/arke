@@ -288,7 +288,10 @@ enum BarkWalletFFIError: Swift.Error, LocalizedError {
     case walletNotInitialized
     case invalidMnemonic
     case configurationError(String)
-    
+    /// Existing wallet data on disk belongs to a different network than the
+    /// one requested, so bark refused to open it.
+    case networkMismatch(String)
+
     var errorDescription: String? {
         switch self {
         case .notImplemented(let method):
@@ -301,6 +304,8 @@ enum BarkWalletFFIError: Swift.Error, LocalizedError {
             return "Invalid mnemonic phrase"
         case .configurationError(let message):
             return "Configuration error: \(message)"
+        case .networkMismatch(let message):
+            return "Wallet data belongs to a different network: \(message)"
         }
     }
 }
