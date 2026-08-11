@@ -7,11 +7,14 @@
 
 import SwiftUI
 import ArkeUI
+import Accessibility
 
 struct FirstUseView: View {
     @Binding var isMainnet: Bool
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 0) {
@@ -21,9 +24,10 @@ struct FirstUseView: View {
                     .id(isMainnet)
                     .frame(maxWidth: .infinity)
                     .clipped()
+                    .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity)
-            
+
             // Right column - Existing content
             VStack(spacing: 30) {
                 VStack(spacing: 8) {
@@ -31,13 +35,13 @@ struct FirstUseView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
-                    
+
                     Text("app_name")
                         .font(.system(size: 80, design: .serif))
                         .fontWeight(.regular)
                         .foregroundStyle(Color.Arke.gold)
                 }
-                
+
                 Spacer()
 
                 VStack(spacing: 16) {
@@ -46,38 +50,65 @@ struct FirstUseView: View {
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .bottom)))
                     }
 
-                    Button("button_create_wallet") {
+                    Button {
                         onCreateWallet()
+                    } label: {
+                        Text("button_create_wallet")
+                            .font(.system(.title2, weight: .semibold))
+                            .foregroundStyle(Color.Arke.gold4)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
                     }
-                    .buttonStyle(ArkeButtonStyle(size: .large))
+                    .buttonStyle(.glassProminent)
+                    .controlSize(.large)
+                    .tint(Color.Arke.gold)
 
-                    Button("action_import_wallet") {
+                    Button {
                         onImportWallet()
+                    } label: {
+                        Text("button_import_wallet")
+                            .font(.system(.title2, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
                     }
-                    .buttonStyle(ArkeButtonStyle(size: .large, variant: .outline))
+                    .buttonStyle(.glass)
+                    .controlSize(.large)
                 }
             }
             .padding(.horizontal, 40)
             .padding(.vertical, 60)
             .frame(maxWidth: .infinity)
         }
+        .colorScheme(.dark)
         .background(Color.Arke.gold4)
-        .animation(.smooth(duration: 0.5), value: isMainnet)
+        .animation(reduceMotion ? .none : .smooth(duration: 0.5), value: isMainnet)
         .overlay(alignment: .topLeading) {
             Button {
-                isMainnet.toggle()
+                if reduceMotion {
+                    isMainnet.toggle()
+                } else {
+                    withAnimation {
+                        isMainnet.toggle()
+                    }
+                }
+
+                // Announce network change for VoiceOver users
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    let announcement = isMainnet ?
+                        String(localized: "accessibility_switched_mainnet") :
+                        String(localized: "accessibility_switched_testnet")
+                    AccessibilityNotification.Announcement(announcement).post()
+                }
             } label: {
                 Image(systemName: "testtube.2")
-                    .font(.system(size: 16))
-                    .foregroundStyle(isMainnet ? Color.Arke.gold.opacity(0.5) : Color.Arke.gold)
-                    .frame(width: 32, height: 32)
-                    .background(Color.white.opacity(0.05))
-                    .clipShape(Circle())
+                    .frame(width: 24, height: 24)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glass)
+            .controlSize(.regular)
+            .tint(Color.Arke.gold)
             .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet") : String(localized: "accessibility_switch_to_mainnet"))
             .accessibilityHint(String(localized: "accessibility_network_toggle_hint"))
             .padding(20)

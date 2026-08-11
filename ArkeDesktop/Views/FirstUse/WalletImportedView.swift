@@ -45,17 +45,22 @@ struct WalletImportedView: View {
             Button {
                 onContinue()
             } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.right")
-                    Text("onboarding_lets_go")
-                }
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 27))
+                    .foregroundStyle(Color.Arke.gold4)
+                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(ArkeButtonStyle(size: .large))
+            .buttonStyle(.glassProminent)
+            .controlSize(.large)
+            .tint(Color.Arke.gold)
+            .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
+            .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
         }
         .padding(.horizontal, 40)
         .padding(.top, 60)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .colorScheme(.dark)
         .background(Color.Arke.gold4)
     }
 }

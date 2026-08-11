@@ -1179,6 +1179,7 @@
       }
     },
     "action_import_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5386,6 +5387,7 @@
       }
     },
     "firstuse_create_new_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5396,6 +5398,7 @@
       }
     },
     "firstuse_generate_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5417,6 +5420,7 @@
       }
     },
     "firstuse_wallet_created" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6381,6 +6385,7 @@
       }
     },
     "onboarding_alpha_notice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6401,6 +6406,7 @@
       }
     },
     "onboarding_backup_advice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6541,6 +6547,7 @@
       }
     },
     "onboarding_lets_go" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6601,6 +6608,7 @@
       }
     },
     "onboarding_server_notice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6631,6 +6639,7 @@
       }
     },
     "onboarding_signet_notice" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -6931,6 +6940,7 @@
       }
     },
     "progress_creating_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

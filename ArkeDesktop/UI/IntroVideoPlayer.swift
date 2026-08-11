@@ -1,16 +1,16 @@
 //
-//  IntroVideoPlayer_iOS.swift
+//  IntroVideoPlayer.swift
 //  Arké
 //
-//  Created by Christoph on 01/20/26.
+//  Created by Christoph on 08/11/26.
+//
+//  macOS port of IntroVideoPlayer_iOS; uses the shared VideoSubtitle model.
 //
 
 import SwiftUI
 import AVKit
 import AVFoundation
 import Combine
-
-// VideoSubtitle lives in Shared/Models/IntroVideoLibrary.swift
 
 // MARK: - Video Player ViewModel
 
@@ -20,18 +20,16 @@ class IntroVideoPlayerViewModel: ObservableObject {
     @Published var currentSubtitle: String?
     @Published var hasEnded: Bool = false
     @Published var isMuted: Bool = false
-    
+
     private var player: AVPlayer?
     private var timeObserver: Any?
     private var endObserver: NSObjectProtocol?
-    
+
     let videoName: String
     let videoExtension: String
     let subtitles: [VideoSubtitle]
     let autoPlay: Bool
     let onVideoEnded: () -> Void
-
-    private var hasConfiguredAudioSession = false
 
     init(
         videoName: String,
@@ -55,7 +53,7 @@ class IntroVideoPlayerViewModel: ObservableObject {
 
         let player = AVPlayer(url: videoURL)
         self.player = player
-        
+
         // Add periodic time observer for subtitle updates
         let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
@@ -63,7 +61,7 @@ class IntroVideoPlayerViewModel: ObservableObject {
                 self?.updateSubtitle(for: time.seconds)
             }
         }
-        
+
         // Observe when video ends
         endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
@@ -74,9 +72,8 @@ class IntroVideoPlayerViewModel: ObservableObject {
                 self?.videoDidEnd()
             }
         }
-        
+
         if autoPlay {
-            configureAudioSession()
             player.play()
             // Defer state change to avoid "Publishing changes from within view updates" warning
             DispatchQueue.main.async { [weak self] in
@@ -85,19 +82,6 @@ class IntroVideoPlayerViewModel: ObservableObject {
         }
 
         return player
-    }
-
-    // Configure lazily so a paused player doesn't interrupt other audio until playback starts
-    private func configureAudioSession() {
-        guard !hasConfiguredAudioSession else { return }
-        hasConfiguredAudioSession = true
-
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("Failed to set audio session: \(error)")
-        }
     }
 
     func togglePlayPause() {
@@ -111,7 +95,6 @@ class IntroVideoPlayerViewModel: ObservableObject {
                 player.seek(to: .zero)
                 hasEnded = false
             }
-            configureAudioSession()
             player.play()
             isPlaying = true
         }
@@ -123,47 +106,46 @@ class IntroVideoPlayerViewModel: ObservableObject {
     }
 
     func play() {
-        configureAudioSession()
         player?.play()
         isPlaying = true
     }
-    
+
     func toggleMute() {
         guard let player = player else { return }
         isMuted.toggle()
         player.isMuted = isMuted
     }
-    
+
     func setMuted(_ muted: Bool) {
         guard let player = player else { return }
         isMuted = muted
         player.isMuted = muted
     }
-    
+
     private func updateSubtitle(for time: TimeInterval) {
         // Find active subtitle at current time
         let activeSubtitle = subtitles.first { $0.isActive(at: time) }
         currentSubtitle = activeSubtitle?.text
     }
-    
+
     private func videoDidEnd() {
         hasEnded = true
         isPlaying = false
         currentSubtitle = nil
         onVideoEnded()
     }
-    
+
     func cleanup() {
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
             timeObserver = nil
         }
-        
+
         if let observer = endObserver {
             NotificationCenter.default.removeObserver(observer)
             endObserver = nil
         }
-        
+
         player?.pause()
         player = nil
     }
@@ -171,7 +153,7 @@ class IntroVideoPlayerViewModel: ObservableObject {
 
 // MARK: - Video Player View
 
-struct IntroVideoPlayer_iOS: View {
+struct IntroVideoPlayer: View {
     @StateObject private var viewModel: IntroVideoPlayerViewModel
     @Binding var isMuted: Bool
     @Binding var isPaused: Bool
@@ -198,13 +180,13 @@ struct IntroVideoPlayer_iOS: View {
         _isPaused = isPaused
         self.subtitleBottomPadding = subtitleBottomPadding
     }
-    
+
     var body: some View {
         ZStack {
             // Video player
             IntroVideoPlayerView(viewModel: viewModel)
                 .ignoresSafeArea()
-            
+
             // Play/pause/replay indicator
             if !viewModel.isPlaying {
                 Image(systemName: viewModel.hasEnded ? "arrow.counterclockwise" : "play.fill")
@@ -218,12 +200,12 @@ struct IntroVideoPlayer_iOS: View {
                     )
                     .transition(.opacity.combined(with: .scale))
             }
-            
+
             // Subtitle overlay
             if let subtitle = viewModel.currentSubtitle {
                 VStack {
                     Spacer()
-                    
+
                     Text(subtitle)
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(.white)
@@ -270,38 +252,48 @@ struct IntroVideoPlayer_iOS: View {
     }
 }
 
-// MARK: - UIViewRepresentable for AVPlayer
+// MARK: - NSViewRepresentable for AVPlayer
 
-private struct IntroVideoPlayerView: UIViewRepresentable {
+private struct IntroVideoPlayerView: NSViewRepresentable {
     @ObservedObject var viewModel: IntroVideoPlayerViewModel
-    
-    func makeUIView(context: Context) -> VideoPlayerUIView {
-        let view = VideoPlayerUIView()
+
+    func makeNSView(context: Context) -> VideoPlayerNSView {
+        let view = VideoPlayerNSView()
         if let player = viewModel.setupPlayer() {
             view.configure(with: player)
         }
         return view
     }
-    
-    func updateUIView(_ uiView: VideoPlayerUIView, context: Context) {
+
+    func updateNSView(_ nsView: VideoPlayerNSView, context: Context) {
         // Updates handled by view model
     }
-    
-    class VideoPlayerUIView: UIView {
+
+    class VideoPlayerNSView: NSView {
         private var playerLayer: AVPlayerLayer?
-        
+
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.wantsLayer = true
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+            self.wantsLayer = true
+        }
+
         func configure(with player: AVPlayer) {
             playerLayer = AVPlayerLayer(player: player)
-            
+
             guard let playerLayer = playerLayer else { return }
-            
+
             playerLayer.videoGravity = .resizeAspectFill
             playerLayer.frame = bounds
-            layer.addSublayer(playerLayer)
+            layer?.addSublayer(playerLayer)
         }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
+
+        override func layout() {
+            super.layout()
             playerLayer?.frame = bounds
         }
     }

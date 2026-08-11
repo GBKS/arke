@@ -5,11 +5,27 @@
 //  Created by Christoph on 10/24/25.
 //
 
+/*
+
+Create wallet sequence
+1. firstUse
+2. introVideos
+3. createWallet
+4. walletCreated
+
+Import wallet sequence
+1. firstUse
+2. importWallet
+3. walletImported
+
+ */
+
 import SwiftUI
 import ArkeUI
 
 enum OnboardingState {
     case firstUse
+    case introVideos
     case importWallet
     case walletImported
     case usagePattern
@@ -26,23 +42,13 @@ enum NavigationDirection {
 struct OnboardingFlow: View {
     @State private var currentState: OnboardingState = .firstUse
     @State private var navigationDirection: NavigationDirection = .forward
-    @State private var usagePattern: ServerUsageProfile = .casual
     @State private var isMainnet: Bool = true
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
-    
+
     var body: some View {
         ZStack {
             HStack(spacing: 0) {
-                /*
-                VStack {
-                    // Left column - Big video
-                     LoopingVideoPlayer(videoName: "cover-animation", videoExtension: "mp4")
-                         .frame(maxWidth: .infinity)
-                         .clipped()
-                }
-                .frame(maxWidth: .infinity)
-                */
                 VStack {
                     switch currentState {
                     case .firstUse:
@@ -51,7 +57,7 @@ struct OnboardingFlow: View {
                             onCreateWallet: {
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
-                                    currentState = .usagePattern
+                                    currentState = .introVideos
                                 }
                             },
                             onImportWallet: {
@@ -70,7 +76,39 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("firstUse")
-                        
+
+                    case .introVideos:
+                        IntroVideoView(
+                            onBack: {
+                                navigationDirection = .backward
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    currentState = .firstUse
+                                }
+                            },
+                            onContinue: {
+                                navigationDirection = .forward
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    currentState = .createWallet
+                                }
+                            },
+                            onSkip: {
+                                navigationDirection = .forward
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    currentState = .createWallet
+                                }
+                            },
+                            isMainnet: isMainnet
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("introVideos")
+
                     case .importWallet:
                         ImportWalletView(
                             isMainnet: isMainnet,
@@ -96,7 +134,7 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("importWallet")
-                        
+
                     case .walletImported:
                         WalletImportedView(
                             onContinue: {
@@ -117,8 +155,10 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("walletImported")
-                        
+
                     case .usagePattern:
+                        Text("label_usage_pattern")
+                        /*
                         UsagePatternView(
                             onBack: {
                                 navigationDirection = .backward
@@ -144,8 +184,10 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("usagePattern")
-                        
+                        */
                     case .selectServer:
+                        Text("label_usage_pattern")
+                        /*
                         ServerSelectionView(
                             onBack: { profile in
                                 usagePattern = profile
@@ -171,21 +213,24 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("selectServer")
-                        
+                        */
                     case .createWallet:
                         CreateWalletView(
                             isMainnet: isMainnet,
                             onBack: {
                                 navigationDirection = .backward
                                 withAnimation(.smooth(duration: 0.4)) {
-                                    currentState = .selectServer
+                                    currentState = .firstUse
                                 }
                             },
                             onWalletCreated: {
+                                onWalletReady()
+                                /*
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .walletCreated
                                 }
+                                 */
                             },
                             walletManager: walletManager
                         )
@@ -198,7 +243,6 @@ struct OnboardingFlow: View {
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
                         .tag("createWallet")
-                        
                     case .walletCreated:
                         WalletCreatedView(
                             onContinue: {

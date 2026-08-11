@@ -32,14 +32,14 @@ struct WalletCreatedView: View {
                         .font(.system(size: 40, design: .serif))
                         .foregroundStyle(Color.Arke.gold)
                     
-                    Text("firstuse_wallet_created")
+                    Text("onboarding_wallet_ready")
                         .font(.system(size: 21))
                         .lineSpacing(6)
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
-                    
-                    Text("onboarding_backup_advice")
+
+                    Text("onboarding_backup_reminder")
                         .font(.system(size: 21))
                         .lineSpacing(6)
                         .foregroundStyle(.white)
@@ -53,17 +53,22 @@ struct WalletCreatedView: View {
             Button {
                 onContinue()
             } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.right")
-                    Text("onboarding_lets_go")
-                }
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 27))
+                    .foregroundStyle(Color.Arke.gold4)
+                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(ArkeButtonStyle(size: .large))
+            .buttonStyle(.glassProminent)
+            .controlSize(.large)
+            .tint(Color.Arke.gold)
+            .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
+            .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
         }
         .padding(.horizontal, 40)
         .padding(.top, 60)
         .padding(.bottom, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .colorScheme(.dark)
         .background(Color.Arke.gold4)
     }
 }
