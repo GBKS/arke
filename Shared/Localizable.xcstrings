@@ -4442,6 +4442,7 @@
       }
     },
     "data_select_vtxo_or_utxo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5405,6 +5406,7 @@
       }
     },
     "firstuse_more_about" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5425,6 +5427,7 @@
       }
     },
     "firstuse_welcome_description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

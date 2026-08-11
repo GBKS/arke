@@ -17,8 +17,7 @@ enum NavigationItem: String, CaseIterable {
     case contacts = "Contácts"
     case tags = "Tágs"
     case settings = "Séttings"
-    case data = "X-Ráy"
-    
+
     var systemImage: String {
         switch self {
         case .balance: return "list.bullet"
@@ -28,7 +27,6 @@ enum NavigationItem: String, CaseIterable {
         case .contacts: return "person.fill"
         case .tags: return "tag.fill"
         case .settings: return "gearshape.fill"
-        case .data: return "brain.head.profile.fill"
         }
     }
 }
@@ -36,7 +34,6 @@ enum NavigationItem: String, CaseIterable {
 struct WalletView: View {
     @State private var selectedItem: NavigationItem = .activity
     @State private var selectedTransaction: TransactionModel?
-    @State private var selectedDataItem: DataDetailItem?
     @State private var selectedContact: ContactModel?
     @State private var editingContact: ContactModel?
     @State private var activityFilterContact: PersistentContact? = nil
@@ -143,38 +140,6 @@ struct WalletView: View {
                     .navigationSplitViewColumnWidth(min: 300, ideal: 300, max: 400)
                 }
             }
-            } else if selectedItem == .data {
-            // Three-column layout for data view
-            NavigationSplitView {
-                // Sidebar
-                WalletSidebar(selectedItem: $selectedItem)
-                    .navigationSplitViewColumnWidth(min: 250, ideal: 250)
-            } content: {
-                DataView(selectedDataItem: $selectedDataItem)
-                    .navigationSplitViewColumnWidth(min: 300, ideal: 300)
-            } detail: {
-                if let dataItem = selectedDataItem {
-                    switch dataItem {
-                    case .vtxo(let vtxo):
-                        VTXODetailView(vtxo: vtxo)
-                            .navigationSplitViewColumnWidth(min: 350, ideal: 350, max: 400)
-                    case .utxo(let utxo):
-                        UTXODetailView(utxo: utxo)
-                            .navigationSplitViewColumnWidth(min: 350, ideal: 350, max: 400)
-                    }
-                } else {
-                    ContentUnavailableView {
-                        VStack(spacing: 15) {
-                            Image(systemName: "list.bullet")
-                                .imageScale(.medium)
-                                .symbolVariant(.none)
-                            Text("data_select_vtxo_or_utxo")
-                                .font(.system(size: 19, design: .serif))
-                        }
-                    }
-                    .navigationSplitViewColumnWidth(min: 350, ideal: 350, max: 400)
-                }
-            }
             } else if selectedItem == .contacts {
             // Three-column layout for contacts view
             NavigationSplitView {
@@ -228,10 +193,7 @@ struct WalletView: View {
                 WalletSidebar(selectedItem: $selectedItem)
                     .navigationSplitViewColumnWidth(min: 250, ideal: 250)
             } content: {
-                SettingsView(
-                    selectedItem: $selectedSetting,
-                    onNavigateToData: { selectedItem = .data }
-                )
+                SettingsView(selectedItem: $selectedSetting)
                 .navigationSplitViewColumnWidth(min: 300, ideal: 340)
             } detail: {
                 SettingsDetailView(
@@ -264,8 +226,6 @@ struct WalletView: View {
                 case .tags:
                     TagsView(onNavigateToActivity: navigateToFilteredActivityByTag)
                 case .settings:
-                    EmptyView() // This case shouldn't be reached now
-                case .data:
                     EmptyView() // This case shouldn't be reached now
                 case .activity:
                     EmptyView() // This case shouldn't be reached

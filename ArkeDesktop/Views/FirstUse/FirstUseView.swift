@@ -17,9 +17,10 @@ struct FirstUseView: View {
         HStack(spacing: 0) {
             VStack {
                 // Left column - Big video
-                 LoopingVideoPlayer(videoName: "cover-animation", videoExtension: "mp4")
-                     .frame(maxWidth: .infinity)
-                     .clipped()
+                 LoopingVideoPlayer(videoName: isMainnet ? "coffee-shop-chat-2": "experimenter-small", videoExtension: "mp4")
+                    .id(isMainnet)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
             }
             .frame(maxWidth: .infinity)
             
@@ -35,24 +36,6 @@ struct FirstUseView: View {
                         .font(.system(size: 80, design: .serif))
                         .fontWeight(.regular)
                         .foregroundStyle(Color.Arke.gold)
-                    
-                    Text("firstuse_welcome_description")
-                        .fontWeight(.light)
-                        .font(.system(size: 21))
-                        .lineSpacing(6)
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 16)
-                    
-                    Text("firstuse_more_about")
-                        .font(.system(size: 17))
-                        .padding(.top, 16)
-                        .foregroundStyle(Color.Arke.gold)
-                        .onTapGesture {
-                            if let url = URL(string: "https://second.tech") {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
                 }
                 
                 Spacer()

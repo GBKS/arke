@@ -41,9 +41,9 @@ struct WalletSidebar: View {
             // Navigation List
             List(NavigationItem.allCases, id: \.self, selection: $selectedItem) { item in
                 if item != .balance {
-                    // In read-only mode: hide Send (requires wallet), Data (diagnostic only)
+                    // In read-only mode: hide Send (requires wallet)
                     // Keep Receive visible (addresses work via CloudKit, Lightning hidden in view)
-                    if !manager.isReadOnlyMode || (item != .send && item != .data) {
+                    if !manager.isReadOnlyMode || item != .send {
                         NavigationLink(value: item) {
                             Label(item.rawValue, systemImage: item.systemImage)
                                 .font(.system(size: 15))

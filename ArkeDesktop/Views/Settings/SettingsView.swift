@@ -19,6 +19,7 @@ enum SettingsDetailItem: String, CaseIterable, Identifiable, Hashable {
     case feeSummary
     case feeSchedule
     case addressHistory
+    case xray
     case addressPatterns
     case deleteWallet
 
@@ -27,7 +28,6 @@ enum SettingsDetailItem: String, CaseIterable, Identifiable, Hashable {
 
 struct SettingsView: View {
     @Binding var selectedItem: SettingsDetailItem?
-    let onNavigateToData: () -> Void
 
     @Environment(WalletManager.self) private var manager
     @Environment(\.deviceRegistrationService) private var deviceService
@@ -123,18 +123,13 @@ struct SettingsView: View {
                     )
                     .tag(SettingsDetailItem.addressHistory)
 
-                    // X-Ray lives in the sidebar; this row just navigates there
-                    Button {
-                        onNavigateToData()
-                    } label: {
-                        settingsRow(
-                            icon: "brain.head.profile.fill",
-                            color: .Arke.teal,
-                            title: "data_xray_title",
-                            subtitle: Text("data_wallet_raw")
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    settingsRow(
+                        icon: "brain.head.profile.fill",
+                        color: .Arke.teal,
+                        title: "data_xray_title",
+                        subtitle: Text("data_wallet_raw")
+                    )
+                    .tag(SettingsDetailItem.xray)
                 }
             } header: {
                 Text("data_behind_curtain")
@@ -269,6 +264,8 @@ struct SettingsDetailView: View {
             FeeScheduleView()
         case .addressHistory:
             AddressHistoryView()
+        case .xray:
+            XRaySettingDetailView()
         case .addressPatterns:
             AddressPatternsSettingView()
         case .deleteWallet:
@@ -288,6 +285,57 @@ struct SettingsDetailView: View {
                         .font(.system(size: 19, design: .serif))
                 }
             }
+        }
+    }
+}
+
+// MARK: - X-Ray
+
+// Hosts DataView in the settings detail column. The VTXO/UTXO detail
+// column from the old sidebar layout doesn't exist here, so selections
+// present as a sheet instead.
+private struct XRaySettingDetailView: View {
+    @State private var selectedDataItem: DataDetailItem?
+
+    var body: some View {
+        DataView(selectedDataItem: $selectedDataItem)
+            .sheet(item: $selectedDataItem) { item in
+                XRayDataDetailSheet(item: item)
+            }
+    }
+}
+
+private struct XRayDataDetailSheet: View {
+    let item: DataDetailItem
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button("button_done") {
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding([.top, .horizontal])
+
+            switch item {
+            case .vtxo(let vtxo):
+                VTXODetailView(vtxo: vtxo)
+            case .utxo(let utxo):
+                UTXODetailView(utxo: utxo)
+            }
+        }
+        .frame(width: 420, height: 560)
+    }
+}
+
+extension DataDetailItem: Identifiable {
+    var id: String {
+        switch self {
+        case .vtxo(let vtxo): return "vtxo-\(vtxo.id)"
+        case .utxo(let utxo): return "utxo-\(utxo.id)"
         }
     }
 }
