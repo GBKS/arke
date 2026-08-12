@@ -60,7 +60,16 @@ struct LoopingVideoPlayer: NSViewRepresentable {
     }
     
     func updateNSView(_ nsView: PlayerView, context: Context) {
-        // Updates are handled internally by PlayerView
+        // Swap the video if SwiftUI reuses this view with a different video name
+        nsView.updateVideo(
+            name: videoName,
+            extension: videoExtension,
+            videoGravity: videoGravity,
+            autoPlay: autoPlay,
+            showErrorIndicator: showErrorIndicator,
+            loops: loops,
+            onCompletion: onCompletion
+        )
     }
     
     func makeCoordinator() -> Coordinator {
@@ -75,6 +84,9 @@ class PlayerView: NSView {
     private var player: AVPlayer?
     private var playerLayer: AVPlayerLayer?
     private var loopingObserver: NSObjectProtocol?
+    private var currentVideoName: String?
+    private var readyForDisplayObservation: NSKeyValueObservation?
+    private var pendingSwapCleanup: (() -> Void)?
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -95,6 +107,8 @@ class PlayerView: NSView {
         loops: Bool,
         onCompletion: (() -> Void)?
     ) {
+        currentVideoName = name
+
         // Load video from bundle
         guard let videoURL = Bundle.main.url(forResource: name, withExtension: `extension`) else {
             if showErrorIndicator {
@@ -114,6 +128,7 @@ class PlayerView: NSView {
         guard let playerLayer = playerLayer else { return }
 
         playerLayer.videoGravity = videoGravity
+        playerLayer.frame = self.bounds
         self.layer?.addSublayer(playerLayer)
 
         // Set up looping or one-shot completion
@@ -139,6 +154,69 @@ class PlayerView: NSView {
         }
     }
     
+    /// Replaces the current video if the name changed, tearing down the old player first
+    func updateVideo(
+        name: String,
+        extension ext: String,
+        videoGravity: AVLayerVideoGravity,
+        autoPlay: Bool,
+        showErrorIndicator: Bool,
+        loops: Bool,
+        onCompletion: (() -> Void)?
+    ) {
+        guard name != currentVideoName else { return }
+
+        // Finish any in-flight swap so its outgoing layer doesn't linger
+        readyForDisplayObservation?.invalidate()
+        readyForDisplayObservation = nil
+        pendingSwapCleanup?()
+        pendingSwapCleanup = nil
+
+        // Keep the outgoing video on screen until the new one has a frame
+        // ready, otherwise the view background flashes through the gap
+        let oldPlayer = player
+        let oldLayer = playerLayer
+        let oldObserver = loopingObserver
+        loopingObserver = nil
+        self.layer?.backgroundColor = nil
+
+        setupVideo(
+            name: name,
+            extension: ext,
+            videoGravity: videoGravity,
+            autoPlay: autoPlay,
+            showErrorIndicator: showErrorIndicator,
+            loops: loops,
+            onCompletion: onCompletion
+        )
+
+        let cleanup = {
+            oldPlayer?.pause()
+            oldLayer?.removeFromSuperlayer()
+            if let oldObserver {
+                NotificationCenter.default.removeObserver(oldObserver)
+            }
+        }
+
+        guard let newLayer = playerLayer else {
+            // New video failed to load; drop the old one so the error state shows
+            cleanup()
+            return
+        }
+
+        pendingSwapCleanup = cleanup
+        readyForDisplayObservation = newLayer.observe(\.isReadyForDisplay, options: [.initial, .new]) { [weak self] layer, _ in
+            guard layer.isReadyForDisplay else { return }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.pendingSwapCleanup?()
+                self.pendingSwapCleanup = nil
+                self.readyForDisplayObservation?.invalidate()
+                self.readyForDisplayObservation = nil
+            }
+        }
+    }
+
     /// Manually start or resume playback
     func play() {
         player?.play()

@@ -60,7 +60,16 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: PlayerView_iOS, context: Context) {
-        // Updates are handled internally by PlayerView_iOS
+        // Swap the video if SwiftUI reuses this view with a different video name
+        uiView.updateVideo(
+            name: videoName,
+            extension: videoExtension,
+            videoGravity: videoGravity,
+            autoPlay: autoPlay,
+            showErrorIndicator: showErrorIndicator,
+            loops: loops,
+            onCompletion: onCompletion
+        )
     }
     
     func makeCoordinator() -> Coordinator {
@@ -75,6 +84,9 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
         private var player: AVPlayer?
         private var playerLayer: AVPlayerLayer?
         private var loopingObserver: NSObjectProtocol?
+        private var currentVideoName: String?
+        private var readyForDisplayObservation: NSKeyValueObservation?
+        private var pendingSwapCleanup: (() -> Void)?
         
         override init(frame: CGRect) {
             super.init(frame: frame)
@@ -93,6 +105,8 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
             loops: Bool,
             onCompletion: (() -> Void)?
         ) {
+            currentVideoName = name
+
             // Configure audio session to mix with other audio (like background music)
             do {
                 try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
@@ -119,8 +133,9 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
             guard let playerLayer = playerLayer else { return }
             
             playerLayer.videoGravity = videoGravity
+            playerLayer.frame = self.bounds
             self.layer.addSublayer(playerLayer)
-            
+
             // Set up looping or one-shot completion
             loopingObserver = NotificationCenter.default.addObserver(
                 forName: .AVPlayerItemDidPlayToEndTime,
@@ -144,6 +159,69 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
             }
         }
         
+        /// Replaces the current video if the name changed, tearing down the old player first
+        func updateVideo(
+            name: String,
+            extension ext: String,
+            videoGravity: AVLayerVideoGravity,
+            autoPlay: Bool,
+            showErrorIndicator: Bool,
+            loops: Bool,
+            onCompletion: (() -> Void)?
+        ) {
+            guard name != currentVideoName else { return }
+
+            // Finish any in-flight swap so its outgoing layer doesn't linger
+            readyForDisplayObservation?.invalidate()
+            readyForDisplayObservation = nil
+            pendingSwapCleanup?()
+            pendingSwapCleanup = nil
+
+            // Keep the outgoing video on screen until the new one has a frame
+            // ready, otherwise the view background flashes through the gap
+            let oldPlayer = player
+            let oldLayer = playerLayer
+            let oldObserver = loopingObserver
+            loopingObserver = nil
+            backgroundColor = nil
+
+            setupVideo(
+                name: name,
+                extension: ext,
+                videoGravity: videoGravity,
+                autoPlay: autoPlay,
+                showErrorIndicator: showErrorIndicator,
+                loops: loops,
+                onCompletion: onCompletion
+            )
+
+            let cleanup = {
+                oldPlayer?.pause()
+                oldLayer?.removeFromSuperlayer()
+                if let oldObserver {
+                    NotificationCenter.default.removeObserver(oldObserver)
+                }
+            }
+
+            guard let newLayer = playerLayer else {
+                // New video failed to load; drop the old one so the error state shows
+                cleanup()
+                return
+            }
+
+            pendingSwapCleanup = cleanup
+            readyForDisplayObservation = newLayer.observe(\.isReadyForDisplay, options: [.initial, .new]) { [weak self] layer, _ in
+                guard layer.isReadyForDisplay else { return }
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.pendingSwapCleanup?()
+                    self.pendingSwapCleanup = nil
+                    self.readyForDisplayObservation?.invalidate()
+                    self.readyForDisplayObservation = nil
+                }
+            }
+        }
+
         /// Manually start or resume playback
         func play() {
             player?.play()
