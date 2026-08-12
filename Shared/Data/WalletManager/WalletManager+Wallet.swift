@@ -8,6 +8,7 @@
 
 import Foundation
 import os
+import UserNotifications
 
 extension WalletManager {
     
@@ -481,23 +482,28 @@ extension WalletManager {
             // ✅ NEW: Reset manager state FIRST to prevent any operations during deletion
             Self.logger.debug("   Step 1: Resetting manager state...")
             await self.resetManagerState()
-            
+
+            // Clear local notifications and Live Activities before the services
+            // that own them are torn down
+            Self.logger.debug("   Step 2: Clearing local notifications and Live Activities...")
+            await self.clearLocalNotificationsAndLiveActivities()
+
             // ✅ Unregister from push notifications before deletion
             #if os(iOS)
-            Self.logger.debug("   Step 2: Unregistering from push notifications...")
+            Self.logger.debug("   Step 3: Unregistering from push notifications...")
             await self.unregisterFromPushNotifications()
             #endif
-            
+
             // ✅ NEW: Give services time to release any resources
-            Self.logger.debug("   Step 3: Waiting for services to settle...")
+            Self.logger.debug("   Step 4: Waiting for services to settle...")
             try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
-            
+
             // Now delete the wallet (this handles FFI cleanup internally)
-            Self.logger.debug("   Step 4: Deleting wallet files...")
+            Self.logger.debug("   Step 5: Deleting wallet files...")
             let result = try await wallet.deleteWallet()
-            
+
             // Clear the saved network configuration
-            Self.logger.debug("   Step 5: Clearing saved network configuration...")
+            Self.logger.debug("   Step 6: Clearing saved network configuration...")
             NetworkConfigPersistence.clear()
 
             // Clear the local wallet evidence breadcrumb (files are gone; the caller
@@ -513,7 +519,26 @@ extension WalletManager {
     }
     
     // MARK: - Private Helpers
-    
+
+    /// Cancel pending local notifications and end any Live Activity so they
+    /// don't outlive the wallet: a pending "Time to Refresh" or exit check-in
+    /// reminder would otherwise fire for a wallet that no longer exists, and
+    /// a stale exit activity would linger on the lock screen. Push
+    /// notifications are handled separately by unregisterFromPushNotifications.
+    private func clearLocalNotificationsAndLiveActivities() async {
+        vtxoRefreshService?.cancelScheduledNotification()
+
+        #if os(iOS)
+        await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
+        #endif
+
+        #if canImport(ActivityKit) && os(iOS)
+        await exitProgressionService?.endLiveActivityImmediately()
+        #endif
+
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+    }
+
     /// Gets the wallet directory path
     private func getWalletDirectory() -> URL {
         let appSupport = FileManager.default.urls(

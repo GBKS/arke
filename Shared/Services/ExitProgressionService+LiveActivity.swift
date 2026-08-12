@@ -139,6 +139,19 @@ extension ExitProgressionService {
         await ExitProgressionNotifications.shared.cancelAllCheckInReminders()
     }
 
+    /// End the Live Activity immediately, with no summary banner. Used on
+    /// wallet deletion, where the standard end (an hour-long "Move complete!"
+    /// summary) would advertise an exit of a wallet that no longer exists.
+    /// Sweeps all activities of our type, not just the tracked one, to catch
+    /// orphans from a previous launch that were never reattached.
+    func endLiveActivityImmediately() async {
+        for activity in Activity<ExitProgressActivityAttributes>.activities {
+            await activity.end(activity.content, dismissalPolicy: .immediate)
+        }
+        Self.activeActivity = nil
+        Self.logger.info("🗑️ [LiveActivity] Ended all activities immediately")
+    }
+
     // MARK: - Relaunch Reattachment
 
     /// Reattach to any surviving Live Activity on app launch and bring it up to date.
