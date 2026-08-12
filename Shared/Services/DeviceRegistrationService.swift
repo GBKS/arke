@@ -51,6 +51,9 @@ class DeviceRegistrationService {
     
     /// Pending registration (for lazy registration pattern)
     private var pendingRegistration: (hash: String, hasSeed: Bool)?
+
+    /// Observer token for CloudKit remote-change refreshes
+    @ObservationIgnored private var cloudKitChangeObserver: NSObjectProtocol?
     
     // MARK: - Initialization
     
@@ -60,11 +63,33 @@ class DeviceRegistrationService {
     
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
-        
+
+        observeCloudKitChanges()
+
         // Load registered devices
         Task {
             await loadRegisteredDevices()
             await processPendingRegistrations()
+        }
+    }
+
+    /// Refreshes the device list (and resolves primary conflicts) whenever CloudKit
+    /// imports records mid-session. Without this, registrations arriving from other
+    /// devices are invisible until the next launch re-runs loadRegisteredDevices().
+    /// CloudKitObserver already debounces the underlying remote-change notifications.
+    private func observeCloudKitChanges() {
+        guard cloudKitChangeObserver == nil else { return }
+
+        cloudKitChangeObserver = NotificationCenter.default.addObserver(
+            forName: .cloudKitDataDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await self.loadRegisteredDevices()
+                await self.reconcilePrimaryConflicts()
+            }
         }
     }
     
@@ -262,10 +287,22 @@ class DeviceRegistrationService {
     // MARK: - Device Registration
     
     /// Registers the current device in the device registry
+    ///
+    /// Primary status is claimed only by explicit user actions (wallet create/import,
+    /// `allowPrimaryClaim: true`), and only when no other device is currently known to
+    /// hold it. Detection paths must pass `allowPrimaryClaim: false`: a device whose
+    /// seed arrived via iCloud Keychain didn't create the wallet, and racing
+    /// "first device" heuristics against KVS/CloudKit sync lag is what produced
+    /// duplicate primaries. A device that wrongly ends up secondary recovers via the
+    /// no-primary banner (promote flow); duplicate primaries converge via
+    /// `reconcilePrimaryConflicts()`.
+    ///
     /// - Parameters:
     ///   - walletHash: The hash of the wallet this device is associated with
     ///   - hasSeed: Whether this device has the seed phrase stored locally
-    func registerCurrentDevice(walletHash: String, hasSeed: Bool) async throws {
+    ///   - allowPrimaryClaim: Whether this registration may claim primary status
+    ///     (true only for create/import flows)
+    func registerCurrentDevice(walletHash: String, hasSeed: Bool, allowPrimaryClaim: Bool = false) async throws {
         return try await taskManager.execute(key: "registerCurrentDevice") {
             guard let modelContext = self.modelContext else {
                 throw DeviceRegistrationError.noModelContext
@@ -283,6 +320,8 @@ class DeviceRegistrationService {
             
             if let existing = try? modelContext.fetch(descriptor).first {
                 // Update existing registration
+                let walletChanged = existing.walletHash != walletHash
+
                 existing.deviceName = deviceName
                 existing.walletHash = walletHash
                 existing.hasSeed = hasSeed
@@ -290,60 +329,46 @@ class DeviceRegistrationService {
                 existing.lastAppVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
                 existing.isActive = true
                 existing.deviceModelIdentifier = modelIdentifier
-                // Note: isPrimaryDevice is preserved - don't change it on update
-                
+
+                if walletChanged {
+                    // Primary status never carries over from another wallet
+                    let claim = allowPrimaryClaim && !self.activePrimaryExists(for: walletHash, excludingDeviceId: deviceId, in: modelContext)
+                    existing.isPrimaryDevice = claim
+                    existing.becamePrimaryAt = claim ? Date() : nil
+                    existing.demotedAt = nil
+                    Self.logger.info("Wallet changed for this device - primary reset (claimed=\(claim))")
+                } else if allowPrimaryClaim && !existing.isPrimaryDevice
+                            && !self.activePrimaryExists(for: walletHash, excludingDeviceId: deviceId, in: modelContext) {
+                    // A deliberate create/import on this device may claim a vacant primary
+                    existing.isPrimaryDevice = true
+                    existing.becamePrimaryAt = Date()
+                }
+                // Otherwise isPrimaryDevice is preserved - detection-path updates never change it
+
                 // Ensure device is registered in KV store with current primary status
                 self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash)
-                
-                // Also ensure isPrimary status is stored in KV store for future reinstalls
+
                 let kvStore = NSUbiquitousKeyValueStore.default
                 kvStore.set(existing.isPrimaryDevice, forKey: "device_\(deviceId)_isPrimary")
                 kvStore.synchronize()
-                
+
                 Self.logger.info("Updated existing device registration")
             } else {
-                // Check if this device was previously primary (via KV store)
-                // This preserves primary status across app reinstalls when CloudKit hasn't synced yet
-                let wasPrimaryDevice = self.getDevicePrimaryStatusFromKVStore(deviceId: deviceId)
-                
-                // Check if this is the first device being registered for this wallet
-                // Use BOTH CloudKit/SwiftData AND NSUbiquitousKeyValueStore to avoid race conditions
-                let walletDevicesDescriptor = FetchDescriptor<DeviceRegistration>(
-                    predicate: #Predicate { $0.walletHash == walletHash }
-                )
-                let swiftDataDeviceCount = (try? modelContext.fetch(walletDevicesDescriptor).count) ?? 0
-                let kvStoreDeviceCount = self.getRegisteredDeviceCountFromKVStore(walletHash: walletHash)
-                
-                // Consider it the first device only if BOTH sources confirm no devices exist
-                // This prevents race conditions during CloudKit sync delays
-                let isFirstDevice = (swiftDataDeviceCount == 0 && kvStoreDeviceCount == 0)
-                
-                // Determine primary status: prefer KV store history, fallback to first device logic
-                let shouldBePrimary: Bool
-                if let wasPrimary = wasPrimaryDevice {
-                    // KV store has record - trust it (handles reinstall case)
-                    shouldBePrimary = wasPrimary
-                    Self.logger.debug("Using KV store primary status: \(wasPrimary)")
-                } else {
-                    // No KV store record - fall back to first device logic (handles clean slate)
-                    shouldBePrimary = isFirstDevice
-                    if swiftDataDeviceCount == 0 && kvStoreDeviceCount > 0 {
-                        Self.logger.warning("Race condition detected! SwiftData: 0 devices, KVStore: \(kvStoreDeviceCount) devices")
-                        Self.logger.debug("   CloudKit hasn't synced yet - setting isPrimary=false to avoid duplicate primary devices")
-                    }
-                }
-                
-                // Register device in KV store BEFORE creating SwiftData record
-                // This prevents other devices from thinking they're first
+                // Primary is claimed only by explicit create/import actions, and only
+                // when no other device is currently known to hold it. No "first device"
+                // inference: sync lag would let a detecting device win that race.
+                let shouldBePrimary = allowPrimaryClaim && !self.activePrimaryExists(for: walletHash, excludingDeviceId: deviceId, in: modelContext)
+
+                // Register device in KV store registry (used for cleanup bookkeeping)
                 self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash)
-                
-                // Store primary status in KV store for future reinstalls
+
+                // Store primary status in KV store (read by shouldBlockWalletAccess and
+                // the MainView demotion/promotion observers)
                 let kvStore = NSUbiquitousKeyValueStore.default
                 kvStore.set(shouldBePrimary, forKey: "device_\(deviceId)_isPrimary")
                 kvStore.synchronize()
-                
+
                 // Create new registration
-                // First device becomes primary automatically, or preserves previous primary status
                 let registration = DeviceRegistration(
                     deviceId: deviceId,
                     deviceName: deviceName,
@@ -351,22 +376,36 @@ class DeviceRegistrationService {
                     walletHash: walletHash,
                     hasSeed: hasSeed,
                     isPrimaryDevice: shouldBePrimary,
-                    deviceModelIdentifier: modelIdentifier
+                    deviceModelIdentifier: modelIdentifier,
+                    becamePrimaryAt: shouldBePrimary ? Date() : nil
                 )
-                
+
                 modelContext.insert(registration)
-                
-                Self.logger.info("Created new device registration (isPrimary=\(shouldBePrimary), SwiftData:\(swiftDataDeviceCount), KVStore:\(kvStoreDeviceCount))")
+
+                Self.logger.info("Created new device registration (isPrimary=\(shouldBePrimary), claimAllowed=\(allowPrimaryClaim))")
             }
             
             try modelContext.save()
-            
+
             // Update last heartbeat timestamp
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: self.lastHeartbeatKey)
-            
+
             // Reload devices list
             await self.loadRegisteredDevices()
+
+            // Resolve any duplicate-primary state that is already visible
+            await self.reconcilePrimaryConflicts()
         }
+    }
+
+    /// Whether another active device currently holds primary for the given wallet
+    private func activePrimaryExists(for walletHash: String, excludingDeviceId deviceId: String, in modelContext: ModelContext) -> Bool {
+        let descriptor = FetchDescriptor<DeviceRegistration>(
+            predicate: #Predicate {
+                $0.walletHash == walletHash && $0.isPrimaryDevice == true && $0.isActive == true && $0.deviceId != deviceId
+            }
+        )
+        return ((try? modelContext.fetchCount(descriptor)) ?? 0) > 0
     }
     
     /// Updates the current device's seed status
@@ -465,8 +504,9 @@ class DeviceRegistrationService {
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastHeartbeatKey)
         
         Self.logger.debug("Heartbeat updated")
-        
+
         await loadRegisteredDevices()
+        await reconcilePrimaryConflicts()
     }
     
     // MARK: - Queries
@@ -557,15 +597,24 @@ class DeviceRegistrationService {
     }
     
     /// Gets the primary device for the wallet
-    func getPrimaryDevice() async throws -> DeviceRegistration? {
+    /// - Parameter walletHash: When provided, only considers devices registered for
+    ///   that wallet - stale registrations from other (test) wallets must not count
+    func getPrimaryDevice(walletHash: String? = nil) async throws -> DeviceRegistration? {
         guard let modelContext = modelContext else {
             throw DeviceRegistrationError.noModelContext
         }
-        
-        let descriptor = FetchDescriptor<DeviceRegistration>(
-            predicate: #Predicate { $0.isPrimaryDevice == true && $0.isActive == true }
-        )
-        
+
+        let descriptor: FetchDescriptor<DeviceRegistration>
+        if let walletHash = walletHash {
+            descriptor = FetchDescriptor<DeviceRegistration>(
+                predicate: #Predicate { $0.isPrimaryDevice == true && $0.isActive == true && $0.walletHash == walletHash }
+            )
+        } else {
+            descriptor = FetchDescriptor<DeviceRegistration>(
+                predicate: #Predicate { $0.isPrimaryDevice == true && $0.isActive == true }
+            )
+        }
+
         return try? modelContext.fetch(descriptor).first
     }
     
@@ -728,8 +777,8 @@ class DeviceRegistrationService {
             throw MigrationError.alreadyPrimary
         }
         
-        // 3. Check if another primary device already exists
-        let existingPrimary = try await getPrimaryDevice()
+        // 3. Check if another primary device already exists for this wallet
+        let existingPrimary = try await getPrimaryDevice(walletHash: currentDevice.walletHash)
         if existingPrimary != nil {
             throw MigrationError.primaryDeviceAlreadyExists
         }
@@ -766,19 +815,136 @@ class DeviceRegistrationService {
 
     /// Check if there is currently no primary device
     /// Returns true if no active device has isPrimaryDevice = true
+    /// Scoped to this device's wallet when known - a stale primary registration
+    /// from another (test) wallet must not mask a missing primary here
     func checkForNoPrimaryDevice() async throws -> Bool {
-        guard let modelContext = modelContext else {
+        guard modelContext != nil else {
             throw DeviceRegistrationError.noModelContext
         }
 
-        let descriptor = FetchDescriptor<DeviceRegistration>(
-            predicate: #Predicate { $0.isPrimaryDevice == true && $0.isActive == true }
-        )
-
-        let primaryDevices = try modelContext.fetch(descriptor)
-        return primaryDevices.isEmpty
+        let walletHash = (try? await getCurrentDevice())?.walletHash
+        return try await getPrimaryDevice(walletHash: walletHash) == nil
     }
-    
+
+    // MARK: - Primary Conflict Reconciliation
+
+    /// Resolves duplicate-primary states by self-demotion.
+    ///
+    /// Registration coordinates over eventually-consistent iCloud channels, so two
+    /// devices can transiently both believe they are primary (e.g. the same seed
+    /// imported on two devices before either synced the other's claim). Each device
+    /// only ever demotes ITSELF - it owns its record, so there are no CloudKit write
+    /// conflicts - and all devices apply the same deterministic winner rule, so the
+    /// system converges as soon as the conflicting records are mutually visible.
+    func reconcilePrimaryConflicts() async {
+        guard let modelContext = modelContext else { return }
+        guard let deviceId = try? getOrCreateDeviceId() else { return }
+
+        // A reinstall registers a fresh record before the pre-reinstall record has
+        // synced down; once both are visible, collapse them to one.
+        dedupeOwnRecords(deviceId: deviceId, in: modelContext)
+
+        let ownDescriptor = FetchDescriptor<DeviceRegistration>(
+            predicate: #Predicate { $0.deviceId == deviceId }
+        )
+        guard let current = try? modelContext.fetch(ownDescriptor).first,
+              current.isPrimaryDevice, current.isActive else {
+            // Only a primary device ever needs to consider stepping down
+            return
+        }
+
+        let walletHash = current.walletHash
+        let conflictDescriptor = FetchDescriptor<DeviceRegistration>(
+            predicate: #Predicate {
+                $0.walletHash == walletHash && $0.isPrimaryDevice == true && $0.isActive == true
+            }
+        )
+        guard let primaries = try? modelContext.fetch(conflictDescriptor), primaries.count > 1 else {
+            return
+        }
+
+        let winnerId = Self.primaryConflictWinner(candidates: primaries.map {
+            PrimaryDeviceCandidate(deviceId: $0.deviceId, becamePrimaryAt: $0.becamePrimaryAt, registeredAt: $0.registeredAt)
+        })
+
+        guard winnerId != deviceId else {
+            Self.logger.warning("⚠️ Primary conflict (\(primaries.count) primaries) - this device wins, expecting others to self-demote")
+
+            // Clear any stale demotion breadcrumbs so the winning claim survives the
+            // next launch - shouldBlockWalletAccess reads both before initialization
+            let kvStore = NSUbiquitousKeyValueStore.default
+            kvStore.set(true, forKey: "device_\(deviceId)_isPrimary")
+            kvStore.synchronize()
+            UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
+            return
+        }
+
+        Self.logger.warning("⚠️ Primary conflict (\(primaries.count) primaries) - self-demoting, winner is another device")
+
+        current.isPrimaryDevice = false
+        current.demotedAt = Date()
+        try? modelContext.save()
+
+        let kvStore = NSUbiquitousKeyValueStore.default
+        kvStore.set(false, forKey: "device_\(deviceId)_isPrimary")
+        kvStore.synchronize()
+
+        UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
+
+        // Close the wallet if it's currently running in primary mode
+        NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+
+        await loadRegisteredDevices()
+    }
+
+    /// Deterministic winner among conflicting primaries: the earliest claim wins
+    /// (the incumbent keeps primary; a deliberate takeover goes through the explicit
+    /// demote/promote flow), with deviceId as a total-order tiebreaker so every
+    /// device independently picks the same winner.
+    nonisolated static func primaryConflictWinner(candidates: [PrimaryDeviceCandidate]) -> String? {
+        candidates.min { a, b in
+            let aDate = a.becamePrimaryAt ?? a.registeredAt
+            let bDate = b.becamePrimaryAt ?? b.registeredAt
+            if aDate != bDate { return aDate < bDate }
+            return a.deviceId < b.deviceId
+        }?.deviceId
+    }
+
+    /// Removes duplicate registrations for this device (same deviceId).
+    /// Keeps the strongest record: primary beats secondary, then most recently seen.
+    /// Preferring the primary record deliberately restores primary status after a
+    /// reinstall, where the fresh registration was secondary but the pre-reinstall
+    /// record (same Keychain deviceId) was primary.
+    private func dedupeOwnRecords(deviceId: String, in modelContext: ModelContext) {
+        let descriptor = FetchDescriptor<DeviceRegistration>(
+            predicate: #Predicate { $0.deviceId == deviceId }
+        )
+        guard let records = try? modelContext.fetch(descriptor), records.count > 1 else { return }
+
+        let sorted = records.sorted { a, b in
+            if a.isPrimaryDevice != b.isPrimaryDevice { return a.isPrimaryDevice }
+            return a.lastSeenAt > b.lastSeenAt
+        }
+        for stale in sorted.dropFirst() {
+            modelContext.delete(stale)
+        }
+        try? modelContext.save()
+
+        if let survivor = sorted.first, survivor.isPrimaryDevice {
+            // Restoring primary from the pre-reinstall record: the fresh secondary
+            // registration wrote device_<id>_isPrimary = false, which
+            // shouldBlockWalletAccess treats as a demotion at every launch. Reset
+            // the flag to match the surviving record or the device wedges in
+            // read-only despite being primary.
+            let kvStore = NSUbiquitousKeyValueStore.default
+            kvStore.set(true, forKey: "device_\(deviceId)_isPrimary")
+            kvStore.synchronize()
+            UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
+        }
+
+        Self.logger.warning("Deduplicated \(records.count - 1) duplicate registration(s) for this device")
+    }
+
     // MARK: - Fast Device Registry (NSUbiquitousKeyValueStore)
     
     /// Registers a device in the fast KV store registry
@@ -794,22 +960,6 @@ class DeviceRegistrationService {
         Self.logger.debug("Registered device in KV store: \(deviceId)")
     }
     
-    /// Gets the count of registered devices from KV store (fast, syncs before CloudKit)
-    /// This helps detect if other devices exist even when CloudKit hasn't synced yet
-    private func getRegisteredDeviceCountFromKVStore(walletHash: String) -> Int {
-        let kvStore = NSUbiquitousKeyValueStore.default
-        let allKeys = kvStore.dictionaryRepresentation.keys
-        let prefix = "\(registeredDevicesPrefix)\(walletHash)."
-        
-        let deviceCount = allKeys.filter { $0.hasPrefix(prefix) }.count
-        
-        if deviceCount > 0 {
-            Self.logger.debug("Found \(deviceCount) devices in KV store for wallet")
-        }
-        
-        return deviceCount
-    }
-    
     /// Removes a device from the KV store registry
     private func unregisterDeviceFromKVStore(deviceId: String, walletHash: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
@@ -819,25 +969,6 @@ class DeviceRegistrationService {
         kvStore.synchronize()
         
         Self.logger.debug("Unregistered device from KV store: \(deviceId)")
-    }
-    
-    /// Gets the primary status for a specific device from KV store
-    /// Returns nil if no record exists (device never registered or KV store was cleared)
-    /// This helps preserve primary status across app reinstalls when CloudKit hasn't synced yet
-    private func getDevicePrimaryStatusFromKVStore(deviceId: String) -> Bool? {
-        let kvStore = NSUbiquitousKeyValueStore.default
-        let key = "device_\(deviceId)_isPrimary"
-        
-        // Check if key exists in KV store
-        guard kvStore.dictionaryRepresentation.keys.contains(key) else {
-            return nil
-        }
-        
-        let isPrimary = kvStore.bool(forKey: key)
-        
-        Self.logger.debug("Retrieved isPrimary=\(isPrimary) from KV store for device: \(deviceId)")
-        
-        return isPrimary
     }
     
     /// Clears all device registrations from KV store for a specific wallet
@@ -902,6 +1033,15 @@ class DeviceRegistrationService {
             Self.logger.debug("Cleaned up \(orphanedDeviceIds.count) orphaned KV store entries")
         }
     }
+}
+
+// MARK: - Supporting Types
+
+/// Pure-data view of a primary-conflict candidate, extracted for testability
+struct PrimaryDeviceCandidate {
+    let deviceId: String
+    let becamePrimaryAt: Date?
+    let registeredAt: Date
 }
 
 // MARK: - Error Types

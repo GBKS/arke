@@ -50,17 +50,19 @@ struct MainView_iOS: View {
             Self.logger.debug("No wallet hash available for device registration")
             return
         }
-        
+
         // Determine if this device has the seed
         let hasSeed = securityService.hasMnemonic()
-        
-        // Register device (SwiftData operation)
+
+        // Register device (SwiftData operation). Detection never claims primary -
+        // only the create/import flows do (registration inside WalletManager)
         let startTime = CFAbsoluteTimeGetCurrent()
         Self.logger.debug("Device registration starting...")
         do {
             try await serviceContainer.deviceRegistrationService.registerCurrentDevice(
                 walletHash: hash,
-                hasSeed: hasSeed
+                hasSeed: hasSeed,
+                allowPrimaryClaim: false
             )
 
             Self.logger.info("Device registered with hasSeed=\(hasSeed) in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
@@ -335,21 +337,18 @@ struct MainView_iOS: View {
                 let hashValue = store.string(forKey: ubiquitousHashKey)
                 
                 if let _ = hashValue {
-                    Self.logger.info("ubiquitousHashKey added - wallet created on another device, re-detecting wallet state")
+                    Self.logger.info("ubiquitousHashKey added - wallet created on another device, re-running wallet detection")
                 } else {
-                    Self.logger.info("ubiquitousHashKey removed - wallet deleted on another device, re-detecting wallet state")
+                    Self.logger.info("ubiquitousHashKey removed - wallet deleted on another device, re-running wallet detection")
                 }
-                
-                // Re-detect wallet state when hash changes
-                // This will update walletState and trigger appropriate UI changes
-                let newState = await securityService.detectWalletState()
-                walletState = newState
-                
-                Self.logger.info("Wallet state updated to: \(String(describing: newState))")
-                
-                // If we're currently in onboarding and a wallet was created on another device,
-                // the UI will automatically show the "Link existing wallet" option
-                // If the hash was deleted, it will show the standard create/import options
+
+                // Re-run the FULL detection path, not just detectWalletState():
+                // checkForExistingWallet() also starts CloudKit sync + notification
+                // registration (activateLateDetectedWalletServices), registers this
+                // device, and initializes read-only mode. Setting walletState alone
+                // wedges the view on the loading screen with
+                // walletState == .walletActiveElsewhere and no initialization.
+                await checkForExistingWallet()
             }
             
             // Check for device primary status changes

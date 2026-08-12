@@ -280,7 +280,7 @@ class SecurityService {
 
         // 2. Check NSUbiquitousKeyValueStore for synced hash
         // This is the single source of truth for cross-device wallet detection
-        if self.getUbiquitousHash() != nil {
+        if let cloudWalletHash = self.getUbiquitousHash() {
             // Wallet exists on this iCloud account but the seed hasn't reached this
             // device (iCloud Keychain off or lagging). Route into read-only mode; the
             // caller registers this device and initializes with forceReadOnly. The
@@ -291,7 +291,7 @@ class SecurityService {
             if self.modelContext != nil {
                 do {
                     let deviceService = ServiceContainer.shared.deviceRegistrationService
-                    if let primaryDevice = try await deviceService.getPrimaryDevice() {
+                    if let primaryDevice = try await deviceService.getPrimaryDevice(walletHash: cloudWalletHash) {
                         primaryDeviceName = primaryDevice.deviceName
                     }
                 } catch {

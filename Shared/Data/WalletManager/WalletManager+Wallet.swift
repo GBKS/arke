@@ -133,9 +133,10 @@ extension WalletManager {
                 // Get wallet hash from ubiquitous store (set during mnemonic save)
                 if let walletHash = securityService.getUbiquitousHash() {
                     let deviceService = ServiceContainer.shared.deviceRegistrationService
-                    
-                    // Register as device with seed access
-                    try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true)
+
+                    // Import is a deliberate user action - it may claim primary
+                    // if no other device currently holds it
+                    try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
                     Self.logger.info("✅ Device registered after wallet import")
                 } else {
                     Self.logger.warning("⚠️ Could not get wallet hash for device registration")
@@ -303,7 +304,9 @@ extension WalletManager {
         do {
             if let walletHash = securityService.getUbiquitousHash() {
                 let deviceService = ServiceContainer.shared.deviceRegistrationService
-                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true)
+                // Import is a deliberate user action - it may claim primary
+                // if no other device currently holds it
+                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
                 Self.logger.info("✅ Device registered after wallet import")
             } else {
                 Self.logger.warning("⚠️ Could not get wallet hash for device registration")
@@ -384,6 +387,23 @@ extension WalletManager {
             self.isInitialized = true
             self.freshWalletOrigin = .created
             Self.logger.info("🌱 Fresh wallet origin: created - transaction list will skip the initial-sync skeleton")
+
+            // Register this device for the new wallet. Creation is the explicit user
+            // action that claims primary - detection paths never do, so this must not
+            // be left to the view layer's registerDeviceIfNeeded()
+            do {
+                if let walletHash = self.securityService.getUbiquitousHash() {
+                    let deviceService = ServiceContainer.shared.deviceRegistrationService
+                    try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
+                    Self.logger.info("✅ Device registered as primary after wallet creation")
+                } else {
+                    Self.logger.warning("⚠️ Could not get wallet hash for device registration")
+                }
+            } catch {
+                Self.logger.warning("⚠️ Failed to register device (non-critical): \(error)")
+                // Continue anyway - the view layer's registerDeviceIfNeeded() retries,
+                // and a missing primary is recoverable via the promote flow
+            }
 
             // Start background progression services for new wallet
             stepStartTime = CFAbsoluteTimeGetCurrent()

@@ -49,16 +49,35 @@ struct MainView: View {
                 // Onboarding sequence when no wallet found
                 OnboardingFlow(
                     onWalletReady: {
+                        // Transition to the wallet UI immediately - createWallet already
+                        // set isInitialized and started services, so WalletView can
+                        // render while the remaining setup completes in the background
+                        hasWallet = true
+
                         Task {
-                            // Activate services now that wallet exists
+                            // 1. Activate services now that wallet exists
                             serviceContainer.setActive(true)
-                            
-                            // Configure services with model context to begin loading data
+
+                            // 2. Configure services with model context (CRITICAL: must happen before registration)
                             serviceContainer.configureServices(with: modelContext)
-                            
-                            // Initialize the wallet after creation
-                            await walletManager.initialize()
-                            hasWallet = true
+
+                            // 3. Start the initial wallet sync immediately - it's the longest step
+                            //    and drives the transaction list's first-load UI, so it must not
+                            //    wait behind device registration below
+                            Task {
+                                print("🔧 [MainView] Initializing newly created wallet from onWalletReady callback")
+                                await walletManager.initialize()
+                                print("✅ [MainView] New wallet initialization complete")
+                            }
+
+                            // 4. Start CloudKit sync now that wallet exists
+                            serviceContainer.startCloudKitSync(modelContainer: modelContext.container)
+
+                            // 5. Register for remote notifications (CloudKit push)
+                            NSApplication.shared.registerForRemoteNotifications()
+
+                            // 6. Register device (NOW ModelContext is available)
+                            await registerDeviceIfNeeded()
                         }
                     }
                 )
@@ -114,8 +133,39 @@ struct MainView: View {
         NSApplication.shared.registerForRemoteNotifications()
     }
 
+    // MARK: - Device Registration Coordination
+
+    /// Registers the current device after wallet detection or creation
+    /// Should be called AFTER ServiceContainer has been configured with ModelContext
+    private func registerDeviceIfNeeded() async {
+        // Get hash from SecurityService (no side effects)
+        guard let hash = securityService.getWalletHashForRegistration() else {
+            print("ℹ️ [MainView] No wallet hash available for device registration")
+            return
+        }
+
+        // Determine if this device has the seed
+        let hasSeed = securityService.hasMnemonic()
+
+        // Register device (SwiftData operation). Detection never claims primary -
+        // only the create/import flows do (registration inside WalletManager)
+        print("🔍 [MainView] Device registration starting...")
+        do {
+            try await serviceContainer.deviceRegistrationService.registerCurrentDevice(
+                walletHash: hash,
+                hasSeed: hasSeed,
+                allowPrimaryClaim: false
+            )
+
+            print("✅ [MainView] Device registered with hasSeed=\(hasSeed)")
+        } catch {
+            // Log but don't fail - device registration is not critical
+            print("⚠️ [MainView] Device registration failed: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - NSUbiquitousKeyValueStore Observation
-    
+
     private func subscribeToUbiquitousStoreChanges() {
         NotificationCenter.default.addObserver(
             forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
@@ -183,28 +233,48 @@ struct MainView: View {
                 
                 if let _ = hashValue {
                     #if DEBUG
-                    print("✅ [MainView] ubiquitousHashKey added - wallet created on another device")
-                    print("   → Re-detecting wallet state to show 'Link existing wallet' option")
+                    print("✅ [MainView] ubiquitousHashKey added - wallet created on another device, re-running wallet detection")
                     #endif
                 } else {
                     #if DEBUG
-                    print("🗑️ [MainView] ubiquitousHashKey removed - wallet deleted on another device")
-                    print("   → Re-detecting wallet state to hide 'Link existing wallet' option")
+                    print("🗑️ [MainView] ubiquitousHashKey removed - wallet deleted on another device, re-running wallet detection")
                     #endif
                 }
-                
-                // Re-detect wallet state when hash changes
-                // This will update walletState and trigger appropriate UI changes
-                let newState = await securityService.detectWalletState()
-                walletState = newState
-                
-                #if DEBUG
-                print("🔄 [MainView] Wallet state updated to: \(newState)")
-                #endif
-                
-                // If we're currently in onboarding and a wallet was created on another device,
-                // the UI will automatically show the "Link existing wallet" option
-                // If the hash was deleted, it will show the standard create/import options
+
+                // Re-run the FULL detection path, not just detectWalletState():
+                // checkForExistingWallet() also starts CloudKit sync + notification
+                // registration (activateLateDetectedWalletServices), registers this
+                // device, and initializes read-only mode. Setting walletState alone
+                // wedges the view on the loading screen with
+                // walletState == .walletActiveElsewhere and no initialization.
+                await checkForExistingWallet()
+            }
+
+            // Check for device primary status changes
+            let deviceId = try? serviceContainer.deviceRegistrationService.getOrCreateDeviceId()
+            if let deviceId = deviceId,
+               changedKeys.contains("device_\(deviceId)_isPrimary") {
+
+                let kvStore = NSUbiquitousKeyValueStore.default
+                let isPrimary = kvStore.bool(forKey: "device_\(deviceId)_isPrimary")
+
+                if !isPrimary && kvStore.object(forKey: "device_\(deviceId)_isPrimary") != nil {
+                    print("⚠️ [MainView] Device has been demoted from primary")
+
+                    // Set local UserDefaults flag
+                    UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
+
+                    // Trigger wallet closure if currently running
+                    NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+                } else if isPrimary {
+                    print("✅ [MainView] Device has been promoted to primary")
+
+                    // Clear demotion flag
+                    UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
+
+                    // Trigger re-initialization as primary
+                    NotificationCenter.default.post(name: .devicePromotedToPrimary, object: nil)
+                }
             }
         }
     }
@@ -227,7 +297,12 @@ struct MainView: View {
             if case .walletActiveElsewhere = state {
                 print("📱 Wallet exists but device is not primary - initializing in read-only mode")
                 hasWallet = false  // Keep false so we don't trigger normal wallet view yet
-                
+                isCheckingWallet = false
+
+                // Register device before initialization - read-only mode reads the
+                // device registration record during initialize()
+                await registerDeviceIfNeeded()
+
                 // Initialize wallet in read-only mode
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
@@ -238,19 +313,22 @@ struct MainView: View {
             } else {
                 // Set UI state FIRST so view transitions immediately
                 hasWallet = true
-                
+                isCheckingWallet = false
+
                 print("🔍 [MainView] UI transition complete - wallet will initialize in true background")
-                
-                // Initialize wallet in a detached task so it doesn't block UI
+
+                // Start the wallet sync immediately - primary mode doesn't depend on
+                // device registration, which can take a while (CloudKit round trips)
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
                     print("🔧 [MainView] Initializing wallet in detached background task... at \(Date())")
                     await walletManager.initialize()
                     print("✅ [MainView] Wallet initialization complete at \(Date())")
                 }
+
+                // Register device (services are already configured at this point)
+                await registerDeviceIfNeeded()
             }
-            
-            isCheckingWallet = false
         } else {
             // Perform deeper check only for edge cases (wallet on other device, etc.)
             print("⚠️ No wallet detected in early check, performing deeper detection...")
@@ -270,14 +348,17 @@ struct MainView: View {
                 hasWallet = true
                 isCheckingWallet = false
                 
-                // Initialize wallet in detached task
+                // Start the wallet sync immediately - primary mode doesn't depend on
+                // device registration, which can take a while (CloudKit round trips)
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
                     print("🔧 [MainView] Initializing wallet in detached background task... at \(Date())")
                     await walletManager.initialize()
                     print("✅ [MainView] Wallet initialization complete")
                 }
-                
+
+                await registerDeviceIfNeeded()
+
             case .walletActiveElsewhere:
                 // Wallet exists but device is not primary - initialize in read-only mode
                 print("📱 Wallet exists but device is not primary - initializing in read-only mode")
@@ -287,7 +368,11 @@ struct MainView: View {
 
                 hasWallet = false
                 isCheckingWallet = false
-                
+
+                // Register device before initialization - read-only mode reads the
+                // device registration record during initialize()
+                await registerDeviceIfNeeded()
+
                 // Initialize wallet in read-only mode
                 Task.detached { [weak walletManager] in
                     guard let walletManager = walletManager else { return }
