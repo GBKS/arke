@@ -34,7 +34,7 @@ struct DeleteWalletSettingView: View {
                     Text("action_delete_wallet")
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "settings_delete_warning_icloud"))
+                    Text(introText)
                         .font(.title3)
                         .lineSpacing(6)
                         .foregroundColor(.secondary)
@@ -164,7 +164,10 @@ struct DeleteWalletSettingView: View {
                 DeletePermanentlyConfirmationView(
                     deletionStrategy: strategy,
                     onConfirm: {
-                        await deleteWallet(includeCloudData: true)
+                        // Only wipe shared data (CloudKit, iCloud backup, seed) when
+                        // this is the last device; with other active devices the
+                        // wallet keeps living on them and one can be promoted
+                        await deleteWallet(includeCloudData: strategy == .promptForCloudData)
                     },
                     onBack: {
                         showingDeletionConfirmation = false
@@ -174,6 +177,18 @@ struct DeleteWalletSettingView: View {
         }
     }
     
+    /// Strategy-specific intro; neutral while the device check is still running
+    private var introText: String {
+        switch deletionStrategy {
+        case .localOnly:
+            return String(localized: "settings_delete_warning_local_only", defaultValue: "This will permanently delete your wallet from this device. Your other devices keep access to the wallet.")
+        case .promptForCloudData:
+            return String(localized: "settings_delete_warning_icloud")
+        case nil:
+            return String(localized: "settings_delete_warning_device", defaultValue: "This will permanently delete your wallet from this device.")
+        }
+    }
+
     private func checkDevices() async {
         isCheckingDevices = true
         deleteError = nil

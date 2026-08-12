@@ -98,21 +98,31 @@ class WalletDataCleanupService {
         print("🗑️ [WalletDataCleanupService] Starting wallet data deletion (includeCloudData: \(includeCloudData))")
         #endif
         
-        // Step 1: Delete keychain data
-        updateProgress(.deletingKeychain, message: "Removing mnemonic from Keychain...")
-        do {
-            try deleteKeychainData()
-            summary.keychainDeleted = true
+        // Step 1: Delete keychain data — full wipe only. The mnemonic is
+        // synced via iCloud Keychain, so deleting it here would propagate to
+        // every device and permanently lock the remaining secondaries out of
+        // promotion. With other active devices the seed is shared property
+        // and must survive this device's deletion.
+        if includeCloudData {
+            updateProgress(.deletingKeychain, message: "Removing mnemonic from Keychain...")
+            do {
+                try Self.deleteKeychainItem(service: keychainService, account: mnemonicAccount)
+                summary.keychainDeleted = true
+                #if DEBUG
+                print("✅ [WalletDataCleanupService] Keychain data deleted")
+                #endif
+            } catch {
+                #if DEBUG
+                print("⚠️ [WalletDataCleanupService] Failed to delete keychain: \(error)")
+                #endif
+                throw WalletCleanupError.keychainDeletionFailed(error)
+            }
+        } else {
             #if DEBUG
-            print("✅ [WalletDataCleanupService] Keychain data deleted")
+            print("⏭️ [WalletDataCleanupService] Keeping mnemonic (wallet lives on other devices)")
             #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [WalletDataCleanupService] Failed to delete keychain: \(error)")
-            #endif
-            throw WalletCleanupError.keychainDeletionFailed(error)
         }
-        
+
         // Step 2: Unregister device
         updateProgress(.unregisteringDevice, message: "Unregistering device...")
         do {
@@ -189,14 +199,21 @@ class WalletDataCleanupService {
     }
     
     // MARK: - Keychain Deletion
-    
-    private func deleteKeychainData() throws {
+
+    /// Deletes a keychain item regardless of its synchronizable attribute.
+    /// The mnemonic is saved with kSecAttrSynchronizable: true (iCloud
+    /// Keychain), but very old installs may hold a pre-sync local item —
+    /// kSecAttrSynchronizableAny matches both. A query without the attribute
+    /// matches only non-synchronizable items and silently misses the seed.
+    /// Parametrized so tests can run it against a scratch item.
+    nonisolated static func deleteKeychainItem(service: String, account: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: mnemonicAccount
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
         ]
-        
+
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw WalletCleanupError.keychainError(status)

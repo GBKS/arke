@@ -61,7 +61,7 @@ struct DeletePermanentlyConfirmationView: View {
                             .fontWeight(.bold)
                             .multilineTextAlignment(.center)
                         
-                        Text(String(localized: "settings_delete_permanent_warning", defaultValue: "All wallet data will be permanently deleted from this device\(deletionStrategy == .promptForCloudData ? " and iCloud" : ""). No turning back."))
+                        Text(warningText)
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.9))
                             .multilineTextAlignment(.center)
@@ -185,7 +185,7 @@ struct DeletePermanentlyConfirmationView: View {
                                     .controlSize(.small)
                                     .tint(.white)
                             }
-                            Text(isDeleting ? String(localized: "status_deleting_everything") : String(localized: "button_delete_everything"))
+                            Text(isDeleting ? String(localized: "status_deleting_everything") : confirmButtonTitle)
                                 .font(.system(size: 19, weight: .semibold))
                         }
                         .foregroundStyle(Color.white)
@@ -211,10 +211,28 @@ struct DeletePermanentlyConfirmationView: View {
         }
     }
     
+    private var confirmButtonTitle: String {
+        switch deletionStrategy {
+        case .localOnly:
+            return String(localized: "button_delete_from_device", defaultValue: "Delete from This Device")
+        case .promptForCloudData:
+            return String(localized: "button_delete_everything")
+        }
+    }
+
+    private var warningText: String {
+        switch deletionStrategy {
+        case .localOnly:
+            return String(localized: "settings_delete_permanent_warning_local_only", defaultValue: "All wallet data will be permanently deleted from this device. Your other devices keep this wallet — open one of them to make it the active device.")
+        case .promptForCloudData:
+            return String(localized: "settings_delete_permanent_warning_everywhere", defaultValue: "All wallet data will be permanently deleted from this device and iCloud. No turning back.")
+        }
+    }
+
     private func performDeletion() async {
         isDeleting = true
         deleteError = nil
-        
+
         await onConfirm()
     }
 }

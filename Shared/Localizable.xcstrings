@@ -2879,6 +2879,17 @@
         }
       }
     },
+    "button_delete_from_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete from This Device"
+          }
+        }
+      }
+    },
     "button_delete_item" : {
       "localizations" : {
         "en" : {
@@ -7544,11 +7555,34 @@
       }
     },
     "settings_delete_permanent_warning" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "All wallet data will be permanently deleted from this device and iCloud. No turning back."
+          }
+        }
+      }
+    },
+    "settings_delete_permanent_warning_everywhere" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All wallet data will be permanently deleted from this device and iCloud. No turning back."
+          }
+        }
+      }
+    },
+    "settings_delete_permanent_warning_local_only" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All wallet data will be permanently deleted from this device. Your other devices keep this wallet — open one of them to make it the active device."
           }
         }
       }
@@ -7563,12 +7597,34 @@
         }
       }
     },
+    "settings_delete_warning_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device."
+          }
+        }
+      }
+    },
     "settings_delete_warning_icloud" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "This will permanently delete your wallet from this device and iCloud. All linked devices will lose access."
+          }
+        }
+      }
+    },
+    "settings_delete_warning_local_only" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device. Your other devices keep access to the wallet."
           }
         }
       }

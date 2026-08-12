@@ -123,3 +123,80 @@ struct KeychainAccessibilityMigrationTests {
         #expect(readItem(service: service).value == "abandon ability able")
     }
 }
+
+/// Tests for WalletDataCleanupService.deleteKeychainItem — the full-wipe mnemonic
+/// deletion. Regression: the previous query omitted kSecAttrSynchronizable, so it
+/// silently missed the iCloud-synced mnemonic and the seed survived every deletion.
+@Suite("Wallet Cleanup Keychain Deletion Tests")
+struct WalletCleanupKeychainDeletionTests {
+
+    private let account = "mnemonic-test"
+
+    // MARK: - Helpers
+
+    /// Scratch service names keep tests off the real wallet item and parallel-safe.
+    private func uniqueService() -> String {
+        "com.arke.test.cleanup.\(UUID().uuidString)"
+    }
+
+    private func addItem(service: String, synchronizable: Bool) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: synchronizable,
+            kSecValueData as String: Data("abandon ability able".utf8)
+        ]
+        try #require(SecItemAdd(query as CFDictionary, nil) == errSecSuccess)
+    }
+
+    private func itemExists(service: String) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+    }
+
+    private func deleteItem(service: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    // MARK: - Tests
+
+    @Test("Deletes an iCloud-synced item (the real mnemonic's shape)")
+    func deletesSynchronizableItem() throws {
+        let service = uniqueService()
+        defer { deleteItem(service: service) }
+        try addItem(service: service, synchronizable: true)
+
+        try WalletDataCleanupService.deleteKeychainItem(service: service, account: account)
+
+        #expect(!itemExists(service: service))
+    }
+
+    @Test("Deletes a legacy non-synced item")
+    func deletesLegacyItem() throws {
+        let service = uniqueService()
+        defer { deleteItem(service: service) }
+        try addItem(service: service, synchronizable: false)
+
+        try WalletDataCleanupService.deleteKeychainItem(service: service, account: account)
+
+        #expect(!itemExists(service: service))
+    }
+
+    @Test("Missing item does not throw")
+    func missingItemDoesNotThrow() throws {
+        try WalletDataCleanupService.deleteKeychainItem(service: uniqueService(), account: account)
+    }
+}
