@@ -32,11 +32,11 @@ extension BarkWalletFFI {
         
         do {
             // Call FFI offboardVtxos with single VTXO ID
-            let roundId = try await wallet.offboardVtxos(vtxoIds: [vtxo_id], bitcoinAddress: address)
-            
-            Self.logger.info("VTXO offboard initiated, Round ID: \(roundId)")
-            
-            return "VTXO offboard initiated. Round ID: \(roundId)"
+            let result = try await wallet.offboardVtxos(vtxoIds: [vtxo_id], bitcoinAddress: address)
+
+            Self.logger.info("VTXO offboard initiated, Txid: \(result.txid)")
+
+            return "VTXO offboard initiated. Txid: \(result.txid)"
             
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error offboarding VTXO: \(error)")

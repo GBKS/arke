@@ -228,9 +228,9 @@ extension BarkWalletFFI {
 
         do {
             // Call FFI boardAmount method
-            let roundId = try await wallet.boardAmount(amountSats: amountSats)
-            
-            Self.logger.info("Board transaction initiated, VTXO ID: \(roundId.vtxoId), Amount: \(amount) sats, Txid: \(roundId.txid), Waiting for confirmations...")
+            let result = try await wallet.boardAmount(amountSats: amountSats)
+
+            Self.logger.info("Board transaction initiated, VTXO ID: \(result.vtxoId), Amount: \(amount) sats, Txid: \(result.txid), Waiting for confirmations...")
             
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error boarding funds: \(error)")
@@ -262,11 +262,11 @@ extension BarkWalletFFI {
 
         do {
             // Call FFI boardAll method
-            let roundId = try await wallet.boardAll()
-            
-            Self.logger.info("Board all transaction initiated, VTXO ID: \(roundId.vtxoId), Txid: \(roundId.txid), All available onchain funds being boarded...")
-            
-            return "Successfully initiated boarding all funds. VTXO ID: \(roundId.vtxoId), Txid: \(roundId.txid)"
+            let result = try await wallet.boardAll()
+
+            Self.logger.info("Board all transaction initiated, VTXO ID: \(result.vtxoId), Txid: \(result.txid), All available onchain funds being boarded...")
+
+            return "Successfully initiated boarding all funds. VTXO ID: \(result.vtxoId), Txid: \(result.txid)"
             
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error boarding all funds: \(error)")
