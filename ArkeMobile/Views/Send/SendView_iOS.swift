@@ -364,6 +364,11 @@ struct SendView_iOS: View {
         }
         .frame(width: width)
         .scrollDismissesKeyboard(.interactively)
+        // Same tap-to-dismiss behavior as TransactionSwipeCard; fields and
+        // buttons inside win the gesture, so only empty-space taps dismiss
+        .onTapGesture {
+            hideKeyboard()
+        }
     }
     
     @ViewBuilder
