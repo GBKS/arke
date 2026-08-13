@@ -792,28 +792,37 @@ class WalletManager {
         
         // Step 3: Coordinate service refreshes in parallel where possible
         Self.logger.info("🔄 [Refresh] Step 3: Refreshing wallet data (balances, addresses, transactions, block height)...")
+
+        // Addresses first, before the parallel group: on a fresh import,
+        // loading addresses reveals the wallet's first onchain address, and
+        // bark's revealed-SPK sync scans nothing until at least one address
+        // is revealed — the onchain transaction refresh below depends on it.
+        #if DEBUG
+        Self.logger.debug("📍 [ADDRESS TRACE] Refresh calling addressService.loadAddresses()")
+        #endif
+        await addressService?.loadAddresses()
+
         await withTaskGroup(of: Void.self) { group in
             // Balance service handles its own coordination
-            group.addTask { 
-                await self.balanceService?.refreshAllBalances() 
-            }
-            
-            // Address loading
             group.addTask {
-                #if DEBUG
-                Self.logger.debug("📍 [ADDRESS TRACE] Task group calling addressService.loadAddresses()")
-                #endif
-                await self.addressService?.loadAddresses() 
+                await self.balanceService?.refreshAllBalances()
             }
-            
+
             // Transaction refresh (Ark transactions)
-            group.addTask { 
-                await self.transactionService?.refreshTransactions() 
+            group.addTask {
+                await self.transactionService?.refreshTransactions()
             }
             
-            // Onchain transaction refresh (BDK transactions)
+            // Onchain transaction refresh (bark onchain wallet). Its sync
+            // rounds are what advance the BDK wallet state — during a
+            // discovery walk the balance transiently overcounts (a change
+            // output looks unspent until its spending tx is found), and the
+            // parallel refreshAllBalances read can capture that. Re-read
+            // the onchain balance once the history has stabilized; it's a
+            // local state read, no network round-trip.
             group.addTask {
                 await self.onchainTransactionService?.refreshTransactions()
+                await self.balanceService?.refreshOnchainBalance()
             }
             
             // Block height fetch (needed for VTXO expiry calculations)
