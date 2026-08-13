@@ -100,8 +100,20 @@ class OnchainTransactionEntity {
         self.fee = model.fee
         self.isSelfTransfer = model.isSelfTransfer
         self.confirmationHeight = model.confirmationTime?.height
-        self.confirmationTimestamp = model.confirmationTime?.timestamp
-        self.confirmationBlockHash = model.confirmationTime?.blockHash
+        // Keep a previously resolved block timestamp when the fresh model
+        // lacks one for the same block (the Esplora lookup can fail on a
+        // given refresh); drop it only when the block actually changed.
+        if let newConfirmation = model.confirmationTime {
+            if let newTimestamp = newConfirmation.timestamp {
+                self.confirmationTimestamp = newTimestamp
+            } else if newConfirmation.blockHash != self.confirmationBlockHash {
+                self.confirmationTimestamp = nil
+            }
+            self.confirmationBlockHash = newConfirmation.blockHash
+        } else {
+            self.confirmationTimestamp = nil
+            self.confirmationBlockHash = nil
+        }
         self.currentHeight = model.confirmationTime?.currentHeight
         self.lastUpdated = Date()
     }
@@ -111,11 +123,11 @@ class OnchainTransactionEntity {
     /// Convert this entity back to OnchainTransactionModel
     var asModel: OnchainTransactionModel {
         let confirmationTime: ConfirmationTime?
-        
-        if let height = confirmationHeight, let timestamp = confirmationTimestamp {
+
+        if let height = confirmationHeight {
             confirmationTime = ConfirmationTime(
                 height: height,
-                timestamp: timestamp,
+                timestamp: confirmationTimestamp,
                 blockHash: confirmationBlockHash,
                 currentHeight: currentHeight
             )
@@ -148,9 +160,9 @@ extension OnchainTransactionEntity {
         netAmount > 0
     }
     
-    /// Whether transaction is confirmed
+    /// Whether transaction is confirmed (block time may still be resolving)
     var isConfirmed: Bool {
-        confirmationHeight != nil && confirmationTimestamp != nil
+        confirmationHeight != nil
     }
     
     /// Number of confirmations (0 if unconfirmed)

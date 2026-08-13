@@ -48,17 +48,20 @@ nonisolated struct OnchainTransactionModel: Identifiable, Codable, Hashable {
         UInt64(abs(netAmount))
     }
     
-    /// Transaction timestamp (nil if unconfirmed)
+    /// Transaction timestamp (nil if unconfirmed, or if the block time
+    /// hasn't been resolved yet)
     var timestamp: Date? {
-        guard let confirmationTime = confirmationTime else { return nil }
-        return Date(timeIntervalSince1970: TimeInterval(confirmationTime.timestamp))
+        guard let timestamp = confirmationTime?.timestamp else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(timestamp))
     }
 }
 
 /// Confirmation details for a transaction
 nonisolated struct ConfirmationTime: Codable, Hashable {
     let height: UInt32
-    let timestamp: UInt64
+    /// Unix block time. Bark's `BlockRef` carries no timestamp, so this is
+    /// resolved separately (Esplora block lookup) and can lag a refresh.
+    let timestamp: UInt64?
     let blockHash: String?
     let currentHeight: UInt32?
     

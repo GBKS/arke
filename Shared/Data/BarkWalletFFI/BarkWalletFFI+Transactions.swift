@@ -17,97 +17,81 @@ extension BarkWalletFFI {
     // MARK: - Transaction History
     
     func getOnchainTransactions() async throws -> [OnchainTransactionModel] {
-        // Get onchain transaction history from transaction service
-        
+        // Get onchain transaction history from bark's built-in onchain wallet
+
         if isPreview {
             return OnchainTransactionModel.mockTransactions()
         }
-        
-        // Ensure transaction reader is initialized
-        guard let txReader = transactionReader else {
-            Self.logger.warning("Transaction reader not initialized - cannot fetch transaction history")
-            throw BarkWalletFFIError.configurationError("Transaction reader not initialized")
+
+        guard let onchainWallet = onchainWallet else {
+            Self.logger.warning("Onchain wallet not initialized - cannot fetch transaction history")
+            throw BarkWalletFFIError.configurationError("Onchain wallet not initialized")
         }
-        
+
         Self.logger.debug("Fetching onchain transaction history...")
-        
+
         do {
-            // Sync transaction reader first to get latest transactions
-            try await txReader.sync()
-            
-            // Get transaction details from reader
-            let txDetails = txReader.getTransactionDetails()
-            
-            // Convert to OnchainTransactionModel
-            let transactions = txDetails.map { detail in
-                OnchainTransactionModel(
-                    txid: detail.txid,
-                    received: detail.received,
-                    sent: detail.sent,
-                    fee: detail.fee,
-                    confirmationTime: detail.confirmationTime,
-                    isSelfTransfer: detail.isSelfTransfer
-                )
+            // transactions() only reflects what the wallet has synced, and
+            // bark discovers chained txs one sync round at a time (each
+            // round's changes reveal the addresses the next round scans).
+            // Loop until the set is stable so one fetch walks the whole
+            // chain — steady state exits after a single sync.
+            let result = try await OnchainHistorySyncer.syncUntilStable(
+                previousTxids: knownOnchainTxids,
+                sync: { _ = try await onchainWallet.sync() },
+                fetch: { try await onchainWallet.transactions() }
+            )
+            knownOnchainTxids = result.txids
+            let walletTransactions = result.transactions
+            if result.rounds > 1 {
+                Self.logger.info("Onchain history stabilized after \(result.rounds) sync round(s)")
             }
-            
+            if result.rounds == OnchainHistorySyncer.maxRounds {
+                Self.logger.warning("Onchain history still changing after \(result.rounds) sync rounds - discovery may complete on the next refresh")
+            }
+            let tipHeight = try? await onchainWallet.tipHeight()
+
+            // Resolve block timestamps: bark's BlockRef has no block time
+            let timestampService = blockTimestampService ?? BlockTimestampService(
+                esploraBaseURL: config.esploraAddress ?? networkConfig.esploraBaseURL
+            )
+            blockTimestampService = timestampService
+            let blockHashes = Set(walletTransactions.compactMap { $0.confirmation?.hash })
+            let blockTimestamps = await timestampService.timestamps(forBlockHashes: blockHashes)
+
+            let transactions = OnchainTransactionMapper.map(
+                transactions: walletTransactions,
+                tipHeight: tipHeight,
+                blockTimestamps: blockTimestamps
+            )
+
             Self.logger.info("Retrieved \(transactions.count) onchain transactions")
-            
-            // Log detailed information for each transaction
-            for (index, tx) in transactions.enumerated() {
-                // Calculate net amount safely (avoiding unsigned integer overflow)
-                let netAmount: Int64
-                if tx.sent >= tx.received {
-                    netAmount = -Int64(tx.sent - tx.received)  // Negative for outgoing
-                } else {
-                    netAmount = Int64(tx.received - tx.sent)   // Positive for incoming
-                }
-                
-                let txType: String
-                if tx.isSelfTransfer {
-                    txType = "SELF-TRANSFER"
-                } else if tx.sent > tx.received {
-                    txType = "SEND"
-                } else if tx.received > tx.sent {
-                    txType = "RECEIVE"
-                } else {
-                    txType = "NEUTRAL"
-                }
-                
-                if let confirmationTime = tx.confirmationTime {
-                    let date = Date(timeIntervalSince1970: TimeInterval(confirmationTime.timestamp))
-                    Self.logger.debug("Transaction #\(index + 1): TXID: \(tx.txid), Net Amount: \(netAmount) sats, Sent: \(tx.sent) sats, Received: \(tx.received) sats, Fee: \(tx.fee?.description ?? "unknown") sats, Status: Confirmed, Block Height: \(confirmationTime.height), Timestamp: \(confirmationTime.timestamp), Date: \(date), Confirmations: \(tx.confirmations), Type: \(txType)")
-                } else {
-                    Self.logger.debug("Transaction #\(index + 1): TXID: \(tx.txid), Net Amount: \(netAmount) sats, Sent: \(tx.sent) sats, Received: \(tx.received) sats, Fee: \(tx.fee?.description ?? "unknown") sats, Status: Pending (unconfirmed), Confirmations: \(tx.confirmations), Type: \(txType)")
-                }
-            }
-            
-            
-            // Sort by confirmation time (most recent first), unconfirmed at top
+
+            // Sort newest first, unconfirmed at top; height breaks ties and
+            // covers transactions whose block time hasn't resolved yet
             let sortedTransactions = transactions.sorted { tx1, tx2 in
-                // Unconfirmed transactions first
-                if tx1.confirmationTime == nil && tx2.confirmationTime != nil {
-                    return true
-                }
-                if tx1.confirmationTime != nil && tx2.confirmationTime == nil {
+                switch (tx1.confirmationTime, tx2.confirmationTime) {
+                case (nil, nil):
                     return false
+                case (nil, _):
+                    return true
+                case (_, nil):
+                    return false
+                case (let conf1?, let conf2?):
+                    if let time1 = conf1.timestamp, let time2 = conf2.timestamp, time1 != time2 {
+                        return time1 > time2
+                    }
+                    return conf1.height > conf2.height
                 }
-                
-                // Both confirmed or both unconfirmed - sort by timestamp/height
-                if let time1 = tx1.confirmationTime?.timestamp,
-                   let time2 = tx2.confirmationTime?.timestamp {
-                    return time1 > time2
-                }
-                
-                return false
             }
-            
+
             // Log summary
             let confirmed = sortedTransactions.filter { $0.isConfirmed }.count
             let pending = sortedTransactions.count - confirmed
             Self.logger.debug("Total transactions: \(sortedTransactions.count), Confirmed: \(confirmed), Pending: \(pending)")
-            
+
             return sortedTransactions
-            
+
         } catch {
             Self.logger.error("Error fetching onchain transactions: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get onchain transactions: \(error.localizedDescription)")
@@ -360,13 +344,13 @@ extension BarkWalletFFI {
     
     func sendOnchainWithSafetyCheck(to address: String, amount: Int, feeRateSatPerVb: UInt64? = nil) async throws -> String {
         try validateMainnetOperation()
-        
+
         if networkConfig.isMainnet {
             Self.logger.warning("MAINNET ONCHAIN SEND: Sending \(amount) sats to \(address)")
         } else {
             Self.logger.info("\(self.networkConfig.networkType.uppercased()) ONCHAIN SEND: Sending \(amount) sats to \(address)")
         }
-        
+
         return try await sendOnchain(to: address, amount: amount, feeRateSatPerVb: feeRateSatPerVb)
     }
 }
