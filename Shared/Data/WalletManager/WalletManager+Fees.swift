@@ -114,23 +114,22 @@ extension WalletManager {
     ///   - amountSats: Amount to send in satoshis
     ///   - feeRateSatPerVb: Fee rate in satoshis per vByte
     /// - Returns: Estimated fee in satoshis
-    /// - Throws: Error if calculation fails or transaction reader not available
+    /// - Throws: Error if calculation fails or the estimator can't be created
     func estimateOnchainFeeWithBDK(address: String, amountSats: UInt64, feeRateSatPerVb: UInt64) async throws -> UInt64 {
         guard let ffiWallet = wallet as? BarkWalletFFI else {
             throw BarkErrorArke.commandFailed("BDK wallet not available")
         }
-        
-        guard let transactionReader = ffiWallet.transactionReader else {
-            throw BarkErrorArke.commandFailed("Transaction reader not available")
-        }
-        
-        // Sync transaction reader to ensure we have latest UTXOs
+
+        // Created lazily on first use; a fresh database full-scans once
+        let feeEstimator = try await ffiWallet.ensureFeeEstimator()
+
+        // Sync to ensure we have the latest UTXOs
         // Use incremental sync for speed (not full scan)
-        try await transactionReader.sync(fullScan: false)
-        
+        try await feeEstimator.sync(fullScan: false)
+
         // Estimate fee using BDK's transaction builder
         // This builds an actual transaction to determine exact fees
-        return try transactionReader.estimateFee(
+        return try feeEstimator.estimateFee(
             address: address,
             amountSats: amountSats,
             feeRateSatPerVb: feeRateSatPerVb
@@ -146,23 +145,22 @@ extension WalletManager {
     ///   - address: Destination Bitcoin address
     ///   - feeRateSatPerVb: Fee rate in satoshis per vByte
     /// - Returns: Tuple of (sendable amount, fee) both in satoshis
-    /// - Throws: Error if calculation fails or transaction reader not available
+    /// - Throws: Error if calculation fails or the estimator can't be created
     func calculateOnchainMaxSendable(address: String, feeRateSatPerVb: UInt64) async throws -> (sendAmount: UInt64, fee: UInt64) {
         guard let ffiWallet = wallet as? BarkWalletFFI else {
             throw BarkErrorArke.commandFailed("BDK wallet not available")
         }
-        
-        guard let transactionReader = ffiWallet.transactionReader else {
-            throw BarkErrorArke.commandFailed("Transaction reader not available")
-        }
-        
-        // Sync transaction reader to ensure we have latest UTXOs
+
+        // Created lazily on first use; a fresh database full-scans once
+        let feeEstimator = try await ffiWallet.ensureFeeEstimator()
+
+        // Sync to ensure we have the latest UTXOs
         // Use incremental sync for speed (not full scan)
-        try await transactionReader.sync(fullScan: false)
-        
+        try await feeEstimator.sync(fullScan: false)
+
         // Calculate max sendable using BDK's drain wallet feature
         // This builds an actual transaction to determine exact fees
-        return try transactionReader.calculateMaxSendable(
+        return try feeEstimator.calculateMaxSendable(
             address: address,
             feeRateSatPerVb: feeRateSatPerVb
         )

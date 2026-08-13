@@ -159,16 +159,6 @@ extension BarkWalletFFI {
             )
             print("   ✅ Built-in onchain wallet created")
 
-            // Create lightweight transaction reader for history
-            print("   Creating transaction history reader...")
-            let txReader = try BDKTransactionReader(
-                mnemonic: mnemonic,
-                network: net,
-                esploraURL: finalConfig.esploraAddress ?? networkConfig.esploraBaseURL,
-                dataDir: bdkDataDir
-            )
-            print("   ✅ Transaction reader created")
-
             // Create Bark wallet with built-in onchain capabilities.
             // A single Wallet.open must perform the local creation itself: a
             // prior initWallet() call writes the properties row first, which
@@ -193,7 +183,6 @@ extension BarkWalletFFI {
             
             self.wallet = newWallet
             self.onchainWallet = builtInWallet
-            self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
             secureWalletFilePermissions()
             
@@ -207,18 +196,6 @@ extension BarkWalletFFI {
                        let size = attrs[.size] as? Int64 {
                         Self.logger.debug("Found Bark file: \(file) (\(size) bytes)")
                     }
-                }
-            }
-            
-            // Perform initial transaction reader sync in background
-            Task { [weak self] in
-                guard self != nil else { return }
-                do {
-                    print("🔄 Starting background transaction sync...")
-                    try await txReader.sync(fullScan: true)
-                    print("✅ Background BDK sync complete - transaction history ready")
-                } catch {
-                    print("⚠️ Background BDK sync failed (will retry on demand): \(error.localizedDescription)")
                 }
             }
             
@@ -443,16 +420,6 @@ extension BarkWalletFFI {
             )
             print("✅ Built-in onchain wallet created")
 
-            // Create lightweight transaction reader for history
-            print("🔧 Creating transaction history reader...")
-            let txReader = try BDKTransactionReader(
-                mnemonic: mnemonic,
-                network: net,
-                esploraURL: finalConfig.esploraAddress ?? networkConfig.esploraBaseURL,
-                dataDir: bdkDataDir
-            )
-            print("✅ Transaction reader created")
-            
             // Open or create Bark wallet with built-in onchain capabilities
             // If backup was restored, wallet data already exists, so we should open it
             // Otherwise, create a new wallet
@@ -486,22 +453,8 @@ extension BarkWalletFFI {
             
             self.wallet = restoredWallet
             self.onchainWallet = builtInWallet
-            self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
             secureWalletFilePermissions()
-            
-            // Perform initial transaction reader sync in background
-            // This is especially important for imported wallets to discover transaction history
-            Task { [weak self] in
-                guard self != nil else { return }
-                do {
-                    print("🔄 Starting background transaction sync for imported wallet...")
-                    try await txReader.sync(fullScan: true)
-                    print("✅ Background transaction sync complete - history ready")
-                } catch {
-                    print("⚠️ Background transaction sync failed (will retry on demand): \(error.localizedDescription)")
-                }
-            }
 
             // NOTE: Mnemonic storage is handled by WalletManager.importWalletWithBackup() to avoid duplication
             // WalletManager calls securityService.handleSeedImport() which saves the mnemonic

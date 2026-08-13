@@ -202,49 +202,6 @@ extension BarkWalletFFI {
             )
             Self.logger.info("Built-in onchain wallet created")
 
-            // Create lightweight transaction reader for history
-            Self.logger.debug("Creating transaction history reader...")
-            let txReader = try BDKTransactionReader(
-                mnemonic: mnemonic,
-                network: ffiNetwork,
-                esploraURL: config.esploraAddress ?? networkConfig.esploraBaseURL,
-                dataDir: bdkDataDir
-            )
-            Self.logger.info("Transaction reader created")
-            
-            /*
-            // DIAGNOSTIC: Compare wallet configurations
-            Self.logger.debug("WALLET CONFIGURATION COMPARISON:")
-            do {
-                // Get first address from built-in wallet
-                let builtInAddress = try await builtInWallet.newAddress()
-                Self.logger.debug("Built-in wallet first address: \(builtInAddress)")
-                
-                // Get first 5 addresses from transaction reader
-                let txReaderAddresses = txReader.getFirstNAddresses(count: 25)
-                Self.logger.debug("Transaction reader first 25 addresses:")
-                for (index, address) in txReaderAddresses.enumerated() {
-                    Self.logger.debug("  [\(index)]: \(address)")
-                }
-                
-                // Compare built-in address with first TX reader address
-                let builtInStr = String(describing: builtInAddress)
-                if let firstTxReaderAddress = txReaderAddresses.first {
-                    if builtInStr == firstTxReaderAddress {
-                        Self.logger.debug("Addresses MATCH - wallets are using same descriptors")
-                    } else {
-                        Self.logger.warning("Addresses DIFFER - wallets may have different descriptors! Built-in: \(builtInStr), TX Reader [0]: \(firstTxReaderAddress)")
-                        // Check if built-in matches any of the first 5 addresses
-                        if let matchIndex = txReaderAddresses.firstIndex(of: builtInStr) {
-                            Self.logger.info("Built-in address matches TX Reader[\(matchIndex)] - possible offset!")
-                        }
-                    }
-                }
-            } catch {
-                Self.logger.warning("Could not compare wallet addresses: \(error)")
-            }
-             */
-            
             // PERFORMANCE: Esplora connectivity test disabled to prevent main thread blocking
             // This synchronous network call was causing ~1+ second UI freeze during wallet opening
             // because WalletManager is @MainActor. The actual wallet opening will test connectivity
@@ -302,26 +259,9 @@ extension BarkWalletFFI {
             
             self.wallet = openedWallet
             self.onchainWallet = builtInWallet
-            self.transactionReader = txReader
             self.cachedMnemonic = mnemonic
             secureWalletFilePermissions()
-            
-            // Perform initial transaction reader sync in background (non-blocking)
-            // This proactively syncs transaction history without blocking wallet opening
-            // If sync fails, it will be retried when transaction history is accessed
-            // CRITICAL: Use Task.detached to avoid inheriting main actor isolation
-            // A plain Task {} would inherit @MainActor and block the UI during fullScan
-            Task.detached { [weak self] in
-                guard self != nil else { return }
-                do {
-                    Self.logger.debug("Starting background transaction sync...")
-                    try await txReader.sync(fullScan: true)
-                    Self.logger.info("Background transaction sync complete - history ready")
-                } catch {
-                    Self.logger.warning("Background transaction sync failed (will retry on demand): \(error.localizedDescription)")
-                }
-            }
-            
+
             // let afterOpen = Date()
             Self.logger.info("Existing wallet opened successfully")
             // Self.logger.debug("[DIAGNOSTIC] Wallet.open() took \(afterOpen.timeIntervalSince(beforeOpen)) seconds")
@@ -461,7 +401,9 @@ extension BarkWalletFFI {
         // Clear references (this should trigger Rust cleanup)
         self.wallet = nil
         self.onchainWallet = nil
+        self.feeEstimator = nil
         self.cachedMnemonic = nil
+        self.knownOnchainTxids = []
         
         Self.logger.info("Wallet references cleared")
         

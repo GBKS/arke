@@ -9,7 +9,7 @@
 //  extensions across multiple files for maintainability:
 //
 //  📁 Core (this file):
-//     - Properties: wallet, onchainWallet, transactionReader, config
+//     - Properties: wallet, onchainWallet, feeEstimator, config
 //     - Initialization and setup
 //     - Utility methods: extractTxFromPsbt(), broadcastTx()
 //     - Error types: BarkWalletFFIError
@@ -81,8 +81,18 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// The onchain wallet (managed internally, created alongside main wallet)
     var onchainWallet: OnchainWallet?
     
-    /// Read-only transaction history reader (runs alongside OnchainWallet.default())
-    var transactionReader: BDKTransactionReader?
+    /// Shadow BDK wallet for send-flow fee estimation only. Created lazily
+    /// on first use (`ensureFeeEstimator()`) — never at wallet startup.
+    var feeEstimator: BDKFeeEstimator?
+
+    /// Resolves block timestamps for onchain history — bark's `BlockRef`
+    /// carries no block time. Created lazily on the first history fetch.
+    var blockTimestampService: BlockTimestampService?
+
+    /// Txid set from the last completed onchain history fetch. Seeds the
+    /// sync-until-stable loop so a steady-state fetch costs one sync while
+    /// post-import discovery keeps syncing until the chain walk completes.
+    var knownOnchainTxids: Set<String> = []
     
     /// FFI configuration object, always derived from the current `networkConfig`.
     /// Computed (not stored) so that `updateNetworkConfig()` propagates to every

@@ -13,9 +13,47 @@ import Bark
 import os
 
 extension BarkWalletFFI {
-    
+
+    // MARK: - Onchain Fee Estimator (shadow BDK wallet)
+
+    /// The lazily created shadow BDK wallet for send-flow fee estimation.
+    /// No longer created at wallet startup (Phase 2 of the reader removal):
+    /// the first use pays a one-time full scan when the database is fresh,
+    /// and each estimate afterwards does an incremental sync. Goes away
+    /// entirely once bark exposes an onchain estimate/drain API.
+    func ensureFeeEstimator() async throws -> BDKFeeEstimator {
+        if let feeEstimator = feeEstimator {
+            return feeEstimator
+        }
+
+        guard let mnemonic = cachedMnemonic else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        let bdkDataDir = walletDir.appendingPathComponent("bdk", isDirectory: true)
+        if !FileManager.default.fileExists(atPath: bdkDataDir.path) {
+            try FileManager.default.createDirectory(at: bdkDataDir, withIntermediateDirectories: true)
+        }
+
+        Self.logger.debug("Creating fee estimator (lazy, first fee estimate)")
+        let estimator = try BDKFeeEstimator(
+            mnemonic: mnemonic,
+            network: ffiNetwork,
+            esploraURL: config.esploraAddress ?? networkConfig.esploraBaseURL,
+            dataDir: bdkDataDir
+        )
+
+        if estimator.createdFreshDatabase {
+            Self.logger.info("Fee estimator database is fresh - running one-time full scan")
+            try await estimator.sync(fullScan: true)
+        }
+
+        feeEstimator = estimator
+        return estimator
+    }
+
     // MARK: - Fee Estimation
-    
+
     func estimateArkoorPaymentFee(amountSats: UInt64) async throws -> FeeEstimate {
         // Estimate fee for Arkoor (Ark-to-Ark) payment operation
         
