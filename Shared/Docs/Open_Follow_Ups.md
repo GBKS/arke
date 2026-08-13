@@ -42,6 +42,27 @@ stale). Last consolidated: 2026-08-12.
   bark reporting broadcast; (b) round-replacement VTXO fails signature
   validation. The cancelled-exit date bump is already §1.4 in
   `Bark_Bindings_Feedback.md`.
+- [ ] **Claimed exit funds invisible after seed import** (network-verified
+  2026-08-13, test wallet: 8,839 sats confirmed-unspent at the claim
+  address, absent from balance — 143,041 shown vs 151,880 actual). Root
+  cause chain: `ExitClaimSequence.run` reveals a fresh address
+  (`getOnchainAddress()` = `reveal_next_address`) as its FIRST step on
+  every claim attempt — before `drainExits` can fail — and
+  `ExitProgressionService` auto-retries failed claims (e.g. fee-blocked)
+  each interval, so every failed attempt burns one derivation index. These
+  claim addresses bypass `AddressService` history entirely (untracked, not
+  gap-limited). Seed import loses the revealed-index state, and both BDK
+  gap-10 scans (reader full scan, bark revealed-SPK sync) stop before
+  reaching the claim address. Note the receive screen is NOT a contributor
+  (`AddressService` reuses the unused address), but its 20-unused cap also
+  independently exceeds the gap-10 scan. Mitigation candidates: (a) reveal
+  the claim address only after a successful `drainExits` build, or persist
+  and reuse one claim address per exit; (b) route claim addresses through
+  `AddressService`; (c) scan stop gap ≥ unused cap + margin (e.g. 50) on
+  import; (d) upstream — bark onchain wallet has no rescan/full-scan API
+  (ties into feedback §2.6 `forceRescan` removal). Also blocks the exit
+  movement from ever linking its claim tx (`onchain_… not found` on every
+  relink pass).
 
 ## Startup & Initialization
 
@@ -65,6 +86,55 @@ See `Features/Background_Execution.md` (Phase 1 done, soak running).
 
 - [ ] **On-device verify with a v1-snapshot wallet** (migration merged and
   green in tests; the on-device snapshot upgrade path is unverified).
+
+## BDK Transaction Reader Removal
+
+Plan in `Features/BDK_Transaction_Reader_Removal.md` (planned 2026-08-12,
+no code yet). Enabled by `OnchainWalletProtocol.transactions()` in the new
+bindings.
+
+- [x] **Phase 0**: A/B diagnostic PASSED 2026-08-12 (imported signet wallet
+  with completed exit): 5/5 txid match, all nets/fees/heights identical;
+  CPFP-fee-nil risk disproven (bark reports exact fees, even for receives).
+  Findings folded into the plan doc (§3.2 net-sign derivation, §5 notes:
+  post-import one-sync lag; claim tx outside descriptors unlinked — pre-
+  existing; imported CPFP children origin=Block → never movement-linked).
+- [x] **Phase 1**: DONE 2026-08-13 — history now comes from
+  `onchainWallet.transactions()` via `OnchainTransactionMapper` (net-sign
+  classification, raw-tx output-sum parser) with Esplora block-timestamp
+  resolution (`BlockTimestampService`; `ConfirmationTime.timestamp` is now
+  optional and entities keep a resolved timestamp when a refresh lacks one).
+  Phase 0 diagnostic removed. 19 new unit tests green.
+- [x] **Phase 1 defect — first render after fresh import shows 0 onchain
+  txs**: FIXED 2026-08-13. (a) `WalletManager.refresh` now awaits
+  `addressService.loadAddresses()` (which reveals index 0 on a fresh
+  import) before the parallel service group, so the first onchain sync has
+  something to scan; (b) `getOnchainTransactions()` loops sync+fetch via
+  `OnchainHistorySyncer.syncUntilStable` (repeats while the txid set
+  changes, cap 5 rounds, seeded with the previous fetch's txids so steady
+  state costs one sync; reset on wallet shutdown). 5 new unit tests.
+- [x] **On-device verify of Phase 1 + discovery fix**: PASSED 2026-08-13 —
+  fresh seed import shows the full history on first Activity render, no
+  pull-to-refresh needed.
+- [x] **Stale balance overcount after fresh import**: FIXED 2026-08-13 —
+  the parallel balance read raced the discovery walk and captured bark's
+  transient mid-walk overcount (289,848 vs 143,041; a change output looks
+  unspent until its spending tx is discovered). The refresh task group now
+  re-reads the onchain balance (`refreshOnchainBalance()`, local state, no
+  network) right after the onchain history fetch stabilizes. On-device
+  verified 2026-08-13: balance settles without a manual refresh.
+- [x] **Phase 2**: DONE 2026-08-13 — no shadow BDK wallet at startup (the
+  three background full scans on create/import/open are gone). Renamed to
+  `BDKFeeEstimator`, created lazily by `ensureFeeEstimator()` on the first
+  send-flow fee estimate (fresh DB → one-time full scan), cleared at wallet
+  shutdown. Light verify: open the send screen with an onchain source and
+  confirm the fee preview + max-send still work (first use pays the scan).
+- [ ] **Phase 3** (blocked upstream): full removal + drop `bdk-swift` once
+  bark exposes onchain estimate/drain fee APIs.
+- [x] **Feedback doc**: updated 2026-08-13 — §2.5 marked mostly resolved
+  (block time on `BlockRef` remains), new §2.5b estimate/drain ask, §2.6
+  extended with the seed-import invisible-funds case, pagination noted
+  under Priority 3, summary table rows 7/7b/7c.
 
 ## Desktop Parity
 

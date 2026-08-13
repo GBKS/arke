@@ -413,21 +413,56 @@ it in a loop to know when the wallet is usable.
 
 **Ask:** a `connectionStatus()` query plus a status-change event.
 
-### 2.5 `OnchainWallet` exposes no transaction history
+### 2.5 `OnchainWallet` exposes no transaction history — MOSTLY RESOLVED
 
-To show onchain history we run a **second, parallel BDK wallet**
-(`Shared/Data/BDKTransactionReader.swift`) on the same descriptors, purely
-read-only. Double sync traffic, double storage, and a standing risk of
-descriptor drift between your BDK instance and ours.
+**Resolved by `OnchainWallet.transactions()`** (with `tipHeight()` and
+`utxos()`) — thank you, this is exactly what we asked for, and we verified
+it side-by-side against our shadow BDK wallet on a real signet wallet:
+identical txids, net amounts, fees, and confirmation heights. The `isCpfp`
+flag is a genuinely useful bonus. We have migrated our history pipeline to
+it (2026-08-13).
 
-**Ask:** `OnchainWallet.listTransactions()` (txid, sent, received, fee,
-confirmation block/time is all we need).
+**Remaining ask:** `WalletTransaction.confirmation` (`BlockRef`) carries
+height + hash but **no block time**. Transaction dates in any wallet UI come
+from the block time, so every client has to fetch block headers from Esplora
+themselves — data bark's BDK wallet already has. Please add a timestamp to
+`BlockRef` (or a `blockTime` field on `WalletTransaction`).
+
+### 2.5b `OnchainWallet` has no fee estimation / drain preview
+
+The one remaining reason our shadow BDK wallet still exists: previewing the
+fee for a direct onchain send, and computing max-sendable (drain). The
+`Wallet.estimateSendOnchainFee` estimate covers the ark offboard, not the
+onchain wallet's own `send()`, and `prepareTx`/`prepareDrainTx` exist only
+on `CustomOnchainWalletCallbacks` (the interface foreign wallets implement),
+not on `OnchainWalletProtocol`.
+
+Estimating with a parallel wallet is inherently fragile: its coin selection
+isn't guaranteed to match what your wallet picks when `send()` actually
+runs — "send max" especially rides on that.
+
+**Ask:** `OnchainWallet.estimateSend(address, amountSats, feeRateSatPerVb)`
+returning the fee, plus a drain variant returning `(sendAmount, fee)` —
+i.e. `prepareTx`/`prepareDrainTx` promoted onto `OnchainWalletProtocol`
+without broadcasting would do. This unblocks deleting our second BDK stack
+entirely.
 
 ### 2.6 `forceRescan` was removed with no replacement
 
 0.11 dropped `forceRescan` from creation, and `WalletOpenArgs` has no rescan
 flag. If onchain state is ever wrong there is now no recovery API short of
 deleting the datadir.
+
+**Concrete case (network-verified 2026-08-13):** a seed-imported wallet
+whose pre-import exit claim paid an onchain address ~10+ indices past the
+used-address band. The revealed-index state is gone after seed import, the
+revealed-SPK sync never reaches that far, and there is no API to force a
+wider scan — the claim output (8,839 sats, confirmed) is simply invisible
+to `balance()` and `transactions()`. A rescan API with a configurable stop
+gap (or a generous post-recovery full scan) would recover this; related:
+`OnchainWallet.address()` always reveals a fresh index, so repeated calls
+(e.g. retried claim flows) widen the gap — a `peekAddress()`/next-unused
+variant would help clients avoid burning indices.
 
 ---
 
@@ -458,6 +493,16 @@ deleting the datadir.
   can tell the user nothing — our debug helper literally prints a list of
   guesses (`Shared/Helpers/RoundStateDebugger.swift`). Phase, attempt count,
   and next-attempt time would make round UX possible.
+
+**History**
+
+- Neither `history()` nor `OnchainWallet.transactions()` paginates — every
+  call serializes the wallet's full history across the FFI
+  (`historyByPaymentMethod` filters, but doesn't paginate), and
+  `WalletTransaction.txHex` makes the latter carry a full raw tx per entry.
+  Fine at today's sizes; a cursor/since variant (`history(afterId:)`,
+  `transactions(sinceHeight:)`) would keep long-lived wallets from paying
+  O(all-time) per sync. Low priority.
 
 **Types**
 
@@ -564,7 +609,9 @@ pattern we're asking you to extend everywhere:
 | 4 | Events: exit/round/lightning/connection/tip | 4 standing timers + 2 ad-hoc poll loops |
 | 5 | `wallet.close()` with deterministic resource release | Three 500 ms shutdown sleeps (a race) |
 | 6 | `walletExists()` / datadir info | Filename probing (data-loss near-miss in 0.11) |
-| 7 | `OnchainWallet.listTransactions()` | Entire parallel read-only BDK wallet |
+| 7 | ~~`OnchainWallet.listTransactions()`~~ ✅ shipped as `transactions()` (0.6.1) — remaining: block time on `BlockRef` | History side of the parallel BDK wallet (migrated 2026-08-13) |
+| 7b | `OnchainWallet` estimate/drain preview (§2.5b) | The rest of the parallel BDK wallet (fee estimation) |
+| 7c | Onchain rescan API with configurable stop gap; next-unused `address()` variant (§2.6) | Invisible-funds hole after seed import (verified: 8,839 sats) |
 | 8 | `paymentHash` on `LightningSend`; `failed` status case | Client-side BOLT11 parsing; poll-timeout guessing |
 | 9 | Richer `RoundState`; enum `Vtxo`/`Movement` fields | Guesswork UI and undocumented string matching |
 | 10 | Upstream migration notes per release | Hand-written binding-diff docs |
