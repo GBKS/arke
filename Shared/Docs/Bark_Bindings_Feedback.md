@@ -328,6 +328,31 @@ questions:
    funds they may not be able to move; an explicit expired state (or
    documented client-side rule) would let us render this honestly.
 
+### 1.9 Recovery mailbox reports expiry-swept VTXOs as bare `Spent` — users can't be told where funds went
+
+Field case (2026-08-13, signet, `ark.signet.2nd.dev`): a seed-only import at
+15:04 recovered VTXO `8958f837…afad:0` (10,000 sats, expiry height 317579,
+tip 317524 — ~55 blocks to expiry). The wallet was deleted minutes later, so
+no device held the keys until a second seed-only import at 21:09. By then the
+expiry had passed and the recovery scan reported the same VTXO as
+`not spendable (Spent), skipping`. No signer existed during the window, so
+the only party that could have made it unspendable is the server's expiry
+sweep.
+
+From the client, every `Spent` looks identical: spent by the user in a round,
+sent out as an arkoor, or swept by the server at expiry. On a fresh import
+(no local history) that means the 10,000 sats simply vanish — the balance is
+lower than the user remembers, with no movement, no state, nothing we can
+render. We cannot even distinguish "you spent this from another device" from
+"you missed the expiry deadline," which are opposite messages trust-wise.
+
+**Ask:** include a reason alongside the spent status in recovery-mailbox
+entries — e.g. `spentInRound(txid) / spentArkoor / sweptAtExpiry(height)` —
+or expose it on VTXO state generally. With a `sweptAtExpiry` signal we could
+write an explicit "expired" entry into wallet history instead of silently
+showing less money. Complements §1.8's question 3 (rendering not-yet-swept
+expired VTXOs honestly).
+
 ---
 
 ## Priority 2 — costs us reliability and battery
@@ -621,3 +646,4 @@ pattern we're asking you to extend everywhere:
 | 14 | Terminal failure + abandon API for rounds that fail validation | Nothing yet — the affected funds are simply stuck |
 | 15 | Recovery scan: run whenever never-completed, explicit outcome, retried connect, public re-scan | Wipe-and-reopen retry loop in wallet import |
 | 16 | Expired-VTXO semantics: exit viability, re-issue policy, explicit state | Users seeing "spendable" balance they can't move |
+| 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) | Silent, inexplicable balance shrinkage after seed import |

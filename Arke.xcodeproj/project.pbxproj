@@ -599,8 +599,6 @@
 				"Docs/Data samples/ExitTransactionStatus_State.md",
 				"Docs/Data samples/Movements.md",
 				Docs/DataVersionObservation.md,
-				Docs/debug_logs_v2.txt,
-				Docs/debug_logs.txt,
 				"Docs/Development/common-tasks.md",
 				Docs/Development/intro.md,
 				Docs/Development/setup.md,

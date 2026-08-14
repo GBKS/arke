@@ -37,6 +37,16 @@ stale). Last consolidated: 2026-08-12.
 - [ ] **Exit completion issues**: on-device verify with a wallet that has both
   claimed and cancelled exits. See `Features/Exit_Completion_Issues.md`
   (all 5 phases done).
+- [x] **Fresh-import live activity respawn — on-device verified 2026-08-13**:
+  importing a wallet whose exit already completed spawned a "Move complete
+  5/5" activity because (a) bark replays finished exits through the state
+  machine on a fresh DB so they read as in-flight for ~2s, and (b)
+  `endLiveActivity` froze the pre-chain 5-step estimate instead of the real
+  6-step total. Fix: `recreateMissingActivities` now runs only after the
+  launch `checkAndProgressExits` pass (reattach still immediate), and
+  `endLiveActivity` recomputes step totals from final statuses. Verified:
+  re-import produced zero `[LiveActivity]` log lines; check-in reminders
+  were cleared instead of armed-then-cancelled.
 - [ ] **Report upstream to bark devs** (network-verified on the stuck signet
   wallet): (a) exit package transactions don't exist on the network despite
   bark reporting broadcast; (b) round-replacement VTXO fails signature
@@ -63,6 +73,36 @@ stale). Last consolidated: 2026-08-12.
   (ties into feedback §2.6 `forceRescan` removal). Also blocks the exit
   movement from ever linking its claim tx (`onchain_… not found` on every
   relink pass).
+
+## VTXO Expiry
+
+Field incident 2026-08-13 (signet): wallet deleted with a 10,000-sat VTXO
+(`8958f837…`, expiry height 317579) ~2h from expiry; on re-import 6h later
+the recovery mailbox reported it `Spent` — swept by the server at expiry (no
+device held keys in between, so no other spender was possible). The app never
+surfaced the stake: no warning at deletion, no explanation afterward — Ark
+balance just showed 0. Signet's 144-block (~6h) expiry made this unusually
+tight, but the gaps are structural:
+
+- [ ] **Warn on wallet deletion about forfeitable offchain balance**: the
+  minimum expiry height across spendable VTXOs is known at deletion time —
+  the confirmation should say "your offchain balance of X is forfeited
+  around \<time\> unless this wallet is re-imported and refreshed before
+  then." Deleting the last device also deletes the only agent that can
+  refresh.
+- [ ] **Surface expiry sweeps instead of silently showing less money**: on
+  import (and during recovery scans) VTXOs come back as bare `Spent` with no
+  reason, so "spent from another device" and "lost to the expiry deadline"
+  are indistinguishable and nothing appears in history. Blocked on upstream
+  spent-reason (`sweptAtExpiry` etc.) — filed as §1.9 / ask 17 in
+  `Bark_Bindings_Feedback.md`. Once available, write an explicit "expired"
+  history entry.
+- [ ] **Expiry-critical reminders vs. the notifications toggle**: the
+  scheduled free-refresh reminder is silently dropped when notifications are
+  disabled in app settings (as they were in the field logs), removing an
+  expiry defense without the user knowing the cost. Consider exempting
+  expiry-deadline reminders from the toggle, or warning that disabling
+  notifications risks missed refresh deadlines.
 
 ## Startup & Initialization
 

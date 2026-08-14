@@ -97,19 +97,22 @@ class ExitProgressionService {
         Self.logger.info("▶️ Starting service (check interval: \(Int(self.checkInterval))s)")
         isRunning = true
 
-        // Reattach to existing Live Activities, then re-arm the check-in
-        // reminder backstop if exits are in flight (or clear stale reminders
-        // if none are) — see rescheduleCheckInRemindersIfNeeded (iOS only)
-        #if os(iOS)
+        // Reattach to a surviving Live Activity right away, but run the
+        // initial progression check BEFORE recreating a missing one: on a
+        // fresh seed import bark replays already-completed exits through its
+        // state machine, so they look in-flight until the first pass settles
+        // them — recreating earlier spawns a lock-screen activity for an
+        // exit that finished long ago. Check-in reminders re-arm after the
+        // same pass for the same reason (iOS only).
         Task {
+            #if os(iOS)
             await reattachToExistingActivities()
-            await rescheduleCheckInRemindersIfNeeded()
-        }
-        #endif
-
-        // Run initial check immediately
-        Task {
+            #endif
             await checkAndProgressExits()
+            #if os(iOS)
+            await recreateMissingActivities()
+            await rescheduleCheckInRemindersIfNeeded()
+            #endif
         }
 
         // Schedule timer for periodic checks

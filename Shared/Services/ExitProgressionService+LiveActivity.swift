@@ -105,20 +105,29 @@ extension ExitProgressionService {
         }
     }
 
-    /// End the Live Activity with a final summary state.
-    func endLiveActivity(success: Bool) async {
+    /// End the Live Activity with a final summary state. `statuses`, when
+    /// provided, supplies the definitive step totals: the last pushed update
+    /// can predate the transaction chain becoming known (e.g. right after a
+    /// fresh-import replay), leaving a shorter step estimate than the exit
+    /// detail views show.
+    func endLiveActivity(success: Bool, statuses: [ExitTransactionStatus] = []) async {
         guard let activity = Self.activeActivity else {
             Self.logger.debug("⚠️ [LiveActivity] No active activity to end")
             return
         }
 
         let current = activity.content.state
+        let aggregate = statuses.isEmpty ? nil : ExitProgress(statuses: statuses)
+        let totalSteps = (aggregate?.totalSteps).flatMap { $0 > 0 ? $0 : nil } ?? current.totalSteps
+        let totalTransactions = statuses.isEmpty
+            ? current.totalTransactions
+            : statuses.reduce(0) { $0 + max(1, Int($1.transactionCount)) }
         let finalState = ExitProgressActivityAttributes.ContentState(
-            currentStep: success ? current.totalSteps : current.currentStep,
-            totalSteps: current.totalSteps,
+            currentStep: success ? totalSteps : current.currentStep,
+            totalSteps: totalSteps,
             stepDescription: success ? "Move complete!" : "Move stopped",
-            transactionsConfirmed: current.totalTransactions,
-            totalTransactions: current.totalTransactions,
+            transactionsConfirmed: totalTransactions,
+            totalTransactions: totalTransactions,
             exitState: success ? .claimed : .start,
             lastUpdated: Date(),
             needsCheckIn: false,
@@ -154,13 +163,14 @@ extension ExitProgressionService {
 
     // MARK: - Relaunch Reattachment
 
-    /// Reattach to any surviving Live Activity on app launch and bring it up to date.
+    /// Reattach to any surviving Live Activity on app launch and bring it up
+    /// to date. Deliberately does NOT recreate a missing activity — see
+    /// recreateMissingActivities(), which runs only after the first
+    /// progression pass.
     func reattachToExistingActivities() async {
-        if let existing = Activity<ExitProgressActivityAttributes>.activities.first {
-            Self.activeActivity = existing
-            Self.logger.info("✅ [LiveActivity] Reattached to existing activity")
-        }
-        await recreateMissingActivities()
+        guard let existing = Activity<ExitProgressActivityAttributes>.activities.first else { return }
+        Self.activeActivity = existing
+        Self.logger.info("✅ [LiveActivity] Reattached to existing activity")
         await updateAllLiveActivities()
     }
 
@@ -168,14 +178,19 @@ extension ExitProgressionService {
     /// (e.g. after an app rebuild or a crash mid-exit). Must filter with
     /// `isInFlight`, not `isActive`: claimed and cancelled exits stay in bark's
     /// exit list forever, so an already-finished batch would otherwise respawn
-    /// a "complete" activity on every launch.
-    private func recreateMissingActivities() async {
+    /// a "complete" activity on every launch. Must also run only AFTER the
+    /// launch progression pass: a fresh seed import replays already-completed
+    /// exits through the state machine, so they read as in-flight for the
+    /// first few seconds until that pass settles them.
+    func recreateMissingActivities() async {
         guard Self.activeActivity == nil else { return }
         do {
             let exitVtxos = try await wallet.getExitVtxos().filter { $0.isInFlight }
             guard !exitVtxos.isEmpty else { return }
             Self.logger.info("🆕 [LiveActivity] Recreating missing activity for \(exitVtxos.count) exit(s)")
             await startLiveActivity(for: exitVtxos)
+            // Replace the placeholder step estimate with real chain data
+            await updateAllLiveActivities()
         } catch {
             Self.logger.warning("⚠️ [LiveActivity] Failed to recreate missing activity: \(error)")
         }
@@ -210,7 +225,7 @@ extension ExitProgressionService {
 
             switch aggregate.phase {
             case .complete:
-                await endLiveActivity(success: true)
+                await endLiveActivity(success: true, statuses: statuses)
             case .cancelled where exitVtxos.isEmpty:
                 // All VTXOs gone from exit list — treat as complete
                 await endLiveActivity(success: true)
