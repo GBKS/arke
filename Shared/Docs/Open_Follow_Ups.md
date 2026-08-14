@@ -122,10 +122,11 @@ tight, but the gaps are structural:
   recreate → reminders) live in `LaunchSequence` (`ExitProgressionLogic.swift`)
   with injected effects and an order-pinning test
   (`LaunchSequenceTests/launchOrderIsPinned`); contract rule 8 now enforced.
-- [ ] **Next pure-logic extractions** (per the contract's Test gaps):
-  wallet-detection decisions (contract rules 3/4/14 — overlaps the optional
-  Phase 5 refactor above) and the import wipe-and-reopen retry decision
-  (rule 2, `BarkWalletFFI+WalletCreation.swift`).
+- [x] **Import wipe-and-reopen retry decision extracted** (done 2026-08-14):
+  `ImportRecoveryLogic` in `BarkWalletFFI+WalletCreation.swift`, decision
+  matrix pinned by `ImportRecoveryLogicTests` (contract rule 2).
+- [ ] **Next pure-logic extraction**: wallet-detection decisions (contract
+  rules 3/4/14 — overlaps the optional Phase 5 refactor above).
 
 ## Background Execution
 

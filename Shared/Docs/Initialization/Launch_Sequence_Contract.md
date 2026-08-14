@@ -27,7 +27,9 @@ A failed scan is indistinguishable from a skipped one, and the scan runs only
 on the creating open — so on nil report, stop the daemon, wipe the
 seconds-old database, redo the creating open (bounded retries). Fresh-seed
 *creation* uses `skipRecovery: true`; import must never.
-Enforced: `BarkWalletFFI+WalletCreation.swift` (`openImportedWallet`). Test: none.
+Enforced: `BarkWalletFFI+WalletCreation.swift` (`openImportedWallet`,
+decision in `ImportRecoveryLogic`). Test: `ImportRecoveryLogicTests`
+(decision matrix; the wipe-before-reopen mechanics remain code-only).
 
 **3. Wallet existence is `db.sqlite` OR `bark.sqlite` — never recreate-from-seed on a "missing" database.**
 bark 0.11+ creates `db.sqlite`; a `bark.sqlite`-only probe false-detected "no
@@ -144,8 +146,9 @@ Enforced: `WalletManager+Wallet.swift` (deletion strategy). Test: none.
 
 ## Test gaps
 
-Rules with no pinning test, roughly by risk: 1, 2, 3, 4, 14, 17. Rule 8 is
-covered since 2026-08-14 by the `LaunchSequence` extraction
-(`ExitProgressionLogic.swift`), which is the pattern to follow for the rest —
-next candidates: wallet-detection Phase 5 (rules 3/4/14) and the import
-wipe-and-reopen retry decision (rule 2).
+Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17. Covered since
+2026-08-14: rule 8 (`LaunchSequence`, `ExitProgressionLogic.swift`) and
+rule 2's decision matrix (`ImportRecoveryLogic`,
+`BarkWalletFFI+WalletCreation.swift`) — the pattern to follow for the rest.
+Next candidate: wallet-detection decisions (rules 3/4/14, overlaps the
+optional startup-detection Phase 5 refactor).

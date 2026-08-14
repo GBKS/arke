@@ -12,6 +12,35 @@ import Foundation
 import Bark
 import os
 
+// MARK: - Import recovery retry decision
+
+/// The pure decision for a seed-only import's creating open
+/// (Docs/Initialization/Launch_Sequence_Contract.md, rule 2): bark runs the
+/// seed-recovery scan only on the open that creates the wallet locally, and
+/// a scan that errors is swallowed into a nil report with no re-scan API —
+/// so a nil report while attempts remain means wipe the seconds-old
+/// database and redo the creating open.
+enum ImportRecoveryLogic {
+
+    static let maxAttempts = 3
+
+    enum Decision: Equatable {
+        /// The creating open delivered a recovery report — keep the wallet.
+        case accept
+        /// No report, attempts remain — wipe the database and reopen.
+        case wipeAndRetry
+        /// No report, attempts exhausted — keep the wallet anyway. VTXOs
+        /// still pending in the regular mailbox arrive via sync; round-
+        /// received ones stay missing until a future recovery succeeds.
+        case acceptWithoutRecovery
+    }
+
+    static func decision(hasReport: Bool, attempt: Int, maxAttempts: Int = Self.maxAttempts) -> Decision {
+        if hasReport { return .accept }
+        return attempt >= maxAttempts ? .acceptWithoutRecovery : .wipeAndRetry
+    }
+}
+
 extension BarkWalletFFI {
     
     // MARK: - Wallet Creation
@@ -512,8 +541,7 @@ extension BarkWalletFFI {
         config finalConfig: Config,
         onchain builtInWallet: OnchainWallet
     ) async throws -> Wallet {
-        let maxAttempts = 3
-        for attempt in 1...maxAttempts {
+        for attempt in 1...ImportRecoveryLogic.maxAttempts {
             let wallet = try await Wallet.open(
                 network: net,
                 mnemonicOrSeed: mnemonic,
@@ -532,23 +560,28 @@ extension BarkWalletFFI {
                 )
             )
 
-            if let report = wallet.recoveryReport() {
-                logRecoveryReport(report)
-                await retryFailedRecoveries(from: report, wallet: wallet)
+            let report = wallet.recoveryReport()
+            switch ImportRecoveryLogic.decision(hasReport: report != nil, attempt: attempt) {
+            case .accept:
+                if let report {
+                    logRecoveryReport(report)
+                    await retryFailedRecoveries(from: report, wallet: wallet)
+                }
                 return wallet
-            }
 
-            Self.logger.warning("Recovery scan produced no report (attempt \(attempt)/\(maxAttempts)) - the scan errored before completing")
-            if attempt == maxAttempts {
-                Self.logger.error("Recovery scan never completed after \(maxAttempts) attempts - continuing import; VTXOs still pending in the regular mailbox arrive via sync, but round-received VTXOs may be missing until a future recovery succeeds")
+            case .acceptWithoutRecovery:
+                Self.logger.error("Recovery scan never completed after \(ImportRecoveryLogic.maxAttempts) attempts - continuing import; VTXOs still pending in the regular mailbox arrive via sync, but round-received VTXOs may be missing until a future recovery succeeds")
                 return wallet
-            }
 
-            // The scan only runs on the open that creates the wallet locally,
-            // so retrying requires wiping the seconds-old database first.
-            try? await wallet.stopDaemon()
-            try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
-            removeBarkDatabase()
+            case .wipeAndRetry:
+                Self.logger.warning("Recovery scan produced no report (attempt \(attempt)/\(ImportRecoveryLogic.maxAttempts)) - the scan errored before completing")
+                // The scan only runs on the open that creates the wallet
+                // locally, so retrying requires wiping the seconds-old
+                // database first.
+                try? await wallet.stopDaemon()
+                try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
+                removeBarkDatabase()
+            }
         }
         throw BarkWalletFFIError.configurationError("Wallet open retry loop exited unexpectedly")
     }
