@@ -109,10 +109,20 @@ tight, but the gaps are structural:
 - [ ] **Startup wallet detection review follow-ups**: 8 items listed in
   `Initialization/REVIEW.md` / `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`
   (phases 1–4 done); optional Phase 5 refactor.
-- [ ] **Seed-recovery scan never runs on import**: our initWallet+open
-  two-step bypasses bark's recovery scan (gated on `created_now`). Fix is a
-  single `Wallet.open(createWithoutServer:)` call. Until then, restoring from
-  seed alone silently shows an empty wallet.
+- [x] **Seed-recovery scan never runs on import** — fixed and field-verified:
+  single `Wallet.open(createWithoutServer:)` shipped
+  (`BarkWalletFFI+WalletCreation.swift`); imports on 2026-08-13 show the scan
+  running and completing (`Seed recovery finished … complete=true`).
+- [ ] **Keep `Initialization/Launch_Sequence_Contract.md` current** (created
+  2026-08-14): the ordering-invariants contract for startup/import/exit/
+  multi-device/deletion. Every startup-shaped incident fix adds a rule; PRs
+  touching launch ordering check against it.
+- [ ] **`LaunchSequence` extraction**: move `ExitProgressionService.start()`'s
+  ordered steps (reattach → first check → recreate → reminders) into a pure
+  sequence with injected effects, `ExitClaimSequence`-style, plus an
+  order-pinning unit test (contract rule 8). Establishes the pattern for the
+  contract's other "Test: none" rules; next candidates are wallet-detection
+  Phase 5 and the import wipe-and-reopen retry decision.
 
 ## Background Execution
 
