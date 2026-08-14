@@ -582,3 +582,25 @@ struct ExitClaimSequenceTests {
         #expect(wallet.log == ["getOnchainAddress", "drainExits", "extractTxFromPsbt", "broadcastTx"])
     }
 }
+
+// MARK: - Launch sequence
+
+@Suite("Launch Sequence Tests")
+struct LaunchSequenceTests {
+
+    @Test("Launch order: reattach, initial check, recreate activities, reschedule reminders")
+    @MainActor
+    func launchOrderIsPinned() async {
+        var steps: [String] = []
+        await LaunchSequence.run(effects: LaunchSequence.Effects(
+            reattachActivities: { steps.append("reattach") },
+            runInitialCheck: { steps.append("check") },
+            recreateActivities: { steps.append("recreate") },
+            rescheduleReminders: { steps.append("reminders") }
+        ))
+
+        // Recreate/reminders before the first check is the fresh-import
+        // live-activity respawn (contract rule 8) — the order is the test
+        #expect(steps == ["reattach", "check", "recreate", "reminders"])
+    }
+}

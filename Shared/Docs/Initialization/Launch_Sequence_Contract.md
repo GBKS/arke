@@ -66,8 +66,9 @@ On a fresh seed import bark replays already-completed exits through the
 state machine, so they read as in-flight until the first pass settles them —
 recreating earlier spawned a "Move complete 5/5" lock-screen activity for an
 exit finished long ago (2026-08-13).
-Enforced: `ExitProgressionService.swift` (`start`). Test: none — prime
-candidate for a `LaunchSequence` extraction with an order-pinning test.
+Enforced: `ExitProgressionLogic.swift` (`LaunchSequence.run`, called from
+`ExitProgressionService.start`). Test: `ExitProgressTests`
+(`LaunchSequenceTests/launchOrderIsPinned`).
 
 **9. Activity recreation filters on `isInFlight`, never `isActive`.**
 Claimed and cancelled exits stay in bark's exit list; an `isActive` filter
@@ -143,7 +144,8 @@ Enforced: `WalletManager+Wallet.swift` (deletion strategy). Test: none.
 
 ## Test gaps
 
-Rules with no pinning test, roughly by risk: 1, 2, 8, 11-adjacent ordering in
-`start()` (8), 3, 4, 14, 17. The `LaunchSequence` extraction planned in
-`Open_Follow_Ups.md` (Startup & Initialization) covers rule 8 and gives the
-pattern for the rest.
+Rules with no pinning test, roughly by risk: 1, 2, 3, 4, 14, 17. Rule 8 is
+covered since 2026-08-14 by the `LaunchSequence` extraction
+(`ExitProgressionLogic.swift`), which is the pattern to follow for the rest —
+next candidates: wallet-detection Phase 5 (rules 3/4/14) and the import
+wipe-and-reopen retry decision (rule 2).

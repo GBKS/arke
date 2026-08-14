@@ -117,12 +117,15 @@ tight, but the gaps are structural:
   2026-08-14): the ordering-invariants contract for startup/import/exit/
   multi-device/deletion. Every startup-shaped incident fix adds a rule; PRs
   touching launch ordering check against it.
-- [ ] **`LaunchSequence` extraction**: move `ExitProgressionService.start()`'s
-  ordered steps (reattach → first check → recreate → reminders) into a pure
-  sequence with injected effects, `ExitClaimSequence`-style, plus an
-  order-pinning unit test (contract rule 8). Establishes the pattern for the
-  contract's other "Test: none" rules; next candidates are wallet-detection
-  Phase 5 and the import wipe-and-reopen retry decision.
+- [x] **`LaunchSequence` extraction** (done 2026-08-14):
+  `ExitProgressionService.start()`'s ordered steps (reattach → first check →
+  recreate → reminders) live in `LaunchSequence` (`ExitProgressionLogic.swift`)
+  with injected effects and an order-pinning test
+  (`LaunchSequenceTests/launchOrderIsPinned`); contract rule 8 now enforced.
+- [ ] **Next pure-logic extractions** (per the contract's Test gaps):
+  wallet-detection decisions (contract rules 3/4/14 — overlaps the optional
+  Phase 5 refactor above) and the import wipe-and-reopen retry decision
+  (rule 2, `BarkWalletFFI+WalletCreation.swift`).
 
 ## Background Execution
 

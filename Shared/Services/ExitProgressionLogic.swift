@@ -89,6 +89,41 @@ enum ExitProgressionLogic {
     }
 }
 
+// MARK: - Launch sequence
+
+/// The ordered steps of ExitProgressionService's launch pass, with every
+/// effect injected. The ORDER is load-bearing
+/// (Docs/Initialization/Launch_Sequence_Contract.md, rule 8):
+/// - reattachActivities first, so updates from the initial check reach a
+///   Live Activity that survived the previous process
+/// - the initial progression check BEFORE recreateActivities: on a fresh
+///   seed import bark replays already-completed exits through its state
+///   machine, so they read as in-flight until the first pass settles
+///   them — recreating earlier spawns a lock-screen activity for an exit
+///   that finished long ago (2026-08-13)
+/// - rescheduleReminders last, for the same reason: re-arming before the
+///   pass arms check-in reminders for replayed, already-finished exits
+enum LaunchSequence {
+
+    struct Effects {
+        /// Reattach to a surviving Live Activity (never recreates)
+        let reattachActivities: @MainActor () async -> Void
+        /// The initial checkAndProgressExits pass
+        let runInitialCheck: @MainActor () async -> Void
+        /// Recreate a missing Live Activity for genuinely in-flight exits
+        let recreateActivities: @MainActor () async -> Void
+        /// Re-arm or clear check-in reminders from in-flight state
+        let rescheduleReminders: @MainActor () async -> Void
+    }
+
+    static func run(effects: Effects) async {
+        await effects.reattachActivities()
+        await effects.runInitialCheck()
+        await effects.recreateActivities()
+        await effects.rescheduleReminders()
+    }
+}
+
 // MARK: - Claim sequence
 
 /// The ordered, fund-moving steps of claiming exits, with the two
