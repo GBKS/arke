@@ -20,10 +20,11 @@ struct LinkedDevicesView: View {
         VStack(alignment: .leading, spacing: 20) {
             // Header
             VStack(alignment: .leading, spacing: 8) {
-                Text("settings_linked_devices")
+                Text(L10n.settingsLinkedDevices)
                     .font(.system(size: 28, weight: .bold, design: .default))
-                
-                Text("settings_manage_devices")
+
+                Text(String(localized: "settings_manage_devices",
+                            defaultValue: "Manage devices that have access to your wallet"))
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
@@ -36,7 +37,7 @@ struct LinkedDevicesView: View {
                     // Current device
                     if let currentDevice = currentDevice {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("settings_this_device")
+                            Text(String(localized: "settings_this_device", defaultValue: "This Device"))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.secondary)
                                 .textCase(.uppercase)
@@ -69,13 +70,14 @@ struct LinkedDevicesView: View {
                     // Danger zone
                     if !otherDevices.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("settings_danger_zone")
+                            Text(L10n.settingsDangerZone)
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.Arke.red)
                                 .textCase(.uppercase)
                             
                             VStack(alignment: .leading, spacing: 12) {
-                                Text(String(localized: "settings_unlink_all_help"))
+                                Text(String(localized: "settings_unlink_all_help",
+                                            defaultValue: "Use this if you've lost a device or want to revoke access from all other devices. This cannot be undone."))
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -85,7 +87,8 @@ struct LinkedDevicesView: View {
                                 } label: {
                                     HStack {
                                         Image(systemName: "exclamationmark.triangle.fill")
-                                        Text("button_unlink_all_others")
+                                        Text(String(localized: "button_unlink_all_others",
+                                                    defaultValue: "Unlink All Other Devices"))
                                     }
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.white)
@@ -125,25 +128,29 @@ struct LinkedDevicesView: View {
         .task {
             await deviceService.loadRegisteredDevices()
         }
-        .alert("settings_unlink_device", isPresented: $showingUnlinkConfirmation, presenting: deviceToUnlink) { device in
-            Button("button_cancel", role: .cancel) { }
-            Button("button_unlink", role: .destructive) {
+        .alert(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
+               isPresented: $showingUnlinkConfirmation, presenting: deviceToUnlink) { device in
+            Button(L10n.buttonCancel, role: .cancel) { }
+            Button(L10n.buttonUnlink, role: .destructive) {
                 Task {
                     await unlinkDevice(device)
                 }
             }
         } message: { device in
-            Text("Are you sure you want to unlink \(device.deviceName)? It will need to re-import the recovery phrase to regain access.")
+            Text(String(localized: "alert_unlink_device_message",
+                        defaultValue: "Are you sure you want to unlink \(device.deviceName)? It will need to re-import the recovery phrase to regain access."))
         }
-        .alert("button_unlink_all_others", isPresented: $showingUnlinkAllConfirmation) {
-            Button("button_cancel", role: .cancel) { }
+        .alert(String(localized: "button_unlink_all_others", defaultValue: "Unlink All Other Devices"),
+               isPresented: $showingUnlinkAllConfirmation) {
+            Button(L10n.buttonCancel, role: .cancel) { }
             Button(String(localized: "button_unlink_all_devices", defaultValue: "Unlink All (\(otherDevices.count) devices)"), role: .destructive) {
                 Task {
                     await unlinkAllOtherDevices()
                 }
             }
         } message: {
-            Text(String(localized: "settings_unlink_all_warning"))
+            Text(String(localized: "settings_unlink_all_warning",
+                        defaultValue: "All other devices will lose access to the wallet. They will need to re-import the recovery phrase to regain access. This action cannot be undone."))
         }
     }
     
@@ -181,7 +188,9 @@ struct LinkedDevicesView: View {
             try await deviceService.unlinkDevice(device.deviceId)
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to unlink device: \(error.localizedDescription)"
+                errorMessage = String(format: String(localized: "error_unlink_device",
+                                                     defaultValue: "Failed to unlink device: %@"),
+                                      error.localizedDescription)
             }
         }
         
@@ -196,7 +205,9 @@ struct LinkedDevicesView: View {
             try await deviceService.unlinkAllOtherDevices()
         } catch {
             await MainActor.run {
-                errorMessage = "Failed to unlink devices: \(error.localizedDescription)"
+                errorMessage = String(format: String(localized: "error_unlink_devices",
+                                                     defaultValue: "Failed to unlink devices: %@"),
+                                      error.localizedDescription)
             }
         }
         
@@ -224,7 +235,7 @@ struct DeviceCard: View {
                         .font(.system(size: 16, weight: .semibold))
                     
                     if isCurrent {
-                        Text(String(localized: "settings_this_device_parentheses"))
+                        Text(L10n.settingsThisDeviceParentheses)
                             .font(.system(size: 13))
                             .foregroundColor(.secondary)
                     }
@@ -235,7 +246,7 @@ struct DeviceCard: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
-                    Text("symbol_bullet")
+                    Text(L10n.symbolBullet)
                         .foregroundColor(.secondary)
                     
                     Text(device.lastSeenRelative)
@@ -245,13 +256,13 @@ struct DeviceCard: View {
                 
                 HStack(spacing: 6) {
                     if device.hasSeed {
-                        StatusBadge(text: "Full Wallet", color: .Arke.green)
+                        StatusBadge(text: L10n.statusFullWallet, color: .Arke.green)
                     } else {
-                        StatusBadge(text: "Metadata Only", color: .Arke.orange)
+                        StatusBadge(text: L10n.statusMetadataOnly, color: .Arke.orange)
                     }
-                    
+
                     if device.isStale {
-                        StatusBadge(text: "Stale", color: .Arke.red)
+                        StatusBadge(text: String(localized: "status_stale", defaultValue: "Stale"), color: .Arke.red)
                     }
                 }
             }
@@ -263,7 +274,7 @@ struct DeviceCard: View {
                 Button {
                     onUnlink()
                 } label: {
-                    Text("button_unlink")
+                    Text(L10n.buttonUnlink)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.Arke.red)
                         .padding(.horizontal, 12)

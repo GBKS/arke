@@ -16,11 +16,11 @@ public enum UTXOStatus {
     public var displayText: String {
         switch self {
         case .unconfirmed:
-            return String(localized: "status_unconfirmed", bundle: .module)
+            return String(localized: "status_unconfirmed", defaultValue: "Unconfirmed", bundle: .module)
         case .confirming(let confirmations):
             return String(localized: "\(confirmations) confirmations", bundle: .module)
         case .confirmed:
-            return String(localized: "status_confirmed", bundle: .module)
+            return L10n.statusConfirmed
         }
     }
 

@@ -101,7 +101,7 @@ public struct LargeErrorView: View {
             VStack(spacing: 20) {
                 if let onDismiss = onDismiss {
                     Button(action: onDismiss) {
-                        Text("button_cancel", bundle: .module)
+                        Text(L10n.buttonCancel)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
@@ -113,7 +113,7 @@ public struct LargeErrorView: View {
                 
                 if let onRetry = onRetry {
                     Button(action: onRetry) {
-                        Text("button_retry", bundle: .module)
+                        Text(L10n.buttonRetry)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)

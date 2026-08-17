@@ -58,10 +58,10 @@ public struct NoExitView<Media: View>: View {
             
             // Icon and title
             VStack(alignment: .leading, spacing: 10) {
-                Text("action_start_forced_move", bundle: .module)
+                Text(String(localized: "action_start_forced_move", defaultValue: "Start a forced move", bundle: .module))
                     .font(.system(.title, design: .serif))
 
-                Text(String(localized: "balance_emergency_move_help", bundle: .module))
+                Text(String(localized: "balance_emergency_move_help", defaultValue: "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only.", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -71,7 +71,7 @@ public struct NoExitView<Media: View>: View {
                 // Amount card
                 /*
                 VStack(spacing: 6) {
-                    Text("balance_amount_to_recover")
+                    Text(String(localized: "balance_amount_to_recover", defaultValue: "Amount to move", bundle: .module))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -90,19 +90,19 @@ public struct NoExitView<Media: View>: View {
                 if isConnectedToServer {
                     VStack(alignment: .leading, spacing: 15) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("balance_forced_move_server_connected_title", bundle: .module)
+                            Text(String(localized: "balance_forced_move_server_connected_title", defaultValue: "Before you start", bundle: .module))
                                 .font(.title3)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                            Text("balance_forced_move_server_connected", bundle: .module)
+                            Text(String(localized: "balance_forced_move_server_connected", defaultValue: "There's a faster, cheaper way to move to Savings in the balance view.", bundle: .module))
                                 .font(.body)
                                 .foregroundColor(.white)
                                 .fontWeight(.medium)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             
-                            Text("balance_forced_move_emergencies_only", bundle: .module)
+                            Text(String(localized: "balance_forced_move_emergencies_only", defaultValue: "Use a forced move only if the server won't cooperate.", bundle: .module))
                                 .font(.body)
                                 .foregroundColor(.white)
                                 .fontWeight(.medium)
@@ -111,7 +111,7 @@ public struct NoExitView<Media: View>: View {
 
                         if let onGoToBalance {
                             Button(action: onGoToBalance) {
-                                Text("button_view_balance_details", bundle: .module)
+                                Text(String(localized: "button_view_balance_details", defaultValue: "View balance", bundle: .module))
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundColor(Color.Arke.gold4)
@@ -136,13 +136,13 @@ public struct NoExitView<Media: View>: View {
                 // Exit_Refresh_Coordination.md).
                 if hasOngoingRefresh {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("balance_forced_move_refresh_in_progress_title", bundle: .module)
+                        Text(String(localized: "balance_forced_move_refresh_in_progress_title", defaultValue: "Refresh in progress", bundle: .module))
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text("balance_forced_move_refresh_in_progress", bundle: .module)
+                        Text(String(localized: "balance_forced_move_refresh_in_progress", defaultValue: "There’s a pending refresh. If you start a forced move now, it may get cancelled by the refresh. Best to wait.", bundle: .module))
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -170,22 +170,22 @@ public struct NoExitView<Media: View>: View {
                     VStack(alignment: .leading, spacing: 8) {
                         CheckableWarningItem(
                             isChecked: $acknowledgedTakesTime,
-                            text: "message_takes_24_hours"
+                            text: String(localized: "message_takes_24_hours", defaultValue: "A forced move can take 10+ hours", bundle: .module)
                         )
                         
                         CheckableWarningItem(
                             isChecked: $acknowledgedCannotCancel,
-                            text: "message_cannot_cancel"
+                            text: String(localized: "message_cannot_cancel", defaultValue: "It cannot be cancelled", bundle: .module)
                         )
                         
                         CheckableWarningItem(
                             isChecked: $acknowledgedFees,
-                            text: "balance_final_step_fee"
+                            text: String(localized: "balance_final_step_fee", defaultValue: "Fees may be quite large", bundle: .module)
                         )
                         
                         CheckableWarningItem(
                             isChecked: $acknowledgedHourlyCheckin,
-                            text: "message_hourly_checkin_required"
+                            text: String(localized: "message_hourly_checkin_required", defaultValue: "You will need to check in once per hour until completion", bundle: .module)
                         )
                     }
                     .lineSpacing(6)
@@ -196,12 +196,12 @@ public struct NoExitView<Media: View>: View {
                     onStartExit()
                 } label: {
                     if let estimate = exitCostEstimate, !estimate.canAfford {
-                        Label(String(localized: "button_insufficient_balance", bundle: .module), systemImage: "exclamationmark.triangle")
+                        Label(String(localized: "button_insufficient_balance", defaultValue: "Insufficient Balance", bundle: .module), systemImage: "exclamationmark.triangle")
                             .font(.system(size: 21, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
                     } else {
-                        Text("button_start", bundle: .module)
+                        Text(L10n.buttonStart)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
@@ -213,7 +213,7 @@ public struct NoExitView<Media: View>: View {
                 .tint(exitCostEstimate?.canAfford == false ? .red : Color.Arke.gold)
                 .disabled(spendableBalance == 0 || isProcessing || (exitCostEstimate?.canAfford == false) || !allAcknowledged)
             } else {
-                Text(String(localized: "balance_no_bitcoin_payments", bundle: .module))
+                Text(String(localized: "balance_no_bitcoin_payments", defaultValue: "You don't have any bitcoin in your payments balance to move.", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.primary)
                     .padding(.top, 10)
@@ -226,7 +226,7 @@ public struct NoExitView<Media: View>: View {
 
 struct CheckableWarningItem: View {
     @Binding var isChecked: Bool
-    let text: LocalizedStringKey
+    let text: String
     
     var body: some View {
         Button {
@@ -237,7 +237,7 @@ struct CheckableWarningItem: View {
                     .font(.system(size: 30))
                     .foregroundColor(isChecked ? Color.Arke.green : .primary.opacity(0.15))
 
-                Text(text, bundle: .module)
+                Text(text)
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)

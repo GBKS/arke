@@ -18,16 +18,23 @@ public struct EmojiPickerGrid: View {
         self._selectedEmoji = selectedEmoji
     }
 
-    // Common emoji categories for tags. The first tuple element is a
-    // localization key resolved against the package bundle.
+    // Common emoji categories for tags. The first tuple element is the
+    // localized section title (unique, so it also serves as the ForEach id).
     private static let emojiCategories = [
-        ("emoji_category_food_drink", ["☕", "🍕", "🍔", "🍎", "🍰", "🍜", "🍺", "🥗", "🍩", "🍳"]),
-        ("emoji_category_transportation", ["🚗", "🚌", "✈️", "🚂", "🚲", "🛴", "🚁", "⛽", "🚕", "🛻"]),
-        ("emoji_category_shopping", ["🛒", "🛍️", "👕", "👟", "📱", "💻", "🎮", "📚", "🛏️", "🪑"]),
-        ("emoji_category_money", ["💰", "💳", "💎", "🏦", "📈", "📊", "💸", "🪙", "💵", "🧾"]),
-        ("emoji_category_activities", ["⚽", "🏀", "🎵", "🎬", "🎨", "📖", "🎯", "🎲", "🏃", "🏋️"]),
-        ("emoji_category_objects", ["📄", "📱", "💻", "⌚", "🎁", "🔑", "💡", "🛠️", "📋", "🗂️"]),
-        ("emoji_category_symbols", ["⭐", "❤️", "✅", "❌", "⚠️", "🔥", "💯", "✨", "🎯", "📍"])
+        (String(localized: "emoji_category_food_drink", defaultValue: "Food & Drink", bundle: .module),
+         ["☕", "🍕", "🍔", "🍎", "🍰", "🍜", "🍺", "🥗", "🍩", "🍳"]),
+        (String(localized: "emoji_category_transportation", defaultValue: "Transportation", bundle: .module),
+         ["🚗", "🚌", "✈️", "🚂", "🚲", "🛴", "🚁", "⛽", "🚕", "🛻"]),
+        (String(localized: "emoji_category_shopping", defaultValue: "Shopping", bundle: .module),
+         ["🛒", "🛍️", "👕", "👟", "📱", "💻", "🎮", "📚", "🛏️", "🪑"]),
+        (String(localized: "emoji_category_money", defaultValue: "Money", bundle: .module),
+         ["💰", "💳", "💎", "🏦", "📈", "📊", "💸", "🪙", "💵", "🧾"]),
+        (String(localized: "emoji_category_activities", defaultValue: "Activities", bundle: .module),
+         ["⚽", "🏀", "🎵", "🎬", "🎨", "📖", "🎯", "🎲", "🏃", "🏋️"]),
+        (String(localized: "emoji_category_objects", defaultValue: "Objects", bundle: .module),
+         ["📄", "📱", "💻", "⌚", "🎁", "🔑", "💡", "🛠️", "📋", "🗂️"]),
+        (String(localized: "emoji_category_symbols", defaultValue: "Symbols", bundle: .module),
+         ["⭐", "❤️", "✅", "❌", "⚠️", "🔥", "💯", "✨", "🎯", "📍"])
     ]
 
     /// A random emoji from the picker's catalog, used to seed new tags
@@ -40,7 +47,7 @@ public struct EmojiPickerGrid: View {
         LazyVStack(alignment: .center, spacing: 15) {
             ForEach(Self.emojiCategories, id: \.0) { category in
                 VStack(alignment: .center, spacing: 15) {
-                    Text(LocalizedStringKey(category.0), bundle: .module)
+                    Text(category.0)
                         .font(.headline)
                         .padding(.horizontal)
 

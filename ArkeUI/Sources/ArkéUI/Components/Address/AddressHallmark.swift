@@ -39,7 +39,7 @@ public struct AddressHallmark: View {
             mode: colorScheme == .dark ? .dark : .light,
             bordered: bordered
         )
-        .accessibilityLabel(Text("accessibility_address_identicon", bundle: .module))
+        .accessibilityLabel(Text(String(localized: "accessibility_address_identicon", defaultValue: "Address identicon", bundle: .module)))
     }
 }
 

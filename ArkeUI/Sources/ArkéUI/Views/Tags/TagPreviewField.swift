@@ -106,10 +106,10 @@ public struct TagPreviewField: View {
         .buttonStyle(.plain)
         .accessibilityLabel(
             selectedEmoji.isEmpty
-                ? Text("action_choose_emoji", bundle: .module)
-                : Text("action_change_emoji", bundle: .module)
+                ? Text(String(localized: "action_choose_emoji", defaultValue: "Choose emoji", bundle: .module))
+                : Text(String(localized: "action_change_emoji", defaultValue: "Change emoji", bundle: .module))
         )
-        .accessibilityHint(Text("accessibility_hint_choose_emoji", bundle: .module))
+        .accessibilityHint(Text(String(localized: "accessibility_hint_choose_emoji", defaultValue: "Opens the emoji picker", bundle: .module)))
         .accessibilityAddTraits(activePicker == .emoji ? .isSelected : [])
     }
 
@@ -123,7 +123,7 @@ public struct TagPreviewField: View {
         // the capsule starts placeholder-sized and only grows once the
         // name outgrows it. The real field is overlaid at that size.
         ZStack {
-            Text("placeholder_tag_name", bundle: .module)
+            Text(String(localized: "placeholder_tag_name", defaultValue: "Enter tag name", bundle: .module))
             Text(verbatim: name)
         }
         .font(.title3)
@@ -150,14 +150,14 @@ public struct TagPreviewField: View {
                 .overlay(alignment: .leading) {
                     // Custom placeholder so it renders in the tag color.
                     if name.isEmpty {
-                        Text("placeholder_tag_name", bundle: .module)
+                        Text(String(localized: "placeholder_tag_name", defaultValue: "Enter tag name", bundle: .module))
                             .font(.title3)
                             .fontWeight(.medium)
                             .foregroundStyle(tint.opacity(0.6))
                             .allowsHitTesting(false)
                     }
                 }
-                .accessibilityLabel(Text("label_name", bundle: .module))
+                .accessibilityLabel(Text(String(localized: "label_name", defaultValue: "Name", bundle: .module)))
         }
     }
 
@@ -172,8 +172,8 @@ public struct TagPreviewField: View {
                 .overlay(activeRing(.color))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("action_choose_color", bundle: .module))
-        .accessibilityHint(Text("accessibility_hint_choose_color", bundle: .module))
+        .accessibilityLabel(Text(String(localized: "action_choose_color", defaultValue: "Choose color", bundle: .module)))
+        .accessibilityHint(Text(String(localized: "accessibility_hint_choose_color", defaultValue: "Opens the color picker", bundle: .module)))
         .accessibilityAddTraits(activePicker == .color ? .isSelected : [])
     }
 }

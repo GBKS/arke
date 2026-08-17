@@ -102,7 +102,7 @@ public struct BalanceRefreshStatus: View {
         .onChange(of: data.hasActiveRefresh) { _, isRefreshing in
             if isRefreshing {
                 AccessibilityNotification.Announcement(
-                    String(localized: "status_refreshing", bundle: .module)
+                    L10n.statusRefreshing
                 ).post()
             }
         }
@@ -120,10 +120,10 @@ public struct BalanceRefreshStatus: View {
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(String(localized: "label_payments_balance_refresh", bundle: .module))
+                Text(String(localized: "label_payments_balance_refresh", defaultValue: "Payments balance refresh", bundle: .module))
                     .font(.body)
                     .foregroundStyle(.secondary)
-                Text(String(localized: "status_loading", bundle: .module))
+                Text(String(localized: "status_loading", defaultValue: "Loading", bundle: .module))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -152,7 +152,7 @@ public struct BalanceRefreshStatus: View {
                     .cornerRadius(8)
                     .accessibilityHidden(true)
 
-                Text(String(localized: "label_payments_balance_refresh", bundle: .module))
+                Text(String(localized: "label_payments_balance_refresh", defaultValue: "Payments balance refresh", bundle: .module))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(.primary)
@@ -183,14 +183,14 @@ public struct BalanceRefreshStatus: View {
     @ViewBuilder
     private var refreshingContent: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(String(localized: "status_refreshing", bundle: .module))
+            Text(L10n.statusRefreshing)
                 .font(.title3)
                 .fontWeight(.semibold)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             if let nextRound = timeUntilNextRound {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_next_round", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(L10n.labelNextRound).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }
@@ -204,7 +204,7 @@ public struct BalanceRefreshStatus: View {
 
     @ViewBuilder
     private var emptyStateContent: some View {
-        Text(String(localized: "message_not_needed_empty_balance", bundle: .module))
+        Text(String(localized: "message_not_needed_empty_balance", defaultValue: "Not needed for empty balance", bundle: .module))
             .font(.body)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -225,7 +225,7 @@ public struct BalanceRefreshStatus: View {
                 Button {
                     Task { await data.onRefresh?() }
                 } label: {
-                    Text(String(localized: "button_start", bundle: .module))
+                    Text(L10n.buttonStart)
                         .font(.system(size: 21, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .frame(maxWidth: .infinity)
@@ -233,7 +233,7 @@ public struct BalanceRefreshStatus: View {
                 .controlSize(.regular)
                 .buttonStyle(.glassProminent)
                 .tint(.Arke.gold)
-                .accessibilityHint(String(localized: "accessibility_hint_start_refresh", bundle: .module))
+                .accessibilityHint(String(localized: "accessibility_hint_start_refresh", defaultValue: "Refreshes your balance now", bundle: .module))
                 .padding(.top, 10)
             }
         }
@@ -245,7 +245,7 @@ public struct BalanceRefreshStatus: View {
     private var expiredContent: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .center, spacing: 4) {
-                Text(String(localized: "label_status", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                Text(L10n.labelStatus).font(.body).foregroundStyle(.secondary)
                 Spacer()
                 Text(data.statusMessage).font(.body).fontWeight(.medium)
             }
@@ -254,7 +254,7 @@ public struct BalanceRefreshStatus: View {
 
             if let amount = data.totalAmountToRefresh {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_amount", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(L10n.labelAmount).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
                 }
@@ -264,7 +264,7 @@ public struct BalanceRefreshStatus: View {
 
             if let ago = data.expiredAgoString {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "status_expired", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(String(localized: "status_expired", defaultValue: "Expired", bundle: .module)).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(String(localized: "format_time_ago", defaultValue: "\(ago) ago", bundle: .module)).font(.body).fontWeight(.medium)
                 }
@@ -274,7 +274,7 @@ public struct BalanceRefreshStatus: View {
 
             if let nextRound = timeUntilNextRound {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_next_round", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(L10n.labelNextRound).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }
@@ -289,7 +289,7 @@ public struct BalanceRefreshStatus: View {
     private var timesContent: some View {
         VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 4) {
-                Text(String(localized: "label_status", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                Text(L10n.labelStatus).font(.body).foregroundStyle(.secondary)
                 Spacer()
                 Text(data.statusMessage).font(.body).fontWeight(.medium)
             }
@@ -298,7 +298,7 @@ public struct BalanceRefreshStatus: View {
 
             if let amount = data.totalAmountToRefresh {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_amount_to_refresh", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(String(localized: "label_amount_to_refresh", defaultValue: "Amount to refresh", bundle: .module)).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
                 }
@@ -308,7 +308,7 @@ public struct BalanceRefreshStatus: View {
 
             if let expiry = data.timeUntilExpiry {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_time_until_expiry", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(String(localized: "label_time_until_expiry", defaultValue: "Time until expiry", bundle: .module)).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(expiry).font(.body).fontWeight(.medium)
                 }
@@ -318,7 +318,7 @@ public struct BalanceRefreshStatus: View {
 
             if let nextRound = timeUntilNextRound {
                 HStack(alignment: .center, spacing: 4) {
-                    Text(String(localized: "label_next_round", bundle: .module)).font(.body).foregroundStyle(.secondary)
+                    Text(L10n.labelNextRound).font(.body).foregroundStyle(.secondary)
                     Spacer()
                     Text(nextRound).font(.body).fontWeight(.medium)
                 }

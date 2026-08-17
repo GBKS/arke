@@ -23,7 +23,11 @@ struct LinkedDevicesView_iOS: View {
     
     var body: some View {
         List {
-            Text(otherDevices.isEmpty ? String(localized: "linked_devices_single_device_description") : String(localized: "linked_devices_multiple_devices_description"))
+            Text(otherDevices.isEmpty
+                 ? String(localized: "linked_devices_single_device_description",
+                          defaultValue: "You're using Arké on one device. Install Arké on another iPhone or iPad signed in to the same iCloud, and it'll appear here automatically. View-only at first, ready to take over if you need it.")
+                 : String(localized: "linked_devices_multiple_devices_description",
+                          defaultValue: "Only your primary device can spend. Secondary devices can view balance and history."))
                 .font(.title3)
                 .foregroundColor(.secondary)
                 .lineSpacing(6)
@@ -64,9 +68,11 @@ struct LinkedDevicesView_iOS: View {
                 Section {
                     Label {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("linked_devices_no_active_wallet")
+                            Text(String(localized: "linked_devices_no_active_wallet",
+                                        defaultValue: "No Active Wallet"))
                                 .font(.headline)
-                            Text("linked_devices_no_active_wallet_description")
+                            Text(String(localized: "linked_devices_no_active_wallet_description",
+                                        defaultValue: "Make this device your primary wallet to send and receive."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -76,7 +82,8 @@ struct LinkedDevicesView_iOS: View {
                             .accessibilityHidden(true)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel(String(localized: "accessibility_no_primary_device_alert"))
+                    .accessibilityLabel(String(localized: "accessibility_no_primary_device_alert",
+                                               defaultValue: "Warning: No active wallet. Make this device your primary wallet to send and receive."))
                     .accessibilityAddTraits(.isStaticText)
                 }
             }
@@ -87,22 +94,28 @@ struct LinkedDevicesView_iOS: View {
                     // Show "Make This Device Secondary" if this is primary
                     if currentDevice?.isPrimaryDevice == true {
                         Button(action: { showDemoteSheet = true }) {
-                            Label("button_make_device_secondary", systemImage: "arrow.down.circle")
+                            Label(String(localized: "button_make_device_secondary",
+                                         defaultValue: "Make Device Secondary"),
+                                  systemImage: "arrow.down.circle")
                                 .foregroundStyle(.primary)
                         }
-                        .accessibilityHint(String(localized: "accessibility_make_secondary_hint"))
+                        .accessibilityHint(String(localized: "accessibility_make_secondary_hint",
+                                                  defaultValue: "Converts this device to view-only mode. You won't be able to spend from this device."))
                     }
                     
                     // Show "Make This Device Primary" if this is secondary and no primary exists
                     if currentDevice?.isPrimaryDevice == false && !hasPrimaryDevice {
                         Button(action: { showPromoteSheet = true }) {
-                            Label("button_make_device_primary", systemImage: "arrow.up.circle")
+                            Label(String(localized: "button_make_device_primary",
+                                         defaultValue: "Make Device Primary"),
+                                  systemImage: "arrow.up.circle")
                                 .foregroundStyle(Color.Arke.green)
                         }
-                        .accessibilityHint(String(localized: "accessibility_make_primary_hint"))
+                        .accessibilityHint(String(localized: "accessibility_make_primary_hint",
+                                                  defaultValue: "Enables spending on this device. This device will have full wallet access."))
                     }
                 } header: {
-                    Text("section_device_role")
+                    Text(L10n.sectionDeviceRole)
                 }
             }
             
@@ -117,7 +130,7 @@ struct LinkedDevicesView_iOS: View {
             }
         }
         .listSectionSpacing(8)
-        .navigationTitle("settings_linked_devices")
+        .navigationTitle(L10n.settingsLinkedDevices)
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showDemoteSheet) {
             DemoteDeviceSheet(isPresented: $showDemoteSheet, onSuccess: {
@@ -141,18 +154,21 @@ struct LinkedDevicesView_iOS: View {
             await checkForNoPrimaryDevice()
             await checkForPrimaryDevice()
         }
-        .confirmationDialog("settings_unlink_device",
+        .confirmationDialog(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
             isPresented: $showingUnlinkConfirmation,
             presenting: deviceToUnlink
         ) { (device: DeviceRegistration) in
-            Button(String(format: String(localized: "button_unlink_device_name"), device.deviceName), role: .destructive) {
+            Button(String(format: String(localized: "button_unlink_device_name",
+                                         defaultValue: "Unlink %@"),
+                          device.deviceName), role: .destructive) {
                 Task {
                     await unlinkDevice(device)
                 }
             }
-            Button("button_cancel", role: .cancel) { }
+            Button(L10n.buttonCancel, role: .cancel) { }
         } message: { (device: DeviceRegistration) in
-            Text("alert_device_lose_access")
+            Text(String(localized: "alert_device_lose_access",
+                        defaultValue: "This device will no longer have access to the wallet. It will need to re-import the recovery phrase to regain access."))
         }
 
     }
@@ -197,7 +213,9 @@ struct LinkedDevicesView_iOS: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = String(format: String(localized: "error_unlink_device"), error.localizedDescription)
+                errorMessage = String(format: String(localized: "error_unlink_device",
+                                                     defaultValue: "Failed to unlink device: %@"),
+                                      error.localizedDescription)
                 
                 // Announce error to VoiceOver users
                 UIAccessibility.post(notification: .announcement, argument: errorMessage)
@@ -266,7 +284,7 @@ struct DeviceRow_iOS: View {
                         .font(.system(size: 16, weight: .medium))
                     
                     if isCurrent {
-                        Text("settings_this_device_parentheses")
+                        Text(L10n.settingsThisDeviceParentheses)
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
@@ -278,7 +296,7 @@ struct DeviceRow_iOS: View {
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                     
-                    Text("symbol_bullet")
+                    Text(L10n.symbolBullet)
                         .foregroundColor(.secondary)
                     
                     Text(device.lastSeenRelative)
@@ -289,13 +307,13 @@ struct DeviceRow_iOS: View {
                 // Status badges
                 HStack(spacing: 6) {
                     if device.isPrimaryDevice {
-                        StatusBadge_iOS(text: String(localized: "status_full_wallet"), color: .Arke.blue)
+                        StatusBadge_iOS(text: L10n.statusFullWallet, color: .Arke.blue)
                     } else {
-                        StatusBadge_iOS(text: String(localized: "status_metadata_only"), color: .Arke.orange)
+                        StatusBadge_iOS(text: L10n.statusMetadataOnly, color: .Arke.orange)
                     }
-                    
+
                     if device.isStale {
-                        StatusBadge_iOS(text: String(localized: "status_stale"), color: .Arke.red)
+                        StatusBadge_iOS(text: String(localized: "status_stale", defaultValue: "Stale"), color: .Arke.red)
                     }
                 }
                 .padding(.top, 4)
@@ -340,7 +358,11 @@ struct DeviceRow_iOS: View {
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(deviceAccessibilityLabel)
-        .accessibilityHint(isCurrent ? String(localized: "accessibility_current_device_hint") : String(localized: "accessibility_other_device_hint"))
+        .accessibilityHint(isCurrent
+            ? String(localized: "accessibility_current_device_hint",
+                     defaultValue: "Double tap to view options for this device")
+            : String(localized: "accessibility_other_device_hint",
+                     defaultValue: "Double tap to view options for this device"))
     }
     
     private var deviceAccessibilityLabel: String {
@@ -348,27 +370,28 @@ struct DeviceRow_iOS: View {
         
         // Device name and current status
         if isCurrent {
-            parts.append("\(device.deviceName), \(String(localized: "settings_this_device_parentheses"))")
+            parts.append("\(device.deviceName), \(L10n.settingsThisDeviceParentheses)")
         } else {
             parts.append(device.deviceName)
         }
-        
+
         // Platform
         parts.append(device.platformDisplayName)
-        
+
         // Last seen
-        parts.append(String(localized: "accessibility_last_seen") + " \(device.lastSeenRelative)")
-        
+        parts.append(String(localized: "accessibility_last_seen", defaultValue: "last seen") + " \(device.lastSeenRelative)")
+
         // Primary/Secondary status
         if device.isPrimaryDevice {
-            parts.append(String(localized: "status_full_wallet"))
+            parts.append(L10n.statusFullWallet)
         } else {
-            parts.append(String(localized: "status_metadata_only"))
+            parts.append(L10n.statusMetadataOnly)
         }
-        
+
         // Stale warning
         if device.isStale {
-            parts.append(String(localized: "accessibility_device_stale_warning"))
+            parts.append(String(localized: "accessibility_device_stale_warning",
+                                defaultValue: "Warning: not seen recently"))
         }
         
         return parts.joined(separator: ", ")

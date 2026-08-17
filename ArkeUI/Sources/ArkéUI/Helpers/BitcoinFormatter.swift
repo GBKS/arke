@@ -223,9 +223,9 @@ public class BitcoinFormatter {
         let zeroString: String
         switch selectedFormat {
         case .fullBitcoin, .corn, .unicorn:
-            zeroString = String(localized: "format_zero", bundle: .module)
+            zeroString = L10n.formatZero
         case .satoshis, .bip177:
-            zeroString = String(localized: "format_zero", bundle: .module)
+            zeroString = L10n.formatZero
         }
         
         switch placement {
@@ -338,7 +338,7 @@ public class BitcoinFormatter {
         
         // Get formatted number string
         guard let formattedNumber = formatter.string(from: numberToFormat) else {
-            return String(localized: "format_zero", bundle: .module)
+            return L10n.formatZero
         }
         
         // In accounting style, always place symbol on the right for consistency

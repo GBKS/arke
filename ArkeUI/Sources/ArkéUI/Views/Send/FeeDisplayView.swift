@@ -40,7 +40,7 @@ public struct FeeDisplayView: View {
     @ViewBuilder
     private var content: some View {
         HStack(spacing: 8) {
-            Text("label_fee", bundle: .module)
+            Text(L10n.labelFee)
                 .font(.body)
                 .foregroundColor(.secondary)
 
@@ -70,10 +70,10 @@ public struct FeeDisplayView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityValue(fee == nil
-            ? Text("accessibility_value_fee_unavailable", bundle: .module)
+            ? Text(String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module))
             : Text(verbatim: ""))
         .accessibilityHint(showDisclosure && onTap != nil
-            ? Text("accessibility_hint_change_fee", bundle: .module)
+            ? Text(String(localized: "accessibility_hint_change_fee", defaultValue: "Opens fee selection", bundle: .module))
             : Text(verbatim: ""))
     }
     

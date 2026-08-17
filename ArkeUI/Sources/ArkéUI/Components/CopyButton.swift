@@ -124,7 +124,7 @@ public struct CopyButton: View {
         if let help {
             return Text(help)
         }
-        return Text(String(localized: "action_copy_value", bundle: .module))
+        return Text(String(localized: "action_copy_value", defaultValue: "Copy value", bundle: .module))
     }
 
     private func copy() {
@@ -135,7 +135,7 @@ public struct CopyButton: View {
 
         // Announce the copy to VoiceOver so success isn't a silent action.
         AccessibilityNotification.Announcement(
-            String(localized: "status_copied_exclaim", bundle: .module)
+            L10n.statusCopiedExclaim
         ).post()
 
         Task {
@@ -166,7 +166,7 @@ public struct CopyButton: View {
     public var body: some View {
         styledButton
             .accessibilityLabel(accessibilityLabel)
-            .accessibilityHint(Text(String(localized: "accessibility_hint_copy_value", bundle: .module)))
+            .accessibilityHint(Text(String(localized: "accessibility_hint_copy_value", defaultValue: "Copies the value to the clipboard", bundle: .module)))
             .ifLet(help) { view, help in
                 view.help(help)
             }

@@ -15,10 +15,10 @@ public enum TransactionTypeEnum: Codable, Equatable, Sendable {
     
     public var displayName: String {
         switch self {
-        case .sent: return String(localized: "transaction_sent", bundle: .module)
-        case .received: return String(localized: "transaction_received", bundle: .module)
-        case .transfer: return String(localized: "transaction_transfer", bundle: .module)
-        case .pending: return String(localized: "transaction_type_pending", bundle: .module)
+        case .sent: return L10n.transactionSent
+        case .received: return L10n.transactionReceived
+        case .transfer: return String(localized: "transaction_transfer", defaultValue: "Transfer", bundle: .module)
+        case .pending: return String(localized: "transaction_type_pending", defaultValue: "Pending", bundle: .module)
         }
     }
     

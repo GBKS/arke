@@ -19,7 +19,7 @@ public struct ContactPreviewCard: View {
 
     public var body: some View {
         VStack(spacing: 16) {
-            Text("label_preview", bundle: .module)
+            Text(String(localized: "label_preview", defaultValue: "Preview", bundle: .module))
                 .font(.headline)
                 .foregroundStyle(.secondary)
 

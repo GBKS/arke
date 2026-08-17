@@ -42,7 +42,7 @@ public struct LightningAmountInputSection: View {
             if lightningInvoice == nil {
                 VStack(spacing: 0) {
                     HStack(spacing: 8) {
-                        TextField(String(localized: "placeholder_amount_required", bundle: .module), text: $amount)
+                        TextField(String(localized: "placeholder_amount_required", defaultValue: "Amount (required)", bundle: .module), text: $amount)
                             .font(.system(.body, design: .monospaced))
                             .textFieldStyle(.plain)
                             .padding(.leading, 25)
@@ -51,7 +51,7 @@ public struct LightningAmountInputSection: View {
                                 onAmountChange()
                             }
                         Spacer()
-                        Text("symbol_bitcoin", bundle: .module)
+                        Text(String(localized: "symbol_bitcoin", defaultValue: "₿", bundle: .module))
                             .font(.system(.body, design: .monospaced))
                             .padding(.trailing, 25)
                     }
@@ -61,7 +61,7 @@ public struct LightningAmountInputSection: View {
                             .padding(.horizontal, 25)
                         
                         HStack(spacing: 8) {
-                            TextField(String(localized: "placeholder_note_optional", bundle: .module), text: $note)
+                            TextField(L10n.placeholderNoteOptional, text: $note)
                                 .font(.system(.body, design: .monospaced))
                                 .textFieldStyle(.plain)
                                 .padding(.horizontal, 25)
@@ -102,7 +102,7 @@ public struct LightningAmountInputSection: View {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.Arke.green)
                     .accessibilityHidden(true)
-                Text("status_invoice_generated", bundle: .module)
+                Text(String(localized: "status_invoice_generated", defaultValue: "Invoice generated", bundle: .module))
                     .font(.title2)
                     .multilineTextAlignment(.center)
             }
@@ -118,7 +118,7 @@ public struct LightningAmountInputSection: View {
                     onInvoiceTap()
                 }
 
-            Text(showCopySuccess ? String(localized: "status_copied_exclaim", bundle: .module) : String(localized: "action_tap_copy", bundle: .module))
+            Text(showCopySuccess ? L10n.statusCopiedExclaim : String(localized: "action_tap_copy", defaultValue: "Tap to copy", bundle: .module))
                 .font(.caption2)
                 .foregroundColor(showCopySuccess ? .Arke.green : .secondary)
         }
@@ -129,10 +129,10 @@ public struct LightningAmountInputSection: View {
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
-        .accessibilityLabel(Text("action_copy_invoice", bundle: .module))
-        .accessibilityHint(Text("accessibility_hint_copy_invoice", bundle: .module))
+        .accessibilityLabel(Text(String(localized: "action_copy_invoice", defaultValue: "Copy invoice", bundle: .module)))
+        .accessibilityHint(Text(String(localized: "accessibility_hint_copy_invoice", defaultValue: "Copies the Lightning invoice to the clipboard", bundle: .module)))
         .accessibilityValue(showCopySuccess ?
-            Text("status_copied_exclaim", bundle: .module) : Text(verbatim: ""))
+            Text(L10n.statusCopiedExclaim) : Text(verbatim: ""))
         .accessibilityAction {
             onInvoiceTap()
         }

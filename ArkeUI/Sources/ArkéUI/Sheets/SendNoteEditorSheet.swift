@@ -27,7 +27,7 @@ public struct SendNoteEditorSheet: View {
             // Header with title and cancel button
             HStack(spacing: 10) {
                 // Text field
-                TextField(String(localized: "placeholder_add_note", bundle: .module), text: $note, axis: .vertical)
+                TextField(L10n.placeholderAddNote, text: $note, axis: .vertical)
                     .focused($isFocused)
                     .textFieldStyle(.plain)
                     .font(.title3)
@@ -51,7 +51,7 @@ public struct SendNoteEditorSheet: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 6)
                 }
-                .accessibilityLabel(Text("button_done", bundle: .module))
+                .accessibilityLabel(Text(L10n.buttonDone))
                 .buttonStyle(.glassProminent)
             }
         }

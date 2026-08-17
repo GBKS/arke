@@ -46,17 +46,17 @@ struct BitcoinFormatterExampleView: View {
             }
             .padding()
         }
-        .navigationTitle(String(localized: "nav_title_bitcoin_formatter_examples", bundle: .module))
+        .navigationTitle(String(localized: "nav_title_bitcoin_formatter_examples", defaultValue: "Bitcoin Formatter Demo", bundle: .module))
     }
     
     // MARK: - Header Section
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "nav_title_bitcoin_formatter_examples", bundle: .module))
+            Text(String(localized: "nav_title_bitcoin_formatter_examples", defaultValue: "Bitcoin Formatter Demo", bundle: .module))
                 .font(.system(size: 28, weight: .bold, design: .serif))
 
-            Text(String(localized: "description_bitcoin_formatter_demo", bundle: .module))
+            Text(String(localized: "description_bitcoin_formatter_demo", defaultValue: "This view demonstrates how Bitcoin amounts are formatted based on your selected format preference and system locale.", bundle: .module))
                 .font(.body)
                 .foregroundColor(.secondary)
         }
@@ -66,21 +66,21 @@ struct BitcoinFormatterExampleView: View {
     
     private var currentFormatSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "label_current_format", bundle: .module))
+            Text(String(localized: "label_current_format", defaultValue: "Current Format", bundle: .module))
                 .font(.headline)
 
             HStack {
-                Text(String(localized: "label_selected", bundle: .module))
+                Text(String(localized: "label_selected", defaultValue: "Selected:", bundle: .module))
                     .foregroundColor(.secondary)
                 Text(selectedFormat.displayName)
                     .fontWeight(.semibold)
                 Spacer()
-                Text(String(localized: "format_example_with_placeholder \(selectedFormat.exampleFormat)", bundle: .module))
+                Text(String(localized: "format_example_with_placeholder %@", defaultValue: "Example: \(selectedFormat.exampleFormat)", bundle: .module))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
 
-            Text(String(localized: "hint_change_settings_formats", bundle: .module))
+            Text(String(localized: "hint_change_settings_formats", defaultValue: "Change in Settings to see different formats", bundle: .module))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -93,7 +93,7 @@ struct BitcoinFormatterExampleView: View {
     
     private var examplesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(String(localized: "label_amount_examples", bundle: .module))
+            Text(String(localized: "label_amount_examples", defaultValue: "Amount Examples", bundle: .module))
                 .font(.headline)
             
             ForEach(exampleAmounts, id: \.sats) { example in
@@ -117,16 +117,16 @@ struct BitcoinFormatterExampleView: View {
     
     private var transactionExamplesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(String(localized: "label_transaction_formatting_examples", bundle: .module))
+            Text(String(localized: "label_transaction_formatting_examples", defaultValue: "Transaction Formatting Examples", bundle: .module))
                 .font(.headline)
 
-            Text(String(localized: "format_with_sign_prefixes", bundle: .module))
+            Text(String(localized: "format_with_sign_prefixes", defaultValue: "With Sign Prefixes", bundle: .module))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
             Group {
                 HStack {
-                    Text(String(localized: "label_received", bundle: .module))
+                    Text(String(localized: "label_received", defaultValue: "Received:", bundle: .module))
                         .frame(width: 100, alignment: .leading)
                     Text(BitcoinFormatter.shared.formatTransactionAmount(
                         1_000_000,
@@ -138,7 +138,7 @@ struct BitcoinFormatterExampleView: View {
                 }
                 
                 HStack {
-                    Text(String(localized: "label_sent", bundle: .module))
+                    Text(String(localized: "label_sent", defaultValue: "Sent:", bundle: .module))
                         .frame(width: 100, alignment: .leading)
                     Text(BitcoinFormatter.shared.formatTransactionAmount(
                         1_000_000,
@@ -153,13 +153,13 @@ struct BitcoinFormatterExampleView: View {
             Divider()
                 .padding(.vertical, 8)
 
-            Text(String(localized: "format_accounting_style", bundle: .module))
+            Text(String(localized: "format_accounting_style", defaultValue: "Accounting Style (Symbol at End)", bundle: .module))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
             Group {
                 HStack {
-                    Text(String(localized: "label_received", bundle: .module))
+                    Text(String(localized: "label_received", defaultValue: "Received:", bundle: .module))
                         .frame(width: 100, alignment: .leading)
                     Text(BitcoinFormatter.shared.formatAccountingAmount(
                         5_000_000,
@@ -171,7 +171,7 @@ struct BitcoinFormatterExampleView: View {
                 }
                 
                 HStack {
-                    Text(String(localized: "label_sent", bundle: .module))
+                    Text(String(localized: "label_sent", defaultValue: "Sent:", bundle: .module))
                         .frame(width: 100, alignment: .leading)
                     Text(BitcoinFormatter.shared.formatAccountingAmount(
                         5_000_000,

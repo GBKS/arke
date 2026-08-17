@@ -1797,9 +1797,6 @@
       },
       "shouldTranslate" : false
     },
-    "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access." : {
-
-    },
     "backup_already_up_to_date" : {
       "localizations" : {
         "en" : {

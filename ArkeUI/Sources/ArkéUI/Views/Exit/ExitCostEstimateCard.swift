@@ -33,7 +33,7 @@ public struct ExitCostEstimateCard: View {
                 */
 
                 ExitCostRow(
-                    label: String(localized: "balance_amount_to_recover", bundle: .module),
+                    label: String(localized: "balance_amount_to_recover", defaultValue: "Amount to move", bundle: .module),
                     value: BitcoinFormatter.shared.formatAmount(Int(spendableBalance))
                 )
 
@@ -41,7 +41,7 @@ public struct ExitCostEstimateCard: View {
 
                 // Show fee range if available, otherwise single estimate
                 ExitCostRow(
-                    label: String(localized: "balance_estimated_fee", bundle: .module),
+                    label: String(localized: "balance_estimated_fee", defaultValue: "Estimated fee", bundle: .module),
                     value: estimate.isRange
                         ? "\(BitcoinFormatter.shared.formatAmount(Int(estimate.lowCost))) – \(BitcoinFormatter.shared.formatAmount(Int(estimate.highCost)))"
                         : BitcoinFormatter.shared.formatAmount(Int(estimate.totalCost))
@@ -51,7 +51,7 @@ public struct ExitCostEstimateCard: View {
 
                 // Show transaction count
                 ExitCostRow(
-                    label: String(localized: "fee_transactions", bundle: .module),
+                    label: L10n.feeTransactions,
                     value: "\(estimate.transactionRange)"
                 )
 
@@ -78,7 +78,7 @@ public struct ExitCostEstimateCard: View {
                 Divider()
                 
                 Label {
-                    Text("balance_increase_savings_for_fee", bundle: .module)
+                    Text(String(localized: "balance_increase_savings_for_fee", defaultValue: "Increase your savings balance to cover the fee.", bundle: .module))
                 } icon: {
                     Image(systemName: "tornado")
                         .accessibilityHidden(true)

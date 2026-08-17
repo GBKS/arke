@@ -12,8 +12,8 @@ public struct AmountAndNoteInputView: View {
     @Binding var note: String
     @Binding var showingAmountAndNote: Bool
     
-    var amountPlaceholder: String = String(localized: "placeholder_amount_optional", bundle: .module)
-    var notePlaceholder: String = String(localized: "placeholder_note_optional", bundle: .module)
+    var amountPlaceholder: String = L10n.placeholderAmountOptional
+    var notePlaceholder: String = L10n.placeholderNoteOptional
     var unitLabel: String? = nil
     var isDisabled: Bool = false
     var allowDecimal: Bool = true
@@ -31,9 +31,9 @@ public struct AmountAndNoteInputView: View {
     /// VoiceOver label for the amount field, including the unit when present.
     private var amountAccessibilityLabel: String {
         if let unit = unitLabel {
-            return String(localized: "accessibility_amount_label_with_unit \(unit)", bundle: .module)
+            return String(localized: "accessibility_amount_label_with_unit %@", defaultValue: "Amount in \(unit)", bundle: .module)
         } else {
-            return String(localized: "accessibility_amount_label", bundle: .module)
+            return String(localized: "accessibility_amount_label", defaultValue: "Amount", bundle: .module)
         }
     }
 
@@ -52,8 +52,8 @@ public struct AmountAndNoteInputView: View {
         self._amount = amount
         self._note = note
         self._showingAmountAndNote = showingAmountAndNote
-        self.amountPlaceholder = amountPlaceholder ?? String(localized: "placeholder_amount_optional", bundle: .module)
-        self.notePlaceholder = notePlaceholder ?? String(localized: "placeholder_note_optional", bundle: .module)
+        self.amountPlaceholder = amountPlaceholder ?? L10n.placeholderAmountOptional
+        self.notePlaceholder = notePlaceholder ?? L10n.placeholderNoteOptional
         self.unitLabel = unitLabel
         self.isDisabled = isDisabled
         self.allowDecimal = allowDecimal
@@ -73,8 +73,8 @@ public struct AmountAndNoteInputView: View {
         self._amount = amount
         self._note = note
         self._showingAmountAndNote = showingAmountAndNote
-        self.amountPlaceholder = amountPlaceholder ?? String(localized: "placeholder_amount_optional", bundle: .module)
-        self.notePlaceholder = notePlaceholder ?? String(localized: "placeholder_note_optional", bundle: .module)
+        self.amountPlaceholder = amountPlaceholder ?? L10n.placeholderAmountOptional
+        self.notePlaceholder = notePlaceholder ?? L10n.placeholderNoteOptional
         self.unitLabel = unitLabel
         self.isDisabled = isDisabled
         self.allowDecimal = allowDecimal
@@ -96,7 +96,7 @@ public struct AmountAndNoteInputView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button(String(localized: "button_done", bundle: .module)) {
+                Button(L10n.buttonDone) {
                     focusedField = nil
                 }
             }
@@ -111,7 +111,7 @@ public struct AmountAndNoteInputView: View {
             }
         } label: {
             HStack(spacing: 6) {
-                Text("receive_add_amount_note", bundle: .module)
+                Text(String(localized: "receive_add_amount_note", defaultValue: "Add amount and note", bundle: .module))
                     .font(.body)
                 Spacer()
             }
@@ -192,7 +192,7 @@ public struct AmountAndNoteInputView: View {
                 .focused($focusedField, equals: .note)
                 .disabled(isDisabled)
                 .opacity(isDisabled ? 0.6 : 1.0)
-                .accessibilityLabel(Text("accessibility_note_label", bundle: .module))
+                .accessibilityLabel(Text(String(localized: "accessibility_note_label", defaultValue: "Note", bundle: .module)))
         }
     }
 }

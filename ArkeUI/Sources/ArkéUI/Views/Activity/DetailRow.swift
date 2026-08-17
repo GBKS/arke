@@ -56,7 +56,7 @@ public struct DetailRow: View {
 
         // Announce the copy to VoiceOver so success isn't a silent action.
         AccessibilityNotification.Announcement(
-            String(localized: "status_copied_exclaim", bundle: .module)
+            L10n.statusCopiedExclaim
         ).post()
 
         // Call the optional callback if provided (for showing copy success feedback)

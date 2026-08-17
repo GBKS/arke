@@ -34,7 +34,7 @@ public struct ErrorBox: View {
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
-                    Text(String(localized: "error_sincere_regrets", bundle: .module))
+                    Text(String(localized: "error_sincere_regrets", defaultValue: "Sincere regrets", bundle: .module))
                         .font(.headline)
                         .foregroundColor(.Arke.red)
                     
@@ -46,8 +46,8 @@ public struct ErrorBox: View {
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
-                        .help(String(localized: "action_dismiss_error", bundle: .module))
-                        .accessibilityLabel(Text("action_dismiss_error", bundle: .module))
+                        .help(String(localized: "action_dismiss_error", defaultValue: "Dismiss error", bundle: .module))
+                        .accessibilityLabel(Text(String(localized: "action_dismiss_error", defaultValue: "Dismiss error", bundle: .module)))
                     }
                 }
                 
@@ -58,14 +58,14 @@ public struct ErrorBox: View {
                     .padding(.vertical, 4)
                 
                 HStack(spacing: 12) {
-                    Button(String(localized: "error_copy", bundle: .module)) {
+                    Button(String(localized: "error_copy", defaultValue: "Copy Error", bundle: .module)) {
                         copyErrorToClipboard()
                     }
                     .buttonStyle(.bordered)
                     .font(.caption)
                     
                     if let onRetry = onRetry {
-                        Button(String(localized: "button_retry", bundle: .module)) {
+                        Button(L10n.buttonRetry) {
                             onRetry()
                         }
                         .buttonStyle(.borderedProminent)
@@ -80,7 +80,7 @@ public struct ErrorBox: View {
                                 .foregroundColor(.Arke.green)
                                 .font(.caption)
                                 .accessibilityHidden(true)
-                            Text(String(localized: "status_copied", bundle: .module))
+                            Text(String(localized: "status_copied", defaultValue: "Copied", bundle: .module))
                                 .font(.caption)
                                 .foregroundColor(.Arke.green)
                         }

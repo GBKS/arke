@@ -42,7 +42,7 @@ public struct PaymentDestinationItem: View {
         self.contactName = contactName
         self.contactAvatar = contactAvatar
         self.viable = viable
-        self.viabilityReason = viabilityReason ?? String(localized: "status_available", bundle: .module)
+        self.viabilityReason = viabilityReason ?? String(localized: "status_available", defaultValue: "Available", bundle: .module)
         self.showMatchedContact = showMatchedContact
     }
     
@@ -57,7 +57,7 @@ public struct PaymentDestinationItem: View {
                 .buttonStyle(.plain)
                 .help(viabilityReason)
                 .accessibilityElement(children: .combine)
-                .accessibilityHint(Text("accessibility_hint_select_destination", bundle: .module))
+                .accessibilityHint(Text(String(localized: "accessibility_hint_select_destination", defaultValue: "Selects this payment destination", bundle: .module)))
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
             } else {
                 rowContent
@@ -77,7 +77,7 @@ public struct PaymentDestinationItem: View {
                         .accessibilityHidden(true)
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(String(localized: "label_known_address", bundle: .module))
+                        Text(String(localized: "label_known_address", defaultValue: "Known address", bundle: .module))
                             .font(.body)
                             .foregroundColor(.arkeSecondary)
                         Text(contactName)
@@ -121,10 +121,10 @@ public struct PaymentDestinationItem: View {
                 
                 if let fee = estimatedFee {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(String(localized: "label_fee", bundle: .module))
+                        Text(L10n.labelFee)
                             .foregroundColor(.secondary)
                         
-                        Text(fee > 0 ? "~\(BitcoinFormatter.shared.formatAmount(fee))" : String(localized: "label_free", bundle: .module))
+                        Text(fee > 0 ? "~\(BitcoinFormatter.shared.formatAmount(fee))" : String(localized: "label_free", defaultValue: "Free", bundle: .module))
                             .font(.body)
                             .foregroundColor(isSelectable && viable ? .primary : .secondary)
                     }

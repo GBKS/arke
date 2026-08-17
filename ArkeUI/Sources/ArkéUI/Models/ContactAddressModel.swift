@@ -63,7 +63,7 @@ public struct ContactAddressModel: Identifiable, Hashable, Codable, Sendable {
         format.supportsBitcoinNetworks
     }
 
-    /// Shortened address for display (first 8 + String(localized: "symbol_ellipsis") + last 8 characters)
+    /// Shortened address for display (first 8 + L10n.symbolEllipsis + last 8 characters)
     public var shortAddress: String {
         guard address.count > 16 else { return address }
         let start = address.prefix(8)

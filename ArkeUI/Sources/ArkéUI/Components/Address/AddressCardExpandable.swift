@@ -60,7 +60,7 @@ public struct AddressCardExpandable: View {
             }
             .buttonStyle(.bordered)
             .tint(showingCopied ? .Arke.green : .Arke.gold)
-            .help(Text("action_copy_address", bundle: .module))
+            .help(Text(String(localized: "action_copy_address", defaultValue: "Copy address", bundle: .module)))
         }
     }
 }

@@ -82,7 +82,7 @@ public struct AmountInputSection: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("placeholder_enter_amount", bundle: .module)
+                Text(L10n.placeholderEnterAmount)
                     .font(.body)
                     .fontWeight(.medium)
                 
@@ -93,7 +93,7 @@ public struct AmountInputSection: View {
                 }
             }
             
-            TextField(String(localized: "format_zero", bundle: .module), text: $amount)
+            TextField(L10n.formatZero, text: $amount)
                 .textFieldStyle(.plain)
                 .font(.title)
                 .foregroundColor(exceedsBalance ? .orange : .primary)
@@ -111,9 +111,9 @@ public struct AmountInputSection: View {
                         amount = String(newValue.prefix(20))
                     }
                 }
-                .accessibilityLabel(Text("accessibility_amount_field", bundle: .module))
+                .accessibilityLabel(Text(String(localized: "accessibility_amount_field", defaultValue: "Send amount", bundle: .module)))
                 .accessibilityValue(exceedsBalance
-                    ? Text("accessibility_value_exceeds_balance", bundle: .module)
+                    ? Text(String(localized: "accessibility_value_exceeds_balance", defaultValue: "Exceeds available balance", bundle: .module))
                     : Text(verbatim: ""))
             
             Divider()
@@ -138,17 +138,17 @@ public struct AmountInputSection: View {
                         .buttonStyle(.plain)
                         .disabled(maxSpendableAmount == 0)
                         .accessibilityElement(children: .combine)
-                        .accessibilityHint(Text("accessibility_hint_set_max", bundle: .module))
+                        .accessibilityHint(Text(String(localized: "accessibility_hint_set_max", defaultValue: "Sets the amount to your maximum spendable balance. Activate again to clear.", bundle: .module)))
                     }
                 } else {
-                    Text("send_amount_fixed", bundle: .module)
+                    Text(String(localized: "send_amount_fixed", defaultValue: "Amount is fixed", bundle: .module))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
 
                 if minimumSendAmount > 0 {
                     HStack(spacing: 8) {
-                        Text("label_minimum", bundle: .module)
+                        Text(String(localized: "label_minimum", defaultValue: "Minimum", bundle: .module))
                             .font(.body)
                             .foregroundColor(.secondary)
 
@@ -221,7 +221,7 @@ public struct AmountInputSection: View {
     .toolbar {
         ToolbarItemGroup(placement: .keyboard) {
             Spacer()
-            Button(String(localized: "button_done", bundle: .module)) {
+            Button(L10n.buttonDone) {
                 isFocused = false
             }
         }

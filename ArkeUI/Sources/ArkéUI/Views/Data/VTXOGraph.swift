@@ -133,7 +133,7 @@ public struct VTXOGraph: View {
         VStack {
             Image(systemName: "tray")
                 .foregroundStyle(.secondary)
-            Text("vtxo_graph_empty", bundle: .module)
+            Text(String(localized: "vtxo_graph_empty", defaultValue: "No active VTXOs", bundle: .module))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -189,7 +189,7 @@ public struct VTXOGraph: View {
 
             HStack {
                 if freeRefreshFraction != nil {
-                    Text("vtxo_graph_free_refresh_zone", bundle: .module)
+                    Text(String(localized: "vtxo_graph_free_refresh_zone", defaultValue: "Free refresh zone", bundle: .module))
                         .font(.callout)
                         .foregroundStyle(Color.Arke.blue)
                 }
@@ -232,14 +232,15 @@ private struct VTXOGraphBar: View {
 
     private var accessibilityText: Text {
         var label = String(
-            localized: "accessibility_vtxo_graph_bar \(vtxo.formattedAmount) \(Int(daysLeft.rounded(.up)))",
+            localized: "accessibility_vtxo_graph_bar %@ %lld",
+            defaultValue: "\(vtxo.formattedAmount), expires in ^[\(Int(daysLeft.rounded(.up))) days](inflect: true)",
             bundle: .module
         )
         if isExpired {
-            label += ", " + String(localized: "accessibility_vtxo_graph_expired", bundle: .module)
+            label += ", " + String(localized: "accessibility_vtxo_graph_expired", defaultValue: "expired", bundle: .module)
         }
         if vtxo.state == .locked {
-            label += ", " + String(localized: "accessibility_vtxo_graph_locked", bundle: .module)
+            label += ", " + String(localized: "accessibility_vtxo_graph_locked", defaultValue: "locked", bundle: .module)
         }
         return Text(label)
     }
@@ -288,7 +289,7 @@ private struct VTXOGraphBar: View {
                 .fixedSize()
 
             if isExpired {
-                Text("vtxo_graph_expired", bundle: .module)
+                Text(String(localized: "vtxo_graph_expired", defaultValue: "Expired", bundle: .module))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 6)

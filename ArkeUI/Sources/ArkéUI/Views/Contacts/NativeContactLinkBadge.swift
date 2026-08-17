@@ -34,13 +34,13 @@ public struct NativeContactLinkBadge: View {
                     .foregroundStyle(Color.Arke.blue)
 
                 if showLabel {
-                    Text(String(localized: "label_linked_to_contacts", bundle: .module))
+                    Text(String(localized: "label_linked_to_contacts", defaultValue: "Linked to Contacts", bundle: .module))
                         .font(size.textFont)
                         .foregroundColor(.secondary)
                 }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "label_linked_to_contacts", bundle: .module))
+            .accessibilityLabel(String(localized: "label_linked_to_contacts", defaultValue: "Linked to Contacts", bundle: .module))
         }
     }
     

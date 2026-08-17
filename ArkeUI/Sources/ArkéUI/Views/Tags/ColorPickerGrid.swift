@@ -61,7 +61,7 @@ public struct ColorPickerGrid: View {
             swatchCircle(fillColor: fillColor, isSelected: isSelected)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("accessibility_color_swatch \(index + 1)", bundle: .module))
+        .accessibilityLabel(Text(String(localized: "accessibility_color_swatch %lld", defaultValue: "Color option \(index + 1)", bundle: .module)))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
@@ -80,7 +80,7 @@ public struct ColorPickerGrid: View {
         // the hit-testing threshold, so taps never reach it. The well is
         // also the only way SwiftUI can open the system color picker.
         ColorPicker(
-            String(localized: "action_choose_custom_color", bundle: .module),
+            String(localized: "action_choose_custom_color", defaultValue: "Choose custom color", bundle: .module),
             selection: $customColor,
             supportsOpacity: false
         )

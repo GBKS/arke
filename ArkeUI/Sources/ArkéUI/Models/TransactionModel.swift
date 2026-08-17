@@ -322,7 +322,7 @@ public struct TransactionModel: Identifiable, Hashable, Codable, Sendable {
             return notes
         }
         let endIndex = notes.index(notes.startIndex, offsetBy: 100)
-        return String(notes[..<endIndex]) + String(localized: "symbol_ellipsis", bundle: .module)
+        return String(notes[..<endIndex]) + L10n.symbolEllipsis
     }
 
     // MARK: - Linking Helpers

@@ -19,13 +19,13 @@ public extension ConnectionQuality {
     var displayName: String {
         switch self {
         case .excellent:
-            return String(localized: "connection_quality_excellent", bundle: .module)
+            return String(localized: "connection_quality_excellent", defaultValue: "Excellent", bundle: .module)
         case .good:
-            return String(localized: "connection_quality_good", bundle: .module)
+            return String(localized: "connection_quality_good", defaultValue: "Good", bundle: .module)
         case .poor:
-            return String(localized: "connection_quality_poor", bundle: .module)
+            return String(localized: "connection_quality_poor", defaultValue: "Poor", bundle: .module)
         case .disconnected:
-            return String(localized: "connection_quality_disconnected", bundle: .module)
+            return String(localized: "connection_quality_disconnected", defaultValue: "Disconnected", bundle: .module)
         }
     }
     
@@ -129,25 +129,25 @@ public struct ConnectionStatus: Sendable {
     
     public var statusMessage: String {
         if isReadOnlyMode {
-            return String(localized: "status_readonly_mode", bundle: .module)
+            return String(localized: "status_readonly_mode", defaultValue: "Read-only mode", bundle: .module)
         }
 
         if isConnected {
             switch quality {
             case .excellent:
-                return String(localized: "status_connected", bundle: .module)
+                return String(localized: "status_connected", defaultValue: "Connected", bundle: .module)
             case .good:
-                return String(localized: "status_connected", bundle: .module)
+                return String(localized: "status_connected", defaultValue: "Connected", bundle: .module)
             case .poor:
-                return String(localized: "status_poor_connection", bundle: .module)
+                return String(localized: "status_poor_connection", defaultValue: "Poor connection", bundle: .module)
             case .disconnected:
-                return String(localized: "status_disconnected", bundle: .module)
+                return String(localized: "status_disconnected", defaultValue: "Disconnected", bundle: .module)
             }
         } else {
             if reconnectionAttempts > 0 {
-                return String(localized: "status_reconnecting_attempt \(reconnectionAttempts)", bundle: .module)
+                return String(localized: "status_reconnecting_attempt %lld", defaultValue: "Reconnecting... (attempt \(reconnectionAttempts))", bundle: .module)
             } else {
-                return String(localized: "status_disconnected", bundle: .module)
+                return String(localized: "status_disconnected", defaultValue: "Disconnected", bundle: .module)
             }
         }
     }
@@ -156,7 +156,7 @@ public struct ConnectionStatus: Sendable {
         if let lastSync = lastSuccessfulSync {
             let formatter = RelativeDateTimeFormatter()
             formatter.unitsStyle = .full
-            return String(localized: "status_last_synced \(formatter.localizedString(for: lastSync, relativeTo: Date()))", bundle: .module)
+            return String(localized: "status_last_synced %@", defaultValue: "Last synced \(formatter.localizedString(for: lastSync, relativeTo: Date()))", bundle: .module)
         }
         return nil
     }

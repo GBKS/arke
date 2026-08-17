@@ -30,10 +30,10 @@ public struct ForcedMoveUnderwayView<Media: View>: View {
                 .clipped()
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("forced_move_underway_title", bundle: .module)
+                Text(String(localized: "forced_move_underway_title", defaultValue: "Forced move underway", bundle: .module))
                     .font(.system(.title, design: .serif))
 
-                Text("forced_move_all_moving", bundle: .module)
+                Text(String(localized: "forced_move_all_moving", defaultValue: "All of your bitcoin is already on its way to your Savings balance. You can follow the progress in your activity.", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -41,7 +41,7 @@ public struct ForcedMoveUnderwayView<Media: View>: View {
 
             if let onGoToActivity {
                 Button(action: onGoToActivity) {
-                    Text("button_view_activity", bundle: .module)
+                    Text(String(localized: "button_view_activity", defaultValue: "View activity", bundle: .module))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(Color.Arke.gold4)

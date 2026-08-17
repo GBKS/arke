@@ -22,7 +22,7 @@ public struct PaymentRequestMetadataView: View {
         VStack(alignment: .leading, spacing: 10) {
             if let label = label, !label.isEmpty {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("label_label_colon", bundle: .module)
+                    Text(String(localized: "label_label_colon", defaultValue: "Label:", bundle: .module))
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(label)
@@ -37,7 +37,7 @@ public struct PaymentRequestMetadataView: View {
             }
             if let message = message, !message.isEmpty {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("label_message_colon", bundle: .module)
+                    Text(String(localized: "label_message_colon", defaultValue: "Message:", bundle: .module))
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(message)
@@ -52,7 +52,7 @@ public struct PaymentRequestMetadataView: View {
             }
             if let amount = amount {
                 HStack(alignment: .top, spacing: 10) {
-                    Text("send_amount_to_pay", bundle: .module)
+                    Text(String(localized: "send_amount_to_pay", defaultValue: "Amount to pay:", bundle: .module))
                         .font(.body)
                         .foregroundColor(.secondary)
                     Text(BitcoinFormatter.shared.formatAmount(amount))

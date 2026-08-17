@@ -92,7 +92,7 @@ public struct ArkeQRCodeView: View {
             .buttonStyle(.glass)
             .controlSize(.large)
             .tint(Color.Arke.gold)
-            .accessibilityLabel(String(localized: "button_close", bundle: .module))
+            .accessibilityLabel(L10n.buttonClose)
         }
         .task {
             generateQRCode()

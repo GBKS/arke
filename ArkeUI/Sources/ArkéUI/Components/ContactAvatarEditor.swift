@@ -154,7 +154,7 @@ public struct ContactAvatarEditor: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("contacts_preset_avatars", bundle: .module))
+        .accessibilityLabel(Text(String(localized: "contacts_preset_avatars", defaultValue: "Preset Avatars", bundle: .module)))
     }
 
     private var customFileButton: some View {
@@ -182,8 +182,8 @@ public struct ContactAvatarEditor: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(selection.isCustom
-            ? Text("button_clear", bundle: .module)
-            : Text("action_choose_from_files", bundle: .module))
+            ? Text(String(localized: "button_clear", defaultValue: "Clear", bundle: .module))
+            : Text(String(localized: "action_choose_from_files", defaultValue: "Choose from Files...", bundle: .module)))
     }
 
     private var presetGrid: some View {

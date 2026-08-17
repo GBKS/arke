@@ -182,6 +182,7 @@
 				Helpers/ClipboardServiceProtocol.swift,
 				Helpers/CloudKitObserver.swift,
 				Helpers/ExitDiagnostics.swift,
+				Helpers/L10n.swift,
 				Helpers/LightningInvoiceParser.swift,
 				Helpers/LNURLResolver.swift,
 				Helpers/NotificationNames.swift,

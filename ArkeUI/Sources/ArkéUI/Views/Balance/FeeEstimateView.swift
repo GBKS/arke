@@ -29,14 +29,14 @@ public struct FeeEstimateView<Input: Equatable & Sendable>: View {
         VStack {
             if isLoading {
                 HStack(spacing: 6) {
-                    Text(String(localized: "label_fee", bundle: .module))
+                    Text(L10n.labelFee)
                     ProgressView()
                         .controlSize(.small)
                 }
                 .font(.body)
                 .foregroundColor(.secondary)
             } else if hasError {
-                Text(String(localized: "status_fee_unavailable", bundle: .module))
+                Text(String(localized: "status_fee_unavailable", defaultValue: "Fee: Not available", bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             } else if let fee = estimatedFee {
@@ -46,13 +46,13 @@ public struct FeeEstimateView<Input: Equatable & Sendable>: View {
                     .font(.body)
                     .foregroundColor(.secondary)
             } else {
-                Text(String(localized: "label_fee_pending", bundle: .module))
+                Text(String(localized: "label_fee_pending", defaultValue: "Fee: —", bundle: .module))
                     .font(.body)
                     .foregroundColor(.secondary)
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "accessibility_fee_label", bundle: .module))
+        .accessibilityLabel(String(localized: "accessibility_fee_label", defaultValue: "Fee", bundle: .module))
         .accessibilityValue(accessibilityValueText)
         .onChange(of: input) { oldValue, newValue in
             handleInputChange(newValue)
@@ -68,15 +68,15 @@ public struct FeeEstimateView<Input: Equatable & Sendable>: View {
     /// Spoken value announced by VoiceOver, reflecting the current fee state.
     private var accessibilityValueText: String {
         if isLoading {
-            return String(localized: "status_loading", bundle: .module)
+            return String(localized: "status_loading", defaultValue: "Loading", bundle: .module)
         } else if hasError {
-            return String(localized: "accessibility_value_fee_unavailable", bundle: .module)
+            return String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module)
         } else if let fee = estimatedFee {
             return String(localized: "format_fee_approximate",
                           defaultValue: "approximately \(BitcoinFormatter.shared.formatAmount(Int(fee)))",
                           bundle: .module)
         } else {
-            return String(localized: "accessibility_value_fee_pending", bundle: .module)
+            return String(localized: "accessibility_value_fee_pending", defaultValue: "Not yet estimated", bundle: .module)
         }
     }
 

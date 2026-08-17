@@ -53,7 +53,7 @@ public struct ForcedMoveProgressView<Media: View>: View {
                 .clipped()
 
             VStack(alignment: .leading, spacing: 10) {
-                Text(titleKey, bundle: .module)
+                Text(title)
                     .font(.system(.title, design: .serif))
 
                 Text(statusText)
@@ -69,17 +69,23 @@ public struct ForcedMoveProgressView<Media: View>: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForcedMoveExpectationRow(
                     icon: "clock.arrow.circlepath",
-                    text: "forced_move_expect_checkin"
+                    text: String(localized: "forced_move_expect_checkin",
+                                 defaultValue: "Check in about once an hour. Opening the app keeps the move going.",
+                                 bundle: .module)
                 )
 
                 ForcedMoveExpectationRow(
                     icon: "bell",
-                    text: "forced_move_expect_reminders"
+                    text: String(localized: "forced_move_expect_reminders",
+                                 defaultValue: "We'll remind you to check in.",
+                                 bundle: .module)
                 )
 
                 ForcedMoveExpectationRow(
                     icon: "checkmark.seal",
-                    text: "forced_move_expect_automatic"
+                    text: String(localized: "forced_move_expect_automatic",
+                                 defaultValue: "When it completes, the bitcoin is added to your Savings balance automatically.",
+                                 bundle: .module)
                 )
             }
             .lineSpacing(6)
@@ -88,12 +94,14 @@ public struct ForcedMoveProgressView<Media: View>: View {
         }
     }
 
-    private var titleKey: LocalizedStringKey {
+    private var title: String {
         switch phase {
         case .starting, .waiting:
-            return "forced_move_underway_title"
+            return String(localized: "forced_move_underway_title",
+                          defaultValue: "Forced move underway", bundle: .module)
         case .finishing:
-            return "forced_move_finishing_title"
+            return String(localized: "forced_move_finishing_title",
+                          defaultValue: "Finishing your forced move", bundle: .module)
         }
     }
 
@@ -141,7 +149,7 @@ public struct ForcedMoveProgressView<Media: View>: View {
                     .font(.system(size: 24))
                     .foregroundColor(.Arke.orange)
 
-                Text("forced_move_reminders_off", bundle: .module)
+                Text(String(localized: "forced_move_reminders_off", defaultValue: "Reminders are off. Turn on notifications so you don't miss a check-in.", bundle: .module))
                     .font(.body)
                     .foregroundColor(.primary)
             }
@@ -151,9 +159,10 @@ public struct ForcedMoveProgressView<Media: View>: View {
             } label: {
                 Text(
                     reminderState == .denied
-                        ? "forced_move_open_settings"
-                        : "forced_move_turn_on_reminders",
-                    bundle: .module
+                        ? String(localized: "forced_move_open_settings",
+                                 defaultValue: "Open Settings", bundle: .module)
+                        : String(localized: "forced_move_turn_on_reminders",
+                                 defaultValue: "Turn On Notifications", bundle: .module)
                 )
                 .font(.body)
                 .fontWeight(.medium)
@@ -174,7 +183,7 @@ public struct ForcedMoveProgressView<Media: View>: View {
 
 struct ForcedMoveExpectationRow: View {
     let icon: String
-    let text: LocalizedStringKey
+    let text: String
 
     var body: some View {
         HStack(spacing: 12) {
@@ -183,7 +192,7 @@ struct ForcedMoveExpectationRow: View {
                 .foregroundColor(.secondary)
                 .frame(width: 30)
 
-            Text(text, bundle: .module)
+            Text(text)
                 .font(.title3)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.leading)
