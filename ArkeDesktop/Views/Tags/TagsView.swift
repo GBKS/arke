@@ -52,7 +52,7 @@ struct TagsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding(.vertical, 20)
             .padding(.horizontal, 30)
-            .navigationTitle("tags_title")
+            .navigationTitle(L10n.tagsTitle)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -111,7 +111,7 @@ struct TagsView: View {
                 print("🔧 TagsView: TagEditor sheet appeared with tag: \(tag.name) (ID: \(tag.id))")
             }
         }
-        .confirmationDialog("button_delete_tag",
+        .confirmationDialog(String(localized: "button_delete_tag", defaultValue: "Delete Tag"),
             isPresented: Binding(
                 get: { viewModel.tagToDelete != nil },
                 set: { if !$0 { viewModel.hideDeleteConfirmation() } }
@@ -124,11 +124,11 @@ struct TagsView: View {
                     viewModel.hideDeleteConfirmation()
                 }
             }
-            Button("button_cancel", role: .cancel) {
+            Button(L10n.buttonCancel, role: .cancel) {
                 viewModel.hideDeleteConfirmation()
             }
         } message: { (tag: TagModel) in
-            Text("alert_confirm_delete_tag")
+            Text(String(localized: "alert_confirm_delete_tag", defaultValue: "Are you sure you want to delete this tag? This action cannot be undone."))
         }
     }
     
@@ -142,7 +142,7 @@ struct TagsView: View {
         if items.isEmpty {
             VStack(spacing: 20) {
                 ProgressView()
-                Text("progress_loading_tags")
+                Text(String(localized: "progress_loading_tags", defaultValue: "Loading tags..."))
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -210,14 +210,14 @@ struct TagsView: View {
                         
                         // Column 5: Menu
                         Menu {
-                            Button("button_edit") {
+                            Button(L10n.buttonEdit) {
                                 print("🔧 TagsView: Edit button pressed for tag: \(item.tag.name) (ID: \(item.tag.id))")
                                 viewModel.showEditTagEditor(for: item.tag)
                             }
                             
                             Divider()
                             
-                            Button("button_delete", role: .destructive) {
+                            Button(L10n.buttonDelete, role: .destructive) {
                                 viewModel.showDeleteConfirmation(for: item.tag)
                             }
                         } label: {
@@ -251,24 +251,24 @@ struct TagsView: View {
                 .symbolRenderingMode(.hierarchical)
             
             VStack(spacing: 8) {
-                Text("tags_empty_title")
+                Text(String(localized: "tags_empty_title", defaultValue: "No Tags Yet"))
                     .font(.title2)
                     .fontWeight(.semibold)
                 
-                Text("tags_empty_help")
+                Text(String(localized: "tags_empty_help", defaultValue: "Create tags to organize and categorize your transactions"))
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Button("tags_create_first") {
+            Button(String(localized: "tags_create_first", defaultValue: "Create Your First Tag")) {
                 viewModel.showNewTagEditor()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             
-            Button("tags_add_default_tags") {
+            Button(String(localized: "tags_add_default_tags", defaultValue: "Add default tags")) {
                 Task {
                     await viewModel.createDefaultTags()
                 }

@@ -19,18 +19,18 @@ struct ContactEditor_iOS: View {
     var body: some View {
         Form {
             Section {
-                Text("contacts_editor_title")
-                Text("contacts_editor_placeholder")
+                Text(String(localized: "contacts_editor_title", defaultValue: "Contact Editor"))
+                Text(String(localized: "contacts_editor_placeholder", defaultValue: "Implement your contact editing form here"))
                     .foregroundStyle(.secondary)
             }
         }
-        .navigationTitle(editingContact == nil ? "New Contact" : String(localized: "button_edit_contact"))
+        .navigationTitle(editingContact == nil ? "New Contact" : String(localized: "button_edit_contact", defaultValue: "Edit Contact"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("button_cancel", action: onCancel)
+                Button(L10n.buttonCancel, action: onCancel)
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("button_save") {
+                Button(L10n.buttonSave) {
                     // Implement save logic
                     if let contact = editingContact {
                         onSave(contact)

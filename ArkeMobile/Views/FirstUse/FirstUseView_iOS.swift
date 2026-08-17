@@ -41,16 +41,16 @@ struct FirstUseView_iOS: View {
                         // Announce network change for VoiceOver users
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             let announcement = isMainnet ? 
-                                String(localized: "accessibility_switched_mainnet") : 
-                                String(localized: "accessibility_switched_testnet")
+                                String(localized: "accessibility_switched_mainnet", defaultValue: "Switched to mainnet. You will create a real wallet.") : 
+                                String(localized: "accessibility_switched_testnet", defaultValue: "Switched to testnet. You will create a test wallet.")
                             UIAccessibility.post(notification: .announcement, argument: announcement)
                         }
                     } label: {
                         Image(systemName: "testtube.2")
                             .frame(width: 24, height: 24)
                     }
-                    .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet") : String(localized: "accessibility_switch_to_mainnet"))
-                    .accessibilityHint(String(localized: "accessibility_network_toggle_hint"))
+                    .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet", defaultValue: "Switch to testnet") : String(localized: "accessibility_switch_to_mainnet", defaultValue: "Switch to mainnet"))
+                    .accessibilityHint(String(localized: "accessibility_network_toggle_hint", defaultValue: "Toggle between mainnet and testnet"))
                     .buttonStyle(.glass)
                     .controlSize(.regular)
                     .tint(.Arke.gold)
@@ -73,7 +73,7 @@ struct FirstUseView_iOS: View {
                             isMainnet.toggle()
                         }
                     } label: {
-                        Text("app_name")
+                        Text(L10n.appName)
                             .font(.system(size: 100, design: .serif))
                             .fontWeight(.semibold)
                             .foregroundStyle(Color.Arke.gold)
@@ -82,7 +82,7 @@ struct FirstUseView_iOS: View {
                     */
                     
                     if !isMainnet {
-                        Text("onboarding_test_wallet_notice")
+                        Text(String(localized: "onboarding_test_wallet_notice", defaultValue: "You will create a test wallet."))
                             .font(.title2)
                             .fontWeight(.semibold)
                             .foregroundStyle(Color.white)
@@ -97,7 +97,7 @@ struct FirstUseView_iOS: View {
                     Button {
                         onCreateWallet()
                     } label: {
-                        Text("button_create_wallet")
+                        Text(String(localized: "button_create_wallet", defaultValue: "Create Wallet"))
                             .font(.system(.title2, weight: .semibold))
                             .fontWeight(.semibold)
                             .foregroundStyle(Color.Arke.gold4)
@@ -111,7 +111,7 @@ struct FirstUseView_iOS: View {
                     Button {
                         onImportWallet()
                     } label: {
-                        Text("button_import_wallet")
+                        Text(L10n.buttonImportWallet)
                             .font(.system(.title2, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)

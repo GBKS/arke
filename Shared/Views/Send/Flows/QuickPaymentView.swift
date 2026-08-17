@@ -241,9 +241,9 @@ struct QuickPaymentView: View {
     /// Header label for the primary destination section
     private var primaryDestinationLabel: String {
         if primaryDisplayDestination?.balanceSourceName != nil {
-            return String(localized: "label_address")
+            return L10n.labelAddress
         } else {
-            return String(localized: "label_address")
+            return L10n.labelAddress
         }
     }
     
@@ -428,7 +428,7 @@ struct QuickPaymentView: View {
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
-                        .help("action_clear_contact")
+                        .help(L10n.actionClearContact)
                         
                         /*
                         Button(action: onDismiss) {
@@ -436,7 +436,7 @@ struct QuickPaymentView: View {
                                 .font(.title)
                         }
                         .buttonStyle(.glass)
-                        .help("action_clear_contact")
+                        .help(L10n.actionClearContact)
                         */
                     }
                     
@@ -519,7 +519,7 @@ struct QuickPaymentView: View {
                         onSendImmediately?(destId, amountToSend)
                         isSending = false
                     } label: {
-                        Text("button_send")
+                        Text(L10n.buttonSend)
                             .font(.title2)
                             .foregroundStyle(Color.Arke.gold4)
                             .padding(.horizontal, 40)
@@ -529,7 +529,7 @@ struct QuickPaymentView: View {
                     .tint(.Arke.gold)
                     .disabled(!canSendImmediately || isSending)
                 } else {
-                    Text("error_address_wrong_network")
+                    Text(String(localized: "error_address_wrong_network", defaultValue: "Cannot use this address on current network"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .italic()
@@ -541,7 +541,7 @@ struct QuickPaymentView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("button_done") {
+                Button(L10n.buttonDone) {
                     isAmountFieldFocused = false
                 }
             }

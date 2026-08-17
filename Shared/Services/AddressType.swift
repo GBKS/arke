@@ -14,8 +14,8 @@ enum AddressType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .ark: return String(localized: "activity_ark_address")
-        case .onchain: return String(localized: "activity_bitcoin_address")
+        case .ark: return String(localized: "activity_ark_address", defaultValue: "Ark Address")
+        case .onchain: return String(localized: "activity_bitcoin_address", defaultValue: "Bitcoin Address")
         }
     }
     

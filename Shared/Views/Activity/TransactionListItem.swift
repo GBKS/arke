@@ -44,14 +44,14 @@ struct TransactionListItem: View {
         return transaction.exitBlockedInfo?.reason
     }
 
-    private func exitBlockedBadgeKey(for reason: ExitBlockedReason) -> LocalizedStringKey {
+    private func exitBlockedBadgeText(for reason: ExitBlockedReason) -> String {
         switch reason {
         case .insufficientOnchainFunds:
-            return "status_exit_paused_funds"
+            return String(localized: "status_exit_paused_funds", defaultValue: "Needs onchain funds")
         case .claimFeeExceedsOutput:
-            return "status_exit_paused_fees"
+            return String(localized: "status_exit_paused_fees", defaultValue: "Paused — fees too high")
         case .other:
-            return "status_exit_paused"
+            return String(localized: "status_exit_paused", defaultValue: "Paused")
         }
     }
 
@@ -156,7 +156,7 @@ struct TransactionListItem: View {
                         Image(systemName: "clock")
                             .font(.caption)
                             .fontWeight(.medium)
-                        Text(exitBlockedBadgeKey(for: blockedReason))
+                        Text(exitBlockedBadgeText(for: blockedReason))
                             .font(.caption)
                             .fontWeight(.medium)
                     }
@@ -167,7 +167,7 @@ struct TransactionListItem: View {
                     .cornerRadius(6)
                     .padding(.top, 4)
                 } else if isExitFinalizing {
-                    Text("status_exit_finalizing")
+                    Text(String(localized: "status_exit_finalizing", defaultValue: "Finalizing"))
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white)

@@ -41,7 +41,7 @@ struct TagsView_iOS: View {
                 emptyStateSection(viewModel: viewModel)
             }
         }
-        .navigationTitle("tags_title")
+        .navigationTitle(L10n.tagsTitle)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -98,7 +98,7 @@ struct TagsView_iOS: View {
             .environment(walletManager.tagServiceForEnvironment)
             .presentationDetents([.medium, .large])
         }
-        .confirmationDialog("button_delete_tag",
+        .confirmationDialog(String(localized: "button_delete_tag", defaultValue: "Delete Tag"),
             isPresented: Binding(
                 get: { viewModel.tagToDelete != nil },
                 set: { if !$0 { viewModel.hideDeleteConfirmation() } }
@@ -111,11 +111,11 @@ struct TagsView_iOS: View {
                     viewModel.hideDeleteConfirmation()
                 }
             }
-            Button(String(localized: "button_cancel"), role: .cancel) {
+            Button(L10n.buttonCancel, role: .cancel) {
                 viewModel.hideDeleteConfirmation()
             }
         } message: { tag in
-            Text(String(localized: "alert_confirm_delete_tag"))
+            Text(String(localized: "alert_confirm_delete_tag", defaultValue: "Are you sure you want to delete this tag? This action cannot be undone."))
         }
     }
     
@@ -127,9 +127,9 @@ struct TagsView_iOS: View {
         
         if items.isEmpty {
             ContentUnavailableView {
-                Label("status_loading_tags", systemImage: "tag.circle")
+                Label(String(localized: "status_loading_tags", defaultValue: "Loading Tags"), systemImage: "tag.circle")
             } description: {
-                Text(String(localized: "status_please_wait"))
+                Text(String(localized: "status_please_wait", defaultValue: "Please wait..."))
             }
         } else {
             Section {
@@ -151,13 +151,13 @@ struct TagsView_iOS: View {
                             Button(role: .destructive) {
                                 viewModel.showDeleteConfirmation(for: item.tag)
                             } label: {
-                                Label("button_delete", systemImage: "trash")
+                                Label(L10n.buttonDelete, systemImage: "trash")
                             }
                             
                             Button {
                                 viewModel.showEditTagEditor(for: item.tag)
                             } label: {
-                                Label("button_edit", systemImage: "pencil")
+                                Label(L10n.buttonEdit, systemImage: "pencil")
                             }
                             .tint(.Arke.blue)
                         }
@@ -167,7 +167,7 @@ struct TagsView_iOS: View {
                             Button {
                                 viewModel.showEditTagEditor(for: item.tag)
                             } label: {
-                                Label("button_edit", systemImage: "pencil")
+                                Label(L10n.buttonEdit, systemImage: "pencil")
                             }
                         }
                         
@@ -175,7 +175,7 @@ struct TagsView_iOS: View {
                             Button {
                                 onNavigateToActivity(item.tag)
                             } label: {
-                                Label("button_view_transactions", systemImage: "list.bullet")
+                                Label(String(localized: "button_view_transactions", defaultValue: "View Transactions"), systemImage: "list.bullet")
                             }
                         }
                         
@@ -185,7 +185,7 @@ struct TagsView_iOS: View {
                             Button(role: .destructive) {
                                 viewModel.showDeleteConfirmation(for: item.tag)
                             } label: {
-                                Label("button_delete", systemImage: "trash")
+                                Label(L10n.buttonDelete, systemImage: "trash")
                             }
                         }
                     }
@@ -199,16 +199,16 @@ struct TagsView_iOS: View {
     private func emptyStateSection(viewModel: TagsViewModel) -> some View {
         Section {
             ContentUnavailableView {
-                Label("tags_empty_title", systemImage: "tag.circle")
+                Label(String(localized: "tags_empty_title", defaultValue: "No Tags Yet"), systemImage: "tag.circle")
             } description: {
-                Text("tags_empty_help")
+                Text(String(localized: "tags_empty_help", defaultValue: "Create tags to organize and categorize your transactions"))
             } actions: {
-                Button("tags_create_first") {
+                Button(String(localized: "tags_create_first", defaultValue: "Create Your First Tag")) {
                     viewModel.showNewTagEditor()
                 }
                 .buttonStyle(.borderedProminent)
                 
-                Button("button_add_default_tags") {
+                Button(String(localized: "button_add_default_tags", defaultValue: "Add Default Tags")) {
                     Task {
                         await viewModel.createDefaultTags()
                     }
@@ -239,7 +239,7 @@ private struct TagRow: View {
                 if tag.isSystemTag {
                     Spacer()
                     
-                    Text("activity_fees_paid")
+                    Text(L10n.activityFeesPaid)
                         .font(.body)
                         .foregroundColor(.secondary)
                     
@@ -262,7 +262,7 @@ private struct TagRow: View {
             } else {
                 Spacer()
                 
-                Text("symbol_em_dash")
+                Text(L10n.symbolEmDash)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

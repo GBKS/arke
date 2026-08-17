@@ -111,13 +111,13 @@ struct ActivityView_iOS: View {
     
     private var connectionStatusDescription: String {
         if manager.connectionStatus.isReadOnlyMode {
-            return String(localized: "accessibility_connection_readonly")
+            return String(localized: "accessibility_connection_readonly", defaultValue: "Read-only mode")
         } else if !hasArkConnection {
-            return String(localized: "accessibility_connection_none")
+            return String(localized: "accessibility_connection_none", defaultValue: "No connection")
         } else if !hasGoodConnection {
-            return String(localized: "accessibility_connection_poor")
+            return String(localized: "accessibility_connection_poor", defaultValue: "Poor connection quality")
         }
-        return String(localized: "accessibility_connection_issue")
+        return String(localized: "accessibility_connection_issue", defaultValue: "Connection issue")
     }
     
     var body: some View {
@@ -140,9 +140,9 @@ struct ActivityView_iOS: View {
                     .padding(.top, 10)
                     .padding(.horizontal, 20)
                     .accessibilityElement(children: .contain)
-                    .accessibilityLabel(String(localized: "accessibility_balance_label"))
-                    .accessibilityValue(isBalanceHidden ? String(localized: "accessibility_balance_hidden") : (manager.totalBalance.map { BitcoinFormatter.shared.formatAmount($0.grandTotalSat) } ?? String(localized: "accessibility_balance_loading")))
-                    .accessibilityHint(String(localized: "accessibility_balance_hint"))
+                    .accessibilityLabel(String(localized: "accessibility_balance_label", defaultValue: "Balance"))
+                    .accessibilityValue(isBalanceHidden ? String(localized: "accessibility_balance_hidden", defaultValue: "Hidden") : (manager.totalBalance.map { BitcoinFormatter.shared.formatAmount($0.grandTotalSat) } ?? String(localized: "accessibility_balance_loading", defaultValue: "Loading")))
+                    .accessibilityHint(String(localized: "accessibility_balance_hint", defaultValue: "Tap to view balance details. Long press to toggle balance visibility."))
                     .accessibilityAddTraits(.isButton)
                 
                 // Filter chip (if active)
@@ -185,8 +185,8 @@ struct ActivityView_iOS: View {
                         VStack(spacing: 15) {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .accessibilityLabel(String(localized: "accessibility_loading_label"))
-                            Text(String(localized: "progress_loading_transactions"))
+                                .accessibilityLabel(String(localized: "accessibility_loading_label", defaultValue: "Loading"))
+                            Text(String(localized: "progress_loading_transactions", defaultValue: "Loading transactions..."))
                                 .font(.system(size: 19, design: .serif))
                         }
                     }
@@ -239,8 +239,8 @@ struct ActivityView_iOS: View {
                             .font(.system(size: 15))
                             .foregroundStyle(.primary)
                     }
-                    .accessibilityLabel(String(localized: "accessibility_faucet_label"))
-                    .accessibilityHint(String(localized: "accessibility_faucet_hint"))
+                    .accessibilityLabel(String(localized: "accessibility_faucet_label", defaultValue: "Test Faucet"))
+                    .accessibilityHint(String(localized: "accessibility_faucet_hint", defaultValue: "Get test bitcoin from faucet"))
                 }
             }
             
@@ -254,9 +254,9 @@ struct ActivityView_iOS: View {
                             .font(.system(size: 15))
                             .foregroundStyle(connectionStatusColor)
                     }
-                    .accessibilityLabel(String(localized: "accessibility_connection_status_label"))
+                    .accessibilityLabel(String(localized: "accessibility_connection_status_label", defaultValue: "Connection Status"))
                     .accessibilityValue(connectionStatusDescription)
-                    .accessibilityHint(String(localized: "accessibility_connection_status_hint"))
+                    .accessibilityHint(String(localized: "accessibility_connection_status_hint", defaultValue: "View connection details"))
                 }
             }
             
@@ -268,8 +268,8 @@ struct ActivityView_iOS: View {
                         .font(.system(size: 15))
                         .foregroundStyle(.primary)
                 }
-                .accessibilityLabel(String(localized: "accessibility_tags_label"))
-                .accessibilityHint(String(localized: "accessibility_tags_hint"))
+                .accessibilityLabel(String(localized: "accessibility_tags_label", defaultValue: "Tags"))
+                .accessibilityHint(String(localized: "accessibility_tags_hint", defaultValue: "View and manage transaction tags"))
             }
             
             ToolbarItem(placement: .topBarTrailing) {
@@ -280,8 +280,8 @@ struct ActivityView_iOS: View {
                         .font(.system(size: 19))
                         .foregroundStyle(.primary)
                 }
-                .accessibilityLabel(String(localized: "accessibility_settings_label"))
-                .accessibilityHint(String(localized: "accessibility_settings_hint"))
+                .accessibilityLabel(String(localized: "accessibility_settings_label", defaultValue: "Settings"))
+                .accessibilityHint(String(localized: "accessibility_settings_hint", defaultValue: "Open settings and preferences"))
             }
         }
         .onChange(of: selectedTransaction) { oldValue, newValue in

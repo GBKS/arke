@@ -8,14 +8,9 @@
 import SwiftUI
 
 public struct LargeErrorView: View {
-    /// The title shown above the error message.
-    ///
-    /// - Note: A `LocalizedStringKey` is resolved against the caller's bundle
-    ///   context (effectively `Bundle.main`), not this package's `.module`
-    ///   bundle. Pass keys defined in the app's catalog, or an already-localized
-    ///   value. Package-defined string keys will not resolve here — if that's
-    ///   needed, change this API to accept a resolved `Text`/`String` plus a bundle.
-    let title: LocalizedStringKey
+    /// The title shown above the error message, already localized by the caller
+    /// (e.g. via `String(localized:defaultValue:)`).
+    let title: String
     let errorMessage: String
     let image: String?
     let systemImage: String?
@@ -25,7 +20,7 @@ public struct LargeErrorView: View {
     let onDismiss: (() -> Void)?
 
     public init(
-        title: LocalizedStringKey,
+        title: String,
         errorMessage: String,
         image: String? = nil,
         systemImage: String? = nil,

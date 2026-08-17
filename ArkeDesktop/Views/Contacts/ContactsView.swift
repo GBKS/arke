@@ -56,7 +56,7 @@ struct ContactsView: View {
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 12)
-            .navigationTitle("contacts_title")
+            .navigationTitle(L10n.contactsTitle)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -163,18 +163,18 @@ struct ContactsView: View {
                 .symbolRenderingMode(.hierarchical)
             
             VStack(spacing: 8) {
-                Text("contacts_no_contacts_yet")
+                Text(String(localized: "contacts_no_contacts_yet", defaultValue: "No Contacts Yet"))
                     .font(.title2)
                     .fontWeight(.semibold)
                 
-                Text("contacts_empty_help")
+                Text(String(localized: "contacts_empty_help", defaultValue: "Add contacts to organize your transactions and make sending easier"))
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
             
-            Button("contacts_create_first") {
+            Button(String(localized: "contacts_create_first", defaultValue: "Create Your First Contact")) {
                 viewModel.showNewContactEditor()
             }
             .buttonStyle(.borderedProminent)

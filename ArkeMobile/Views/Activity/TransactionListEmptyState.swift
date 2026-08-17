@@ -22,22 +22,22 @@ struct TransactionListEmptyState: View {
         var title: String {
             switch self {
             case .none:
-                return String(localized: "transaction_list_empty_title")
+                return String(localized: "transaction_list_empty_title", defaultValue: "Ready when you are")
             case .tag(let name):
-                return String(localized: "transaction_list_empty_tag_title \(name)")
+                return String(localized: "transaction_list_empty_tag_title %@", defaultValue: "No Transactions in \"\(name)\"")
             case .contact(let name):
-                return String(localized: "transaction_list_empty_contact_title \(name)")
+                return String(localized: "transaction_list_empty_contact_title %@", defaultValue: "No Transactions with \(name)")
             }
         }
         
         func message(isTestnet: Bool) -> String? {
             switch self {
             case .none:
-                return isTestnet ? String(localized: "transaction_list_empty_message_testnet") : nil
+                return isTestnet ? String(localized: "transaction_list_empty_message_testnet", defaultValue: "Get started by funding your wallet with test bitcoin") : nil
             case .tag:
-                return String(localized: "transaction_list_empty_tag_message")
+                return String(localized: "transaction_list_empty_tag_message", defaultValue: "Transactions you tag will appear here")
             case .contact:
-                return String(localized: "transaction_list_empty_contact_message")
+                return String(localized: "transaction_list_empty_contact_message", defaultValue: "Transactions with this contact will appear here")
             }
         }
         
@@ -84,7 +84,7 @@ struct TransactionListEmptyState: View {
                     HStack {
                         Image(systemName: "book.pages.fill")
                             .foregroundStyle(Color.Arke.gold)
-                        Text("transaction_list_empty_guide_button")
+                        Text(String(localized: "transaction_list_empty_guide_button", defaultValue: "See the test guide"))
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold)
                     }
@@ -98,7 +98,7 @@ struct TransactionListEmptyState: View {
                 Button {
                     onNavigateToReceive()
                 } label: {
-                    Text("activity_receive_bitcoin")
+                    Text(String(localized: "activity_receive_bitcoin", defaultValue: "Receive Bitcoin"))
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)

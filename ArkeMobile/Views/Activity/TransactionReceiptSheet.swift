@@ -18,7 +18,7 @@ struct TransactionReceiptSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text("data_technical_details")
+                Text(L10n.dataTechnicalDetails)
                     .font(.system(.title3))
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -28,8 +28,8 @@ struct TransactionReceiptSheet: View {
                         address: addressValue,
                         shareContent: addressValue,
                         label: transaction.transactionType == .received
-                            ? String(localized: "activity_from_address")
-                            : String(localized: "activity_to_address")
+                            ? L10n.activityFromAddress
+                            : L10n.activityToAddress
                     )
                 }
 

@@ -136,7 +136,7 @@ struct ReceiveView_iOS: View {
                     Spacer()
                         .frame(height: 135)
                     
-                    Text("receive_share_your_addresses")
+                    Text(String(localized: "receive_share_your_addresses", defaultValue: "Share your Addresses"))
                         .font(.system(size: 24, design: .serif))
                         .multilineTextAlignment(.center)
                     
@@ -156,7 +156,7 @@ struct ReceiveView_iOS: View {
                         VStack(spacing: 30) {
                             // Main share button - shares BIP-21 URI as text
                             ShareLink(item: shareContent) {
-                                Text("receive_share_payment_link")
+                                Text(String(localized: "receive_share_payment_link", defaultValue: "Share Payment Link"))
                                     .font(.system(size: 21, weight: .semibold))
                                     .foregroundStyle(Color.Arke.gold4)
                                     .frame(maxWidth: .infinity)
@@ -165,13 +165,13 @@ struct ReceiveView_iOS: View {
                             .buttonStyle(.glassProminent)
                             .tint(.Arke.gold)
                             .controlSize(.large)
-                            .accessibilityLabel(String(localized: "accessibility_share_payment_request"))
-                            .accessibilityHint(String(localized: "accessibility_share_payment_hint"))
+                            .accessibilityLabel(String(localized: "accessibility_share_payment_request", defaultValue: "Share payment request"))
+                            .accessibilityHint(String(localized: "accessibility_share_payment_hint", defaultValue: "Opens share sheet to send address to others"))
                             
                             // vCard share button - only show if user has profile
                             if viewModel.hasUserProfile, let vcardURL = viewModel.getVCardData() {
                                 ShareButton(items: [vcardURL]) {
-                                    Text("receive_share_contact_card")
+                                    Text(String(localized: "receive_share_contact_card", defaultValue: "Share Contact Card"))
                                         .font(.system(size: 21, weight: .semibold))
                                         .foregroundStyle(.primary)
                                         .frame(maxWidth: .infinity)
@@ -180,8 +180,8 @@ struct ReceiveView_iOS: View {
                                 .buttonStyle(.plain)
                                 .tint(.Arke.gold)
                                 .controlSize(.small)
-                                .accessibilityLabel(String(localized: "accessibility_share_contact_card"))
-                                .accessibilityHint(String(localized: "accessibility_share_contact_hint"))
+                                .accessibilityLabel(String(localized: "accessibility_share_contact_card", defaultValue: "Share contact card"))
+                                .accessibilityHint(String(localized: "accessibility_share_contact_hint", defaultValue: "Shares your payment address as a contact"))
                             }
                         }
                         .padding(.horizontal)
@@ -192,7 +192,7 @@ struct ReceiveView_iOS: View {
             }
         }
         .frame(width: width)
-        .accessibilityLabel(String(localized: "accessibility_payment_qr"))
+        .accessibilityLabel(L10n.accessibilityPaymentQr)
     }
     
     @ViewBuilder
@@ -202,7 +202,7 @@ struct ReceiveView_iOS: View {
             Spacer()
                 .frame(height: 135)
             
-            Text("receive_request_a_payment")
+            Text(String(localized: "receive_request_a_payment", defaultValue: "Request a Payment"))
                 .font(.system(size: 24, design: .serif))
                 .multilineTextAlignment(.center)
             
@@ -225,7 +225,7 @@ struct ReceiveView_iOS: View {
         .padding(.horizontal)
         .frame(width: width)
         .frame(maxHeight: .infinity)
-        .accessibilityLabel(String(localized: "accessibility_lightning_invoice_form"))
+        .accessibilityLabel(String(localized: "accessibility_lightning_invoice_form", defaultValue: "Lightning invoice form"))
     }
 }
 

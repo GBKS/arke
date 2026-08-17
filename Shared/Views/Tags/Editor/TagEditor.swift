@@ -183,7 +183,7 @@ struct TagEditor: View {
     @ViewBuilder
     private var nameExistsWarning: some View {
         Label {
-            Text("tags_name_exists")
+            Text(String(localized: "tags_name_exists", defaultValue: "A tag with this name already exists"))
         } icon: {
             Image(systemName: "exclamationmark.triangle")
         }

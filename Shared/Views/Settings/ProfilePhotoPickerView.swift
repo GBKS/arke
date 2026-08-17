@@ -119,19 +119,18 @@ struct ProfilePhotoPickerView: View {
         }
         .buttonStyle(.plain)
         .offset(x: 4, y: 4)
-        .confirmationDialog(
-            "action_remove_photo",
+        .confirmationDialog(String(localized: "action_remove_photo", defaultValue: "Remove Photo"),
             isPresented: $showingRemoveConfirmation,
             titleVisibility: .visible
         ) {
-            Button("action_remove", role: .destructive) {
+            Button(L10n.actionRemove, role: .destructive) {
                 withAnimation {
                     avatarData = nil
                 }
             }
-            Button("button_cancel", role: .cancel) {}
+            Button(L10n.buttonCancel, role: .cancel) {}
         } message: {
-            Text("profile_remove_photo_confirm")
+            Text(String(localized: "profile_remove_photo_confirm", defaultValue: "Are you sure you want to remove your profile photo?"))
         }
     }
 

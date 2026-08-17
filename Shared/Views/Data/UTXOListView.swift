@@ -24,7 +24,7 @@ struct UTXOListView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("label_utxos")
+                    Text(String(localized: "label_utxos", defaultValue: "UTXOs"))
                         .font(.system(size: 24, design: .serif))
                     
                     if !utxos.isEmpty {
@@ -73,7 +73,7 @@ struct UTXOListView: View {
                 VStack {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
-                    Text("balance_no_utxos")
+                    Text(String(localized: "balance_no_utxos", defaultValue: "No UTXOs found"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

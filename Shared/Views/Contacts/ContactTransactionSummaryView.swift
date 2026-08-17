@@ -16,7 +16,7 @@ struct ContactTransactionSummaryView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("status_sent")
+                    Text(String(localized: "status_sent", defaultValue: "Sent"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -29,7 +29,7 @@ struct ContactTransactionSummaryView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("status_received")
+                    Text(String(localized: "status_received", defaultValue: "Received"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     

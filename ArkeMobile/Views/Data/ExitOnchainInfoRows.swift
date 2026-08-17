@@ -19,7 +19,7 @@ struct ExitOnchainInfoRows: View {
         VStack(alignment: .leading, spacing: 8) {
             // Confirmation status
             HStack {
-                Text("activity_confirmations")
+                Text(String(localized: "activity_confirmations", defaultValue: "Confirmations"))
                     .foregroundStyle(.secondary)
                 Spacer()
 
@@ -33,20 +33,20 @@ struct ExitOnchainInfoRows: View {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(Color.Arke.green)
-                        Text("status_confirmed")
+                        Text(L10n.statusConfirmed)
                     }
                 } else {
                     HStack(spacing: 4) {
                         Image(systemName: "clock")
                             .foregroundStyle(Color.Arke.orange)
-                        Text("activity_unconfirmed")
+                        Text(L10n.activityUnconfirmed)
                     }
                 }
             }
 
             // When the wallet recorded it (BDK confirmation time once confirmed)
             HStack {
-                Text("label_date")
+                Text(String(localized: "label_date", defaultValue: "Date"))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(transaction.formattedDate)
@@ -55,7 +55,7 @@ struct ExitOnchainInfoRows: View {
             // Amount (if applicable)
             if transaction.amount != 0 {
                 HStack {
-                    Text("label_amount")
+                    Text(L10n.labelAmount)
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(BitcoinFormatter.shared.formatAmount(transaction.amount))
@@ -65,7 +65,7 @@ struct ExitOnchainInfoRows: View {
             // Onchain fee
             if let onchainFee = transaction.onchainFeeSat, onchainFee > 0 {
                 HStack {
-                    Text("activity_network_fee")
+                    Text(L10n.activityNetworkFee)
                         .foregroundStyle(.secondary)
                     Spacer()
                     Text(BitcoinFormatter.shared.formatAmount(Int(onchainFee)))

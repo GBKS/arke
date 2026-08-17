@@ -30,9 +30,9 @@ struct AddressListItem: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .buttonBorderShape(.circle)
-                .accessibilityLabel("action_send_address")
+                .accessibilityLabel(L10n.actionSendAddress)
                 #if os(macOS)
-                .help("action_send_address")
+                .help(L10n.actionSendAddress)
                 #endif
                 
                 // Address info
@@ -64,10 +64,10 @@ struct AddressListItem: View {
                             .font(.body)
                             .tint(Color.Arke.gold4)
                     }
-                    .accessibilityLabel("action_edit_address")
+                    .accessibilityLabel(L10n.actionEditAddress)
                     .buttonStyle(.bordered)
                     #if os(macOS)
-                    .help("action_edit_address")
+                    .help(L10n.actionEditAddress)
                     #endif
                 }
             }
@@ -83,12 +83,12 @@ struct AddressListItem: View {
         .cornerRadius(8)
         .contextMenu {
             Button(action: copyAddress) {
-                Label("action_copy", systemImage: "doc.on.doc")
+                Label(String(localized: "action_copy", defaultValue: "Copy"), systemImage: "doc.on.doc")
             }
             
             if isEditable && !address.isPrimary {
                 Button(action: onSetPrimary) {
-                    Label("button_set_primary", systemImage: "star.fill")
+                    Label(String(localized: "button_set_primary", defaultValue: "Set as Primary"), systemImage: "star.fill")
                 }
             }
         }

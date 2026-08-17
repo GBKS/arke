@@ -19,7 +19,7 @@ struct ActionButtonsView: View {
             // Share button
             if let shareContent = shareContent {
                 ShareLink(item: shareContent) {
-                    Text("button_share")
+                    Text(L10n.buttonShare)
                         .font(.system(size: 21, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 40)
@@ -42,7 +42,7 @@ struct ActionButtonsView: View {
                 .buttonStyle(.glassProminent)
                 .controlSize(.regular)
                 .tint(Color.Arke.gold)
-                .accessibilityLabel("button_back")
+                .accessibilityLabel(L10n.buttonBack)
             }
         }
     }

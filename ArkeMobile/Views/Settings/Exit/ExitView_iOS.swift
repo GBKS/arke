@@ -182,14 +182,14 @@ struct ExitView_iOS: View {
                 await estimateExitCost()
             }
         }
-        .alert("action_start_forced_move", isPresented: $showingStartConfirmation) {
-            Button("button_cancel", role: .cancel) { }
+        .alert(String(localized: "action_start_forced_move", defaultValue: "Start a forced move"), isPresented: $showingStartConfirmation) {
+            Button(L10n.buttonCancel, role: .cancel) { }
             if let estimate = exitCostEstimate, !estimate.canAfford {
-                Button("settings_board_funds") {
+                Button(String(localized: "settings_board_funds", defaultValue: "Board Funds")) {
                     // TODO: Navigate to board flow
                 }
             } else {
-                Button("button_start") {
+                Button(L10n.buttonStart) {
                     Task {
                         await startExit()
                     }
@@ -208,7 +208,7 @@ struct ExitView_iOS: View {
                     This takes about 24 hours and cannot be cancelled.
                     """)
                     */
-                    Text("settings_forced_move_duration_warning")
+                    Text(String(localized: "settings_forced_move_duration_warning", defaultValue: "This takes about 10+ hours and cannot be cancelled."))
                 } else {
                     Text("""
                     ⚠️ Insufficient onchain balance
@@ -225,8 +225,8 @@ struct ExitView_iOS: View {
             }
         }
         .tint(Color.Arke.gold4)
-        .alert("error_title", isPresented: $showingError) {
-            Button("button_ok") { }
+        .alert(L10n.errorTitle, isPresented: $showingError) {
+            Button(L10n.buttonOk) { }
         } message: {
             Text(errorMessage ?? "An error occurred")
         }

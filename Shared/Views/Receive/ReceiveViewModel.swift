@@ -45,10 +45,10 @@ final class ReceiveViewModel {
     
     var balanceTypeLabel: String {
         switch selectedBalance {
-        case .payments: return String(localized: "receive_balance_payments")
-        case .savings: return String(localized: "receive_balance_savings")
-        case .lightning: return String(localized: "network_lightning")
-        case .paymentsAndSavings: return String(localized: "receive_payments_and_savings")
+        case .payments: return String(localized: "receive_balance_payments", defaultValue: "Payments")
+        case .savings: return String(localized: "receive_balance_savings", defaultValue: "Savings")
+        case .lightning: return L10n.networkLightning
+        case .paymentsAndSavings: return String(localized: "receive_payments_and_savings", defaultValue: "Payments and Savings")
         }
     }
     

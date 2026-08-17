@@ -8,12 +8,12 @@
 import SwiftUI
 
 public struct DetailRow: View {
-    let title: LocalizedStringKey
+    let title: String
     let value: String
     let isCopyable: Bool
     let onCopy: ((String) -> Void)?
 
-    public init(title: LocalizedStringKey, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
+    public init(title: String, value: String, isCopyable: Bool = false, onCopy: ((String) -> Void)? = nil) {
         self.title = title
         self.value = value
         self.isCopyable = isCopyable

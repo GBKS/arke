@@ -30,7 +30,7 @@ struct TransactionTagView: View {
                     FlowLayout(alignment: .leading, spacing: 8) {
                         // Add tags button styled like a TagChip
                         /*
-                        Button("button_add_tags") {
+                        Button(String(localized: "button_add_tags", defaultValue: "Add tags")) {
                             showingTagSelector = true
                         }
                         .padding(.horizontal, 10)
@@ -51,7 +51,7 @@ struct TransactionTagView: View {
                         Button{
                             showingTagSelector = true
                         } label: {
-                            Text("button_add_tags")
+                            Text(String(localized: "button_add_tags", defaultValue: "Add tags"))
                                 .font(.body)
                                 .fontWeight(.medium)
                                 .foregroundStyle(Color.Arke.gold2)
@@ -75,7 +75,7 @@ struct TransactionTagView: View {
                     if !transaction.isInternalTransfer {
                         // Edit tags button styled like a TagChip
                         /*
-                        Button("label_change") {
+                        Button(L10n.labelChange) {
                             showingTagSelector = true
                         }
                         .padding(.horizontal, 10)
@@ -99,7 +99,7 @@ struct TransactionTagView: View {
                             Image(systemName: "paintbrush.pointed.fill")
                                 .font(.body)
                         }
-                        .accessibilityLabel("action_change_tags")
+                        .accessibilityLabel(String(localized: "action_change_tags", defaultValue: "Change tags"))
                         .buttonStyle(.bordered)
                         .disabled(isLoading)
                         
@@ -110,7 +110,7 @@ struct TransactionTagView: View {
                                 .font(.body)
                                 .tint(Color.Arke.gold4)
                         }
-                        .accessibilityLabel("action_edit_address")
+                        .accessibilityLabel(L10n.actionEditAddress)
                         .buttonStyle(.bordered)
                          */
                     }

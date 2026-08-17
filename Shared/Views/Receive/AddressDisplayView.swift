@@ -112,7 +112,7 @@ struct AddressDisplayView: View {
             .padding(.horizontal, 25)
             .padding(.vertical, 20)
         } else {
-            ProgressView("progress_loading_address")
+            ProgressView(String(localized: "progress_loading_address", defaultValue: "Loading address..."))
         }
     }
     
@@ -151,7 +151,7 @@ struct AddressDisplayView: View {
                     )
                 }
             } else {
-                ProgressView(String(localized: "progress_loading_address"))
+                ProgressView(L10n.progressLoadingAddress)
             }
             
             Divider()
@@ -187,7 +187,7 @@ struct AddressDisplayView: View {
                     )
                 }
             } else {
-                ProgressView(String(localized: "progress_loading_address"))
+                ProgressView(L10n.progressLoadingAddress)
             }
         }
         .padding(.horizontal, 20)
@@ -201,10 +201,10 @@ struct AddressDisplayView: View {
                 .font(.largeTitle)
                 .foregroundStyle(.orange)
             
-            Text("label_lightning_network")
+            Text(String(localized: "label_lightning_network", defaultValue: "Lightning Network"))
                 .font(.headline)
             
-            Text(String(localized: "message_lightning_coming_soon"))
+            Text(String(localized: "message_lightning_coming_soon", defaultValue: "Lightning support coming soon... maybe!?"))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }

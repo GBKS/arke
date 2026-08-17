@@ -63,12 +63,12 @@ struct QRScannerView_iOS: View {
                 .font(.system(size: 60))
                 .foregroundStyle(.white)
             
-            Text("error_camera_access_required")
+            Text(String(localized: "error_camera_access_required", defaultValue: "Camera Access Required"))
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
             
-            Text("message_enable_camera")
+            Text(String(localized: "message_enable_camera", defaultValue: "Please enable camera access in Settings to scan QR codes"))
                 .font(.body)
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
@@ -78,7 +78,7 @@ struct QRScannerView_iOS: View {
                 Button {
                     UIApplication.shared.open(settingsURL)
                 } label: {
-                    Text("button_open_settings")
+                    Text(String(localized: "button_open_settings", defaultValue: "Open Settings"))
                         .fontWeight(.semibold)
                         .foregroundStyle(.black)
                         .padding(.horizontal, 24)

@@ -17,7 +17,7 @@ struct ConfigurationSectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("data_configuration")
+            Text(String(localized: "data_configuration", defaultValue: "Configuration"))
                 .font(.system(size: 24, design: .serif))
                 .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -32,7 +32,7 @@ struct ConfigurationSectionView: View {
                 VStack {
                     Image(systemName: "gear")
                         .foregroundStyle(.secondary)
-                    Text("data_no_configuration")
+                    Text(String(localized: "data_no_configuration", defaultValue: "No configuration data"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

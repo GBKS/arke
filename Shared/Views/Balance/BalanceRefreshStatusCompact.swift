@@ -65,7 +65,7 @@ struct BalanceRefreshStatusCompact: View {
                 .background(.white.opacity(0.15))
                 .cornerRadius(6)
             
-            Text("progress_loading")
+            Text(String(localized: "progress_loading", defaultValue: "Loading..."))
                 .font(.body)
                 .fontWeight(.medium)
                 .foregroundStyle(.white)
@@ -97,11 +97,11 @@ struct BalanceRefreshStatusCompact: View {
             
             // Status text on the left
             if data.hasActiveRefresh {
-                Text("balance_refreshing")
+                Text(String(localized: "balance_refreshing", defaultValue: "Refreshing"))
                     .font(.body)
                     .foregroundStyle(data.urgencyForegroundColor)
             } else if data.statusMessage.isEmpty {
-                Text("balance_no_refresh_needed")
+                Text(String(localized: "balance_no_refresh_needed", defaultValue: "No refresh needed"))
                     .font(.body)
                     .foregroundStyle(data.urgencyForegroundColor)
             } else {
@@ -116,7 +116,7 @@ struct BalanceRefreshStatusCompact: View {
             if data.hasActiveRefresh {
                 if let nextRound = timeUntilNextRound {
                     HStack(spacing: 4) {
-                        Text("balance_next_round")
+                        Text(String(localized: "balance_next_round", defaultValue: "Next round"))
                             .font(.body)
                             .foregroundStyle(data.urgencyForegroundColor)
                         Text(nextRound)

@@ -66,7 +66,7 @@ struct SendModalContentView: View {
                         onDismiss()
                         onDismissEntireView?()
                     } label: {
-                        Text("button_done")
+                        Text(L10n.buttonDone)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .padding(.horizontal, 20)
@@ -82,7 +82,7 @@ struct SendModalContentView: View {
                     Button {
                         onDismiss()
                     } label: {
-                        Text("button_cancel")
+                        Text(L10n.buttonCancel)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .padding(.horizontal, 20)
@@ -120,23 +120,23 @@ struct SendModalContentView: View {
         }
     }
     
-    private var stateTitle: LocalizedStringKey {
+    private var stateTitle: String {
         switch state {
         case .sending:
-            return "status_sending_payment"
+            return String(localized: "status_sending_payment", defaultValue: "Sending Payment")
         case .success:
-            return "status_payment_sent"
+            return String(localized: "status_payment_sent", defaultValue: "Payment Sent")
         case .error:
-            return "error_payment_failed"
+            return String(localized: "error_payment_failed", defaultValue: "Payment Failed")
         }
     }
     
-    private var stateMessage: LocalizedStringKey? {
+    private var stateMessage: String? {
         switch state {
         case .sending:
-            return "onboarding_relax"
+            return String(localized: "onboarding_relax", defaultValue: "Relax your mind and body.")
         case .success:
-            return "message_confirm_shortly"
+            return String(localized: "message_confirm_shortly", defaultValue: "It will be confirmed shortly.")
         case .error:
             return nil // Error message comes from the error itself
         }

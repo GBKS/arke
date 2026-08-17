@@ -332,7 +332,7 @@ struct ContactPaymentView: View {
                     if isResolvingBIP353 {
                         HStack {
                             ProgressView()
-                            Text(String(localized: "status_resolving_address"))
+                            Text(String(localized: "status_resolving_address", defaultValue: "Resolving address..."))
                                 .foregroundColor(.secondary)
                         }
                         .padding()
@@ -345,7 +345,7 @@ struct ContactPaymentView: View {
                         SheetDestinationDisplayView(
                             primaryDisplayDestination: primaryDisplayDestination,
                             alternativeDisplayDestinations: alternativeDisplayDestinations,
-                            primaryDestinationLabel: String(localized: "label_addresses"),
+                            primaryDestinationLabel: String(localized: "label_addresses", defaultValue: "Addresses"),
                             isSimpleAddress: false,
                             showMatchedContact: false,
                             formatNameOverride: matchedContactAddress?.address,
@@ -436,7 +436,7 @@ struct ContactPaymentView: View {
             Button {
                 onSend()
             } label: {
-                Text("button_send")
+                Text(L10n.buttonSend)
                     .font(.title2)
                     .foregroundStyle(Color.Arke.gold4)
                     .padding(.horizontal, 40)
@@ -452,7 +452,7 @@ struct ContactPaymentView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("button_done") {
+                Button(L10n.buttonDone) {
                     isAmountFieldFocused = false
                 }
             }

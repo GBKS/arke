@@ -26,7 +26,7 @@ struct TransactionNotesSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            TextField(String(localized: "placeholder_add_note"), text: $notesText, axis: .vertical)
+            TextField(L10n.placeholderAddNote, text: $notesText, axis: .vertical)
                 .lineLimit(1...10)
                 .textFieldStyle(.plain)
                 .font(.body)
@@ -55,7 +55,7 @@ struct TransactionNotesSection: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("button_done") {
+                Button(L10n.buttonDone) {
                     isNotesFocused = false
                 }
             }
@@ -110,8 +110,8 @@ struct TransactionNotesSection: View {
                 await saveNotesImmediately(for: currentTransactionId)
             }
         }
-        .alert("error_save_notes", isPresented: $showError) {
-            Button("button_ok", role: .cancel) { }
+        .alert(String(localized: "error_save_notes", defaultValue: "Failed to Save Notes"), isPresented: $showError) {
+            Button(L10n.buttonOk, role: .cancel) { }
         } message: {
             Text(errorMessage)
         }

@@ -17,7 +17,7 @@ struct ArkInfoSectionView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("data_ark_info")
+            Text(String(localized: "data_ark_info", defaultValue: "Ark Info"))
                 .font(.system(size: 24, design: .serif))
                 .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -32,7 +32,7 @@ struct ArkInfoSectionView: View {
                 VStack {
                     Image(systemName: "info.circle")
                         .foregroundStyle(.secondary)
-                    Text("data_no_ark_info")
+                    Text(String(localized: "data_no_ark_info", defaultValue: "No ark info data"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

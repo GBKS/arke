@@ -35,7 +35,7 @@ struct UserProfileSettingView: View {
                 .padding(.top, 20)
 
                 // Name field
-                TextField("profile_name_placeholder", text: $name)
+                TextField(String(localized: "profile_name_placeholder", defaultValue: "Enter your name"), text: $name)
                     .textFieldStyle(.plain)
                     .font(.system(size: 24, design: .serif))
                     .multilineTextAlignment(.center)
@@ -62,7 +62,7 @@ struct UserProfileSettingView: View {
             #endif
         }
         .background(Color.systemBackground)
-        .navigationTitle("settings_my_profile")
+        .navigationTitle(String(localized: "settings_my_profile", defaultValue: "My Profile"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif

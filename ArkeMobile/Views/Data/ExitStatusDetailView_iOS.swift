@@ -60,7 +60,7 @@ struct ExitStatusDetailView_iOS: View {
 
                 if progress.isCancelled {
                     Section {
-                        Label("exit_cancelled_explanation", systemImage: "xmark.circle")
+                        Label(String(localized: "exit_cancelled_explanation", defaultValue: "This move was cancelled because the funds were already moved another way. Nothing was lost."), systemImage: "xmark.circle")
                             .foregroundStyle(.secondary)
                     }
                 } else {
@@ -78,7 +78,7 @@ struct ExitStatusDetailView_iOS: View {
                 }
 
                 if let history = status.history, !history.isEmpty {
-                    Section(String(localized: "data_state_history")) {
+                    Section(String(localized: "data_state_history", defaultValue: "State History")) {
                         ForEach(Array(history.enumerated()), id: \.offset) { index, state in
                             StateHistoryRow(index: index, state: state)
                         }
@@ -90,7 +90,7 @@ struct ExitStatusDetailView_iOS: View {
                 Section {
                     HStack {
                         ProgressView()
-                        Text(String(localized: "status_loading_status"))
+                        Text(String(localized: "status_loading_status", defaultValue: "Loading detailed status..."))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -101,7 +101,7 @@ struct ExitStatusDetailView_iOS: View {
                 }
             }
         }
-        .navigationTitle("balance_exit_status")
+        .navigationTitle(String(localized: "balance_exit_status", defaultValue: "Force Move Status"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -334,7 +334,7 @@ struct ExitStatusSheet: View {
             ExitStatusDetailView_iOS(vtxoId: vtxoId, exitVtxo: exitVtxo)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("button_done") {
+                        Button(L10n.buttonDone) {
                             dismiss()
                         }
                     }
@@ -358,20 +358,20 @@ private struct ExitProgressHeaderView: View {
     var body: some View {
         Group {
             if let exitVtxo {
-                HeaderRow(labelKey: "label_amount", value: BitcoinFormatter.shared.formatAmount(Int(exitVtxo.amountSats)))
+                HeaderRow(label: L10n.labelAmount, value: BitcoinFormatter.shared.formatAmount(Int(exitVtxo.amountSats)))
             }
 
             if progress.isCancelled {
-                Label("data_vtxo_already_spent", systemImage: "xmark.circle")
+                Label(String(localized: "data_vtxo_already_spent", defaultValue: "Funds Already Spent"), systemImage: "xmark.circle")
                     .foregroundStyle(.secondary)
             } else {
                 // Always show the fee row so users know where to expect fee
                 // information; "—" stands in until the first fee is known
                 let feeValue = totalFeesPaid > 0 ? BitcoinFormatter.shared.formatAmount(totalFeesPaid) : "—"
                 if progress.phase == .complete {
-                    HeaderRow(labelKey: "exit_fees_total", value: feeValue)
+                    HeaderRow(label: String(localized: "exit_fees_total", defaultValue: "Network Fees"), value: feeValue)
                 } else {
-                    HeaderRow(labelKey: "exit_fees_so_far", value: feeValue)
+                    HeaderRow(label: String(localized: "exit_fees_so_far", defaultValue: "Network Fees So Far"), value: feeValue)
                 }
             }
         }
@@ -379,12 +379,12 @@ private struct ExitProgressHeaderView: View {
 }
 
 private struct HeaderRow: View {
-    let labelKey: LocalizedStringKey
+    let label: String
     let value: String
 
     var body: some View {
         HStack {
-            Text(labelKey)
+            Text(label)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
@@ -491,19 +491,19 @@ private struct ExitStepRow: View {
     private var title: Text {
         switch step.kind {
         case .prepare:
-            return Text("exit_step_prepare")
+            return Text(String(localized: "exit_step_prepare", defaultValue: "Start"))
         case .confirmTransaction(let index, let total, _):
             if total > 1 {
-                return Text("exit_step_confirm_transaction \(index)")
+                return Text(String(localized: "exit_step_confirm_transaction %lld", defaultValue: "Transaction \(index)"))
             } else {
-                return Text("exit_step_confirm_transaction_single")
+                return Text(String(localized: "exit_step_confirm_transaction_single", defaultValue: "Transaction"))
             }
         case .waitForUnlock:
-            return Text("exit_step_wait_unlock")
+            return Text(String(localized: "exit_step_wait_unlock", defaultValue: "Wait for unlock"))
         case .claim:
-            return Text("exit_step_claim")
+            return Text(String(localized: "exit_step_claim", defaultValue: "Claim"))
         case .complete:
-            return Text("exit_step_complete")
+            return Text(String(localized: "exit_step_complete", defaultValue: "Complete"))
         }
     }
 
@@ -519,7 +519,7 @@ private struct ExitStepRow: View {
     private var statusText: Text? {
         switch step.kind {
         case .prepare:
-            return Text("exit_step_prepare_status")
+            return Text(String(localized: "exit_step_prepare_status", defaultValue: "Preparing"))
         case .confirmTransaction(_, _, let transaction):
             guard let transaction else { return nil }
             return transactionStatusText(transaction.status)
@@ -527,9 +527,9 @@ private struct ExitStepRow: View {
             if let blocksUntilUnlock, blocksUntilUnlock > 0 {
                 return Text(verbatim: estimatedUnlockTime(blocks: blocksUntilUnlock))
             }
-            return Text("status_exit_finalizing")
+            return Text(String(localized: "status_exit_finalizing", defaultValue: "Finalizing"))
         case .claim:
-            return Text("exit_step_claim_status")
+            return Text(String(localized: "exit_step_claim_status", defaultValue: "Broadcasting claim transaction"))
         case .complete:
             return nil
         }
@@ -559,11 +559,11 @@ private struct ExitStepRow: View {
 
             case .confirmTransaction(_, _, let transaction):
                 if let transaction {
-                    LabeledTxidRow(labelKey: "activity_transaction_id", txid: transaction.txid)
-                    StepDetailTextRow(labelKey: "label_status", value: transactionStatusText(transaction.status))
+                    LabeledTxidRow(label: L10n.activityTransactionId, txid: transaction.txid)
+                    StepDetailTextRow(label: String(localized: "label_status", defaultValue: "Status"), value: transactionStatusText(transaction.status))
 
                     if case .confirmed(let data) = transaction.status {
-                        StepDetailRow(labelKey: "data_confirmed_block", value: "\(data.block.height)")
+                        StepDetailRow(label: String(localized: "data_confirmed_block", defaultValue: "Confirmed Block"), value: "\(data.block.height)")
                     }
 
                     // Onchain wallet view of this transaction: confirmations,
@@ -575,7 +575,7 @@ private struct ExitStepRow: View {
                     // A third party spent this transaction's anchor to speed
                     // it up — their fee, not ours
                     if externalBumpChild(of: transaction.status) != nil {
-                        Label("exit_fee_bumped_externally", systemImage: "person.2")
+                        Label(String(localized: "exit_fee_bumped_externally", defaultValue: "Sped up by a third party — their fee, not yours"), systemImage: "person.2")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -583,34 +583,34 @@ private struct ExitStepRow: View {
 
             case .waitForUnlock(let confirmedBlock, let claimableHeight):
                 if let confirmedBlock {
-                    StepDetailRow(labelKey: "data_confirmed_block", value: "\(confirmedBlock.height)")
+                    StepDetailRow(label: String(localized: "data_confirmed_block", defaultValue: "Confirmed Block"), value: "\(confirmedBlock.height)")
                 }
                 if let claimableHeight {
-                    StepDetailRow(labelKey: "data_claimable_height", value: "\(claimableHeight)")
+                    StepDetailRow(label: String(localized: "data_claimable_height", defaultValue: "Claimable Height"), value: "\(claimableHeight)")
                 }
                 if let blocksUntilUnlock, blocksUntilUnlock > 0 {
-                    StepDetailRow(labelKey: "data_estimated_time", value: estimatedUnlockTime(blocks: blocksUntilUnlock))
+                    StepDetailRow(label: String(localized: "data_estimated_time", defaultValue: "Estimated time"), value: estimatedUnlockTime(blocks: blocksUntilUnlock))
                 }
 
             case .claim(let claimTxid):
                 if let claimTxid {
-                    LabeledTxidRow(labelKey: "data_claim_tx", txid: claimTxid)
+                    LabeledTxidRow(label: String(localized: "data_claim_tx", defaultValue: "Claim TX"), txid: claimTxid)
 
                     // While the claim is in flight, its onchain record shows
                     // live confirmations; once done, the complete step owns it
                     if step.state == .current, let linkedTransaction {
                         ExitOnchainInfoRows(transaction: linkedTransaction)
                     } else if let fee = linkedTransaction?.onchainFeeSat, fee > 0 {
-                        StepDetailRow(labelKey: "activity_network_fee", value: BitcoinFormatter.shared.formatAmount(fee))
+                        StepDetailRow(label: L10n.activityNetworkFee, value: BitcoinFormatter.shared.formatAmount(fee))
                     }
                 }
 
             case .complete(let txid, let block):
                 if let txid {
-                    LabeledTxidRow(labelKey: "data_claim_tx", txid: txid)
+                    LabeledTxidRow(label: String(localized: "data_claim_tx", defaultValue: "Claim TX"), txid: txid)
                 }
                 if let block {
-                    StepDetailRow(labelKey: "data_block", value: "\(block.height)")
+                    StepDetailRow(label: String(localized: "data_block", defaultValue: "Block"), value: "\(block.height)")
                 }
                 if let linkedTransaction {
                     ExitOnchainInfoRows(transaction: linkedTransaction)
@@ -639,13 +639,13 @@ private struct ExitStepRow: View {
     private func transactionStatusText(_ status: ExitTxStatus) -> Text {
         switch status {
         case .verifyInputs, .needsSignedPackage, .awaitingCpfpBroadcast, .needsBroadcasting:
-            return Text("exit_tx_status_preparing")
+            return Text(String(localized: "exit_tx_status_preparing", defaultValue: "Preparing"))
         case .broadcastWithCpfp:
-            return Text("exit_tx_status_broadcast")
+            return Text(String(localized: "exit_tx_status_broadcast", defaultValue: "Confirming"))
         case .awaitingInputConfirmation:
             return Text("Waiting")
         case .confirmed:
-            return Text("status_confirmed")
+            return Text(L10n.statusConfirmed)
         case .unparsed:
             return Text("—")
         }
@@ -662,19 +662,19 @@ private struct CopyableTxidRow: View {
                 Button {
                     UIPasteboard.general.string = txid
                 } label: {
-                    Label("data_copy_transaction_id", systemImage: "doc.on.doc")
+                    Label(String(localized: "data_copy_transaction_id", defaultValue: "Copy Transaction ID"), systemImage: "doc.on.doc")
                 }
             }
     }
 }
 
 private struct LabeledTxidRow: View {
-    let labelKey: LocalizedStringKey
+    let label: String
     let txid: String
 
     var body: some View {
         HStack {
-            Text(labelKey)
+            Text(label)
                 .foregroundStyle(.secondary)
             Spacer()
             CopyableTxidRow(txid: txid)
@@ -685,12 +685,12 @@ private struct LabeledTxidRow: View {
 
 /// Like StepDetailRow, but for localized (non-monospaced) values.
 private struct StepDetailTextRow: View {
-    let labelKey: LocalizedStringKey
+    let label: String
     let value: Text
 
     var body: some View {
         HStack {
-            Text(labelKey)
+            Text(label)
                 .foregroundStyle(.secondary)
             Spacer()
             value
@@ -700,12 +700,12 @@ private struct StepDetailTextRow: View {
 }
 
 private struct StepDetailRow: View {
-    let labelKey: LocalizedStringKey
+    let label: String
     let value: String
 
     var body: some View {
         HStack {
-            Text(labelKey)
+            Text(label)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
@@ -724,7 +724,7 @@ private struct TechnicalDetailsSection: View {
     let status: ExitTransactionStatus
 
     var body: some View {
-        Section("data_technical_details") {
+        Section(L10n.dataTechnicalDetails) {
             LabeledContent("label_vtxo_id") {
                 Text(vtxoId)
                     .font(.system(.caption, design: .monospaced))
@@ -736,7 +736,7 @@ private struct TechnicalDetailsSection: View {
                     .font(.system(.caption, design: .monospaced))
             }
 
-            LabeledContent(String(localized: "activity_transaction_count"), value: "\(status.transactionCount)")
+            LabeledContent(String(localized: "activity_transaction_count", defaultValue: "Transaction Count"), value: "\(status.transactionCount)")
 
             let txids = status.allTransactionIds
             if !txids.isEmpty {
@@ -746,7 +746,7 @@ private struct TechnicalDetailsSection: View {
                     }
                 } label: {
                     HStack {
-                        Text("data_transaction_ids")
+                        Text(String(localized: "data_transaction_ids", defaultValue: "Transaction IDs:"))
                         Spacer()
                         Text("\(txids.count)")
                             .foregroundStyle(.secondary)
@@ -765,23 +765,23 @@ private struct ParsedStateLabel: View {
     var body: some View {
         switch parsed {
         case .start:
-            Label("button_start", systemImage: "flag")
+            Label(L10n.buttonStart, systemImage: "flag")
         case .processing:
-            Label("data_processing", systemImage: "gearshape")
+            Label(L10n.dataProcessing, systemImage: "gearshape")
         case .awaitingDelta:
-            Label("data_awaiting_delta", systemImage: "clock")
+            Label(String(localized: "data_awaiting_delta", defaultValue: "Awaiting Delta"), systemImage: "clock")
         case .claimable:
-            Label("data_claimable", systemImage: "checkmark.circle")
+            Label(String(localized: "data_claimable", defaultValue: "Claimable"), systemImage: "checkmark.circle")
         case .claimInProgress:
-            Label("data_claim_in_progress", systemImage: "arrow.down.circle")
+            Label(String(localized: "data_claim_in_progress", defaultValue: "Claim In Progress"), systemImage: "arrow.down.circle")
         case .claimed:
-            Label("data_claimed", systemImage: "checkmark.circle.fill")
+            Label(String(localized: "data_claimed", defaultValue: "Claimed"), systemImage: "checkmark.circle.fill")
         case .vtxoAlreadySpent:
-            Label("data_vtxo_already_spent", systemImage: "xmark.circle")
+            Label(String(localized: "data_vtxo_already_spent", defaultValue: "Funds Already Spent"), systemImage: "xmark.circle")
         case .canceled:
-            Label("transaction_cancelled", systemImage: "xmark.circle")
+            Label(L10n.transactionCancelled, systemImage: "xmark.circle")
         case .unparsed:
-            Label("data_unknown", systemImage: "questionmark.circle")
+            Label(L10n.dataUnknown, systemImage: "questionmark.circle")
         }
     }
 }
@@ -839,7 +839,7 @@ private struct ParsedStateDetails: View {
 
                 if !data.transactions.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("data_transaction_ids")
+                        Text(String(localized: "data_transaction_ids", defaultValue: "Transaction IDs:"))
                             .font(.caption2.bold())
                             .foregroundStyle(.secondary)
 

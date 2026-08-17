@@ -36,7 +36,7 @@ struct ContactInfoBanner: View {
             #endif
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("send_sending_to")
+                Text(String(localized: "send_sending_to", defaultValue: "Sending to"))
                     .font(.title3)
                     .foregroundColor(.secondary)
                 
@@ -65,7 +65,7 @@ struct ContactInfoBanner: View {
                     .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
-            .help("action_clear_contact")
+            .help(L10n.actionClearContact)
         }
     }
 }

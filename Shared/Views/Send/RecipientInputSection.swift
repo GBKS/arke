@@ -25,7 +25,7 @@ struct RecipientInputSection: View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack(spacing: 8) {
-                Text("send_recipient_address")
+                Text(String(localized: "send_recipient_address", defaultValue: "Send to"))
                     .font(.body)
                     .fontWeight(.medium)
                 
@@ -35,7 +35,7 @@ struct RecipientInputSection: View {
                         .font(.body)
                 }
                 .buttonStyle(.plain)
-                .help("action_show_address_formats")
+                .help(String(localized: "action_show_address_formats", defaultValue: "Show supported address formats"))
                 
                 if case .valid = state {
                     Button(action: { showingAddressReview = true }) {
@@ -44,7 +44,7 @@ struct RecipientInputSection: View {
                             .font(.body)
                     }
                     .buttonStyle(.plain)
-                    .help("send_review_address")
+                    .help(String(localized: "send_review_address", defaultValue: "Review address"))
                 } else if case .bip353Resolved = state {
                     Button(action: { showingAddressReview = true }) {
                         Image(systemName: "magnifyingglass")
@@ -52,7 +52,7 @@ struct RecipientInputSection: View {
                             .font(.body)
                     }
                     .buttonStyle(.plain)
-                    .help("send_review_address")
+                    .help(String(localized: "send_review_address", defaultValue: "Review address"))
                 }
                 
                 Spacer()
@@ -64,7 +64,7 @@ struct RecipientInputSection: View {
             // Input field
             BitcoinAddressField(
                 text: $input,
-                placeholder: String(localized: "placeholder_enter_address"),
+                placeholder: String(localized: "placeholder_enter_address", defaultValue: "Enter address..."),
                 isFocused: $isRecipientFieldFocused
             )
             //.frame(maxHeight: 120)

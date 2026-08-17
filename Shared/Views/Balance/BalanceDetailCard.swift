@@ -52,7 +52,7 @@ struct BalanceDetailCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("status_available")
+                            Text(String(localized: "status_available", defaultValue: "Available"))
                                 .font(.body)
                                 .foregroundColor(.white.opacity(0.75))
                             Spacer()
@@ -62,7 +62,7 @@ struct BalanceDetailCard: View {
                                     .fontWeight(.medium)
                                     .foregroundColor(.white)
                             } else {
-                                Text("symbol_em_dash")
+                                Text(L10n.symbolEmDash)
                                     .font(.body)
                                     .foregroundColor(.white)
                             }
@@ -90,7 +90,7 @@ struct BalanceDetailCard: View {
                                 }
                             } else {
                                 HStack {
-                                    Text("status_pending")
+                                    Text(L10n.statusPending)
                                         .font(.body)
                                         .foregroundColor(.white.opacity(0.75))
                                     Spacer()
@@ -100,7 +100,7 @@ struct BalanceDetailCard: View {
                                             .fontWeight(.medium)
                                             .foregroundColor(.white)
                                     } else {
-                                        Text("symbol_em_dash")
+                                        Text(L10n.symbolEmDash)
                                             .font(.body)
                                             .foregroundColor(.white)
                                     }
@@ -114,7 +114,7 @@ struct BalanceDetailCard: View {
                             }
                         } else {
                             HStack {
-                                Text("status_pending")
+                                Text(L10n.statusPending)
                                     .font(.body)
                                     .foregroundColor(.white.opacity(0.75))
                                 Spacer()
@@ -124,7 +124,7 @@ struct BalanceDetailCard: View {
                                         .fontWeight(.medium)
                                         .foregroundColor(.white)
                                 } else {
-                                    Text("symbol_em_dash")
+                                    Text(L10n.symbolEmDash)
                                         .font(.body)
                                         .foregroundColor(.white)
                                 }
@@ -137,7 +137,7 @@ struct BalanceDetailCard: View {
                         .padding(.vertical, 5)
                     
                     HStack {
-                        Text("label_total")
+                        Text(String(localized: "label_total", defaultValue: "Total"))
                             .font(.title2)
                             .foregroundColor(.white.opacity(0.75))
                         Spacer()
@@ -146,7 +146,7 @@ struct BalanceDetailCard: View {
                                 .font(.title2)
                                 .foregroundColor(.white)
                         } else {
-                            Text("symbol_em_dash")
+                            Text(L10n.symbolEmDash)
                                 .font(.title2)
                                 .foregroundColor(.white)
                         }

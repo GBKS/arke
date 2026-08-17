@@ -53,7 +53,7 @@ struct OffboardingModalFormView: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 30, height: 30)
                         }
-                        .accessibilityLabel("button_close")
+                        .accessibilityLabel(L10n.buttonClose)
                         .buttonStyle(.bordered)
                         .clipShape(Circle())
                         .padding(.trailing, 8)
@@ -62,10 +62,10 @@ struct OffboardingModalFormView: View {
                 
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("button_move_to_savings")
+                        Text(String(localized: "button_move_to_savings", defaultValue: "Move to Savings"))
                             .font(.system(.title, design: .serif))
                         
-                        Text(String(localized: "balance_transfer_savings_help"))
+                        Text(String(localized: "balance_transfer_savings_help", defaultValue: "Transfer funds to the savings balance for slower and more expensive payments, with the benefit of no maintenance fees."))
                             .font(.title3)
                             .foregroundColor(.arkeSecondary)
                             .lineSpacing(6)
@@ -78,7 +78,7 @@ struct OffboardingModalFormView: View {
                             .fontWeight(.medium)
                         */
                         
-                        TextField("placeholder_enter_amount", text: $amountText)
+                        TextField(L10n.placeholderEnterAmount, text: $amountText)
                             .textFieldStyle(.plain)
                             .font(.title)
                             .padding(.horizontal, 16)
@@ -99,7 +99,7 @@ struct OffboardingModalFormView: View {
                             .toolbar {
                                 ToolbarItemGroup(placement: .keyboard) {
                                     Spacer()
-                                    Button("button_done") {
+                                    Button(L10n.buttonDone) {
                                         isAmountFieldFocused = false
                                     }
                                 }
@@ -111,7 +111,7 @@ struct OffboardingModalFormView: View {
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             } else {
-                                Text(String(localized: "status_loading_balance"))
+                                Text(String(localized: "status_loading_balance", defaultValue: "Loading available balance..."))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
@@ -128,7 +128,7 @@ struct OffboardingModalFormView: View {
                             onConfirm(amount)
                         }
                     } label: {
-                        Text("button_start")
+                        Text(L10n.buttonStart)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)

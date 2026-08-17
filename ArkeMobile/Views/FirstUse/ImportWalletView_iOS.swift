@@ -47,21 +47,21 @@ struct ImportWalletView_iOS: View {
                         .buttonStyle(.glass)
                         .controlSize(.large)
                         .tint(Color.Arke.gold)
-                        .accessibilityLabel("button_back")
+                        .accessibilityLabel(L10n.buttonBack)
                         
                         Spacer()
                     }
                     .padding(.top, 10)
                     
                     VStack(spacing: 8) {
-                        Text("onboarding_import_title")
+                        Text(String(localized: "onboarding_import_title", defaultValue: "Import Wallet"))
                             .font(.system(.largeTitle, design: .serif))
                             .foregroundStyle(Color.Arke.gold)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityAddTraits(.isHeader)
                         
-                        Text("onboarding_restore_wallet")
+                        Text(String(localized: "onboarding_restore_wallet", defaultValue: "Restore your existing wallet with your 12-word recovery phrase."))
                             .font(.system(.title2))
                             .lineSpacing(4)
                             .foregroundStyle(.white)
@@ -69,7 +69,7 @@ struct ImportWalletView_iOS: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     
-                    TextField(NSLocalizedString("placeholder_enter_recovery_phrase", comment: ""), text: $mnemonicPhrase, axis: .vertical)
+                    TextField(String(localized: "placeholder_enter_recovery_phrase", defaultValue: "Enter your 12-words here..."), text: $mnemonicPhrase, axis: .vertical)
                         .padding(15)
                         .background(Color.primary.opacity(0.05))
                         .foregroundStyle(.white)
@@ -81,8 +81,8 @@ struct ImportWalletView_iOS: View {
                         .autocorrectionDisabled(true)
                         .keyboardType(.asciiCapable)
                         .submitLabel(.done)
-                        .accessibilityLabel(String(localized: "accessibility_recovery_phrase_field"))
-                        .accessibilityHint(String(localized: "accessibility_recovery_phrase_hint"))
+                        .accessibilityLabel(String(localized: "accessibility_recovery_phrase_field", defaultValue: "Recovery phrase"))
+                        .accessibilityHint(String(localized: "accessibility_recovery_phrase_hint", defaultValue: "Enter your 12 or 24 word recovery phrase"))
                         .onChange(of: mnemonicPhrase) { oldValue, newValue in
                             // If user presses return/enter, dismiss keyboard
                             if newValue.contains("\n") || newValue.contains("\r") {
@@ -102,12 +102,12 @@ struct ImportWalletView_iOS: View {
                         .frame(maxWidth: 400)
                     
                     VStack(spacing: 12) {
-                        Text("backup_file_section_title")
+                        Text(String(localized: "backup_file_section_title", defaultValue: "Wallet Backup File"))
                             .font(.system(.body, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text("backup_file_section_description")
+                        Text(String(localized: "backup_file_section_description", defaultValue: "Optionally add your wallet backup file to restore your transaction history and wallet data. Without it, your funds are recovered from the network, but local history is not restored."))
                             .font(.system(.body))
                             .foregroundStyle(.white.opacity(0.8))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -119,7 +119,7 @@ struct ImportWalletView_iOS: View {
                             if UIAccessibility.isVoiceOverRunning {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                     UIAccessibility.post(notification: .announcement, 
-                                        argument: String(localized: "accessibility_file_picker_opened"))
+                                        argument: String(localized: "accessibility_file_picker_opened", defaultValue: "File picker opened. Select your backup file."))
                                 }
                             }
                         } label: {
@@ -132,14 +132,14 @@ struct ImportWalletView_iOS: View {
                                         Text(fileName)
                                             .font(.subheadline)
                                             .fontWeight(.medium)
-                                        Text("backup_file_selected")
+                                        Text(String(localized: "backup_file_selected", defaultValue: "Backup file selected"))
                                             .font(.footnote)
                                             .opacity(0.8)
                                     } else {
-                                        Text("button_select_backup_file")
+                                        Text(String(localized: "button_select_backup_file", defaultValue: "Select Backup File"))
                                             .font(.subheadline)
                                             .fontWeight(.medium)
-                                        Text("backup_file_not_selected")
+                                        Text(String(localized: "backup_file_not_selected", defaultValue: "Optional — restore from recovery phrase only"))
                                             .font(.footnote)
                                             .opacity(0.8)
                                     }
@@ -170,7 +170,7 @@ struct ImportWalletView_iOS: View {
                             await importWallet()
                         }
                     } label: {
-                        Text(isImporting ? "status_importing" : "button_import_wallet")
+                        Text(isImporting ? String(localized: "status_importing", defaultValue: "Importing...") : L10n.buttonImportWallet)
                             .font(.system(.title2, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
@@ -209,15 +209,15 @@ struct ImportWalletView_iOS: View {
                     // Announce file selection for VoiceOver users
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         UIAccessibility.post(notification: .announcement, 
-                            argument: String(format: String(localized: "accessibility_backup_file_selected"), url.lastPathComponent))
+                            argument: String(format: String(localized: "accessibility_backup_file_selected", defaultValue: "Selected backup file: %@"), url.lastPathComponent))
                     }
                 }
             case .failure(let error):
-                showError(String(format: NSLocalizedString("error_file_picker", comment: ""), error.localizedDescription))
+                showError(String(format: L10n.errorFilePicker, error.localizedDescription))
             }
         }
-        .alert("error_import", isPresented: $showingError) {
-            Button("button_ok") { }
+        .alert(String(localized: "error_import", defaultValue: "Import Error"), isPresented: $showingError) {
+            Button(L10n.buttonOk) { }
         } message: {
             Text(errorMessage)
         }
@@ -228,7 +228,7 @@ struct ImportWalletView_iOS: View {
         
         // Validate mnemonic
         guard !trimmedMnemonic.isEmpty else {
-            showError(NSLocalizedString("error_enter_recovery_phrase", comment: ""))
+            showError(String(localized: "error_enter_recovery_phrase", defaultValue: "Please enter a recovery phrase"))
             return
         }
 
@@ -262,7 +262,7 @@ struct ImportWalletView_iOS: View {
             
         } catch {
             isImporting = false
-            showError(String(format: NSLocalizedString("error_import_wallet", comment: ""), error.localizedDescription))
+            showError(String(format: String(localized: "error_import_wallet", defaultValue: "Failed to import wallet: %@"), error.localizedDescription))
         }
     }
     

@@ -33,7 +33,7 @@ struct DeletePermanentlyConfirmationView: View {
                         onBack()
                     } label: {
                         HStack(spacing: 6) {
-                            Text("button_cancel")
+                            Text(L10n.buttonCancel)
                                 .font(.system(size: 17))
                         }
                         .foregroundColor(.white)
@@ -50,12 +50,12 @@ struct DeletePermanentlyConfirmationView: View {
                 // Content area
                 VStack(spacing: 25) {
                     VStack(spacing: 15) {
-                        Text(String(localized: "message_delete_permanently"))
+                        Text(String(localized: "message_delete_permanently", defaultValue: "Delete Permanently?"))
                             .font(.system(.largeTitle, design: .serif, weight: .bold))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                         
-                        Text("message_cannot_undo")
+                        Text(String(localized: "message_cannot_undo", defaultValue: "This cannot be undone!"))
                             .font(.title2)
                             .foregroundColor(.Arke.red)
                             .fontWeight(.bold)
@@ -164,7 +164,7 @@ struct DeletePermanentlyConfirmationView: View {
                 VStack(spacing: 15) {
                     #if os(iOS)
                     SlideToActionButton_iOS(
-                        text: String(localized: "button_slide_to_delete"),
+                        text: String(localized: "button_slide_to_delete", defaultValue: "Slide to Delete"),
                         icon: "trash.fill",
                         tintColor: Color.Arke.red,
                         isEnabled: !isDeleting
@@ -185,7 +185,7 @@ struct DeletePermanentlyConfirmationView: View {
                                     .controlSize(.small)
                                     .tint(.white)
                             }
-                            Text(isDeleting ? String(localized: "status_deleting_everything") : confirmButtonTitle)
+                            Text(isDeleting ? String(localized: "status_deleting_everything", defaultValue: "Deleting Everything...") : confirmButtonTitle)
                                 .font(.system(size: 19, weight: .semibold))
                         }
                         .foregroundStyle(Color.white)
@@ -216,7 +216,7 @@ struct DeletePermanentlyConfirmationView: View {
         case .localOnly:
             return String(localized: "button_delete_from_device", defaultValue: "Delete from This Device")
         case .promptForCloudData:
-            return String(localized: "button_delete_everything")
+            return String(localized: "button_delete_everything", defaultValue: "Delete Everything")
         }
     }
 

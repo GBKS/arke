@@ -95,7 +95,7 @@ struct ContactEditor: View {
 
                     // Name Field
                     VStack(alignment: .leading, spacing: 8) {
-                        TextField(String(localized: "placeholder_contact_name"), text: $name)
+                        TextField(String(localized: "placeholder_contact_name", defaultValue: "Enter contact name"), text: $name)
                             .font(.title3)
                             .textFieldStyle(.plain)
                             .autocorrectionDisabled()
@@ -109,14 +109,14 @@ struct ContactEditor: View {
                             }
 
                         if validation.nameExists {
-                            Label("contacts_name_exists", systemImage: "exclamationmark.triangle")
+                            Label(String(localized: "contacts_name_exists", defaultValue: "A contact with this name already exists"), systemImage: "exclamationmark.triangle")
                                 .font(.caption)
                                 .foregroundColor(.Arke.red)
                         }
                     }
 
                     // Notes Field
-                    TextField(String(localized: "placeholder_add_note"), text: $notes, axis: .vertical)
+                    TextField(L10n.placeholderAddNote, text: $notes, axis: .vertical)
                         .lineLimit(1...6)
                         .textFieldStyle(.plain)
                         .padding(12)
@@ -161,11 +161,11 @@ struct ContactEditor: View {
                     saveButton
                 }
             }
-            .confirmationDialog("button_delete_contact",
+            .confirmationDialog(L10n.buttonDeleteContact,
                 isPresented: $showingDeleteConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("button_delete", role: .destructive) {
+                Button(L10n.buttonDelete, role: .destructive) {
                     deleteContact()
                 }
                 Button(role: .cancel) {
@@ -210,7 +210,7 @@ struct ContactEditor: View {
 
     @ViewBuilder
     private var importButton: some View {
-        Button("button_import") {
+        Button(String(localized: "button_import", defaultValue: "Import")) {
             showingContactImport = true
         }
     }
@@ -222,7 +222,7 @@ struct ContactEditor: View {
         } label: {
             Image(systemName: "xmark")
         }
-        .accessibilityLabel("button_cancel")
+        .accessibilityLabel(L10n.buttonCancel)
     }
     
     @ViewBuilder
@@ -233,7 +233,7 @@ struct ContactEditor: View {
         } label: {
             Image(systemName: "checkmark")
         }
-        .accessibilityLabel("button_save")
+        .accessibilityLabel(L10n.buttonSave)
         .disabled(!canSave)
         .fontWeight(.semibold)
     }
@@ -243,7 +243,7 @@ struct ContactEditor: View {
         Button(role: .destructive) {
             showingDeleteConfirmation = true
         } label: {
-            Label("button_delete", systemImage: "trash")
+            Label(L10n.buttonDelete, systemImage: "trash")
         }
     }
     
@@ -265,7 +265,7 @@ struct ContactEditor: View {
     // MARK: - Computed Properties
     
     private var navigationTitle: String {
-        isEditing ? String(localized: "button_edit_contact") : "New Contact"
+        isEditing ? String(localized: "button_edit_contact", defaultValue: "Edit Contact") : String(localized: "contacts_new_title", defaultValue: "New Contact")
     }
     
     // MARK: - Actions

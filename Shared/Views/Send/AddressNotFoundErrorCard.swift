@@ -28,7 +28,7 @@ struct AddressNotFoundErrorCard: View {
                     .font(.title3)
                     .foregroundColor(.orange)
                 
-                Text("error_address_not_found")
+                Text(String(localized: "error_address_not_found", defaultValue: "Address Not Found"))
                     .font(.headline)
                     .foregroundColor(.primary)
             }

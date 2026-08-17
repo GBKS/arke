@@ -59,7 +59,7 @@ struct BoardingModalView: View {
                 ))
             case .error(let errorMessage):
                 LargeErrorView(
-                    title: "error_boarding_failed",
+                    title: String(localized: "error_boarding_failed", defaultValue: "Boarding Failed"),
                     errorMessage: errorMessage,
                     image: nil,
                     systemImage: "xmark.circle.fill",

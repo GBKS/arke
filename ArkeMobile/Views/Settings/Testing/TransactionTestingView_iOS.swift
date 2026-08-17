@@ -15,7 +15,7 @@ struct TransactionTestingView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("testing_play_around_and_find_out")
+                Text(String(localized: "testing_play_around_and_find_out", defaultValue: "Play around and find out."))
                     .font(.body)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -24,10 +24,10 @@ struct TransactionTestingView_iOS: View {
                     NavigationLink(destination: IncrementalPaymentTestView_iOS()) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("nav_title_spam_payments")
+                                Text(String(localized: "nav_title_spam_payments", defaultValue: "Spam Payments"))
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("testing_spam_payments_subtitle")
+                                Text(String(localized: "testing_spam_payments_subtitle", defaultValue: "Send multiple payments with increasing amounts"))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.leading)
@@ -49,10 +49,10 @@ struct TransactionTestingView_iOS: View {
                     NavigationLink(destination: InvoiceGenerationTestView_iOS()) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("testing_generate_invoices")
+                                Text(String(localized: "testing_generate_invoices", defaultValue: "Generate Invoices"))
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("testing_invoice_generation_subtitle")
+                                Text(String(localized: "testing_invoice_generation_subtitle", defaultValue: "Create multiple Lightning invoices and copy to clipboard"))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.leading)
@@ -72,7 +72,7 @@ struct TransactionTestingView_iOS: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("nav_title_transaction_testing")
+        .navigationTitle(String(localized: "nav_title_transaction_testing", defaultValue: "Transaction Testing"))
         .navigationBarTitleDisplayMode(.large)
     }
 }

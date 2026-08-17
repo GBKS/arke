@@ -47,7 +47,7 @@ struct TransactionContactView: View {
                     
                     // Edit contact button styled like a chip
                     /*
-                    Button("label_change") {
+                    Button(L10n.labelChange) {
                         showingContactSelector = true
                     }
                     .padding(.horizontal, 10)
@@ -71,7 +71,7 @@ struct TransactionContactView: View {
                         Image(systemName: "paintbrush.pointed.fill")
                             .font(.body)
                     }
-                    .accessibilityLabel("action_change_contact")
+                    .accessibilityLabel(String(localized: "action_change_contact", defaultValue: "Change contact"))
                     .buttonStyle(.bordered)
                     .disabled(isContactLoading)
                 }
@@ -79,7 +79,7 @@ struct TransactionContactView: View {
                 FlowLayout(alignment: .leading, spacing: 8) {
                     // Add contact button styled like a ContactChip
                     /*
-                    Button("button_add_contact") {
+                    Button(String(localized: "button_add_contact", defaultValue: "Add Contact")) {
                         showingContactSelector = true
                     }
                     .padding(.horizontal, 10)
@@ -100,7 +100,7 @@ struct TransactionContactView: View {
                     Button{
                         showingContactSelector = true
                     } label: {
-                        Text("button_add_contact")
+                        Text(String(localized: "button_add_contact", defaultValue: "Add Contact"))
                             .font(.body)
                             .fontWeight(.medium)
                             .foregroundStyle(Color.Arke.gold2)
@@ -136,7 +136,7 @@ struct TransactionContactView: View {
                     }
                 )
                 .environment(walletManager)
-                .navigationTitle("button_assign_contact")                
+                .navigationTitle(String(localized: "button_assign_contact", defaultValue: "Assign Contact"))                
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif

@@ -86,7 +86,7 @@ struct SendView: View {
             .padding(.top, 20)
             .padding()
         }
-        .navigationTitle("nav_title_send")
+        .navigationTitle(String(localized: "nav_title_send", defaultValue: "Send bitcoin"))
         .sheet(item: $sendOperation) { operation in
             sendModalSheet(operation: operation)
         }

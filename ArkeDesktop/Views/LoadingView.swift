@@ -13,7 +13,7 @@ struct LoadingView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("progress_checking_for_wallet")
+            Text(String(localized: "progress_checking_for_wallet", defaultValue: "Checking for wallet..."))
                 .foregroundStyle(.secondary)
                 .padding(.top)
         }

@@ -54,7 +54,7 @@ struct BalanceView: View {
                             }
                             .buttonStyle(ArkeIconButtonStyle())
                             .disabled(!canBoard)
-                            .help(canBoard ? String(localized: "balance_move_to_payments") : String(localized: "balance_no_funds_savings"))
+                            .help(canBoard ? String(localized: "balance_move_to_payments", defaultValue: "Move funds to payments") : String(localized: "balance_no_funds_savings", defaultValue: "No funds available in savings to move to payments"))
                             
                             Button(action: {
                                 showingOffboardingModal = true
@@ -63,7 +63,7 @@ struct BalanceView: View {
                             }
                             .buttonStyle(ArkeIconButtonStyle())
                             .disabled(!canOffboard)
-                            .help(canOffboard ? String(localized: "balance_move_to_savings") : String(localized: "balance_no_funds_payments"))
+                            .help(canOffboard ? String(localized: "balance_move_to_savings", defaultValue: "Move funds to savings") : String(localized: "balance_no_funds_payments", defaultValue: "No funds available in payments to move to savings"))
                         }
                         .frame(maxWidth: 150)
                     }
@@ -101,7 +101,7 @@ struct BalanceView: View {
             }
             .padding(20)
         }
-        .navigationTitle("nav_title_balance_details")
+        .navigationTitle(String(localized: "nav_title_balance_details", defaultValue: "Your balance details"))
         .refreshable {
             // Only allow refresh in primary mode
             if !manager.isReadOnlyMode {

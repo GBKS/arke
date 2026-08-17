@@ -40,11 +40,11 @@ struct ImportWalletView: View {
             }
             
             VStack(spacing: 8) {
-                Text("onboarding_import_title")
+                Text(String(localized: "onboarding_import_title", defaultValue: "Import Wallet"))
                     .font(.system(size: 40, design: .serif))
                     .foregroundStyle(Color.Arke.gold)
                 
-                Text("onboarding_restore_wallet")
+                Text(String(localized: "onboarding_restore_wallet", defaultValue: "Restore your existing wallet with your 12-word recovery phrase."))
                     .fontWeight(.light)
                     .font(.system(size: 21))
                     .lineSpacing(6)
@@ -63,7 +63,7 @@ struct ImportWalletView: View {
                 .cornerRadius(8)
                 .overlay(alignment: .topLeading) {
                     if mnemonicPhrase.isEmpty {
-                        Text("placeholder_enter_recovery_phrase")
+                        Text(String(localized: "placeholder_enter_recovery_phrase", defaultValue: "Enter your 12-words here..."))
                             .foregroundStyle(.gray)
                             .font(.system(size: 21, design: .monospaced))
                             .padding(.horizontal, 15)
@@ -78,12 +78,12 @@ struct ImportWalletView: View {
                 .frame(maxWidth: 400, minHeight: 80, maxHeight: 130)
 
             VStack(spacing: 12) {
-                Text("backup_file_section_title")
+                Text(String(localized: "backup_file_section_title", defaultValue: "Wallet Backup File"))
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                Text("backup_file_section_description")
+                Text(String(localized: "backup_file_section_description", defaultValue: "Optionally add your wallet backup file to restore your transaction history and wallet data. Without it, your funds are recovered from the network, but local history is not restored."))
                     .fontWeight(.light)
                     .font(.system(size: 15))
                     .foregroundStyle(.white.opacity(0.8))
@@ -101,14 +101,14 @@ struct ImportWalletView: View {
                                 Text(fileName)
                                     .font(.subheadline)
                                     .fontWeight(.medium)
-                                Text("backup_file_selected")
+                                Text(String(localized: "backup_file_selected", defaultValue: "Backup file selected"))
                                     .font(.footnote)
                                     .opacity(0.8)
                             } else {
-                                Text("button_select_backup_file")
+                                Text(String(localized: "button_select_backup_file", defaultValue: "Select Backup File"))
                                     .font(.subheadline)
                                     .fontWeight(.medium)
-                                Text("backup_file_not_selected")
+                                Text(String(localized: "backup_file_not_selected", defaultValue: "Optional — restore from recovery phrase only"))
                                     .font(.footnote)
                                     .opacity(0.8)
                             }
@@ -135,7 +135,7 @@ struct ImportWalletView: View {
 
             Spacer()
 
-            Button(isImporting ? LocalizedStringKey("status_importing") : LocalizedStringKey("button_import_wallet")) {
+            Button(isImporting ? String(localized: "status_importing", defaultValue: "Importing...") : L10n.buttonImportWallet) {
                 Task {
                     await importWallet()
                 }
@@ -160,11 +160,11 @@ struct ImportWalletView: View {
                     backupFileName = url.lastPathComponent
                 }
             case .failure(let error):
-                showError(String(format: NSLocalizedString("error_file_picker", comment: ""), error.localizedDescription))
+                showError(String(format: L10n.errorFilePicker, error.localizedDescription))
             }
         }
-        .alert("error_import", isPresented: $showingError) {
-            Button("button_ok") { }
+        .alert(String(localized: "error_import", defaultValue: "Import Error"), isPresented: $showingError) {
+            Button(L10n.buttonOk) { }
         } message: {
             Text(errorMessage)
         }
@@ -175,7 +175,7 @@ struct ImportWalletView: View {
         
         // Basic validation
         guard !trimmedMnemonic.isEmpty else {
-            showError(NSLocalizedString("error_enter_recovery_phrase", comment: ""))
+            showError(String(localized: "error_enter_recovery_phrase", defaultValue: "Please enter a recovery phrase"))
             return
         }
 
@@ -208,7 +208,7 @@ struct ImportWalletView: View {
             onWalletImported()
 
         } catch {
-            showError(String(format: NSLocalizedString("error_import_wallet", comment: ""), error.localizedDescription))
+            showError(String(format: String(localized: "error_import_wallet", defaultValue: "Failed to import wallet: %@"), error.localizedDescription))
         }
     }
     

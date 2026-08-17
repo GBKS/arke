@@ -75,7 +75,7 @@ public struct CopyButton: View {
     private let iconColor: Color?
     private let backgroundColor: Color?
     private let copiedColor: Color
-    private let help: LocalizedStringKey?
+    private let help: String?
 
     @State private var showingCopied = false
 
@@ -89,7 +89,7 @@ public struct CopyButton: View {
         iconColor: Color? = nil,
         backgroundColor: Color? = nil,
         copiedColor: Color = .Arke.green,
-        help: LocalizedStringKey? = nil
+        help: String? = nil
     ) {
         self.content = content
         self.size = size

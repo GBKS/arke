@@ -26,7 +26,7 @@ struct ReceiveView: View {
                     }
             }
         }
-        .navigationTitle("nav_title_receive")
+        .navigationTitle(String(localized: "nav_title_receive", defaultValue: "Receive bitcoin"))
     }
     
     @ViewBuilder
@@ -72,7 +72,7 @@ struct ReceiveView: View {
     @ViewBuilder
     private var headerSection: some View {
         VStack(spacing: 8) {
-            Text("receive_share_info")
+            Text(String(localized: "receive_share_info", defaultValue: "Share your payment info"))
                 .font(.system(size: 24, design: .serif))
                 .multilineTextAlignment(.center)
         }
@@ -116,7 +116,7 @@ struct ReceiveView: View {
             .contentShape(Rectangle())
         }
         .menuStyle(.button)
-        .help("receive_switch_balance_type")
+        .help(String(localized: "receive_switch_balance_type", defaultValue: "Switch balance type"))
     }
     
     @ViewBuilder
@@ -130,10 +130,10 @@ struct ReceiveView: View {
         } else {
             if vm.lightningInvoice == nil {
                 VStack(spacing: 8) {
-                    Text("receive_lightning_invoice")
+                    Text(String(localized: "receive_lightning_invoice", defaultValue: "Lightning Invoice"))
                         .font(.title2)
                         .multilineTextAlignment(.center)
-                    Text("receive_enter_amount")
+                    Text(String(localized: "receive_enter_amount", defaultValue: "Enter an amount to generate a Lightning invoice"))
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

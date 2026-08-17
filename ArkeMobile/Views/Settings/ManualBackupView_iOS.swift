@@ -12,7 +12,7 @@ struct ManualBackupView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("settings_offline_backup_help")
+                Text(String(localized: "settings_offline_backup_help", defaultValue: "An offline backup needs both items below. Your recovery phrase alone won't recover your full balance. The backup file holds data that exists only on your device and in iCloud."))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -27,11 +27,11 @@ struct ManualBackupView_iOS: View {
                                 .frame(width: 24, height: 24)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("settings_recovery_phrase")
+                                Text(String(localized: "settings_recovery_phrase", defaultValue: "Recovery Phrase"))
                                     .font(.system(size: 16))
                                     .foregroundColor(.primary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                Text("action_view_backup")
+                                Text(String(localized: "action_view_backup", defaultValue: "Restores access to your funds"))
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -48,11 +48,11 @@ struct ManualBackupView_iOS: View {
                                 .frame(width: 24, height: 24)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("settings_backup_file")
+                                Text(String(localized: "settings_backup_file", defaultValue: "Backup File"))
                                     .font(.system(size: 16))
                                     .foregroundColor(.primary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                Text("settings_required_to_recover_funds")
+                                Text(String(localized: "settings_required_to_recover_funds", defaultValue: "Required to recover funds"))
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -63,7 +63,7 @@ struct ManualBackupView_iOS: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("settings_manual_backup")
+        .navigationTitle(L10n.settingsManualBackup)
         .navigationBarTitleDisplayMode(.large)
     }
 }

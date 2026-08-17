@@ -45,18 +45,18 @@ struct VTXODeveloperActionsView: View {
                             }
                             if let feeEstimate = refreshFeeEstimate {
                                 if feeEstimate.feeSats == 0 {
-                                    let freeText = String(localized: "fee_free")
-                                    Text("action_refresh_with_fee \(freeText)")
+                                    let freeText = L10n.feeFree
+                                    Text(String(localized: "action_refresh_with_fee %@", defaultValue: "Refresh (\(freeText))"))
                                         .fontWeight(.medium)
                                         .foregroundStyle(Color.Arke.goldLabel)
                                 } else {
                                     let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
-                                    Text("action_refresh_with_fee \(formattedFee)")
+                                    Text(String(localized: "action_refresh_with_fee %@", defaultValue: "Refresh (\(formattedFee))"))
                                         .fontWeight(.medium)
                                         .foregroundStyle(Color.Arke.goldLabel)
                                 }
                             } else {
-                                Text("button_refresh")
+                                Text(String(localized: "button_refresh", defaultValue: "Refresh"))
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.Arke.goldLabel)
                             }
@@ -78,7 +78,7 @@ struct VTXODeveloperActionsView: View {
                                 .controlSize(.small)
                                 .foregroundStyle(Color.Arke.goldLabel)
                         }
-                        Text("button_offboard")
+                        Text(String(localized: "button_offboard", defaultValue: "Offboard"))
                             .fontWeight(.medium)
                             .foregroundStyle(Color.Arke.goldLabel)
                     }
@@ -98,7 +98,7 @@ struct VTXODeveloperActionsView: View {
                                 .controlSize(.small)
                                 .foregroundStyle(Color.Arke.goldLabel)
                         }
-                        Text("button_exit")
+                        Text(String(localized: "button_exit", defaultValue: "Exit"))
                             .fontWeight(.medium)
                             .foregroundStyle(Color.Arke.goldLabel)
                     }
@@ -130,7 +130,7 @@ struct VTXODeveloperActionsView: View {
                         .font(.title3)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("status_refresh_successful")
+                        Text(String(localized: "status_refresh_successful", defaultValue: "Refresh Successful"))
                             .font(.headline)
                             .foregroundColor(.Arke.green)
                         
@@ -139,7 +139,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                             .textSelection(.enabled)
                         
-                        Text(String(localized: "balance_vtxo_refresh_note"))
+                        Text(L10n.balanceVtxoRefreshNote)
                             .font(.caption)
                             .foregroundColor(.orange)
                             .padding(.top, 4)
@@ -154,7 +154,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .help("button_dismiss")
+                    .help(L10n.buttonDismiss)
                 }
                 .padding(12)
                 .background(
@@ -187,7 +187,7 @@ struct VTXODeveloperActionsView: View {
                         .font(.title3)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("status_exit_successful")
+                        Text(String(localized: "status_exit_successful", defaultValue: "Exit Successful"))
                             .font(.headline)
                             .foregroundColor(.Arke.green)
                         
@@ -196,7 +196,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                             .textSelection(.enabled)
                         
-                        Text(String(localized: "balance_vtxo_refresh_note"))
+                        Text(L10n.balanceVtxoRefreshNote)
                             .font(.caption)
                             .foregroundColor(.orange)
                             .padding(.top, 4)
@@ -211,7 +211,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .help("button_dismiss")
+                    .help(L10n.buttonDismiss)
                 }
                 .padding(12)
                 .background(
@@ -244,7 +244,7 @@ struct VTXODeveloperActionsView: View {
                         .font(.title3)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("status_offboard_successful")
+                        Text(String(localized: "status_offboard_successful", defaultValue: "Offboard Successful"))
                             .font(.headline)
                             .foregroundColor(.Arke.green)
                         
@@ -253,7 +253,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                             .textSelection(.enabled)
                         
-                        Text(String(localized: "balance_vtxo_refresh_note"))
+                        Text(L10n.balanceVtxoRefreshNote)
                             .font(.caption)
                             .foregroundColor(.orange)
                             .padding(.top, 4)
@@ -268,7 +268,7 @@ struct VTXODeveloperActionsView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .help("button_dismiss")
+                    .help(L10n.buttonDismiss)
                 }
                 .padding(12)
                 .background(

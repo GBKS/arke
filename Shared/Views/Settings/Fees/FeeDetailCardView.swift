@@ -145,8 +145,8 @@ struct FeeDetailCardView: View {
                         .buttonStyle(.plain)
                         .accessibilityHint(
                             expandedSections.contains(index) 
-                                ? String(localized: "accessibility_section_collapse")
-                                : String(localized: "accessibility_section_expand")
+                                ? String(localized: "accessibility_section_collapse", defaultValue: "Double tap to collapse")
+                                : String(localized: "accessibility_section_expand", defaultValue: "Double tap to expand")
                         )
                     }
                     

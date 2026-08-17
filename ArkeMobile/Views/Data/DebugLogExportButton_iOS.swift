@@ -25,7 +25,7 @@ struct DebugLogExportButton_iOS: View {
                 } else {
                     Image(systemName: "waveform.path.ecg")
                 }
-                Text(isGenerating ? "debug_logs_generating" : "debug_logs_title")
+                Text(isGenerating ? String(localized: "debug_logs_generating", defaultValue: "Generating…") : String(localized: "debug_logs_title", defaultValue: "Export Debug Logs"))
                     .font(.system(size: 17, weight: .semibold))
             }
             .padding(.vertical, 4)
@@ -39,8 +39,8 @@ struct DebugLogExportButton_iOS: View {
         .disabled(isGenerating)
         .padding(.horizontal)
         .padding(.bottom, 20)
-        .alert("debug_logs_error_title", isPresented: $showError) {
-            Button("button_ok", role: .cancel) { }
+        .alert(String(localized: "debug_logs_error_title", defaultValue: "Couldn't Export Logs"), isPresented: $showError) {
+            Button(L10n.buttonOk, role: .cancel) { }
         } message: {
             Text(errorMessage ?? "")
         }

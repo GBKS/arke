@@ -24,7 +24,7 @@ struct ArkBalanceView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             HStack {
-                Text("balance_ark")
+                Text(String(localized: "balance_ark", defaultValue: "Ark Balance"))
                     .font(.system(size: 24, design: .serif))
                 
                 Spacer()
@@ -43,7 +43,7 @@ struct ArkBalanceView: View {
                 VStack {
                     Image(systemName: "bitcoinsign.circle")
                         .foregroundStyle(.secondary)
-                    Text("data_no_ark_balance")
+                    Text(String(localized: "data_no_ark_balance", defaultValue: "No ark balance data"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -53,7 +53,7 @@ struct ArkBalanceView: View {
                     // Summary view
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("balance_total")
+                            Text(String(localized: "balance_total", defaultValue: "Total Balance"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Text(BitcoinFormatter.shared.formatAmount(balance.totalSat))
@@ -67,7 +67,7 @@ struct ArkBalanceView: View {
                         if balance.totalPendingSat > 0 {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("status_pending")
+                                    Text(L10n.statusPending)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                     Text(BitcoinFormatter.shared.formatAmount(balance.totalPendingSat))
@@ -81,7 +81,7 @@ struct ArkBalanceView: View {
                         }
                         
                         VStack(alignment: .trailing, spacing: 4) {
-                            Text("balance_spendable")
+                            Text(String(localized: "balance_spendable", defaultValue: "Spendable"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Text(BitcoinFormatter.shared.formatAmount(balance.spendableSat))

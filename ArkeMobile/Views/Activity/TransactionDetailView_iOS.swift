@@ -120,7 +120,7 @@ struct TransactionDetailView_iOS: View {
         .ignoresSafeArea(edges: .top)
         .overlay(alignment: .bottom) {
             if viewModel.showCopySuccess {
-                Text("status_copied_clipboard")
+                Text(String(localized: "status_copied_clipboard", defaultValue: "Copied to clipboard"))
                     .font(.caption)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -174,12 +174,12 @@ struct TransactionDetailView_iOS: View {
                         // For exits, use fees including linked onchain transactions
                         let feeText = transaction.formattedTotalFeesIncludingLinked(modelContext: modelContext) ?? BitcoinFormatter.shared.formatAmount(0)
                         let hasFees = transaction.totalFeesIncludingLinked(modelContext: modelContext) > 0
-                        Text(hasFees ? "\(feeText) fee" : String(localized: "label_no_fee"))
+                        Text(hasFees ? "\(feeText) fee" : L10n.labelNoFee)
                             .font(.title3)
                             .fontWeight(.medium)
                             .foregroundColor(.white.opacity(0.75))
                         
-                        Text("symbol_middot")
+                        Text(String(localized: "symbol_middot", defaultValue: "·"))
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.75))
                     }
@@ -357,14 +357,14 @@ struct TransactionDetailView_iOS: View {
                     /*
                     if let offchainFee = transaction.formattedFee {
                         DetailRow(
-                            title: "activity_offchain_fee",
+                            title: String(localized: "activity_offchain_fee", defaultValue: "Offchain Fee"),
                             value: offchainFee
                         )
                     }
                     if let onchainFee = transaction.formattedOnchainFee {
                         Divider()
                         DetailRow(
-                            title: "activity_onchain_fee",
+                            title: String(localized: "activity_onchain_fee", defaultValue: "Onchain Fee"),
                             value: onchainFee
                         )
                     }
@@ -373,14 +373,14 @@ struct TransactionDetailView_iOS: View {
                     if let totalFee = transaction.formattedTotalFees {
                         Divider()
                         DetailRow(
-                            title: "label_fee",
+                            title: L10n.labelFee,
                             value: totalFee
                         )
                     }
                 } else {
                     // Show single fee line
                     DetailRow(
-                        title: "label_fee",
+                        title: L10n.labelFee,
                         value: transaction.formattedTotalFees ?? BitcoinFormatter.shared.formatAmount(0)
                     )
                 }
@@ -423,7 +423,7 @@ struct TransactionDetailView_iOS: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         /*
-                        Text(transaction.transactionType == .received ? LocalizedStringKey("activity_from_address") : LocalizedStringKey("activity_to_address"))
+                        Text(transaction.transactionType == .received ? L10n.activityFromAddress : L10n.activityToAddress)
                             .font(.body)
                             .foregroundColor(.secondary)
                         */
@@ -431,7 +431,7 @@ struct TransactionDetailView_iOS: View {
                         AddressCardExpandable(
                             address: addressValue,
                             shareContent: addressValue,
-                            label: transaction.transactionType == .received ? String(localized: "activity_from_address") : String(localized: "activity_to_address")
+                            label: transaction.transactionType == .received ? L10n.activityFromAddress : L10n.activityToAddress
                         )
                     }
                 }
@@ -451,7 +451,7 @@ struct TransactionDetailView_iOS: View {
             // Transaction ID
             Divider()
             DetailRow(
-                title: "activity_transaction_id",
+                title: L10n.activityTransactionId,
                 value: transaction.txid,
                 isCopyable: true,
                 onCopy: { viewModel?.copyToClipboard($0) }

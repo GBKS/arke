@@ -28,11 +28,11 @@ struct WalletImportedView: View {
                 }
                 
                 VStack(spacing: 8) {
-                    Text("status_wallet_imported")
+                    Text(String(localized: "status_wallet_imported", defaultValue: "Wallet Imported!"))
                         .font(.system(size: 40, design: .serif))
                         .foregroundStyle(Color.Arke.gold)
                     
-                    Text(String(localized: "onboarding_import_success"))
+                    Text(String(localized: "onboarding_import_success", defaultValue: "Your Ark wallet has been successfully imported and is ready to use."))
                         .font(.system(size: 21))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
@@ -53,8 +53,8 @@ struct WalletImportedView: View {
             .buttonStyle(.glassProminent)
             .controlSize(.large)
             .tint(Color.Arke.gold)
-            .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
-            .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
+            .accessibilityLabel(L10n.accessibilityContinueToWallet)
+            .accessibilityHint(L10n.accessibilityWalletReadyHint)
         }
         .padding(.horizontal, 40)
         .padding(.top, 60)

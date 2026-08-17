@@ -21,7 +21,7 @@ struct RecoveryPhraseSettingView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "settings_recovery_phrase_help"))
+            Text(String(localized: "settings_recovery_phrase_help", defaultValue: "Your recovery phrase restores your wallet. Anyone who has it can spend your bitcoin. Keep it safe and never share it."))
                 .font(.title3)
                 .foregroundColor(.secondary)
                 .lineSpacing(6)
@@ -31,7 +31,7 @@ struct RecoveryPhraseSettingView: View {
                     HStack {
                         ProgressView()
                             .scaleEffect(0.8)
-                        Text("progress_loading")
+                        Text(String(localized: "progress_loading", defaultValue: "Loading..."))
                             .font(.body)
                             .foregroundColor(.secondary)
                     }
@@ -63,11 +63,11 @@ struct RecoveryPhraseSettingView: View {
                                         Image(systemName: "eye")
                                             .frame(width: 24, height: 24)
                                             .foregroundStyle(Color.Arke.gold2)
-                                        //Text("button_reveal_words")
+                                        //Text(String(localized: "button_reveal_words", defaultValue: "Reveal All Words"))
                                         //    .foregroundStyle(Color.Arke.gold2)
                                     }
                                 }
-                                .accessibilityLabel("button_reveal_words")
+                                .accessibilityLabel(String(localized: "button_reveal_words", defaultValue: "Reveal All Words"))
                                 .buttonStyle(.glass)
                                 .controlSize(.regular)
                                 .tint(Color.Arke.gold)
@@ -98,11 +98,11 @@ struct RecoveryPhraseSettingView: View {
                                             .foregroundStyle(Color.Arke.gold2)
                                     }
                                     
-                                    //Text(showCopiedFeedback ? String(localized: "status_copied_exclaim") : String(localized: "button_copy_clipboard"))
+                                    //Text(showCopiedFeedback ? L10n.statusCopiedExclaim : String(localized: "button_copy_clipboard", defaultValue: "Copy to Clipboard"))
                                     //    .foregroundColor(showCopiedFeedback ? .Arke.green : .Arke.gold2)
                                 }
                             }
-                            .accessibilityLabel(showCopiedFeedback ? String(localized: "status_copied_exclaim") : String(localized: "button_copy_clipboard"))
+                            .accessibilityLabel(showCopiedFeedback ? L10n.statusCopiedExclaim : String(localized: "button_copy_clipboard", defaultValue: "Copy to Clipboard"))
                             .buttonStyle(.glass)
                             .controlSize(.regular)
                             .tint(Color.Arke.gold)
@@ -115,11 +115,11 @@ struct RecoveryPhraseSettingView: View {
                                     Image(systemName: "qrcode")
                                         .frame(width: 24, height: 24)
                                         .foregroundStyle(Color.Arke.gold2)
-                                    //Text("action_show_qr")
+                                    //Text(String(localized: "action_show_qr", defaultValue: "Show as QR Code"))
                                     //    .foregroundStyle(Color.Arke.gold2)
                                 }
                             }
-                            .accessibilityLabel("action_show_qr")
+                            .accessibilityLabel(String(localized: "action_show_qr", defaultValue: "Show as QR Code"))
                             .buttonStyle(.glass)
                             .controlSize(.regular)
                             .tint(Color.Arke.gold)
@@ -156,7 +156,7 @@ struct RecoveryPhraseSettingView: View {
                         await loadMnemonic()
                     }
                 } label: {
-                    Text("settings_show_recovery_phrase")
+                    Text(String(localized: "settings_show_recovery_phrase", defaultValue: "Show Recovery Phrase"))
                         .font(.system(size: 19, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                         .padding(.horizontal, 8)
@@ -174,7 +174,7 @@ struct RecoveryPhraseSettingView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .navigationTitle("settings_recovery_phrase")
+        .navigationTitle(String(localized: "settings_recovery_phrase", defaultValue: "Recovery Phrase"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         .task {
@@ -231,11 +231,11 @@ struct RecoveryPhraseSettingView: View {
                 .shadow(color: Color.black.opacity(0.15), radius: 3, x: 0, y: 2)
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("action_download_backup")
+                Text(String(localized: "action_download_backup", defaultValue: "Download backup sheet"))
                     .font(.system(size: 15))
                     .foregroundColor(.primary)
                 
-                Text("settings_backup_print")
+                Text(String(localized: "settings_backup_print", defaultValue: "Print and write your phrase"))
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }

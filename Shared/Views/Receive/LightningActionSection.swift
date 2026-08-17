@@ -30,7 +30,7 @@ struct LightningActionSection: View {
                         } else {
                             Image(systemName: "bolt.fill")
                         }
-                        Text(isGeneratingInvoice ? String(localized: "status_creating_invoice") : String(localized: "button_create_invoice"))
+                        Text(isGeneratingInvoice ? String(localized: "status_creating_invoice", defaultValue: "Creating Invoice...") : String(localized: "button_create_invoice", defaultValue: "Create Invoice"))
                     }
                 }
                 .buttonStyle(ArkeButtonStyle(size: ArkeButtonSize.medium))
@@ -45,7 +45,7 @@ struct LightningActionSection: View {
                         ShareLink(item: actualInvoice) {
                             HStack(spacing: 6) {
                                 Image(systemName: "square.and.arrow.up")
-                                Text("button_share")
+                                Text(L10n.buttonShare)
                             }
                         }
                         .buttonStyle(ArkeButtonStyle(size: .medium))

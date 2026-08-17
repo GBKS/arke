@@ -25,7 +25,7 @@ struct NotificationsSettingView_iOS: View {
                 headerView
 
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("settings_notifications")
+                    Text(String(localized: "settings_notifications", defaultValue: "Notifications"))
                         .font(.system(.title, design: .serif))
                     
 
@@ -73,8 +73,8 @@ struct NotificationsSettingView_iOS: View {
             .padding()
         }
         .contentMargins(.top, 0, for: .scrollContent)
-        .alert("notification_error_title", isPresented: $showNotificationError) {
-            Button("button_ok", role: .cancel) { }
+        .alert(String(localized: "notification_error_title", defaultValue: "Notification Error"), isPresented: $showNotificationError) {
+            Button(L10n.buttonOk, role: .cancel) { }
         } message: {
             Text(notificationErrorMessage)
         }

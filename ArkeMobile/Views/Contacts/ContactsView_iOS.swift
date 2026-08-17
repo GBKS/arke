@@ -71,9 +71,9 @@ extension ContactsView_iOS {
                     contactListView(viewModel: viewModel)
                 }
             }
-            .navigationTitle("contacts_title")
+            .navigationTitle(L10n.contactsTitle)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: String(localized: "placeholder_search_contacts"))
+            .searchable(text: $viewModel.searchText, prompt: L10n.placeholderSearchContacts)
             .toolbar {
                 toolbarContent(viewModel: viewModel)
             }
@@ -141,13 +141,13 @@ extension ContactsView_iOS {
                 await viewModel.deleteContact(contact)
             }
         } label: {
-            Label("button_delete", systemImage: "trash")
+            Label(L10n.buttonDelete, systemImage: "trash")
         }
         
         Button {
             viewModel?.showEditContactEditor(for: contact)
         } label: {
-            Label("button_edit", systemImage: "paintbrush.pointed.fill")
+            Label(L10n.buttonEdit, systemImage: "paintbrush.pointed.fill")
         }
         .tint(.Arke.blue)
     }
@@ -196,7 +196,7 @@ extension ContactsView_iOS {
             } label: {
                 Image(systemName: showStatistics ? "chart.bar.fill" : "chart.bar")
             }
-            .help("action_toggle_statistics")
+            .help(String(localized: "action_toggle_statistics", defaultValue: "Toggle Statistics"))
         }
         
         ToolbarItem(placement: .primaryAction) {
@@ -216,11 +216,11 @@ extension ContactsView_iOS {
     @ViewBuilder
     private func emptyStateView(viewModel: ContactsViewModel) -> some View {
         ContentUnavailableView {
-            Label("contacts_empty_title", systemImage: "person.2.circle")
+            Label(String(localized: "contacts_empty_title", defaultValue: "No Contacts"), systemImage: "person.2.circle")
         } description: {
-            Text("contacts_empty_help")
+            Text(String(localized: "contacts_empty_help", defaultValue: "Add contacts to organize your transactions and make sending easier"))
         } actions: {
-            Button("contacts_create_first") {
+            Button(String(localized: "contacts_create_first", defaultValue: "Create Your First Contact")) {
                 viewModel.showNewContactEditor()
             }
             .buttonStyle(.borderedProminent)

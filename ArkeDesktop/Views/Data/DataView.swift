@@ -49,7 +49,7 @@ struct DataView: View {
                 BlockHeightSectionView()
             }
             .padding(.vertical, 20)
-            .navigationTitle("nav_title_wallet_indepth")
+            .navigationTitle(String(localized: "nav_title_wallet_indepth", defaultValue: "Your wallet in-depth"))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -64,7 +64,7 @@ struct DataView: View {
                             } else {
                                 Image(systemName: "arrow.clockwise")
                             }
-                            Text("button_sync")
+                            Text(String(localized: "button_sync", defaultValue: "Sync"))
                         }
                     }
                     .disabled(isSyncing)
@@ -83,23 +83,23 @@ struct DataView: View {
                             } else {
                                 Image(systemName: "square.and.arrow.down")
                             }
-                            Text("button_download")
+                            Text(L10n.buttonDownload)
                         }
                     }
                     .disabled(isExporting)
                 }
             }
-            .alert("alert_export_error", isPresented: .constant(exportError != nil)) {
-                Button("button_ok") {
+            .alert(String(localized: "alert_export_error", defaultValue: "Export Error"), isPresented: .constant(exportError != nil)) {
+                Button(L10n.buttonOk) {
                     exportError = nil
                 }
             } message: {
                 Text(exportError ?? "")
             }
-            .alert("alert_export_successful", isPresented: $showingExportSuccess) {
-                Button("button_ok") { }
+            .alert(String(localized: "alert_export_successful", defaultValue: "Export Successful"), isPresented: $showingExportSuccess) {
+                Button(L10n.buttonOk) { }
             } message: {
-                Text("alert_wallet_data_saved")
+                Text(String(localized: "alert_wallet_data_saved", defaultValue: "Wallet data has been saved successfully."))
             }
         }
     }

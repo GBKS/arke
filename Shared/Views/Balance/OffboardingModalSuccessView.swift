@@ -27,10 +27,10 @@ struct OffboardingModalSuccessView: View {
             
             VStack(spacing: 15) {
                 VStack(spacing: 8) {
-                    Text("status_transfer_initiated")
+                    Text(String(localized: "status_transfer_initiated", defaultValue: "Transfer Initiated"))
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "balance_transfer_savings_progress"))
+                    Text(String(localized: "balance_transfer_savings_progress", defaultValue: "Your coins are being transferred to your savings balance. This process may take a moment to complete."))
                         .font(.title3)
                         .foregroundColor(.arkeSecondary)
                         .multilineTextAlignment(.center)

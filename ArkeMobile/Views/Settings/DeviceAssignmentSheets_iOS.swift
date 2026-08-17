@@ -18,11 +18,11 @@ struct DemoteDeviceSheet: View {
                     .foregroundStyle(Color.Arke.blue)
 
                 // Title
-                Text("settings_make_this_device_secondary")
+                Text(String(localized: "settings_make_this_device_secondary", defaultValue: "Make This Device Secondary?"))
                     .font(.title2.bold())
 
                 // Explanation
-                Text("settings_make_secondary_help")
+                Text(String(localized: "settings_make_secondary_help", defaultValue: "This device will switch to view-only mode. Make sure you have your other device ready to make it primary."))
                     .font(.title3)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
@@ -31,11 +31,11 @@ struct DemoteDeviceSheet: View {
                 // Info box
                 GroupBox {
                     VStack(alignment: .leading, spacing: 8) {
-                        Label("settings_after_confirming", systemImage: "info.circle")
+                        Label(String(localized: "settings_after_confirming", defaultValue: "After confirming:"), systemImage: "info.circle")
                             .font(.body)
-                        Text("settings_make_secondary_step_1")
-                        Text("settings_make_secondary_step_2")
-                        Text("settings_make_secondary_step_3")
+                        Text(String(localized: "settings_make_secondary_step_1", defaultValue: "1. This device becomes view-only"))
+                        Text(String(localized: "settings_make_secondary_step_2", defaultValue: "2. Open your other device"))
+                        Text(String(localized: "settings_make_secondary_step_3", defaultValue: "3. Make that device primary"))
                     }
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -60,7 +60,7 @@ struct DemoteDeviceSheet: View {
                                 .progressViewStyle(.circular)
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Text("settings_make_secondary")
+                            Text(String(localized: "settings_make_secondary", defaultValue: "Make Secondary"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
@@ -74,7 +74,7 @@ struct DemoteDeviceSheet: View {
                     Button {
                         isPresented = false
                     } label: {
-                        Text("button_cancel")
+                        Text(L10n.buttonCancel)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
@@ -87,7 +87,7 @@ struct DemoteDeviceSheet: View {
                 .padding(.horizontal)
             }
             .padding(.vertical)
-            .navigationTitle("section_device_role")
+            .navigationTitle(L10n.sectionDeviceRole)
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -132,11 +132,11 @@ struct PromoteDeviceSheet: View {
                     .foregroundStyle(Color.Arke.green)
 
                 // Title
-                Text("settings_make_this_device_primary")
+                Text(String(localized: "settings_make_this_device_primary", defaultValue: "Make This Device Primary?"))
                     .font(.title2.bold())
 
                 // Explanation
-                Text("settings_make_primary_help")
+                Text(String(localized: "settings_make_primary_help", defaultValue: "This device will become your active wallet, able to send and receive payments."))
                     .font(.title3)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
@@ -160,7 +160,7 @@ struct PromoteDeviceSheet: View {
                                 .progressViewStyle(.circular)
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Text("settings_make_primary")
+                            Text(String(localized: "settings_make_primary", defaultValue: "Make Primary"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
@@ -174,7 +174,7 @@ struct PromoteDeviceSheet: View {
                     Button {
                         isPresented = false
                     } label: {
-                        Text("button_cancel")
+                        Text(L10n.buttonCancel)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
@@ -187,7 +187,7 @@ struct PromoteDeviceSheet: View {
                 .padding(.horizontal)
             }
             .padding(.vertical)
-            .navigationTitle("section_device_role")
+            .navigationTitle(L10n.sectionDeviceRole)
             .navigationBarTitleDisplayMode(.inline)
         }
     }

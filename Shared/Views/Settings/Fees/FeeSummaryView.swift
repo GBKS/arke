@@ -17,7 +17,7 @@ struct FeeSummaryView: View {
             .task(id: walletManager.transactions.count) {
                 loadStatistics()
             }
-            //.navigationTitle("activity_fee_summary")
+            //.navigationTitle(L10n.activityFeeSummary)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -41,7 +41,7 @@ struct FeeSummaryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // Large serif title
-                Text("activity_fee_summary")
+                Text(L10n.activityFeeSummary)
                     .font(.system(.largeTitle, design: .serif))
                     .padding(.horizontal)
                 
@@ -93,41 +93,41 @@ struct FeeSummaryView: View {
         }
         
         let keyMetrics: [FeeDetailCardView.KeyMetric] = [
-            .init(label: String(localized: "fee_transactions"), value: "\(sendStats.count)"),
-            .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(sendStats.totalFees, hasData: hasData)),
-            .init(label: String(localized: "fee_amount_sent"), value: formatAmountOrDash(sendStats.volume, hasData: hasData))
+            .init(label: L10n.feeTransactions, value: "\(sendStats.count)"),
+            .init(label: L10n.activityFeesPaid, value: formatAmountOrDash(sendStats.totalFees, hasData: hasData)),
+            .init(label: String(localized: "fee_amount_sent", defaultValue: "Amount Sent"), value: formatAmountOrDash(sendStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = sendStats.networkBreakdown
         let networkSection = FeeDetailCardView.Section(
-            title: String(localized: "fee_by_network"),
+            title: String(localized: "fee_by_network", defaultValue: "Fees by Network"),
             items: [
                 .init(
                     label: networkBreakdown.arkCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_ark"), networkBreakdown.arkCount)
-                        : String(localized: "network_ark"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkArk, networkBreakdown.arkCount)
+                        : L10n.networkArk,
                     value: formatAmountOrDash(networkBreakdown.arkFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.lightningCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_lightning"), networkBreakdown.lightningCount)
-                        : String(localized: "network_lightning"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkLightning, networkBreakdown.lightningCount)
+                        : L10n.networkLightning,
                     value: formatAmountOrDash(networkBreakdown.lightningFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.bitcoinCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_bitcoin"), networkBreakdown.bitcoinCount)
-                        : String(localized: "network_bitcoin"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkBitcoin, networkBreakdown.bitcoinCount)
+                        : L10n.networkBitcoin,
                     value: formatAmountOrDash(networkBreakdown.bitcoinFees, hasData: hasData)
                 )
             ]
         )
         
         return FeeDetailCardView(
-            title: String(localized: "fee_average_send"),
+            title: String(localized: "fee_average_send", defaultValue: "Average Send Fee"),
             subtitle: nil,
             prominentMetric: percentageString,
-            prominentMetricAccessibilityLabel: String(format: String(localized: "accessibility_average_fee_percentage"), percentageString),
+            prominentMetricAccessibilityLabel: String(format: String(localized: "accessibility_average_fee_percentage", defaultValue: "Average fee as percentage of volume: %@"), percentageString),
             keyMetrics: keyMetrics,
             sections: [networkSection],
             iconSymbol: "arrow.up",
@@ -163,33 +163,33 @@ struct FeeSummaryView: View {
         let keyMetrics: [FeeDetailCardView.KeyMetric] = [
             .init(
                 label: refreshStats?.count ?? 0 > 0 
-                    ? String(format: String(localized: "maintenance_refresh_with_count"), refreshStats!.count)
-                    : String(localized: "maintenance_refresh"),
+                    ? String(format: String(localized: "maintenance_refresh_with_count", defaultValue: "Refresh (%lld)"), refreshStats!.count)
+                    : String(localized: "maintenance_refresh", defaultValue: "Refresh"),
                 value: formatAmountOrDash(refreshStats?.fees ?? 0, hasData: hasData)
             ),
             .init(
                 label: boardingStats?.count ?? 0 > 0 
-                    ? String(format: String(localized: "maintenance_boarding_with_count"), boardingStats!.count)
-                    : String(localized: "maintenance_boarding"),
+                    ? String(format: String(localized: "maintenance_boarding_with_count", defaultValue: "Move to Payments (%lld)"), boardingStats!.count)
+                    : String(localized: "maintenance_boarding", defaultValue: "Move to Payments"),
                 value: formatAmountOrDash(boardingStats?.fees ?? 0, hasData: hasData)
             ),
             .init(
                 label: combinedOffboardingCount > 0 
-                    ? String(format: String(localized: "maintenance_offboarding_with_count"), combinedOffboardingCount)
-                    : String(localized: "maintenance_offboarding"),
+                    ? String(format: String(localized: "maintenance_offboarding_with_count", defaultValue: "Move to Savings (%lld)"), combinedOffboardingCount)
+                    : String(localized: "maintenance_offboarding", defaultValue: "Move to Savings"),
                 value: formatAmountOrDash(combinedOffboardingFees, hasData: hasData)
             ),
             .init(
                 label: recoveryCount > 0 
-                    ? String(format: String(localized: "maintenance_exit_with_count"), recoveryCount)
-                    : String(localized: "maintenance_exit"),
+                    ? String(format: String(localized: "maintenance_exit_with_count", defaultValue: "Force Move to Savings (%lld)"), recoveryCount)
+                    : String(localized: "maintenance_exit", defaultValue: "Force Move to Savings"),
                 value: formatAmountOrDash(recoveryFees, hasData: hasData)
             )
         ]
         
         return FeeDetailCardView(
-            title: String(localized: "fee_maintenance"),
-            subtitle: String(localized: "fee_maintenance_subtitle"),
+            title: String(localized: "fee_maintenance", defaultValue: "Maintenance Fees"),
+            subtitle: String(localized: "fee_maintenance_subtitle", defaultValue: "Your payments balance requires occasional refreshes and transfers."),
             prominentMetric: formatAmountOrDash(internalStats.totalFees, hasData: hasData),
             prominentMetricAccessibilityLabel: nil,
             keyMetrics: keyMetrics,
@@ -215,41 +215,41 @@ struct FeeSummaryView: View {
         }
         
         let keyMetrics: [FeeDetailCardView.KeyMetric] = [
-            .init(label: String(localized: "fee_transactions"), value: "\(receiveStats.count)"),
-            .init(label: String(localized: "activity_fees_paid"), value: formatAmountOrDash(receiveStats.totalFees, hasData: hasData)),
-            .init(label: String(localized: "fee_amount_received"), value: formatAmountOrDash(receiveStats.volume, hasData: hasData))
+            .init(label: L10n.feeTransactions, value: "\(receiveStats.count)"),
+            .init(label: L10n.activityFeesPaid, value: formatAmountOrDash(receiveStats.totalFees, hasData: hasData)),
+            .init(label: String(localized: "fee_amount_received", defaultValue: "Amount Received"), value: formatAmountOrDash(receiveStats.volume, hasData: hasData))
         ]
         
         let networkBreakdown = receiveStats.networkBreakdown
         let networkSection = FeeDetailCardView.Section(
-            title: String(localized: "fee_network_breakdown"),
+            title: String(localized: "fee_network_breakdown", defaultValue: "Network Breakdown"),
             items: [
                 .init(
                     label: networkBreakdown.arkCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_ark"), networkBreakdown.arkCount)
-                        : String(localized: "network_ark"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkArk, networkBreakdown.arkCount)
+                        : L10n.networkArk,
                     value: formatAmountOrDash(networkBreakdown.arkFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.lightningCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_lightning"), networkBreakdown.lightningCount)
-                        : String(localized: "network_lightning"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkLightning, networkBreakdown.lightningCount)
+                        : L10n.networkLightning,
                     value: formatAmountOrDash(networkBreakdown.lightningFees, hasData: hasData)
                 ),
                 .init(
                     label: networkBreakdown.bitcoinCount > 0 
-                        ? String(format: String(localized: "fee_network_with_count"), String(localized: "network_bitcoin"), networkBreakdown.bitcoinCount)
-                        : String(localized: "network_bitcoin"),
+                        ? String(format: L10n.feeNetworkWithCount, L10n.networkBitcoin, networkBreakdown.bitcoinCount)
+                        : L10n.networkBitcoin,
                     value: formatAmountOrDash(networkBreakdown.bitcoinFees, hasData: hasData)
                 )
             ]
         )
         
         return FeeDetailCardView(
-            title: String(localized: "fee_average_receive"),
+            title: String(localized: "fee_average_receive", defaultValue: "Average Receive Fee"),
             subtitle: nil,
             prominentMetric: percentageString,
-            prominentMetricAccessibilityLabel: String(format: String(localized: "accessibility_average_fee_percentage"), percentageString),
+            prominentMetricAccessibilityLabel: String(format: String(localized: "accessibility_average_fee_percentage", defaultValue: "Average fee as percentage of volume: %@"), percentageString),
             keyMetrics: keyMetrics,
             sections: [networkSection]
         )
@@ -260,9 +260,9 @@ struct FeeSummaryView: View {
     @ViewBuilder
     private var emptyStateView: some View {
         ContentUnavailableView {
-            Label("activity_empty_title", systemImage: "chart.bar.xaxis")
+            Label(String(localized: "activity_empty_title", defaultValue: "No Transactions Yet"), systemImage: "chart.bar.xaxis")
         } description: {
-            Text("activity_fee_stats_empty")
+            Text(String(localized: "activity_fee_stats_empty", defaultValue: "Fee statistics will appear here once you start making transactions"))
         }
     }
     
@@ -272,8 +272,8 @@ struct FeeSummaryView: View {
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
-                .accessibilityLabel(String(localized: "accessibility_loading_fee_stats"))
-            Text(String(localized: "status_loading_fee_stats"))
+                .accessibilityLabel(String(localized: "accessibility_loading_fee_stats", defaultValue: "Loading fee statistics"))
+            Text(String(localized: "status_loading_fee_stats", defaultValue: "Loading fee statistics..."))
                 .foregroundStyle(.secondary)
         }
     }
@@ -283,11 +283,11 @@ struct FeeSummaryView: View {
     @ViewBuilder
     private func errorView(message: String) -> some View {
         ContentUnavailableView {
-            Label("error_load_statistics", systemImage: "exclamationmark.triangle")
+            Label(String(localized: "error_load_statistics", defaultValue: "Unable to Load Statistics"), systemImage: "exclamationmark.triangle")
         } description: {
             Text(message)
         } actions: {
-            Button("button_try_again") {
+            Button(L10n.buttonTryAgain) {
                 loadStatistics()
             }
         }

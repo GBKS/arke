@@ -31,7 +31,7 @@ struct DeleteWalletSettingView: View {
                  */
                 
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("action_delete_wallet")
+                    Text(String(localized: "action_delete_wallet", defaultValue: "Delete wallet"))
                         .font(.system(.title, design: .serif))
                     
                     Text(introText)
@@ -48,7 +48,7 @@ struct DeleteWalletSettingView: View {
                     if let balance = walletManager.totalBalance, balance.grandTotalSat > 0 {
                         VStack(alignment: .leading, spacing: 10) {
                             Label {
-                                Text(String(localized: "settings_delete_balance_warning"))
+                                Text(String(localized: "settings_delete_balance_warning", defaultValue: "You still have funds in your wallet. Make sure to transfer them out before deleting, or accept that small amounts below minimum fees may not be recoverable."))
                                     .font(.callout)
                                     .foregroundColor(.primary)
                             } icon: {
@@ -71,7 +71,7 @@ struct DeleteWalletSettingView: View {
                     // Manual backup reminder
                     VStack(alignment: .leading, spacing: 12) {
                         Label {
-                            Text(String(localized: "settings_delete_backup_reminder"))
+                            Text(String(localized: "settings_delete_backup_reminder", defaultValue: "Have you completed a manual backup? You need both your recovery phrase and wallet state file to fully restore your wallet."))
                                 .font(.callout)
                                 .foregroundColor(.primary)
                         } icon: {
@@ -84,10 +84,10 @@ struct DeleteWalletSettingView: View {
                         #if os(iOS)
                         NavigationLink {
                             ManualBackupView_iOS()
-                                .navigationTitle("settings_manual_backup")
+                                .navigationTitle(L10n.settingsManualBackup)
                                 .navigationBarTitleDisplayMode(.large)
                         } label: {
-                            Text("button_manual_backup")
+                            Text(String(localized: "button_manual_backup", defaultValue: "Back up Wallet"))
                                 .font(.callout)
                                 .fontWeight(.medium)
                         }
@@ -125,7 +125,7 @@ struct DeleteWalletSettingView: View {
                         HStack {
                             ProgressView()
                                 .controlSize(.small)
-                            Text(String(localized: "status_checking_devices"))
+                            Text(String(localized: "status_checking_devices", defaultValue: "Checking for other devices..."))
                                 .font(.callout)
                                 .foregroundColor(.secondary)
                         }
@@ -136,7 +136,7 @@ struct DeleteWalletSettingView: View {
                             showingDeletionConfirmation = true
                         } label: {
                             HStack {
-                                Text("button_delete_wallet")
+                                Text(L10n.buttonDeleteWallet)
                                     .font(.system(size: 19, weight: .semibold))
                                 Spacer()
                                 Image(systemName: "chevron.right")
@@ -183,7 +183,7 @@ struct DeleteWalletSettingView: View {
         case .localOnly:
             return String(localized: "settings_delete_warning_local_only", defaultValue: "This will permanently delete your wallet from this device. Your other devices keep access to the wallet.")
         case .promptForCloudData:
-            return String(localized: "settings_delete_warning_icloud")
+            return String(localized: "settings_delete_warning_icloud", defaultValue: "This will permanently delete your wallet from this device and iCloud. All linked devices will lose access.")
         case nil:
             return String(localized: "settings_delete_warning_device", defaultValue: "This will permanently delete your wallet from this device.")
         }

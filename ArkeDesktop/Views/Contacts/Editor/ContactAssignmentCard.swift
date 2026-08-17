@@ -29,14 +29,14 @@ struct ContactAssignmentCard: View {
                         .lineLimit(2)
                 }
                 
-                Text("contacts_assigned_to_this_transaction")
+                Text(String(localized: "contacts_assigned_to_this_transaction", defaultValue: "Assigned to this transaction"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            Button("action_remove") {
+            Button(L10n.actionRemove) {
                 onRemove()
             }
             .buttonStyle(.borderedProminent)

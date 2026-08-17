@@ -24,60 +24,60 @@ extension TransactionModel {
             switch category {
             case .boarding:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_moved"),
-                    pending: String(localized: "transaction_moving"),
-                    failed: String(localized: "transaction_failed_move"),
+                    confirmed: L10n.transactionMoved,
+                    pending: L10n.transactionMoving,
+                    failed: L10n.transactionFailedMove,
                     includePrefix: includeStatusPrefix
                 )
             case .exit:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_forced_move"),
-                    pending: String(localized: "transaction_forcing_move"),
-                    failed: String(localized: "transaction_failed_forced_move"),
-                    cancelled: String(localized: "transaction_cancelled_forced_move"),
+                    confirmed: String(localized: "transaction_forced_move", defaultValue: "Forced Move"),
+                    pending: String(localized: "transaction_forcing_move", defaultValue: "Forcing Move"),
+                    failed: String(localized: "transaction_failed_forced_move", defaultValue: "Failed forced move"),
+                    cancelled: String(localized: "transaction_cancelled_forced_move", defaultValue: "Cancelled Forced Move"),
                     includePrefix: includeStatusPrefix
                 )
             case .offboarding:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_moved"),
-                    pending: String(localized: "transaction_moving"),
-                    failed: String(localized: "transaction_failed_move"),
+                    confirmed: L10n.transactionMoved,
+                    pending: L10n.transactionMoving,
+                    failed: L10n.transactionFailedMove,
                     includePrefix: includeStatusPrefix
                 )
             case .refresh:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_refresh"),
-                    pending: String(localized: "transaction_refreshing"),
-                    failed: String(localized: "transaction_failed_refresh"),
+                    confirmed: String(localized: "transaction_refresh", defaultValue: "Refresh"),
+                    pending: String(localized: "transaction_refreshing", defaultValue: "Refreshing"),
+                    failed: String(localized: "transaction_failed_refresh", defaultValue: "Failed refresh"),
                     includePrefix: includeStatusPrefix
                 )
             case .lightningSend:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_sent"),
-                    pending: String(localized: "transaction_sending"),
-                    failed: String(localized: "transaction_failed_send"),
+                    confirmed: L10n.transactionSent,
+                    pending: L10n.transactionSending,
+                    failed: L10n.transactionFailedSend,
                     includePrefix: includeStatusPrefix
                 )
             case .lightningReceive:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_received"),
-                    pending: String(localized: "transaction_receiving"),
-                    failed: String(localized: "transaction_failed_receive"),
+                    confirmed: L10n.transactionReceived,
+                    pending: L10n.transactionReceiving,
+                    failed: L10n.transactionFailedReceive,
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
                 if(subsystemName == "bark.offboard") {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_moved"),
-                        pending: String(localized: "transaction_moving"),
-                        failed: String(localized: "transaction_failed_move"),
+                        confirmed: L10n.transactionMoved,
+                        pending: L10n.transactionMoving,
+                        failed: L10n.transactionFailedMove,
                         includePrefix: includeStatusPrefix
                     )
                 }
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_sent"),
-                    pending: String(localized: "transaction_sending"),
-                    failed: String(localized: "transaction_failed_send"),
+                    confirmed: L10n.transactionSent,
+                    pending: L10n.transactionSending,
+                    failed: L10n.transactionFailedSend,
                     includePrefix: includeStatusPrefix
                 )
             case .onchainTransaction:
@@ -92,9 +92,9 @@ extension TransactionModel {
                 // Check if this is a self-transfer first
                 if isInternalTransfer {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_moved"),
-                        pending: String(localized: "transaction_moving"),
-                        failed: String(localized: "transaction_failed_move"),
+                        confirmed: L10n.transactionMoved,
+                        pending: L10n.transactionMoving,
+                        failed: L10n.transactionFailedMove,
                         includePrefix: includeStatusPrefix
                     )
                 }
@@ -102,20 +102,20 @@ extension TransactionModel {
                 switch type {
                 case .received:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_received"),
-                        pending: String(localized: "transaction_receiving"),
-                        failed: String(localized: "transaction_failed_receive"),
+                        confirmed: L10n.transactionReceived,
+                        pending: L10n.transactionReceiving,
+                        failed: L10n.transactionFailedReceive,
                         includePrefix: includeStatusPrefix
                     )
                 case .sent:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_sent"),
-                        pending: String(localized: "transaction_sending"),
-                        failed: String(localized: "transaction_failed_send"),
+                        confirmed: L10n.transactionSent,
+                        pending: L10n.transactionSending,
+                        failed: L10n.transactionFailedSend,
                         includePrefix: includeStatusPrefix
                     )
                 default:
-                    return String(localized: "transaction_generic")
+                    return String(localized: "transaction_generic", defaultValue: "Transaction")
                 }
             case .offchainTransfer:
                 // Fall through to contact logic below
@@ -130,30 +130,30 @@ extension TransactionModel {
         switch transactionType {
         case .received:
             return statusAwareText(
-                confirmed: String(localized: "transaction_received"),
-                pending: String(localized: "transaction_receiving"),
-                failed: String(localized: "transaction_failed_receive"),
-                cancelled: String(localized: "transaction_cancelled_receive"),
+                confirmed: L10n.transactionReceived,
+                pending: L10n.transactionReceiving,
+                failed: L10n.transactionFailedReceive,
+                cancelled: String(localized: "transaction_cancelled_receive", defaultValue: "Cancelled receive"),
                 includePrefix: includeStatusPrefix
             )
         case .sent:
             return statusAwareText(
-                confirmed: String(localized: "transaction_sent"),
-                pending: String(localized: "transaction_sending"),
-                failed: String(localized: "transaction_failed_send"),
-                cancelled: String(localized: "transaction_cancelled_send"),
+                confirmed: L10n.transactionSent,
+                pending: L10n.transactionSending,
+                failed: L10n.transactionFailedSend,
+                cancelled: String(localized: "transaction_cancelled_send", defaultValue: "Cancelled send"),
                 includePrefix: includeStatusPrefix
             )
         case .transfer:
             return statusAwareText(
-                confirmed: String(localized: "transaction_move"),
-                pending: String(localized: "transaction_moving"),
-                failed: String(localized: "transaction_failed_move"),
-                cancelled: String(localized: "transaction_cancelled_move"),
+                confirmed: String(localized: "transaction_move", defaultValue: "Move"),
+                pending: L10n.transactionMoving,
+                failed: L10n.transactionFailedMove,
+                cancelled: String(localized: "transaction_cancelled_move", defaultValue: "Cancelled move"),
                 includePrefix: includeStatusPrefix
             )
         case .pending:
-            return String(localized: "transaction_pending")
+            return L10n.transactionPending
         }
         */
         
@@ -176,87 +176,87 @@ extension TransactionModel {
             case .boarding:
                 let amountText = BitcoinFormatter.shared.formatAmount(amount)
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_moved_amount \(amountText)"),
-                    pending: String(localized: "transaction_moving_amount \(amountText)"),
-                    failed: String(localized: "transaction_failed_move"),
+                    confirmed: String(localized: "transaction_moved_amount %@", defaultValue: "Moved \(amountText)"),
+                    pending: String(localized: "transaction_moving_amount %@", defaultValue: "Moving \(amountText)"),
+                    failed: L10n.transactionFailedMove,
                     includePrefix: includeStatusPrefix
                 )
             case .exit:
                 let amountText = BitcoinFormatter.shared.formatAmount(amount)
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_force_moved_amount \(amountText)"),
-                    pending: String(localized: "transaction_force_moving_amount \(amountText)"),
-                    failed: String(localized: "transaction_failed_forced_move"),
-                    cancelled: String(localized: "transaction_cancelled_force_move_amount \(amountText)"),
+                    confirmed: String(localized: "transaction_force_moved_amount %@", defaultValue: "Force moved \(amountText)"),
+                    pending: String(localized: "transaction_force_moving_amount %@", defaultValue: "Force moving \(amountText)"),
+                    failed: String(localized: "transaction_failed_forced_move", defaultValue: "Failed forced move"),
+                    cancelled: String(localized: "transaction_cancelled_force_move_amount %@", defaultValue: "Cancelled force move of \(amountText)"),
                     includePrefix: includeStatusPrefix
                 )
             case .offboarding:
                 let amountText = BitcoinFormatter.shared.formatAmount(amount)
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_moved_amount \(amountText)"),
-                    pending: String(localized: "transaction_moving_amount \(amountText)"),
-                    failed: String(localized: "transaction_failed_move"),
+                    confirmed: String(localized: "transaction_moved_amount %@", defaultValue: "Moved \(amountText)"),
+                    pending: String(localized: "transaction_moving_amount %@", defaultValue: "Moving \(amountText)"),
+                    failed: L10n.transactionFailedMove,
                     includePrefix: includeStatusPrefix
                 )
             case .refresh:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_refresh"),
-                    pending: String(localized: "transaction_refreshing"),
-                    failed: String(localized: "transaction_failed_refresh"),
+                    confirmed: String(localized: "transaction_refresh", defaultValue: "Refresh"),
+                    pending: String(localized: "transaction_refreshing", defaultValue: "Refreshing"),
+                    failed: String(localized: "transaction_failed_refresh", defaultValue: "Failed refresh"),
                     includePrefix: includeStatusPrefix
                 )
             case .lightningSend:
                 if let contact = associatedContacts.first {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_to_contact \(contact.cachedName)"),
-                        pending: String(localized: "transaction_sending_to_contact \(contact.cachedName)"),
-                        failed: String(localized: "transaction_failed_send_to_contact \(contact.cachedName)"),
+                        confirmed: String(localized: "transaction_to_contact %@", defaultValue: "To \(contact.cachedName)"),
+                        pending: String(localized: "transaction_sending_to_contact %@", defaultValue: "Sending to \(contact.cachedName)"),
+                        failed: String(localized: "transaction_failed_send_to_contact %@", defaultValue: "Failed send to \(contact.cachedName)"),
                         includePrefix: includeStatusPrefix
                     )
                 }
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_sent"),
-                    pending: String(localized: "transaction_sending"),
-                    failed: String(localized: "transaction_failed_send"),
+                    confirmed: L10n.transactionSent,
+                    pending: L10n.transactionSending,
+                    failed: L10n.transactionFailedSend,
                     includePrefix: includeStatusPrefix
                 )
             case .lightningReceive:
                 if let contact = associatedContacts.first {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_from_contact \(contact.cachedName)"),
-                        pending: String(localized: "transaction_receiving_from_contact \(contact.cachedName)"),
-                        failed: String(localized: "transaction_failed_receive_from_contact \(contact.cachedName)"),
+                        confirmed: String(localized: "transaction_from_contact %@", defaultValue: "From \(contact.cachedName)"),
+                        pending: String(localized: "transaction_receiving_from_contact %@", defaultValue: "Receiving from \(contact.cachedName)"),
+                        failed: String(localized: "transaction_failed_receive_from_contact %@", defaultValue: "Failed receive from \(contact.cachedName)"),
                         includePrefix: includeStatusPrefix
                     )
                 }
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_received"),
-                    pending: String(localized: "transaction_receiving"),
-                    failed: String(localized: "transaction_failed_receive"),
+                    confirmed: L10n.transactionReceived,
+                    pending: L10n.transactionReceiving,
+                    failed: L10n.transactionFailedReceive,
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
                 if(subsystemName == "bark.offboard") {
                     let amountText = BitcoinFormatter.shared.formatAmount(amount)
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_moved_amount \(amountText)"),
-                        pending: String(localized: "transaction_moving_amount \(amountText)"),
-                        failed: String(localized: "transaction_failed_move_to_savings"),
+                        confirmed: String(localized: "transaction_moved_amount %@", defaultValue: "Moved \(amountText)"),
+                        pending: String(localized: "transaction_moving_amount %@", defaultValue: "Moving \(amountText)"),
+                        failed: String(localized: "transaction_failed_move_to_savings", defaultValue: "Failed move to savings"),
                         includePrefix: includeStatusPrefix
                     )
                 }
                 if let contact = associatedContacts.first {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_to_contact \(contact.cachedName)"),
-                        pending: String(localized: "transaction_sending_to_contact \(contact.cachedName)"),
-                        failed: String(localized: "transaction_failed_send_to_contact \(contact.cachedName)"),
+                        confirmed: String(localized: "transaction_to_contact %@", defaultValue: "To \(contact.cachedName)"),
+                        pending: String(localized: "transaction_sending_to_contact %@", defaultValue: "Sending to \(contact.cachedName)"),
+                        failed: String(localized: "transaction_failed_send_to_contact %@", defaultValue: "Failed send to \(contact.cachedName)"),
                         includePrefix: includeStatusPrefix
                     )
                 }
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_sent"),
-                    pending: String(localized: "transaction_sending"),
-                    failed: String(localized: "transaction_failed_send"),
+                    confirmed: L10n.transactionSent,
+                    pending: L10n.transactionSending,
+                    failed: L10n.transactionFailedSend,
                     includePrefix: includeStatusPrefix
                 )
             case .onchainTransaction:
@@ -264,9 +264,9 @@ extension TransactionModel {
                 if isInternalTransfer {
                     let amountText = BitcoinFormatter.shared.formatAmount(amount)
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_moved_amount \(amountText)"),
-                        pending: String(localized: "transaction_moving_amount \(amountText)"),
-                        failed: String(localized: "transaction_failed_move"),
+                        confirmed: String(localized: "transaction_moved_amount %@", defaultValue: "Moved \(amountText)"),
+                        pending: String(localized: "transaction_moving_amount %@", defaultValue: "Moving \(amountText)"),
+                        failed: L10n.transactionFailedMove,
                         includePrefix: includeStatusPrefix
                     )
                 }
@@ -275,16 +275,16 @@ extension TransactionModel {
                     switch type {
                     case .received:
                         return statusAwareText(
-                            confirmed: String(localized: "transaction_from_contact \(contact.cachedName)"),
-                            pending: String(localized: "transaction_receiving_from_contact \(contact.cachedName)"),
-                            failed: String(localized: "transaction_failed_receive"),
+                            confirmed: String(localized: "transaction_from_contact %@", defaultValue: "From \(contact.cachedName)"),
+                            pending: String(localized: "transaction_receiving_from_contact %@", defaultValue: "Receiving from \(contact.cachedName)"),
+                            failed: L10n.transactionFailedReceive,
                             includePrefix: includeStatusPrefix
                         )
                     case .sent:
                         return statusAwareText(
-                            confirmed: String(localized: "transaction_to_contact \(contact.cachedName)"),
-                            pending: String(localized: "transaction_sending_to_contact \(contact.cachedName)"),
-                            failed: String(localized: "transaction_failed_send"),
+                            confirmed: String(localized: "transaction_to_contact %@", defaultValue: "To \(contact.cachedName)"),
+                            pending: String(localized: "transaction_sending_to_contact %@", defaultValue: "Sending to \(contact.cachedName)"),
+                            failed: L10n.transactionFailedSend,
                             includePrefix: includeStatusPrefix
                         )
                     default:
@@ -295,20 +295,20 @@ extension TransactionModel {
                 switch type {
                 case .received:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_received"),
-                        pending: String(localized: "transaction_receiving"),
-                        failed: String(localized: "transaction_failed_receive"),
+                        confirmed: L10n.transactionReceived,
+                        pending: L10n.transactionReceiving,
+                        failed: L10n.transactionFailedReceive,
                         includePrefix: includeStatusPrefix
                     )
                 case .sent:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_sent"),
-                        pending: String(localized: "transaction_sending"),
-                        failed: String(localized: "transaction_failed_send"),
+                        confirmed: L10n.transactionSent,
+                        pending: L10n.transactionSending,
+                        failed: L10n.transactionFailedSend,
                         includePrefix: includeStatusPrefix
                     )
                 default:
-                    return String(localized: "transaction_bitcoin")
+                    return String(localized: "transaction_bitcoin", defaultValue: "Bitcoin Transaction")
                 }
             case .offchainTransfer:
                 // Fall through to contact logic below
@@ -323,27 +323,27 @@ extension TransactionModel {
             switch transactionType {
             case .received:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_from_contact \(contact.cachedName)"),
-                    pending: String(localized: "transaction_receiving_from_contact \(contact.cachedName)"),
-                    failed: String(localized: "transaction_failed_receive_from_contact \(contact.cachedName)"),
+                    confirmed: String(localized: "transaction_from_contact %@", defaultValue: "From \(contact.cachedName)"),
+                    pending: String(localized: "transaction_receiving_from_contact %@", defaultValue: "Receiving from \(contact.cachedName)"),
+                    failed: String(localized: "transaction_failed_receive_from_contact %@", defaultValue: "Failed receive from \(contact.cachedName)"),
                     includePrefix: includeStatusPrefix
                 )
             case .sent:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_to_contact \(contact.cachedName)"),
-                    pending: String(localized: "transaction_sending_to_contact \(contact.cachedName)"),
-                    failed: String(localized: "transaction_failed_send_to_contact \(contact.cachedName)"),
+                    confirmed: String(localized: "transaction_to_contact %@", defaultValue: "To \(contact.cachedName)"),
+                    pending: String(localized: "transaction_sending_to_contact %@", defaultValue: "Sending to \(contact.cachedName)"),
+                    failed: String(localized: "transaction_failed_send_to_contact %@", defaultValue: "Failed send to \(contact.cachedName)"),
                     includePrefix: includeStatusPrefix
                 )
             case .transfer:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_transfer"),
-                    pending: String(localized: "transaction_transferring"),
-                    failed: String(localized: "transaction_failed_transfer"),
+                    confirmed: String(localized: "transaction_transfer", defaultValue: "Transfer"),
+                    pending: String(localized: "transaction_transferring", defaultValue: "Transferring"),
+                    failed: String(localized: "transaction_failed_transfer", defaultValue: "Failed transfer"),
                     includePrefix: includeStatusPrefix
                 )
             case .pending:
-                return String(localized: "transaction_pending")
+                return L10n.transactionPending
             }
         }
         
@@ -366,75 +366,75 @@ extension TransactionModel {
             switch category {
             case .boarding:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_savings_to_payments"),
-                    pending: String(localized: "transaction_detail_savings_to_payments"),
-                    failed: String(localized: "transaction_detail_savings_to_payments"),
+                    confirmed: L10n.transactionDetailSavingsToPayments,
+                    pending: L10n.transactionDetailSavingsToPayments,
+                    failed: L10n.transactionDetailSavingsToPayments,
                     includePrefix: includeStatusPrefix
                 )
             case .exit:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_payments_to_savings"),
-                    pending: String(localized: "transaction_detail_payments_to_savings"),
-                    failed: String(localized: "transaction_detail_payments_to_savings"),
+                    confirmed: L10n.transactionDetailPaymentsToSavings,
+                    pending: L10n.transactionDetailPaymentsToSavings,
+                    failed: L10n.transactionDetailPaymentsToSavings,
                     includePrefix: includeStatusPrefix
                 )
             case .offboarding:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_payments_to_savings"),
-                    pending: String(localized: "transaction_detail_payments_to_savings"),
-                    failed: String(localized: "transaction_detail_payments_to_savings"),
+                    confirmed: L10n.transactionDetailPaymentsToSavings,
+                    pending: L10n.transactionDetailPaymentsToSavings,
+                    failed: L10n.transactionDetailPaymentsToSavings,
                     includePrefix: includeStatusPrefix
                 )
             case .refresh:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_refreshed_payments"),
-                    pending: String(localized: "transaction_detail_refreshing_payments"),
-                    failed: String(localized: "transaction_detail_failed_refreshing_payments"),
+                    confirmed: String(localized: "transaction_detail_refreshed_payments", defaultValue: "Refreshed payments balance."),
+                    pending: String(localized: "transaction_detail_refreshing_payments", defaultValue: "Refreshing payments balance."),
+                    failed: String(localized: "transaction_detail_failed_refreshing_payments", defaultValue: "Failed refreshing payments balance."),
                     includePrefix: includeStatusPrefix
                 )
             case .lightningSend:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_from_payments"),
-                    pending: String(localized: "transaction_detail_from_payments"),
-                    failed: String(localized: "transaction_detail_from_payments"),
+                    confirmed: L10n.transactionDetailFromPayments,
+                    pending: L10n.transactionDetailFromPayments,
+                    failed: L10n.transactionDetailFromPayments,
                     includePrefix: includeStatusPrefix
                 )
             case .lightningReceive:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_to_payments"),
-                    pending: String(localized: "transaction_detail_to_payments"),
-                    failed: String(localized: "transaction_detail_failed_receive_to_payments"),
+                    confirmed: String(localized: "transaction_detail_to_payments", defaultValue: "To payments."),
+                    pending: String(localized: "transaction_detail_to_payments", defaultValue: "To payments."),
+                    failed: String(localized: "transaction_detail_failed_receive_to_payments", defaultValue: "Failed receive to payments."),
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
                 if subsystemName == "bark.offboard" {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_detail_payments_to_savings"),
-                        pending: String(localized: "transaction_detail_payments_to_savings"),
-                        failed: String(localized: "transaction_detail_payments_to_savings"),
+                        confirmed: L10n.transactionDetailPaymentsToSavings,
+                        pending: L10n.transactionDetailPaymentsToSavings,
+                        failed: L10n.transactionDetailPaymentsToSavings,
                         includePrefix: includeStatusPrefix
                     )
                 }
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_from_savings"),
-                    pending: String(localized: "transaction_detail_from_savings"),
-                    failed: String(localized: "transaction_detail_from_savings"),
+                    confirmed: L10n.transactionDetailFromSavings,
+                    pending: L10n.transactionDetailFromSavings,
+                    failed: L10n.transactionDetailFromSavings,
                     includePrefix: includeStatusPrefix
                 )
             case .offchainTransfer:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_from_payments"),
-                    pending: String(localized: "transaction_detail_from_payments"),
-                    failed: String(localized: "transaction_detail_from_payments"),
+                    confirmed: L10n.transactionDetailFromPayments,
+                    pending: L10n.transactionDetailFromPayments,
+                    failed: L10n.transactionDetailFromPayments,
                     includePrefix: includeStatusPrefix
                 )
             case .onchainTransaction:
                 // Check if this is a self-transfer first
                 if isInternalTransfer {
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_detail_within_savings"),
-                        pending: String(localized: "transaction_detail_within_savings"),
-                        failed: String(localized: "transaction_detail_failed_move_within_savings"),
+                        confirmed: String(localized: "transaction_detail_within_savings", defaultValue: "Within savings."),
+                        pending: String(localized: "transaction_detail_within_savings", defaultValue: "Within savings."),
+                        failed: String(localized: "transaction_detail_failed_move_within_savings", defaultValue: "Failed move within savings."),
                         includePrefix: includeStatusPrefix
                     )
                 }
@@ -442,20 +442,20 @@ extension TransactionModel {
                 switch type {
                 case .received:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_detail_to_savings"),
-                        pending: String(localized: "transaction_detail_to_savings"),
-                        failed: String(localized: "transaction_detail_failed_receive"),
+                        confirmed: String(localized: "transaction_detail_to_savings", defaultValue: "To savings."),
+                        pending: String(localized: "transaction_detail_to_savings", defaultValue: "To savings."),
+                        failed: String(localized: "transaction_detail_failed_receive", defaultValue: "Failed receive."),
                         includePrefix: includeStatusPrefix
                     )
                 case .sent:
                     return statusAwareText(
-                        confirmed: String(localized: "transaction_detail_from_savings"),
-                        pending: String(localized: "transaction_detail_from_savings"),
-                        failed: String(localized: "transaction_detail_failed_send"),
+                        confirmed: L10n.transactionDetailFromSavings,
+                        pending: L10n.transactionDetailFromSavings,
+                        failed: String(localized: "transaction_detail_failed_send", defaultValue: "Failed send."),
                         includePrefix: includeStatusPrefix
                     )
                 default:
-                    return String(localized: "transaction_detail_generic")
+                    return String(localized: "transaction_detail_generic", defaultValue: "Transaction.")
                 }
             case .unknown:
                 break
@@ -469,30 +469,30 @@ extension TransactionModel {
             switch transactionType {
             case .received:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_received_amount_from \(amountText) \(contact.cachedName)"),
-                    pending: String(localized: "transaction_detail_receiving_amount_from \(amountText) \(contact.cachedName)"),
-                    failed: String(localized: "transaction_detail_failed_receive_from \(contact.cachedName)"),
-                    cancelled: String(localized: "transaction_detail_cancelled_receive_from \(contact.cachedName)"),
+                    confirmed: String(localized: "transaction_detail_received_amount_from %@ %@", defaultValue: "Received \(amountText) from \(contact.cachedName)."),
+                    pending: String(localized: "transaction_detail_receiving_amount_from %@ %@", defaultValue: "Receiving \(amountText) from \(contact.cachedName)."),
+                    failed: String(localized: "transaction_detail_failed_receive_from %@", defaultValue: "Failed receive from \(contact.cachedName)."),
+                    cancelled: String(localized: "transaction_detail_cancelled_receive_from %@", defaultValue: "Cancelled receive from \(contact.cachedName)."),
                     includePrefix: includeStatusPrefix
                 )
             case .sent:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_sent_amount_to \(amountText) \(contact.cachedName)"),
-                    pending: String(localized: "transaction_detail_sending_amount_to \(amountText) \(contact.cachedName)"),
-                    failed: String(localized: "transaction_detail_failed_send_to \(contact.cachedName)"),
-                    cancelled: String(localized: "transaction_detail_cancelled_send_to \(contact.cachedName)"),
+                    confirmed: String(localized: "transaction_detail_sent_amount_to %@ %@", defaultValue: "Sent \(amountText) to \(contact.cachedName)."),
+                    pending: String(localized: "transaction_detail_sending_amount_to %@ %@", defaultValue: "Sending \(amountText) to \(contact.cachedName)."),
+                    failed: String(localized: "transaction_detail_failed_send_to %@", defaultValue: "Failed send to \(contact.cachedName)."),
+                    cancelled: String(localized: "transaction_detail_cancelled_send_to %@", defaultValue: "Cancelled send to \(contact.cachedName)."),
                     includePrefix: includeStatusPrefix
                 )
             case .transfer:
                 return statusAwareText(
-                    confirmed: String(localized: "transaction_detail_transfer"),
-                    pending: String(localized: "transaction_detail_transferring"),
-                    failed: String(localized: "transaction_detail_failed_transfer"),
-                    cancelled: String(localized: "transaction_detail_cancelled_transfer"),
+                    confirmed: String(localized: "transaction_detail_transfer", defaultValue: "Transfer."),
+                    pending: String(localized: "transaction_detail_transferring", defaultValue: "Transferring."),
+                    failed: String(localized: "transaction_detail_failed_transfer", defaultValue: "Failed transfer."),
+                    cancelled: String(localized: "transaction_detail_cancelled_transfer", defaultValue: "Cancelled transfer."),
                     includePrefix: includeStatusPrefix
                 )
             case .pending:
-                return String(localized: "transaction_pending")
+                return L10n.transactionPending
             }
         }
         
@@ -501,7 +501,7 @@ extension TransactionModel {
     }
     
     /// Helper method to return status-aware text
-    private func statusAwareText(confirmed: String, pending: String, failed: String, cancelled: String = String(localized: "transaction_cancelled"), includePrefix: Bool) -> String {
+    private func statusAwareText(confirmed: String, pending: String, failed: String, cancelled: String = L10n.transactionCancelled, includePrefix: Bool) -> String {
         guard includePrefix else {
             return confirmed
         }
@@ -543,30 +543,30 @@ extension TransactionModel {
         switch transactionType {
         case .sent:
             return statusAwareText(
-                confirmed: String(localized: "transaction_sent"),
-                pending: String(localized: "transaction_sending"),
-                failed: String(localized: "transaction_failed_send"),
-                cancelled: String(localized: "transaction_cancelled_send"),
+                confirmed: L10n.transactionSent,
+                pending: L10n.transactionSending,
+                failed: L10n.transactionFailedSend,
+                cancelled: String(localized: "transaction_cancelled_send", defaultValue: "Cancelled send"),
                 includePrefix: includePrefix
             )
         case .received:
             return statusAwareText(
-                confirmed: String(localized: "transaction_received"),
-                pending: String(localized: "transaction_receiving"),
-                failed: String(localized: "transaction_failed_receive"),
-                cancelled: String(localized: "transaction_cancelled_receive"),
+                confirmed: L10n.transactionReceived,
+                pending: L10n.transactionReceiving,
+                failed: L10n.transactionFailedReceive,
+                cancelled: String(localized: "transaction_cancelled_receive", defaultValue: "Cancelled receive"),
                 includePrefix: includePrefix
             )
         case .transfer:
             return statusAwareText(
-                confirmed: String(localized: "transaction_move"),
-                pending: String(localized: "transaction_moving"),
-                failed: String(localized: "transaction_failed_move"),
-                cancelled: String(localized: "transaction_cancelled_move"),
+                confirmed: String(localized: "transaction_move", defaultValue: "Move"),
+                pending: L10n.transactionMoving,
+                failed: L10n.transactionFailedMove,
+                cancelled: String(localized: "transaction_cancelled_move", defaultValue: "Cancelled move"),
                 includePrefix: includePrefix
             )
         case .pending:
-            return String(localized: "transaction_pending")
+            return L10n.transactionPending
         }
     }
     
@@ -576,10 +576,10 @@ extension TransactionModel {
         
         switch category {
         case .refresh:
-            return String(localized: "transaction_explainer_refresh")
+            return String(localized: "transaction_explainer_refresh", defaultValue: "A refresh is a maintenance operation that extends the lifetime of your payments balance. No bitcoin was sent or received.")
             
         case .exit:
-            return String(localized: "transaction_explainer_exit")
+            return String(localized: "transaction_explainer_exit", defaultValue: "A recovery moves bitcoin from your payments balance to your savings balance without the involvement of the server that typically facilitates this.")
             
         //case .onchainTransaction:
         //    return "This is a native Bitcoin transaction managed by your onchain wallet. These transactions are settled directly on the Bitcoin blockchain."

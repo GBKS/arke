@@ -117,12 +117,12 @@ struct TransactionSwipeCard: View, Equatable {
 
                     HStack(spacing: 4) {
                         if let feeText {
-                            Text(hasFees ? "\(feeText) fee" : String(localized: "label_no_fee"))
+                            Text(hasFees ? "\(feeText) fee" : L10n.labelNoFee)
                                 .font(.body)
                                 .fontWeight(.medium)
                                 .foregroundColor(.white.opacity(0.75))
 
-                            Text("symbol_middot")
+                            Text(String(localized: "symbol_middot", defaultValue: "·"))
                                 .font(.body)
                                 .foregroundColor(.white.opacity(0.75))
                         }
@@ -201,7 +201,7 @@ struct TransactionSwipeCard: View, Equatable {
                 onShowDetails()
             } label: {
                 HStack(spacing: 4) {
-                    Text("label_details")
+                    Text(L10n.labelDetails)
                         .font(.body)
                         .fontWeight(.medium)
                     Image(systemName: "chevron.down")

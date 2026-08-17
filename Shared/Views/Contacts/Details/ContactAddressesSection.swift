@@ -23,7 +23,7 @@ struct ContactAddressesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("label_addresses")
+                Text(String(localized: "label_addresses", defaultValue: "Addresses"))
                     .font(.headline)
                     .fontWeight(.semibold)
                 
@@ -36,7 +36,7 @@ struct ContactAddressesSection: View {
                         Image(systemName: "plus")
                             .tint(Color.Arke.gold4)
                     }
-                    .accessibilityLabel(Text("button_add_new_address"))
+                    .accessibilityLabel(Text(String(localized: "button_add_new_address", defaultValue: "Add new Address")))
                     .buttonStyle(.bordered)
                 }
             }
@@ -49,7 +49,7 @@ struct ContactAddressesSection: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .Arke.blue))
                         .scaleEffect(0.7)
                     
-                    Text(String(localized: "status_loading_addresses"))
+                    Text(String(localized: "status_loading_addresses", defaultValue: "Loading addresses..."))
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
@@ -139,11 +139,11 @@ struct ContactAddressesSection: View {
                 .font(.largeTitle)
                 .foregroundColor(.secondary)
             
-            Text("contacts_no_addresses_added")
+            Text(String(localized: "contacts_no_addresses_added", defaultValue: "No addresses added"))
                 .font(.body)
                 .foregroundColor(.secondary)
             
-            Text("contacts_add_addresses_help")
+            Text(String(localized: "contacts_add_addresses_help", defaultValue: "Add addresses to send Bitcoin to this contact"))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

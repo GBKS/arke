@@ -26,10 +26,10 @@ struct RefreshModalRefreshingView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text("status_refreshing_balance")
+                    Text(String(localized: "status_refreshing_balance", defaultValue: "Refreshing your balance"))
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "onboarding_get_excited"))
+                    Text(String(localized: "onboarding_get_excited", defaultValue: "Get excited for a fresh and new experience."))
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -40,7 +40,7 @@ struct RefreshModalRefreshingView: View {
                 Button {
                     onCancel()
                 } label: {
-                    Text("button_cancel")
+                    Text(L10n.buttonCancel)
                         .font(.system(size: 21, weight: .semibold))
                         .foregroundStyle(.primary)
                         .frame(maxWidth: .infinity)

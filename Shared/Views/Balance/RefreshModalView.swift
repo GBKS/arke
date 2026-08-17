@@ -58,7 +58,7 @@ struct RefreshModalView: View {
                 ))
             case .error(let errorMessage):
                 LargeErrorView(
-                    title: "error_refresh_failed",
+                    title: String(localized: "error_refresh_failed", defaultValue: "Refresh Failed"),
                     errorMessage: errorMessage,
                     image: nil,
                     systemImage: "exclamationmark.triangle.fill",

@@ -144,7 +144,7 @@ struct TransactionCardStackView_iOS: View {
                         }
                         .buttonStyle(.glass)
                         .tint(Color.Arke.gold)
-                        .accessibilityLabel("button_close")
+                        .accessibilityLabel(L10n.buttonClose)
 
                         Spacer()
                         

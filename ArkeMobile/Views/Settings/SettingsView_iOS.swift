@@ -71,19 +71,19 @@ struct SettingsView_iOS: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            //Text("settings_my_profile")
+                            //Text(String(localized: "settings_my_profile", defaultValue: "My Profile"))
                             //    .font(.callout)
                             
                             if let profile = userProfile, profile.isConfigured {
                                 if profile.name.isEmpty {
-                                    Text("profile_photo_set")
+                                    Text(String(localized: "profile_photo_set", defaultValue: "Photo set"))
                                         .font(.title3.weight(.semibold))
                                 } else {
                                     Text(profile.name)
                                         .font(.title3.weight(.semibold))
                                 }
                             } else {
-                                Text("profile_customize_info")
+                                Text(String(localized: "profile_customize_info", defaultValue: "Your name and photo"))
                                     .font(.callout)
                             }
                         }
@@ -102,7 +102,7 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("settings_unit_format")
+                            Text(String(localized: "settings_unit_format", defaultValue: "Unit Format"))
                                 .font(.body)
                             Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedFormat.displayName)"))
                                 .font(.footnote)
@@ -121,9 +121,9 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("action_hide_balance")
+                            Text(String(localized: "action_hide_balance", defaultValue: "Hide Card Balance"))
                                 .font(.body)
-                            Text("balance_reveal_hint")
+                            Text(String(localized: "balance_reveal_hint", defaultValue: "Long-press balance card to reveal"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
@@ -141,9 +141,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("settings_notifications")
+                                Text(String(localized: "settings_notifications", defaultValue: "Notifications"))
                                     .font(.body)
-                                Text("settings_notifications_hint")
+                                Text(String(localized: "settings_notifications_hint", defaultValue: "Get notified when funds arrive"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -152,7 +152,7 @@ struct SettingsView_iOS: View {
                     .padding(.vertical, 4)
                 }
             } header: {
-                Text("settings_general")
+                Text(String(localized: "settings_general", defaultValue: "General"))
             }
 
             // Security Section
@@ -166,9 +166,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("settings_manual_backup")
+                                Text(L10n.settingsManualBackup)
                                     .font(.body)
-                                Text("settings_manual_backup_hint")
+                                Text(String(localized: "settings_manual_backup_hint", defaultValue: "Save your wallet offline"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -186,7 +186,7 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("settings_linked_devices")
+                            Text(L10n.settingsLinkedDevices)
                                 .font(.body)
                             Text(String(localized: "settings_devices_connected", defaultValue: "\(deviceCount) devices connected"))
                                 .font(.footnote)
@@ -196,7 +196,7 @@ struct SettingsView_iOS: View {
                     .padding(.vertical, 2)
                 }
             } header: {
-                Text("settings_security")
+                Text(String(localized: "settings_security", defaultValue: "Security"))
             }
             
             // Help & Learning Section
@@ -210,9 +210,9 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("onboarding_intro_video")
+                            Text(String(localized: "onboarding_intro_video", defaultValue: "Intro Video"))
                                 .font(.body)
-                            Text("settings_learn_how")
+                            Text(String(localized: "settings_learn_how", defaultValue: "Learn how everything works"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
@@ -220,7 +220,7 @@ struct SettingsView_iOS: View {
                     .padding(.vertical, 2)
                 }
             } header: {
-                Text("settings_help_learning")
+                Text(String(localized: "settings_help_learning", defaultValue: "Help & Learning"))
             }
 
             // Behind the Curtain Section
@@ -234,9 +234,9 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("activity_fee_summary")
+                            Text(L10n.activityFeeSummary)
                                 .font(.body)
-                            Text("action_view_fees")
+                            Text(String(localized: "action_view_fees", defaultValue: "View transaction fees"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
@@ -255,9 +255,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("settings_fee_schedule")
+                                Text(L10n.settingsFeeSchedule)
                                     .font(.body)
-                                Text("settings_fee_schedule_hint")
+                                Text(String(localized: "settings_fee_schedule_hint", defaultValue: "Server fee breakdown"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -274,9 +274,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("receive_address_history")
+                                Text(L10n.receiveAddressHistory)
                                     .font(.body)
-                                Text("action_view_addresses")
+                                Text(String(localized: "action_view_addresses", defaultValue: "View generated addresses"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -293,9 +293,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("data_xray_title")
+                                Text(L10n.dataXrayTitle)
                                     .font(.body)
-                                Text("data_wallet_raw")
+                                Text(String(localized: "data_wallet_raw", defaultValue: "Your wallet data, raw"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -312,7 +312,7 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("nav_title_transaction_testing")
+                                Text(String(localized: "nav_title_transaction_testing", defaultValue: "Transaction Testing"))
                                     .font(.callout)
                                 Text("Developer stress tests")
                                     .font(.footnote)
@@ -324,7 +324,7 @@ struct SettingsView_iOS: View {
                     */
                 }
             } header: {
-                Text("data_behind_curtain")
+                Text(String(localized: "data_behind_curtain", defaultValue: "Behind the curtain"))
             }
 
             // Experimental Section
@@ -338,9 +338,9 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("settings_proximity_sharing")
+                            Text(String(localized: "settings_proximity_sharing", defaultValue: "Nearby Sharing"))
                                 .font(.body)
-                            Text("settings_proximity_sharing_hint")
+                            Text(String(localized: "settings_proximity_sharing_hint", defaultValue: "Share payment info with nearby devices when tilting"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
@@ -357,9 +357,9 @@ struct SettingsView_iOS: View {
                             .frame(width: iconSize, height: iconSize)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("settings_address_patterns")
+                            Text(L10n.settingsAddressPatterns)
                                 .font(.body)
-                            Text("settings_address_patterns_hint")
+                            Text(String(localized: "settings_address_patterns_hint", defaultValue: "Show unique visual patterns to help identify addresses"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }
@@ -367,7 +367,7 @@ struct SettingsView_iOS: View {
                 }
                 .padding(.vertical, 2)
             } header: {
-                Text("settings_experimental")
+                Text(String(localized: "settings_experimental", defaultValue: "Experimental"))
             }
 
             // Danger Zone Section (only in primary mode)
@@ -385,9 +385,9 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("button_force_move_savings")
+                                Text(String(localized: "button_force_move_savings", defaultValue: "Force Move to Savings"))
                                     .font(.body)
-                                Text("balance_transfer_independently")
+                                Text(String(localized: "balance_transfer_independently", defaultValue: "Transfer your bitcoin independently"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -404,10 +404,10 @@ struct SettingsView_iOS: View {
                                 .frame(width: iconSize, height: iconSize)
 
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("button_delete_wallet")
+                                Text(L10n.buttonDeleteWallet)
                                     .font(.body)
                                     .foregroundColor(.Arke.red)
-                                Text("settings_delete_wallet_title")
+                                Text(String(localized: "settings_delete_wallet_title", defaultValue: "Permanently remove your wallet"))
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
@@ -415,12 +415,12 @@ struct SettingsView_iOS: View {
                         .padding(.vertical, 2)
                     }
                 } header: {
-                    Text("settings_danger_zone")
+                    Text(L10n.settingsDangerZone)
                 }
             //}
         }
         .contentMargins(.top, 12, for: .scrollContent)
-        .navigationTitle("settings_title")
+        .navigationTitle(L10n.settingsTitle)
         .navigationBarTitleDisplayMode(.large)
         .task {
             await deviceService.loadRegisteredDevices()

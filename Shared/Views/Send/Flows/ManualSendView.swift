@@ -155,7 +155,7 @@ struct ManualSendView: View {
                 SheetDestinationDisplayView(
                     primaryDisplayDestination: primaryDisplay,
                     alternativeDisplayDestinations: alternativeDisplayDestinations,
-                    primaryDestinationLabel: String(localized: "label_address"),
+                    primaryDestinationLabel: L10n.labelAddress,
                     isSimpleAddress: false,
                     showMatchedContact: true,
                     formatNameOverride: originalBIP353Address,
@@ -190,7 +190,7 @@ struct ManualSendView: View {
             Button {
                 onSend()
             } label: {
-                Text("button_send")
+                Text(L10n.buttonSend)
                     .font(.title2)
                     .foregroundStyle(Color.Arke.gold4)
                     .padding(.horizontal, 40)
@@ -206,7 +206,7 @@ struct ManualSendView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("button_done") {
+                Button(L10n.buttonDone) {
                     isRecipientFieldFocused = false
                     isAmountFieldFocused = false
                 }

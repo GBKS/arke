@@ -28,10 +28,10 @@ struct BoardingModalSuccessView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text("status_transfer_initiated")
+                    Text(String(localized: "status_transfer_initiated", defaultValue: "Transfer Initiated"))
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "balance_transfer_ark_progress"))
+                    Text(String(localized: "balance_transfer_ark_progress", defaultValue: "Your coins are being transferred to your payment balance and will be ready to use in a jiffy."))
                         .font(.title3)
                         .foregroundColor(.arkeSecondary)
                         .multilineTextAlignment(.center)
@@ -47,7 +47,7 @@ struct BoardingModalSuccessView: View {
                     .foregroundStyle(Color.Arke.gold4)
                     .frame(maxWidth: .infinity)
             }
-            .accessibilityLabel("button_done")
+            .accessibilityLabel(L10n.buttonDone)
             .buttonStyle(.glassProminent)
             .controlSize(.large)
             .tint(Color.Arke.gold)

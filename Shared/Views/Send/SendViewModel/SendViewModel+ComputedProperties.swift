@@ -150,7 +150,7 @@ extension SendViewModel {
         
         let ranked = rankedDestinations.first { $0.destination.id == destination.id }
         return ranked?.estimatedFee.map { fee in
-            fee > 0 ? BitcoinFormatter.shared.formatAmount(fee) : String(localized: "label_no_fee")
+            fee > 0 ? BitcoinFormatter.shared.formatAmount(fee) : L10n.labelNoFee
         }
     }
     

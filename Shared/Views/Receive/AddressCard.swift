@@ -45,7 +45,7 @@ struct AddressCard: View {
             }
             
             if chunks.count > 4 {
-                Text(String(localized: "symbol_ellipsis"))
+                Text(L10n.symbolEllipsis)
                     .foregroundStyle(.primary)
                     .fontWeight(.regular)
             }
@@ -83,7 +83,7 @@ struct AddressCard: View {
             
             Spacer()
 
-            CopyButton(address, help: "action_copy_address")
+            CopyButton(address, help: String(localized: "action_copy_address", defaultValue: "Copy address"))
         }
     }
 }

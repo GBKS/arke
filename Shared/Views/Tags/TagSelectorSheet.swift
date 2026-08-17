@@ -53,7 +53,7 @@ struct TagSelectorSheet: View {
                 Spacer()
             }
         }
-        .navigationTitle("button_assign_tags")
+        .navigationTitle(String(localized: "button_assign_tags", defaultValue: "Choose Tags"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .presentationDetents([.medium])
@@ -65,7 +65,7 @@ struct TagSelectorSheet: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .accessibilityLabel("tags_new_title")
+                .accessibilityLabel(String(localized: "tags_new_title", defaultValue: "New Tag"))
             }
             
             ToolbarItem(placement: .confirmationAction) {
@@ -74,7 +74,7 @@ struct TagSelectorSheet: View {
                 } label: {
                     Image(systemName: "checkmark")
                 }
-                .accessibilityLabel("button_done")
+                .accessibilityLabel(L10n.buttonDone)
             }
         }
         .sheet(isPresented: $showingTagEditor) {

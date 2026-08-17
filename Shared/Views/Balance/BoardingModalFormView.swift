@@ -48,7 +48,7 @@ struct BoardingModalFormView: View {
                                 .font(.system(size: 16, weight: .semibold))
                                 .frame(width: 30, height: 30)
                         }
-                        .accessibilityLabel("button_close")
+                        .accessibilityLabel(L10n.buttonClose)
                         .buttonStyle(.bordered)
                         .clipShape(Circle())
                         .padding(.trailing, 8)
@@ -57,10 +57,10 @@ struct BoardingModalFormView: View {
                 
                 VStack(alignment: .leading, spacing: 24) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("button_move_to_payments")
+                        Text(String(localized: "button_move_to_payments", defaultValue: "Move to Payments"))
                             .font(.system(.title, design: .serif))
                         
-                        Text(String(localized: "balance_transfer_payments_help"))
+                        Text(String(localized: "balance_transfer_payments_help", defaultValue: "Transfer funds to the payments balance for fast and low-fee payments, in return for incurring regular maintenance fees."))
                             .font(.title3)
                             .foregroundColor(.arkeSecondary)
                             .lineSpacing(6)
@@ -73,7 +73,7 @@ struct BoardingModalFormView: View {
                             .fontWeight(.medium)
                         */
                         
-                        TextField(String(localized: "placeholder_enter_amount"), text: $amountText)
+                        TextField(L10n.placeholderEnterAmount, text: $amountText)
                             .textFieldStyle(.plain)
                             .font(.title)
                             .padding(.horizontal, 16)
@@ -95,7 +95,7 @@ struct BoardingModalFormView: View {
                             .toolbar {
                                 ToolbarItemGroup(placement: .keyboard) {
                                     Spacer()
-                                    Button("button_done") {
+                                    Button(L10n.buttonDone) {
                                         isAmountFieldFocused = false
                                     }
                                 }
@@ -103,11 +103,11 @@ struct BoardingModalFormView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             if let minimum = minimumAmount {
-                                Text(BitcoinFormatter.shared.formatAmount(minimum) + String(localized: "suffix_minimum"))
+                                Text(BitcoinFormatter.shared.formatAmount(minimum) + String(localized: "suffix_minimum", defaultValue: " minimum."))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             } else {
-                                Text(String(localized: "status_loading_minimum"))
+                                Text(String(localized: "status_loading_minimum", defaultValue: "Loading minimum amount..."))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             }
@@ -118,7 +118,7 @@ struct BoardingModalFormView: View {
                                 return estimate.feeSats
                             }
                             
-                            Text("balance_plus_network_fee")
+                            Text(String(localized: "balance_plus_network_fee", defaultValue: "Plus network fee."))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                         }
@@ -129,7 +129,7 @@ struct BoardingModalFormView: View {
                             onConfirm(amount)
                         }
                     } label: {
-                        Text("button_start")
+                        Text(L10n.buttonStart)
                             .font(.system(size: 21, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)

@@ -86,10 +86,10 @@ struct AddressHistoryView: View {
                             Image(systemName: "tray")
                                 .font(.largeTitle)
                                 .foregroundColor(.secondary)
-                            Text("receive_no_addresses")
+                            Text(String(localized: "receive_no_addresses", defaultValue: "No addresses yet"))
                                 .font(.headline)
                                 .foregroundColor(.secondary)
-                            Text("receive_addresses_empty")
+                            Text(String(localized: "receive_addresses_empty", defaultValue: "Addresses will appear here as they are generated"))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
@@ -100,12 +100,12 @@ struct AddressHistoryView: View {
                 }
             }
         }
-        .navigationTitle("receive_address_history")
+        .navigationTitle(L10n.receiveAddressHistory)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
-        .alert("error_title", isPresented: $showError) {
-            Button("button_ok") { }
+        .alert(L10n.errorTitle, isPresented: $showError) {
+            Button(L10n.buttonOk) { }
         } message: {
             Text(errorMessage ?? "Unknown error")
         }
@@ -228,11 +228,11 @@ struct AddressHistoryRowView: View {
                 HStack(spacing: 4) {
                     Text(address.generatedAt, style: .relative)
                         .font(.caption)
-                    Text("label_ago")
+                    Text(String(localized: "label_ago", defaultValue: "ago"))
                         .font(.caption)
 
                     if let index = address.derivationIndex {
-                        Text("symbol_bullet")
+                        Text(L10n.symbolBullet)
                             .foregroundColor(.secondary)
                         Text(String(localized: "format_address_number", defaultValue: "Address #\(index)"))
                             .font(.caption)

@@ -60,7 +60,7 @@ struct LightningInvoiceFormView_iOS: View {
                 
                 // Optional note toggle/field
                 if showNoteField {
-                    TextField("placeholder_note_optional", text: $note)
+                    TextField(String(localized: "placeholder_note_optional", defaultValue: "Add note (optional)"), text: $note)
                         .textFieldStyle(.roundedBorder)
                         .focused($isNoteFocused)
                         .submitLabel(.done)
@@ -98,7 +98,7 @@ struct LightningInvoiceFormView_iOS: View {
                             isNoteFocused = true
                         }
                     } label: {
-                        Text("receive_add_note")
+                        Text(String(localized: "receive_add_note", defaultValue: "Add note"))
                             .font(.system(.body, weight: .medium))
                             .foregroundStyle(Color.secondary)
                     }

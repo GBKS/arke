@@ -30,7 +30,7 @@ struct WalletCreatedView_iOS: View {
                     .accessibilityHidden(true)
                     
                     VStack(spacing: 8) {
-                        Text("onboarding_ready_bitcoin")
+                        Text(String(localized: "onboarding_ready_bitcoin", defaultValue: "You are ready for bitcoin!"))
                             .font(.largeTitle)
                             .fontDesign(.serif)
                             .foregroundStyle(Color.Arke.gold)
@@ -38,7 +38,7 @@ struct WalletCreatedView_iOS: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .accessibilityAddTraits(.isHeader)
                         
-                        Text("onboarding_wallet_ready")
+                        Text(String(localized: "onboarding_wallet_ready", defaultValue: "Your new wallet is ready to use."))
                             .font(.title2)
                             .lineSpacing(4)
                             .foregroundStyle(.white)
@@ -46,7 +46,7 @@ struct WalletCreatedView_iOS: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, 8)
                         
-                        Text("onboarding_backup_reminder")
+                        Text(String(localized: "onboarding_backup_reminder", defaultValue: "Make sure to make a backup. You're in control of this wallet, and also responsible for it."))
                             .font(.title2)
                             .lineSpacing(4)
                             .foregroundStyle(.white)
@@ -72,8 +72,8 @@ struct WalletCreatedView_iOS: View {
                 .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .tint(Color.Arke.gold)
-                .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
-                .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
+                .accessibilityLabel(L10n.accessibilityContinueToWallet)
+                .accessibilityHint(L10n.accessibilityWalletReadyHint)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
             }

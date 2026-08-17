@@ -214,19 +214,37 @@ They are hygiene items (Phase 6), not defaultValue targets.
   builds extract into *package* catalogs at all — the first genuinely new package
   key will answer it; if it doesn't appear, add the entry manually.
 
-### Phase 3 — Shared/ (largest root), one feature area per batch
-- [ ] Balance (incl. Boarding/Offboarding/Refresh modals)
-- [ ] Send
-- [ ] Receive
-- [ ] Contacts
-- [ ] Activity + Tags
-- [ ] Data
-- [ ] Settings (incl. Fees, deletion flows, recovery phrase)
-- [ ] Non-view sources (WalletManager, services, models — e.g.
-      `TransactionModel+DisplayHelpers.swift` alone has 174 sites)
+### Phases 3–5 — Shared/, ArkeMobile/, ArkeDesktop/ — DONE 2026-08-17
+Collapsed into one script-driven sweep (the per-feature batching was designed for
+hand work; the mechanical passes made it unnecessary):
+- [x] `Shared/Helpers/L10n.swift` regenerated from audit data (99 accessors).
+- [x] Script passes over all roots: accessor collapse, defaultValue insertion,
+      builder wrapping, hybrid-interpolation pass (`--hybrids`), localized-param
+      pass (`title:`/`help:`/`text:`/`description:`).
+- [x] Component API migrations `LocalizedStringKey` → `String` (call sites converted
+      atomically): ArkéUI `DetailRow.title` (87 sites), `LargeErrorView.title`,
+      `CopyButton.help`; app-side `settingsRow(title:)`, `ExitStatusDetailView`
+      row structs; `SendModalContentView`/`TransactionListItem` key-returning vars.
+- [x] Legacy API sweeps: explicit `LocalizedStringKey("key")` wraps,
+      `NSLocalizedString("key", comment:)`, bare-literal key ternaries.
 
-### Phase 4 — ArkeMobile/ (per feature area, same batching)
-### Phase 5 — ArkeDesktop/ (per feature area, same batching)
+**Result: 1,252 of 1,343 real call sites migrated (93%).** The remaining 91 are
+by design, not backlog:
+- 43 sites on **plural-variation keys** — stay catalog-managed (defaultValue cannot
+  express variations; includes the substitution key
+  `balance_vtxos_expired_and_expiring %lld %lld`).
+- 38 sites on **sanctioned plain-English interpolation keys** (`%lld transactions`,
+  `%@ ago`, …) — promoting them is a key rename, deferred to Phase 6.
+- ~10 in comments / `#Preview` names / audit noise.
+
+**Phases 3–5 findings:**
+- Both catalogs showed **zero diff** across all builds — every value matched.
+- New-to-the-plan classes found and handled: `NSLocalizedString` legacy calls,
+  explicit `LocalizedStringKey("key")` wraps (incl. the guidelines' old ternary
+  advice — that section needs updating in Phase 6), key-returning
+  `LocalizedStringKey` computed vars, and public package components with
+  `LocalizedStringKey` params (must convert type + every call site atomically,
+  else leftover literals render raw as plain `String`s).
 
 ### Phase 6 — Hygiene & wrap-up
 - [ ] Author English for any remaining missing-value keys; `shouldTranslate: false`
@@ -266,3 +284,4 @@ They are hygiene items (Phase 6), not defaultValue targets.
 | Guard test | 1 | done 2026-08-17 | `LocalizationCatalogTests`, green |
 | Linked Devices (pilot) | 1 | done 2026-08-17 | 136/1,680 sites migrated overall; D4 verified; desktop-only keys pending next desktop build |
 | ArkéUI package | 2 | done 2026-08-17 | 333/1,654 sites migrated overall; script + manual pass; 6 plain-English keys deferred to Phase 6 |
+| Shared + ArkeMobile + ArkeDesktop | 3–5 | done 2026-08-17 | 1,252/1,343 sites (93%); remainder is by-design (plural/plain-English/comments); both platforms build, guard green |

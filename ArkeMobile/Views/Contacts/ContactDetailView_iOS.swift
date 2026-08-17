@@ -43,29 +43,29 @@ struct ContactDetailView_iOS: View {
             .toolbar {
                 if contact.contactType.canBeEdited {
                     ToolbarItem(placement: .primaryAction) {
-                        Button("button_edit") {
+                        Button(L10n.buttonEdit) {
                             onEdit()
                         }
                     }
                 }
             }
-            .confirmationDialog("button_delete_contact",
+            .confirmationDialog(L10n.buttonDeleteContact,
                 isPresented: $showDeleteConfirmation,
                 titleVisibility: .visible
             ) {
-                Button("button_delete", role: .destructive) {
+                Button(L10n.buttonDelete, role: .destructive) {
                     onDelete()
                     dismiss()
                 }
-                Button("button_cancel", role: .cancel) {}
+                Button(L10n.buttonCancel, role: .cancel) {}
             } message: {
                 Text(String(localized: "message_confirm_delete", defaultValue: "Are you sure you want to delete \(contact.displayName)?"))
             }
             .sheet(isPresented: contactImportSheetBinding) {
                 contactImportSheetView
             }
-            .alert("contacts_link", isPresented: alertBinding) {
-                Button("button_ok", role: .cancel) { }
+            .alert(String(localized: "contacts_link", defaultValue: "Contact Link"), isPresented: alertBinding) {
+                Button(L10n.buttonOk, role: .cancel) { }
             } message: {
                 if let alertMessage = viewModel?.alertMessage {
                     Text(alertMessage)
@@ -131,7 +131,7 @@ struct ContactDetailView_iOS: View {
     }
     
     private func notesSection(_ notes: String) -> some View {
-        Section("label_notes") {
+        Section(String(localized: "label_notes", defaultValue: "Notes")) {
             Text(notes)
                 .font(.body)
                 .foregroundColor(.primary)
@@ -164,7 +164,7 @@ struct ContactDetailView_iOS: View {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
-                Label("button_delete_contact", systemImage: "trash")
+                Label(L10n.buttonDeleteContact, systemImage: "trash")
                     .foregroundStyle(Color.Arke.red)
             }
         }
@@ -246,7 +246,7 @@ struct ContactDetailView_iOS: View {
                         .font(.body)
                         .foregroundStyle(Color.Arke.gold4)
                 }
-                Text(viewModel?.isRequestingFaucet == true ? String(localized: "status_requesting") : String(localized: "onboarding_ask_test_bitcoin"))
+                Text(viewModel?.isRequestingFaucet == true ? String(localized: "status_requesting", defaultValue: "Requesting...") : String(localized: "onboarding_ask_test_bitcoin", defaultValue: "Ask for test bitcoin"))
                     .font(.system(.body, weight: .semibold))
                     .foregroundStyle(Color.Arke.gold4)
             }

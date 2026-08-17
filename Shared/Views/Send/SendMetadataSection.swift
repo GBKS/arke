@@ -51,8 +51,8 @@ public struct SendMetadataSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(pendingMetadata?.hasContact ?? false ? LocalizedStringKey("action_change_contact") : LocalizedStringKey("action_assign_contact"))
-            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_contact"))
+            .accessibilityLabel(pendingMetadata?.hasContact ?? false ? String(localized: "action_change_contact", defaultValue: "Change contact") : String(localized: "action_assign_contact", defaultValue: "Assign contact"))
+            .accessibilityHint(String(localized: "accessibility_hint_assign_contact", defaultValue: "Opens contact selector"))
             
             // Tags button
             Button {
@@ -85,7 +85,7 @@ public struct SendMetadataSection: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(tagsAccessibilityLabel)
-            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_tags"))
+            .accessibilityHint(String(localized: "accessibility_hint_assign_tags", defaultValue: "Opens tag selector"))
             
             // Note button
             Button {
@@ -109,9 +109,9 @@ public struct SendMetadataSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? LocalizedStringKey("action_change_note") : LocalizedStringKey("action_assign_note"))
-            .accessibilityHint(LocalizedStringKey("accessibility_hint_assign_note"))
-            .accessibilityValue((pendingMetadata?.hasNotes ?? false) ? String(localized: "accessibility_value_note_present") : "")
+            .accessibilityLabel(pendingMetadata?.hasNotes ?? false ? String(localized: "action_change_note", defaultValue: "Change note") : String(localized: "action_assign_note", defaultValue: "Assign note"))
+            .accessibilityHint(String(localized: "accessibility_hint_assign_note", defaultValue: "Opens note editor"))
+            .accessibilityValue((pendingMetadata?.hasNotes ?? false) ? String(localized: "accessibility_value_note_present", defaultValue: "Note added") : "")
         }
         .padding(.vertical, 12)
         .sheet(isPresented: $showContactSelector) {
@@ -123,7 +123,7 @@ public struct SendMetadataSection: View {
                         await applyContactSelectionAsync(contact)
                     }
                 )
-                .navigationTitle(LocalizedStringKey("button_assign_contact"))
+                .navigationTitle(String(localized: "button_assign_contact", defaultValue: "Assign Contact"))
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
@@ -183,12 +183,12 @@ public struct SendMetadataSection: View {
     
     private var tagsAccessibilityLabel: String {
         guard let metadata = pendingMetadata else {
-            return String(localized: "action_assign_tags")
+            return String(localized: "action_assign_tags", defaultValue: "Assign tags")
         }
         
         let tags = metadata.associatedTags
         if tags.isEmpty {
-            return String(localized: "action_assign_tags")
+            return String(localized: "action_assign_tags", defaultValue: "Assign tags")
         } else if tags.count == 1 {
             return String(localized: "Change tags: \(tags[0].name)")
         } else {

@@ -158,7 +158,7 @@ struct OnboardingFlow_iOS: View {
                         .tag("walletImported")
                         
                     case .usagePattern:
-                        Text("label_usage_pattern")
+                        Text(L10n.labelUsagePattern)
                         /*
                         UsagePatternView(
                             onBack: {
@@ -187,7 +187,7 @@ struct OnboardingFlow_iOS: View {
                         .tag("usagePattern")
                         */
                     case .selectServer:
-                        Text("label_usage_pattern")
+                        Text(L10n.labelUsagePattern)
                         /*
                         ServerSelectionView(
                             onBack: { profile in

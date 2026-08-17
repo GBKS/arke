@@ -26,10 +26,10 @@ struct BoardingModalBoardingView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text("status_starting_transfer")
+                    Text(String(localized: "status_starting_transfer", defaultValue: "Starting Transfer"))
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "onboarding_relax"))
+                    Text(String(localized: "onboarding_relax", defaultValue: "Relax your mind and body."))
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

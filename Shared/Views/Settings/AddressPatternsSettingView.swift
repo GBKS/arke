@@ -31,7 +31,7 @@ struct AddressPatternsSettingView: View {
                 headerView
 
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("settings_address_patterns")
+                    Text(L10n.settingsAddressPatterns)
                         .font(.system(.title, design: .serif))
 
                     Toggle(isOn: $showAddressIcons) {

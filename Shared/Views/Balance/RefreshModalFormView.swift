@@ -32,7 +32,7 @@ struct RefreshModalFormView: View {
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 30, height: 30)
                     }
-                    .accessibilityLabel("button_close")
+                    .accessibilityLabel(L10n.buttonClose)
                     .buttonStyle(.bordered)
                     .clipShape(Circle())
                     .padding(.trailing, 8)
@@ -61,7 +61,7 @@ struct RefreshModalFormView: View {
                             .font(.system(size: 16, weight: .semibold))
                             .frame(width: 30, height: 30)
                     }
-                    .accessibilityLabel("button_close")
+                    .accessibilityLabel(L10n.buttonClose)
                     .buttonStyle(.bordered)
                     .clipShape(Circle())
                     .padding(.trailing, 8)
@@ -71,10 +71,10 @@ struct RefreshModalFormView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 10) {
-                    Text("action_refresh_payments")
+                    Text(String(localized: "action_refresh_payments", defaultValue: "Refresh payments balance"))
                         .font(.system(.title, design: .serif))
                     
-                    Text("desc_maintenance_task")
+                    Text(String(localized: "desc_maintenance_task", defaultValue: "This is a regular maintenance task to keep your balance active for fast and low-fee payments."))
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -82,14 +82,14 @@ struct RefreshModalFormView: View {
                         .padding(.horizontal)
                     
                     if vtxoIdsToRefresh.isEmpty {
-                        Text("balance_no_vtxos_to_refresh")
+                        Text(String(localized: "balance_no_vtxos_to_refresh", defaultValue: "A refresh is not needed right now."))
                             .font(.title3)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.top, 16)
                     } else if let amount = amountToRefresh, amount > 0 {
                         VStack(spacing: 8) {
-                            Text("balance_amount_refreshing")
+                            Text(String(localized: "balance_amount_refreshing", defaultValue: "Amount to refresh"))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             
@@ -99,7 +99,7 @@ struct RefreshModalFormView: View {
                                 .foregroundColor(.primary)
                             
                             VStack(spacing: 8) {
-                                Text("balance_amount_locked")
+                                Text(String(localized: "balance_amount_locked", defaultValue: "This amount will be temporarily locked."))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
@@ -136,7 +136,7 @@ struct RefreshModalFormView: View {
                             .progressViewStyle(.circular)
                             .scaleEffect(0.9)
                     }
-                    Text(isLoading ? String(localized: "status_refreshing") : "Start")
+                    Text(isLoading ? String(localized: "status_refreshing", defaultValue: "Refreshing...") : "Start")
                         .font(.system(size: 21, weight: .semibold))
                         .foregroundStyle(Color.Arke.gold4)
                 }

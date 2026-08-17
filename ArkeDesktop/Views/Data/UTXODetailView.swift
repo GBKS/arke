@@ -23,11 +23,11 @@ struct UTXODetailView: View {
                             .foregroundColor(.orange)
                         
                         VStack(alignment: .leading) {
-                            Text("balance_unspent_output")
+                            Text(String(localized: "balance_unspent_output", defaultValue: "Unspent Output"))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
-                            Text("balance_available_spending")
+                            Text(String(localized: "balance_available_spending", defaultValue: "Available for spending"))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -44,7 +44,7 @@ struct UTXODetailView: View {
                     
                     // Confirmation Status Badge
                     HStack {
-                        Text("status_confirmed")
+                        Text(L10n.statusConfirmed)
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.white)
@@ -61,40 +61,40 @@ struct UTXODetailView: View {
                 
                 // Details Section
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("balance_utxo_details")
+                    Text(String(localized: "balance_utxo_details", defaultValue: "UTXO Details"))
                         .font(.headline)
                         .fontWeight(.semibold)
                     
                     VStack(spacing: 12) {
                         // Outpoint
                         DetailRow(
-                            title: "data_outpoint",
+                            title: String(localized: "data_outpoint", defaultValue: "Outpoint"),
                             value: utxo.outpoint,
                             isCopyable: true
                         )
                         
                         // Transaction Hash
                         DetailRow(
-                            title: "data_transaction_hash",
+                            title: String(localized: "data_transaction_hash", defaultValue: "Transaction Hash"),
                             value: utxo.transactionHash,
                             isCopyable: true
                         )
                         
                         // Output Index
                         DetailRow(
-                            title: "data_output_index",
+                            title: String(localized: "data_output_index", defaultValue: "Output Index"),
                             value: String(utxo.outputIndex)
                         )
                         
                         // Confirmation Height
                         DetailRow(
-                            title: "data_confirmation_height",
-                            value: utxo.confirmationHeight.map(String.init) ?? String(localized: "activity_unconfirmed")
+                            title: String(localized: "data_confirmation_height", defaultValue: "Confirmation Height"),
+                            value: utxo.confirmationHeight.map(String.init) ?? L10n.activityUnconfirmed
                         )
                         
                         // Short Outpoint for Reference
                         DetailRow(
-                            title: "data_short_reference",
+                            title: String(localized: "data_short_reference", defaultValue: "Short Reference"),
                             value: utxo.shortOutpoint
                         )
                     }
@@ -104,7 +104,7 @@ struct UTXODetailView: View {
             }
             .padding()
         }
-        .navigationTitle("label_utxo")
+        .navigationTitle(String(localized: "label_utxo", defaultValue: "UTXO"))
         #if os(macOS)
         .background(Color(nsColor: .windowBackgroundColor))
         #else

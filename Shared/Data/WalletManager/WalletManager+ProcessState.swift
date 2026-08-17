@@ -128,7 +128,7 @@ extension WalletManager {
         }
         
         if shouldShowBackupReminder {
-            messages.append(String(localized: "message_backup_your_wallet"))
+            messages.append(String(localized: "message_backup_your_wallet", defaultValue: "Backup your wallet"))
         }
         
         if connectionStatus.showWarning {

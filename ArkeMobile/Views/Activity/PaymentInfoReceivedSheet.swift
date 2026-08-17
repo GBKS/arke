@@ -62,7 +62,7 @@ struct PaymentInfoReceivedSheet: View {
                             .padding(.top, 24)
                     }
                     
-                    Text("activity_payment_info_received")
+                    Text(String(localized: "activity_payment_info_received", defaultValue: "Payment Info Received"))
                         .font(.system(size: 30, design: .serif))
                     
                     if let label = parsedURI.label, !label.isEmpty {
@@ -115,7 +115,7 @@ struct PaymentInfoReceivedSheet: View {
                             Image(systemName: "paperplane.fill")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
-                            Text("activity_pay")
+                            Text(String(localized: "activity_pay", defaultValue: "Pay"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                         }
@@ -136,7 +136,7 @@ struct PaymentInfoReceivedSheet: View {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundStyle(.primary)
-                                Text("activity_view_contact")
+                                Text(String(localized: "activity_view_contact", defaultValue: "View Contact"))
                                     .font(.system(size: 21, weight: .semibold))
                                     .foregroundStyle(.primary)
                             }
@@ -162,7 +162,7 @@ struct PaymentInfoReceivedSheet: View {
                                         .font(.system(size: 18, weight: .semibold))
                                         .foregroundStyle(.primary)
                                 }
-                                Text(isCreatingContact ? LocalizedStringKey("activity_adding") : LocalizedStringKey("activity_add_to_contacts"))
+                                Text(isCreatingContact ? String(localized: "activity_adding", defaultValue: "Adding...") : String(localized: "activity_add_to_contacts", defaultValue: "Add to Contacts"))
                                     .font(.system(size: 21, weight: .semibold))
                                     .foregroundStyle(.primary)
                             }
@@ -264,7 +264,7 @@ struct PaymentInfoReceivedSheet: View {
     
     private func contactInfoSection(contact: PersistentContact) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("nav_title_contact")
+            Text(String(localized: "nav_title_contact", defaultValue: "Contact"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
@@ -313,7 +313,7 @@ struct PaymentInfoReceivedSheet: View {
     
     private func arkAddressSection(arkAddress: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("activity_ark_address")
+            Text(String(localized: "activity_ark_address", defaultValue: "Ark Address"))
                 .font(.body)
                 .foregroundStyle(.secondary)
             
@@ -323,7 +323,7 @@ struct PaymentInfoReceivedSheet: View {
     
     private var addressSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("activity_bitcoin_address")
+            Text(String(localized: "activity_bitcoin_address", defaultValue: "Bitcoin Address"))
                 .font(.body)
                 .foregroundStyle(.secondary)
             
@@ -333,7 +333,7 @@ struct PaymentInfoReceivedSheet: View {
     
     private func labelSection(label: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("activity_label")
+            Text(String(localized: "activity_label", defaultValue: "Label"))
                 .font(.body)
                 .foregroundStyle(.secondary)
             
@@ -344,7 +344,7 @@ struct PaymentInfoReceivedSheet: View {
     
     private func amountSection(amount: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("label_amount")
+            Text(L10n.labelAmount)
                 .font(.body)
                 .foregroundStyle(.secondary)
             

@@ -109,7 +109,7 @@ struct ContactSelectorSheet: View {
                     } label: {
                         Image(systemName: "xmark")
                     }
-                    .accessibilityLabel("button_cancel")
+                    .accessibilityLabel(L10n.buttonCancel)
                 }
             }
             */
@@ -120,7 +120,7 @@ struct ContactSelectorSheet: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .accessibilityLabel("contacts_new_title")
+                .accessibilityLabel(String(localized: "contacts_new_title", defaultValue: "New Contact"))
             }
             
             ToolbarItem(placement: .confirmationAction) {
@@ -131,7 +131,7 @@ struct ContactSelectorSheet: View {
                 } label: {
                     Image(systemName: "checkmark")
                 }
-                .accessibilityLabel("button_apply")
+                .accessibilityLabel(String(localized: "button_apply", defaultValue: "Apply"))
                 .disabled(pendingContact?.id == currentAssignedContact?.id && currentAssignedContact != nil)
             }
         }

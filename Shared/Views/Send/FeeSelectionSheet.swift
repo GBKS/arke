@@ -17,7 +17,7 @@ struct FeeSelectionSheet: View {
     var body: some View {
         VStack(spacing: 20) {
             // Header
-            Text("send_payment_speed_question")
+            Text(String(localized: "send_payment_speed_question", defaultValue: "How fast should the payment arrive?"))
                 .font(.system(size: 24, design: .serif))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -56,7 +56,7 @@ struct FeeSelectionSheet: View {
             Button {
                 onDismiss()
             } label: {
-                Text("button_done")
+                Text(L10n.buttonDone)
                     .font(.title3)
                     .foregroundStyle(Color.Arke.gold4)
                     .frame(maxWidth: .infinity)

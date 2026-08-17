@@ -56,7 +56,7 @@ struct OffboardingModalView: View {
                 ))
             case .error(let errorMessage):
                 LargeErrorView(
-                    title: "error_transfer_failed",
+                    title: String(localized: "error_transfer_failed", defaultValue: "Transfer Failed"),
                     errorMessage: errorMessage,
                     image: nil,
                     systemImage: "xmark.circle.fill",

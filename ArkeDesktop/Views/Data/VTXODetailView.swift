@@ -73,7 +73,7 @@ struct VTXODetailView: View {
                 // Details Section
                 VStack(alignment: .leading, spacing: 16) {
                     /*
-                    Text("balance_vtxo_details")
+                    Text(String(localized: "balance_vtxo_details", defaultValue: "VTXO Details"))
                         .font(.headline)
                         .fontWeight(.semibold)
                     */
@@ -81,51 +81,51 @@ struct VTXODetailView: View {
                     VStack(spacing: 12) {
                         // Outpoint (ID)
                         DetailRow(
-                            title: "data_outpoint",
+                            title: String(localized: "data_outpoint", defaultValue: "Outpoint"),
                             value: currentVtxo.outpoint,
                             isCopyable: true
                         )
                         
                         // Transaction ID
                         DetailRow(
-                            title: "activity_transaction_id",
+                            title: L10n.activityTransactionId,
                             value: currentVtxo.txid,
                             isCopyable: true
                         )
                         
                         // Output Index
                         DetailRow(
-                            title: "data_output_index",
+                            title: String(localized: "data_output_index", defaultValue: "Output Index"),
                             value: String(currentVtxo.vout)
                         )
                         
                         // VTXO Kind
                         DetailRow(
-                            title: "data_vtxo_kind",
+                            title: String(localized: "data_vtxo_kind", defaultValue: "VTXO Kind"),
                             value: currentVtxo.kind.displayName
                         )
                         
                         // State
                         DetailRow(
-                            title: "label_state",
+                            title: String(localized: "label_state", defaultValue: "State"),
                             value: currentVtxo.state.displayName
                         )
                         
                         // Expiry Height (0 means unknown)
                         DetailRow(
-                            title: "data_expiry_height",
+                            title: String(localized: "data_expiry_height", defaultValue: "Expiry Height"),
                             value: expiryHeightValue
                         )
 
                         // Exit Depth
                         DetailRow(
-                            title: "data_exit_depth",
+                            title: String(localized: "data_exit_depth", defaultValue: "Exit Depth"),
                             value: currentVtxo.exitDepth.formatted()
                         )
 
                         // Exit Transaction Weight
                         DetailRow(
-                            title: "data_exit_transaction_weight",
+                            title: String(localized: "data_exit_transaction_weight", defaultValue: "Exit Transaction Weight"),
                             value: "\(currentVtxo.exitTxWeightWu.formatted()) WU"
                         )
                     }
@@ -135,7 +135,7 @@ struct VTXODetailView: View {
             }
             .padding()
         }
-        .navigationTitle("balance_vtxo_details")
+        .navigationTitle(String(localized: "balance_vtxo_details", defaultValue: "VTXO Details"))
         #if os(macOS)
         .background(Color(nsColor: .windowBackgroundColor))
         #else
@@ -150,7 +150,7 @@ struct VTXODetailView: View {
 
     private var expiryHeightValue: String {
         guard currentVtxo.expiryHeight > 0 else {
-            return String(localized: "data_unknown")
+            return L10n.dataUnknown
         }
         var value = currentVtxo.expiryHeight.formatted()
         if let blockHeight = currentBlockHeight {

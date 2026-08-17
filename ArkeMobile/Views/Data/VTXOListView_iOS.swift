@@ -45,7 +45,7 @@ struct VTXOListView_iOS: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("label_vtxos")
+                    Text(String(localized: "label_vtxos", defaultValue: "VTXOs"))
                         .font(.system(size: 24, design: .serif))
                     
                     if !vtxos.isEmpty {
@@ -65,18 +65,18 @@ struct VTXOListView_iOS: View {
                     } label: {
                         if let feeEstimate = refreshFeeEstimate {
                             if feeEstimate.feeSats == 0 {
-                                let freeText = String(localized: "fee_free")
-                                Text("action_get_new_ones_with_fee \(freeText)")
+                                let freeText = L10n.feeFree
+                                Text(String(localized: "action_get_new_ones_with_fee %@", defaultValue: "Refresh all (\(freeText))"))
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.Arke.goldLabel)
                             } else {
                                 let formattedFee = BitcoinFormatter.shared.formatAmount(Int(feeEstimate.feeSats))
-                                Text("action_get_new_ones_with_fee \(formattedFee)")
+                                Text(String(localized: "action_get_new_ones_with_fee %@", defaultValue: "Refresh all (\(formattedFee))"))
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.Arke.goldLabel)
                             }
                         } else {
-                            Text("action_get_new_ones")
+                            Text(String(localized: "action_get_new_ones", defaultValue: "Refresh all"))
                                 .fontWeight(.medium)
                                 .foregroundStyle(Color.Arke.goldLabel)
                         }
@@ -108,7 +108,7 @@ struct VTXOListView_iOS: View {
                 HStack(spacing: 10) {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
-                    Text("balance_no_vtxos")
+                    Text(String(localized: "balance_no_vtxos", defaultValue: "No VTXOs found"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -133,7 +133,7 @@ struct VTXOListView_iOS: View {
                 // The graph above covers active VTXOs; the list shows the
                 // spent and exited ones the graph filters out.
                 if !inactiveVTXOs.isEmpty {
-                    Text("label_vtxos_inactive")
+                    Text(String(localized: "label_vtxos_inactive", defaultValue: "Spent & exited"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.top, 20)

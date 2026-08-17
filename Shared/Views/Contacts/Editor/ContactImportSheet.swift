@@ -54,7 +54,7 @@ struct ContactImportSheet: View {
                     requestingPermissionView
                 }
             }
-            .navigationTitle("button_import_contact")
+            .navigationTitle(String(localized: "button_import_contact", defaultValue: "Import Contact"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button {
@@ -62,7 +62,7 @@ struct ContactImportSheet: View {
                     } label: {
                         Image(systemName: "xmark")
                     }
-                    .accessibilityLabel("button_cancel")
+                    .accessibilityLabel(L10n.buttonCancel)
                 }
             }
             .task {
@@ -101,7 +101,7 @@ struct ContactImportSheet: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
             
-            TextField(String(localized: "placeholder_search_contacts"), text: $searchText)
+            TextField(L10n.placeholderSearchContacts, text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.body)
                 .onChange(of: searchText) { _, newValue in
@@ -159,7 +159,7 @@ struct ContactImportSheet: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text(String(localized: "status_searching_contacts"))
+            Text(String(localized: "status_searching_contacts", defaultValue: "Searching contacts..."))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -173,15 +173,15 @@ struct ContactImportSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
             
-            Text("contacts_search_empty")
+            Text(String(localized: "contacts_search_empty", defaultValue: "No contacts found"))
                 .font(.headline)
             
             if !searchText.isEmpty {
-                Text("message_try_different_search")
+                Text(String(localized: "message_try_different_search", defaultValue: "Try a different search term"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             } else {
-                Text("placeholder_search_hint")
+                Text(String(localized: "placeholder_search_hint", defaultValue: "Start typing to search your contacts"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -196,7 +196,7 @@ struct ContactImportSheet: View {
                 .font(.system(size: 48))
                 .foregroundColor(.Arke.red)
             
-            Text("error_title")
+            Text(L10n.errorTitle)
                 .font(.headline)
             
             Text(message)
@@ -204,7 +204,7 @@ struct ContactImportSheet: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            Button("button_try_again") {
+            Button(L10n.buttonTryAgain) {
                 Task {
                     await performSearch(query: searchText)
                 }
@@ -222,7 +222,7 @@ struct ContactImportSheet: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text(String(localized: "status_requesting_contacts"))
+            Text(String(localized: "status_requesting_contacts", defaultValue: "Requesting access to Contacts..."))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -236,23 +236,23 @@ struct ContactImportSheet: View {
                 .font(.system(size: 64))
                 .foregroundColor(.orange)
             
-            Text("error_contacts_access_required")
+            Text(String(localized: "error_contacts_access_required", defaultValue: "Contacts Access Required"))
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("desc_contacts_access_needed")
+            Text(String(localized: "desc_contacts_access_needed", defaultValue: "This app needs permission to access your Contacts to import contact information."))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             
-            Button("button_open_system_settings") {
+            Button(String(localized: "button_open_system_settings", defaultValue: "Open System Settings")) {
                 openSystemSettings()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             
-            Text(String(localized: "message_permission_granted_retry"))
+            Text(String(localized: "message_permission_granted_retry", defaultValue: "After granting permission, please try again."))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -371,7 +371,7 @@ struct ContactImportRow: View {
             Spacer()
             
             // Select button
-            Button("button_select") {
+            Button(String(localized: "button_select", defaultValue: "Select")) {
                 onSelect()
             }
             .buttonStyle(.borderedProminent)

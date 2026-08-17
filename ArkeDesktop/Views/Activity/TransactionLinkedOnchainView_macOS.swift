@@ -30,7 +30,7 @@ struct TransactionLinkedOnchainView_macOS: View {
                 HStack {
                     Image(systemName: "link")
                         .font(.headline)
-                    Text("activity_onchain_transactions")
+                    Text(String(localized: "activity_onchain_transactions", defaultValue: "Onchain Transactions"))
                         .font(.headline)
                         .fontWeight(.semibold)
                 }
@@ -69,7 +69,7 @@ struct LinkedOnchainCard_macOS: View {
             // Transaction ID row
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("activity_transaction_id")
+                    Text(L10n.activityTransactionId)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     HStack(spacing: 8) {
@@ -134,7 +134,7 @@ struct LinkedOnchainCard_macOS: View {
                             Image(systemName: "clock")
                                 .font(.caption2)
                                 .foregroundColor(.orange)
-                            Text("activity_unconfirmed")
+                            Text(L10n.activityUnconfirmed)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -145,7 +145,7 @@ struct LinkedOnchainCard_macOS: View {
                 // Onchain fee
                 if let onchainFee = transaction.onchainFeeSat, onchainFee > 0 {
                     HStack {
-                        Text("activity_network_fee")
+                        Text(L10n.activityNetworkFee)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -158,7 +158,7 @@ struct LinkedOnchainCard_macOS: View {
                 // Amount (if applicable)
                 if transaction.amount != 0 {
                     HStack {
-                        Text("label_amount")
+                        Text(L10n.labelAmount)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
@@ -181,7 +181,7 @@ struct LinkedOnchainCard_macOS: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption2)
                     .foregroundColor(confirmations >= 6 ? .green : .orange)
-                Text(confirmations >= 6 ? LocalizedStringKey("status_confirmed") : LocalizedStringKey("activity_confirming"))
+                Text(confirmations >= 6 ? L10n.statusConfirmed : String(localized: "activity_confirming", defaultValue: "Confirming"))
                     .font(.caption2)
                     .foregroundColor(confirmations >= 6 ? .green : .orange)
             }
@@ -194,7 +194,7 @@ struct LinkedOnchainCard_macOS: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.caption2)
                     .foregroundColor(.green)
-                Text("status_confirmed")
+                Text(L10n.statusConfirmed)
                     .font(.caption2)
                     .foregroundColor(.green)
             }

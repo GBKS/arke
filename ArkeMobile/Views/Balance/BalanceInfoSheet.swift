@@ -15,7 +15,7 @@ struct BalanceInfoSheet: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    Text("balance_about_title")
+                    Text(String(localized: "balance_about_title", defaultValue: "About Your Balances"))
                         .font(.system(size: 30, design: .serif))
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
@@ -29,20 +29,20 @@ struct BalanceInfoSheet: View {
                                 .frame(width: 50, height: 50)
                                 .cornerRadius(8)
                             
-                            Text("balance_payments")
+                            Text(String(localized: "balance_payments", defaultValue: "Payments Balance"))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                         }
                         
-                        Text("balance_payments_help")
+                        Text(String(localized: "balance_payments_help", defaultValue: "Your Payments Balance uses the Ark protocol to enable fast, low-fee Bitcoin payments similar to Lightning."))
                             .font(.body)
                             .foregroundColor(.secondary)
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            BalanceInfoSheetRow(icon: "hare", text: NSLocalizedString("balance_payments_fast", comment: ""))
-                            BalanceInfoSheetRow(icon: "bitcoinsign", text: NSLocalizedString("balance_payments_low_fees", comment: ""))
-                            BalanceInfoSheetRow(icon: "calendar", text: NSLocalizedString("balance_payments_periodic_fees", comment: ""))
-                            BalanceInfoSheetRow(icon: "network", text: NSLocalizedString("balance_payments_ark_server", comment: ""))
+                            BalanceInfoSheetRow(icon: "hare", text: String(localized: "balance_payments_fast", defaultValue: "Super-fast payments"))
+                            BalanceInfoSheetRow(icon: "bitcoinsign", text: String(localized: "balance_payments_low_fees", defaultValue: "Low transaction fees"))
+                            BalanceInfoSheetRow(icon: "calendar", text: String(localized: "balance_payments_periodic_fees", defaultValue: "Periodic maintenance fees"))
+                            BalanceInfoSheetRow(icon: "network", text: String(localized: "balance_payments_ark_server", defaultValue: "Facilitated by an Ark server"))
                         }
                     }
                     
@@ -56,20 +56,20 @@ struct BalanceInfoSheet: View {
                                 .frame(width: 50, height: 50)
                                 .cornerRadius(8)
                             
-                            Text("balance_savings")
+                            Text(String(localized: "balance_savings", defaultValue: "Savings Balance"))
                                 .font(.title2)
                                 .fontWeight(.semibold)
                         }
                         
-                        Text("balance_savings_help")
+                        Text(String(localized: "balance_savings_help", defaultValue: "Your Savings Balance is standard Bitcoin held directly on the blockchain with full security."))
                             .font(.body)
                             .foregroundColor(.secondary)
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            BalanceInfoSheetRow(icon: "tortoise.fill", text: NSLocalizedString("balance_savings_slow", comment: ""))
-                            BalanceInfoSheetRow(icon: "bitcoinsign", text: NSLocalizedString("balance_savings_high_fees", comment: ""))
-                            BalanceInfoSheetRow(icon: "checkmark.circle.fill", text: NSLocalizedString("balance_savings_no_fees", comment: ""))
-                            BalanceInfoSheetRow(icon: "network", text: NSLocalizedString("balance_savings_bitcoin_network", comment: ""))
+                            BalanceInfoSheetRow(icon: "tortoise.fill", text: String(localized: "balance_savings_slow", defaultValue: "Slow payments (10+ minutes)"))
+                            BalanceInfoSheetRow(icon: "bitcoinsign", text: String(localized: "balance_savings_high_fees", defaultValue: "High transaction fees"))
+                            BalanceInfoSheetRow(icon: "checkmark.circle.fill", text: String(localized: "balance_savings_no_fees", defaultValue: "No maintenance fees"))
+                            BalanceInfoSheetRow(icon: "network", text: String(localized: "balance_savings_bitcoin_network", defaultValue: "Uses the Bitcoin Network"))
                         }
                     }
                     
@@ -89,13 +89,13 @@ struct BalanceInfoSheet: View {
                         }
                         */
                         
-                        Text("balance_arrows_help")
+                        Text(String(localized: "balance_arrows_help", defaultValue: "Use the arrows between your balances to move funds."))
                             .font(.body)
                             .foregroundColor(.secondary)
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            BalanceInfoSheetRow(icon: "arrow.up.circle.fill", text: NSLocalizedString("balance_transfer_savings_to_payments", comment: ""))
-                            BalanceInfoSheetRow(icon: "arrow.down.circle.fill", text: NSLocalizedString("balance_transfer_payments_to_savings", comment: ""))
+                            BalanceInfoSheetRow(icon: "arrow.up.circle.fill", text: String(localized: "balance_transfer_savings_to_payments", defaultValue: "From Savings to Payments"))
+                            BalanceInfoSheetRow(icon: "arrow.down.circle.fill", text: String(localized: "balance_transfer_payments_to_savings", defaultValue: "From Payments to Savings"))
                         }
                     }
                 }
@@ -103,7 +103,7 @@ struct BalanceInfoSheet: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("button_done") {
+                    Button(L10n.buttonDone) {
                         dismiss()
                     }
                 }

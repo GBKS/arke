@@ -34,7 +34,7 @@ struct TransactionDetailView: View {
                     }
             }
         }
-        .navigationTitle("nav_title_transaction")
+        .navigationTitle(String(localized: "nav_title_transaction", defaultValue: "Transaction"))
         #if os(macOS)
         .background(Color(NSColor.windowBackgroundColor))
         #else
@@ -129,7 +129,7 @@ struct TransactionDetailView: View {
                     VStack(spacing: 12) {
                         // Transaction ID
                         DetailRow(
-                            title: "activity_transaction_id",
+                            title: L10n.activityTransactionId,
                             value: transaction.txid,
                             isCopyable: true,
                             onCopy: { viewModel.copyToClipboard($0) }
@@ -138,7 +138,7 @@ struct TransactionDetailView: View {
                         // Address
                         if let address = transaction.address {
                             DetailRow(
-                                title: transaction.transactionType == .received ? LocalizedStringKey("activity_from_address") : LocalizedStringKey("activity_to_address"),
+                                title: transaction.transactionType == .received ? L10n.activityFromAddress : L10n.activityToAddress,
                                 value: address,
                                 isCopyable: true,
                                 onCopy: { viewModel.copyToClipboard($0) }
@@ -151,27 +151,27 @@ struct TransactionDetailView: View {
                             if transaction.hasBothFeeTypes {
                                 if let offchainFee = transaction.formattedFee {
                                     DetailRow(
-                                        title: "activity_offchain_fee",
+                                        title: String(localized: "activity_offchain_fee", defaultValue: "Offchain Fee"),
                                         value: offchainFee
                                     )
                                 }
                                 if let onchainFee = transaction.formattedOnchainFee {
                                     DetailRow(
-                                        title: "activity_onchain_fee",
+                                        title: String(localized: "activity_onchain_fee", defaultValue: "Onchain Fee"),
                                         value: onchainFee
                                     )
                                 }
                                 // Show total
                                 if let totalFee = transaction.formattedTotalFees {
                                     DetailRow(
-                                        title: "activity_total_fee",
+                                        title: String(localized: "activity_total_fee", defaultValue: "Total Fee"),
                                         value: totalFee
                                     )
                                 }
                             } else {
                                 // Show single fee line
                                 DetailRow(
-                                    title: "label_fee",
+                                    title: L10n.labelFee,
                                     value: transaction.formattedTotalFees ?? BitcoinFormatter.shared.formatAmount(0)
                                 )
                             }
@@ -179,13 +179,13 @@ struct TransactionDetailView: View {
                         
                         // Date
                         DetailRow(
-                            title: "label_date",
+                            title: String(localized: "label_date", defaultValue: "Date"),
                             value: transaction.date.formatted(date: .abbreviated, time: .shortened)
                         )
                     }
                     .padding(.top, 8)
                 } label: {
-                    Text("label_details")
+                    Text(L10n.labelDetails)
                         .font(.headline)
                         .fontWeight(.semibold)
                 }
@@ -197,7 +197,7 @@ struct TransactionDetailView: View {
         }
         .overlay(alignment: .bottom) {
             if viewModel.showCopySuccess {
-                Text("status_copied_clipboard")
+                Text(String(localized: "status_copied_clipboard", defaultValue: "Copied to clipboard"))
                     .font(.caption)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)

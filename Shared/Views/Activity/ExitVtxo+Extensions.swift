@@ -19,19 +19,19 @@ extension Bark.ExitState {
     var displayName: String {
         switch self {
         case .start:
-            return String(localized: "status_starting")
+            return String(localized: "status_starting", defaultValue: "Starting")
         case .processing:
-            return String(localized: "data_processing")
+            return L10n.dataProcessing
         case .awaitingDelta:
-            return String(localized: "data_processing")
+            return L10n.dataProcessing
         case .claimable:
-            return String(localized: "status_ready_to_withdraw")
+            return String(localized: "status_ready_to_withdraw", defaultValue: "Ready to withdraw")
         case .claimInProgress:
-            return String(localized: "status_withdrawing")
+            return String(localized: "status_withdrawing", defaultValue: "Withdrawing")
         case .claimed:
-            return String(localized: "status_complete")
+            return String(localized: "status_complete", defaultValue: "Complete")
         case .vtxoAlreadySpent, .canceled:
-            return String(localized: "transaction_cancelled")
+            return L10n.transactionCancelled
         }
     }
 }
@@ -54,7 +54,7 @@ extension ExitVtxo {
     /// Short VTXO ID for display (first 8 + last 4 characters)
     var shortVtxoId: String {
         if vtxoId.count > 12 {
-            return String(vtxoId.prefix(8)) + String(localized: "symbol_ellipsis") + String(vtxoId.suffix(4))
+            return String(vtxoId.prefix(8)) + L10n.symbolEllipsis + String(vtxoId.suffix(4))
         }
         return vtxoId
     }
@@ -140,13 +140,13 @@ extension ExitVtxo {
     /// - Returns: Human-readable time string (e.g., "~2 hours", "~3 days")
     func formattedTimeRemaining(currentHeight: Int, claimableHeight: Int) -> String {
         if isClaimable {
-            return String(localized: "status_ready")
+            return String(localized: "status_ready", defaultValue: "Ready")
         }
         
         let timeInterval = estimatedTimeRemaining(currentHeight: currentHeight, claimableHeight: claimableHeight)
         
         if timeInterval <= 0 {
-            return String(localized: "status_ready")
+            return String(localized: "status_ready", defaultValue: "Ready")
         }
         
         let hours = Int(timeInterval) / 3600

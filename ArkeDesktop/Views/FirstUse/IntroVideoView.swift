@@ -48,9 +48,9 @@ struct IntroVideoView: View {
                 }
             )
             .id(currentVideoIndex) // Force recreation when video changes
-            .accessibilityLabel(String(format: String(localized: "accessibility_video_player"), videos[currentVideoIndex].title))
+            .accessibilityLabel(String(format: String(localized: "accessibility_video_player", defaultValue: "Video: %@"), videos[currentVideoIndex].title))
             .accessibilityAddTraits(.playsSound)
-            .accessibilityHint(String(localized: "accessibility_video_has_captions"))
+            .accessibilityHint(String(localized: "accessibility_video_has_captions", defaultValue: "Video includes captions"))
             .frame(maxWidth: .infinity)
             .clipped()
             .overlay(alignment: .topTrailing) {
@@ -59,8 +59,8 @@ struct IntroVideoView: View {
 
                     // Announce mute state change
                     let announcement = isMuted ?
-                        String(localized: "accessibility_audio_muted") :
-                        String(localized: "accessibility_audio_unmuted")
+                        String(localized: "accessibility_audio_muted", defaultValue: "Audio muted") :
+                        String(localized: "accessibility_audio_unmuted", defaultValue: "Audio unmuted")
                     AccessibilityNotification.Announcement(announcement).post()
                 } label: {
                     Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
@@ -69,7 +69,7 @@ struct IntroVideoView: View {
                 }
                 .buttonStyle(.glass)
                 .tint(Color.Arke.gold)
-                .accessibilityLabel(isMuted ? String(localized: "action_unmute_audio") : String(localized: "action_mute_audio"))
+                .accessibilityLabel(isMuted ? String(localized: "action_unmute_audio", defaultValue: "Unmute audio") : String(localized: "action_mute_audio", defaultValue: "Mute audio"))
                 .padding(20)
             }
 
@@ -93,7 +93,7 @@ struct IntroVideoView: View {
                     Button {
                         onSkip()
                     } label: {
-                        Text("button_skip")
+                        Text(String(localized: "button_skip", defaultValue: "Skip"))
                             .font(.system(.title2, weight: .semibold))
                             .frame(maxWidth: .infinity)
                             .padding(.horizontal, 20)
@@ -120,7 +120,7 @@ struct IntroVideoView: View {
                 }
                 .buttonStyle(.glass)
                 .tint(Color.Arke.gold)
-                .accessibilityLabel("button_back")
+                .accessibilityLabel(L10n.buttonBack)
                 .padding(20)
             }
         }
@@ -174,7 +174,7 @@ struct VideoListItem: View {
                         .lineLimit(2)
 
                     if isCurrentlyPlaying {
-                        Text("label_now_playing")
+                        Text(String(localized: "label_now_playing", defaultValue: "Now Playing"))
                             .font(.footnote)
                             .foregroundStyle(Color.Arke.gold)
                     }
@@ -191,9 +191,9 @@ struct VideoListItem: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(isCurrentlyPlaying ?
-            String(format: String(localized: "accessibility_video_now_playing"), video.title) :
-            String(format: String(localized: "accessibility_video_item"), index + 1, video.title))
-        .accessibilityHint(String(localized: "accessibility_play_video_hint"))
+            String(format: String(localized: "accessibility_video_now_playing", defaultValue: "Now playing: %@"), video.title) :
+            String(format: String(localized: "accessibility_video_item", defaultValue: "Video %lld: %@"), index + 1, video.title))
+        .accessibilityHint(String(localized: "accessibility_play_video_hint", defaultValue: "Double tap to play this video"))
         .accessibilityAddTraits(isCurrentlyPlaying ? [.isButton, .isSelected] : .isButton)
     }
 }

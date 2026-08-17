@@ -110,7 +110,7 @@ struct ContactRow: View {
                         Image(systemName: "paperplane.fill")
                     }
                     .buttonStyle(ArkeIconButtonStyle(size: .small))
-                    .help(String(format: NSLocalizedString("help_send_to", comment: ""), contact.displayName))
+                    .help(String(format: String(localized: "help_send_to", defaultValue: "Send to %@"), contact.displayName))
                 }
             }
         }

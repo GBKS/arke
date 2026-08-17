@@ -57,7 +57,7 @@ struct LightningInvoicePage: View {
                             .frame(width: 30, height: 30)
                             .foregroundStyle(.white)
                     }
-                    .accessibilityLabel("button_close")
+                    .accessibilityLabel(L10n.buttonClose)
                     .padding(4)
                     .buttonStyle(.plain)
                     .background(Color.black.opacity(0.15))
@@ -74,11 +74,11 @@ struct LightningInvoicePage: View {
                 // Header - context-aware
                 HStack(alignment: .center) {
                     if invoiceState == .qrDisplay {
-                        Text("receive_scan_to_pay_title")
+                        Text(L10n.receiveScanToPayTitle)
                             .font(.system(size: 36, weight: .semibold, design: .serif))
                             .foregroundStyle(.white)
                     } else {
-                        Text("placeholder_enter_amount")
+                        Text(L10n.placeholderEnterAmount)
                             .font(.system(size: 36, weight: .semibold, design: .serif))
                             .foregroundStyle(.white)
                     }
@@ -165,7 +165,7 @@ struct LightningInvoicePage: View {
     private var amountDisplayView: some View {
         VStack(spacing: 8) {
             if amount.isEmpty {
-                Text("format_zero")
+                Text(String(localized: "format_zero", defaultValue: "0"))
                     .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundStyle(.white.opacity(0.3))
                     .padding(.top, 30)
@@ -191,7 +191,7 @@ struct LightningInvoicePage: View {
                 .scaleEffect(1.5)
                 .tint(.black)
             
-            Text("activity_generating_invoice")
+            Text(String(localized: "activity_generating_invoice", defaultValue: "Generating invoice..."))
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
         }

@@ -83,7 +83,7 @@ struct CreateWalletView: View {
                 if showGetStartedButton {
                     // Get Started button
                     VStack(spacing: 30) {
-                        Text("onboarding_wallet_awaits")
+                        Text(String(localized: "onboarding_wallet_awaits", defaultValue: "Your wallet awaits."))
                             .font(.system(.title, design: .serif))
                             .foregroundStyle(Color.Arke.gold)
                             .accessibilityAddTraits(.isHeader)
@@ -93,7 +93,7 @@ struct CreateWalletView: View {
                             hasNavigated = true
                             onWalletCreated()
                         } label: {
-                            Text("onboarding_step_in")
+                            Text(String(localized: "onboarding_step_in", defaultValue: "Let’s go"))
                                 .font(.system(.title2, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                                 .frame(maxWidth: .infinity)
@@ -102,8 +102,8 @@ struct CreateWalletView: View {
                         .controlSize(.large)
                         .tint(Color.Arke.gold)
                         .disabled(hasNavigated)
-                        .accessibilityLabel("button_get_started")
-                        .accessibilityHint(Text("accessibility_continue_new_wallet"))
+                        .accessibilityLabel(String(localized: "button_get_started", defaultValue: "Get Started"))
+                        .accessibilityHint(Text(String(localized: "accessibility_continue_new_wallet", defaultValue: "Continue to your new wallet")))
                         .accessibilityFocused($isGetStartedFocused)
                     }
                     .accessibilityElement(children: .contain)
@@ -119,12 +119,12 @@ struct CreateWalletView: View {
                             .tint(Color.Arke.gold)
                             .scaleEffect(1.5)
 
-                        Text("onboarding_creating_wallet")
+                        Text(L10n.onboardingCreatingWallet)
                             .font(.system(.headline, weight: .medium))
                             .foregroundStyle(.white)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("onboarding_creating_wallet")
+                    .accessibilityLabel(L10n.onboardingCreatingWallet)
                     .accessibilityAddTraits(.updatesFrequently)
                     .transition(reduceMotion ? .identity : .opacity)
                 }
@@ -137,7 +137,7 @@ struct CreateWalletView: View {
         .background(Color.Arke.gold4)
         .task {
             // Announce wallet creation start for VoiceOver users
-            AccessibilityNotification.Announcement(String(localized: "accessibility_wallet_creation_started")).post()
+            AccessibilityNotification.Announcement(String(localized: "accessibility_wallet_creation_started", defaultValue: "Creating your wallet")).post()
 
             // Start wallet creation immediately in parallel with video playback
             Task {
@@ -156,13 +156,13 @@ struct CreateWalletView: View {
                 revealGetStartedButton()
             }
         }
-        .alert(Text("alert_wallet_creation_failed"), isPresented: $showingError) {
-            Button("button_retry") {
+        .alert(Text(String(localized: "alert_wallet_creation_failed", defaultValue: "Wallet Creation Failed")), isPresented: $showingError) {
+            Button(L10n.buttonRetry) {
                 Task {
                     await startWalletCreation()
                 }
             }
-            Button("button_go_back", role: .cancel) {
+            Button(String(localized: "button_go_back", defaultValue: "Go Back"), role: .cancel) {
                 onBack()
             }
         } message: {
@@ -176,14 +176,14 @@ struct CreateWalletView: View {
         if reduceMotion {
             showGetStartedButton = true
             isGetStartedFocused = true
-            AccessibilityNotification.Announcement(String(localized: "accessibility_wallet_ready")).post()
+            AccessibilityNotification.Announcement(L10n.accessibilityWalletReady).post()
         } else {
             withAnimation(.easeInOut(duration: 0.35)) {
                 showGetStartedButton = true
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isGetStartedFocused = true
-                AccessibilityNotification.Announcement(String(localized: "accessibility_wallet_ready")).post()
+                AccessibilityNotification.Announcement(L10n.accessibilityWalletReady).post()
             }
         }
     }
@@ -279,9 +279,9 @@ struct CreateWalletView: View {
 
                     // Provide more helpful error messages
                     if isServerError {
-                        errorMessage = String(localized: "error_ark_server_connection")
+                        errorMessage = String(localized: "error_ark_server_connection", defaultValue: "Unable to connect to the Ark server. Please try again later.")
                     } else if isNetworkError && retryCount >= maxRetries {
-                        errorMessage = String(localized: "error_network_multiple_attempts")
+                        errorMessage = String(localized: "error_network_multiple_attempts", defaultValue: "Connection failed after multiple attempts. Please check your internet connection and try again.")
                     } else {
                         errorMessage = errorString
                     }

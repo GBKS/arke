@@ -14,7 +14,7 @@ struct ManualBackupView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
-                Text("settings_offline_backup_help")
+                Text(String(localized: "settings_offline_backup_help", defaultValue: "An offline backup needs both items below. Your recovery phrase alone won't recover your full balance. The backup file holds data that exists only on your device and in iCloud."))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -32,7 +32,7 @@ struct ManualBackupView: View {
             .frame(maxWidth: 500)
             .frame(maxWidth: .infinity)
         }
-        .navigationTitle("settings_manual_backup")
+        .navigationTitle(L10n.settingsManualBackup)
     }
 }
 
@@ -47,10 +47,10 @@ struct BackupStatusSectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("settings_backup_file")
+            Text(String(localized: "settings_backup_file", defaultValue: "Backup File"))
                 .font(.system(size: 24, design: .serif))
 
-            Text(String(localized: "backup_description"))
+            Text(String(localized: "backup_description", defaultValue: "The backup file includes all transactions from your payments balance."))
                 .font(.body)
                 .foregroundColor(.secondary)
                 .lineSpacing(6)
@@ -59,14 +59,14 @@ struct BackupStatusSectionView: View {
             if let info = backupInfo {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(String(localized: "backup_last_synced"))
+                        Text(String(localized: "backup_last_synced", defaultValue: "Last synced"))
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(info.formattedDate)
                     }
 
                     HStack {
-                        Text(String(localized: "backup_size"))
+                        Text(String(localized: "backup_size", defaultValue: "Size"))
                             .foregroundColor(.secondary)
                         Spacer()
                         Text(info.formattedSize)
@@ -74,7 +74,7 @@ struct BackupStatusSectionView: View {
                 }
                 .font(.body)
             } else {
-                Text(String(localized: "backup_no_backup_available"))
+                Text(String(localized: "backup_no_backup_available", defaultValue: "No backup available"))
                     .foregroundColor(.secondary)
                     .font(.body)
             }
@@ -83,7 +83,7 @@ struct BackupStatusSectionView: View {
                 HStack {
                     Image(systemName: result == .failed ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                         .foregroundColor(result == .failed ? .red : .green)
-                    Text(result == .success ? String(localized: "backup_successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date") : String(localized: "backup_failed"))
+                    Text(result == .success ? String(localized: "backup_successful", defaultValue: "Backup successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date", defaultValue: "Backup already up-to-date") : String(localized: "backup_failed", defaultValue: "Backup failed"))
                         .foregroundColor(result == .failed ? .red : .green)
                 }
                 .font(.body)
@@ -99,7 +99,7 @@ struct BackupStatusSectionView: View {
                 Button {
                     exportBackupFile()
                 } label: {
-                    Label(String(localized: "button_download"), systemImage: "square.and.arrow.down")
+                    Label(L10n.buttonDownload, systemImage: "square.and.arrow.down")
                 }
                 .disabled(backupInfo == nil)
 
@@ -109,9 +109,9 @@ struct BackupStatusSectionView: View {
                     }
                 } label: {
                     if isBackingUp {
-                        Label(String(localized: "backup_syncing"), systemImage: "arrow.clockwise.icloud")
+                        Label(String(localized: "backup_syncing", defaultValue: "Syncing.."), systemImage: "arrow.clockwise.icloud")
                     } else {
-                        Label(String(localized: "backup_sync_now"), systemImage: "arrow.clockwise.icloud")
+                        Label(String(localized: "backup_sync_now", defaultValue: "Sync Now"), systemImage: "arrow.clockwise.icloud")
                     }
                 }
                 .disabled(isBackingUp)
@@ -167,7 +167,7 @@ struct BackupStatusSectionView: View {
             }
             try FileManager.default.copyItem(at: sourceURL, to: destination)
         } catch {
-            exportErrorMessage = String(format: NSLocalizedString("error_file_picker", comment: ""), error.localizedDescription)
+            exportErrorMessage = String(format: L10n.errorFilePicker, error.localizedDescription)
         }
     }
 }

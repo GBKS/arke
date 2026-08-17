@@ -96,7 +96,7 @@ struct DataView_iOS: View {
                  */
             }
         }
-        .navigationTitle("data_xray_title")
+        .navigationTitle(L10n.dataXrayTitle)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -112,8 +112,8 @@ struct DataView_iOS: View {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
-                .accessibilityLabel("accessibility_reload_all_data")
-                .accessibilityHint("accessibility_reload_all_data_hint")
+                .accessibilityLabel(String(localized: "accessibility_reload_all_data", defaultValue: "Reload all data"))
+                .accessibilityHint(String(localized: "accessibility_reload_all_data_hint", defaultValue: "Refreshes all sections including balances, VTXOs, exits, and configuration"))
                 .disabled(isReloading)
             }
         }

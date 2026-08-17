@@ -27,16 +27,16 @@ struct IncrementalPaymentTestView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("testing_spam_payments_help")
+                Text(String(localized: "testing_spam_payments_help", defaultValue: "Send incremental payments for testing. Enter an ark address, lightning offer, or lightning invoice."))
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
             
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_recipient")
+                        Text(String(localized: "testing_recipient", defaultValue: "Recipient"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_ark_or_lightning_address", text: $recipient)
+                        TextField(String(localized: "placeholder_ark_or_lightning_address", defaultValue: "Ark address, Lightning invoice, or Lightning address"), text: $recipient)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .disabled(isRunning)
@@ -46,10 +46,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_count")
+                        Text(String(localized: "testing_count", defaultValue: "Count"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_number_of_payments_to_send", text: $count)
+                        TextField(String(localized: "placeholder_number_of_payments_to_send", defaultValue: "Number of payments to send"), text: $count)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -58,10 +58,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_start_amount_sats")
+                        Text(String(localized: "testing_start_amount_sats", defaultValue: "Start Amount (sats)"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_initial_payment_amount", text: $startAmount)
+                        TextField(String(localized: "placeholder_initial_payment_amount", defaultValue: "Initial payment amount"), text: $startAmount)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -70,10 +70,10 @@ struct IncrementalPaymentTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_delay_ms")
+                        Text(String(localized: "testing_delay_ms", defaultValue: "Delay (ms)"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_delay_between_payments", text: $delayMs)
+                        TextField(String(localized: "placeholder_delay_between_payments", defaultValue: "Delay between payments"), text: $delayMs)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -83,20 +83,20 @@ struct IncrementalPaymentTestView_iOS: View {
                 if isRunning {
                     VStack(spacing: 12) {
                         HStack {
-                            Text("testing_progress")
+                            Text(String(localized: "testing_progress", defaultValue: "Progress:"))
                             Spacer()
                             Text("\(sentCount)/\(Int(count) ?? 0) sent, \(failedCount) failed")
                                 .foregroundColor(.secondary)
                         }
                         
-                        Button("testing_stop", role: .destructive) {
+                        Button(String(localized: "testing_stop", defaultValue: "STOP"), role: .destructive) {
                             stopTest()
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.red)
                     }
                 } else {
-                    Button("testing_start_test") {
+                    Button(String(localized: "testing_start_test", defaultValue: "Start Test")) {
                         startTest()
                     }
                     .buttonStyle(.borderedProminent)
@@ -105,7 +105,7 @@ struct IncrementalPaymentTestView_iOS: View {
             }
             .padding(.horizontal, 20)
         }
-        .navigationTitle("nav_title_spam_payments")
+        .navigationTitle(String(localized: "nav_title_spam_payments", defaultValue: "Spam Payments"))
         .navigationBarTitleDisplayMode(.large)
     }
     

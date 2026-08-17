@@ -48,7 +48,7 @@ struct FilterChipView: View {
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
-                .accessibilityLabel("button_clear_filter")
+                .accessibilityLabel(String(localized: "button_clear_filter", defaultValue: "Clear Filter"))
                 .buttonStyle(.plain)
                 .padding(6)
             }

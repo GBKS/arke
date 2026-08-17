@@ -52,6 +52,6 @@ struct WalletSidebar: View {
                 }
             }
         }
-        .navigationTitle("nav_title_wallet")
+        .navigationTitle(String(localized: "nav_title_wallet", defaultValue: "Wallet"))
     }
 }

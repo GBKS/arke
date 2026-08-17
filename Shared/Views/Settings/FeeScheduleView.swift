@@ -16,7 +16,7 @@ struct FeeScheduleView: View {
             if let feeSchedule = manager.arkInfo?.feeSchedule {
                 ScrollView {
                     VStack(spacing: 20) {
-                        Text("fee_schedule_help")
+                        Text(String(localized: "fee_schedule_help", defaultValue: "These are the fees charged by the server for different operations."))
                             .font(.body)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,7 +87,7 @@ struct FeeScheduleView: View {
                         )
                         
                         // Footer note
-                        Text("fee_server_fees_help")
+                        Text(String(localized: "fee_server_fees_help", defaultValue: "Fees are charged by the Ark server and are separate from Bitcoin network fees."))
                             .font(.body)
                             .foregroundColor(.secondary)
                             .padding(.top, 8)
@@ -98,13 +98,13 @@ struct FeeScheduleView: View {
                 }
             } else {
                 ContentUnavailableView(
-                    "fee_information_unavailable",
+                    String(localized: "fee_information_unavailable", defaultValue: "Fee Information Unavailable"),
                     systemImage: "exclamationmark.triangle",
-                    description: Text("fee_unable_to_load_fee_schedule")
+                    description: Text(String(localized: "fee_unable_to_load_fee_schedule", defaultValue: "Unable to load fee schedule from server."))
                 )
             }
         }
-        .navigationTitle("settings_fee_schedule")
+        .navigationTitle(L10n.settingsFeeSchedule)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
@@ -323,7 +323,7 @@ struct FeeCard: View {
                 
                 // Free indicator badge
                 if isFree {
-                    Text("fee_free")
+                    Text(L10n.feeFree)
                         .font(.body)
                         .fontWeight(.semibold)
                         .foregroundColor(.Arke.green)
@@ -365,7 +365,7 @@ struct FeeCard: View {
                             
                             // Show value with free indicator if it's "0.00%" or formatted zero amount
                             if value == "0.00%" || value == BitcoinFormatter.shared.formatAmount(0) {
-                                Text("fee_free")
+                                Text(L10n.feeFree)
                                     .font(.body)
                                     .foregroundColor(.Arke.green)
                             } else {

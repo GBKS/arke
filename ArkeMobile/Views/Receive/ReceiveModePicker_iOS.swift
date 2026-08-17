@@ -18,7 +18,7 @@ struct ReceiveModePicker_iOS: View {
         if !isReadOnlyMode {
             GlassEffectContainer(spacing: 8.0) {
                 HStack(spacing: 0) {
-                    Label("receive_request_a_payment", systemImage: "qrcode")
+                    Label(String(localized: "receive_request_a_payment", defaultValue: "Request a Payment"), systemImage: "qrcode")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .fontWeight(selectedBalance == .lightning ? .semibold : .regular)
@@ -27,7 +27,7 @@ struct ReceiveModePicker_iOS: View {
                         .foregroundStyle(selectedBalance == .lightning ? Color.Arke.gold : .secondary)
                         .animation(nil, value: selectedBalance)
                     
-                    Label("receive_share_your_addresses", systemImage: "list.dash")
+                    Label(String(localized: "receive_share_your_addresses", defaultValue: "Share your Addresses"), systemImage: "list.dash")
                         .labelStyle(.iconOnly)
                         .font(.title2)
                         .fontWeight(selectedBalance == .paymentsAndSavings ? .semibold : .regular)
@@ -67,9 +67,9 @@ struct ReceiveModePicker_iOS: View {
             )
             .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("balance_type")
-            .accessibilityValue(selectedBalance == .lightning ? String(localized: "network_lightning") : String(localized: "receive_payments_and_savings"))
-            .accessibilityHint("accessibility_hint_toggle_balance_type")
+            .accessibilityLabel(String(localized: "balance_type", defaultValue: "Balance type"))
+            .accessibilityValue(selectedBalance == .lightning ? L10n.networkLightning : String(localized: "receive_payments_and_savings", defaultValue: "Payments and Savings"))
+            .accessibilityHint(String(localized: "accessibility_hint_toggle_balance_type", defaultValue: "Toggle between Lightning and Payments and Savings"))
         }
     }
 }

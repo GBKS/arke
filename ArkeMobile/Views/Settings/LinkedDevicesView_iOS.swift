@@ -328,13 +328,13 @@ struct DeviceRow_iOS: View {
                     Button {
                         onMakeSecondary()
                     } label: {
-                        Label("settings_make_secondary", systemImage: "arrow.down.circle")
+                        Label(String(localized: "settings_make_secondary", defaultValue: "Make Secondary"), systemImage: "arrow.down.circle")
                     }
                 } else {
                     Button {
                         onMakePrimary()
                     } label: {
-                        Label("settings_make_primary", systemImage: "arrow.up.circle")
+                        Label(String(localized: "settings_make_primary", defaultValue: "Make Primary"), systemImage: "arrow.up.circle")
                     }
                 }
                 
@@ -344,7 +344,7 @@ struct DeviceRow_iOS: View {
                     Button(role: .destructive) {
                         onRemove()
                     } label: {
-                        Label("action_remove", systemImage: "trash")
+                        Label(L10n.actionRemove, systemImage: "trash")
                     }
                 }
             } label: {

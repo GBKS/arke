@@ -10,7 +10,7 @@ struct BackupStatusSectionView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
-                Text(String(localized: "backup_description"))
+                Text(String(localized: "backup_description", defaultValue: "The backup file includes all transactions from your payments balance."))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -19,7 +19,7 @@ struct BackupStatusSectionView_iOS: View {
                 if let info = backupInfo {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text(String(localized: "backup_last_synced"))
+                            Text(String(localized: "backup_last_synced", defaultValue: "Last synced"))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -28,7 +28,7 @@ struct BackupStatusSectionView_iOS: View {
                         }
                         
                         HStack {
-                            Text(String(localized: "backup_size"))
+                            Text(String(localized: "backup_size", defaultValue: "Size"))
                                 .font(.body)
                                 .foregroundColor(.secondary)
                             Spacer()
@@ -38,7 +38,7 @@ struct BackupStatusSectionView_iOS: View {
                     }
                     .font(.subheadline)
                 } else {
-                    Text(String(localized: "backup_no_backup_available"))
+                    Text(String(localized: "backup_no_backup_available", defaultValue: "No backup available"))
                         .foregroundColor(.secondary)
                         .font(.body)
                 }
@@ -47,7 +47,7 @@ struct BackupStatusSectionView_iOS: View {
                     HStack {
                         Image(systemName: result == .failed ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                             .foregroundColor(result == .failed ? .red : .green)
-                        Text(result == .success ? String(localized: "backup_successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date") : String(localized: "backup_failed"))
+                        Text(result == .success ? String(localized: "backup_successful", defaultValue: "Backup successful") : result == .alreadyUpToDate ? String(localized: "backup_already_up_to_date", defaultValue: "Backup already up-to-date") : String(localized: "backup_failed", defaultValue: "Backup failed"))
                             .foregroundColor(result == .failed ? .red : .green)
                     }
                     .font(.body)
@@ -61,7 +61,7 @@ struct BackupStatusSectionView_iOS: View {
                             Image(systemName: "square.and.arrow.down")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.primary)
-                            Text(String(localized: "button_download"))
+                            Text(L10n.buttonDownload)
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(.primary)
                         }
@@ -85,7 +85,7 @@ struct BackupStatusSectionView_iOS: View {
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundStyle(.primary)
                             }
-                            Text(isBackingUp ? String(localized: "backup_syncing") : String(localized: "backup_sync_now"))
+                            Text(isBackingUp ? String(localized: "backup_syncing", defaultValue: "Syncing..") : String(localized: "backup_sync_now", defaultValue: "Sync Now"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(.primary)
                         }
@@ -100,7 +100,7 @@ struct BackupStatusSectionView_iOS: View {
             }
             .padding()
         }
-        .navigationTitle(String(localized: "backup_title"))
+        .navigationTitle(String(localized: "backup_title", defaultValue: "Backup file"))
         .navigationBarTitleDisplayMode(.large)
         .task {
             await loadBackupInfo()

@@ -64,12 +64,12 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "numbers",
                     color: .Arke.indigo,
-                    title: "settings_unit_format",
+                    title: String(localized: "settings_unit_format", defaultValue: "Unit Format"),
                     subtitle: Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedFormat.displayName)"))
                 )
                 .tag(SettingsDetailItem.unitFormat)
             } header: {
-                Text("settings_general")
+                Text(String(localized: "settings_general", defaultValue: "General"))
             }
 
             // Security Section
@@ -78,8 +78,8 @@ struct SettingsView: View {
                     settingsRow(
                         icon: "shield.fill",
                         color: .Arke.green,
-                        title: "settings_manual_backup",
-                        subtitle: Text("settings_manual_backup_hint")
+                        title: L10n.settingsManualBackup,
+                        subtitle: Text(String(localized: "settings_manual_backup_hint", defaultValue: "Save your wallet offline"))
                     )
                     .tag(SettingsDetailItem.manualBackup)
                 }
@@ -87,12 +87,12 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "laptopcomputer.and.iphone",
                     color: .Arke.purple,
-                    title: "settings_linked_devices",
+                    title: L10n.settingsLinkedDevices,
                     subtitle: Text(String(localized: "settings_devices_connected", defaultValue: "\(deviceCount) devices connected"))
                 )
                 .tag(SettingsDetailItem.linkedDevices)
             } header: {
-                Text("settings_security")
+                Text(String(localized: "settings_security", defaultValue: "Security"))
             }
 
             // Behind the Curtain Section
@@ -100,8 +100,8 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "chart.bar.fill",
                     color: .Arke.green,
-                    title: "activity_fee_summary",
-                    subtitle: Text("action_view_fees")
+                    title: L10n.activityFeeSummary,
+                    subtitle: Text(String(localized: "action_view_fees", defaultValue: "View transaction fees"))
                 )
                 .tag(SettingsDetailItem.feeSummary)
 
@@ -110,29 +110,29 @@ struct SettingsView: View {
                     settingsRow(
                         icon: "list.bullet.rectangle.fill",
                         color: .Arke.teal,
-                        title: "settings_fee_schedule",
-                        subtitle: Text("settings_fee_schedule_hint")
+                        title: L10n.settingsFeeSchedule,
+                        subtitle: Text(String(localized: "settings_fee_schedule_hint", defaultValue: "Server fee breakdown"))
                     )
                     .tag(SettingsDetailItem.feeSchedule)
 
                     settingsRow(
                         icon: "building.columns.fill",
                         color: .Arke.blue,
-                        title: "receive_address_history",
-                        subtitle: Text("action_view_addresses")
+                        title: L10n.receiveAddressHistory,
+                        subtitle: Text(String(localized: "action_view_addresses", defaultValue: "View generated addresses"))
                     )
                     .tag(SettingsDetailItem.addressHistory)
 
                     settingsRow(
                         icon: "brain.head.profile.fill",
                         color: .Arke.teal,
-                        title: "data_xray_title",
-                        subtitle: Text("data_wallet_raw")
+                        title: L10n.dataXrayTitle,
+                        subtitle: Text(String(localized: "data_wallet_raw", defaultValue: "Your wallet data, raw"))
                     )
                     .tag(SettingsDetailItem.xray)
                 }
             } header: {
-                Text("data_behind_curtain")
+                Text(String(localized: "data_behind_curtain", defaultValue: "Behind the curtain"))
             }
 
             // Experimental Section
@@ -140,12 +140,12 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "square.grid.2x2.fill",
                     color: .Arke.teal,
-                    title: "settings_address_patterns",
-                    subtitle: Text("settings_address_patterns_hint")
+                    title: L10n.settingsAddressPatterns,
+                    subtitle: Text(String(localized: "settings_address_patterns_hint", defaultValue: "Show unique visual patterns to help identify addresses"))
                 )
                 .tag(SettingsDetailItem.addressPatterns)
             } header: {
-                Text("settings_experimental")
+                Text(String(localized: "settings_experimental", defaultValue: "Experimental"))
             }
 
             // Danger Zone Section
@@ -153,16 +153,16 @@ struct SettingsView: View {
                 settingsRow(
                     icon: "trash.fill",
                     color: .Arke.red,
-                    title: "button_delete_wallet",
+                    title: L10n.buttonDeleteWallet,
                     titleColor: .Arke.red,
-                    subtitle: Text("settings_delete_wallet_title")
+                    subtitle: Text(String(localized: "settings_delete_wallet_title", defaultValue: "Permanently remove your wallet"))
                 )
                 .tag(SettingsDetailItem.deleteWallet)
             } header: {
-                Text("settings_danger_zone")
+                Text(L10n.settingsDangerZone)
             }
         }
-        .navigationTitle("settings_title")
+        .navigationTitle(L10n.settingsTitle)
         .task {
             await deviceService.loadRegisteredDevices()
         }
@@ -197,14 +197,14 @@ struct SettingsView: View {
 
             if let profile = userProfile, profile.isConfigured {
                 if profile.name.isEmpty {
-                    Text("profile_photo_set")
+                    Text(String(localized: "profile_photo_set", defaultValue: "Photo set"))
                         .font(.title3.weight(.semibold))
                 } else {
                     Text(profile.name)
                         .font(.title3.weight(.semibold))
                 }
             } else {
-                Text("profile_customize_info")
+                Text(String(localized: "profile_customize_info", defaultValue: "Your name and photo"))
                     .font(.callout)
             }
         }
@@ -214,7 +214,7 @@ struct SettingsView: View {
     private func settingsRow(
         icon: String,
         color: Color,
-        title: LocalizedStringKey,
+        title: String,
         titleColor: Color = .primary,
         subtitle: Text
     ) -> some View {
@@ -281,7 +281,7 @@ struct SettingsDetailView: View {
                     Image(systemName: "gearshape")
                         .imageScale(.medium)
                         .symbolVariant(.none)
-                    Text("settings_title")
+                    Text(L10n.settingsTitle)
                         .font(.system(size: 19, design: .serif))
                 }
             }
@@ -313,7 +313,7 @@ private struct XRayDataDetailSheet: View {
         VStack(spacing: 0) {
             HStack {
                 Spacer()
-                Button("button_done") {
+                Button(L10n.buttonDone) {
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)

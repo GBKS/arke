@@ -38,7 +38,7 @@ struct PendingRoundsListView_iOS: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("data_pending_rounds")
+                    Text(String(localized: "data_pending_rounds", defaultValue: "Pending Rounds"))
                         .font(.system(size: 24, design: .serif))
                     
                     if !rounds.isEmpty {
@@ -73,7 +73,7 @@ struct PendingRoundsListView_iOS: View {
                 HStack(spacing: 10) {
                     Image(systemName: "tray")
                         .foregroundStyle(.secondary)
-                    Text("data_no_pending_rounds")
+                    Text(String(localized: "data_no_pending_rounds", defaultValue: "No pending rounds"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -187,7 +187,7 @@ private struct RoundRowView: View {
                         .font(.system(size: 15, weight: .semibold))
                     
                     if round.ongoing {
-                        Text("status_ongoing")
+                        Text(String(localized: "status_ongoing", defaultValue: "Ongoing"))
                             .font(.caption)
                             .foregroundStyle(Color.Arke.green)
                             .padding(.horizontal, 6)
@@ -195,7 +195,7 @@ private struct RoundRowView: View {
                             .background(Color.Arke.green.opacity(0.2))
                             .cornerRadius(4)
                     } else {
-                        Text("status_finalizing")
+                        Text(String(localized: "status_finalizing", defaultValue: "Finalizing..."))
                             .font(.caption)
                             .foregroundStyle(.orange)
                             .padding(.horizontal, 6)
@@ -245,13 +245,13 @@ private struct RoundRowView: View {
             */
         }
         .padding(.vertical, 12)
-        .alert("alert_cancel_round", isPresented: $showCancelConfirmation) {
-            Button("data_cancel_round", role: .destructive) {
+        .alert(String(localized: "alert_cancel_round", defaultValue: "Cancel Round?"), isPresented: $showCancelConfirmation) {
+            Button(String(localized: "data_cancel_round", defaultValue: "Cancel Round"), role: .destructive) {
                 Task {
                     await cancelRound()
                 }
             }
-            Button("data_keep_round", role: .cancel) { }
+            Button(String(localized: "data_keep_round", defaultValue: "Keep Round"), role: .cancel) { }
         } message: {
             Text("This will cancel round \(round.id) and release the locked VTXOs.")
         }

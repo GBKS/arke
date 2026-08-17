@@ -29,29 +29,29 @@ struct ContactDetailsDisclosure: View {
                     .padding(.vertical, 4)
                 
                 DetailRow(
-                    title: "contacts_contact_type",
+                    title: String(localized: "contacts_contact_type", defaultValue: "Contact Type"),
                     value: contact.contactType.displayName
                 )
                 
                 DetailRow(
-                    title: "contacts_added",
+                    title: String(localized: "contacts_added", defaultValue: "Added"),
                     value: contact.createdAt.formatted(date: .abbreviated, time: .shortened)
                 )
                 
                 if contact.updatedAt != contact.createdAt {
                     DetailRow(
-                        title: "contacts_last_updated",
+                        title: String(localized: "contacts_last_updated", defaultValue: "Last Updated"),
                         value: contact.updatedAt.formatted(date: .abbreviated, time: .shortened)
                     )
                 }
                 
                 DetailRow(
-                    title: "contacts_contact_id",
+                    title: String(localized: "contacts_contact_id", defaultValue: "Contact ID"),
                     value: contact.id.uuidString
                 )
             }
         } label: {
-            Text("label_details")
+            Text(L10n.labelDetails)
                 .font(.headline)
                 .fontWeight(.semibold)
         }

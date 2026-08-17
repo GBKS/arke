@@ -693,9 +693,9 @@ struct DeletionSummary: Codable {
         }
         
         if parts.isEmpty {
-            return String(localized: "settings_no_cloud_data_deleted")
+            return String(localized: "settings_no_cloud_data_deleted", defaultValue: "No cloud data deleted")
         } else {
-            return String(localized: "settings_deleted_summary \(parts.joined(separator: ", "))")
+            return String(localized: "settings_deleted_summary %@", defaultValue: "Deleted: \(parts.joined(separator: ", "))")
         }
     }
 }
@@ -728,7 +728,7 @@ enum DeletionStrategy {
         case .localOnly:
             return "Delete from This Device"
         case .promptForCloudData:
-            return String(localized: "button_delete_everything")
+            return String(localized: "button_delete_everything", defaultValue: "Delete Everything")
         }
     }
 }

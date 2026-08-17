@@ -32,16 +32,16 @@ struct InvoiceGenerationTestView_iOS: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("testing_invoice_generation_help")
+                Text(String(localized: "testing_invoice_generation_help", defaultValue: "Generate multiple lightning invoices for testing and copy them to the clipboard."))
                     .font(.body)
                     .foregroundColor(.secondary)
             
                 VStack(alignment: .leading) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_count")
+                        Text(String(localized: "testing_count", defaultValue: "Count"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_number_of_invoices_to_generate", text: $count)
+                        TextField(String(localized: "placeholder_number_of_invoices_to_generate", defaultValue: "Number of invoices to generate"), text: $count)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -50,10 +50,10 @@ struct InvoiceGenerationTestView_iOS: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("testing_amount_sats")
+                        Text(String(localized: "testing_amount_sats", defaultValue: "Amount (sats)"))
                             .font(.body)
                             .foregroundColor(.secondary)
-                        TextField("placeholder_invoice_amount", text: $amount)
+                        TextField(String(localized: "placeholder_invoice_amount", defaultValue: "Invoice amount"), text: $amount)
                             .keyboardType(.numberPad)
                             .disabled(isRunning)
                     }
@@ -63,13 +63,13 @@ struct InvoiceGenerationTestView_iOS: View {
                 if isRunning {
                     VStack(spacing: 12) {
                         HStack {
-                            Text("testing_progress")
+                            Text(String(localized: "testing_progress", defaultValue: "Progress:"))
                             Spacer()
                             Text("\(generatedCount)/\(Int(count) ?? 0) generated, \(failedCount) failed")
                                 .foregroundColor(.secondary)
                         }
                         
-                        Button("testing_stop", role: .destructive) {
+                        Button(String(localized: "testing_stop", defaultValue: "STOP"), role: .destructive) {
                             stopTest()
                         }
                         .buttonStyle(.borderedProminent)
@@ -78,24 +78,24 @@ struct InvoiceGenerationTestView_iOS: View {
                 } else if !invoices.isEmpty {
                     VStack(spacing: 12) {
                         HStack {
-                            Text("testing_results")
+                            Text(String(localized: "testing_results", defaultValue: "Results:"))
                             Spacer()
                             Text("\(invoices.count) invoices generated")
                                 .foregroundColor(.secondary)
                         }
                         
-                        Button("testing_copy_all_to_clipboard") {
+                        Button(String(localized: "testing_copy_all_to_clipboard", defaultValue: "Copy All to Clipboard")) {
                             copyInvoicesToClipboard()
                         }
                         .buttonStyle(.borderedProminent)
                         
-                        Button("testing_clear_results") {
+                        Button(String(localized: "testing_clear_results", defaultValue: "Clear Results")) {
                             clearResults()
                         }
                         .buttonStyle(.bordered)
                     }
                 } else {
-                    Button("testing_generate_invoices") {
+                    Button(String(localized: "testing_generate_invoices", defaultValue: "Generate Invoices")) {
                         startTest()
                     }
                     .buttonStyle(.borderedProminent)
@@ -119,7 +119,7 @@ struct InvoiceGenerationTestView_iOS: View {
                                 UIPasteboard.general.string = invoice
                                 showCopiedAlert = true
                             }) {
-                                Label("testing_copy_invoice", systemImage: "doc.on.doc")
+                                Label(String(localized: "testing_copy_invoice", defaultValue: "Copy Invoice"), systemImage: "doc.on.doc")
                             }
                         }
                     }
@@ -127,12 +127,12 @@ struct InvoiceGenerationTestView_iOS: View {
             }
             .padding(.horizontal)
         }
-        .navigationTitle("nav_title_invoice_generation")
+        .navigationTitle(String(localized: "nav_title_invoice_generation", defaultValue: "Invoice Generation"))
         .navigationBarTitleDisplayMode(.large)
-        .alert("status_copied_exclaim", isPresented: $showCopiedAlert) {
-            Button("button_ok", role: .cancel) { }
+        .alert(L10n.statusCopiedExclaim, isPresented: $showCopiedAlert) {
+            Button(L10n.buttonOk, role: .cancel) { }
         } message: {
-            Text(invoices.count > 1 ? LocalizedStringKey("testing_all_invoices_copied_to_clipboard") : LocalizedStringKey("testing_invoice_copied_to_clipboard"))
+            Text(invoices.count > 1 ? String(localized: "testing_all_invoices_copied_to_clipboard", defaultValue: "All invoices copied to clipboard") : String(localized: "testing_invoice_copied_to_clipboard", defaultValue: "Invoice copied to clipboard"))
         }
     }
     

@@ -559,7 +559,7 @@ struct LoadingView_iOS: View {
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
                 
-                Text("onboarding_look_great")
+                Text(String(localized: "onboarding_look_great", defaultValue: "Hi"))
                     .font(.system(size: 64, weight: .semibold, design: .serif))
                     .foregroundStyle(.primary)
             }

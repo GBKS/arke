@@ -70,7 +70,7 @@ struct ContactDetailView: View {
                     Divider()
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("label_notes")
+                        Text(String(localized: "label_notes", defaultValue: "Notes"))
                             .font(.headline)
                             .fontWeight(.semibold)
                         
@@ -105,12 +105,12 @@ struct ContactDetailView: View {
             }
             .padding()
         }
-        .navigationTitle("nav_title_contact")
+        .navigationTitle(String(localized: "nav_title_contact", defaultValue: "Contact"))
         .background(Color(NSColor.windowBackgroundColor))
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 if let onEdit = onEdit {
-                    Button("button_edit") {
+                    Button(L10n.buttonEdit) {
                         onEdit()
                     }
                     .buttonStyle(.bordered)
@@ -133,11 +133,11 @@ struct ContactDetailView: View {
                 }
             )
         }
-        .alert("contacts_link", isPresented: Binding(
+        .alert(String(localized: "contacts_link", defaultValue: "Contact Link"), isPresented: Binding(
             get: { viewModel.showingAlert },
             set: { viewModel.showingAlert = $0 }
         )) {
-            Button("button_ok", role: .cancel) { }
+            Button(L10n.buttonOk, role: .cancel) { }
         } message: {
             if let alertMessage = viewModel.alertMessage {
                 Text(alertMessage)

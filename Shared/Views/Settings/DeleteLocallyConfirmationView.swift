@@ -46,7 +46,7 @@ struct DeleteLocallyConfirmationView: View {
                         onBack()
                     } label: {
                         HStack(spacing: 6) {
-                            Text("button_cancel")
+                            Text(L10n.buttonCancel)
                                 .font(.system(size: 17))
                         }
                         .foregroundColor(.white)
@@ -63,12 +63,12 @@ struct DeleteLocallyConfirmationView: View {
                 // Content area
                 VStack(spacing: 25) {
                     VStack(spacing: 15) {
-                        Text(String(localized: "message_delete_from_device"))
+                        Text(String(localized: "message_delete_from_device", defaultValue: "Delete from This Device?"))
                             .font(.system(.largeTitle, design: .serif, weight: .bold))
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
                         
-                        Text("desc_remove_wallet_device_only")
+                        Text(String(localized: "desc_remove_wallet_device_only", defaultValue: "This will remove the wallet from this device only. You can restore it later with your recovery phrase."))
                             .font(.title3)
                             .foregroundColor(.white.opacity(0.9))
                             .multilineTextAlignment(.center)
@@ -146,7 +146,7 @@ struct DeleteLocallyConfirmationView: View {
                                     .controlSize(.small)
                                     .tint(.white)
                             }
-                            Text(isDeleting ? String(localized: "status_deleting") : "Delete from This Device")
+                            Text(isDeleting ? String(localized: "status_deleting", defaultValue: "Deleting...") : "Delete from This Device")
                                 .font(.system(size: 19, weight: .semibold))
                         }
                         .foregroundStyle(Color.white)

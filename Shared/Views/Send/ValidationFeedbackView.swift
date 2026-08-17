@@ -28,7 +28,7 @@ struct ValidationFeedbackView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.Arke.green)
                     
-                    Text("status_valid")
+                    Text(L10n.statusValid)
                         .font(.body)
                         .foregroundColor(.Arke.green)
                         .fontWeight(.semibold)
@@ -40,7 +40,7 @@ struct ValidationFeedbackView: View {
                     Image(systemName: "info.circle.fill")
                         .foregroundColor(.Arke.blue)
                     
-                    Text("status_valid") // BIP-353 address detected
+                    Text(L10n.statusValid) // BIP-353 address detected
                         .font(.body)
                         .foregroundColor(.Arke.blue)
                         .fontWeight(.semibold)
@@ -56,7 +56,7 @@ struct ValidationFeedbackView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.Arke.green)
                     
-                    Text("status_valid")
+                    Text(L10n.statusValid)
                         .font(.body)
                         .foregroundColor(.Arke.green)
                         .fontWeight(.semibold)
@@ -72,7 +72,7 @@ struct ValidationFeedbackView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.Arke.orange)
                     
-                    Text("status_invalid")
+                    Text(String(localized: "status_invalid", defaultValue: "Invalid"))
                         .font(.body)
                         .foregroundColor(.Arke.orange)
                         .fontWeight(.medium)

@@ -32,17 +32,17 @@ struct FaucetModalView_iOS: View {
                             .font(.system(size: 60))
                             .foregroundStyle(Color.Arke.gold)
                         
-                        Text("onboarding_thanks_testing")
+                        Text(String(localized: "onboarding_thanks_testing", defaultValue: "Thanks for helping test Arké"))
                             .font(.system(size: 28, design: .serif))
                         
-                        Text(String(localized: "onboarding_tester_welcome"))
+                        Text(String(localized: "onboarding_tester_welcome", defaultValue: "As a tester, you'll be using test bitcoin that has no real-world value. Let's get you set up with some test coins so you can start exploring."))
                             .font(.body)
                             .foregroundStyle(.secondary)
                     }
                     
                     // Instructions
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("onboarding_how_test_bitcoin")
+                        Text(String(localized: "onboarding_how_test_bitcoin", defaultValue: "How to get test bitcoin"))
                             .font(.system(.title3, weight: .semibold))
                         
                         // Faucetto Signetto Contact Card
@@ -66,11 +66,11 @@ struct FaucetModalView_iOS: View {
                                     .clipShape(Circle())
                                 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("onboarding_faucet_name")
+                                    Text(String(localized: "onboarding_faucet_name", defaultValue: "Faucetto Signetto"))
                                         .font(.system(size: 17, weight: .semibold))
                                         .foregroundStyle(.primary)
                                     
-                                    Text("action_tap_view_contact")
+                                    Text(String(localized: "action_tap_view_contact", defaultValue: "Tap to view contact"))
                                         .font(.system(size: 14))
                                         .foregroundStyle(.secondary)
                                 }
@@ -119,7 +119,7 @@ struct FaucetModalView_iOS: View {
                             Image(systemName: "book.pages")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
-                            Text("button_view_test_guide")
+                            Text(String(localized: "button_view_test_guide", defaultValue: "View Test Guide"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                         }
@@ -140,7 +140,7 @@ struct FaucetModalView_iOS: View {
                             Image(systemName: "bubble.left.and.bubble.right")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
-                            Text("action_chat_discord")
+                            Text(String(localized: "action_chat_discord", defaultValue: "Chat on Discord"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(Color.Arke.gold4)
                         }
@@ -151,7 +151,7 @@ struct FaucetModalView_iOS: View {
                     .tint(Color.Arke.gold)
                     
                     // Note
-                    Text(String(localized: "onboarding_faucet_disclaimer"))
+                    Text(String(localized: "onboarding_faucet_disclaimer", defaultValue: "Faucetto has rate limits to ensure fair access. Please don't drain them, and return test coins when you're done."))
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 20)

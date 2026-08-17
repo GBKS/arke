@@ -261,14 +261,14 @@ struct WalletView_iOS: View {
                                 }
                             }
                         )
-                        .navigationTitle("contacts_title")
+                        .navigationTitle(L10n.contactsTitle)
                     case .tags:
                         TagsView_iOS { tag in
                             // Apply tag filter and pop back to activity view
                             activityFilterTag = tag
                             activityNavPath.removeLast()
                         }
-                        .navigationTitle("tags_title")
+                        .navigationTitle(L10n.tagsTitle)
                         #if os(iOS)
                         .navigationBarTitleDisplayMode(.inline)
                         #endif
@@ -279,7 +279,7 @@ struct WalletView_iOS: View {
                                 activityNavPath.append(ActivityDestination.dataDetail(dataItem))
                             })
                         } else {
-                            Text("data_readonly_unavailable")
+                            Text(String(localized: "data_readonly_unavailable", defaultValue: "Data view not available in read-only mode"))
                         }
                     case .dataDetail(let dataItem):
                         switch dataItem {
@@ -293,7 +293,7 @@ struct WalletView_iOS: View {
             }
             .tabItem {
                 Label {
-                    Text(String(localized: "accessibility_tab_activity"))
+                    Text(String(localized: "accessibility_tab_activity", defaultValue: "Activity"))
                 } icon: {
                     Image(systemName: WalletTab.activity.systemImage)
                         .font(.system(size: 24, weight: .semibold))
@@ -379,7 +379,7 @@ struct WalletView_iOS: View {
             }
                 .tabItem {
                     Label {
-                        Text(String(localized: "accessibility_tab_send"))
+                        Text(String(localized: "accessibility_tab_send", defaultValue: "Send"))
                     } icon: {
                         Image(systemName: WalletTab.send.systemImage)
                             .font(.system(size: 24, weight: .semibold))
@@ -399,7 +399,7 @@ struct WalletView_iOS: View {
             }
             .tabItem {
                 Label {
-                    Text(String(localized: "accessibility_tab_receive"))
+                    Text(String(localized: "accessibility_tab_receive", defaultValue: "Receive"))
                 } icon: {
                     Image(systemName: WalletTab.receive.systemImage)
                         .font(.system(size: 24, weight: .semibold))

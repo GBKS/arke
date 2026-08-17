@@ -133,7 +133,7 @@ struct WalletView: View {
                             Image(systemName: "list.bullet")
                                 .imageScale(.medium)
                                 .symbolVariant(.none)
-                            Text("label_select_a_transaction")
+                            Text(String(localized: "label_select_a_transaction", defaultValue: "Select a transaction"))
                                 .font(.system(size: 19, design: .serif))
                         }
                     }
@@ -179,7 +179,7 @@ struct WalletView: View {
                             Image(systemName: "list.bullet")
                                 .imageScale(.medium)
                                 .symbolVariant(.none)
-                            Text("label_select_a_contact")
+                            Text(String(localized: "label_select_a_contact", defaultValue: "Select a contact"))
                                 .font(.system(size: 19, design: .serif))
                         }
                     }

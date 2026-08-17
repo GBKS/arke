@@ -19,10 +19,10 @@ struct BitcoinFormatSettingView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("settings_bitcoin_format")
+            Text(L10n.settingsBitcoinFormat)
                 .font(.system(size: 24, design: .serif))
             
-            Text(String(localized: "settings_bitcoin_format_help"))
+            Text(String(localized: "settings_bitcoin_format_help", defaultValue: "Choose how bitcoin amounts are displayed throughout the app."))
                 .font(.body)
                 .foregroundColor(.secondary)
             

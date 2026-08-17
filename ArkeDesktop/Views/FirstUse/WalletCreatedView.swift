@@ -28,18 +28,18 @@ struct WalletCreatedView: View {
                 }
                 
                 VStack(spacing: 8) {
-                    Text("onboarding_ready_bitcoin")
+                    Text(String(localized: "onboarding_ready_bitcoin", defaultValue: "You are ready for bitcoin!"))
                         .font(.system(size: 40, design: .serif))
                         .foregroundStyle(Color.Arke.gold)
                     
-                    Text("onboarding_wallet_ready")
+                    Text(String(localized: "onboarding_wallet_ready", defaultValue: "Your new wallet is ready to use."))
                         .font(.system(size: 21))
                         .lineSpacing(6)
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
 
-                    Text("onboarding_backup_reminder")
+                    Text(String(localized: "onboarding_backup_reminder", defaultValue: "Make sure to make a backup. You're in control of this wallet, and also responsible for it."))
                         .font(.system(size: 21))
                         .lineSpacing(6)
                         .foregroundStyle(.white)
@@ -61,8 +61,8 @@ struct WalletCreatedView: View {
             .buttonStyle(.glassProminent)
             .controlSize(.large)
             .tint(Color.Arke.gold)
-            .accessibilityLabel(String(localized: "accessibility_continue_to_wallet"))
-            .accessibilityHint(String(localized: "accessibility_wallet_ready_hint"))
+            .accessibilityLabel(L10n.accessibilityContinueToWallet)
+            .accessibilityHint(L10n.accessibilityWalletReadyHint)
         }
         .padding(.horizontal, 40)
         .padding(.top, 60)

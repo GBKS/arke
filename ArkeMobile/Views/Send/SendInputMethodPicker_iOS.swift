@@ -15,7 +15,7 @@ struct SendInputMethodPicker_iOS: View {
     var body: some View {
         GlassEffectContainer(spacing: 8.0) {
             HStack(spacing: 0) {
-                Label("button_scan", systemImage: "qrcode.viewfinder")
+                Label(String(localized: "button_scan", defaultValue: "Scan"), systemImage: "qrcode.viewfinder")
                     .labelStyle(.iconOnly)
                     .font(.title2)
                     .fontWeight(inputMethod == .camera ? .semibold : .regular)
@@ -23,7 +23,7 @@ struct SendInputMethodPicker_iOS: View {
                     .frame(height: 44)
                     .foregroundStyle(inputMethod == .camera ? Color.Arke.gold : .secondary)
                 
-                Label("label_input", systemImage: "keyboard")
+                Label(String(localized: "label_input", defaultValue: "Input"), systemImage: "keyboard")
                     .labelStyle(.iconOnly)
                     .font(.title2)
                     .fontWeight(inputMethod == .input ? .semibold : .regular)
@@ -62,8 +62,8 @@ struct SendInputMethodPicker_iOS: View {
         )
         .shadow(color: .black.opacity(0.15), radius: 20, x: 0, y: 10)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("send_input_method")
-        .accessibilityValue(inputMethod == .camera ? String(localized: "label_camera") : String(localized: "label_keyboard"))
-        .accessibilityHint(String(localized: "send_double_tap_input"))
+        .accessibilityLabel(String(localized: "send_input_method", defaultValue: "Input Method"))
+        .accessibilityValue(inputMethod == .camera ? String(localized: "label_camera", defaultValue: "Camera") : String(localized: "label_keyboard", defaultValue: "Keyboard"))
+        .accessibilityHint(String(localized: "send_double_tap_input", defaultValue: "Double tap to switch input method"))
     }
 }
