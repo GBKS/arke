@@ -260,9 +260,12 @@ by design, not backlog:
       extraction caveat, catalog-managed exceptions, tooling section.
 - [x] Full mobile test suite run at wrap-up (see Progress table).
 - [x] `Open_Follow_Ups.md` updated.
-- [ ] **Remaining (user):** on-device smoke pass — one screen per feature area,
-      watching for raw-key sightings; plus the next desktop IDE build merges any
-      desktop-only extraction.
+- [x] **On-device smoke pass — verified by user 2026-08-17** (iPhone + macOS, no
+      raw-key sightings). The desktop build's extraction resurrected
+      `%u confirmation%@`, exposing one hand-assembled plural the scanner missed
+      (quotes inside the interpolation); replaced with semantic keys using
+      `^[…](inflect: true)` automatic grammar agreement, orphaned plain keys
+      purged. **Migration complete.**
 - Decision: the 38 sanctioned plain-English interpolation keys are **kept** — the
   guidelines explicitly sanction them, and promoting them is a rename with no
   behavioral benefit. They are permanently by-design, not backlog.

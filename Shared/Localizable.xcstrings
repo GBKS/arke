@@ -287,9 +287,6 @@
     "%u" : {
       "shouldTranslate" : false
     },
-    "%u+ confirmations" : {
-
-    },
     "•" : {
       "shouldTranslate" : false
     },
@@ -1430,12 +1427,45 @@
         }
       }
     },
+    "activity_confirmation_count %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "^[%lld confirmations](inflect: true)"
+          }
+        }
+      }
+    },
     "activity_confirmations" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirmations"
+          }
+        }
+      }
+    },
+    "activity_confirmations_capped %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld+ confirmations"
+          }
+        }
+      }
+    },
+    "activity_confirmed_at_block %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Confirmed at block %lld"
           }
         }
       }
@@ -1709,6 +1739,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export Successful"
+          }
+        }
+      }
+    },
+    "alert_unlink_device_message" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access."
           }
         }
       }
@@ -3295,9 +3336,6 @@
         }
       }
     },
-    "Confirmed at block %u" : {
-
-    },
     "Contact '%@' assigned" : {
 
     },
@@ -4722,6 +4760,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to unlink device: %@"
+          }
+        }
+      }
+    },
+    "error_unlink_devices" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to unlink devices: %@"
           }
         }
       }

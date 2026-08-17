@@ -7,12 +7,11 @@ stale). Last consolidated: 2026-08-12.
 
 ## Localization
 
-- [ ] **defaultValue migration — on-device smoke pass** (all 6 phases done
-  2026-08-17, see `Localization/Default_Value_Migration_Plan.md`): browse one
-  screen per feature area on device watching for raw-key sightings; the next
-  desktop IDE build also merges any pending desktop-only extraction. Everything
-  else is verified (both platforms build, guard test + full mobile suite green,
-  catalogs byte-identical through extraction).
+- [x] **defaultValue migration — on-device smoke pass — verified 2026-08-17**
+  (iPhone + macOS, no raw-key sightings). The desktop build's extraction also
+  exposed one last hand-assembled plural in
+  `TransactionLinkedOnchainView_macOS` — fixed with `^[…](inflect: true)`.
+  Migration fully complete; see `Localization/Default_Value_Migration_Plan.md`.
 
 ## Wallet Deletion & Device Registry
 

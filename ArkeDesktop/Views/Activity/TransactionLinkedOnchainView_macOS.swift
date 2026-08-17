@@ -105,11 +105,11 @@ struct LinkedOnchainCard_macOS: View {
                                 .foregroundColor(confirmations >= 6 ? .green : .orange)
                             
                             if confirmations >= 6 {
-                                Text("\(confirmations)+ confirmations")
+                                Text(String(localized: "activity_confirmations_capped %lld", defaultValue: "\(Int(confirmations))+ confirmations"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             } else {
-                                Text("\(confirmations) confirmation\(confirmations != 1 ? "s" : "")")
+                                Text(String(localized: "activity_confirmation_count %lld", defaultValue: "^[\(Int(confirmations)) confirmations](inflect: true)"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -122,7 +122,7 @@ struct LinkedOnchainCard_macOS: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption2)
                                 .foregroundColor(.green)
-                            Text("Confirmed at block \(height)")
+                            Text(String(localized: "activity_confirmed_at_block %lld", defaultValue: "Confirmed at block \(Int(height))"))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
