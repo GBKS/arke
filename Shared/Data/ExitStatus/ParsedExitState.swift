@@ -98,8 +98,9 @@ nonisolated public enum ParsedExitState: Equatable, Codable {
     }
 
     /// The exit was cancelled before its transactions were broadcast (bark 0.4+).
-    /// Not producible via this app's bindings yet (no cancel-exit API), but can
-    /// appear if the datadir was driven by bark-cli or a future bindings bump.
+    /// Bindings v0.18.0 expose `cancelExit(vtxoId:)`, so this becomes app-producible
+    /// once adopted (see Docs/Bark_Bindings_Unadopted_API.md); until then it only
+    /// appears if the datadir was driven by bark-cli or another binding consumer.
     nonisolated public struct CanceledState: Equatable, Codable {
         public let tipHeight: UInt32
 

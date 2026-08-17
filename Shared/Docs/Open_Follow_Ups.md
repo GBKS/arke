@@ -47,6 +47,15 @@ stale). Last consolidated: 2026-08-12.
   `endLiveActivity` recomputes step totals from final statuses. Verified:
   re-import produced zero `[LiveActivity]` log lines; check-in reminders
   were cleared instead of armed-then-cancelled.
+- [ ] **Adopt `cancelExit` from bindings v0.18.0** (landed 2026-08-17): the
+  cancel-exit API our `ParsedExitState.canceled` comment was waiting for —
+  the natural escape hatch for fee-blocked exits. Prerequisites before a
+  cancel button ships: Live Activity `ExitState` lacks terminal
+  `canceled`/`vtxoAlreadySpent` cases; verify the date-freeze workaround
+  covers explicit cancels (feedback §1.4 upstream bug); check whether bark
+  purges cancelled exits from `getExitVtxos()` like claimed ones (snapshot
+  into `PersistentExitCache` if so). Full notes in
+  `Bark_Bindings_Unadopted_API.md` §1.1.
 - [ ] **Report upstream to bark devs** (network-verified on the stuck signet
   wallet): (a) exit package transactions don't exist on the network despite
   bark reporting broadcast; (b) round-replacement VTXO fails signature
@@ -135,6 +144,17 @@ See `Features/Background_Execution.md` (Phase 1 done, soak running).
 - [ ] **BGTask grant frequency**: evaluate soak results (how often iOS actually
   grants the refresh task).
 - [ ] **Phase 2**: mailbox push wake → full background pass. Relay stays dumb.
+
+## Bindings Adoption
+
+`Bark_Bindings_Unadopted_API.md` (created 2026-08-17) records everything the
+bindings offer that we haven't adopted, with feature implications — roadmap
+inspiration lives there. Baseline: bindings v0.18.0 / bark v0.6.1 (the
+v0.17→v0.18 bump was purely additive; nothing broke).
+
+- [ ] **Keep the unadopted-API record current on every bindings bump**: diff
+  the release commits in the package checkout, add new surface, move adopted
+  items to its Adopted-since section.
 
 ## Bark 0.16 Migration
 

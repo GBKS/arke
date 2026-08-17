@@ -581,6 +581,7 @@
 				Docs/Archive/Implementations/WALLET_DELETION_REFACTOR_SUMMARY.md,
 				Docs/Archive/readme.md,
 				Docs/Bark_Bindings_Feedback.md,
+				Docs/Bark_Bindings_Unadopted_API.md,
 				"Docs/BDK/BDK-Implementation-Complete.md",
 				"Docs/BDK/BDK-Improvements-2026-02-26.md",
 				"Docs/BDK/BDK-Integration-Status.md",
