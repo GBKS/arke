@@ -9,7 +9,8 @@
             "value": "%1$@ – %2$@"
           }
         }
-      }
+      },
+      "shouldTranslate": false
     },
     "%lld confirmations": {
       "localizations": {

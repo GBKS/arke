@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "—" : {
-
+      "shouldTranslate" : false
     },
     "(%@)" : {
       "shouldTranslate" : false
@@ -37,7 +37,8 @@
             "value" : "%1$@...%2$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%lld" : {
       "shouldTranslate" : false
@@ -286,21 +287,11 @@
     "%u" : {
       "shouldTranslate" : false
     },
-    "%u confirmation%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$u confirmation%2$@"
-          }
-        }
-      }
-    },
     "%u+ confirmations" : {
 
     },
     "•" : {
-
+      "shouldTranslate" : false
     },
     "+%lld" : {
       "shouldTranslate" : false
@@ -478,11 +469,12 @@
         }
       }
     },
-    "accessibility_current_device_hint" : {
+    "accessibility_device_options_hint" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Double tap to view options for this device"
           }
         }
@@ -674,16 +666,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warning: No active wallet. Make this device your primary wallet to send and receive."
-          }
-        }
-      }
-    },
-    "accessibility_other_device_hint" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Double tap to view options for this device"
           }
         }
       }
@@ -1174,17 +1156,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hide Card Balance"
-          }
-        }
-      }
-    },
-    "action_import_wallet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import existing wallet"
           }
         }
       }
@@ -1712,17 +1683,6 @@
         }
       }
     },
-    "alert_confirm_unlink_device" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to unlink %@? It will need to re-import the recovery phrase to regain access."
-          }
-        }
-      }
-    },
     "alert_device_lose_access" : {
       "localizations" : {
         "en" : {
@@ -1969,17 +1929,6 @@
         }
       }
     },
-    "balance_all_claimable" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All Claimable"
-          }
-        }
-      }
-    },
     "balance_amount_locked" : {
       "localizations" : {
         "en" : {
@@ -2050,17 +1999,6 @@
         }
       }
     },
-    "balance_exit_details" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forced Move Details"
-          }
-        }
-      }
-    },
     "balance_exit_status" : {
       "localizations" : {
         "en" : {
@@ -2103,17 +2041,6 @@
         }
       }
     },
-    "balance_is_claimable" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Is Claimable"
-          }
-        }
-      }
-    },
     "balance_move_to_payments" : {
       "localizations" : {
         "en" : {
@@ -2140,17 +2067,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Next round"
-          }
-        }
-      }
-    },
-    "balance_no_exit_data" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Active Exit Data"
           }
         }
       }
@@ -2551,28 +2467,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Note: This VTXO may no longer exist. Make sure to manually refresh the VTXO list on the left."
-          }
-        }
-      }
-    },
-    "balance_vtxos_claimed" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The VTXOs from this transaction may have already been claimed or are not found in active exits."
-          }
-        }
-      }
-    },
-    "balance_vtxos_exiting" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "VTXOs Exiting"
           }
         }
       }
@@ -3097,17 +2991,6 @@
         }
       }
     },
-    "button_no" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No"
-          }
-        }
-      }
-    },
     "button_offboard" : {
       "localizations" : {
         "en" : {
@@ -3376,17 +3259,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "View Transactions"
-          }
-        }
-      }
-    },
-    "button_yes" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yes"
           }
         }
       }
@@ -3733,17 +3605,6 @@
         }
       }
     },
-    "data_awaiting_input_confirmation" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Awaiting Input Confirmation"
-          }
-        }
-      }
-    },
     "data_behind_curtain" : {
       "localizations" : {
         "en" : {
@@ -3818,17 +3679,6 @@
         }
       }
     },
-    "data_broadcast_with_cpfp" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Broadcast with CPFP"
-          }
-        }
-      }
-    },
     "data_cancel_round" : {
       "localizations" : {
         "en" : {
@@ -3875,17 +3725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claimable Height"
-          }
-        }
-      }
-    },
-    "data_claimable_since" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claimable Since"
           }
         }
       }
@@ -4164,17 +4003,6 @@
         }
       }
     },
-    "data_last_progress" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Progress Results:"
-          }
-        }
-      }
-    },
     "data_ln_receive_antidos_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4226,28 +4054,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Min Board Amount (BTC)"
-          }
-        }
-      }
-    },
-    "data_needs_broadcasting" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Needs Broadcasting"
-          }
-        }
-      }
-    },
-    "data_needs_signed_package" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Needs Signed Package"
           }
         }
       }
@@ -4450,17 +4256,6 @@
         }
       }
     },
-    "data_select_vtxo_or_utxo" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a VTXO or UTXO"
-          }
-        }
-      }
-    },
     "data_server_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -4502,17 +4297,6 @@
         }
       }
     },
-    "data_tip_height" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tip Height"
-          }
-        }
-      }
-    },
     "data_transaction_hash" : {
       "localizations" : {
         "en" : {
@@ -4533,34 +4317,12 @@
         }
       }
     },
-    "data_type" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Type"
-          }
-        }
-      }
-    },
     "data_unknown" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unknown"
-          }
-        }
-      }
-    },
-    "data_unknown_status" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown Status"
           }
         }
       }
@@ -4594,17 +4356,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Required"
-          }
-        }
-      }
-    },
-    "data_verify_inputs" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verify Inputs"
           }
         }
       }
@@ -4945,17 +4696,6 @@
         }
       }
     },
-    "error_select_backup_file" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Please select a backup file"
-          }
-        }
-      }
-    },
     "error_title" : {
       "localizations" : {
         "en" : {
@@ -5146,80 +4886,12 @@
         }
       }
     },
-    "exit_step_wait_blocks %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld block remaining"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld blocks remaining"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "exit_step_wait_status %lld %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld block remaining · %@"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld blocks remaining · %@"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "exit_step_wait_unlock" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wait for unlock"
-          }
-        }
-      }
-    },
-    "exit_steps_section" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Progress"
-          }
-        }
-      }
-    },
-    "exit_tx_status_awaiting_parent" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waiting"
           }
         }
       }
@@ -5390,61 +5062,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unable to load fee schedule from server."
-          }
-        }
-      }
-    },
-    "firstuse_create_new_wallet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create New Wallet"
-          }
-        }
-      }
-    },
-    "firstuse_generate_wallet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We'll now generate a new wallet and recovery phrase for you."
-          }
-        }
-      }
-    },
-    "firstuse_more_about" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More about second.tech"
-          }
-        }
-      }
-    },
-    "firstuse_wallet_created" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your new wallet has been successfully created and is ready to use."
-          }
-        }
-      }
-    },
-    "firstuse_welcome_description" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A MacOS prototype for the Ark protocol implementation by second.tech. This is 110% alpha software using the bitcoin signet."
           }
         }
       }
@@ -5660,17 +5277,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Amount"
-          }
-        }
-      }
-    },
-    "label_basic_info" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Basic Info"
           }
         }
       }
@@ -6392,34 +5998,12 @@
         }
       }
     },
-    "onboarding_alpha_notice" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This is all alpha and experimental. Play and have fun."
-          }
-        }
-      }
-    },
     "onboarding_ask_test_bitcoin" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ask for test bitcoin"
-          }
-        }
-      }
-    },
-    "onboarding_backup_advice" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Once you have some funds in it, make sure to do a proper backup. You're in control of this wallet, and also responsible for it."
           }
         }
       }
@@ -6554,17 +6138,6 @@
         }
       }
     },
-    "onboarding_lets_go" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Let's go!"
-          }
-        }
-      }
-    },
     "onboarding_look_great" : {
       "localizations" : {
         "en" : {
@@ -6615,17 +6188,6 @@
         }
       }
     },
-    "onboarding_server_notice" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It will connect to the Ark Service Provider by second.tech."
-          }
-        }
-      }
-    },
     "onboarding_server_role_help" : {
       "localizations" : {
         "en" : {
@@ -6642,17 +6204,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "UNAVAILABLE"
-          }
-        }
-      }
-    },
-    "onboarding_signet_notice" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It's going to be on signet. Not real bitcoin!"
           }
         }
       }
@@ -6947,17 +6498,6 @@
         }
       }
     },
-    "progress_creating_wallet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Creating wallet..."
-          }
-        }
-      }
-    },
     "progress_loading" : {
       "localizations" : {
         "en" : {
@@ -7211,56 +6751,12 @@
     "Round %u" : {
 
     },
-    "section_confirmed_transactions" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmed Transactions"
-          }
-        }
-      }
-    },
     "section_device_role" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Device Role"
-          }
-        }
-      }
-    },
-    "section_parsed_state" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parsed State"
-          }
-        }
-      }
-    },
-    "section_raw_state" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raw State"
-          }
-        }
-      }
-    },
-    "section_transaction_chain" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transaction Chain"
           }
         }
       }
@@ -7551,17 +7047,6 @@
         }
       }
     },
-    "settings_delete_permanent_warning" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All wallet data will be permanently deleted from this device and iCloud. No turning back."
-          }
-        }
-      }
-    },
     "settings_delete_permanent_warning_everywhere" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -7655,17 +7140,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "settings_display" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display"
           }
         }
       }
@@ -8226,17 +7700,6 @@
         }
       }
     },
-    "status_executing" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Executing..."
-          }
-        }
-      }
-    },
     "status_exit_finalizing" : {
       "localizations" : {
         "en" : {
@@ -8313,17 +7776,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importing..."
-          }
-        }
-      }
-    },
-    "status_in_progress" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In progress"
           }
         }
       }
@@ -8734,18 +8186,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "•"
-          }
-        }
-      },
-      "shouldTranslate" : false
-    },
-    "symbol_chevron" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ">"
           }
         }
       },

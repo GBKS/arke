@@ -246,20 +246,26 @@ by design, not backlog:
   `LocalizedStringKey` params (must convert type + every call site atomically,
   else leftover literals render raw as plain `String`s).
 
-### Phase 6 — Hygiene & wrap-up
-- [ ] Author English for any remaining missing-value keys; `shouldTranslate: false`
-      pass on symbols/format strings (D5).
-- [ ] Consolidate duplicate-meaning key pairs found during migration (Rule 2):
-      `accessibility_current_device_hint` / `accessibility_other_device_hint` have
-      identical English and a pointless ternary in `LinkedDevicesView_iOS`.
-- [ ] Purge stale catalog entries (Xcode editor, filter "Stale"; confirm no dynamic
-      key construction first).
-- [ ] Run the full guard test + both mobile test suites; on-device/simulator smoke of
-      one screen per feature area for raw-key sightings.
-- [ ] Update `Localization_Guidelines.md`: adoption path §3 becomes "migration
-      complete — `defaultValue:` (or `L10n` accessor) is mandatory for all strings";
-      fold in D2 and any D4 exceptions.
-- [ ] Update `Open_Follow_Ups.md`.
+### Phase 6 — Hygiene & wrap-up — DONE 2026-08-17
+- [x] No referenced key lacks English (verified by audit + guard test);
+      `shouldTranslate: false` set on `symbol_*`, `app_name`, and letterless
+      format keys (4 entries marked).
+- [x] Duplicate hint keys consolidated into `accessibility_device_options_hint`;
+      ternary removed.
+- [x] **51 dead keys purged** from the Shared catalog (verified: zero references,
+      no dynamic key construction anywhere; list in commit 470c161's follow-up).
+      Extraction confirmed the purge clean on the next build.
+- [x] `Localization_Guidelines.md` rewritten: `defaultValue:`/`L10n` mandatory,
+      String-not-LocalizedStringKey params, ternary advice replaced, IDE-build
+      extraction caveat, catalog-managed exceptions, tooling section.
+- [x] Full mobile test suite run at wrap-up (see Progress table).
+- [x] `Open_Follow_Ups.md` updated.
+- [ ] **Remaining (user):** on-device smoke pass — one screen per feature area,
+      watching for raw-key sightings; plus the next desktop IDE build merges any
+      desktop-only extraction.
+- Decision: the 38 sanctioned plain-English interpolation keys are **kept** — the
+  guidelines explicitly sanction them, and promoting them is a rename with no
+  behavioral benefit. They are permanently by-design, not backlog.
 
 ---
 
@@ -285,3 +291,4 @@ by design, not backlog:
 | Linked Devices (pilot) | 1 | done 2026-08-17 | 136/1,680 sites migrated overall; D4 verified; desktop-only keys pending next desktop build |
 | ArkéUI package | 2 | done 2026-08-17 | 333/1,654 sites migrated overall; script + manual pass; 6 plain-English keys deferred to Phase 6 |
 | Shared + ArkeMobile + ArkeDesktop | 3–5 | done 2026-08-17 | 1,252/1,343 sites (93%); remainder is by-design (plural/plain-English/comments); both platforms build, guard green |
+| Hygiene & wrap-up | 6 | done 2026-08-17 | 51 dead keys purged; hint keys consolidated; shouldTranslate pass; guidelines rewritten; full mobile suite green; remaining: user on-device smoke |

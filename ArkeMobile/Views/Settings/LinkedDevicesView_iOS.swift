@@ -358,11 +358,8 @@ struct DeviceRow_iOS: View {
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(deviceAccessibilityLabel)
-        .accessibilityHint(isCurrent
-            ? String(localized: "accessibility_current_device_hint",
-                     defaultValue: "Double tap to view options for this device")
-            : String(localized: "accessibility_other_device_hint",
-                     defaultValue: "Double tap to view options for this device"))
+        .accessibilityHint(String(localized: "accessibility_device_options_hint",
+                                  defaultValue: "Double tap to view options for this device"))
     }
     
     private var deviceAccessibilityLabel: String {

@@ -157,9 +157,11 @@ Short strings like "Change", "State", or "Input" are ambiguous without context. 
 
 ## Usage in Code
 
-### Preferred: `defaultValue:` for new strings
+### Mandatory: `defaultValue:` (or an `L10n` accessor)
 
-New strings should use `String(localized:defaultValue:)`, keeping the English copy in code next to the key:
+The August 2026 migration (see `Default_Value_Migration_Plan.md`) moved the English
+copy for every call site into code. All strings use `String(localized:defaultValue:)`,
+keeping the English copy in code next to the key:
 
 ```swift
 Text(String(localized: "settings_address_patterns_toggle",
@@ -181,47 +183,48 @@ Why this is preferred:
 
 The trade-off: **English copy edits must be made in code.** Hand-editing the `en` value in the catalog editor for a `defaultValue:`-backed key gets overwritten by the next build's extraction.
 
-**Adoption path:**
+**Rules (post-migration, August 2026):**
 
-1. All **new** strings use `defaultValue:` — mandatory for anything with interpolation.
-2. Migrate existing bare keys **opportunistically** when touching a file (keep it consistent per file), not in a big sweep.
-3. Key naming rules above apply unchanged; `defaultValue:` does not excuse plain-English keys.
-
-### Legacy: bare keys (catalog holds the value)
-
-Most existing call sites still use bare keys, where the `en` value lives only in the catalog:
-
-```swift
-// SwiftUI views — string literals are LocalizedStringKey automatically
-Text("balance_total")
-Button("button_save") { ... }
-.navigationTitle("nav_title_receive")
-
-// Outside view builders
-errorMessage = String(localized: "error_payment_failed")
-
-// ArkéUI package views — bundle is required
-Text("key_name", bundle: .module)
-String(localized: "key_name", bundle: .module)
-```
-
-**Ternaries need an explicit `LocalizedStringKey`.** A bare ternary of string literals infers `String`, so the text is passed through unlocalized (the raw key appears in the UI):
+1. **Every string carries its English in code** — `defaultValue:` at the call site,
+   or an `L10n` accessor. Bare keys are a regression; do not add new ones.
+2. **Keys used at 3+ call sites** get one static accessor in the module's `L10n`
+   enum (`Shared/Helpers/L10n.swift` for app targets, `ArkeUI/.../Helpers/L10n.swift`
+   package-internal) instead of duplicating the `defaultValue:` — one definition
+   point prevents copy drift. 1–2 sites: inline, with identical copy.
+3. **Custom view parameters take localized `String`, never `LocalizedStringKey`.**
+   `LocalizedStringKey` params silently resolve against `Bundle.main` regardless of
+   which module renders them, and a call site passing a literal key to a `String`
+   param renders the raw key. Callers pass `String(localized:defaultValue:)`.
+4. **Ternaries** localize each branch: `cond ? String(localized:...) : String(localized:...)`.
+   (The pre-migration advice to wrap branches in `LocalizedStringKey(...)` is obsolete.)
+5. Key naming rules above apply unchanged; `defaultValue:` does not excuse
+   plain-English keys.
 
 ```swift
-// ❌ WRONG — infers String, key is not looked up
-.accessibilityLabel(hasContact ? "action_change_contact" : "action_assign_contact")
-
-// ✅ CORRECT
-.accessibilityLabel(hasContact ?
-    LocalizedStringKey("action_change_contact") :
-    LocalizedStringKey("action_assign_contact"))
+// ArkéUI package views — bundle is still required
+String(localized: "key_name", defaultValue: "Value", bundle: .module)
 ```
+
+### Exceptions: keys that stay catalog-managed
+
+- **Plural-variation keys** (and substitution keys like
+  `balance_vtxos_expired_and_expiring %lld %lld`): variations cannot be expressed in
+  a `defaultValue:`, so their English lives in the catalog's `variations` dictionary.
+  Call sites may still pass `defaultValue:` for the base form; never hand-edit the
+  variations expecting code to restore them.
+- **Sanctioned plain-English interpolation keys** (`"%lld transactions"`, `"%@ ago"`)
+  per the Interpolated Strings exception above.
 
 ---
 
 ## Catalog Maintenance
 
-**Xcode rewrites `Localizable.xcstrings` on every build.** Re-extraction re-sorts the file, marks keys it no longer finds in code as `"extractionState" : "stale"`, and can empty hand-added values for keys it cannot match to a call site. Consequences:
+**Xcode rewrites `Localizable.xcstrings` on every IDE build** (command-line
+`xcodebuild` compiles but does not merge extraction back into the source catalog,
+and extraction is per-scheme — desktop-only keys need a desktop build).
+Re-extraction re-sorts the file, marks keys it no longer finds in code as
+`"extractionState" : "stale"`, and can empty hand-added values for keys it cannot
+match to a call site. Consequences:
 
 - After hand-editing the catalog, **build and re-verify** that your values survived.
 - Prefer fixing the code side (pointing call sites at existing keys, or adding `defaultValue:`) over hand-adding values.
@@ -242,6 +245,20 @@ Run occasionally, and before starting translation work:
 
 ---
 
+## Tooling
+
+- `Scripts/localization_audit.py` — cross-references both catalogs against all call
+  sites; reports missing English, drift, unreferenced keys, hardcoded-English
+  candidates. Rerun before translation work or after large string changes.
+- `Tests/Shared/LocalizationCatalogTests.swift` — permanent guard: every active
+  snake_case key has English; no cross-catalog drift; no whitespace keys.
+- `Scripts/migrate_defaultvalue.py` — the mechanical migration passes (kept for
+  reference / future sweeps).
+
 ## History
 
 - **March 2026:** Migration from English-text keys to semantic snake_case keys (516 keys, 146 files). See `LOCALIZATION_MIGRATION_SUMMARY.md` and `LOCALIZATION_UPDATE_SUMMARY.md`.
+- **August 2026:** defaultValue migration — English copy moved into code at 1,252
+  call sites (93%; the rest are plural-variation and sanctioned plain-English keys),
+  per-module `L10n` accessors added, 51 dead keys purged, guard test added. See
+  `Default_Value_Migration_Plan.md`.

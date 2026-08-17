@@ -5,6 +5,15 @@ Detail lives in the linked docs — this file is just the index. When an item is
 finished, check it off with the date (move to a Done section or delete once
 stale). Last consolidated: 2026-08-12.
 
+## Localization
+
+- [ ] **defaultValue migration — on-device smoke pass** (all 6 phases done
+  2026-08-17, see `Localization/Default_Value_Migration_Plan.md`): browse one
+  screen per feature area on device watching for raw-key sightings; the next
+  desktop IDE build also merges any pending desktop-only extraction. Everything
+  else is verified (both platforms build, guard test + full mobile suite green,
+  catalogs byte-identical through extraction).
+
 ## Wallet Deletion & Device Registry
 
 - [ ] **On-device verify of the deletion-strategy fix** (fix landed 2026-08-12):
