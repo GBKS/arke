@@ -1,56 +1,99 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "NSCameraUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use your camera to scan QR codes."
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "comment": "Bundle display name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Arké"
+          }
+        }
+      },
+      "shouldTranslate": false
+    },
+    "CFBundleName": {
+      "comment": "Bundle name",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "ArkeMobile"
+          }
+        }
+      },
+      "shouldTranslate": false
+    },
+    "NFCReaderUsageDescription": {
+      "comment": "Privacy - NFC Scan Usage Description",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Arké uses NFC to scan payment information from contactless tags."
           }
         }
       }
     },
-    "NSContactsUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Link to your Contacts to show names and profile images in the app."
+    "NSCameraUsageDescription": {
+      "comment": "Privacy - Camera Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use your camera to scan QR codes."
           }
         }
       }
     },
-    "NSLocalNetworkUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arké uses local network to securely exchange payment information with nearby users."
+    "NSContactsUsageDescription": {
+      "comment": "Privacy - Contacts Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link to your Contacts to show names and profile images in the app."
           }
         }
       }
     },
-    "NSNearbyInteractionAllowOnceUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Arké to detect nearby users once to exchange payment information."
+    "NSLocalNetworkUsageDescription": {
+      "comment": "Privacy - Local Network Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arké uses local network to securely exchange payment information with nearby users."
           }
         }
       }
     },
-    "NSNearbyInteractionUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arké uses Nearby Interaction to detect when you're close to another user for seamless payment information exchange."
+    "NSNearbyInteractionAllowOnceUsageDescription": {
+      "comment": "Privacy - Nearby Interaction Allow Once Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Arké to detect nearby users once to exchange payment information."
+          }
+        }
+      }
+    },
+    "NSNearbyInteractionUsageDescription": {
+      "comment": "Privacy - Nearby Interaction Usage Description",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arké uses Nearby Interaction to detect when you're close to another user for seamless payment information exchange."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
