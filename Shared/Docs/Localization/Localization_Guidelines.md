@@ -245,6 +245,25 @@ Run occasionally, and before starting translation work:
 
 ---
 
+## Translations (de, ja — August 2026)
+
+German and Japanese values exist for every translatable key (state
+`needs_review` until natively reviewed). Rules:
+
+- **Translations live in the catalogs and are edited there** (Xcode's catalog
+  editor) — the code-is-source-of-truth rule applies to English only.
+- Terminology is governed by `Translation_Glossary.md` — one meaning, one term.
+  German uses **du**; Japanese uses です・ます.
+- **New strings ship English-only** (they fall back correctly via
+  `defaultValue:`); add de/ja via `Scripts/apply_translations.py`
+  (JSON in → all catalogs, `needs_review`) or in the catalog editor during the
+  next review cycle.
+- `Scripts/translation_lint.py` prints guard violations (empty values,
+  format-specifier mismatches vs English) with exact keys — the same invariants
+  `LocalizationCatalogTests` enforces in CI.
+- Japanese has no plural forms; `^[…](inflect: true)` in English values is
+  English-only, so German needs explicit plural variations for those keys.
+
 ## Tooling
 
 - `Scripts/localization_audit.py` — cross-references both catalogs against all call

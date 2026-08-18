@@ -3,8 +3,8 @@
 
 Reads a JSON object {key: {"de": value, "ja": value}} from the file given as
 argv[1] (or stdin). A value is a plain string, or {"one": ..., "other": ...}
-for plural variations. Each key is written to every catalog that contains it
-(per Scripts/translation_batches/_units.json), with state "needs_review".
+for plural variations. Each key is written to every catalog that contains it,
+with state "needs_review".
 
 Keys marked shouldTranslate:false are skipped. Existing de/ja entries are
 overwritten (later batches / correction overlays win).
@@ -15,7 +15,12 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-UNITS = json.loads((REPO / "Scripts/translation_batches/_units.json").read_text())
+CATALOGS = ["Shared/Localizable.xcstrings", "ArkeUI/Sources/ArkéUI/Localizable.xcstrings",
+            "ArkeMobile/InfoPlist.xcstrings", "ArkeDesktop/InfoPlist.xcstrings"]
+UNITS: dict = {}
+for _rel in CATALOGS:
+    for _key in json.loads((REPO / _rel).read_text())["strings"]:
+        UNITS.setdefault(_key, []).append(_rel)
 
 
 def unit(value):

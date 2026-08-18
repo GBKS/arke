@@ -7,6 +7,14 @@ stale). Last consolidated: 2026-08-12.
 
 ## Localization
 
+- [ ] **Native-speaker review of the de/ja first pass** (all 1,090 × 2 values are
+  `needs_review`, translated 2026-08-18): start with the glossary's ⚠️ terms
+  (Übertrag, Rechnung, Hauptgerät/Zweitgerät); filter by "Needs Review" in
+  Xcode's catalog editor or export `.xcloc`. Required before shipping the
+  languages. See `Localization/Translation_Rollout_Plan.md`.
+- [ ] **Phase D per-language QA**: run with App Language de (the +30% expansion
+  layout pass — badges, fixed-width buttons, alerts) and ja (typography), plus
+  guard test + full suite. See the rollout plan.
 - [x] **defaultValue migration — on-device smoke pass — verified 2026-08-17**
   (iPhone + macOS, no raw-key sightings). The desktop build's extraction also
   exposed one last hand-assembled plural in
