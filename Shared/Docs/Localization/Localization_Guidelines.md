@@ -228,7 +228,7 @@ match to a call site. Consequences:
 
 - After hand-editing the catalog, **build and re-verify** that your values survived.
 - Prefer fixing the code side (pointing call sites at existing keys, or adding `defaultValue:`) over hand-adding values.
-- For `defaultValue:`-backed keys, code is the source of truth for `en` — edit the copy in code, never in the catalog editor.
+- For `defaultValue:`-backed keys, code is the source of truth for `en` — edit the copy in code, never in the catalog editor. **Caveat (verified 2026-08-18):** entries that predate the migration (state `translated`, no `extractionState`) do NOT auto-follow code edits. When changing such a key's English, also delete its catalog entry — the next IDE build re-adds it as `extracted_with_value`, after which code edits propagate. Entries born from extraction (`extracted_with_value`) follow code automatically.
 - Periodically purge stale entries in Xcode's catalog editor (filter by "Stale", then delete). Confirm a key is not constructed dynamically before deleting it.
 
 ### Audit Checklist

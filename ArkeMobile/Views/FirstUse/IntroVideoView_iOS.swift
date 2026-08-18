@@ -242,7 +242,7 @@ struct VideoListItem: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(isCurrentlyPlaying ? 
             String(format: String(localized: "accessibility_video_now_playing", defaultValue: "Now playing: %@"), video.title) :
-            String(format: String(localized: "accessibility_video_item", defaultValue: "Video %lld: %@"), index + 1, video.title))
+            String(format: String(localized: "accessibility_video_item", defaultValue: "Video %1$lld: %2$@"), index + 1, video.title))
         .accessibilityHint(String(localized: "accessibility_play_video_hint", defaultValue: "Double tap to play this video"))
         .accessibilityAddTraits(isCurrentlyPlaying ? [.isButton, .isSelected] : .isButton)
     }

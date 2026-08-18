@@ -918,11 +918,12 @@
       }
     },
     "accessibility_video_item" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video %lld: %@"
+            "state" : "new",
+            "value" : "Video %1$lld: %2$@"
           }
         }
       }
