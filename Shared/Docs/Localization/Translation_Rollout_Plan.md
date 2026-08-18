@@ -29,22 +29,32 @@ one term. Decisions locked: German uses **du**; balance names are **translated**
       context (`button_`/`label_`/`status_`); comments get added in code when a
       reviewer flags a genuinely ambiguous string (glossary Mechanics §6).
 
-## Phase B — Add the languages (mechanical, in Xcode)
+## Phase B — Add the languages — DONE 2026-08-18 (user, in Xcode)
 
-- [ ] Catalog editor: add German and Japanese to `Shared/Localizable.xcstrings`,
-      the ArkéUI package catalog, and both `InfoPlist.xcstrings`.
-- [ ] Build once; commit the seeded catalogs (every key state "new").
+knownRegions gained de/ja; the build also enriched the InfoPlist catalogs
+(NFC usage description discovered; CFBundle*/copyright marked non-translatable).
 
-## Phase C — Translation
+## Phase C — Translation first pass — DONE 2026-08-18
 
-- [ ] First pass per language, glossary-driven, in batches by feature area
-      (state `needs_review`), verifying after each batch: build → guard test →
-      catalog diff review. AI first pass is acceptable to bootstrap;
-      **native-speaker review is required before release** — this app moves money.
-- [ ] Plural variations authored for German where English uses
-      `^[…](inflect: true)`; Japanese collapses all plurals to one form.
-- [ ] Optionally: Xcode export (`.xcloc`) → external reviewer → import, which
-      preserves review state.
+- [x] **1,090 entries translated to both German and Japanese** (all translatable
+      keys across all four catalogs), state `needs_review` throughout.
+- [x] Process: 13 parallel glossary-bound drafting agents (one per feature
+      family, batches in `Scripts/translation_batches/`), applied via
+      `Scripts/apply_translations.py`, then an explicit review-corrections
+      overlay (29 keys: Sie→du register violations, the BLE "advertising" ≠
+      "Werbung" mistranslation, grammar/terminology fixes).
+- [x] German plural variations authored where needed (incl. the
+      `^[…](inflect: true)` keys); Japanese single-form with 件 counters.
+- [x] Verified: Xcode build green; guard tests green (26 cases) — the
+      specifier-parity check needed to learn `%#@name@` substitution tokens and
+      to skip `shouldTranslate: false` entries (also mirrored in the new
+      `Scripts/translation_lint.py`, which prints offenders the simulator test
+      can't).
+- [ ] **Native-speaker review before release** (the entire point of
+      `needs_review`): all values are first-pass; the glossary's ⚠️ terms
+      (Übertrag, Rechnung, Hauptgerät/Zweitgerät) deserve first attention.
+      Xcode's catalog editor can filter by "Needs Review" per language;
+      alternatively export `.xcloc` for an external reviewer.
 
 ## Phase D — Per-language QA
 
@@ -65,4 +75,6 @@ one term. Decisions locked: German uses **du**; balance names are **translated**
 | Step | Status | Notes |
 |---|---|---|
 | Phase A | done 2026-08-18 | glossary, InfoPlist catalogs, specifier fix, guard rails |
-| Phase B | not started | |
+| Phase B | done 2026-08-18 | languages added in Xcode (user) |
+| Phase C | done 2026-08-18 | 1,090 entries × de+ja, needs_review; guard green; native review pending |
+| Phase D | not started | per-language QA: App Language runs, German expansion layout pass, ja typography |

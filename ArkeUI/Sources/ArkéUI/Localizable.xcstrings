@@ -14,6 +14,24 @@
     },
     "%lld confirmations": {
       "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%lld Bestätigung"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%lld Bestätigungen"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -31,455 +49,1013 @@
               }
             }
           }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld件の承認"
+          }
         }
       }
     },
     "Cannot use: %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kann nicht verwendet werden: %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Cannot use: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "使用できません：%@"
           }
         }
       }
     },
     "accessibility_address_identicon": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adress-Identicon"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Address identicon"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アドレスアイコン"
           }
         }
       }
     },
     "accessibility_amount_field": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Sendebetrag"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Send amount"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送金額"
           }
         }
       }
     },
     "accessibility_amount_label": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額"
           }
         }
       }
     },
     "accessibility_amount_label_with_unit %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag in %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount in %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@での金額"
           }
         }
       }
     },
     "accessibility_color_swatch %lld": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Farboption %lld"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Color option %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カラーオプション%lld"
           }
         }
       }
     },
     "accessibility_fee_label": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühr"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fee"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料"
           }
         }
       }
     },
     "accessibility_hint_change_fee": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Öffnet die Gebührauswahl"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens fee selection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料選択を開く"
           }
         }
       }
     },
     "accessibility_hint_choose_color": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Öffnet die Farbauswahl"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the color picker"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カラーピッカーを開く"
           }
         }
       }
     },
     "accessibility_hint_choose_emoji": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Öffnet die Emoji-Auswahl"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the emoji picker"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "絵文字ピッカーを開く"
           }
         }
       }
     },
     "accessibility_hint_copy_invoice": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kopiert die Lightning-Rechnung in die Zwischenablage"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copies the Lightning invoice to the clipboard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lightning インボイスをクリップボードにコピー"
           }
         }
       }
     },
     "accessibility_hint_copy_value": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kopiert den Wert in die Zwischenablage"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copies the value to the clipboard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "値をクリップボードにコピー"
           }
         }
       }
     },
     "accessibility_hint_select_destination": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wählt dieses Zahlungsziel aus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Selects this payment destination"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この支払い先を選択"
           }
         }
       }
     },
     "accessibility_hint_set_max": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Setzt den Betrag auf dein maximales ausgabefähiges Guthaben. Erneutes Aktivieren zum Löschen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sets the amount to your maximum spendable balance. Activate again to clear."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額を最大使用可能残高に設定します。再度アクティブにしてクリア。"
           }
         }
       }
     },
     "accessibility_hint_start_refresh": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aktualisiert dein Guthaben jetzt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Refreshes your balance now"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今すぐ残高を更新"
           }
         }
       }
     },
     "accessibility_note_label": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notiz"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Note"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メモ"
           }
         }
       }
     },
     "accessibility_value_exceeds_balance": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Übersteigt verfügbares Guthaben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Exceeds available balance"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "利用可能な残高を超えています"
           }
         }
       }
     },
     "accessibility_value_fee_pending": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Noch nicht geschätzt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Not yet estimated"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "まだ推定されていません"
           }
         }
       }
     },
     "accessibility_value_fee_unavailable": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nicht verfügbar"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Not available"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "利用不可"
           }
         }
       }
     },
     "accessibility_vtxo_graph_bar %@ %lld": {
       "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$@, verfällt in %2$lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "%1$@, verfällt in %2$lld Tagen"
+                }
+              }
+            }
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@, expires in ^[%2$lld days](inflect: true)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@、%2$lld日で有効期限切れ"
           }
         }
       }
     },
     "accessibility_vtxo_graph_expired": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "expired"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "有効期限切れ"
           }
         }
       }
     },
     "accessibility_vtxo_graph_locked": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "gesperrt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "locked"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ロック済み"
           }
         }
       }
     },
     "action_change_emoji": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Emoji ändern"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change emoji"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "絵文字を変更"
           }
         }
       }
     },
     "action_choose_color": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Farbe wählen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose color"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "色を選択"
           }
         }
       }
     },
     "action_choose_custom_color": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Benutzerdefinierte Farbe wählen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose custom color"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カスタムカラーを選択"
           }
         }
       }
     },
     "action_choose_emoji": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Emoji wählen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose emoji"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "絵文字を選択"
           }
         }
       }
     },
     "action_choose_from_files": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aus Dateien wählen…"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Choose from Files..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ファイルから選択…"
           }
         }
       }
     },
     "action_copy_address": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adresse kopieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copy address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アドレスをコピー"
           }
         }
       }
     },
     "action_copy_invoice": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechnung kopieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copy invoice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インボイスをコピー"
           }
         }
       }
     },
     "action_copy_value": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wert kopieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copy value"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "値をコピー"
           }
         }
       }
     },
     "action_dismiss_error": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fehler schließen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Dismiss error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "エラーを閉じる"
           }
         }
       }
     },
     "action_start_forced_move": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erzwungene Verschiebung starten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Start a forced move"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制移動を開始"
           }
         }
       }
     },
     "action_tap_copy": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zum Kopieren antippen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tap to copy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "タップしてコピー"
           }
         }
       }
     },
     "address_format_ark_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ark-Protokoll-Adressen für Off-Chain-Zahlungen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Ark protocol addresses for off-chain payments"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "オフチェーン支払い用のArkプロトコルアドレス"
           }
         }
       }
     },
     "address_format_ark_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ark-Adresse"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Ark Address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arkアドレス"
           }
         }
       }
     },
     "address_format_bip21_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoin-URIs mit eingebetteten Zahlungsdetails"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Bitcoin URIs with embedded payment details"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "埋め込み支払い詳細を含むBitcoin URI"
           }
         }
       }
     },
     "address_format_bip21_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-21-Zahlungs-URI"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "BIP-21 Payment URI"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-21支払いURI"
           }
         }
       }
     },
     "address_format_bip353_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lesbare Bitcoin-Adressen über DNS"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Human-readable Bitcoin addresses using DNS"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "DNSを使用した人間が読める形式のBitcoinアドレス"
           }
         }
       }
     },
     "address_format_bip353_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-353-Adresse"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "BIP-353 Address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-353アドレス"
           }
         }
       }
     },
     "address_format_bitcoin_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Standard-Bitcoin-Adressen (P2PKH, P2SH, Bech32)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Standard Bitcoin addresses (P2PKH, P2SH, Bech32)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "標準Bitcoinアドレス（P2PKH、P2SH、Bech32）"
           }
         }
       }
     },
     "address_format_bitcoin_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoin-Adresse"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Bitcoin Address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoinアドレス"
           }
         }
       }
     },
     "address_format_lightning_address_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lesbare Lightning-Zahlungsadressen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Human-readable Lightning payment addresses"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "人間が読める形式のライトニング支払いアドレス"
           }
         }
       }
     },
     "address_format_lightning_address_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lightning-Adresse"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lightning Address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ライトニングアドレス"
           }
         }
       }
     },
     "address_format_lightning_invoice_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lightning-Netzwerk-Zahlungsanforderungen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lightning network payment requests"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ライトニングネットワーク支払いリクエスト"
           }
         }
       }
     },
     "address_format_lightning_invoice_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lightning-Rechnung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lightning Invoice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ライトニングインボイス"
           }
         }
       }
@@ -487,120 +1063,264 @@
     "address_review_sheet_title": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adresse überprüfen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Review Address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アドレスを確認"
           }
         }
       }
     },
     "balance_amount_to_recover": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag zum Verschieben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount to move"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "移動する金額"
           }
         }
       }
     },
     "balance_emergency_move_help": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eine erzwungene Verschiebung ermöglicht dir, dein Bitcoin ohne den Server allein zum Erspartes zu ziehen. Das ist nur für Notfälle."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制移動を使うと、サーバーなしで自分のビットコインを貯蓄に移動できます。緊急時のみの機能です。"
           }
         }
       }
     },
     "balance_estimated_fee": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Geschätzte Gebühr"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Estimated fee"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "推定手数料"
           }
         }
       }
     },
     "balance_final_step_fee": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühren können recht hoch sein"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fees may be quite large"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料はかなり大きくなる可能性があります"
           }
         }
       }
     },
     "balance_forced_move_emergencies_only": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nutze eine erzwungene Verschiebung nur, wenn der Server nicht kooperiert."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Use a forced move only if the server won't cooperate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバーが協力しない場合のみ強制移動を使用してください。"
           }
         }
       }
     },
     "balance_forced_move_refresh_in_progress": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Es gibt eine ausstehende Erneuerung. Wenn du jetzt eine erzwungene Verschiebung startest, kann sie durch die Erneuerung abgebrochen werden. Am besten warten."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "There’s a pending refresh. If you start a forced move now, it may get cancelled by the refresh. Best to wait."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保留中の更新があります。今強制移動を開始すると、更新によってキャンセルされる可能性があります。待つのが最善です。"
           }
         }
       }
     },
     "balance_forced_move_refresh_in_progress_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erneuerung läuft"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Refresh in progress"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新実行中"
           }
         }
       }
     },
     "balance_forced_move_server_connected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Es gibt einen schnelleren und billigeren Weg, zum Erspartes zu verschieben – in der Ansicht deiner Guthaben."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "There's a faster, cheaper way to move to Savings in the balance view."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残高ビューで貯蓄に移動するより速く、より安い方法があります。"
           }
         }
       }
     },
     "balance_forced_move_server_connected_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bevor du startest"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Before you start"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "始める前に"
           }
         }
       }
     },
     "balance_increase_savings_for_fee": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erhöhe dein Erspartes-Guthaben, um die Gebühr zu decken."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Increase your savings balance to cover the fee."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料をカバーするために貯蓄残高を増やしてください。"
           }
         }
       }
     },
     "balance_no_bitcoin_payments": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Du hast kein Bitcoin in deinem Zahlungen-Guthaben zum Verschieben."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You don't have any bitcoin in your payments balance to move."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "支払い残高に移動するビットコインがありません。"
           }
         }
       }
@@ -608,20 +1328,44 @@
     "button_cancel": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Abbrechen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Cancel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キャンセル"
           }
         }
       }
     },
     "button_clear": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Löschen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Clear"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "クリア"
           }
         }
       }
@@ -629,480 +1373,1056 @@
     "button_close": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Schließen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Close"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閉じる"
           }
         }
       }
     },
     "button_done": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fertig"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完了"
           }
         }
       }
     },
     "button_enter_recovery_phrase": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wiederherstellungsphrase eingeben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Enter Recovery Phrase"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "リカバリーフレーズを入力"
           }
         }
       }
     },
     "button_insufficient_balance": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Unzureichendes Guthaben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Insufficient Balance"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残高不足"
           }
         }
       }
     },
     "button_retry": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erneut versuchen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Retry"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "再試行"
           }
         }
       }
     },
     "button_start": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Starten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Start"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開始"
           }
         }
       }
     },
     "button_view_activity": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aktivität anzeigen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "View activity"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクティビティを表示"
           }
         }
       }
     },
     "button_view_balance_details": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Guthaben anzeigen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "View balance"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残高詳細を表示"
           }
         }
       }
     },
     "connection_ark_server_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ark-Server"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Ark Server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arkサーバー"
           }
         }
       }
     },
     "connection_quality_disconnected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Getrennt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Disconnected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "切断"
           }
         }
       }
     },
     "connection_quality_excellent": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausgezeichnet"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Excellent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "優秀"
           }
         }
       }
     },
     "connection_quality_good": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gut"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Good"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "良好です"
           }
         }
       }
     },
     "connection_quality_poor": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Schwach"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Poor"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不良です"
           }
         }
       }
     },
     "connection_readonly_not_primary_message": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dieses Gerät zeigt Wallet-Daten an, die von deinem Hauptgerät über iCloud synchronisiert wurden. Senden und Empfangen sind nur auf deinem Hauptgerät verfügbar."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This device is viewing wallet data synced from your primary device via iCloud. Send and receive functions are only available on your primary device."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このデバイスはメインデバイスからiCloud経由で同期されたウォレットデータを表示しています。送金と受け取りはメインデバイスでのみ利用可能です。"
           }
         }
       }
     },
     "connection_readonly_row_data_synced": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Daten über iCloud synchronisiert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Data synced via iCloud"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iCloud経由でデータを同期中"
           }
         }
       }
     },
     "connection_readonly_row_enter_phrase": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Oder gib jetzt deine Wiederherstellungsphrase ein"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Or enter your recovery phrase now"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "またはここでリカバリーフレーズを入力してください"
           }
         }
       }
     },
     "connection_readonly_row_key_syncing": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wallet-Schlüssel werden über iCloud Keychain synchronisiert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Wallet key syncing via iCloud Keychain"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ウォレットキーがiCloud Keychain経由で同期中です"
           }
         }
       }
     },
     "connection_readonly_row_send_receive_disabled": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Senden und Empfangen deaktiviert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Send and receive disabled"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送金と受け取りは無効です"
           }
         }
       }
     },
     "connection_readonly_row_viewing_only": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zeige nur synchronisierte Daten an"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Viewing synced data only"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "同期されたデータのみを表示しています"
           }
         }
       }
     },
     "connection_readonly_seed_not_synced_message": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dieses Gerät zeigt Wallet-Daten an, die über iCloud synchronisiert wurden. Dein Wallet-Schlüssel ist auf diesem Gerät noch nicht angekommen – er synchronisiert sich normalerweise selbst über iCloud Keychain."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This device is viewing wallet data synced via iCloud. Your wallet key hasn’t arrived on this device yet — it usually syncs on its own through iCloud Keychain."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このデバイスはiCloud経由で同期されたウォレットデータを表示しています。ウォレットキーはまだこのデバイスに到着していません。通常はiCloud Keychain経由で自動的に同期されます。"
           }
         }
       }
     },
     "connection_readonly_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nur-Lesen-Modus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Read-Only Mode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閲覧専用モード"
           }
         }
       }
     },
     "connection_row_connected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mit Ark-Server verbunden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Connected to Ark server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arkサーバーに接続しています"
           }
         }
       }
     },
     "connection_row_not_connected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keine Verbindung zum Ark-Server"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No connection to Ark server"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arkサーバーに接続していません"
           }
         }
       }
     },
     "connection_row_quality %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verbindungsqualität: %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Connection quality: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続品質: %@"
           }
         }
       }
     },
     "connection_row_reconnection_attempts %lld": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wiederverbindungsversuche: %lld"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reconnection attempts: %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "再接続試行: %lld"
           }
         }
       }
     },
     "connection_sheet_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verbindungsstatus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Connection Status"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続ステータス"
           }
         }
       }
     },
     "connection_test_network_message %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Du bist mit %@, einem Testnetzwerk für Entwicklung und Experimente, verbunden."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You are connected to %@, a test network for development and experimentation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@（開発と実験用のテストネットワーク）に接続しています。"
           }
         }
       }
     },
     "connection_test_network_row_faucet": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nutze den Faucet, um Test-Coins zu bekommen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Use the faucet to get test funds"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フォーセットを使ってテストコインを取得してください"
           }
         }
       }
     },
     "connection_test_network_row_no_value": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Test-Coins haben keinen echten Wert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Test coins have no real value"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "テストコインに実際の価値はありません"
           }
         }
       }
     },
     "connection_test_network_row_safe": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Testnetzwerk für sichere Experimente"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Test network for safe experimentation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "安全に実験するためのテストネットワーク"
           }
         }
       }
     },
     "connection_test_network_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Testnetzwerk"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Test Network"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "テストネットワーク"
           }
         }
       }
     },
     "connection_troubleshooting_message": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wenn du Verbindungsprobleme hast, versuche:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "If you’re experiencing connection issues, try:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続に問題がある場合は、以下をお試しください："
           }
         }
       }
     },
     "connection_troubleshooting_row_internet": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Überprüfe deine Internetverbindung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Check your internet connection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インターネット接続を確認してください"
           }
         }
       }
     },
     "connection_troubleshooting_row_refresh": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ziehe nach unten, um zu aktualisieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pull down to refresh"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下にプルして更新してください"
           }
         }
       }
     },
     "connection_troubleshooting_row_restart": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Starte die App neu"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Restart the app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アプリを再起動してください"
           }
         }
       }
     },
     "connection_troubleshooting_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fehlerbehebung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Troubleshooting"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "トラブルシューティング"
           }
         }
       }
     },
     "contacts_preset_avatars": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vordefinierte Avatare"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Preset Avatars"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プリセットアバター"
           }
         }
       }
     },
     "data_network_support_note": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Hinweis: Netzwerkunterstützung umfasst Mainnet, Testnet, Signet und Regtest, soweit zutreffend."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Note: Network support includes mainnet, testnet, signet, and regtest where applicable."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "注：ネットワークサポートはメインネット、テストネット、Signet、および該当する場合はレグテストを含みます。"
           }
         }
       }
     },
     "data_server": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Server: %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Server: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サーバー: %@"
           }
         }
       }
     },
     "description_bitcoin_formatter_demo": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Diese Ansicht zeigt, wie Bitcoin-Beträge basierend auf deinem gewählten Formatierungspräferenz und Systemgebietsschema formatiert werden."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This view demonstrates how Bitcoin amounts are formatted based on your selected format preference and system locale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このビューは、選択した形式設定と システムロケールに基づいて、ビットコイン金額がどのようにフォーマットされるかを示しています。"
           }
         }
       }
     },
     "emoji_category_activities": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aktivitäten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Activities"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクティビティ"
           }
         }
       }
     },
     "emoji_category_food_drink": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Essen & Trinken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Food & Drink"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "食べ物と飲み物"
           }
         }
       }
     },
     "emoji_category_money": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Geld"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Money"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "お金"
           }
         }
       }
     },
     "emoji_category_objects": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Objekte"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Objects"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "オブジェクト"
           }
         }
       }
     },
     "emoji_category_shopping": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Einkaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Shopping"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ショッピング"
           }
         }
       }
     },
     "emoji_category_symbols": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Symbole"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Symbols"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "シンボル"
           }
         }
       }
     },
     "emoji_category_transportation": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verkehr"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Transportation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "交通"
           }
         }
       }
     },
     "error_copy": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Fehler beim Kopieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copy Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コピーエラー"
           }
         }
       }
@@ -1110,186 +2430,420 @@
     "error_refresh_failed": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aktualisierung fehlgeschlagen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Refresh Failed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新に失敗しました"
           }
         }
       }
     },
     "error_sincere_regrets": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Es tut uns aufrichtig leid"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sincere regrets"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "申し訳ございません"
           }
         }
       }
     },
     "fee_priority_fast": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Schnell"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fast"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "高速"
           }
         }
       }
     },
     "fee_priority_fast_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Höhere Gebühr für schnellere Bestätigung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Higher fee for faster confirmation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "迅速な承認のための高い手数料です"
           }
         }
       }
     },
     "fee_priority_fast_time": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "~10-20 Min."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "~10-20 min"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "～10～20分"
           }
         }
       }
     },
     "fee_priority_medium": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mittel"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Medium"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中程度"
           }
         }
       }
     },
     "fee_priority_medium_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausgewogene Gebühr und Bestätigungszeit"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Balanced fee and confirmation time"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料と承認時間のバランスが取れています"
           }
         }
       }
     },
     "fee_priority_medium_time": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "~30-60 Min."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "~30-60 min"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "～30～60分"
           }
         }
       }
     },
     "fee_priority_slow": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Langsam"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Slow"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "低速"
           }
         }
       }
     },
     "fee_priority_slow_description": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Niedrigere Gebühr mit längerer Bestätigungszeit"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lower fee with longer confirmation time"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "低い手数料で長い承認時間です"
           }
         }
       }
     },
     "fee_priority_slow_time": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "~1-2 Std."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "~1-2 hours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "～1～2時間"
           }
         }
       }
     },
     "fee_transactions": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transaktionen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Transactions"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取引"
           }
         }
       }
     },
     "forced_move_all_moving": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dein gesamtes Bitcoin ist bereits auf dem Weg zu deinem Erspartes-Guthaben. Du kannst den Fortschritt in deiner Aktivität verfolgen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "All of your bitcoin is already on its way to your Savings balance. You can follow the progress in your activity."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あなたの Bitcoin はすべて既に貯蓄残高に向かっています。アクティビティで進捗を確認できます。"
           }
         }
       }
     },
     "forced_move_expect_automatic": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nach Abschluss wird das Bitcoin automatisch zu deinem Erspartes-Guthaben hinzugefügt."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "When it completes, the bitcoin is added to your Savings balance automatically."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完了すると、Bitcoin は自動的に貯蓄残高に追加されます。"
           }
         }
       }
     },
     "forced_move_expect_checkin": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Schau etwa einmal pro Stunde vorbei. Das Öffnen der App hält die Verschiebung am Laufen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Check in about once an hour. Opening the app keeps the move going."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約1時間ごとにアプリを開いてください。アプリを開くと移動が続きます。"
           }
         }
       }
     },
     "forced_move_expect_reminders": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wir erinnern dich daran, vorbeizuschauen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "We'll remind you to check in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "チェックインの時間になったらお知らせします。"
           }
         }
       }
     },
     "forced_move_finishing": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Dein Bitcoin ist auf dem Weg zu deinem Erspartes-Guthaben."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Your bitcoin is on its way to your Savings balance."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoin は貯蓄残高に向かっています。"
           }
         }
       }
     },
     "forced_move_finishing_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Deine erzwungene Verschiebung wird abgeschlossen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Finishing your forced move"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制移動を完了中"
           }
         }
       }
     },
     "forced_move_hours_remaining": {
       "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Noch etwa %lld Stunde."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "needs_review",
+                  "value": "Noch etwa %lld Stunden."
+                }
+              }
+            }
+          }
+        },
         "en": {
           "variations": {
             "plural": {
@@ -1307,164 +2861,362 @@
               }
             }
           }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あと %lld 時間程度です。"
+          }
         }
       }
     },
     "forced_move_less_than_hour": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Weniger als 1 Stunde verbleibend."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Less than 1 hour to go."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残り1時間未満です。"
           }
         }
       }
     },
     "forced_move_one_hour_remaining": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Noch etwa 1 Stunde."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "About 1 hour to go."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あと約1時間です。"
           }
         }
       }
     },
     "forced_move_open_settings": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Einstellungen öffnen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Open Settings"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定を開く"
           }
         }
       }
     },
     "forced_move_reminders_off": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erinnerungen sind deaktiviert. Aktiviere Benachrichtigungen, damit du keinen Besuch verpasst."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reminders are off. Turn on notifications so you don't miss a check-in."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知がオフになっています。チェックインを見逃さないよう通知をオンにしてください。"
           }
         }
       }
     },
     "forced_move_starting": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erste Schritte. Schau in etwa einer Stunde vorbei."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Getting started. Check back in about an hour."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開始しました。約1時間後にアプリを開いてください。"
           }
         }
       }
     },
     "forced_move_turn_on_reminders": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Benachrichtigungen aktivieren"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Turn On Notifications"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通知をオンにする"
           }
         }
       }
     },
     "forced_move_underway_title": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Erzwungene Verschiebung läuft"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Forced move underway"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制移動進行中"
           }
         }
       }
     },
     "format_accounting_style": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Buchhaltungsstil (Symbol am Ende)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Accounting Style (Symbol at End)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "会計スタイル（シンボル末尾）"
           }
         }
       }
     },
     "format_example_with_placeholder %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Beispiel: %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Example: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "例: %@"
           }
         }
       }
     },
     "format_fee_approximate": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ungefähr %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "approximately %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約 %@"
           }
         }
       }
     },
     "format_fee_estimate": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühr: ~%@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fee: ~%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料: ~%@"
           }
         }
       }
     },
     "format_less_than_minute": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "< 1 Min."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "< 1m"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1分未満"
           }
         }
       }
     },
     "format_network": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Netzwerk: %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Network: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ネットワーク: %@"
           }
         }
       }
     },
     "format_time_ago": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "vor %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ ago"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 前"
           }
         }
       }
     },
     "format_with_sign_prefixes": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mit Vorzeichen-Präfixen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "With Sign Prefixes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "符号プリフィックス付き"
           }
         }
       }
     },
     "format_zero": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "0"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
+            "value": "0"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
             "value": "0"
           }
         }
@@ -1472,550 +3224,1210 @@
     },
     "hint_change_settings_formats": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ändern in Einstellungen, um verschiedene Formate zu sehen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Change in Settings to see different formats"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定で変更して、異なる形式を確認してください"
           }
         }
       }
     },
     "label_amount": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額"
           }
         }
       }
     },
     "label_amount_examples": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag-Beispiele"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount Examples"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額例"
           }
         }
       }
     },
     "label_amount_to_refresh": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag zum Erneuern"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount to refresh"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新する金額"
           }
         }
       }
     },
     "label_current_format": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Aktuelles Format"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Current Format"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "現在のフォーマット"
           }
         }
       }
     },
     "label_fee": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühr"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fee"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料"
           }
         }
       }
     },
     "label_fee_pending": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühr: —"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fee: —"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料: —"
           }
         }
       }
     },
     "label_free": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kostenlos"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Free"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無料"
           }
         }
       }
     },
     "label_known_address": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bekannte Adresse"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Known address"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "既知のアドレス"
           }
         }
       }
     },
     "label_label_colon": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Beschriftung:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Label:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ラベル:"
           }
         }
       }
     },
     "label_linked_to_contacts": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Mit Kontakten verknüpft"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Linked to Contacts"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連絡先にリンク済み"
           }
         }
       }
     },
     "label_message_colon": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nachricht:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Message:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メッセージ:"
           }
         }
       }
     },
     "label_minimum": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Minimum"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Minimum"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最小"
           }
         }
       }
     },
     "label_name": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Name"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Name"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前"
           }
         }
       }
     },
     "label_next_round": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nächste Runde"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Next round"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "次のラウンド"
           }
         }
       }
     },
     "label_payments_balance_refresh": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zahlungen-Guthaben erneuern"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Payments balance refresh"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "支払い残高の更新"
           }
         }
       }
     },
     "label_preview": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Vorschau"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Preview"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレビュー"
           }
         }
       }
     },
     "label_received": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Empfangen:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Received:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "受け取った:"
           }
         }
       }
     },
     "label_selected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausgewählt:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Selected:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選択済み:"
           }
         }
       }
     },
     "label_sent": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gesendet:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sent:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送金した:"
           }
         }
       }
     },
     "label_status": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Status"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Status"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ステータス"
           }
         }
       }
     },
     "label_time_until_expiry": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zeit bis zum Ablauf"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Time until expiry"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "有効期限までの時間"
           }
         }
       }
     },
     "label_transaction_formatting_examples": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Transaktions-Formatierungsbeispiele"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Transaction Formatting Examples"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取引フォーマット例"
           }
         }
       }
     },
     "message_cannot_cancel": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Es kann nicht abgebrochen werden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "It cannot be cancelled"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キャンセルできません"
           }
         }
       }
     },
     "message_hourly_checkin_required": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Du musst stündlich vorbei schauen, bis der Vorgang abgeschlossen ist"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "You will need to check in once per hour until completion"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完了まで、1時間ごとにアプリを開いてください"
           }
         }
       }
     },
     "message_not_needed_empty_balance": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nicht erforderlich für leeres Guthaben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Not needed for empty balance"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "残高が空の場合は不要です"
           }
         }
       }
     },
     "message_takes_24_hours": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Eine erzwungene Verschiebung kann 10+ Stunden dauern"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A forced move can take 10+ hours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制移動には 10 時間以上かかる場合があります"
           }
         }
       }
     },
     "nav_title_bitcoin_formatter_examples": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoin-Formatierer-Demo"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Bitcoin Formatter Demo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bitcoin フォーマッター デモ"
           }
         }
       }
     },
     "placeholder_add_note": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notiz hinzufügen…"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Add a note..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メモを追加…"
           }
         }
       }
     },
     "placeholder_amount_optional": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag hinzufügen (optional)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Add amount (optional)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額を追加（オプション）"
           }
         }
       }
     },
     "placeholder_amount_required": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag (erforderlich)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount (required)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額（必須）"
           }
         }
       }
     },
     "placeholder_enter_amount": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag eingeben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Enter amount"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額を入力"
           }
         }
       }
     },
     "placeholder_note_optional": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Notiz hinzufügen (optional)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Add note (optional)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メモを追加（オプション）"
           }
         }
       }
     },
     "placeholder_tag_name": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Tag-Name eingeben"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Enter tag name"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "タグ名を入力"
           }
         }
       }
     },
     "receive_add_amount_note": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag und Notiz hinzufügen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Add amount and note"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額とメモを追加"
           }
         }
       }
     },
     "receive_address_formats": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Adressformate"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Address formats"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アドレス形式"
           }
         }
       }
     },
     "send_amount_fixed": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Betrag ist festgelegt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount is fixed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額は固定されています"
           }
         }
       }
     },
     "send_amount_to_pay": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zahlungsbetrag:"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Amount to pay:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "支払い金額："
           }
         }
       }
     },
     "status_added": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ hinzugefügt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Added %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ が追加されました"
           }
         }
       }
     },
     "status_available": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verfügbar"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Available"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "利用可能"
           }
         }
       }
     },
     "status_confirmed": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Bestätigt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Confirmed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "承認済み"
           }
         }
       }
     },
     "status_connected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verbunden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Connected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続済み"
           }
         }
       }
     },
     "status_copied": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kopiert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copied"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コピーしました"
           }
         }
       }
     },
     "status_copied_exclaim": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kopiert!"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Copied!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コピーしました！"
           }
         }
       }
     },
     "status_disconnected": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Getrennt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Disconnected"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続解除"
           }
         }
       }
     },
     "status_expired": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Expired"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "期限切れ"
           }
         }
       }
     },
     "status_fee_unavailable": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gebühr: Nicht verfügbar"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Fee: Not available"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手数料：利用不可"
           }
         }
       }
     },
     "status_invoice_generated": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Rechnung erstellt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Invoice generated"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "インボイスが生成されました"
           }
         }
       }
     },
     "status_last_synced %@": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Zuletzt synchronisiert %@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Last synced %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最後に同期したのは %@ です"
           }
         }
       }
     },
     "status_loading": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Lädt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Loading"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "読み込み中"
           }
         }
       }
     },
     "status_poor_connection": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Schwache Verbindung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Poor connection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "接続が弱い"
           }
         }
       }
     },
     "status_readonly_mode": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Nur-Lesen-Modus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Read-only mode"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閲覧専用モード"
           }
         }
       }
     },
     "status_reconnecting_attempt %lld": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verbindung wird wiederhergestellt… (Versuch %lld)"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reconnecting... (attempt %lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "再接続中…（試行 %lld 回目）"
           }
         }
       }
     },
     "status_refreshing": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Wird aktualisiert…"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Refreshing..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新中…"
           }
         }
       }
     },
     "status_unconfirmed": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Unbestätigt"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Unconfirmed"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未確認"
           }
         }
       }
@@ -2045,70 +4457,154 @@
     },
     "transaction_received": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Empfangen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Received"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "受け取りました"
           }
         }
       }
     },
     "transaction_sent": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Gesendet"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sent"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送金しました"
           }
         }
       }
     },
     "transaction_transfer": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Verschiebung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Transfer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "移動"
           }
         }
       }
     },
     "transaction_type_pending": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ausstehend"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pending"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保留中"
           }
         }
       }
     },
     "vtxo_graph_empty": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Keine aktiven VTXOs"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No active VTXOs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクティブな VTXO がありません"
           }
         }
       }
     },
     "vtxo_graph_expired": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Abgelaufen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Expired"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "期限切れ"
           }
         }
       }
     },
     "vtxo_graph_free_refresh_zone": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kostenloser Erneuerungsbereich"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Free refresh zone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無料更新ゾーン"
           }
         }
       }

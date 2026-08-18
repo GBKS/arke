@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Apply de/ja translations to the string catalogs.
+
+Reads a JSON object {key: {"de": value, "ja": value}} from the file given as
+argv[1] (or stdin). A value is a plain string, or {"one": ..., "other": ...}
+for plural variations. Each key is written to every catalog that contains it
+(per Scripts/translation_batches/_units.json), with state "needs_review".
+
+Keys marked shouldTranslate:false are skipped. Existing de/ja entries are
+overwritten (later batches / correction overlays win).
+"""
+
+import json
+import sys
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+UNITS = json.loads((REPO / "Scripts/translation_batches/_units.json").read_text())
+
+
+def unit(value):
+    if isinstance(value, dict):
+        return {"variations": {"plural": {
+            form: {"stringUnit": {"state": "needs_review", "value": v}}
+            for form, v in value.items()
+        }}}
+    return {"stringUnit": {"state": "needs_review", "value": value}}
+
+
+def main():
+    source = Path(sys.argv[1]).read_text() if len(sys.argv) > 1 else sys.stdin.read()
+    translations = json.loads(source)
+
+    catalogs = {}
+    applied, skipped = 0, []
+    for key, langs in translations.items():
+        paths = UNITS.get(key)
+        if not paths:
+            skipped.append(key)
+            continue
+        for rel in paths:
+            if rel not in catalogs:
+                catalogs[rel] = json.loads((REPO / rel).read_text())
+            entry = catalogs[rel]["strings"].get(key)
+            if entry is None or entry.get("shouldTranslate") is False:
+                continue
+            loc = entry.setdefault("localizations", {})
+            for lang in ("de", "ja"):
+                if lang in langs:
+                    loc[lang] = unit(langs[lang])
+            applied += 1
+
+    for rel, data in catalogs.items():
+        (REPO / rel).write_text(
+            json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+
+    print(f"applied {applied} key-catalog writes across {len(catalogs)} catalogs")
+    if skipped:
+        print(f"skipped (not in unit index): {skipped}")
+
+
+if __name__ == "__main__":
+    main()

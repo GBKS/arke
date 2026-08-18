@@ -130,7 +130,9 @@ struct LocalizationCatalogTests {
 
         var result: [String: [String: [String]]] = [:]
         for (key, value) in strings {
-            let localizations = ((value as? [String: Any])?["localizations"] as? [String: Any]) ?? [:]
+            let entry = value as? [String: Any] ?? [:]
+            if entry["shouldTranslate"] as? Bool == false { continue }
+            let localizations = (entry["localizations"] as? [String: Any]) ?? [:]
             var perLanguage: [String: [String]] = [:]
             for (language, loc) in localizations {
                 guard let loc = loc as? [String: Any] else { continue }
@@ -141,6 +143,17 @@ struct LocalizationCatalogTests {
                 if let plural = (loc["variations"] as? [String: Any])?["plural"] as? [String: Any] {
                     values += plural.values
                         .compactMap { (($0 as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String }
+                }
+                // Substitution tokens (`%#@name@`) hide an argument from the plain
+                // value; surface it as a synthetic specifier so parity sees it.
+                if language == "en",
+                   let subs = loc["substitutions"] as? [String: Any] {
+                    for sub in subs.values {
+                        guard let sub = sub as? [String: Any],
+                              let argNum = sub["argNum"] as? Int,
+                              let spec = sub["formatSpecifier"] as? String else { continue }
+                        values.append("%\(argNum)$\(spec)")
+                    }
                 }
                 perLanguage[language] = values
             }
