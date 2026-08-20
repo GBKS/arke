@@ -645,26 +645,21 @@ extension BarkWalletFFI {
         // ✅ NEW: Explicit shutdown before deletion
         print("🛑 Step 1: Shutting down wallet...")
         await shutdownWallet()
-        
-        // Delete from SecurityService (Keychain only - local deletion)
-        if let securityService = securityService {
-            print("🗑️ Step 2: Deleting mnemonic from Keychain via SecurityService")
-            do {
-                try await securityService.deleteWalletData(includeCloudData: false)
-                print("✅ Mnemonic deleted from Keychain")
-            } catch {
-                print("⚠️ Failed to delete from Keychain: \(error)")
-                // Continue to delete file system data anyway
-            }
-        }
-        
+
+        // NOTE: This method deliberately does NOT touch the keychain. The
+        // mnemonic is iCloud-Keychain-synced shared property of all linked
+        // devices; whether it survives a deletion is a policy decision owned
+        // by WalletDataCleanupService (strategy-aware: kept on local-only
+        // deletion, removed on last-device full wipe). See
+        // Wallet_Deletion_And_Rejoin.md.
+
         // Check if wallet directory exists
         guard fileManager.fileExists(atPath: walletDir.path) else {
             print("⚠️ Wallet directory does not exist at: \(walletDir.path)")
             return "Wallet directory does not exist (already deleted)"
         }
-        
-        print("🗑️ Step 3: Deleting wallet directory: \(walletDir.path)")
+
+        print("🗑️ Step 2: Deleting wallet directory: \(walletDir.path)")
         
         do {
             // Remove the entire wallet directory and its contents

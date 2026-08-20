@@ -516,7 +516,25 @@ class WalletManager {
     
     private func performInitialization(forceReadOnly: Bool? = nil) async {
         Self.logger.info("🔧 [WalletManager] Starting initialization...")
-        
+
+        // Step 0-pre: Recover a missing network config from iCloud BEFORE
+        // anything opens the wallet. A device can lose its local copy (local
+        // deletion + rejoin, reinstall) while the account still knows the
+        // network; without this, load() silently defaults to mainnet and bark
+        // rejects the existing signet/testnet db with a network mismatch
+        // (2026-08-20 incident; contract rule 21).
+        if !NetworkConfigPersistence.hasSavedConfig() {
+            Self.logger.warning("⚠️ No local network config — attempting iCloud recovery before wallet open")
+            await NetworkConfigPersistence.syncFromiCloud()
+            if NetworkConfigPersistence.hasSavedConfig() {
+                let recovered = NetworkConfigPersistence.load()
+                wallet?.updateNetworkConfig(recovered)
+                Self.logger.info("✅ Recovered network config from iCloud: \(recovered.name)")
+            } else {
+                Self.logger.error("❌ No network config locally or in iCloud — wallet open will use the default network and may fail with a network mismatch")
+            }
+        }
+
         // Step 0a: CRITICAL - Check demotion status BEFORE opening wallet
         if await shouldBlockWalletAccess() {
             Self.logger.warning("⚠️ [WalletManager] Device has been demoted - switching to read-only mode")
@@ -1152,13 +1170,16 @@ class WalletManager {
 enum BarkErrorArke: Swift.Error, LocalizedError {
     case binaryNotFound
     case commandFailed(String)
-    
+    case walletAlreadyOnAccount
+
     var errorDescription: String? {
         switch self {
         case .binaryNotFound:
             return "bark binary not found in app bundle"
         case .commandFailed(let message):
             return message
+        case .walletAlreadyOnAccount:
+            return String(localized: "error_wallet_already_on_account", defaultValue: "This iCloud account already has a wallet. Rejoin it or import its recovery phrase — creating a second wallet would overwrite the existing one.")
         }
     }
 }

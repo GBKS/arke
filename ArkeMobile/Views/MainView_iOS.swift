@@ -80,6 +80,17 @@ struct MainView_iOS: View {
                 // Show loading state while checking for wallet
                 LoadingView_iOS()
                     .transition(.opacity)
+            } else if case .walletAvailableToRejoin(let primaryDeviceName) = walletState {
+                // This install deliberately deleted the wallet locally; the account
+                // still has it. Offer rejoin — never onboarding, which would allow
+                // creating a second wallet (Wallet_Deletion_And_Rejoin.md)
+                RejoinWalletView(primaryDeviceName: primaryDeviceName) {
+                    SecurityService.clearLocalDeletionTombstone()
+                    Task {
+                        await checkForExistingWallet()
+                    }
+                }
+                .transition(.opacity)
             } else if case .walletActiveElsewhere = walletState {
                 // Secondary device: Show wallet in read-only mode instead of blocking screen
                 // User can view synced data but cannot perform wallet operations
@@ -87,13 +98,19 @@ struct MainView_iOS: View {
                     WalletView_iOS(onWalletDeleted: {
                         // Stop CloudKit sync when wallet is deleted
                         serviceContainer.stopCloudKitSync()
-                        
+
                         // Deactivate services
                         serviceContainer.setActive(false)
-                        
-                        // Reset state to show onboarding flow with animation
+
                         withAnimation(.smooth(duration: 0.6)) {
                             hasWallet = false
+                        }
+
+                        // Re-run full detection instead of assuming onboarding:
+                        // a full wipe routes there, but a local-only deletion
+                        // routes to the rejoin screen (Wallet_Deletion_And_Rejoin.md)
+                        Task {
+                            await checkForExistingWallet()
                         }
                     })
                     .environment(walletManager)
@@ -108,13 +125,19 @@ struct MainView_iOS: View {
                 WalletView_iOS(onWalletDeleted: {
                     // Stop CloudKit sync when wallet is deleted
                     serviceContainer.stopCloudKitSync()
-                    
+
                     // Deactivate services
                     serviceContainer.setActive(false)
-                    
-                    // Reset state to show onboarding flow with animation
+
                     withAnimation(.smooth(duration: 0.6)) {
                         hasWallet = false
+                    }
+
+                    // Re-run full detection instead of assuming onboarding:
+                    // a full wipe routes there, but a local-only deletion
+                    // routes to the rejoin screen (Wallet_Deletion_And_Rejoin.md)
+                    Task {
+                        await checkForExistingWallet()
                     }
                 })
                 .environment(walletManager)
@@ -419,6 +442,28 @@ struct MainView_iOS: View {
                     await walletManager.initialize()
                     Self.logger.info("✅ Read-only wallet initialization complete")
                 }
+            } else if case .walletAvailableToRejoin = state {
+                // This install deleted the wallet locally — show the rejoin screen.
+                // No initialization, no device registration (it unregistered itself)
+                Self.logger.info("📵 Local deletion tombstone active - showing rejoin screen (cached detection path)")
+                hasWallet = false
+
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isCheckingWallet = false
+                }
+            } else if case .noWallet = state {
+                // The wallet was deleted after launch (the cached early check
+                // predates the deletion) — route to onboarding, not the wallet
+                Self.logger.info("ℹ️ No wallet found despite positive early check (deleted this session)")
+                hasWallet = false
+
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isCheckingWallet = false
+                }
             } else {
                 // Set UI state FIRST so view transitions immediately (without animation)
                 hasWallet = true
@@ -508,18 +553,30 @@ struct MainView_iOS: View {
                     Self.logger.info("✅ Read-only wallet initialization complete")
                 }
 
+            case .walletAvailableToRejoin:
+                // This install deleted the wallet locally — show the rejoin screen.
+                // No initialization, no device registration (it unregistered itself)
+                Self.logger.info("📵 Local deletion tombstone active - showing rejoin screen")
+                hasWallet = false
+
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    isCheckingWallet = false
+                }
+
             case .noWallet:
                 // No wallet found anywhere
                 Self.logger.info("ℹ️ No wallet found")
                 hasWallet = false
-                
+
                 // Disable animation for initial loading -> onboarding transition
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
                 withTransaction(transaction) {
                     isCheckingWallet = false
                 }
-                
+
             case .unknown:
                 // Unable to determine state
                 Self.logger.warning("❓ Unable to determine wallet state")
@@ -538,6 +595,8 @@ struct MainView_iOS: View {
         let route: String
         if case .walletActiveElsewhere = walletState {
             route = "read-only"
+        } else if case .walletAvailableToRejoin = walletState {
+            route = "rejoin"
         } else if hasWallet {
             route = "wallet"
         } else {

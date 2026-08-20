@@ -112,9 +112,20 @@ class NetworkConfigPersistence {
         return nil
     }
     
-    /// Clear the saved network configuration from both UserDefaults and iCloud
-    /// Should be called when deleting the wallet
-    static func clear() {
+    /// Clear only this device's local cache. For local-only wallet deletion:
+    /// the iCloud copy is account-shared property of the remaining devices and
+    /// must survive — removing it strands every other device on the default
+    /// network and their signet/testnet dbs refuse to open (2026-08-20
+    /// incident; Launch_Sequence_Contract rule 21).
+    static func clearLocal() {
+        UserDefaults.standard.removeObject(forKey: UserDefaults.networkConfigKey)
+        logger.info("Network configuration cleared locally (iCloud copy preserved)")
+    }
+
+    /// Clear the local cache AND the shared iCloud copy. Last-device full wipe
+    /// only — owned by WalletDataCleanupService, like every other deletion of
+    /// account-shared state.
+    static func clearEverywhere() {
         UserDefaults.standard.removeObject(forKey: UserDefaults.networkConfigKey)
 
         // Remove from iCloud off the main thread (first access can block).
@@ -122,7 +133,7 @@ class NetworkConfigPersistence {
             NSUbiquitousKeyValueStore.default.removeObject(forKey: iCloudKey)
         }
 
-        logger.info("Network configuration cleared from storage")
+        logger.info("Network configuration cleared from local and iCloud storage")
     }
 
     /// Check if a network configuration has been saved locally.

@@ -25,13 +25,28 @@ struct MainView: View {
             if isCheckingWallet {
                 // Show loading state while checking for wallet
                 LoadingView()
+            } else if case .walletAvailableToRejoin(let primaryDeviceName) = walletState {
+                // This install deliberately deleted the wallet locally; the account
+                // still has it. Offer rejoin — never onboarding, which would allow
+                // creating a second wallet (Wallet_Deletion_And_Rejoin.md)
+                RejoinWalletView(primaryDeviceName: primaryDeviceName) {
+                    SecurityService.clearLocalDeletionTombstone()
+                    Task {
+                        await checkForExistingWallet()
+                    }
+                }
             } else if case .walletActiveElsewhere = walletState {
                 // Secondary device: Show wallet in read-only mode instead of blocking screen
                 // User can view synced data but cannot perform wallet operations
                 if walletManager.isInitialized {
                     WalletView(onWalletDeleted: {
-                        // Reset state to show onboarding flow
                         hasWallet = false
+                        // Re-run full detection instead of assuming onboarding:
+                        // a full wipe routes there, but a local-only deletion
+                        // routes to the rejoin screen (Wallet_Deletion_And_Rejoin.md)
+                        Task {
+                            await checkForExistingWallet()
+                        }
                     })
                     .environment(walletManager)
                 } else {
@@ -41,8 +56,13 @@ struct MainView: View {
             } else if hasWallet {
                 // Main application UI when wallet exists
                 WalletView(onWalletDeleted: {
-                    // Reset state to show onboarding flow
                     hasWallet = false
+                    // Re-run full detection instead of assuming onboarding:
+                    // a full wipe routes there, but a local-only deletion
+                    // routes to the rejoin screen (Wallet_Deletion_And_Rejoin.md)
+                    Task {
+                        await checkForExistingWallet()
+                    }
                 })
                 .environment(walletManager)
             } else {
@@ -310,6 +330,18 @@ struct MainView: View {
                     await walletManager.initialize(forceReadOnly: true)
                     print("✅ Read-only wallet initialization complete")
                 }
+            } else if case .walletAvailableToRejoin = state {
+                // This install deleted the wallet locally — show the rejoin screen.
+                // No initialization, no device registration (it unregistered itself)
+                print("📵 Local deletion tombstone active - showing rejoin screen (cached detection path)")
+                hasWallet = false
+                isCheckingWallet = false
+            } else if case .noWallet = state {
+                // The wallet was deleted after launch (the cached early check
+                // predates the deletion) — route to onboarding, not the wallet
+                print("ℹ️ No wallet found despite positive early check (deleted this session)")
+                hasWallet = false
+                isCheckingWallet = false
             } else {
                 // Set UI state FIRST so view transitions immediately
                 hasWallet = true
@@ -337,6 +369,13 @@ struct MainView: View {
             print("🔍 [MainView] detectWalletState returned: \(state) at \(Date())")
             
             switch state {
+            case .walletAvailableToRejoin:
+                // This install deleted the wallet locally — show the rejoin screen.
+                // No initialization, no device registration (it unregistered itself)
+                print("📵 Local deletion tombstone active - showing rejoin screen")
+                hasWallet = false
+                isCheckingWallet = false
+
             case .walletWithSeed:
                 // Wallet exists with mnemonic in local keychain
                 print("✅ Wallet found with seed in keychain")
@@ -399,6 +438,8 @@ struct MainView: View {
         let route: String
         if case .walletActiveElsewhere = walletState {
             route = "read-only"
+        } else if case .walletAvailableToRejoin = walletState {
+            route = "rejoin"
         } else if hasWallet {
             route = "wallet"
         } else {

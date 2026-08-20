@@ -24,25 +24,11 @@ struct Arke_desktop: App {
     /// Note: Using a let constant since we can't mutate @State in init()
     let initialWalletDetected: Bool
     
-    /// CloudKit-enabled model container for syncing data across devices
+    /// CloudKit-enabled model container for syncing data across devices.
+    /// The schema comes from SwiftDataHelper.appSchemaModels — the canonical
+    /// list shared with ArkeMobile and the wipe-coverage test.
     let modelContainer: ModelContainer = {
-        SwiftDataHelper.createModelContainer(
-            for: PersistentTransaction.self,
-                 ArkBalanceModel.self,
-                 OnchainBalanceModel.self,
-                 PersistentTag.self,
-                 TransactionTagAssignment.self,
-                 PersistentContact.self,
-                 TransactionContactAssignment.self,
-                 PersistentContactAddress.self,
-                 WalletConfiguration.self,
-                 DeviceRegistration.self,  // 📱 Device registry for cross-device management
-                 BackupStatus.self,  // 💾 Backup reminder state
-                 PersistentAddress.self,  // 📍 Address history for gap limit & internal transfers
-                 UserProfile.self,  // 👤 User profile for personalization features
-                 PersistentExitCache.self,  // 🚪 Exit cache for fast UI rendering
-                 PendingPaymentMetadata.self,  // 📤 Pending metadata for send flow
-                 PendingTagAssignment.self,  // 🏷️ Pending tag assignments for send flow
+        SwiftDataHelper.createAppModelContainer(
             cloudKitEnabled: true,  // 🌥️ CloudKit sync enabled for alpha
             cloudKitContainerIdentifier: "iCloud.gbks.sigma"  // Explicit container ID
         )

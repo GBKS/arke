@@ -37,7 +37,47 @@ import CoreData
 /// try uniqueness.cleanupDuplicateBackupStatus()
 /// ```
 struct SwiftDataHelper {
-    
+
+    /// Canonical list of every SwiftData model in the app schema.
+    ///
+    /// Single source of truth: both app targets build their container from this
+    /// list, and the wipe-coverage test asserts that WalletDataCleanupService
+    /// accounts for every entry (directly wiped, cascade-wiped, or explicitly
+    /// exempt). Add new @Model types HERE and then decide their deletion fate —
+    /// the test fails until you do (Wallet_Deletion_And_Rejoin.md).
+    static let appSchemaModels: [any PersistentModel.Type] = [
+        PersistentTransaction.self,
+        ArkBalanceModel.self,
+        OnchainBalanceModel.self,
+        PersistentTag.self,
+        TransactionTagAssignment.self,
+        PersistentContact.self,
+        TransactionContactAssignment.self,
+        PersistentContactAddress.self,
+        WalletConfiguration.self,
+        DeviceRegistration.self,          // 📱 Device registry for cross-device management
+        BackupStatus.self,                // 💾 Backup reminder state
+        PersistentAddress.self,           // 📍 Address history for gap limit & internal transfers
+        UserProfile.self,                 // 👤 User profile for personalization features
+        PersistentExitCache.self,         // 🚪 Exit cache for fast UI rendering
+        PendingPaymentMetadata.self,      // 📤 Pending metadata for send flow
+        PendingTagAssignment.self         // 🏷️ Pending tag assignments for send flow
+    ]
+
+    /// Creates the app's ModelContainer from the canonical schema list
+    static func createAppModelContainer(
+        inMemory: Bool = false,
+        cloudKitEnabled: Bool = false,
+        cloudKitContainerIdentifier: String? = nil
+    ) -> ModelContainer {
+        createModelContainer(
+            types: appSchemaModels,
+            inMemory: inMemory,
+            cloudKitEnabled: cloudKitEnabled,
+            cloudKitContainerIdentifier: cloudKitContainerIdentifier
+        )
+    }
+
     /// Manually deletes all SwiftData stores (useful for debugging)
     /// - Returns: True if successful, false otherwise
     @discardableResult
@@ -45,7 +85,7 @@ struct SwiftDataHelper {
         deleteExistingStore()
         return true
     }
-    
+
     /// Creates a ModelContainer with automatic fallback to delete and recreate on migration errors
     /// - Parameters:
     ///   - types: The model types to include in the schema
@@ -54,7 +94,22 @@ struct SwiftDataHelper {
     ///   - cloudKitContainerIdentifier: Optional custom CloudKit container identifier
     /// - Returns: A configured ModelContainer
     static func createModelContainer(
-        for types: any PersistentModel.Type..., 
+        for types: any PersistentModel.Type...,
+        inMemory: Bool = false,
+        cloudKitEnabled: Bool = false,
+        cloudKitContainerIdentifier: String? = nil
+    ) -> ModelContainer {
+        createModelContainer(
+            types: types,
+            inMemory: inMemory,
+            cloudKitEnabled: cloudKitEnabled,
+            cloudKitContainerIdentifier: cloudKitContainerIdentifier
+        )
+    }
+
+    /// Array-based core of `createModelContainer(for:...)`
+    static func createModelContainer(
+        types: [any PersistentModel.Type],
         inMemory: Bool = false,
         cloudKitEnabled: Bool = false,
         cloudKitContainerIdentifier: String? = nil

@@ -157,6 +157,13 @@ class WalletDataCleanupService {
                 #endif
             }
 
+            // Delete the shared network configuration from iCloud KVS. Full
+            // wipe only: on local-only deletion the KVS copy is the remaining
+            // devices' network identity — removing it strands them on the
+            // default network (2026-08-20 incident; contract rule 21)
+            updateProgress(.deletingCloudHash, message: "Removing network configuration from iCloud...")
+            NetworkConfigPersistence.clearEverywhere()
+
             // Delete the wallet database backup from iCloud Drive
             // A leftover backup would resurface via the restore-on-launch path
             // after a new wallet is created
@@ -187,7 +194,23 @@ class WalletDataCleanupService {
         updateProgress(.clearingUserDefaults, message: "Clearing user preferences...")
         clearUserDefaults()
         summary.userDefaultsCleared = true
-        
+
+        // Step 5: Record or clear the local-deletion tombstone. Local-only
+        // deletion leaves the seed in iCloud Keychain (shared property of the
+        // other devices), so without a tombstone the next launch would silently
+        // resurrect the wallet. Detection routes a tombstoned install to the
+        // rejoin screen instead (Wallet_Deletion_And_Rejoin.md). Set AFTER
+        // clearUserDefaults so it can't be wiped by that step.
+        if includeCloudData {
+            SecurityService.clearLocalDeletionTombstone()
+        } else if let walletHash = getHashFromUbiquitousStore() {
+            SecurityService.recordLocalDeletionTombstone(walletHash: walletHash)
+        } else {
+            #if DEBUG
+            print("⚠️ [WalletDataCleanupService] No wallet hash readable — skipping local-deletion tombstone (next launch falls back to normal detection)")
+            #endif
+        }
+
         updateProgress(.finalizingDeletion, message: "Finalizing deletion...")
         
         #if DEBUG
@@ -242,8 +265,9 @@ class WalletDataCleanupService {
         // Reset notification preference
         UserDefaults.standard.removeObject(forKey: UserDefaults.notificationsEnabledKey)
         
-        // Clear saved network configuration
-        UserDefaults.standard.removeObject(forKey: UserDefaults.networkConfigKey)
+        // Clear saved network configuration (local cache only — the iCloud
+        // copy is handled strategy-aware above, contract rule 21)
+        NetworkConfigPersistence.clearLocal()
         
         // Reset address icons preference
         UserDefaults.standard.removeObject(forKey: UserDefaults.showAddressIconsKey)
@@ -278,6 +302,14 @@ class WalletDataCleanupService {
         // X-Ray of a newly created/imported wallet
         updateProgress(.deletingTransactions, message: "Deleting exit history...")
         summary.exitHistoryDeleted = try await deleteExitHistory(modelContext: modelContext)
+
+        // 1c. Delete pending send metadata (PendingPaymentMetadata /
+        // PendingTagAssignment) — created by the send flow before a bark txid
+        // exists; an old wallet's leftover entries would mis-attach to the next
+        // wallet's transactions. Gap found by the wipe-coverage inventory
+        // (Wallet_Deletion_And_Rejoin.md)
+        updateProgress(.deletingTransactions, message: "Deleting pending send metadata...")
+        summary.pendingSendMetadataDeleted = try await deletePendingSendMetadata(modelContext: modelContext)
 
         // 2. Delete tags
         updateProgress(.deletingTags, message: "Deleting tags...")
@@ -378,6 +410,26 @@ class WalletDataCleanupService {
         #endif
 
         return entries.count
+    }
+
+    private func deletePendingSendMetadata(modelContext: ModelContext) async throws -> Int {
+        let metadataDescriptor = FetchDescriptor<PendingPaymentMetadata>()
+        let metadata = try modelContext.fetch(metadataDescriptor)
+        for entry in metadata {
+            modelContext.delete(entry)
+        }
+
+        let tagDescriptor = FetchDescriptor<PendingTagAssignment>()
+        let pendingTags = try modelContext.fetch(tagDescriptor)
+        for entry in pendingTags {
+            modelContext.delete(entry)
+        }
+
+        #if DEBUG
+        print("🗑️ [WalletDataCleanupService] Queued \(metadata.count) pending payment metadata and \(pendingTags.count) pending tag assignments for deletion")
+        #endif
+
+        return metadata.count + pendingTags.count
     }
 
     private func deleteTags(modelContext: ModelContext) async throws -> Int {
@@ -611,6 +663,7 @@ struct DeletionSummary: Codable {
     var transactionTagAssignmentsDeleted: Int = 0
     var transactionContactAssignmentsDeleted: Int = 0
     var exitHistoryDeleted: Int = 0
+    var pendingSendMetadataDeleted: Int = 0
     var tagsDeleted: Int = 0
     var contactsDeleted: Int = 0
     var contactAddressesDeleted: Int = 0
@@ -628,6 +681,7 @@ struct DeletionSummary: Codable {
         transactionTagAssignmentsDeleted +
         transactionContactAssignmentsDeleted +
         exitHistoryDeleted +
+        pendingSendMetadataDeleted +
         tagsDeleted +
         contactsDeleted + 
         contactAddressesDeleted + 
@@ -655,6 +709,7 @@ struct DeletionSummary: Codable {
         transactionTagAssignmentsDeleted += other.transactionTagAssignmentsDeleted
         transactionContactAssignmentsDeleted += other.transactionContactAssignmentsDeleted
         exitHistoryDeleted += other.exitHistoryDeleted
+        pendingSendMetadataDeleted += other.pendingSendMetadataDeleted
         tagsDeleted += other.tagsDeleted
         contactsDeleted += other.contactsDeleted
         contactAddressesDeleted += other.contactAddressesDeleted
@@ -698,6 +753,71 @@ struct DeletionSummary: Codable {
             return String(localized: "settings_deleted_summary %@", defaultValue: "Deleted: \(parts.joined(separator: ", "))")
         }
     }
+}
+
+/// Deletion-fate inventory for every SwiftData model in the app schema.
+/// WalletWipeCoverageTests asserts these three lists exactly cover
+/// SwiftDataHelper.appSchemaModels — adding a @Model without deciding its
+/// deletion fate fails the test (Wallet_Deletion_And_Rejoin.md).
+enum WalletWipeCoverage {
+    /// Deleted directly by a delete* step in WalletDataCleanupService
+    static let directlyWiped: [any PersistentModel.Type] = [
+        PersistentTransaction.self,
+        PersistentExitCache.self,
+        PendingPaymentMetadata.self,
+        PendingTagAssignment.self,
+        PersistentTag.self,
+        PersistentContact.self,
+        ArkBalanceModel.self,
+        OnchainBalanceModel.self,
+        WalletConfiguration.self,
+        DeviceRegistration.self,
+        BackupStatus.self,
+        PersistentAddress.self,
+        UserProfile.self
+    ]
+
+    /// Removed via relationship cascade from a directly wiped owner
+    static let cascadeWiped: [any PersistentModel.Type] = [
+        TransactionTagAssignment.self,      // cascade from PersistentTransaction
+        TransactionContactAssignment.self,  // cascade from PersistentTransaction
+        PersistentContactAddress.self       // cascade from PersistentContact
+    ]
+
+    /// Deliberately NOT wiped — every entry must state its reason
+    static let exempt: [any PersistentModel.Type] = []
+}
+
+/// Deletion-scope inventory for account-shared state OUTSIDE SwiftData:
+/// iCloud Keychain items and iCloud KVS keys. A device-scoped ("local-only")
+/// deletion must NEVER destroy a `.fullWipeOnly` entry — these are shared
+/// property of the remaining devices. Two incidents define this inventory:
+/// the seed deletion (2026-08-19) and the network-config deletion
+/// (2026-08-20), both the same fault: a device-scoped action destroying
+/// account-scoped state. Consistency is test-asserted
+/// (WalletDeletionRejoinTests); completeness is maintained by review — every
+/// new shared key gets an entry HERE with a scope.
+enum SharedStateWipeCoverage {
+    enum Scope {
+        case fullWipeOnly   // deleted only on the last-device full wipe
+        case deviceLocal    // this device's copy only; account copies untouched
+    }
+
+    struct Entry {
+        let key: String
+        let store: String
+        let scope: Scope
+    }
+
+    static let entries: [Entry] = [
+        Entry(key: "com.arke.wallet / mnemonic",           store: "iCloud Keychain", scope: .fullWipeOnly),
+        Entry(key: "com.arke.wallet.mnemonicHash",         store: "iCloud KVS",      scope: .fullWipeOnly),
+        Entry(key: "com.arke.wallet.networkConfigId",      store: "iCloud KVS",      scope: .fullWipeOnly),
+        Entry(key: "device_<id>_* (registration mirror)",  store: "iCloud KVS",      scope: .fullWipeOnly),
+        Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
+        Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
+        Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal)
+    ]
 }
 
 /// Deletion strategy based on device registry state

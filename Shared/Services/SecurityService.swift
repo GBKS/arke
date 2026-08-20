@@ -141,8 +141,66 @@ class SecurityService {
             }
     }
 
+    // MARK: - Local Deletion Tombstone
+
+    /// UserDefaults key marking that the wallet was deliberately deleted from this
+    /// install while it still lives on other devices. Stores the wallet hash the
+    /// deletion applied to (not a Bool) so staleness is detectable: if the account's
+    /// current KVS hash is missing or different, the tombstone is obsolete.
+    /// Device-local on purpose — it describes this install's choice, never synced.
+    /// See Wallet_Deletion_And_Rejoin.md.
+    private nonisolated static let localDeletionTombstoneKey = "com.arke.wallet.deletedLocally"
+
+    /// Records that this install deliberately deleted the wallet with the given hash
+    nonisolated static func recordLocalDeletionTombstone(walletHash: String) {
+        UserDefaults.standard.set(walletHash, forKey: localDeletionTombstoneKey)
+        logger.info("Recorded local deletion tombstone")
+    }
+
+    /// Clears the tombstone (rejoin, create/import success, full wipe, or staleness)
+    nonisolated static func clearLocalDeletionTombstone() {
+        UserDefaults.standard.removeObject(forKey: localDeletionTombstoneKey)
+        logger.info("Cleared local deletion tombstone")
+    }
+
+    /// The wallet hash this install's deletion applied to, if a tombstone exists
+    nonisolated static func localDeletionTombstoneHash() -> String? {
+        UserDefaults.standard.string(forKey: localDeletionTombstoneKey)
+    }
+
+    /// How a tombstone routes wallet detection
+    enum TombstoneRouting: Equatable {
+        case none    // no tombstone — normal detection
+        case rejoin  // tombstone matches the account's current wallet — offer rejoin
+        case stale   // tombstone refers to a wallet that no longer exists — clear it
+    }
+
+    /// Pure routing decision for the local-deletion tombstone, extracted for testability.
+    ///
+    /// A missing KVS hash alone is NOT proof the account wallet is gone — KVS can
+    /// be transiently blank (fresh cache after iCloud sign-out/in, pre-initial-
+    /// sync), and wrongly clearing the tombstone would silently resurrect the
+    /// wallet. Hash absence only counts when the keychain corroborates it with a
+    /// definitive `.notFound`: a full wipe elsewhere removes both signals, a KVS
+    /// glitch leaves the synced seed readable. On `.unavailable` the answer is
+    /// unknown — keep the tombstone (Multi_Device_Design.md, Failure modes §B).
+    nonisolated static func tombstoneRouting(
+        tombstoneHash: String?,
+        currentAccountHash: String?,
+        mnemonicStatus: MnemonicKeychainStatus
+    ) -> TombstoneRouting {
+        guard let tombstoneHash else { return .none }
+        guard let currentAccountHash else {
+            if case .notFound = mnemonicStatus {
+                return .stale  // both signals definitively gone — wallet fully wiped
+            }
+            return .rejoin     // KVS transient or unreadable keychain — never resurrect
+        }
+        return currentAccountHash == tombstoneHash ? .rejoin : .stale
+    }
+
     // MARK: - Wallet State Detection
-    
+
     /// Detects if user has a wallet on another device
     /// Does NOT register the device - coordinator should call device registration separately
     func detectWalletState() async -> WalletState {
@@ -216,12 +274,60 @@ class SecurityService {
         return nil
     }
     
+    /// Best-effort lookup of the primary device's name for user-facing routing
+    /// states; falls back to a generic label when the registry can't be read
+    private func lookupPrimaryDeviceName(walletHash: String) async -> String {
+        var primaryDeviceName = "Another Device"
+        if modelContext != nil {
+            do {
+                let deviceService = ServiceContainer.shared.deviceRegistrationService
+                if let primaryDevice = try await deviceService.getPrimaryDevice(walletHash: walletHash) {
+                    primaryDeviceName = primaryDevice.deviceName
+                }
+            } catch {
+                Self.logger.warning("⚠️ Failed to look up primary device: \(error)")
+            }
+        }
+        return primaryDeviceName
+    }
+
     /// Internal method that performs the actual wallet state detection
     private func performWalletStateDetection() async -> WalletState {
         let startTime = CFAbsoluteTimeGetCurrent()
         defer {
             Self.logger.info("⏱️ Wallet state detection took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
         }
+        // 0. Local deletion tombstone: this install deliberately deleted the wallet
+        // while it lives on other devices. Checked before any wallet signal so that
+        // neither the still-synced seed nor a low-confidence keychain read can
+        // silently resurrect the wallet (Wallet_Deletion_And_Rejoin.md).
+        if let tombstoneHash = Self.localDeletionTombstoneHash() {
+            let accountHash = getUbiquitousHash()
+            // A missing hash needs keychain corroboration before the tombstone may
+            // be cleared — use the retrying resolver so a transiently unreadable
+            // keychain doesn't masquerade as evidence either way
+            let mnemonicStatus: MnemonicKeychainStatus = accountHash == nil
+                ? await resolveMnemonicStatus()
+                : Self.mnemonicKeychainStatus()
+
+            switch Self.tombstoneRouting(
+                tombstoneHash: tombstoneHash,
+                currentAccountHash: accountHash,
+                mnemonicStatus: mnemonicStatus
+            ) {
+            case .rejoin:
+                lastDetectionWasDefinitive = true
+                let deviceName = await lookupPrimaryDeviceName(walletHash: accountHash ?? tombstoneHash)
+                Self.logger.info("Local deletion tombstone active — routing to rejoin (primary: \(deviceName), kvsHashPresent: \(accountHash != nil))")
+                return .walletAvailableToRejoin(deviceName: deviceName)
+            case .stale:
+                Self.logger.info("Local deletion tombstone stale (account wallet definitively gone or replaced) — clearing")
+                Self.clearLocalDeletionTombstone()
+            case .none:
+                break
+            }
+        }
+
         Self.logger.debug("Wallet state detection: checking local keychain...")
 
         // 1. Check local keychain first (retries briefly if the keychain is unavailable)
@@ -287,17 +393,7 @@ class SecurityService {
             // sheet explains the missing key (ReadOnlyReason.seedNotSynced) and offers
             // recovery phrase entry. Registration status doesn't change the routing,
             // only the primary-device name we can show.
-            var primaryDeviceName = "Another Device"
-            if self.modelContext != nil {
-                do {
-                    let deviceService = ServiceContainer.shared.deviceRegistrationService
-                    if let primaryDevice = try await deviceService.getPrimaryDevice(walletHash: cloudWalletHash) {
-                        primaryDeviceName = primaryDevice.deviceName
-                    }
-                } catch {
-                    Self.logger.warning("⚠️ Failed to look up primary device: \(error)")
-                }
-            }
+            let primaryDeviceName = await lookupPrimaryDeviceName(walletHash: cloudWalletHash)
 
             Self.logger.info("📱 Wallet hash found but no local seed - entering read-only mode (seed not synced)")
             return .walletActiveElsewhere(deviceName: primaryDeviceName)
@@ -578,231 +674,13 @@ class SecurityService {
         #endif
     }
     
-    /// Deletes all wallet data including mnemonic, transactions, contacts, tags, and cloud data
-    /// Note: Coordinator should handle device unregistration separately
-    /// - Parameter includeCloudData: If true, deletes all data from CloudKit. If false, only local keychain.
-    func deleteWalletData(includeCloudData: Bool = false) async throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: mnemonicAccount,
-            kSecAttrSynchronizable as String: true  // Match the save operation
-        ]
-        
-        let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw WalletError.keychainError(status)
-        }
+    // NOTE: Wallet data deletion (keychain mnemonic, ubiquitous hash, CloudKit
+    // data) is owned exclusively by WalletDataCleanupService, which applies
+    // the deletion strategy (local-only vs. full wipe). A duplicate,
+    // incomplete wipe implementation used to live here — removed 2026-08-19
+    // (Wallet_Deletion_And_Rejoin.md). `removeMnemonic()` above remains for
+    // import rollback only.
 
-        // Deliberate deletion: this install no longer has a wallet
-        Self.clearLocalWalletEvidence()
-
-        #if DEBUG
-        print("🗑️ [SecurityService] Deleted mnemonic from Keychain")
-        print("   ℹ️  Coordinator should call DeviceRegistrationService.unregisterCurrentDevice() next")
-        #endif
-        
-        // Delete cloud data if requested
-        if includeCloudData {
-            #if DEBUG
-            print("🗑️ [SecurityService] Starting comprehensive cloud data deletion...")
-            #endif
-            
-            // Remove hash from ubiquitous store
-            deleteHashFromUbiquitousStore()
-            
-            // Delete all user data from SwiftData/CloudKit if available
-            if let modelContext = modelContext {
-                try await deleteAllWalletDataFromSwiftData(modelContext: modelContext)
-            } else {
-                #if DEBUG
-                print("⚠️ [SecurityService] No model context available for cloud data deletion")
-                #endif
-            }
-            
-            #if DEBUG
-            print("✅ [SecurityService] Comprehensive cloud data deletion complete")
-            #endif
-        } else {
-            #if DEBUG
-            print("⏭️ [SecurityService] Keeping iCloud data (hash and configurations)")
-            #endif
-        }
-    }
-    
-    /// Deletes all wallet-related data from SwiftData/CloudKit
-    /// This includes transactions, tags, contacts, balances, and configuration
-    private func deleteAllWalletDataFromSwiftData(modelContext: ModelContext) async throws {
-        var deletionSummary: [String] = []
-        
-        // 1. Delete all transactions (cascade will handle TransactionTagAssignment and TransactionContactAssignment)
-        do {
-            let transactionDescriptor = FetchDescriptor<PersistentTransaction>()
-            let transactions = try modelContext.fetch(transactionDescriptor)
-            
-            let tagAssignmentCount = transactions.reduce(0) { $0 + ($1.tagAssignments?.count ?? 0) }
-            let contactAssignmentCount = transactions.reduce(0) { $0 + ($1.contactAssignments?.count ?? 0) }
-            
-            for transaction in transactions {
-                modelContext.delete(transaction)
-            }
-            
-            deletionSummary.append("\(transactions.count) transactions")
-            if tagAssignmentCount > 0 {
-                deletionSummary.append("\(tagAssignmentCount) transaction-tag assignments")
-            }
-            if contactAssignmentCount > 0 {
-                deletionSummary.append("\(contactAssignmentCount) transaction-contact assignments")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(transactions.count) transactions (cascade: \(tagAssignmentCount) tag assignments, \(contactAssignmentCount) contact assignments)")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete transactions: \(error)")
-            #endif
-        }
-        
-        // 2. Delete all tags (cascade will handle any remaining TransactionTagAssignment)
-        do {
-            let tagDescriptor = FetchDescriptor<PersistentTag>()
-            let tags = try modelContext.fetch(tagDescriptor)
-            
-            for tag in tags {
-                modelContext.delete(tag)
-            }
-            
-            if !tags.isEmpty {
-                deletionSummary.append("\(tags.count) tags")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(tags.count) tags")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete tags: \(error)")
-            #endif
-        }
-        
-        // 3. Delete all contacts (cascade will handle PersistentContactAddress and any remaining TransactionContactAssignment)
-        do {
-            let contactDescriptor = FetchDescriptor<PersistentContact>()
-            let contacts = try modelContext.fetch(contactDescriptor)
-            
-            let addressCount = contacts.reduce(0) { $0 + ($1.addresses?.count ?? 0) }
-            
-            for contact in contacts {
-                modelContext.delete(contact)
-            }
-            
-            if !contacts.isEmpty {
-                deletionSummary.append("\(contacts.count) contacts")
-            }
-            if addressCount > 0 {
-                deletionSummary.append("\(addressCount) contact addresses")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(contacts.count) contacts (cascade: \(addressCount) addresses)")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete contacts: \(error)")
-            #endif
-        }
-        
-        // 4. Delete balance cache records
-        do {
-            // Delete Ark balance cache
-            let arkBalanceDescriptor = FetchDescriptor<ArkBalanceModel>()
-            let arkBalances = try modelContext.fetch(arkBalanceDescriptor)
-            for balance in arkBalances {
-                modelContext.delete(balance)
-            }
-            
-            // Delete onchain balance cache
-            let onchainBalanceDescriptor = FetchDescriptor<OnchainBalanceModel>()
-            let onchainBalances = try modelContext.fetch(onchainBalanceDescriptor)
-            for balance in onchainBalances {
-                modelContext.delete(balance)
-            }
-            
-            let totalBalances = arkBalances.count + onchainBalances.count
-            if totalBalances > 0 {
-                deletionSummary.append("\(totalBalances) balance cache records")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(arkBalances.count) Ark + \(onchainBalances.count) onchain balance cache records")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete balance cache: \(error)")
-            #endif
-        }
-        
-        // 5. Delete wallet configuration
-        do {
-            let configDescriptor = FetchDescriptor<WalletConfiguration>()
-            let configs = try modelContext.fetch(configDescriptor)
-            
-            for config in configs {
-                modelContext.delete(config)
-            }
-            
-            if !configs.isEmpty {
-                deletionSummary.append("\(configs.count) wallet configurations")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(configs.count) wallet configurations")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete wallet configurations: \(error)")
-            #endif
-        }
-        
-        // 6. Delete all device registrations
-        do {
-            let deviceDescriptor = FetchDescriptor<DeviceRegistration>()
-            let devices = try modelContext.fetch(deviceDescriptor)
-            
-            for device in devices {
-                modelContext.delete(device)
-            }
-            
-            if !devices.isEmpty {
-                deletionSummary.append("\(devices.count) device registrations")
-            }
-            
-            #if DEBUG
-            print("🗑️ [SecurityService] Deleted \(devices.count) device registrations")
-            #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [SecurityService] Failed to delete device registrations: \(error)")
-            #endif
-        }
-        
-        // Save all deletions
-        do {
-            try modelContext.save()
-            
-            #if DEBUG
-            print("✅ [SecurityService] Successfully deleted all wallet data from SwiftData/CloudKit:")
-            print("   📦 Summary: \(deletionSummary.joined(separator: ", "))")
-            #endif
-        } catch {
-            #if DEBUG
-            print("❌ [SecurityService] Failed to save deletion changes: \(error)")
-            #endif
-            throw WalletError.unknown("Failed to delete cloud data: \(error.localizedDescription)")
-        }
-    }
-    
     // MARK: - Hash Management (For Validation & Cross-Device Detection)
     
     /// Generates PBKDF2 hash of mnemonic for validation
@@ -1039,6 +917,9 @@ enum WalletState: Equatable {
     case walletActiveElsewhere(deviceName: String)  // Wallet exists but this device can't spend
                                                     // (not primary, or seed not synced here yet -
                                                     // see ConnectionStatus.readOnlyReason)
+    case walletAvailableToRejoin(deviceName: String)  // This install deliberately deleted the wallet
+                                                      // locally; the account still has it — offer
+                                                      // rejoin, never onboarding/create
 }
 
 enum MnemonicValidationResult {

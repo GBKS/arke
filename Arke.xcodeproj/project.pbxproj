@@ -407,6 +407,7 @@
 				Views/Data/VTXODeveloperActionsView.swift,
 				Views/Data/VTXOListView.swift,
 				Views/Data/VTXORowView.swift,
+				Views/FirstUse/RejoinWalletView.swift,
 				Views/Receive/ActionButtonsView.swift,
 				Views/Receive/AddressCard.swift,
 				Views/Receive/AddressDisplayView.swift,

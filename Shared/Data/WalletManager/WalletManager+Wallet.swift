@@ -129,6 +129,9 @@ extension WalletManager {
             freshWalletOrigin = .imported
             Self.logger.info("🌱 Fresh wallet origin: imported (with backup) - transaction list shows skeleton until first sync completes")
 
+            // A successful import supersedes any local-deletion tombstone
+            SecurityService.clearLocalDeletionTombstone()
+
             // Step 8: Register device after wallet import
             do {
                 // Get wallet hash from ubiquitous store (set during mnemonic save)
@@ -300,6 +303,9 @@ extension WalletManager {
         freshWalletOrigin = .imported
         Self.logger.info("🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes")
 
+        // A successful import supersedes any local-deletion tombstone
+        SecurityService.clearLocalDeletionTombstone()
+
         // Register device after wallet import (handleSeedImport saves the mnemonic
         // but leaves device registration to the coordinator)
         do {
@@ -332,7 +338,26 @@ extension WalletManager {
     }
     
     // MARK: - Wallet Creation
-    
+
+    /// Pure decision: does any account-level signal indicate an existing wallet?
+    /// An `.unavailable` keychain read counts as NO signal on its own — a
+    /// transiently unreadable keychain on a genuinely fresh install must not
+    /// brick onboarding; the KVS hash and tombstone still guard the dangerous
+    /// cases. Extracted for testability (Wallet_Deletion_And_Rejoin.md).
+    nonisolated static func accountHasWalletSignals(
+        kvsHashPresent: Bool,
+        mnemonicStatus: MnemonicKeychainStatus,
+        tombstonePresent: Bool
+    ) -> Bool {
+        if kvsHashPresent || tombstonePresent {
+            return true
+        }
+        if case .found = mnemonicStatus {
+            return true
+        }
+        return false
+    }
+
     /// Create a new wallet with a randomly generated mnemonic
     /// Saves the mnemonic to secure storage and syncs hash via iCloud KVS
     /// - Parameters:
@@ -341,7 +366,21 @@ extension WalletManager {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
-        
+
+        // One wallet per iCloud account: refuse creation when any account-level
+        // wallet signal exists. Creating would overwrite the synchronizable seed
+        // in iCloud Keychain account-wide — unrecoverable without a written-down
+        // recovery phrase. Rejoin or import are the only valid paths here
+        // (Wallet_Deletion_And_Rejoin.md).
+        if Self.accountHasWalletSignals(
+            kvsHashPresent: securityService.getUbiquitousHash() != nil,
+            mnemonicStatus: SecurityService.mnemonicKeychainStatus(),
+            tombstonePresent: SecurityService.localDeletionTombstoneHash() != nil
+        ) {
+            Self.logger.error("❌ createWallet refused: this iCloud account already has a wallet")
+            throw BarkErrorArke.walletAlreadyOnAccount
+        }
+
         let overallStartTime = CFAbsoluteTimeGetCurrent()
         Self.logger.info("⏱️ [PROFILE] Starting wallet creation")
         Self.logger.debug("WalletManager.createWallet name: \(networkConfig?.name ?? "none")")
@@ -502,9 +541,14 @@ extension WalletManager {
             Self.logger.debug("   Step 5: Deleting wallet files...")
             let result = try await wallet.deleteWallet()
 
-            // Clear the saved network configuration
-            Self.logger.debug("   Step 6: Clearing saved network configuration...")
-            NetworkConfigPersistence.clear()
+            // Clear this device's local network-config cache only. The iCloud
+            // copy is account-shared state: whether it survives is a strategy
+            // decision owned by WalletDataCleanupService (full wipe clears it,
+            // local-only deletion keeps it for the other devices — clearing it
+            // here stranded a live secondary on mainnet, 2026-08-20; contract
+            // rule 21)
+            Self.logger.debug("   Step 6: Clearing local network configuration cache...")
+            NetworkConfigPersistence.clearLocal()
 
             // Clear the local wallet evidence breadcrumb (files are gone; the caller
             // handles mnemonic deletion, which clears it again - harmless)

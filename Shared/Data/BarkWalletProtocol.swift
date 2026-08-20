@@ -25,6 +25,9 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     
     func createWallet(network: String?, arkServer: String?) async throws -> String
     func importWallet(network: String?, arkServer: String?, mnemonic: String) async throws -> String
+    /// Shuts down the wallet and deletes its on-disk directory. Does NOT touch
+    /// the keychain or any cloud data — that policy is owned by
+    /// WalletDataCleanupService (strategy-aware deletion).
     func deleteWallet() async throws -> String
     func getMnemonic() async throws -> String
     func openWalletIfNeeded() async -> Bool
