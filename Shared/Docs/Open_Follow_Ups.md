@@ -21,8 +21,79 @@ stale). Last consolidated: 2026-08-12.
   `TransactionLinkedOnchainView_macOS` — fixed with `^[…](inflect: true)`.
   Migration fully complete; see `Localization/Default_Value_Migration_Plan.md`.
 
+## Multi-Device (guiding doc: `Architecture/Multi_Device_Design.md`)
+
+Status 2026-08-19: S10 DECIDED (read-only + explain). S7 blocking, the S5
+assistant sketch, and the security-check matrix are PROPOSALS in the doc
+awaiting Christoph's call — the items below assume acceptance:
+
+- [ ] **Security checks first**: switch `authenticateUser` to
+  `.deviceOwnerAuthentication` (passcode fallback; biometrics-only hard-fails
+  on Macs without Touch ID) and wire the gated-actions table (recovery
+  phrase, deletions, promote/demote/unlink; send as opt-in setting). Its only
+  call site is currently commented out — nothing is gated today.
+- [ ] **S7 build — active devices block full wipe**: blockers list with
+  unlink-first paths, informed "delete anyway" override behind the security
+  check, `getDeletionStrategy()` error fallback flipped to conservative,
+  "wallet deleted elsewhere" cleanup-offer state on surviving devices.
+- [ ] **S5 build — migration assistant**: orchestration + copy over existing
+  primitives (S2 join → promote → S6 retire), entry points on both devices;
+  DELETE `migrateToThisDevice()` (writes `isPrimaryDevice` without
+  `becamePrimaryAt`, breaking the reconciliation tiebreak).
+- [ ] **S10 build**: read-only reasons for signed-out / account-changed +
+  safe-exit copy (sign back in, or local-only delete). Never auto-wipe,
+  never pair local files with a foreign account.
+- [ ] **Desktop parity for promote/demote UI** (S3; unlink already exists on
+  both platforms).
+- [ ] **PROPOSED — "new device joined your wallet" notification** (failure
+  modes §C): visibility mitigation for iCloud-account compromise; also
+  honest-flow feedback for S2/S5.
+- [ ] **PROPOSED — phrase-confirmation on full wipe** (failure modes §A):
+  final "Delete everything" asks for two recovery-phrase words — consent +
+  backup-existence proof before destroying the last seed copies.
+- [ ] **Device-backup-twin identity problem** (failure modes §B): restored
+  device backups duplicate the device-ID keychain item across two physical
+  devices; needs a design (liveness nonce / install-scoped identity).
+
 ## Wallet Deletion & Device Registry
 
+- [x] **Shared network config deleted by local-only deletion — FIXED
+  2026-08-20**: found by the first two-device verify — deleting the wallet on
+  the primary cleared the iCloud KVS network config, stranding the secondary
+  on default-mainnet (signet db refused to open; looked like total data
+  loss). `NetworkConfigPersistence.clear()` split into `clearLocal()` /
+  `clearEverywhere()` (cleanup-service-owned, strategy-scoped); wallet
+  initialization now recovers a missing config from iCloud before first open;
+  `SharedStateWipeCoverage` inventories shared keys with deletion scopes.
+  Contract rule 21.
+- [ ] **Optional self-heal on network mismatch**: bark's db knows its own
+  network — on a mismatch open failure, derive the config from the db instead
+  of the stored setting (last-resort recovery; needs a bindings check for
+  reading the db network without a chain source).
+- [x] **Tombstone KVS-transient fix — DONE 2026-08-20**: a missing KVS hash
+  clears the tombstone only when the keychain corroborates with a definitive
+  `.notFound`; seed-still-present or unreadable keychain keep the rejoin
+  route. Tested in `TombstoneRoutingTests`.
+- [ ] **Two-device on-device verify of deletion + rejoin** (code landed
+  2026-08-19, see `Features/Wallet_Deletion_And_Rejoin.md` — Definition of
+  done): local-only delete keeps the seed everywhere (recovery phrase still
+  displays on the other device), deleted device shows the rejoin screen and
+  relaunch does NOT resurrect the wallet; Rejoin restores from the preserved
+  iCloud backup; create-wallet is refused while the account has a wallet.
+  This is the gate for calling the 2026-08-19 seed-deletion fix done.
+- [ ] **Translate the new deletion/rejoin strings** (rejoin_title,
+  `rejoin_message %@`, rejoin_button, error_wallet_already_on_account) for
+  de/ja via `apply_translations.py` + `translation_lint.py` after extraction.
+- [x] **Second mnemonic-deletion site removed — 2026-08-19**:
+  `BarkWalletFFI.deleteWallet()` deleted the synchronizable seed on every
+  deletion (including local-only), defeating the 2026-08-12 strategy fix
+  account-wide. FFI now deletes files only; `SecurityService`'s duplicate
+  (and incomplete) wipe implementation deleted. Launch contract rule 19.
+- [x] **Pending send metadata missing from the full wipe — fixed 2026-08-19**:
+  `PendingPaymentMetadata` / `PendingTagAssignment` were in the schema but not
+  the wipe; found by the new wipe-coverage inventory (`WalletWipeCoverage`,
+  asserted by `WalletDeletionRejoinTests` against
+  `SwiftDataHelper.appSchemaModels`).
 - [ ] **On-device verify of the deletion-strategy fix** (fix landed 2026-08-12):
   with two linked devices, delete the wallet on the primary → secondary's
   Settings → Linked Devices should show the "no active wallet" warning and the

@@ -144,6 +144,44 @@ A fixed value either orphaned secondaries or destroyed the only seed copy
 (fixed 2026-08-12).
 Enforced: `WalletManager+Wallet.swift` (deletion strategy). Test: none.
 
+**19. Only `WalletDataCleanupService` may delete the mnemonic keychain item.**
+A second deletion site inside `BarkWalletFFI.deleteWallet()` deleted the
+synchronizable seed on *every* deletion — including local-only — propagating
+account-wide via iCloud Keychain and defeating rule 18 one call later
+(found 2026-08-19). The FFI layer deletes files only; keychain policy is the
+cleanup service's alone. Legitimate `SecItemDelete` owners: the cleanup
+service, `removeMnemonic()` (import rollback), and the accessibility
+migration's delete-and-re-add fallback.
+Enforced: `BarkWalletFFI+WalletCreation.swift` (comment),
+`BarkWalletProtocol.swift` (contract). Test: none (sweep: grep `SecItemDelete`).
+
+**20. Post-deletion routing re-runs full detection; a local-only deletion routes to the rejoin screen, never onboarding.**
+`onWalletDeleted` used to set `hasWallet = false` blindly, exposing
+onboarding's Create path — which overwrites the account's synchronizable
+seed. The local-deletion tombstone (UserDefaults, stores the wallet hash)
+suppresses seed-based resurrection at relaunch and routes to
+`.walletAvailableToRejoin`; `createWallet` independently refuses when any
+account-level wallet signal exists (`Wallet_Deletion_And_Rejoin.md`).
+Enforced: `SecurityService.swift` (`tombstoneRouting`, detection step 0),
+`MainView_iOS.swift` / `MainView.swift` (`onWalletDeleted`),
+`WalletManager+Wallet.swift` (`accountHasWalletSignals` guard).
+Test: `WalletDeletionRejoinTests`.
+
+**21. Account-shared key-value state (KVS network config, KVS wallet hash, keychain seed) is deleted only by WalletDataCleanupService on a full wipe — never by device-scoped deletion paths.**
+`WalletManager.deleteWallet()` used to call `NetworkConfigPersistence.clear()`
+unconditionally, removing the shared network config from iCloud KVS on every
+deletion: a local-only delete on one device stranded the live secondary on
+default-mainnet, whose signet db then failed to open with a network mismatch
+that looked like total data loss (2026-08-20). Same fault class as rule 19.
+`clearLocal()` vs `clearEverywhere()` make the scope explicit; the inventory
+of shared keys and their scopes lives in `SharedStateWipeCoverage`. Related:
+initialization recovers a missing local config from iCloud before the first
+wallet open (`performInitialization` step 0-pre) instead of silently
+defaulting to mainnet.
+Enforced: `NetworkConfigPersistence.swift`, `WalletDataCleanupService.swift`
+(`SharedStateWipeCoverage`), `WalletManager.swift` (step 0-pre).
+Test: `WalletDeletionRejoinTests` (inventory consistency).
+
 ## Test gaps
 
 Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17. Covered since
