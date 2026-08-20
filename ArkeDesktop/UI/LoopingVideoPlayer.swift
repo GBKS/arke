@@ -10,9 +10,19 @@ import AVKit
 import AVFoundation
 
 struct LoopingVideoPlayer: NSViewRepresentable {
+    /// How the video is anchored when the scaled video overflows the view
+    /// bounds (only takes effect with `.resizeAspectFill`)
+    enum VideoAlignment {
+        /// Overflow is cropped evenly on opposite edges
+        case center
+        /// The top edge stays pinned; overflow is cropped at the bottom
+        case top
+    }
+
     let videoName: String
     let videoExtension: String
     let videoGravity: AVLayerVideoGravity
+    let videoAlignment: VideoAlignment
     let autoPlay: Bool
     let showErrorIndicator: Bool
     let loops: Bool
@@ -23,6 +33,7 @@ struct LoopingVideoPlayer: NSViewRepresentable {
     ///   - videoName: Name of the video file in the app bundle
     ///   - videoExtension: File extension (e.g., "mp4", "mov")
     ///   - videoGravity: How the video should be scaled within the view bounds
+    ///   - videoAlignment: Where the video is anchored when aspect-fill cropping occurs
     ///   - autoPlay: Whether to start playing automatically
     ///   - showErrorIndicator: Whether to show a red background if video fails to load
     ///   - loops: Whether the video should loop continuously (default: true)
@@ -31,6 +42,7 @@ struct LoopingVideoPlayer: NSViewRepresentable {
         videoName: String,
         videoExtension: String,
         videoGravity: AVLayerVideoGravity = .resizeAspectFill,
+        videoAlignment: VideoAlignment = .center,
         autoPlay: Bool = true,
         showErrorIndicator: Bool = true,
         loops: Bool = true,
@@ -39,6 +51,7 @@ struct LoopingVideoPlayer: NSViewRepresentable {
         self.videoName = videoName
         self.videoExtension = videoExtension
         self.videoGravity = videoGravity
+        self.videoAlignment = videoAlignment
         self.autoPlay = autoPlay
         self.showErrorIndicator = showErrorIndicator
         self.loops = loops
@@ -51,6 +64,7 @@ struct LoopingVideoPlayer: NSViewRepresentable {
             name: videoName,
             extension: videoExtension,
             videoGravity: videoGravity,
+            videoAlignment: videoAlignment,
             autoPlay: autoPlay,
             showErrorIndicator: showErrorIndicator,
             loops: loops,
@@ -65,6 +79,7 @@ struct LoopingVideoPlayer: NSViewRepresentable {
             name: videoName,
             extension: videoExtension,
             videoGravity: videoGravity,
+            videoAlignment: videoAlignment,
             autoPlay: autoPlay,
             showErrorIndicator: showErrorIndicator,
             loops: loops,
@@ -87,7 +102,10 @@ class PlayerView: NSView {
     private var currentVideoName: String?
     private var readyForDisplayObservation: NSKeyValueObservation?
     private var pendingSwapCleanup: (() -> Void)?
-    
+    private var videoAlignment: LoopingVideoPlayer.VideoAlignment = .center
+    private var videoSize: CGSize = .zero
+    private var presentationSizeObservation: NSKeyValueObservation?
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
@@ -102,12 +120,17 @@ class PlayerView: NSView {
         name: String,
         extension: String,
         videoGravity: AVLayerVideoGravity,
+        videoAlignment: LoopingVideoPlayer.VideoAlignment,
         autoPlay: Bool,
         showErrorIndicator: Bool,
         loops: Bool,
         onCompletion: (() -> Void)?
     ) {
         currentVideoName = name
+        self.videoAlignment = videoAlignment
+        videoSize = .zero
+        presentationSizeObservation?.invalidate()
+        presentationSizeObservation = nil
 
         // Load video from bundle
         guard let videoURL = Bundle.main.url(forResource: name, withExtension: `extension`) else {
@@ -130,6 +153,12 @@ class PlayerView: NSView {
         playerLayer.videoGravity = videoGravity
         playerLayer.frame = self.bounds
         self.layer?.addSublayer(playerLayer)
+
+        if videoAlignment == .top {
+            // The overflowing layer hangs past the bottom edge; clip it
+            self.layer?.masksToBounds = true
+            observePresentationSize(of: player?.currentItem)
+        }
 
         // Set up looping or one-shot completion
         loopingObserver = NotificationCenter.default.addObserver(
@@ -154,11 +183,47 @@ class PlayerView: NSView {
         }
     }
     
+    /// AVPlayerLayer always centers its aspect-fill crop, so top alignment
+    /// sizes the layer to the fill dimensions manually (via `.resize`
+    /// gravity) and pins its top edge, letting the view clip the bottom.
+    /// The video's dimensions are only known once the item loads them.
+    private func observePresentationSize(of item: AVPlayerItem?) {
+        presentationSizeObservation = item?.observe(\.presentationSize, options: [.initial, .new]) { [weak self] item, _ in
+            let size = item.presentationSize
+            guard size != .zero else { return }
+            DispatchQueue.main.async {
+                guard let self, self.player?.currentItem === item else { return }
+                self.videoSize = size
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                self.playerLayer?.videoGravity = .resize
+                self.playerLayer?.frame = self.playerLayerFrame()
+                CATransaction.commit()
+            }
+        }
+    }
+
+    private func playerLayerFrame() -> CGRect {
+        guard videoAlignment == .top, videoSize != .zero,
+              bounds.width > 0, bounds.height > 0 else { return bounds }
+        let scale = max(bounds.width / videoSize.width, bounds.height / videoSize.height)
+        let scaled = CGSize(width: videoSize.width * scale, height: videoSize.height * scale)
+        // Layer coordinates are bottom-left origin here, so pinning the top
+        // edge means offsetting the origin down by the overflow amount
+        return CGRect(
+            x: (bounds.width - scaled.width) / 2,
+            y: bounds.height - scaled.height,
+            width: scaled.width,
+            height: scaled.height
+        )
+    }
+
     /// Replaces the current video if the name changed, tearing down the old player first
     func updateVideo(
         name: String,
         extension ext: String,
         videoGravity: AVLayerVideoGravity,
+        videoAlignment: LoopingVideoPlayer.VideoAlignment,
         autoPlay: Bool,
         showErrorIndicator: Bool,
         loops: Bool,
@@ -184,6 +249,7 @@ class PlayerView: NSView {
             name: name,
             extension: ext,
             videoGravity: videoGravity,
+            videoAlignment: videoAlignment,
             autoPlay: autoPlay,
             showErrorIndicator: showErrorIndicator,
             loops: loops,
@@ -235,13 +301,14 @@ class PlayerView: NSView {
     
     override func layout() {
         super.layout()
-        playerLayer?.frame = self.bounds
+        playerLayer?.frame = playerLayerFrame()
     }
-    
+
     deinit {
         if let observer = loopingObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        presentationSizeObservation?.invalidate()
         player?.pause()
     }
 }
@@ -252,11 +319,12 @@ class PlayerView: NSView {
 
 extension LoopingVideoPlayer {
     /// Creates a video player that fills the entire frame, cropping if necessary
-    static func aspectFill(videoName: String, videoExtension: String = "mp4") -> LoopingVideoPlayer {
+    static func aspectFill(videoName: String, videoExtension: String = "mp4", alignment: VideoAlignment = .center) -> LoopingVideoPlayer {
         LoopingVideoPlayer(
             videoName: videoName,
             videoExtension: videoExtension,
-            videoGravity: .resizeAspectFill
+            videoGravity: .resizeAspectFill,
+            videoAlignment: alignment
         )
     }
     
