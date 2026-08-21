@@ -349,19 +349,23 @@ settings row; both themes still point at the original assets). Remaining:
   color-first system (ThemeManager, per-theme color asset variants) that
   differs from the shipped image-only `AppTheme`; fold its palette ideas
   into the color-palette item below or archive it.
-- [ ] **Consolidate app art into one shared asset catalog**. Phase 1 done
-  2026-08-21: `Shared/Media.xcassets` created, all 24 theme imagesets
-  moved there from the mobile catalog; desktop membership is automatic
-  (synchronized Shared folder), ArkeMobile needs its membership ticked in
-  Xcode's file inspector. Phase 2 open: 52 legacy image names ship twice
-  on iOS (mobile imagesets + loose `Shared/Images` files opted into the
-  mobile target, e.g. `card-big`, `tuscan-villa`, `black-marble`), and
-  desktop's own catalog holds third copies of a dozen (`card`,
-  `cornfield`, `error`, avatars, intro stills) — checksum-diff each pair
-  first (copies may have diverged), move winners into `Media.xcassets`,
-  delete loose + per-target duplicates. `HoloCard_iOS`/keypad load via
-  `Image(name)` (verified catalog-safe); still grep for `url(forResource`
-  before deleting loose files. ArkeWidgets opts into loose `arke-icon.png`
-  + `arke-icon-100.png` — give it `Media.xcassets` membership or keep
-  those two loose. Videos stay loose.
+- [x] **Consolidate app art into one shared asset catalog — 2026-08-21**.
+  Phase 1: `Shared/Media.xcassets` owned by both app targets (desktop
+  automatic via the synchronized folder, mobile via one opt-in tick), 24
+  theme imagesets moved there. Phase 2: all duplicated art deduped —
+  51 identical mobile imagesets + the newer `safe` (loose/desktop copies
+  were stale Oct 2025 art; desktop's safe image visually updated) moved
+  to `Media.xcassets`, 5 desktop-only imagesets (`bodega`, `cover`,
+  `kinto`, `second`, `success`) moved too, loose duplicates and desktop
+  third copies deleted, dead `arke-qr-background 1` straggler removed.
+  Both per-target catalogs now hold only icons + colorsets. Kept loose by
+  design: `arke-icon(-100).png` (ArkeWidgets uses them; Media membership
+  would drag theme art into the widget bundle), the 8 demo avatars
+  (desktop-only, never duplicated), all videos. Note: `arke-qr-background`
+  in Media is referenced nowhere — delete if no plans for it. Lesson: 
+  deleting synchronized-folder files outside Xcode leaves stale
+  membership-exception entries in the pbxproj that fail BOTH GUI and CLI
+  builds ("Build input file cannot be found"); fixed by scripted removal
+  of entries pointing at nonexistent files, verified by both-platform
+  builds + bundle inspection (assetutil).
 - [ ] **Per-theme color palettes** (deferred by design).
