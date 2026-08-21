@@ -143,6 +143,13 @@ struct BoardingModalFormView: View {
             }
             .frame(maxHeight: .infinity, alignment: .top)
             .padding()
+            #if os(iOS)
+            // Fallback dismissal for when the keyboard toolbar's Done button fails to appear
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isAmountFieldFocused = false
+            }
+            #endif
         }
     }
 }
