@@ -361,7 +361,10 @@ settings row; both themes still point at the original assets). Remaining:
   Both per-target catalogs now hold only icons + colorsets. Kept loose by
   design: `arke-icon(-100).png` (ArkeWidgets uses them; Media membership
   would drag theme art into the widget bundle), the 8 demo avatars
-  (desktop-only, never duplicated), all videos. Note: `arke-qr-background`
+  (desktop-only, never duplicated), all videos, and
+  `arke-recovery-phrase-backup-sheet.pdf` (loaded via
+  `Bundle.main.url(forResource:)` — catalogs can't serve it; the dedup
+  glob briefly deleted it, restored in a07f3fc). Note: `arke-qr-background`
   in Media is referenced nowhere — delete if no plans for it. Lesson: 
   deleting synchronized-folder files outside Xcode leaves stale
   membership-exception entries in the pbxproj that fail BOTH GUI and CLI
