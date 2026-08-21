@@ -15,7 +15,8 @@ struct BalanceView_iOS: View {
     @State private var showingRefreshModal = false
     @State private var showingBalanceInfo = false
     @State private var refreshStatusReloadTrigger = 0
-    
+    @AppStorage(UserDefaults.appThemeKey) private var theme: AppTheme = .defaultTheme
+
     private var canBoard: Bool {
         guard let onchainBalance = manager.onchainBalance else { return false }
         return onchainBalance.spendableSat > 0
@@ -142,7 +143,7 @@ struct BalanceView_iOS: View {
             .padding(.bottom, 20)
         }
         .background(
-            Image("card-big")
+            Image(theme.images.balanceBackground)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()

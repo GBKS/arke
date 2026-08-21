@@ -100,10 +100,12 @@ struct SendModalContentView: View {
     
     @ViewBuilder
     private var videoBackground: some View {
+        // Top-aligned so the character's head survives the crop when the
+        // container is shorter than the video's aspect-fill height
         #if os(iOS)
-        LoopingVideoPlayer_iOS.aspectFill(videoName: stateVideoName, videoExtension: "mp4")
+        LoopingVideoPlayer_iOS.aspectFill(videoName: stateVideoName, videoExtension: "mp4", alignment: .top)
         #elseif os(macOS)
-        LoopingVideoPlayer.aspectFill(videoName: stateVideoName, videoExtension: "mp4")
+        LoopingVideoPlayer.aspectFill(videoName: stateVideoName, videoExtension: "mp4", alignment: .top)
         #endif
     }
 

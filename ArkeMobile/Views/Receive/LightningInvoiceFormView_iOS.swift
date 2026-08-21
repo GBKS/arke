@@ -15,7 +15,8 @@ struct LightningInvoiceFormView_iOS: View {
     @State private var showNoteField = false
     @FocusState private var isNoteFocused: Bool
     @State private var gradientPhase: CGFloat = 0
-    
+    @AppStorage(UserDefaults.appThemeKey) private var theme: AppTheme = .defaultTheme
+
     let onGenerateInvoice: () -> Void
     
     private var formattedAmount: String {
@@ -119,7 +120,7 @@ struct LightningInvoiceFormView_iOS: View {
                     onConfirm: {
                         onGenerateInvoice()
                     },
-                    theme: .textured(imageName: "black-marble"),
+                    theme: .textured(imageName: theme.images.keypadTexture),
                     showPeriod: BitcoinFormatter.shared.allowsDecimalInput,
                     validateInput: { newAmount in
                         // Validate that amount doesn't exceed limits

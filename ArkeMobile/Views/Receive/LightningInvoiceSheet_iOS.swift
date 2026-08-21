@@ -40,6 +40,8 @@ struct LightningInvoiceSheet_iOS: View {
     // Notification state
     @AppStorage(UserDefaults.notificationsEnabledKey)
     private var notificationsEnabled: Bool = false
+
+    @AppStorage(UserDefaults.appThemeKey) private var theme: AppTheme = .defaultTheme
     @State private var notificationsJustEnabled = false
     
     private var userProfile: UserProfile? {
@@ -54,7 +56,7 @@ struct LightningInvoiceSheet_iOS: View {
     var body: some View {
         ZStack {
             // Background image
-            Image("card-big")
+            Image(theme.images.qrBackground)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .ignoresSafeArea()

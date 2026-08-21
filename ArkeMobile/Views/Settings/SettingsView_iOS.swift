@@ -25,6 +25,9 @@ struct SettingsView_iOS: View {
     @AppStorage(UserDefaults.proximityPermissionKey)
     private var proximityEnabled: Bool = false
 
+    @AppStorage(UserDefaults.appThemeKey)
+    private var appTheme: String = AppTheme.defaultTheme.rawValue
+
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 24
     @ScaledMetric(relativeTo: .body) private var avatarSize: CGFloat = 40
 
@@ -39,6 +42,10 @@ struct SettingsView_iOS: View {
     
     private var selectedFormat: BitcoinAmountFormat {
         BitcoinAmountFormat(rawValue: bitcoinFormat) ?? .defaultFormat
+    }
+
+    private var selectedTheme: AppTheme {
+        AppTheme(rawValue: appTheme) ?? .defaultTheme
     }
     
     var body: some View {
@@ -112,6 +119,25 @@ struct SettingsView_iOS: View {
                     .padding(.vertical, 2)
                 }
                 
+                // Theme
+                NavigationLink(destination: ThemeSettingView()) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "paintpalette.fill")
+                            .foregroundColor(.Arke.pink)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.settingsTheme)
+                                .font(.body)
+                            Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedTheme.displayName)"))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+
                 // Balance Privacy Toggle
                 Toggle(isOn: $balancePrivacyEnabled) {
                     HStack(spacing: 12) {

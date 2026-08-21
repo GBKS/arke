@@ -314,3 +314,58 @@ done).
   (only wallet *deletion* ends it, since 2026-08-12). Revisit whether
   demotion should end it too, since the demoted device stops progressing
   the exit.
+
+## Themes
+
+Setting + picker shipped 2026-08-20 (`AppTheme`, `ThemeSettingView`, iOS
+settings row; both themes still point at the original assets). Remaining:
+
+- [x] **All five surfaces themed — 2026-08-20**: BalanceView_iOS (balance
+  background), TiltShareOverlay_iOS, LightningInvoiceFormView_iOS (keypad
+  texture), LightningInvoiceSheet_iOS (receive QR) now read
+  `theme.images.*` via @AppStorage; only AppTheme.swift still names the
+  classic assets. Pending: on-device pass of the ginkgo art at every
+  surface (tilt rotation, keypad crop, HoloCard mask alignment).
+- [x] **BalanceCard themed — 2026-08-20**: card, card-mask, hidden-card via
+  `theme.images.*` (@AppStorage stores the enum directly); cornfield/unicorn
+  format easter eggs deliberately still override the theme's hidden image.
+  Desktop card themes too (always `classic` there until a picker exists).
+- [x] **Real art for the second theme — 2026-08-20**: renamed tuscany →
+  ginkgo with dedicated `ginkgo-*` asset sets (Christoph); de/ja for
+  `theme_name_ginkgo` applied via scripts.
+- [x] **Hidden-card holo + per-theme text color — 2026-08-21**: hidden card
+  renders as HoloCard on iOS when `ThemeImages.hiddenCardMask` is set (nil
+  = flat; easter eggs and macOS stay flat); `AppTheme.textColor` colors the
+  hidden wordmark, hex-overridable per theme, defaults to Arké gold. The
+  holo sheen stays hard-coded gold by decision.
+- [ ] **Ginkgo hidden-card polish** (Christoph): a dedicated
+  `ginkgo-card-hidden-mask` asset and a `textColorHex` (`F3F4F2`) now
+  exist in the tree — confirm they're the final art, then verify on
+  device and tick this.
+- [ ] **Desktop settings entry** for `ThemeSettingView`: a
+  `SettingsDetailItem` case + row — both files are already ArkeDesktop
+  members (the Shared folder is target-attached there). Blocked on theme
+  art reaching the desktop bundle first (see the shared-catalog item
+  below); since the loose `Shared/Images` theme copies were dropped
+  (2026-08-21), the art exists only in `ArkeMobile/Assets.xcassets` and
+  desktop would render blank thumbnails/surfaces for every theme but
+  classic.
+- [ ] **Reconcile the April theme plan doc**
+  (`Features/theme-system-implementation.md`, commit 95c7828): sketches a
+  color-first system (ThemeManager, per-theme color asset variants) that
+  differs from the shipped image-only `AppTheme`; fold its palette ideas
+  into the color-palette item below or archive it.
+- [ ] **Consolidate app art into one shared asset catalog**: theme art
+  now lives only in `ArkeMobile/Assets.xcassets` (the loose
+  `Shared/Images` theme copies were dropped 2026-08-21), so desktop has
+  no theme art at all — and the classic art still ships twice on iOS
+  (`card-big`, `tuscan-villa`, `black-marble`, … exist both as mobile
+  imagesets and as loose `Shared/Images` files opted into the mobile
+  target). Fix: one `Shared` asset catalog owned by both app targets
+  (image sets are universal), per-target catalogs kept only for
+  icons/accent colors, the theme imagesets moved there from the mobile
+  catalog, loose classic image copies and their mobile-catalog duplicates
+  deleted. Before deleting loose files, confirm nothing loads them by
+  bundle URL rather than `Image(named:)` (check HoloCard's mask loading).
+  Videos stay loose.
+- [ ] **Per-theme color palettes** (deferred by design).

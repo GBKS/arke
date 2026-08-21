@@ -228,6 +228,9 @@ enum L10n {
     static var settingsManualBackup: String {
         String(localized: "settings_manual_backup", defaultValue: "Manual Backup")
     }
+    static var settingsTheme: String {
+        String(localized: "settings_theme", defaultValue: "Theme")
+    }
     static var settingsThisDeviceParentheses: String {
         String(localized: "settings_this_device_parentheses", defaultValue: "(This Device)")
     }

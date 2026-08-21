@@ -32,6 +32,9 @@ extension UserDefaults {
     /// Key for storing address icons display preference
     static let showAddressIconsKey = "showAddressIcons"
 
+    /// Key for storing the selected app theme (AppTheme raw value)
+    static let appThemeKey = "appTheme"
+
     /// Key recording that this install has completed at least one wallet sync
     /// that reached the server. Once set, an empty local transaction cache at
     /// launch is trustworthy, so the transaction list can skip its skeleton.

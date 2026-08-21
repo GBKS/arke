@@ -30,7 +30,8 @@ struct TiltShareOverlay_iOS: View {
     @StateObject private var proximityManager = ProximityExchangeManager()
     
     @AppStorage(UserDefaults.proximityPermissionKey) private var hasGrantedProximityPermission: Bool = false
-    
+    @AppStorage(UserDefaults.appThemeKey) private var theme: AppTheme = .defaultTheme
+
     private var userProfile: UserProfile? {
         profiles.first
     }
@@ -40,7 +41,7 @@ struct TiltShareOverlay_iOS: View {
             ZStack {
                 if isVisible {
                     // Full-screen image background (upside down)
-                    Image("tuscan-villa-portrait")
+                    Image(theme.images.tiltBackground)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: geometry.size.width, height: geometry.size.height)

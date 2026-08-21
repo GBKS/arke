@@ -12,7 +12,8 @@ import Combine
 struct BalanceCard: View {
     @Environment(WalletManager.self) private var walletManager
     @AppStorage(BitcoinAmountFormat.userDefaultsKey) private var formatPreference: BitcoinAmountFormat = .defaultFormat
-    
+    @AppStorage(UserDefaults.appThemeKey) private var theme: AppTheme = .defaultTheme
+
     let totalBalance: TotalBalanceModel?
     @Binding var isHidden: Bool
     
@@ -20,16 +21,26 @@ struct BalanceCard: View {
     
     private var hiddenImageName: String {
         if isHidden {
+            // The corn/unicorn unit formats keep their easter-egg art in any theme.
             switch formatPreference {
             case .corn:
                 return "cornfield"
             case .unicorn:
                 return "unicorn"
             default:
-                return "tuscan-villa"
+                return theme.images.hiddenCard
             }
         } else {
-            return "card"
+            return theme.images.card
+        }
+    }
+
+    private var hiddenCardMaskName: String? {
+        switch formatPreference {
+        case .corn, .unicorn:
+            return nil // easter-egg art has no holo mask
+        default:
+            return theme.images.hiddenCardMask
         }
     }
     
@@ -45,7 +56,7 @@ struct BalanceCard: View {
                         #else
                         .font(.system(size: 27, weight: .bold, design: .serif))
                         #endif
-                        .foregroundColor(Color.Arke.gold)
+                        .foregroundColor(theme.textColor)
                         .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
@@ -106,27 +117,31 @@ struct BalanceCard: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 15)
+        .padding(.horizontal, 25)
+        .padding(.top, 20)
+        .padding(.bottom, 18)
         .aspectRatio(3/2, contentMode: .fit)
         .background {
             if isHidden {
-                // Privacy mode - use static images
-                RoundedRectangle(cornerRadius: 15)
-                    .overlay {
-                        Image(hiddenImageName)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    }
-                    .clipped()
+                // Privacy mode - holo when the theme provides a hidden mask (iOS),
+                // flat image otherwise (easter eggs, maskless themes, macOS)
+                #if os(iOS)
+                if let maskName = hiddenCardMaskName {
+                    HoloCard_iOS(cardImageName: hiddenImageName, maskImageName: maskName)
+                } else {
+                    flatHiddenBackground
+                }
+                #else
+                flatHiddenBackground
+                #endif
             } else {
                 // Normal mode - use HoloCard on iOS, regular card image on macOS
                 #if os(iOS)
-                HoloCard_iOS(cardImageName: "card", maskImageName: "card-mask")
+                HoloCard_iOS(cardImageName: theme.images.card, maskImageName: theme.images.cardMask)
                 #else
                 RoundedRectangle(cornerRadius: 15)
                     .overlay {
-                        Image("card")
+                        Image(theme.images.card)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     }
@@ -135,5 +150,15 @@ struct BalanceCard: View {
             }
         }
         .cornerRadius(15)
+    }
+
+    private var flatHiddenBackground: some View {
+        RoundedRectangle(cornerRadius: 15)
+            .overlay {
+                Image(hiddenImageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            }
+            .clipped()
     }
 }
