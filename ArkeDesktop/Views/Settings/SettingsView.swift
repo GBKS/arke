@@ -14,6 +14,7 @@ import ArkeUI
 enum SettingsDetailItem: String, CaseIterable, Identifiable, Hashable {
     case profile
     case unitFormat
+    case theme
     case manualBackup
     case linkedDevices
     case feeSummary
@@ -35,6 +36,9 @@ struct SettingsView: View {
     @AppStorage(BitcoinAmountFormat.userDefaultsKey)
     private var bitcoinFormat: String = BitcoinAmountFormat.defaultFormat.rawValue
 
+    @AppStorage(UserDefaults.appThemeKey)
+    private var appTheme: String = AppTheme.defaultTheme.rawValue
+
     @State private var defaultAvatarImage: String = Bool.random() ? "avatar-silhouette-male" : "avatar-silhouette-female"
 
     @Query private var profiles: [UserProfile]
@@ -45,6 +49,10 @@ struct SettingsView: View {
 
     private var selectedFormat: BitcoinAmountFormat {
         BitcoinAmountFormat(rawValue: bitcoinFormat) ?? .defaultFormat
+    }
+
+    private var selectedTheme: AppTheme {
+        AppTheme(rawValue: appTheme) ?? .defaultTheme
     }
 
     private var deviceCount: Int {
@@ -68,6 +76,14 @@ struct SettingsView: View {
                     subtitle: Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedFormat.displayName)"))
                 )
                 .tag(SettingsDetailItem.unitFormat)
+
+                settingsRow(
+                    icon: "paintpalette.fill",
+                    color: .Arke.pink,
+                    title: L10n.settingsTheme,
+                    subtitle: Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedTheme.displayName)"))
+                )
+                .tag(SettingsDetailItem.theme)
             } header: {
                 Text(String(localized: "settings_general", defaultValue: "General"))
             }
@@ -254,6 +270,8 @@ struct SettingsDetailView: View {
                     .frame(maxWidth: 500)
                     .frame(maxWidth: .infinity)
             }
+        case .theme:
+            ThemeSettingView()
         case .manualBackup:
             ManualBackupView()
         case .linkedDevices:

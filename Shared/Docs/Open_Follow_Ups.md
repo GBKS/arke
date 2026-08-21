@@ -324,8 +324,7 @@ settings row; both themes still point at the original assets). Remaining:
   background), TiltShareOverlay_iOS, LightningInvoiceFormView_iOS (keypad
   texture), LightningInvoiceSheet_iOS (receive QR) now read
   `theme.images.*` via @AppStorage; only AppTheme.swift still names the
-  classic assets. Pending: on-device pass of the ginkgo art at every
-  surface (tilt rotation, keypad crop, HoloCard mask alignment).
+  classic assets. On-device pass of all themes done 2026-08-21.
 - [x] **BalanceCard themed — 2026-08-20**: card, card-mask, hidden-card via
   `theme.images.*` (@AppStorage stores the enum directly); cornfield/unicorn
   format easter eggs deliberately still override the theme's hidden image.
@@ -338,34 +337,31 @@ settings row; both themes still point at the original assets). Remaining:
   = flat; easter eggs and macOS stay flat); `AppTheme.textColor` colors the
   hidden wordmark, hex-overridable per theme, defaults to Arké gold. The
   holo sheen stays hard-coded gold by decision.
-- [ ] **Ginkgo hidden-card polish** (Christoph): a dedicated
-  `ginkgo-card-hidden-mask` asset and a `textColorHex` (`F3F4F2`) now
-  exist in the tree — confirm they're the final art, then verify on
-  device and tick this.
-- [ ] **Desktop settings entry** for `ThemeSettingView`: a
-  `SettingsDetailItem` case + row — both files are already ArkeDesktop
-  members (the Shared folder is target-attached there). Blocked on theme
-  art reaching the desktop bundle first (see the shared-catalog item
-  below); since the loose `Shared/Images` theme copies were dropped
-  (2026-08-21), the art exists only in `ArkeMobile/Assets.xcassets` and
-  desktop would render blank thumbnails/surfaces for every theme but
-  classic.
+- [x] **Ginkgo hidden-card polish — 2026-08-21**: dedicated
+  `ginkgo-card-hidden-mask` + `textColorHex` (`F3F4F2`) shipped; art
+  finalized and device-verified by Christoph.
+- [x] **Desktop settings entry — 2026-08-21**: `SettingsDetailItem.theme`
+  case + General-section row in the desktop SettingsView, opening the
+  shared `ThemeSettingView`; unblocked by moving the theme art into
+  `Shared/Media.xcassets` (see below). Pending: visual pass on macOS.
 - [ ] **Reconcile the April theme plan doc**
   (`Features/theme-system-implementation.md`, commit 95c7828): sketches a
   color-first system (ThemeManager, per-theme color asset variants) that
   differs from the shipped image-only `AppTheme`; fold its palette ideas
   into the color-palette item below or archive it.
-- [ ] **Consolidate app art into one shared asset catalog**: theme art
-  now lives only in `ArkeMobile/Assets.xcassets` (the loose
-  `Shared/Images` theme copies were dropped 2026-08-21), so desktop has
-  no theme art at all — and the classic art still ships twice on iOS
-  (`card-big`, `tuscan-villa`, `black-marble`, … exist both as mobile
-  imagesets and as loose `Shared/Images` files opted into the mobile
-  target). Fix: one `Shared` asset catalog owned by both app targets
-  (image sets are universal), per-target catalogs kept only for
-  icons/accent colors, the theme imagesets moved there from the mobile
-  catalog, loose classic image copies and their mobile-catalog duplicates
-  deleted. Before deleting loose files, confirm nothing loads them by
-  bundle URL rather than `Image(named:)` (check HoloCard's mask loading).
-  Videos stay loose.
+- [ ] **Consolidate app art into one shared asset catalog**. Phase 1 done
+  2026-08-21: `Shared/Media.xcassets` created, all 24 theme imagesets
+  moved there from the mobile catalog; desktop membership is automatic
+  (synchronized Shared folder), ArkeMobile needs its membership ticked in
+  Xcode's file inspector. Phase 2 open: 52 legacy image names ship twice
+  on iOS (mobile imagesets + loose `Shared/Images` files opted into the
+  mobile target, e.g. `card-big`, `tuscan-villa`, `black-marble`), and
+  desktop's own catalog holds third copies of a dozen (`card`,
+  `cornfield`, `error`, avatars, intro stills) — checksum-diff each pair
+  first (copies may have diverged), move winners into `Media.xcassets`,
+  delete loose + per-target duplicates. `HoloCard_iOS`/keypad load via
+  `Image(name)` (verified catalog-safe); still grep for `url(forResource`
+  before deleting loose files. ArkeWidgets opts into loose `arke-icon.png`
+  + `arke-icon-100.png` — give it `Media.xcassets` membership or keep
+  those two loose. Videos stay loose.
 - [ ] **Per-theme color palettes** (deferred by design).

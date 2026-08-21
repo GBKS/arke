@@ -272,6 +272,7 @@
 				"Images/wipe-wallet-from-device.jpg",
 				Images/xerxes.mp4,
 				Localizable.xcstrings,
+				Media.xcassets,
 				Models/ArkBalanceModel.swift,
 				Models/ArkBalanceResponse.swift,
 				"Models/ContactAddressModel+Persistence.swift",
