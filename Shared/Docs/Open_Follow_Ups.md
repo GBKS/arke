@@ -314,6 +314,12 @@ done).
   (only wallet *deletion* ends it, since 2026-08-12). Revisit whether
   demotion should end it too, since the demoted device stops progressing
   the exit.
+- [ ] **Tap-outside keyboard dismissal for the send flows**: added to
+  Boarding/OffboardingModalFormView 2026-08-21 (iOS-only `contentShape` +
+  `onTapGesture` clearing focus, as fallback for the flaky keyboard-toolbar
+  Done button in sheets). ManualSendView, QuickPaymentView, and
+  ContactPaymentView still rely on the toolbar alone — they have multiple
+  fields and denser layouts, so apply with a closer look.
 
 ## Themes
 
@@ -371,4 +377,14 @@ settings row; both themes still point at the original assets). Remaining:
   builds ("Build input file cannot be found"); fixed by scripted removal
   of entries pointing at nonexistent files, verified by both-platform
   builds + bundle inspection (assetutil).
+- [ ] **Send-modal (and balance-modal) video sizing** — parked 2026-08-21,
+  all code changes reverted; revisit with design intent settled. Key
+  finding to keep: the reaction videos display LANDSCAPE ~3:2 — they are
+  encoded portrait with a 90° rotation transform, so raw pixel dimensions
+  (mdls, AVAsset naturalSize) lie about orientation; only presentationSize
+  or a rendered thumbnail shows the truth. A full-width 3:2 window
+  (height = width × 2/3, top-pinned, `.clipped()`) showed the entire video
+  in the medium detent in simulator screenshots but wasn't accepted
+  visually. Balance modals (boarding/offboarding/refresh) use the same
+  `aspectFill` pattern and share whatever fix lands.
 - [ ] **Per-theme color palettes** (deferred by design).
