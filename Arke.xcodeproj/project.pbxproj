@@ -206,6 +206,7 @@
 				"Images/arke-app-icon.icon",
 				"Images/arke-icon-100.png",
 				"Images/arke-icon.png",
+				"Images/arke-recovery-phrase-backup-sheet.pdf",
 				"Images/chilean-lad-idle-small.mp4",
 				"Images/chilean-lad-thumbs-up-small.mp4",
 				"Images/coffee-clapping.mp4",
