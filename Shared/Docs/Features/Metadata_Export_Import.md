@@ -169,6 +169,15 @@ if ever wanted.
    1.2MB → avatar-size follow-up proposed in Open_Follow_Ups.md.
 2. **Phase 2 — Import**: file picker, envelope validation, preview sheet,
    merge helper + apply.
+   **DONE 2026-08-23, on-device verify pending.** Files:
+   `Shared/Services/MetadataImportService.swift` (decode with version probe,
+   `MetadataImportPolicy` pure merge policy, dry-run preview, apply), import
+   UI + preview sheet in `MetadataBackupSectionView.swift`, tests in
+   `Tests/Shared/MetadataImportLogicTests.swift` (policy + round-trip +
+   merge semantics; mobile suite 234/234 green). One policy refinement made
+   during implementation: transaction notes carry no timestamp to arbitrate
+   newest-wins with, so an imported note only fills an empty local note —
+   local notes are never overwritten.
 3. **Phase 3 — QA**: localization pass, mobile test batch, on-device
    round-trip (export on iPhone → import on clean simulator), Open_Follow_Ups
    update.

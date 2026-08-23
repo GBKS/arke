@@ -405,8 +405,12 @@ settings row; both themes still point at the original assets). Remaining:
   in the Manual Backup section. Versioned JSON envelope with dedicated DTOs,
   upsert-by-identity merge with newest-wins, annotations keyed by txid,
   plaintext (no warning copy), no auto-export. Phasing in the doc: 1 export,
-  2 import + merge, 3 QA/localization. Phase 1 (export) shipped and
-  device-tested 2026-08-23.
+  2 import + merge, 3 QA/localization. Phases 1+2 shipped 2026-08-23
+  (export device-tested; import unit-tested 234/234). Remaining:
+  on-device import round-trip (export on one device → import on a fresh
+  wallet), then Phase 3 — the 10 new `metadata_*` keys need an IDE build to
+  extract into the catalog, then `apply_translations.py` +
+  `translation_lint.py` for de/ja/zh-Hant.
 - [x] **Shrink avatar data at every write site — FIXED 2026-08-23** (found
   via a 1.2MB export where one avatar was ~900KB). Root cause was the
   default faucet contact storing the bundled `faucetto-signetto` asset as

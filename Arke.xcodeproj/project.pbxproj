@@ -285,6 +285,7 @@
 				Services/LaunchTiming.swift,
 				Services/LightningClaimService.swift,
 				Services/MetadataExportService.swift,
+				Services/MetadataImportService.swift,
 				Services/MotionManager.swift,
 				Services/NativeContactService.swift,
 				Services/OnchainTransactionService.swift,
