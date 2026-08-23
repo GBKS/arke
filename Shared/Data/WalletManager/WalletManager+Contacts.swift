@@ -265,5 +265,6 @@ extension WalletManager {
     /// Create default contacts if needed
     func createDefaultContactsIfNeeded() async {
         await contactService.createDefaultContactsIfNeeded()
+        await contactService.reencodeOversizedAvatarsIfNeeded()
     }
 }

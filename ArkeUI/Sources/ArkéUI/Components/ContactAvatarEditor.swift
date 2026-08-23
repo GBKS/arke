@@ -214,7 +214,7 @@ public struct ContactAvatarEditor: View {
 
     static func presetAvatarData(imageName: String) -> Data? {
         guard let image = platformImage(named: imageName) else { return nil }
-        return resizeImage(image, maxSize: 300)
+        return AvatarImageProcessor.processedData(from: image)
     }
 
     private static func platformImage(named name: String) -> PlatformImage? {
@@ -255,8 +255,8 @@ public struct ContactAvatarEditor: View {
                     return
                 }
 
-                // Resize if needed (max 300x300)
-                guard let resizedData = Self.resizeImage(platformImage, maxSize: 300) else {
+                // Downscale and re-encode to the standard avatar size
+                guard let resizedData = AvatarImageProcessor.processedData(from: platformImage) else {
                     errorMessage = "Failed to process the selected image."
                     return
                 }
@@ -273,59 +273,6 @@ public struct ContactAvatarEditor: View {
         }
     }
 
-    private static func resizeImage(_ image: PlatformImage, maxSize: CGFloat) -> Data? {
-        #if canImport(AppKit)
-        let originalSize = image.size
-        let scale = min(maxSize / originalSize.width, maxSize / originalSize.height)
-
-        // Don't upscale
-        let scaleFactor = min(scale, 1.0)
-        let newSize = NSSize(
-            width: originalSize.width * scaleFactor,
-            height: originalSize.height * scaleFactor
-        )
-
-        let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil,
-                                    pixelsWide: Int(newSize.width),
-                                    pixelsHigh: Int(newSize.height),
-                                    bitsPerSample: 8,
-                                    samplesPerPixel: 4,
-                                    hasAlpha: true,
-                                    isPlanar: false,
-                                    colorSpaceName: .calibratedRGB,
-                                    bytesPerRow: 0,
-                                    bitsPerPixel: 0)
-
-        guard let bitmap = bitmap else { return nil }
-
-        let context = NSGraphicsContext(bitmapImageRep: bitmap)
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = context
-
-        image.draw(in: NSRect(origin: .zero, size: newSize))
-
-        NSGraphicsContext.restoreGraphicsState()
-
-        return bitmap.representation(using: .png, properties: [:])
-        #else
-        let originalSize = image.size
-        let scale = min(maxSize / originalSize.width, maxSize / originalSize.height)
-
-        // Don't upscale
-        let scaleFactor = min(scale, 1.0)
-        let newSize = CGSize(
-            width: originalSize.width * scaleFactor,
-            height: originalSize.height * scaleFactor
-        )
-
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        let resizedImage = renderer.image { context in
-            image.draw(in: CGRect(origin: .zero, size: newSize))
-        }
-
-        return resizedImage.pngData()
-        #endif
-    }
 }
 
 // MARK: - Previews

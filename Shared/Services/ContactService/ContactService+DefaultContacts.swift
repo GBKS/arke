@@ -42,21 +42,12 @@ extension ContactService {
         
         do {
             var avatarData: Data?
-            
-            #if os(iOS)
-            if let image = UIImage(named: "faucetto-signetto"),
-               let imageData = image.pngData() {
-                avatarData = imageData
+
+            // Downscale the bundled asset — storing it raw put a full-res PNG
+            // (~1MB on 2x/3x devices) into SwiftData and CloudKit
+            if let image = PlatformImage(named: "faucetto-signetto") {
+                avatarData = AvatarImageProcessor.processedData(from: image)
             }
-            #elseif os(macOS)
-            if let image = NSImage(named: "faucetto-signetto"),
-               let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
-                let bitmapRep = NSBitmapImageRep(cgImage: cgImage)
-                if let imageData = bitmapRep.representation(using: .png, properties: [:]) {
-                    avatarData = imageData
-                }
-            }
-            #endif
             
             // Create "Faucetto Signetto" system contact
             let defaultContact = ContactModel(

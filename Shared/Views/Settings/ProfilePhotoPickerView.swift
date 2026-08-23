@@ -143,7 +143,7 @@ struct ProfilePhotoPickerView: View {
             // Load transferable data
             if let data = try await item.loadTransferable(type: Data.self) {
                 // Compress and resize if needed
-                if let processedData = processImageData(data) {
+                if let processedData = AvatarImageProcessor.processedData(from: data) {
                     await MainActor.run {
                         withAnimation {
                             avatarData = processedData
@@ -156,47 +156,4 @@ struct ProfilePhotoPickerView: View {
         }
     }
 
-    /// Process image to reasonable size and quality (max 512px, JPEG 80%)
-    private func processImageData(_ data: Data) -> Data? {
-        let maxDimension: CGFloat = 512
-
-        #if os(iOS)
-        guard let image = UIImage(data: data) else { return nil }
-        let scale = min(maxDimension / image.size.width, maxDimension / image.size.height, 1.0)
-
-        let newSize = CGSize(
-            width: image.size.width * scale,
-            height: image.size.height * scale
-        )
-
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        let resizedImage = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: newSize))
-        }
-
-        return resizedImage.jpegData(compressionQuality: 0.8)
-        #else
-        guard let image = NSImage(data: data) else { return nil }
-        let scale = min(maxDimension / image.size.width, maxDimension / image.size.height, 1.0)
-
-        let newSize = NSSize(
-            width: image.size.width * scale,
-            height: image.size.height * scale
-        )
-
-        let resized = NSImage(size: newSize)
-        resized.lockFocus()
-        image.draw(
-            in: NSRect(origin: .zero, size: newSize),
-            from: .zero,
-            operation: .copy,
-            fraction: 1.0
-        )
-        resized.unlockFocus()
-
-        guard let tiffData = resized.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiffData) else { return nil }
-        return bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
-        #endif
-    }
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Contacts
+import ArkeUI
 
 /// Service for interacting with macOS native Contacts
 @MainActor
@@ -202,16 +203,17 @@ class NativeContactService {
     
     /// Extract image data from CNContact (prefer thumbnail for performance)
     private func extractImageData(from contact: CNContact) -> Data? {
-        // Prefer thumbnail for better performance
+        // Prefer thumbnail for better performance (already avatar-sized)
         if let thumbnailData = contact.thumbnailImageData {
             return thumbnailData
         }
-        
-        // Fall back to full image if thumbnail not available
+
+        // Fall back to the full image, downscaled — raw imageData is
+        // photo-library resolution and would bloat the store and CloudKit
         if contact.imageDataAvailable, let imageData = contact.imageData {
-            return imageData
+            return AvatarImageProcessor.processedData(from: imageData)
         }
-        
+
         return nil
     }
 }

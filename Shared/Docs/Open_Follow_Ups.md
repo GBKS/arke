@@ -397,3 +397,28 @@ settings row; both themes still point at the original assets). Remaining:
   visually. Balance modals (boarding/offboarding/refresh) use the same
   `aspectFill` pattern and share whatever fix lands.
 - [ ] **Per-theme color palettes** (deferred by design).
+
+## Metadata Export / Import (guiding doc: `Features/Metadata_Export_Import.md`)
+
+- [ ] **DECIDED 2026-08-23, ready to build — file-based export/import of user
+  metadata** (contacts, tags, transaction notes/assignments, personal profile)
+  in the Manual Backup section. Versioned JSON envelope with dedicated DTOs,
+  upsert-by-identity merge with newest-wins, annotations keyed by txid,
+  plaintext (no warning copy), no auto-export. Phasing in the doc: 1 export,
+  2 import + merge, 3 QA/localization. Phase 1 (export) shipped and
+  device-tested 2026-08-23.
+- [x] **Shrink avatar data at every write site — FIXED 2026-08-23** (found
+  via a 1.2MB export where one avatar was ~900KB). Root cause was the
+  default faucet contact storing the bundled `faucetto-signetto` asset as
+  full-res PNG (`ContactService+DefaultContacts`), NOT the native-contact
+  path (which already prefers the small thumbnail). Fix: new
+  `AvatarImageProcessor` in ArkéUI (512px, JPEG 0.8, white-flattened alpha,
+  scale-1 rendering so device scale doesn't multiply pixels) now used by the
+  contact editor (was 300px PNG), profile picker (private duplicate
+  deleted), the native full-image fallback, and default-contact creation;
+  plus a one-time launch pass `reencodeOversizedAvatarsIfNeeded()`
+  (>150KB → re-encode, UserDefaults-gated, piggybacks on
+  `createDefaultContactsIfNeeded`) that shrinks existing stores, CloudKit
+  payloads, and exports. Preset avatars are JPGs (no alpha) — safe. Both
+  builds green, mobile suite green. Pending: on-device check that the
+  faucet avatar re-encodes and the export drops to ~KB size.
