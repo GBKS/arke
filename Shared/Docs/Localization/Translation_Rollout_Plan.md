@@ -1,6 +1,7 @@
-# Translation Rollout Plan — German & Japanese
+# Translation Rollout Plan — German, Japanese & Traditional Chinese
 
-Adds `de` and `ja` on top of the completed defaultValue migration
+Adds `de` and `ja` (and later `zh-Hant`, see the section at the end) on top of
+the completed defaultValue migration
 (`Default_Value_Migration_Plan.md`). Volume: ~1,250 translatable strings per
 language across `Shared/Localizable.xcstrings` (~1,085 keys) and the ArkéUI
 package catalog (~208), plus 6 Info.plist permission strings.
@@ -78,3 +79,33 @@ knownRegions gained de/ja; the build also enriched the InfoPlist catalogs
 | Phase B | done 2026-08-18 | languages added in Xcode (user) |
 | Phase C | done 2026-08-18 | 1,090 entries × de+ja, needs_review; guard green; native review pending |
 | Phase D | not started | per-language QA: App Language runs, German expansion layout pass, ja typography |
+| zh-Hant | done 2026-08-23 | 1,088 entries, needs_review; see section below |
+
+---
+
+## Traditional Chinese (zh-Hant) — added 2026-08-23
+
+Motivated by a Hong Kong conference demo. Same pipeline as Phase C, one
+language: glossary section added to `Translation_Glossary.md` (Taiwan
+conventions — Apple's zh-Hant flavor; Hong Kong devices resolve to it via
+locale fallback; plain 你 register mirroring the German du decision), 13
+parallel glossary-bound drafting batches (the Phase C family grouping,
+regenerated from the live catalogs since the originals were deleted), applied
+via `apply_translations.py` (now language-generic), then a review-corrections
+overlay (11 keys: transfer=轉移 not 轉帳 for balance moves, `label_change`
+mistranslated as bitcoin change output, assign/undo terminology unification,
+VTXO-refresh vs UI-refresh conflations).
+
+Extra guard used this round: ICU `Hans-Hant` transform over all values — any
+character that changes under it is simplified-character leakage (zero found).
+A hand-curated "simplified-only characters" list had false positives (估, 備);
+use the transform, not a list.
+
+Open, mirroring de/ja:
+- [ ] Native-speaker review (⚠️ glossary terms first: 聰 vs "sats", 復原片語
+      vs community 助記詞, 付款請求, 轉入/轉出; plus the app-wide 拷貝/剪貼板
+      vs 複製/剪貼簿 pair).
+- [ ] zh-Hant typography QA (App Language = zh-Hant run; CJK/Latin spacing,
+      line breaking) — fold into Phase D.
+- [ ] `knownRegions` gains `"zh-Hant"` in Xcode (user — pbxproj is not edited
+      by tooling while Xcode is open); catalog entries exist regardless.

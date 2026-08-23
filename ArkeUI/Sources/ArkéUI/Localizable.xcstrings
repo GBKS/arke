@@ -55,6 +55,12 @@
             "state": "needs_review",
             "value": "%lld件の承認"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld 次確認"
+          }
         }
       }
     },
@@ -76,6 +82,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "使用できません：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無法使用：%@"
           }
         }
       }
@@ -99,6 +111,12 @@
             "state": "needs_review",
             "value": "アドレスアイコン"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "地址識別圖示"
+          }
         }
       }
     },
@@ -121,6 +139,12 @@
             "state": "needs_review",
             "value": "送金額"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "傳送金額"
+          }
         }
       }
     },
@@ -139,6 +163,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "金額"
@@ -165,6 +195,12 @@
             "state": "needs_review",
             "value": "%@での金額"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "以 %@ 為單位的金額"
+          }
         }
       }
     },
@@ -186,6 +222,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "カラーオプション%lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "顏色選項 %lld"
           }
         }
       }
@@ -209,6 +251,12 @@
             "state": "needs_review",
             "value": "手数料"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費"
+          }
         }
       }
     },
@@ -230,6 +278,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "手数料選択を開く"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開啟手續費選擇"
           }
         }
       }
@@ -253,6 +307,12 @@
             "state": "needs_review",
             "value": "カラーピッカーを開く"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開啟顏色選擇器"
+          }
         }
       }
     },
@@ -274,6 +334,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "絵文字ピッカーを開く"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開啟表情符號選擇器"
           }
         }
       }
@@ -297,6 +363,12 @@
             "state": "needs_review",
             "value": "Lightning インボイスをクリップボードにコピー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "將閃電網路付款請求拷貝到剪貼板"
+          }
         }
       }
     },
@@ -318,6 +390,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "値をクリップボードにコピー"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "將這個值拷貝到剪貼板"
           }
         }
       }
@@ -341,6 +419,12 @@
             "state": "needs_review",
             "value": "この支払い先を選択"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選取此付款目的地"
+          }
         }
       }
     },
@@ -362,6 +446,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "金額を最大使用可能残高に設定します。再度アクティブにしてクリア。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "將金額設為你可花費的最大餘額。再次啟用即可清除。"
           }
         }
       }
@@ -385,6 +475,12 @@
             "state": "needs_review",
             "value": "今すぐ残高を更新"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "立即更新你的餘額"
+          }
         }
       }
     },
@@ -406,6 +502,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "メモ"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "備註"
           }
         }
       }
@@ -429,6 +531,12 @@
             "state": "needs_review",
             "value": "利用可能な残高を超えています"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "超過可用餘額"
+          }
         }
       }
     },
@@ -451,6 +559,12 @@
             "state": "needs_review",
             "value": "まだ推定されていません"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "尚未估算"
+          }
         }
       }
     },
@@ -472,6 +586,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "利用不可"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無法取得"
           }
         }
       }
@@ -507,6 +627,12 @@
             "state": "needs_review",
             "value": "%1$@、%2$lld日で有効期限切れ"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%1$@，%2$lld 天後到期"
+          }
         }
       }
     },
@@ -528,6 +654,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "有効期限切れ"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已到期"
           }
         }
       }
@@ -551,6 +683,12 @@
             "state": "needs_review",
             "value": "ロック済み"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已鎖定"
+          }
         }
       }
     },
@@ -572,6 +710,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "絵文字を変更"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "變更表情符號"
           }
         }
       }
@@ -595,6 +739,12 @@
             "state": "needs_review",
             "value": "色を選択"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選擇顏色"
+          }
         }
       }
     },
@@ -616,6 +766,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "カスタムカラーを選択"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選擇自訂顏色"
           }
         }
       }
@@ -639,6 +795,12 @@
             "state": "needs_review",
             "value": "絵文字を選択"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選擇表情符號"
+          }
         }
       }
     },
@@ -660,6 +822,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ファイルから選択…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "從「檔案」選擇…"
           }
         }
       }
@@ -683,6 +851,12 @@
             "state": "needs_review",
             "value": "アドレスをコピー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拷貝地址"
+          }
         }
       }
     },
@@ -704,6 +878,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "インボイスをコピー"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拷貝付款請求"
           }
         }
       }
@@ -727,6 +907,12 @@
             "state": "needs_review",
             "value": "値をコピー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拷貝內容"
+          }
         }
       }
     },
@@ -748,6 +934,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "エラーを閉じる"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "關閉錯誤訊息"
           }
         }
       }
@@ -771,6 +963,12 @@
             "state": "needs_review",
             "value": "強制移動を開始"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開始強制轉移"
+          }
         }
       }
     },
@@ -792,6 +990,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "タップしてコピー"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "輕點以拷貝"
           }
         }
       }
@@ -815,6 +1019,12 @@
             "state": "needs_review",
             "value": "オフチェーン支払い用のArkプロトコルアドレス"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用於鏈下付款的 Ark 協定地址"
+          }
         }
       }
     },
@@ -836,6 +1046,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Arkアドレス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ark 地址"
           }
         }
       }
@@ -859,6 +1075,12 @@
             "state": "needs_review",
             "value": "埋め込み支払い詳細を含むBitcoin URI"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "內嵌付款詳細資訊的比特幣 URI"
+          }
         }
       }
     },
@@ -880,6 +1102,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "BIP-21支払いURI"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-21 付款 URI"
           }
         }
       }
@@ -903,6 +1131,12 @@
             "state": "needs_review",
             "value": "DNSを使用した人間が読める形式のBitcoinアドレス"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "使用 DNS 的易讀比特幣地址"
+          }
         }
       }
     },
@@ -924,6 +1158,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "BIP-353アドレス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "BIP-353 地址"
           }
         }
       }
@@ -947,6 +1187,12 @@
             "state": "needs_review",
             "value": "標準Bitcoinアドレス（P2PKH、P2SH、Bech32）"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "標準比特幣地址（P2PKH、P2SH、Bech32）"
+          }
         }
       }
     },
@@ -968,6 +1214,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Bitcoinアドレス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "比特幣地址"
           }
         }
       }
@@ -991,6 +1243,12 @@
             "state": "needs_review",
             "value": "人間が読める形式のライトニング支払いアドレス"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "易讀的閃電網路付款地址"
+          }
         }
       }
     },
@@ -1012,6 +1270,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ライトニングアドレス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閃電網路地址"
           }
         }
       }
@@ -1035,6 +1299,12 @@
             "state": "needs_review",
             "value": "ライトニングネットワーク支払いリクエスト"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閃電網路的付款請求"
+          }
         }
       }
     },
@@ -1056,6 +1326,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ライトニングインボイス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閃電網路付款請求"
           }
         }
       }
@@ -1080,6 +1356,12 @@
             "state": "needs_review",
             "value": "アドレスを確認"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢查地址"
+          }
         }
       }
     },
@@ -1101,6 +1383,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "移動する金額"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "要轉移的金額"
           }
         }
       }
@@ -1124,6 +1412,12 @@
             "state": "needs_review",
             "value": "強制移動を使うと、サーバーなしで自分のビットコインを貯蓄に移動できます。緊急時のみの機能です。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制轉移讓你不需要伺服器，就能自行將比特幣移至儲蓄。僅供緊急情況使用。"
+          }
         }
       }
     },
@@ -1145,6 +1439,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "推定手数料"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "預估手續費"
           }
         }
       }
@@ -1168,6 +1468,12 @@
             "state": "needs_review",
             "value": "手数料はかなり大きくなる可能性があります"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費可能相當高"
+          }
         }
       }
     },
@@ -1189,6 +1495,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "サーバーが協力しない場合のみ強制移動を使用してください。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "只有在伺服器不配合時才使用強制轉移。"
           }
         }
       }
@@ -1212,6 +1524,12 @@
             "state": "needs_review",
             "value": "保留中の更新があります。今強制移動を開始すると、更新によってキャンセルされる可能性があります。待つのが最善です。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "目前有一筆待完成的更新。如果現在開始強制轉移，可能會被更新取消。最好先等待。"
+          }
         }
       }
     },
@@ -1233,6 +1551,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "更新実行中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新進行中"
           }
         }
       }
@@ -1256,6 +1580,12 @@
             "state": "needs_review",
             "value": "残高ビューで貯蓄に移動するより速く、より安い方法があります。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在餘額畫面中，有更快、更便宜的方式可以轉移到儲蓄。"
+          }
         }
       }
     },
@@ -1277,6 +1607,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "始める前に"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開始之前"
           }
         }
       }
@@ -1300,6 +1636,12 @@
             "state": "needs_review",
             "value": "手数料をカバーするために貯蓄残高を増やしてください。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "增加你的儲蓄餘額以支付手續費。"
+          }
         }
       }
     },
@@ -1321,6 +1663,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "支払い残高に移動するビットコインがありません。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你的支付餘額中沒有可轉移的比特幣。"
           }
         }
       }
@@ -1345,6 +1693,12 @@
             "state": "needs_review",
             "value": "キャンセル"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取消"
+          }
         }
       }
     },
@@ -1366,6 +1720,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "クリア"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "清除"
           }
         }
       }
@@ -1390,6 +1750,12 @@
             "state": "needs_review",
             "value": "閉じる"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "關閉"
+          }
         }
       }
     },
@@ -1411,6 +1777,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "完了"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完成"
           }
         }
       }
@@ -1434,6 +1806,12 @@
             "state": "needs_review",
             "value": "リカバリーフレーズを入力"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "輸入復原片語"
+          }
         }
       }
     },
@@ -1455,6 +1833,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "残高不足"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "餘額不足"
           }
         }
       }
@@ -1478,6 +1862,12 @@
             "state": "needs_review",
             "value": "再試行"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "重試"
+          }
         }
       }
     },
@@ -1496,6 +1886,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開始"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "開始"
@@ -1522,6 +1918,12 @@
             "state": "needs_review",
             "value": "アクティビティを表示"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "查看活動"
+          }
         }
       }
     },
@@ -1543,6 +1945,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "残高詳細を表示"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "查看餘額"
           }
         }
       }
@@ -1566,6 +1974,12 @@
             "state": "needs_review",
             "value": "Arkサーバー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Ark 伺服器"
+          }
         }
       }
     },
@@ -1587,6 +2001,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "切断"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已中斷連線"
           }
         }
       }
@@ -1610,6 +2030,12 @@
             "state": "needs_review",
             "value": "優秀"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "極佳"
+          }
         }
       }
     },
@@ -1631,6 +2057,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "良好です"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "良好"
           }
         }
       }
@@ -1654,6 +2086,12 @@
             "state": "needs_review",
             "value": "不良です"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不佳"
+          }
         }
       }
     },
@@ -1675,6 +2113,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "このデバイスはメインデバイスからiCloud経由で同期されたウォレットデータを表示しています。送金と受け取りはメインデバイスでのみ利用可能です。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "此裝置正在檢視透過 iCloud 從你的主要裝置同步的錢包資料。傳送與接收功能只能在主要裝置上使用。"
           }
         }
       }
@@ -1698,6 +2142,12 @@
             "state": "needs_review",
             "value": "iCloud経由でデータを同期中"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "資料透過 iCloud 同步"
+          }
         }
       }
     },
@@ -1719,6 +2169,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "またはここでリカバリーフレーズを入力してください"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "或立即輸入你的復原片語"
           }
         }
       }
@@ -1742,6 +2198,12 @@
             "state": "needs_review",
             "value": "ウォレットキーがiCloud Keychain経由で同期中です"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "錢包金鑰正透過 iCloud 鑰匙圈同步"
+          }
         }
       }
     },
@@ -1763,6 +2225,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "送金と受け取りは無効です"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "傳送與接收已停用"
           }
         }
       }
@@ -1786,6 +2254,12 @@
             "state": "needs_review",
             "value": "同期されたデータのみを表示しています"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "僅檢視已同步的資料"
+          }
         }
       }
     },
@@ -1807,6 +2281,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "このデバイスはiCloud経由で同期されたウォレットデータを表示しています。ウォレットキーはまだこのデバイスに到着していません。通常はiCloud Keychain経由で自動的に同期されます。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "此裝置正在檢視透過 iCloud 同步的錢包資料。你的錢包金鑰尚未送達此裝置，通常它會自行透過 iCloud 鑰匙圈同步。"
           }
         }
       }
@@ -1830,6 +2310,12 @@
             "state": "needs_review",
             "value": "閲覧専用モード"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "唯讀模式"
+          }
         }
       }
     },
@@ -1851,6 +2337,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Arkサーバーに接続しています"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連線至 Ark 伺服器"
           }
         }
       }
@@ -1874,6 +2366,12 @@
             "state": "needs_review",
             "value": "Arkサーバーに接続していません"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未連線至 Ark 伺服器"
+          }
         }
       }
     },
@@ -1895,6 +2393,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "接続品質: %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連線品質：%@"
           }
         }
       }
@@ -1918,6 +2422,12 @@
             "state": "needs_review",
             "value": "再接続試行: %lld"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "重新連線嘗試次數：%lld"
+          }
         }
       }
     },
@@ -1939,6 +2449,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "接続ステータス"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連線狀態"
           }
         }
       }
@@ -1962,6 +2478,12 @@
             "state": "needs_review",
             "value": "%@（開発と実験用のテストネットワーク）に接続しています。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你已連線至 %@，這是用於開發與實驗的測試網路。"
+          }
         }
       }
     },
@@ -1983,6 +2505,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "フォーセットを使ってテストコインを取得してください"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "使用水龍頭取得測試資金"
           }
         }
       }
@@ -2006,6 +2534,12 @@
             "state": "needs_review",
             "value": "テストコインに実際の価値はありません"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "測試幣沒有實際價值"
+          }
         }
       }
     },
@@ -2027,6 +2561,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "安全に実験するためのテストネットワーク"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "可安全實驗的測試網路"
           }
         }
       }
@@ -2050,6 +2590,12 @@
             "state": "needs_review",
             "value": "テストネットワーク"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "測試網路"
+          }
         }
       }
     },
@@ -2071,6 +2617,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "接続に問題がある場合は、以下をお試しください："
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "如果遇到連線問題，可以嘗試："
           }
         }
       }
@@ -2094,6 +2646,12 @@
             "state": "needs_review",
             "value": "インターネット接続を確認してください"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢查你的網路連線"
+          }
         }
       }
     },
@@ -2115,6 +2673,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "下にプルして更新してください"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下拉重新整理"
           }
         }
       }
@@ -2138,6 +2702,12 @@
             "state": "needs_review",
             "value": "アプリを再起動してください"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "重新啟動 App"
+          }
         }
       }
     },
@@ -2159,6 +2729,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "トラブルシューティング"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "疑難排解"
           }
         }
       }
@@ -2182,6 +2758,12 @@
             "state": "needs_review",
             "value": "プリセットアバター"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "預設頭像"
+          }
         }
       }
     },
@@ -2203,6 +2785,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "注：ネットワークサポートはメインネット、テストネット、Signet、および該当する場合はレグテストを含みます。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "注意：網路支援視適用情況包含 mainnet、testnet、signet 與 regtest。"
           }
         }
       }
@@ -2226,6 +2814,12 @@
             "state": "needs_review",
             "value": "サーバー: %@"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "伺服器：%@"
+          }
         }
       }
     },
@@ -2247,6 +2841,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "このビューは、選択した形式設定と システムロケールに基づいて、ビットコイン金額がどのようにフォーマットされるかを示しています。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "此畫面示範比特幣金額如何依照你選擇的格式偏好與系統地區設定進行格式化。"
           }
         }
       }
@@ -2270,6 +2870,12 @@
             "state": "needs_review",
             "value": "アクティビティ"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "活動"
+          }
         }
       }
     },
@@ -2291,6 +2897,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "食べ物と飲み物"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "食物與飲料"
           }
         }
       }
@@ -2314,6 +2926,12 @@
             "state": "needs_review",
             "value": "お金"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金錢"
+          }
         }
       }
     },
@@ -2335,6 +2953,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "オブジェクト"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "物品"
           }
         }
       }
@@ -2358,6 +2982,12 @@
             "state": "needs_review",
             "value": "ショッピング"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購物"
+          }
         }
       }
     },
@@ -2380,6 +3010,12 @@
             "state": "needs_review",
             "value": "シンボル"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "符號"
+          }
         }
       }
     },
@@ -2398,6 +3034,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "交通"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "交通"
@@ -2424,6 +3066,12 @@
             "state": "needs_review",
             "value": "コピーエラー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拷貝錯誤"
+          }
         }
       }
     },
@@ -2447,6 +3095,12 @@
             "state": "needs_review",
             "value": "更新に失敗しました"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更新失敗"
+          }
         }
       }
     },
@@ -2468,6 +3122,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "申し訳ございません"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "深感遺憾"
           }
         }
       }
@@ -2491,6 +3151,12 @@
             "state": "needs_review",
             "value": "高速"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "快速"
+          }
         }
       }
     },
@@ -2512,6 +3178,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "迅速な承認のための高い手数料です"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費較高，確認較快"
           }
         }
       }
@@ -2535,6 +3207,12 @@
             "state": "needs_review",
             "value": "～10～20分"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約 10-20 分鐘"
+          }
         }
       }
     },
@@ -2556,6 +3234,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "中程度"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "中等"
           }
         }
       }
@@ -2579,6 +3263,12 @@
             "state": "needs_review",
             "value": "手数料と承認時間のバランスが取れています"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費與確認時間均衡"
+          }
         }
       }
     },
@@ -2600,6 +3290,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "～30～60分"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約 30-60 分鐘"
           }
         }
       }
@@ -2623,6 +3319,12 @@
             "state": "needs_review",
             "value": "低速"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "慢速"
+          }
         }
       }
     },
@@ -2644,6 +3346,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "低い手数料で長い承認時間です"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費較低，確認時間較長"
           }
         }
       }
@@ -2667,6 +3375,12 @@
             "state": "needs_review",
             "value": "～1～2時間"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約 1-2 小時"
+          }
         }
       }
     },
@@ -2688,6 +3402,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "取引"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "交易"
           }
         }
       }
@@ -2711,6 +3431,12 @@
             "state": "needs_review",
             "value": "あなたの Bitcoin はすべて既に貯蓄残高に向かっています。アクティビティで進捗を確認できます。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你的所有比特幣都已在前往儲蓄餘額的路上。你可以在活動中追蹤進度。"
+          }
         }
       }
     },
@@ -2732,6 +3458,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "完了すると、Bitcoin は自動的に貯蓄残高に追加されます。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完成後，比特幣會自動加入你的儲蓄餘額。"
           }
         }
       }
@@ -2755,6 +3487,12 @@
             "state": "needs_review",
             "value": "約1時間ごとにアプリを開いてください。アプリを開くと移動が続きます。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大約每小時開啟一次 App。開啟 App 就能讓轉移繼續進行。"
+          }
         }
       }
     },
@@ -2776,6 +3514,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "チェックインの時間になったらお知らせします。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "我們會提醒你開啟 App。"
           }
         }
       }
@@ -2799,6 +3543,12 @@
             "state": "needs_review",
             "value": "Bitcoin は貯蓄残高に向かっています。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你的比特幣正在前往儲蓄餘額的路上。"
+          }
         }
       }
     },
@@ -2820,6 +3570,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "強制移動を完了中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在完成你的強制轉移"
           }
         }
       }
@@ -2867,6 +3623,12 @@
             "state": "needs_review",
             "value": "あと %lld 時間程度です。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大約還需 %lld 小時。"
+          }
         }
       }
     },
@@ -2888,6 +3650,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "残り1時間未満です。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "還需不到 1 小時。"
           }
         }
       }
@@ -2911,6 +3679,12 @@
             "state": "needs_review",
             "value": "あと約1時間です。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "大約還需 1 小時。"
+          }
         }
       }
     },
@@ -2932,6 +3706,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "設定を開く"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開啟「設定」"
           }
         }
       }
@@ -2955,6 +3735,12 @@
             "state": "needs_review",
             "value": "通知がオフになっています。チェックインを見逃さないよう通知をオンにしてください。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "提醒已關閉。開啟通知，以免錯過開啟 App 的時機。"
+          }
         }
       }
     },
@@ -2976,6 +3762,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "開始しました。約1時間後にアプリを開いてください。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在開始。大約一小時後再回來看看。"
           }
         }
       }
@@ -2999,6 +3791,12 @@
             "state": "needs_review",
             "value": "通知をオンにする"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "開啟通知"
+          }
         }
       }
     },
@@ -3020,6 +3818,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "強制移動進行中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制轉移進行中"
           }
         }
       }
@@ -3043,6 +3847,12 @@
             "state": "needs_review",
             "value": "会計スタイル（シンボル末尾）"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "會計格式（符號置後）"
+          }
         }
       }
     },
@@ -3065,6 +3875,12 @@
             "state": "needs_review",
             "value": "例: %@"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "範例：%@"
+          }
         }
       }
     },
@@ -3083,6 +3899,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "約 %@"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "約 %@"
@@ -3109,6 +3931,12 @@
             "state": "needs_review",
             "value": "手数料: ~%@"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費：約 %@"
+          }
         }
       }
     },
@@ -3130,6 +3958,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "1分未満"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "< 1 分鐘"
           }
         }
       }
@@ -3153,6 +3987,12 @@
             "state": "needs_review",
             "value": "ネットワーク: %@"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "網路：%@"
+          }
         }
       }
     },
@@ -3174,6 +4014,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ 前"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@前"
           }
         }
       }
@@ -3197,6 +4043,12 @@
             "state": "needs_review",
             "value": "符号プリフィックス付き"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "含正負號"
+          }
         }
       }
     },
@@ -3215,6 +4067,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "0"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "0"
@@ -3241,6 +4099,12 @@
             "state": "needs_review",
             "value": "設定で変更して、異なる形式を確認してください"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在「設定」中變更即可查看不同格式"
+          }
         }
       }
     },
@@ -3259,6 +4123,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "金額"
@@ -3285,6 +4155,12 @@
             "state": "needs_review",
             "value": "金額例"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額範例"
+          }
         }
       }
     },
@@ -3306,6 +4182,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "更新する金額"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "要更新的金額"
           }
         }
       }
@@ -3329,6 +4211,12 @@
             "state": "needs_review",
             "value": "現在のフォーマット"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "目前格式"
+          }
         }
       }
     },
@@ -3350,6 +4238,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "手数料"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費"
           }
         }
       }
@@ -3373,6 +4267,12 @@
             "state": "needs_review",
             "value": "手数料: —"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費：—"
+          }
         }
       }
     },
@@ -3394,6 +4294,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "無料"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "免費"
           }
         }
       }
@@ -3417,6 +4323,12 @@
             "state": "needs_review",
             "value": "既知のアドレス"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已知地址"
+          }
         }
       }
     },
@@ -3438,6 +4350,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "ラベル:"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "標記："
           }
         }
       }
@@ -3461,6 +4379,12 @@
             "state": "needs_review",
             "value": "連絡先にリンク済み"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連結至聯絡人"
+          }
         }
       }
     },
@@ -3482,6 +4406,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "メッセージ:"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "訊息："
           }
         }
       }
@@ -3505,6 +4435,12 @@
             "state": "needs_review",
             "value": "最小"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下限"
+          }
         }
       }
     },
@@ -3526,6 +4462,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "名前"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名稱"
           }
         }
       }
@@ -3549,6 +4491,12 @@
             "state": "needs_review",
             "value": "次のラウンド"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下一回合"
+          }
         }
       }
     },
@@ -3570,6 +4518,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "支払い残高の更新"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "支付餘額更新"
           }
         }
       }
@@ -3593,6 +4547,12 @@
             "state": "needs_review",
             "value": "プレビュー"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "預覽"
+          }
         }
       }
     },
@@ -3614,6 +4574,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "受け取った:"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已接收："
           }
         }
       }
@@ -3637,6 +4603,12 @@
             "state": "needs_review",
             "value": "選択済み:"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已選擇："
+          }
         }
       }
     },
@@ -3658,6 +4630,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "送金した:"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已傳送："
           }
         }
       }
@@ -3681,6 +4659,12 @@
             "state": "needs_review",
             "value": "ステータス"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "狀態"
+          }
         }
       }
     },
@@ -3702,6 +4686,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "有効期限までの時間"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "距離到期時間"
           }
         }
       }
@@ -3725,6 +4715,12 @@
             "state": "needs_review",
             "value": "取引フォーマット例"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "交易格式範例"
+          }
         }
       }
     },
@@ -3746,6 +4742,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "キャンセルできません"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無法取消"
           }
         }
       }
@@ -3769,6 +4771,12 @@
             "state": "needs_review",
             "value": "完了まで、1時間ごとにアプリを開いてください"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在完成之前，你需要每小時開啟一次 App"
+          }
         }
       }
     },
@@ -3790,6 +4798,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "残高が空の場合は不要です"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "餘額為空時不需要"
           }
         }
       }
@@ -3813,6 +4827,12 @@
             "state": "needs_review",
             "value": "強制移動には 10 時間以上かかる場合があります"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "強制轉移可能需要 10 小時以上"
+          }
         }
       }
     },
@@ -3834,6 +4854,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Bitcoin フォーマッター デモ"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "比特幣格式化示範"
           }
         }
       }
@@ -3857,6 +4883,12 @@
             "state": "needs_review",
             "value": "メモを追加…"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "加入備註…"
+          }
         }
       }
     },
@@ -3878,6 +4910,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "金額を追加（オプション）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "加入金額（選填）"
           }
         }
       }
@@ -3901,6 +4939,12 @@
             "state": "needs_review",
             "value": "金額（必須）"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額（必填）"
+          }
         }
       }
     },
@@ -3922,6 +4966,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "金額を入力"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "輸入金額"
           }
         }
       }
@@ -3945,6 +4995,12 @@
             "state": "needs_review",
             "value": "メモを追加（オプション）"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新增備註（選填）"
+          }
         }
       }
     },
@@ -3966,6 +5022,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "タグ名を入力"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "輸入標籤名稱"
           }
         }
       }
@@ -3989,6 +5051,12 @@
             "state": "needs_review",
             "value": "金額とメモを追加"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "加入金額與備註"
+          }
         }
       }
     },
@@ -4010,6 +5078,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "アドレス形式"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "地址格式"
           }
         }
       }
@@ -4033,6 +5107,12 @@
             "state": "needs_review",
             "value": "金額は固定されています"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "金額已固定"
+          }
         }
       }
     },
@@ -4054,6 +5134,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "支払い金額："
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "付款金額："
           }
         }
       }
@@ -4077,6 +5163,12 @@
             "state": "needs_review",
             "value": "%@ が追加されました"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新增於 %@"
+          }
         }
       }
     },
@@ -4098,6 +5190,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "利用可能"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "可用"
           }
         }
       }
@@ -4121,6 +5219,12 @@
             "state": "needs_review",
             "value": "承認済み"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已確認"
+          }
         }
       }
     },
@@ -4142,6 +5246,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "接続済み"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連線"
           }
         }
       }
@@ -4165,6 +5275,12 @@
             "state": "needs_review",
             "value": "コピーしました"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已拷貝"
+          }
         }
       }
     },
@@ -4186,6 +5302,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "コピーしました！"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已拷貝！"
           }
         }
       }
@@ -4209,6 +5331,12 @@
             "state": "needs_review",
             "value": "接続解除"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已中斷連線"
+          }
         }
       }
     },
@@ -4230,6 +5358,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "期限切れ"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已過期"
           }
         }
       }
@@ -4253,6 +5387,12 @@
             "state": "needs_review",
             "value": "手数料：利用不可"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手續費：無法取得"
+          }
         }
       }
     },
@@ -4274,6 +5414,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "インボイスが生成されました"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已產生付款請求"
           }
         }
       }
@@ -4297,6 +5443,12 @@
             "state": "needs_review",
             "value": "最後に同期したのは %@ です"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "上次同步：%@"
+          }
         }
       }
     },
@@ -4318,6 +5470,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "読み込み中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "載入中"
           }
         }
       }
@@ -4341,6 +5499,12 @@
             "state": "needs_review",
             "value": "接続が弱い"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連線品質不佳"
+          }
         }
       }
     },
@@ -4362,6 +5526,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "閲覧専用モード"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "唯讀模式"
           }
         }
       }
@@ -4385,6 +5555,12 @@
             "state": "needs_review",
             "value": "再接続中…（試行 %lld 回目）"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在重新連線…（第 %lld 次嘗試）"
+          }
         }
       }
     },
@@ -4407,6 +5583,12 @@
             "state": "needs_review",
             "value": "更新中…"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在更新…"
+          }
         }
       }
     },
@@ -4425,6 +5607,12 @@
           }
         },
         "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未確認"
+          }
+        },
+        "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
             "value": "未確認"
@@ -4474,6 +5662,12 @@
             "state": "needs_review",
             "value": "受け取りました"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已接收"
+          }
         }
       }
     },
@@ -4495,6 +5689,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "送金しました"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已傳送"
           }
         }
       }
@@ -4518,6 +5718,12 @@
             "state": "needs_review",
             "value": "移動"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "轉移"
+          }
         }
       }
     },
@@ -4539,6 +5745,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "保留中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "待處理"
           }
         }
       }
@@ -4562,6 +5774,12 @@
             "state": "needs_review",
             "value": "アクティブな VTXO がありません"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有作用中的 VTXO"
+          }
         }
       }
     },
@@ -4584,6 +5802,12 @@
             "state": "needs_review",
             "value": "期限切れ"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已過期"
+          }
         }
       }
     },
@@ -4605,6 +5829,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "無料更新ゾーン"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "免費更新區間"
           }
         }
       }

@@ -47,6 +47,12 @@
             "state": "needs_review",
             "value": "連絡先と連携して、アプリに名前とプロフィール画像を表示します。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連結你的「聯絡人」，以便在 App 中顯示姓名與大頭照。"
+          }
         }
       }
     },

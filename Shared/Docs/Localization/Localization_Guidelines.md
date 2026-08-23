@@ -245,24 +245,27 @@ Run occasionally, and before starting translation work:
 
 ---
 
-## Translations (de, ja — August 2026)
+## Translations (de, ja — August 2026; zh-Hant — August 2026)
 
-German and Japanese values exist for every translatable key (state
-`needs_review` until natively reviewed). Rules:
+German, Japanese, and Traditional Chinese values exist for every translatable
+key (state `needs_review` until natively reviewed). Rules:
 
 - **Translations live in the catalogs and are edited there** (Xcode's catalog
   editor) — the code-is-source-of-truth rule applies to English only.
 - Terminology is governed by `Translation_Glossary.md` — one meaning, one term.
-  German uses **du**; Japanese uses です・ます.
+  German uses **du**; Japanese uses です・ます; zh-Hant uses plain 你 and
+  Taiwan conventions (Apple's zh-Hant flavor; covers Hong Kong via fallback).
 - **New strings ship English-only** (they fall back correctly via
-  `defaultValue:`); add de/ja via `Scripts/apply_translations.py`
-  (JSON in → all catalogs, `needs_review`) or in the catalog editor during the
-  next review cycle.
+  `defaultValue:`); add translations via `Scripts/apply_translations.py`
+  (JSON in, any language codes → all catalogs, `needs_review`) or in the
+  catalog editor during the next review cycle.
 - `Scripts/translation_lint.py` prints guard violations (empty values,
   format-specifier mismatches vs English) with exact keys — the same invariants
   `LocalizationCatalogTests` enforces in CI.
-- Japanese has no plural forms; `^[…](inflect: true)` in English values is
-  English-only, so German needs explicit plural variations for those keys.
+- Japanese and Chinese have no plural forms; `^[…](inflect: true)` in English
+  values is English-only, so German needs explicit plural variations for those
+  keys while ja/zh-Hant collapse to a single form (measure words: 件 in ja,
+  筆/部/個 in zh-Hant).
 
 ## Tooling
 

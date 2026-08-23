@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Apply de/ja translations to the string catalogs.
+"""Apply translations to the string catalogs.
 
-Reads a JSON object {key: {"de": value, "ja": value}} from the file given as
+Reads a JSON object {key: {"de": value, "zh-Hant": value, ...}} — any language
+codes — from the file given as
 argv[1] (or stdin). A value is a plain string, or {"one": ..., "other": ...}
 for plural variations. Each key is written to every catalog that contains it,
 with state "needs_review".
 
-Keys marked shouldTranslate:false are skipped. Existing de/ja entries are
-overwritten (later batches / correction overlays win).
+Keys marked shouldTranslate:false are skipped. Existing entries for the given
+languages are overwritten (later batches / correction overlays win).
 """
 
 import json
@@ -50,9 +51,8 @@ def main():
             if entry is None or entry.get("shouldTranslate") is False:
                 continue
             loc = entry.setdefault("localizations", {})
-            for lang in ("de", "ja"):
-                if lang in langs:
-                    loc[lang] = unit(langs[lang])
+            for lang, value in langs.items():
+                loc[lang] = unit(value)
             applied += 1
 
     for rel, data in catalogs.items():

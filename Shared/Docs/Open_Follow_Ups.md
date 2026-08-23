@@ -14,7 +14,16 @@ stale). Last consolidated: 2026-08-12.
   languages. See `Localization/Translation_Rollout_Plan.md`.
 - [ ] **Phase D per-language QA**: run with App Language de (the +30% expansion
   layout pass — badges, fixed-width buttons, alerts) and ja (typography), plus
-  guard test + full suite. See the rollout plan.
+  guard test + full suite. See the rollout plan. Now also covers zh-Hant
+  (CJK/Latin spacing, line breaking).
+- [ ] **Native-speaker review of the zh-Hant first pass** (1,088 values,
+  `needs_review`, translated 2026-08-23 for the Hong Kong conference demo):
+  ⚠️ terms first — 聰 vs "sats", 復原片語 vs community 助記詞, 付款請求,
+  轉入/轉出 — plus the app-wide 拷貝/剪貼板 vs 複製/剪貼簿 pair. See the
+  zh-Hant section of `Localization/Translation_Rollout_Plan.md`.
+- [x] **zh-Hant in `knownRegions` — done 2026-08-23** (user, in Xcode);
+  verified: build green, `zh-Hant.lproj` present in ArkeMobile.app, the ArkéUI
+  bundle, and the widgets extension.
 - [x] **defaultValue migration — on-device smoke pass — verified 2026-08-17**
   (iPhone + macOS, no raw-key sightings). The desktop build's extraction also
   exposed one last hand-assembled plural in

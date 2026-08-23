@@ -48,6 +48,12 @@
             "state": "needs_review",
             "value": "Arké は NFC を使用してコンタクトレスタグから支払い情報をスキャンします。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arké 會使用 NFC 掃描感應式標籤中的付款資訊。"
+          }
         }
       }
     },
@@ -70,6 +76,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "カメラを使用して QR コードをスキャンします。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "使用相機掃描 QR Code。"
           }
         }
       }
@@ -94,6 +106,12 @@
             "state": "needs_review",
             "value": "連絡先と連携して、アプリに名前とプロフィール画像を表示します。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連結你的「聯絡人」，以便在 App 中顯示姓名與大頭照。"
+          }
         }
       }
     },
@@ -116,6 +134,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Arké はローカルネットワークを使用して、近くのユーザーと安全に支払い情報を交換します。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arké 會使用區域網路，與附近的使用者安全地交換付款資訊。"
           }
         }
       }
@@ -140,6 +164,12 @@
             "state": "needs_review",
             "value": "Arké が近くのユーザーを一度検出して、支払い情報を交換することを許可します。"
           }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "允許 Arké 偵測一次附近的使用者，以交換付款資訊。"
+          }
         }
       }
     },
@@ -162,6 +192,12 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Arké は Nearby Interaction を使用して、シームレスな支払い情報交換のために、別のユーザーに近いときを検出します。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Arké 會使用「鄰近互動」偵測你何時靠近其他使用者，以便順暢地交換付款資訊。"
           }
         }
       }

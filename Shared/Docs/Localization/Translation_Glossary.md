@@ -1,4 +1,4 @@
-# Translation Glossary — German (de) & Japanese (ja)
+# Translation Glossary — German (de), Japanese (ja) & Traditional Chinese (zh-Hant)
 
 Canonical terminology for translating Arké. **One meaning, one term, everywhere** —
 translators and reviewers must not improvise alternatives per screen. Terms marked
@@ -7,6 +7,12 @@ translators and reviewers must not improvise alternatives per screen. Terms mark
 Decisions locked 2026-08-18 (user):
 - **German register: du** (informal — modern fintech standard; matches Arké's tone).
 - **Balance names are translated**, not kept as English product terms.
+
+zh-Hant added 2026-08-23 (Hong Kong conference demo). Conventions follow
+Apple's Taiwan-flavored zh-Hant (網路, 匯入, 復原) — Hong Kong devices set to
+中文(香港) resolve to zh-Hant when no zh-HK exists, and HK readers are fluent in
+both conventions. Register mirrors the German du decision: plain 你, never 您.
+The zh-Hant first pass is entirely ⚠️ pending native review.
 
 ---
 
@@ -66,6 +72,87 @@ Decisions locked 2026-08-18 (user):
 | QR code | QR-Code | QRコード | |
 | faucet / signet / testnet | Faucet / Signet / Testnet | フォーセット / Signet / テストネット | Developer-facing contexts. |
 | VTXO / UTXO | VTXO / UTXO | VTXO / UTXO | Never translated. |
+
+---
+
+## Traditional Chinese (zh-Hant) terms
+
+Same table structure, kept separate so the de/ja columns above stay stable.
+One meaning, one term.
+
+### Core product terms
+
+| English | zh-Hant | Notes |
+|---|---|---|
+| Arké | Arké | Brand — never translated or transliterated. |
+| Payments (balance) | 支付 | Everyday-word metaphor, mirrors Zahlungen/支払い. |
+| Savings (balance) | 儲蓄 | |
+| wallet | 錢包 | Universal in Chinese bitcoin usage — unlike de/ja, no loanword needed. |
+| bitcoin / Bitcoin | 比特幣 | |
+| sats / sat | ⚠️ 聰 | Established community translation of "satoshi"; native review whether Latin "sats" reads better in tight labels. |
+| balance | 餘額 | |
+| transaction | 交易 | |
+| send | 傳送 | Apple TW convention; 交易-context reads fine. Never 發送 (mainland-flavored). |
+| receive | 接收 | Noun contexts (receiving money): 收款. |
+| move (between balances) | 轉移 | The boarding/offboarding UX verb. |
+| boarding (error contexts) | ⚠️ 轉入 | Only surfaces in errors ("Boarding Failed" → 「轉入失敗」). |
+| forced move | 強制轉移 | Arké's UX term for a unilateral exit. |
+| exit (technical) | Exit | Data/debug screens only; keep as Latin jargon like de. |
+| claim | 領取 | Exit funds becoming spendable. |
+| refresh (VTXO) | 更新 | UI refresh (pull-to-refresh etc.) is 重新整理 — never conflate. |
+| round (Ark round) | 回合 | |
+| check in (forced move) | 開啟 App | Describe the action, like ja アプリを開く. |
+| Ark server | Ark 伺服器 | |
+
+### Keys, backup, devices
+
+| English | zh-Hant | Notes |
+|---|---|---|
+| recovery phrase | ⚠️ 復原片語 | Ledger-style; native review vs community term 助記詞 (mnemonic). |
+| seed | 種子 | Technical contexts only. |
+| backup | 備份 | |
+| import / export | 匯入 / 匯出 | TW standard. |
+| primary device | 主要裝置 | |
+| secondary device | 次要裝置 | |
+| linked devices | 已連結的裝置 | |
+| unlink | 解除連結 | |
+| read-only mode | 唯讀模式 | |
+
+### Payments & network
+
+| English | zh-Hant | Notes |
+|---|---|---|
+| address | 地址 | Crypto convention; not the networking term 位址. |
+| invoice (Lightning) | ⚠️ 付款請求 | Function-first, avoids the tax-receipt reading of 發票. |
+| Lightning | 閃電網路 | Prose; technical rows may keep "Lightning". |
+| onchain | 鏈上 | |
+| fee | 手續費 | |
+| network fee | 網路手續費 | |
+| confirmation(s) | 確認 | |
+| block / block height | 區塊 / 區塊高度 | |
+| contact | 聯絡人 | Apple TW. |
+| tag | 標籤 | |
+| note | 備註 | |
+| QR code | QR Code | Latin, with surrounding spaces per style rule. |
+| faucet / signet / testnet | 水龍頭 / Signet / 測試網 | Developer-facing contexts. |
+| VTXO / UTXO | VTXO / UTXO | Never translated. |
+
+## Style rules — Traditional Chinese
+
+- **Plain 你 register**, never 您 — matches the German du decision. Imperatives
+  without pronoun where natural (「輕點…」, not 「你必須輕點…」).
+- **Traditional characters only** — no simplified leakage (网/发/转/钱/请 are
+  bugs), and Taiwan vocabulary (網路 not 網絡, 軟體 not 軟件).
+- **One half-width space between CJK and Latin/digit runs** (「3 筆交易」,
+  「Ark 伺服器」), including around format specifiers whose values are Latin or
+  numeric. No space before full-width punctuation.
+- Full-width punctuation （，。？！、）in sentences; half-width in bare
+  technical strings (URLs, key-value rows).
+- **No plural forms**: every English plural-variation key collapses to a single
+  form. Measure words: 筆 for transactions/payments, 部 for devices, 個 as
+  general fallback (「%lld 筆交易」).
+- Button labels stay short; zh runs shorter than English — don't pad
+  (「刪除」, not 「立即刪除」 unless English has the emphasis).
 
 ---
 
