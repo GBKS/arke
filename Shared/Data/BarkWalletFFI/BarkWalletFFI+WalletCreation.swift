@@ -345,6 +345,15 @@ extension BarkWalletFFI {
         
         // Never log the mnemonic itself - debug logs get exported and shared.
         print("🔍 [DEBUG] Importing mnemonic word count: \(words.count)")
+
+        // Ensure no wallet is currently loaded (same guard as createWallet).
+        // As of bark-ffi-bindings v0.19.0 dropping a Wallet shuts down its
+        // daemon, so a live instance must be shut down here rather than
+        // silently replaced after the new wallet has opened the same datadir.
+        if wallet != nil {
+            print("⚠️ Warning: Existing wallet instance found, clearing...")
+            await shutdownWallet()
+        }
         
         // Use the provided config or override with custom params.
         // Network is passed separately to the FFI as of Bark 0.11.

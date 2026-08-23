@@ -5,9 +5,9 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.18.0** (bark **v0.6.1**), pinned to
-`master` @ `9c55390`. Compared against `Shared/Data/BarkWalletProtocol.swift`
-and actual `BarkWalletFFI` usage on 2026-08-17.
+**Baseline:** bark-ffi-bindings **v0.19.0** (bark **v0.6.1**), pinned to
+`master` @ `644d010`. Compared against `Shared/Data/BarkWalletProtocol.swift`
+and actual `BarkWalletFFI` usage on 2026-08-23.
 
 **Maintenance:** on every bindings bump, diff the new `WalletProtocol` in the
 package checkout against the previous version (the DerivedData checkout at
@@ -16,6 +16,18 @@ the release commits) and add new methods here. When an item is adopted, move
 it to the Adopted-since list at the bottom with the date. Sibling doc:
 `Bark_Bindings_Feedback.md` (things bark should change; this doc is things
 *we* haven't used yet).
+
+---
+
+## 0. New in v0.19.0
+
+No API surface change — the generated `Bark.swift` diff is doc-comment-only.
+The documented drop behavior of `Wallet` changed: dropping the object now
+shuts down the whole daemon (v0.18.0 only cancelled the mailbox processor
+task). Nothing to adopt; lifetime audit on 2026-08-23 confirmed every drop
+site already calls `stopDaemon()` (via `shutdownWallet()`) first, and
+`BarkWalletFFI.importWallet` gained the same shutdown-before-replace guard
+as `createWallet` to keep it that way.
 
 ---
 
