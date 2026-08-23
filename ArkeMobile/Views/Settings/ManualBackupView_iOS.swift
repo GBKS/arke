@@ -59,6 +59,27 @@ struct ManualBackupView_iOS: View {
                         }
                         .padding(.vertical, 4)
                     }
+
+                    Divider()
+
+                    NavigationLink(destination: MetadataBackupSectionView()) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.text.rectangle.fill")
+                                .foregroundColor(.Arke.purple)
+                                .frame(width: 24, height: 24)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(String(localized: "settings_metadata_backup", defaultValue: "Contacts & Metadata"))
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.primary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(String(localized: "settings_metadata_backup_subtitle", defaultValue: "Contacts, tags, notes, and profile"))
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                 }
             }
             .padding(.horizontal)

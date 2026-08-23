@@ -27,6 +27,11 @@ struct ManualBackupView: View {
 
                 // Backup file
                 BackupStatusSectionView()
+
+                Divider()
+
+                // User-added metadata (contacts, tags, notes, profile)
+                MetadataBackupSectionView()
             }
             .padding()
             .frame(maxWidth: 500)
