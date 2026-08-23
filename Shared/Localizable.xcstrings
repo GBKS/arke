@@ -15938,7 +15938,172 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Exports your contacts, tags, transaction notes, and profile as a file. It contains no keys and no funds."
+            "value" : "Exports your contacts, tags, transaction notes, and profile as a file, or imports one exported earlier. The file contains no keys and no funds."
+          }
+        }
+      }
+    },
+    "metadata_import_annotations" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Transaction notes & tags"
+          }
+        }
+      }
+    },
+    "metadata_import_button" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import"
+          }
+        }
+      }
+    },
+    "metadata_import_confirm" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import"
+          }
+        }
+      }
+    },
+    "metadata_import_contacts" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Contacts"
+          }
+        }
+      }
+    },
+    "metadata_import_error_invalid" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This file is not an Arké data export."
+          }
+        }
+      }
+    },
+    "metadata_import_error_version" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This export file (version %lld) was created by a newer app version. Update the app to import it."
+          }
+        }
+      }
+    },
+    "metadata_import_exported" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exported"
+          }
+        }
+      }
+    },
+    "metadata_import_network_mismatch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This file was exported from a %@ wallet."
+          }
+        }
+      }
+    },
+    "metadata_import_new_merged" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld new, %2$lld merged"
+          }
+        }
+      }
+    },
+    "metadata_import_preview_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Import Preview"
+          }
+        }
+      }
+    },
+    "metadata_import_profile" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Profile"
+          }
+        }
+      }
+    },
+    "metadata_import_profile_applied" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Will be applied"
+          }
+        }
+      }
+    },
+    "metadata_import_success" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Imported %1$lld contacts, %2$lld tags, %3$lld transaction annotations."
+          }
+        }
+      }
+    },
+    "metadata_import_tags" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Tags"
+          }
+        }
+      }
+    },
+    "metadata_import_unmatched" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%lld annotations reference transactions not in this wallet yet. Import again after they sync."
           }
         }
       }
