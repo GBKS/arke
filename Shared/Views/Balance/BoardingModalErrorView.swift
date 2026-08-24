@@ -23,7 +23,7 @@ struct BoardingModalErrorView: View {
                     .foregroundColor(.Arke.red)
                 
                 VStack(spacing: 8) {
-                    Text(String(localized: "error_boarding_failed", defaultValue: "Boarding Failed"))
+                    Text(String(localized: "error_boarding_failed", defaultValue: "Move Failed"))
                         .font(.system(.title, design: .serif))
                     
                     Text(errorMessage)

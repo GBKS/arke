@@ -24,7 +24,7 @@ struct OffboardingModalOffboardingView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text(String(localized: "status_preparing_transfer", defaultValue: "Preparing Transfer"))
+                    Text(String(localized: "status_preparing_transfer", defaultValue: "Preparing Move"))
                         .font(.system(.title, design: .serif))
                     
                     Text(String(localized: "status_may_take_moment", defaultValue: "This may take a moment..."))

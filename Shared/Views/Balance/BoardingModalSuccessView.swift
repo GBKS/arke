@@ -28,10 +28,10 @@ struct BoardingModalSuccessView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text(String(localized: "status_transfer_initiated", defaultValue: "Transfer Initiated"))
+                    Text(String(localized: "status_transfer_initiated", defaultValue: "Move Started"))
                         .font(.system(.title, design: .serif))
                     
-                    Text(String(localized: "balance_transfer_ark_progress", defaultValue: "Your coins are being transferred to your payment balance and will be ready to use in a jiffy."))
+                    Text(String(localized: "balance_transfer_ark_progress", defaultValue: "Your coins are being moved to your payment balance and will be available soon."))
                         .font(.title3)
                         .foregroundColor(.arkeSecondary)
                         .multilineTextAlignment(.center)
