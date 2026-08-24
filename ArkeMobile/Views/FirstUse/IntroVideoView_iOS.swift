@@ -16,9 +16,13 @@ struct IntroVideoView_iOS: View {
     
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showPlaylist = false
-    @State private var currentVideoIndex = 0
+    @State private var scrollPosition: Int? = 0
     @State private var isMuted = false
     @State private var isPaused = false
+
+    private var currentVideoIndex: Int {
+        scrollPosition ?? 0
+    }
     
     // Playlist data (titles, asset names, subtitle timings) lives in
     // Shared/Models/IntroVideoLibrary.swift, shared with desktop
@@ -28,27 +32,59 @@ struct IntroVideoView_iOS: View {
     
     var body: some View {
         ZStack {
-            // Full screen video player
-            IntroVideoPlayer_iOS(
-                videoName: videos[currentVideoIndex].videoAssetName,
-                videoExtension: "mp4",
-                subtitles: videos[currentVideoIndex].subtitles,
-                isMuted: $isMuted,
-                isPaused: $isPaused,
-                onVideoEnded: {
-                    // Auto-advance to next video or call onContinue if last video
-                    if currentVideoIndex < videos.count - 1 {
-                        currentVideoIndex += 1
-                    } else if let onContinue {
-                        onContinue()
+            // Full screen vertical paging feed: swipe up/down to move between
+            // videos, with a rubber-band bounce at both ends
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(videos.enumerated()), id: \.offset) { index, video in
+                        IntroVideoPlayer_iOS(
+                            videoName: video.videoAssetName,
+                            videoExtension: "mp4",
+                            subtitles: video.subtitles,
+                            isMuted: $isMuted,
+                            // Only the settled page plays; neighbors preload
+                            // paused at their first frame
+                            isPaused: Binding(
+                                get: { isPaused || scrollPosition != index },
+                                set: { _ in }
+                            ),
+                            onVideoEnded: {
+                                // Auto-advance to next video or call onContinue if last video
+                                if index < videos.count - 1 {
+                                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.4)) {
+                                        scrollPosition = index + 1
+                                    }
+                                } else if let onContinue {
+                                    onContinue()
+                                }
+                            }
+                        )
+                        .containerRelativeFrame(.vertical)
                     }
                 }
-            )
-            .id(currentVideoIndex) // Force recreation when video changes
+                .scrollTargetLayout()
+            }
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: $scrollPosition)
+            .scrollIndicators(.hidden)
             .ignoresSafeArea()
             .accessibilityLabel(String(format: String(localized: "accessibility_video_player", defaultValue: "Video: %@"), videos[currentVideoIndex].title))
             .accessibilityAddTraits(.playsSound)
             .accessibilityHint(String(localized: "accessibility_video_has_captions", defaultValue: "Video includes captions"))
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment:
+                    if currentVideoIndex < videos.count - 1 {
+                        scrollPosition = currentVideoIndex + 1
+                    }
+                case .decrement:
+                    if currentVideoIndex > 0 {
+                        scrollPosition = currentVideoIndex - 1
+                    }
+                @unknown default:
+                    break
+                }
+            }
             
             // Top toolbar overlay
             VStack {
@@ -147,7 +183,9 @@ struct IntroVideoView_iOS: View {
                                     index: index,
                                     isCurrentlyPlaying: index == currentVideoIndex
                                 ) {
-                                    currentVideoIndex = index
+                                    // No animation: distant jumps shouldn't
+                                    // flip through every page in between
+                                    scrollPosition = index
                                     showPlaylist = false
                                 }
                             }

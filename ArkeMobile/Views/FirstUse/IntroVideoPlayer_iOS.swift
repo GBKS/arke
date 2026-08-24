@@ -21,7 +21,9 @@ class IntroVideoPlayerViewModel: ObservableObject {
     @Published var hasEnded: Bool = false
     @Published var isMuted: Bool = false
     
-    private var player: AVPlayer?
+    // Published so the representable reattaches when a page is torn down
+    // (scrolled offscreen) and later rebuilt with a fresh player
+    @Published private(set) var player: AVPlayer?
     private var timeObserver: Any?
     private var endObserver: NSObjectProtocol?
     
@@ -47,15 +49,20 @@ class IntroVideoPlayerViewModel: ObservableObject {
         self.onVideoEnded = onVideoEnded
     }
 
-    func setupPlayer() -> AVPlayer? {
+    // Creates the player if it doesn't exist yet. Playback is driven
+    // separately (autoPlay on appear, or the isPaused binding) so pages in
+    // the paged intro feed can preload paused at their first frame.
+    func ensurePlayer() {
+        guard player == nil else { return }
         guard let videoURL = Bundle.main.url(forResource: videoName, withExtension: videoExtension) else {
             print("❌ Video not found: \(videoName).\(videoExtension)")
-            return nil
+            return
         }
 
         let player = AVPlayer(url: videoURL)
         self.player = player
-        
+        hasEnded = false
+
         // Add periodic time observer for subtitle updates
         let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
@@ -74,17 +81,6 @@ class IntroVideoPlayerViewModel: ObservableObject {
                 self?.videoDidEnd()
             }
         }
-        
-        if autoPlay {
-            configureAudioSession()
-            player.play()
-            // Defer state change to avoid "Publishing changes from within view updates" warning
-            DispatchQueue.main.async { [weak self] in
-                self?.isPlaying = true
-            }
-        }
-
-        return player
     }
 
     // Configure lazily so a paused player doesn't interrupt other audio until playback starts
@@ -101,6 +97,7 @@ class IntroVideoPlayerViewModel: ObservableObject {
     }
 
     func togglePlayPause() {
+        ensurePlayer()
         guard let player = player else { return }
 
         if isPlaying {
@@ -123,8 +120,10 @@ class IntroVideoPlayerViewModel: ObservableObject {
     }
 
     func play() {
+        ensurePlayer()
+        guard let player = player else { return }
         configureAudioSession()
-        player?.play()
+        player.play()
         isPlaying = true
     }
     
@@ -166,6 +165,9 @@ class IntroVideoPlayerViewModel: ObservableObject {
         
         player?.pause()
         player = nil
+        isPlaying = false
+        hasEnded = false
+        currentSubtitle = nil
     }
 }
 
@@ -205,8 +207,9 @@ struct IntroVideoPlayer_iOS: View {
             IntroVideoPlayerView(viewModel: viewModel)
                 .ignoresSafeArea()
             
-            // Play/pause/replay indicator
-            if !viewModel.isPlaying {
+            // Play/pause/replay indicator; hidden while externally paused so
+            // preloaded neighbor pages in the paged feed show a clean frame
+            if !viewModel.isPlaying && !isPaused {
                 Image(systemName: viewModel.hasEnded ? "arrow.counterclockwise" : "play.fill")
                     .font(.system(size: 40))
                     .foregroundStyle(.white)
@@ -262,7 +265,15 @@ struct IntroVideoPlayer_iOS: View {
             }
         }
         .onAppear {
-            viewModel.setMuted(isMuted)
+            // Deferred so creating the player (a published change) doesn't
+            // happen inside the view update that triggered onAppear
+            DispatchQueue.main.async {
+                viewModel.ensurePlayer()
+                viewModel.setMuted(isMuted)
+                if viewModel.autoPlay && !isPaused {
+                    viewModel.play()
+                }
+            }
         }
         .onDisappear {
             viewModel.cleanup()
@@ -274,35 +285,38 @@ struct IntroVideoPlayer_iOS: View {
 
 private struct IntroVideoPlayerView: UIViewRepresentable {
     @ObservedObject var viewModel: IntroVideoPlayerViewModel
-    
+
     func makeUIView(context: Context) -> VideoPlayerUIView {
         let view = VideoPlayerUIView()
-        if let player = viewModel.setupPlayer() {
-            view.configure(with: player)
-        }
+        view.player = viewModel.player
         return view
     }
-    
+
     func updateUIView(_ uiView: VideoPlayerUIView, context: Context) {
-        // Updates handled by view model
-    }
-    
-    class VideoPlayerUIView: UIView {
-        private var playerLayer: AVPlayerLayer?
-        
-        func configure(with player: AVPlayer) {
-            playerLayer = AVPlayerLayer(player: player)
-            
-            guard let playerLayer = playerLayer else { return }
-            
-            playerLayer.videoGravity = .resizeAspectFill
-            playerLayer.frame = bounds
-            layer.addSublayer(playerLayer)
+        // Reattach whenever the view model recreates its player (pages are
+        // cleaned up when scrolled offscreen and rebuilt on return)
+        if uiView.player !== viewModel.player {
+            uiView.player = viewModel.player
         }
-        
-        override func layoutSubviews() {
-            super.layoutSubviews()
-            playerLayer?.frame = bounds
+    }
+
+    class VideoPlayerUIView: UIView {
+        override class var layerClass: AnyClass { AVPlayerLayer.self }
+
+        private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+
+        var player: AVPlayer? {
+            get { playerLayer.player }
+            set { playerLayer.player = newValue }
+        }
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            playerLayer.videoGravity = .resizeAspectFill
+        }
+
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
         }
     }
 }
