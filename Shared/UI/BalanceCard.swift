@@ -21,15 +21,7 @@ struct BalanceCard: View {
     
     private var hiddenImageName: String {
         if isHidden {
-            // The corn/unicorn unit formats keep their easter-egg art in any theme.
-            switch formatPreference {
-            case .corn:
-                return "cornfield"
-            case .unicorn:
-                return "unicorn"
-            default:
-                return theme.images.hiddenCard
-            }
+            return theme.images.hiddenCard
         } else {
             return theme.images.card
         }
