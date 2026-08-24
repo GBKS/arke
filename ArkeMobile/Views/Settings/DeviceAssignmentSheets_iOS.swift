@@ -13,13 +13,11 @@ struct DemoteDeviceSheet: View {
         NavigationStack {
             VStack(spacing: 20) {
                 // Icon
-                Image(systemName: "arrow.down.circle")
-                    .font(.system(size: 60))
-                    .foregroundStyle(Color.Arke.blue)
+                ArkeCircularIcon(icon: Image(systemName: "arrow.down.circle"))
 
                 // Title
                 Text(String(localized: "settings_make_this_device_secondary", defaultValue: "Make This Device Secondary?"))
-                    .font(.title2.bold())
+                    .font(.system(.title, design: .serif))
 
                 // Explanation
                 Text(String(localized: "settings_make_secondary_help", defaultValue: "This device will switch to view-only mode. Make sure you have your other device ready to make it primary."))
@@ -54,35 +52,16 @@ struct DemoteDeviceSheet: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    Button(action: performDemotion) {
-                        if isProcessing {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text(String(localized: "settings_make_secondary", defaultValue: "Make Secondary"))
-                                .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold4)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.regular)
-                    .tint(Color.Arke.gold)
+                    ArkeGlassButton(
+                        String(localized: "settings_make_secondary", defaultValue: "Make Secondary"),
+                        isLoading: isProcessing,
+                        action: performDemotion
+                    )
                     .disabled(isProcessing)
 
-                    Button {
+                    ArkeGlassButton(L10n.buttonCancel, variant: .secondary) {
                         isPresented = false
-                    } label: {
-                        Text(L10n.buttonCancel)
-                            .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity)
-                        
                     }
-                    .buttonStyle(.glass)
-                    .controlSize(.regular)
-                    .tint(Color.Arke.gold)
                 }
                 .padding(.horizontal)
             }
@@ -127,13 +106,11 @@ struct PromoteDeviceSheet: View {
         NavigationStack {
             VStack(spacing: 20) {
                 // Icon
-                Image(systemName: "arrow.up.circle")
-                    .font(.system(size: 60))
-                    .foregroundStyle(Color.Arke.green)
+                ArkeCircularIcon(icon: Image(systemName: "arrow.up.circle"))
 
                 // Title
                 Text(String(localized: "settings_make_this_device_primary", defaultValue: "Make This Device Primary?"))
-                    .font(.title2.bold())
+                    .font(.system(.title, design: .serif))
 
                 // Explanation
                 Text(String(localized: "settings_make_primary_help", defaultValue: "This device will become your active wallet, able to send and receive payments."))
@@ -154,35 +131,16 @@ struct PromoteDeviceSheet: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    Button(action: performPromotion) {
-                        if isProcessing {
-                            ProgressView()
-                                .progressViewStyle(.circular)
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text(String(localized: "settings_make_primary", defaultValue: "Make Primary"))
-                                .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(Color.Arke.gold4)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .buttonStyle(.glassProminent)
-                    .controlSize(.regular)
-                    .tint(Color.Arke.gold)
+                    ArkeGlassButton(
+                        String(localized: "settings_make_primary", defaultValue: "Make Primary"),
+                        isLoading: isProcessing,
+                        action: performPromotion
+                    )
                     .disabled(isProcessing)
-                    
-                    Button {
+
+                    ArkeGlassButton(L10n.buttonCancel, variant: .secondary) {
                         isPresented = false
-                    } label: {
-                        Text(L10n.buttonCancel)
-                            .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .frame(maxWidth: .infinity)
-                        
                     }
-                    .buttonStyle(.glass)
-                    .controlSize(.regular)
-                    .tint(Color.Arke.gold)
                 }
                 .padding(.horizontal)
             }

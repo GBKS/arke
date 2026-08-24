@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ArkeUI
 
 /// Shown when this install deliberately deleted the wallet locally while the
 /// wallet still lives on other devices of the same iCloud account.
@@ -27,29 +28,25 @@ struct RejoinWalletView: View {
     var body: some View {
         VStack(spacing: 16) {
             Spacer()
-
-            Image(systemName: "icloud")
-                .font(.system(size: 56))
-                .foregroundStyle(.secondary)
+            
+            ArkeCircularIcon(icon: Image(systemName: "icloud"))
                 .padding(.bottom, 8)
 
             Text(String(localized: "rejoin_title", defaultValue: "Your wallet is still active"))
-                .font(.title2.weight(.semibold))
+                .font(.system(.title, design: .serif))
                 .multilineTextAlignment(.center)
 
             Text(String(localized: "rejoin_message %@", defaultValue: "This iCloud account has a wallet on \(primaryDeviceName). You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."))
-                .font(.body)
+                .font(.title3)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             Spacer()
-
-            Button(action: onRejoin) {
-                Text(String(localized: "rejoin_button", defaultValue: "Rejoin This Wallet"))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            
+            ArkeGlassButton(
+                String(localized: "rejoin_button", defaultValue: "Rejoin This Wallet"),
+                action: onRejoin
+            )
         }
         .padding(32)
         .frame(maxWidth: 480)

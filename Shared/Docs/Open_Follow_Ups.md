@@ -329,6 +329,26 @@ done).
   Done button in sheets). ManualSendView, QuickPaymentView, and
   ContactPaymentView still rely on the toolbar alone — they have multiple
   fields and denser layouts, so apply with a closer look.
+- [ ] **ArkeGlassButton adoption sweep**: new ArkéUI component
+  (2026-08-24) centralizing the repeated glass-button recipe
+  (glassProminent/glass + large control + gold tint + title2 semibold
+  gold4/primary label + full width + isLoading spinner swap). Adopted in
+  DeviceAssignmentSheets_iOS only; ~45 `.glassProminent` and ~29 `.glass`
+  call sites across ~39 files remain hand-styled — migrate opportunistically
+  or in one pass. Note some legacy sites use `size: 21` instead of title2
+  and `.regular` control size; the component canonicalizes to
+  title2/`.large`, so expect slight visual normalization when sweeping.
+  The pre-glass custom `ArkeButtonStyle` (5 call sites) is a separate
+  later cleanup.
+- [ ] **ArkeCircularIcon adoption sweep**: new ArkéUI component
+  (2026-08-24) — white SF Symbol on a circular scratch-surface texture
+  with drop shadow (default 75pt circle, 30pt icon). Adopted in
+  DeviceAssignmentSheets_iOS; other bare large-icon sites to migrate:
+  FaucetModalView_iOS, PaymentInfoReceivedSheet, QRScannerView_iOS,
+  desktop WalletCreatedView/WalletImportedView. The texture is
+  deliberately duplicated in ArkeUI/Sources/Media.xcassets (package
+  needs its own bundle copy; Shared copy stays for
+  ScratchableMnemonicGrid's main-bundle lookup).
 
 ## Themes
 
