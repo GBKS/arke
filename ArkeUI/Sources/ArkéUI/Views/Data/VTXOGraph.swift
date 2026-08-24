@@ -171,6 +171,7 @@ public struct VTXOGraph: View {
                     .frame(height: 1)
                     .padding(.top, 4)
             }
+            .padding(.top, barSpacing)
             .background(alignment: .topLeading) {
                 // Free refresh zone, behind the bars and the baseline.
                 if let freeRefreshFraction {
