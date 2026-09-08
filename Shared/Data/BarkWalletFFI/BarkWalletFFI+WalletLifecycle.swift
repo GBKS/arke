@@ -362,7 +362,36 @@ extension BarkWalletFFI {
             throw error
         }
     }
-    
+
+    /// Stop the wallet daemon and wait until its tasks have finished.
+    ///
+    /// Unlike `stopDaemon()`, which returns before the daemon's background
+    /// tasks drain, this guarantees nothing runs afterwards — required before
+    /// deleting or overwriting the wallet's datadir (new in bark FFI 0.23).
+    /// No-op when no daemon is running.
+    func stopDaemonWait() async throws {
+        guard let wallet = wallet else {
+            // If wallet is nil, daemon is already stopped
+            Self.logger.debug("Wallet is nil, daemon already stopped")
+            return
+        }
+
+        Self.logger.debug("Stopping wallet daemon (waiting for tasks to finish)...")
+
+        do {
+            try await wallet.stopDaemonWait()
+
+            Self.logger.info("Wallet daemon stopped and tasks drained")
+
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error stopping daemon (wait): \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to stop daemon: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Unexpected error stopping daemon (wait): \(error)")
+            throw error
+        }
+    }
+
     // MARK: - Wallet Shutdown
     
     /// Explicitly shutdown and cleanup wallet resources
@@ -372,9 +401,11 @@ extension BarkWalletFFI {
         
         Self.logger.debug("[BarkWalletFFI] Shutting down wallet...")
         
-        // CRITICAL: Stop the daemon first to release datadir locks
+        // CRITICAL: Stop the daemon first to release datadir locks.
+        // stopDaemonWait drains the daemon's tasks before returning, so
+        // nothing is still writing when callers delete or overwrite files.
         do {
-            try await stopDaemon()
+            try await stopDaemonWait()
             Self.logger.info("Daemon stopped successfully")
         } catch {
             Self.logger.warning("Failed to stop daemon (may not be running): \(error)")

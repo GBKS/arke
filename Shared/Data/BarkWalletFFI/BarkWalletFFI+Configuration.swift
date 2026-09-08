@@ -67,7 +67,9 @@ extension BarkWalletFFI {
             bitcoindUser: ffiConfig.bitcoindUser,
             bitcoindPass: ffiConfig.bitcoindPass,
             network: networkString,
-            vtxoRefreshExpiryThreshold: ffiConfig.vtxoRefreshExpiryThreshold,
+            // FFI narrowed this to UInt16? in bark FFI 0.23; widen losslessly
+            // so the app model (and its export format) stays UInt32?.
+            vtxoRefreshExpiryThreshold: ffiConfig.vtxoRefreshExpiryThreshold.map { UInt32($0) },
             vtxoExitMargin: ffiConfig.vtxoExitMargin,
             htlcRecvClaimDelta: ffiConfig.htlcRecvClaimDelta,
             fallbackFeeRate: ffiConfig.fallbackFeeRate,
@@ -170,7 +172,7 @@ extension BarkWalletFFI {
         // FFI ArkInfo provides all fields we need - 1:1 mapping
         
         // Log the FFI ArkInfo fields
-        Self.logger.debug("FFI ArkInfo fields: roundIntervalSecs: \(ffiArkInfo.roundIntervalSecs), nbRoundNonces: \(ffiArkInfo.nbRoundNonces), vtxoExitDelta: \(ffiArkInfo.vtxoExitDelta), vtxoExpiryDelta: \(ffiArkInfo.vtxoExpiryDelta), htlcSendExpiryDelta: \(ffiArkInfo.htlcSendExpiryDelta), htlcExpiryDelta: \(ffiArkInfo.htlcExpiryDelta), maxVtxoAmountSats: \(ffiArkInfo.maxVtxoAmountSats.map { String($0) } ?? "nil"), requiredBoardConfirmations: \(ffiArkInfo.requiredBoardConfirmations), maxUserInvoiceCltvDelta: \(ffiArkInfo.maxUserInvoiceCltvDelta), minBoardAmountSats: \(ffiArkInfo.minBoardAmountSats), maxVtxoExitDepth: \(ffiArkInfo.maxVtxoExitDepth), lnReceiveAntiDosRequired: \(ffiArkInfo.lnReceiveAntiDosRequired), feeSchedule: \(String(describing: ffiArkInfo.feeSchedule))")
+        Self.logger.debug("FFI ArkInfo fields: roundIntervalSecs: \(ffiArkInfo.roundIntervalSecs), nbRoundNonces: \(ffiArkInfo.nbRoundNonces), vtxoExitDelta: \(ffiArkInfo.vtxoExitDelta), vtxoLifetime: \(ffiArkInfo.vtxoLifetime), htlcSendExpiryDelta: \(ffiArkInfo.htlcSendExpiryDelta), htlcExpiryDelta: \(ffiArkInfo.htlcExpiryDelta), maxVtxoAmountSats: \(ffiArkInfo.maxVtxoAmountSats.map { String($0) } ?? "nil"), requiredBoardConfirmations: \(ffiArkInfo.requiredBoardConfirmations), maxUserInvoiceCltvDelta: \(ffiArkInfo.maxUserInvoiceCltvDelta), minBoardAmountSats: \(ffiArkInfo.minBoardAmountSats), maxVtxoExitDepth: \(ffiArkInfo.maxVtxoExitDepth), lnReceiveAntiDosRequired: \(ffiArkInfo.lnReceiveAntiDosRequired), feeSchedule: \(String(describing: ffiArkInfo.feeSchedule))")
 
         let feeSchedule = ArkeUI.FeeSchedule(from: ffiArkInfo.feeSchedule)
 
@@ -180,7 +182,11 @@ extension BarkWalletFFI {
             roundInterval: roundIntervalString,
             nbRoundNonces: Int(ffiArkInfo.nbRoundNonces),
             vtxoExitDelta: Int(ffiArkInfo.vtxoExitDelta),
-            vtxoExpiryDelta: Int(ffiArkInfo.vtxoExpiryDelta),
+            // Sourced from vtxoLifetime: upstream renamed vtxo_expiry_delta to
+            // vtxo_lifetime in bark 0.7.0; the FFI's vtxoExpiryDelta is a
+            // deprecated alias. The app model keeps its field name (Codable
+            // key is part of the metadata-export format).
+            vtxoExpiryDelta: Int(ffiArkInfo.vtxoLifetime),
             htlcSendExpiryDelta: Int(ffiArkInfo.htlcSendExpiryDelta),
             htlcExpiryDelta: Int(ffiArkInfo.htlcExpiryDelta),
             maxVtxoAmount: ffiArkInfo.maxVtxoAmountSats.map { Int($0) },

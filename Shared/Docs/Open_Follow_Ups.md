@@ -252,6 +252,40 @@ v0.17→v0.18 bump was purely additive; nothing broke).
   the release commits in the package checkout, add new surface, move adopted
   items to its Adopted-since section.
 
+## Bark 0.23 Migration (minimal pass shipped 2026-09-08)
+
+Guiding docs: `Migrations/Bark-0.19.0-to-0.23.0/`. Shipped: recompile,
+`vtxoLifetime` migration, `UInt16` config-read widening, `stopDaemonWait()`
+in all shutdown paths. Deferred adoption (see plan §2.2-2.4, §Phase 3):
+
+- [ ] **`initialScanOnchain(birthdayHeight:)` on import** — recovers onchain
+  history from a previous incarnation of the seed; `sync()` never finds it.
+  Needs a distinct "scanning" import UI state + on-device import verify.
+- [ ] **`estimateEmergencyExitFee(...)` exit pre-flight** — show broadcast
+  vs claim fees separately; block/warn hard on `fundable == false`. Slow
+  call (syncs onchain wallet first).
+- [ ] **`recoveryStatus()` adoption** — distinguishes recovery-failed from
+  never-ran; at minimum log `.failed(message:)` where the import path reads
+  `recoveryReport()` (`BarkWalletFFI+WalletCreation.swift:572`).
+- [ ] **Phase 3 (optional, ask first)**: `RoundFlowKind`-rich round UI,
+  externally funded board (`boardFundingAddress`/`boardPsbt`),
+  `OnchainWallet.evictTx`.
+- [ ] **Update `Bark_Bindings_Unadopted_API.md`** for the 0.23 surface
+  (baseline is v0.18.0).
+- [ ] **Daemon auto-start on `Wallet.open()` (new in bark 0.7.0)** — device log
+  2026-09-08 shows Rust starting the daemon during open, then our explicit
+  `runDaemon()` triggering `Called Wallet::start_daemon while daemon was
+  already running.` Per bark docs, calling start again stops the previous
+  daemon and starts a new one, so we may be restarting a just-started daemon
+  every launch. Either drop the explicit `runDaemon()` call
+  (`WalletManager` open path) or confirm the double-start is a true no-op.
+- [ ] **18s gap between `initialize()` called and executed** — same device
+  log: `initialize() CALLED` 01:29:56, `initialize execute` 01:30:14. A
+  *relative* anomaly within one run (not tethering overhead); suspect the
+  TaskDeduplicationManager/queueing layer. Check if it reproduces before
+  digging (Xcode-tethered timings are otherwise ignorable; untethered
+  cold-launch budget is 2.84s).
+
 ## Bark 0.16 Migration
 
 - [ ] **On-device verify with a v1-snapshot wallet** (migration merged and

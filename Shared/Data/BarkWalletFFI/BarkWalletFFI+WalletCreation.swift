@@ -587,7 +587,7 @@ extension BarkWalletFFI {
                 // The scan only runs on the open that creates the wallet
                 // locally, so retrying requires wiping the seconds-old
                 // database first.
-                try? await wallet.stopDaemon()
+                try? await wallet.stopDaemonWait() // drains daemon tasks before we delete the db
                 try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
                 removeBarkDatabase()
             }
