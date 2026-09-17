@@ -17,6 +17,23 @@ struct RelayRegisterRequest: Codable {
     let ark_addr: String
     let device_token: String
     let apns_topic: String
+    let trigger: String?
+}
+
+/// What prompted a registration. Sent to the relay (optional `trigger` field
+/// on POST /v1/register) so refresh-path frequencies can be counted
+/// server-side instead of from device logs (SWIFT_AUTH_WAKE_SPEC.md).
+enum RelayRegistrationTrigger: String, Sendable {
+    /// App launch / foreground refresh
+    case foreground
+    /// The in-process expiry timer (`onNeedsRefresh`)
+    case timer
+    /// `BGAppRefreshTask` handler
+    case backgroundTask = "background_task"
+    /// Handling a `mailbox_auth_refresh` wake push
+    case wakePush = "wake_push"
+    /// APNs device token changed
+    case tokenChange = "token_change"
 }
 
 struct RelayUnregisterRequest: Codable {
@@ -26,6 +43,11 @@ struct RelayUnregisterRequest: Codable {
 
 struct RelayRegisterResponse: Codable {
     let status: String
+    /// Expiry of the registered authorization (UNIX seconds), read out of the
+    /// token by the relay; null/absent on older relay versions. Double so a
+    /// fractional-seconds value can't fail the decode of a successful
+    /// registration.
+    let authorization_expires_at: Double?
 }
 
 struct RelayUnregisterResponse: Codable {
@@ -69,12 +91,23 @@ class RelayRegistrationService {
     /// Timer for scheduled authorization refresh
     private var refreshTimer: Task<Void, Never>?
 
-    /// When the next auth refresh should run (expiry minus buffer); nil until a
-    /// successful registration. Single source of truth for refresh timing: the
-    /// in-process timer and the BGTask request both derive from this, so the
-    /// two paths can't drift if the TTL policy changes.
+    /// When the next in-process (foreground) auth refresh should run (expiry
+    /// minus buffer); nil until a successful registration. This and the BGTask
+    /// date (`backgroundRefreshDate`) both derive from the same
+    /// `authExpiresAt`, so the paths can't drift if the TTL policy changes.
     var nextRefreshDate: Date? {
         authExpiresAt?.addingTimeInterval(-authRefreshBuffer)
+    }
+
+    /// When the BGTask fallback should ask to run: the midpoint of the token's
+    /// remaining life, not expiry minus the tight foreground buffer.
+    /// `earliestBeginDate` is advisory — iOS routinely runs the task hours
+    /// late, and field data (SWIFT_AUTH_WAKE_SPEC.md) showed it usually misses
+    /// a 1h window before a 24h expiry. Costs about one extra registration per
+    /// day; the foreground timer keeps the tight buffer.
+    var backgroundRefreshDate: Date? {
+        guard let authExpiresAt else { return nil }
+        return Date().addingTimeInterval(authExpiresAt.timeIntervalSinceNow / 2)
     }
 
     /// Called shortly before the current authorization expires so the caller
@@ -103,12 +136,14 @@ class RelayRegistrationService {
     ///   - arkAddr: Ark server URL
     ///   - deviceToken: APNs device token (64-char hex)
     ///   - apnsTopic: App bundle identifier
+    ///   - trigger: What prompted this registration (relay-side counting)
     func registerDevice(
         mailboxId: String,
         authorizationHex: String,
         arkAddr: String,
         deviceToken: String,
-        apnsTopic: String
+        apnsTopic: String,
+        trigger: RelayRegistrationTrigger
     ) async throws {
         // Check if we need to re-register based on auth hash
         let authHash = hashAuthorization(authorizationHex)
@@ -122,7 +157,8 @@ class RelayRegistrationService {
             authorization_hex: authorizationHex,
             ark_addr: arkAddr,
             device_token: deviceToken,
-            apns_topic: apnsTopic
+            apns_topic: apnsTopic,
+            trigger: trigger.rawValue
         )
         
         // Note: don't log the full request payload here - authorization_hex and
@@ -137,18 +173,28 @@ class RelayRegistrationService {
             
             Self.logger.notice("✅ Device registered: \(response.status, privacy: .public)")
             
-            // Update state
+            // Update state. Prefer the relay-reported expiry (read out of the
+            // token itself) over the local authTTL assumption, so a TTL change
+            // in bark-ffi needs no app change. A non-future expiry on a token
+            // the relay just accepted is contradictory (clock skew or relay
+            // bug) - fall back to the local TTL rather than let it drive an
+            // immediate re-refresh loop.
             lastAuthHash = authHash
-            authExpiresAt = Date().addingTimeInterval(authTTL)
+            let reportedExpiry = response.authorization_expires_at.map { Date(timeIntervalSince1970: $0) }
+            if let reportedExpiry, reportedExpiry > Date() {
+                authExpiresAt = reportedExpiry
+            } else {
+                authExpiresAt = Date().addingTimeInterval(authTTL)
+            }
 
             // Schedule refresh
             scheduleAuthRefresh()
 
-            // Mirror the in-process timer with a BGTask request at the same
-            // deadline — the fallback for when the process is suspended or
-            // killed before the timer can fire
+            // Mirror the in-process timer with a BGTask request — the fallback
+            // for when the process is suspended or killed before the timer can
+            // fire, asked for early (mid-life) because iOS grants it late
             #if os(iOS)
-            BackgroundTaskCoordinator.shared.scheduleRefresh(earliestBeginDate: nextRefreshDate)
+            BackgroundTaskCoordinator.shared.scheduleRefresh(earliestBeginDate: backgroundRefreshDate)
             #endif
         } catch let error as RelayError {
             Self.logger.error("❌ Registration failed: \(error.localizedDescription, privacy: .public)")
@@ -222,8 +268,11 @@ class RelayRegistrationService {
         // Cancel existing timer
         refreshTimer?.cancel()
 
-        // Calculate when to refresh (TTL - buffer)
-        let refreshDelay = authTTL - authRefreshBuffer
+        // Sleep until expiry minus buffer, from the real (possibly
+        // relay-reported) expiry rather than the fixed TTL constant; the
+        // floor keeps a short-lived token from spinning a refresh loop
+        guard let refreshDate = nextRefreshDate else { return }
+        let refreshDelay = max(refreshDate.timeIntervalSinceNow, 60)
 
         refreshTimer = Task { [weak self] in
             do {

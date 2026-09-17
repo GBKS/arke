@@ -139,9 +139,9 @@ struct Arke_mobile: App {
                 // Safety-net BGTask submit: guarantees a pending refresh
                 // request exists even if no foreground path scheduled one
                 // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4).
-                // Uses the real auth deadline when a registration is active.
+                // Uses the mid-life BGTask date when a registration is active.
                 BackgroundTaskCoordinator.shared.scheduleRefresh(
-                    earliestBeginDate: walletManager.relayAuthNextRefreshDate
+                    earliestBeginDate: walletManager.relayAuthBackgroundRefreshDate
                 )
 
                 Task {
@@ -199,7 +199,7 @@ struct Arke_mobile: App {
         ) { _ in
             Task { @MainActor in
                 Self.logger.info("APNs token received, registering with relay...")
-                await manager.registerForPushNotifications()
+                await manager.registerForPushNotifications(trigger: .tokenChange)
             }
         }
     }

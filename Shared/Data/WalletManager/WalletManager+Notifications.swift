@@ -11,14 +11,30 @@ import OSLog
 import ArkeUI
 
 #if os(iOS)
+
+/// Outcome of a background relay auth pass, mapped by each wake source to
+/// its own completion contract: `setTaskCompleted(success:)` for BGTasks
+/// (`nothingToDo` counts as success), `UIBackgroundFetchResult` for the
+/// `mailbox_auth_refresh` wake push (`.newData`/`.noData`/`.failed`).
+enum RelayAuthRefreshOutcome: Sendable {
+    /// A fresh authorization was minted and registered with the relay
+    case refreshed
+    /// Nothing needed doing: notifications disabled, no wallet, or a wake
+    /// for a mailbox this device no longer holds
+    case nothingToDo
+    /// The pass couldn't register (keychain locked, wallet open or
+    /// registration failure) - report failure so the wake chain retries
+    case failed
+}
+
 extension WalletManager {
-    
+
     // MARK: - Push Notification Registration
-    
+
     /// Register device for push notifications with the relay server
     /// Called automatically after wallet initialization and when APNs token is received
     /// Requires valid APNs token and wallet to be initialized
-    func registerForPushNotifications() async {
+    func registerForPushNotifications(trigger: RelayRegistrationTrigger = .foreground) async {
         // Ensure wallet is initialized before attempting registration
         guard isInitialized else {
             Self.logger.info("Cannot register for push - wallet not yet initialized (normal during app startup; registration will be retried after initialization)")
@@ -32,24 +48,33 @@ extension WalletManager {
             return
         }
 
-        _ = await mintAndRegisterWithRelay()
+        _ = await mintAndRegisterWithRelay(trigger: trigger)
     }
 
-    /// Deadline for the next relay auth refresh (expiry minus buffer), if a
-    /// registration is active. Drives the BGTask request date.
-    var relayAuthNextRefreshDate: Date? {
-        relayRegistrationService?.nextRefreshDate
+    /// Date the BGTask fallback should be scheduled at (midpoint of the
+    /// token's remaining life), if a registration is active. Drives the
+    /// BGTask request date; the in-process timer keeps its own tighter
+    /// expiry-minus-buffer deadline inside RelayRegistrationService.
+    var relayAuthBackgroundRefreshDate: Date? {
+        relayRegistrationService?.backgroundRefreshDate
     }
 
     /// Background-wake variant of `registerForPushNotifications()`: does the
-    /// minimum to keep the relay authorization fresh from a BGTask launch —
+    /// minimum to keep the relay authorization fresh from a background launch —
     /// opens the wallet database if needed but skips full initialization
-    /// (refresh pipeline, service startup, UI state). Returns whether the pass
-    /// succeeded, for `setTaskCompleted(success:)`.
-    func refreshRelayAuthInBackground() async -> Bool {
+    /// (refresh pipeline, service startup, UI state).
+    /// - Parameters:
+    ///   - expectedMailboxId: For wake pushes, the mailbox the relay sent the
+    ///     wake for; a mismatch with the current wallet (wallet was replaced
+    ///     on this device) makes the pass a no-op.
+    ///   - trigger: What woke us, reported to the relay on registration.
+    func refreshRelayAuthInBackground(
+        expectedMailboxId: String? = nil,
+        trigger: RelayRegistrationTrigger = .backgroundTask
+    ) async -> RelayAuthRefreshOutcome {
         guard UserDefaults.standard.bool(forKey: "notifications_enabled") else {
             Self.logger.info("Background relay auth refresh: notifications disabled - nothing to do")
-            return true
+            return .nothingToDo
         }
 
         // Keychain-unavailable (device between reboot and first unlock) is a
@@ -61,19 +86,39 @@ extension WalletManager {
             break
         case .notFound:
             Self.logger.info("Background relay auth refresh: no wallet - nothing to do")
-            return true
+            return .nothingToDo
         case .unavailable(let osStatus):
             Self.logger.warning("Background relay auth refresh: keychain unavailable (OSStatus \(osStatus)) - retrying on a later wake")
-            return false
+            return .failed
         }
 
-        // A BGTask launch skips the UI flow that normally calls initialize().
+        // A background launch skips the UI flow that normally calls initialize().
         // Minting a mailbox authorization only needs the wallet database open,
         // not the full refresh pipeline - so open it directly.
         if !isInitialized, let ffiWallet = wallet as? BarkWalletFFI {
             guard await ffiWallet.openWalletIfNeeded() else {
                 Self.logger.error("Background relay auth refresh: wallet failed to open")
-                return false
+                return .failed
+            }
+        }
+
+        // A wake push names the mailbox it was sent for. If the wallet on this
+        // device was replaced since that registration, the wake is stale -
+        // ignore it (the current wallet's own refresh chain is unaffected)
+        if let expectedMailboxId {
+            guard let wallet else {
+                Self.logger.warning("Background relay auth refresh: no wallet to compare mailbox id against")
+                return .failed
+            }
+            do {
+                let currentMailboxId = try wallet.mailboxIdentifier()
+                guard currentMailboxId.caseInsensitiveCompare(expectedMailboxId) == .orderedSame else {
+                    Self.logger.notice("Background relay auth refresh: wake targets mailbox \(expectedMailboxId.prefix(8), privacy: .public)... but current wallet holds \(currentMailboxId.prefix(8), privacy: .public)... - ignoring stale wake")
+                    return .nothingToDo
+                }
+            } catch {
+                Self.logger.error("Background relay auth refresh: failed to read mailbox id: \(error.localizedDescription)")
+                return .failed
             }
         }
 
@@ -82,13 +127,13 @@ extension WalletManager {
         // calling onNeedsRefresh)
         relayRegistrationService?.forceRefresh()
 
-        return await mintAndRegisterWithRelay()
+        return await mintAndRegisterWithRelay(trigger: trigger) ? .refreshed : .failed
     }
 
     /// Mints mailbox credentials and registers with the relay. Shared core of
     /// the foreground and background registration paths - callers own the
     /// gating (initialization, settings, keychain).
-    private func mintAndRegisterWithRelay() async -> Bool {
+    private func mintAndRegisterWithRelay(trigger: RelayRegistrationTrigger) async -> Bool {
         guard let wallet = wallet,
               let relayService = relayRegistrationService else {
             Self.logger.warning("Cannot register for push - wallet or relay service not available")
@@ -127,7 +172,8 @@ extension WalletManager {
                 authorizationHex: authorizationHex,
                 arkAddr: arkAddr,
                 deviceToken: deviceToken,
-                apnsTopic: apnsTopic
+                apnsTopic: apnsTopic,
+                trigger: trigger
             )
 
             Self.logger.info("Successfully registered for push notifications")

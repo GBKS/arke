@@ -661,6 +661,7 @@
 				Docs/Send/SENDVIEW_PREVIEW_STATES.md,
 				Docs/Send/SENDVIEW_USAGE_EXAMPLES.md,
 				Docs/Send/SENDVIEW_USAGE_GUIDE.md,
+				Docs/SWIFT_AUTH_WAKE_SPEC.md,
 				"Images/cover-animation.mp4",
 				Models/ExitProgressActivityAttributes.swift,
 			);

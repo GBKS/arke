@@ -92,10 +92,16 @@ complementary silent-push approach that doesn't have this problem.
    - **Always reschedule the next occurrence before returning**, success or
      failure — a missed/failed run must not end the refresh cycle.
 4. **Scheduling policy.** Submit a `BGAppRefreshTaskRequest` with
-   `earliestBeginDate` set relative to the *real* token expiry (reuse
-   `authTTL`/`authRefreshBuffer` from `RelayRegistrationService`, i.e.
-   request to run ~1h before the 24h mark), not a fixed constant — so if the
-   auth TTL policy ever changes, both refresh paths stay in sync.
+   `earliestBeginDate` set relative to the *real* token expiry, not a fixed
+   constant — so if the auth TTL policy ever changes, both refresh paths
+   stay in sync. *(Amended 2026-09-17, per SWIFT_AUTH_WAKE_SPEC.md work
+   item 5: the BGTask asks for the midpoint of the token's remaining life
+   (`RelayRegistrationService.backgroundRefreshDate`) rather than
+   expiry-minus-buffer — `earliestBeginDate` is advisory and field data
+   showed iOS usually missed the 1h window. The foreground timer keeps the
+   tight expiry-minus-buffer deadline (`nextRefreshDate`); both derive from
+   the same `authExpiresAt`, which since the same date prefers the
+   relay-reported `authorization_expires_at` over the local `authTTL`.)*
    - Submit this request every time a registration/refresh succeeds
      (foreground or background), mirroring how `scheduleAuthRefresh()`
      re-arms itself today.
@@ -151,15 +157,17 @@ complementary silent-push approach that doesn't have this problem.
 
 ## Open Questions
 
-- **Is `BGAppRefreshTask` reliable enough on its own?** Open, answered by
-  this plan's field-data logging. The fallback shape is decided, though:
-  per Background_Execution.md Decision 2 (the relay never acts on its own
-  initiative), a relay-decided "your auth is about to expire" push is
-  ruled out. Instead the contingent Phase 6 **app-requested wake-up API**
-  covers this case uniformly — the app POSTs a wake for
-  expiry-minus-buffer, the relay just delivers a silent push at that
-  time. Build only if the field data shows BGTasks don't fire often
-  enough.
+- **Is `BGAppRefreshTask` reliable enough on its own?** *Answered
+  2026-09-17: no* — relay-side field data showed 124 of 151 registered
+  mailboxes holding expired tokens. The fallback shape changed with that
+  answer: Background_Execution.md Decision 2 was amended, and the relay
+  now sends a relay-decided `mailbox_auth_refresh` silent push derived
+  from the token expiry it already holds (see SWIFT_AUTH_WAKE_SPEC.md;
+  handled client-side by `BackgroundTaskCoordinator.handleAuthWakePush`).
+  The BGTask request date was also widened to the token's mid-life, and
+  registrations now carry a `trigger` field so refresh-path frequencies
+  are counted server-side. The contingent Phase 6 app-requested wake-up
+  API remains scoped to deadlines only the app can compute.
 - Do we need a `BGProcessingTask` instead/in addition, if minting +
   registering ever needs more time/resources than `BGAppRefreshTask`'s
   short execution window allows? Current work (one wallet call + one HTTP

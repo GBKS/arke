@@ -237,9 +237,16 @@ tight, but the gaps are structural:
 
 See `Features/Background_Execution.md` (Phase 1 done, soak running).
 
-- [ ] **BGTask grant frequency**: evaluate soak results (how often iOS actually
-  grants the refresh task).
-- [ ] **Phase 2**: mailbox push wake → full background pass. Relay stays dumb.
+- [x] **BGTask grant frequency**: ~~evaluate soak results~~ answered from the
+  relay side 2026-09-17 (124/151 mailboxes expired — not often enough); the
+  `trigger` field on `/v1/register` now measures it server-side per wake path.
+- [ ] **Auth wake push: on-device verify** (implemented 2026-09-17, see
+  `SWIFT_AUTH_WAKE_SPEC.md` acceptance criteria): `simctl push` with the
+  current wallet's mailbox id → `refreshed`/`.newData` + `trigger:
+  "wake_push"` at the relay; bogus mailbox id → "ignoring stale wake" +
+  `nothingToDo`; terminated-not-force-quit cold launch needs a real device.
+- [ ] **Phase 2**: mailbox push wake → full background pass. Relay stays dumb
+  *except* the auth-expiry wake (Decision 2 amendment, 2026-09-17).
 
 ## Bindings Adoption
 

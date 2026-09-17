@@ -86,12 +86,12 @@ final class BackgroundTaskCoordinator: Sendable {
         scheduleRefresh()
 
         let started = Date()
-        let work = Task { @MainActor () -> Bool in
+        let work = Task { @MainActor () -> RelayAuthRefreshOutcome in
             guard let manager = Self.walletManager else {
                 Self.logger.warning("⚠️ No WalletManager wired to coordinator — skipping pass")
-                return false
+                return .failed
             }
-            return await manager.refreshRelayAuthInBackground()
+            return await manager.refreshRelayAuthInBackground(trigger: .backgroundTask)
         }
 
         // Cancel cleanly if iOS revokes the window mid-request; cancellation
@@ -104,19 +104,66 @@ final class BackgroundTaskCoordinator: Sendable {
         }
 
         Task {
-            let success = await work.value
+            let outcome = await work.value
 
             // Re-submit with the real deadline now that registration state is
             // fresh (registerDevice's success path also submits — a harmless
             // double-replace with the same date)
-            if let deadline = await MainActor.run(body: { Self.walletManager?.relayAuthNextRefreshDate }) {
+            if let deadline = await MainActor.run(body: { Self.walletManager?.relayAuthBackgroundRefreshDate }) {
                 self.scheduleRefresh(earliestBeginDate: deadline)
             }
 
             // Pass-complete field data line (Background_Execution.md, Phase 1)
             let elapsed = String(format: "%.2f", Date().timeIntervalSince(started))
-            Self.logger.notice("✅ BGAppRefreshTask relay auth pass complete (success: \(success), \(elapsed, privacy: .public)s)")
-            task.setTaskCompleted(success: success)
+            Self.logger.notice("✅ BGAppRefreshTask relay auth pass complete (outcome: \(String(describing: outcome), privacy: .public), \(elapsed, privacy: .public)s)")
+            task.setTaskCompleted(success: outcome != .failed)
+        }
+    }
+
+    // MARK: - Auth Wake Push Handling
+
+    /// Entry point for the relay's `mailbox_auth_refresh` silent push
+    /// (SWIFT_AUTH_WAKE_SPEC.md): runs the same relay auth pass as the BGTask
+    /// and reports the outcome for the fetch completion handler. This path has
+    /// no BGTask `expirationHandler`, so a timeout just inside the ~30s push
+    /// window cancels in-flight work instead; the completion is still called
+    /// exactly once, by the awaiting block.
+    func handleAuthWakePush(
+        payloadMailboxId: String?,
+        completion: @escaping @Sendable (RelayAuthRefreshOutcome) -> Void
+    ) {
+        // Per-wake-source field data line (Background_Execution.md, Phase 1)
+        Self.logger.notice("⏰ Woke via mailbox_auth_refresh push")
+
+        let started = Date()
+        let work = Task { @MainActor () -> RelayAuthRefreshOutcome in
+            guard let manager = Self.walletManager else {
+                Self.logger.warning("⚠️ No WalletManager wired to coordinator — skipping pass")
+                return .failed
+            }
+            return await manager.refreshRelayAuthInBackground(
+                expectedMailboxId: payloadMailboxId,
+                trigger: .wakePush
+            )
+        }
+
+        // Cancellation propagates into URLSession; the awaiting block below
+        // still runs and reports .failed
+        let timeout = Task {
+            try? await Task.sleep(nanoseconds: 25_000_000_000)
+            guard !Task.isCancelled else { return }
+            Self.logger.warning("⏳ mailbox_auth_refresh pass ran long — cancelling in-flight work")
+            work.cancel()
+        }
+
+        Task {
+            let outcome = await work.value
+            timeout.cancel()
+
+            // Pass-complete field data line (Background_Execution.md, Phase 1)
+            let elapsed = String(format: "%.2f", Date().timeIntervalSince(started))
+            Self.logger.notice("✅ mailbox_auth_refresh pass complete (outcome: \(String(describing: outcome), privacy: .public), \(elapsed, privacy: .public)s)")
+            completion(outcome)
         }
     }
 

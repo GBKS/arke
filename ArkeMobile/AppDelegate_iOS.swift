@@ -98,13 +98,36 @@ class AppDelegate_iOS: NSObject, UIApplicationDelegate, UNUserNotificationCenter
             return
         }
         
+        // Relay-initiated auth wake (SWIFT_AUTH_WAKE_SPEC.md): re-register the
+        // mailbox authorization instead of syncing. Must be routed before the
+        // generic contains("mailbox") branch below, which would funnel it into
+        // a full refresh() that never re-registers. The completion handler is
+        // called once the pass finishes — iOS uses the result to budget future
+        // background time, so failures must not report .newData.
+        if let notificationType = userInfo["type"] as? String,
+           notificationType == "mailbox_auth_refresh" {
+            Self.logger.info("Auth wake push received - refreshing relay authorization")
+            BackgroundTaskCoordinator.shared.handleAuthWakePush(
+                payloadMailboxId: userInfo["mailbox_id"] as? String
+            ) { outcome in
+                DispatchQueue.main.async {
+                    switch outcome {
+                    case .refreshed: completionHandler(.newData)
+                    case .nothingToDo: completionHandler(.noData)
+                    case .failed: completionHandler(.failed)
+                    }
+                }
+            }
+            return
+        }
+
         // Check if this is a mailbox notification from relay
         // The relay sends notifications with type="mailbox_arkoor" and includes vtxo_count
         Self.logger.debug("Checking for mailbox notification...")
         if let notificationType = userInfo["type"] as? String,
            notificationType.contains("mailbox") {
             Self.logger.info("Mailbox notification confirmed (type: \(notificationType)) - posting NotificationCenter event")
-            
+
             if let vtxoCount = userInfo["vtxo_count"] {
                 Self.logger.info("Mailbox contains \(vtxoCount as! NSObject) VTXOs")
             }

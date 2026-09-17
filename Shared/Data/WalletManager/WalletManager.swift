@@ -388,7 +388,7 @@ class WalletManager {
         let relayAPIToken = Bundle.main.object(forInfoDictionaryKey: "RelayAPIToken") as? String
         relayRegistrationService = RelayRegistrationService(relayAPIToken: relayAPIToken)
         relayRegistrationService?.onNeedsRefresh = { [weak self] in
-            await self?.registerForPushNotifications()
+            await self?.registerForPushNotifications(trigger: .timer)
         }
         Self.logger.info("📮 [WalletManager] RelayRegistrationService initialized\(relayAPIToken != nil ? " with API token" : " without API token")")
         #endif
