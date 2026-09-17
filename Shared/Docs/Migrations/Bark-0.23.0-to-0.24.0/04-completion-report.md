@@ -62,8 +62,8 @@ buckets → two ordered passes, never merged).
   "Arke mobile".
 - Full mobile suite: batch run at end of task (lean workflow) — result
   recorded in the session, not blocking this report.
-- On-device: not yet — listed in `Open_Follow_Ups.md` as an opportunistic
-  smoke on the next signet import (watch for the per-pass retry log lines).
+- On-device: seed import tested by Christoph 2026-09-17, works. (Per-pass
+  retry log lines not inspected — fine unless a foreign-VTXO case appears.)
 
 ## Deviations from the plan
 

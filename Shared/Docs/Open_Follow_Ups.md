@@ -302,9 +302,10 @@ Guiding docs: `Migrations/Bark-0.23.0-to-0.24.0/`. Shipped: recompile +
 - [ ] **Protocol mirroring of `importVtxo(args:)` / `recoverVtxos(gapLimit:)`**
   — mirror onto `BarkWalletProtocol` when the first caller needs a
   non-default; today both stay FFI-internal.
-- [ ] **On-device import smoke of the widened retry** — next time a signet
-  import is run, confirm the new log lines: scan report → per-pass retry
-  outcomes ("still foreign after widened scan" should be rare/empty).
+- [x] **On-device import smoke of the widened retry** — done 2026-09-17:
+  Christoph ran a seed import on device same day as the bump; import worked.
+  (Log-line inspection of the per-pass retry outcomes wasn't part of the
+  pass; revisit only if a foreign-VTXO case ever surfaces in the field.)
 
 ## Bark 0.16 Migration
 
