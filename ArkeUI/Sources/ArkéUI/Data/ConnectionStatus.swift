@@ -76,7 +76,7 @@ public extension ConnectionQuality {
         }
     }
     
-    public var canPerformCollaborativeOperations: Bool {
+    var canPerformCollaborativeOperations: Bool {
         switch self {
         case .excellent, .good:
             return true

@@ -131,7 +131,7 @@ private struct HoloCardView_iOS: View {
 @MainActor
 private final class MotionManager: ObservableObject {
     private nonisolated(unsafe) let manager = CMMotionManager()
-    private nonisolated(unsafe) let queue = OperationQueue()
+    private let queue = OperationQueue()
     private nonisolated(unsafe) var referenceAttitude: CMAttitude?
 
     @Published var roll: Double = 0

@@ -212,12 +212,14 @@ public struct ContactAvatarEditor: View {
 
     // MARK: - Actions
 
-    static func presetAvatarData(imageName: String) -> Data? {
+    // nonisolated: called from nonisolated ContactAvatarSelection.resolvedData();
+    // pure asset loading with no main-actor state
+    nonisolated static func presetAvatarData(imageName: String) -> Data? {
         guard let image = platformImage(named: imageName) else { return nil }
         return AvatarImageProcessor.processedData(from: image)
     }
 
-    private static func platformImage(named name: String) -> PlatformImage? {
+    private nonisolated static func platformImage(named name: String) -> PlatformImage? {
         #if canImport(AppKit)
         return Bundle.module.image(forResource: name)
         #else

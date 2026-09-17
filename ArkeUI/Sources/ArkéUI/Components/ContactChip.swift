@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 public enum ContactChipSize {
     case small

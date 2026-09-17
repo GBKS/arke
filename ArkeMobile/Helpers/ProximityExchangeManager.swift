@@ -511,7 +511,9 @@ class ProximityExchangeManager: NSObject, ObservableObject {
 extension ProximityExchangeManager: MCSessionDelegate {
     
     nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange newState: MCSessionState) {
-        Task { @MainActor in
+        // Explicit [self]: the nested asyncAfter closure captures self weakly, which
+        // requires this Task's strong capture to be spelled out
+        Task { @MainActor [self] in
             switch newState {
             case .connected:
                 Self.logger.info("Session connected to peer: \(peerID.displayName)")
@@ -761,7 +763,9 @@ extension ProximityExchangeManager: MCNearbyServiceBrowserDelegate {
 extension ProximityExchangeManager: NISessionDelegate {
     
     nonisolated func session(_ session: NISession, didUpdate nearbyObjects: [NINearbyObject]) {
-        Task { @MainActor in
+        // Explicit [self]: the nested timer closure captures self weakly, which
+        // requires this Task's strong capture to be spelled out
+        Task { @MainActor [self] in
             guard let object = nearbyObjects.first else {
                 Self.logger.debug("NI update with no objects")
                 return

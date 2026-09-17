@@ -10,7 +10,9 @@ import ActivityKit
 import Foundation
 
 /// Activity attributes for exit progression Live Activity
-struct ExitProgressActivityAttributes: ActivityAttributes {
+/// nonisolated: plain data type; ActivityKit uses the conformance from
+/// concurrent contexts, so it must not inherit the default MainActor isolation.
+nonisolated struct ExitProgressActivityAttributes: ActivityAttributes {
     
     /// Dynamic state that updates during the exit process
     public struct ContentState: Codable, Hashable {
@@ -50,7 +52,7 @@ struct ExitProgressActivityAttributes: ActivityAttributes {
 }
 
 /// Exit states - matches the parsed states from ExitStatusParser
-enum ExitState: String, Codable, Hashable {
+nonisolated enum ExitState: String, Codable, Hashable {
     case start
     case processing
     case awaitingDelta

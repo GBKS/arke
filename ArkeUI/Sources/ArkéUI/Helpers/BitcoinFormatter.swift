@@ -11,12 +11,15 @@ import Observation
 /// A formatter for Bitcoin amounts that respects user preferences and system locale settings.
 /// This class reads the user's preferred Bitcoin display format and applies system locale
 /// settings for number formatting (decimal/grouping separators, symbol placement, etc.).
+///
+/// @unchecked Sendable: the only mutable state (`updateTrigger`) is written solely
+/// on the main queue (the UserDefaults observer in init); `userDefaults` is thread-safe.
 @Observable
-public class BitcoinFormatter {
-    
+public final class BitcoinFormatter: @unchecked Sendable {
+
     // MARK: - Singleton
-    
-    nonisolated(unsafe) public static let shared = BitcoinFormatter()
+
+    public static let shared = BitcoinFormatter()
     
     // MARK: - Properties
     

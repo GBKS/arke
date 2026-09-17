@@ -7,7 +7,6 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 public struct SendNoteEditorSheet: View {
     @Binding var note: String

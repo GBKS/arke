@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import ArkeUI
 
 public enum ArkeIconButtonSize {
     case small, medium, large

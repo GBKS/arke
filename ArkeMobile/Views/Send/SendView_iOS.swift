@@ -67,17 +67,21 @@ struct SendView_iOS: View {
             } else {
                 ProgressView()
                     .task {
-                        viewModel = SendViewModel(
+                        let newViewModel = SendViewModel(
                             walletManager: manager,
                             clipboardService: ClipboardService_iOS(),
                             modelContext: modelContext
                         )
-                        viewModel?.onDismiss = { [weak viewModel] in
+                        viewModel = newViewModel
+                        // Capture the binding rather than the view struct: capturing self
+                        // would retain the @State storage (including the view model) inside
+                        // a closure the view model itself stores, defeating the weak capture.
+                        newViewModel.onDismiss = { [weak newViewModel, inputMethod = $inputMethod] in
                             logger.debug("🧹 Clearing form after successful send")
-                            viewModel?.clearAll()
-                            inputMethod = .camera
+                            newViewModel?.clearAll()
+                            inputMethod.wrappedValue = .camera
                         }
-                        await viewModel?.handleInitialSetup(
+                        await newViewModel.handleInitialSetup(
                             prefilledRecipient: prefilledRecipient,
                             prefilledContact: prefilledContact
                         )

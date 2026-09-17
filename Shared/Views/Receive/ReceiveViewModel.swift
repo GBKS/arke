@@ -170,7 +170,7 @@ final class ReceiveViewModel {
         
         // Hide success feedback after 2 seconds
         Task {
-            try await Task.sleep(nanoseconds: 2_000_000_000)
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 withAnimation {
                     showCopySuccess = false

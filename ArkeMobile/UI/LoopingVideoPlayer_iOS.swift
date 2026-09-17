@@ -130,11 +130,15 @@ struct LoopingVideoPlayer_iOS: UIViewRepresentable {
             presentationSizeObservation?.invalidate()
             presentationSizeObservation = nil
 
-            // Configure audio session to mix with other audio (like background music)
-            do {
-                try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-            } catch {
-                print("Failed to set audio session category: \(error)")
+            // Configure audio session to mix with other audio (like background music).
+            // Off the main thread: audio session calls can block and trip the
+            // UI-responsiveness runtime issue while the session is active.
+            Task.detached(priority: .utility) {
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+                } catch {
+                    print("Failed to set audio session category: \(error)")
+                }
             }
             
             // Load video from bundle
