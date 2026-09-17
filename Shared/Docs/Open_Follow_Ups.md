@@ -270,8 +270,9 @@ in all shutdown paths. Deferred adoption (see plan §2.2-2.4, §Phase 3):
 - [ ] **Phase 3 (optional, ask first)**: `RoundFlowKind`-rich round UI,
   externally funded board (`boardFundingAddress`/`boardPsbt`),
   `OnchainWallet.evictTx`.
-- [ ] **Update `Bark_Bindings_Unadopted_API.md`** for the 0.23 surface
-  (baseline is v0.18.0).
+- [x] **Update `Bark_Bindings_Unadopted_API.md`** for the 0.23 surface —
+  done 2026-09-17 as a catch-up section during the 0.24 bump (baseline now
+  v0.24.0).
 - [ ] **Daemon auto-start on `Wallet.open()` (new in bark 0.7.0)** — device log
   2026-09-08 shows Rust starting the daemon during open, then our explicit
   `runDaemon()` triggering `Called Wallet::start_daemon while daemon was
@@ -285,6 +286,25 @@ in all shutdown paths. Deferred adoption (see plan §2.2-2.4, §Phase 3):
   TaskDeduplicationManager/queueing layer. Check if it reproduces before
   digging (Xcode-tethered timings are otherwise ignorable; untethered
   cold-launch budget is 2.84s).
+
+## Bark 0.24 Migration (shipped 2026-09-17)
+
+Guiding docs: `Migrations/Bark-0.23.0-to-0.24.0/`. Shipped: recompile +
+`vtxoKeyGapLimit: nil` (gap limit 50 → 250 by design), widened
+`foreign`-ids recovery retry (`ImportRecoveryLogic.retryPasses` +
+`retryRecoveries`, `maxVtxoKeyGapLimit()` = 100_000), 4 new
+`ImportRecoveryLogicTests`. Deferred:
+
+- [ ] **`importVtxos` batch adoption** — no import loop exists today
+  (`WalletManager.importVtxo` has zero callers); adopt when a multi-VTXO
+  import feature appears. Notes in `Bark_Bindings_Unadopted_API.md` (v0.24
+  section).
+- [ ] **Protocol mirroring of `importVtxo(args:)` / `recoverVtxos(gapLimit:)`**
+  — mirror onto `BarkWalletProtocol` when the first caller needs a
+  non-default; today both stay FFI-internal.
+- [ ] **On-device import smoke of the widened retry** — next time a signet
+  import is run, confirm the new log lines: scan report → per-pass retry
+  outcomes ("still foreign after widened scan" should be rare/empty).
 
 ## Bark 0.16 Migration
 

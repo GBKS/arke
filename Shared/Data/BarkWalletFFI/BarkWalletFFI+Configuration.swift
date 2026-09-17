@@ -248,7 +248,8 @@ extension BarkWalletFFI {
             offboardRequiredConfirmations: nil,  // Use default confirmations (v0.6.3+)
             daemonManualSync: nil,  // Use default (v0.6.3+)
             lightningReceiveClaimRetries: nil,  // Use default retries (v0.6.3+)
-            userAgent: userAgent  // e.g. "arke-ios/17" (v0.11+)
+            userAgent: userAgent,  // e.g. "arke-ios/17" (v0.11+)
+            vtxoKeyGapLimit: nil  // Use default (250, v0.24+; was hardcoded 50 pre-0.24)
         )
     }
 }

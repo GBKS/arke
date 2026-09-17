@@ -39,6 +39,35 @@ enum ImportRecoveryLogic {
         if hasReport { return .accept }
         return attempt >= maxAttempts ? .acceptWithoutRecovery : .wipeAndRetry
     }
+
+    /// One `recoverVtxos` call to make after a completed scan: which ids,
+    /// and with what gap-limit override (nil = the wallet's configured limit).
+    struct RetryPass: Equatable {
+        enum Bucket: String {
+            case failed
+            case foreign
+        }
+        let bucket: Bucket
+        let vtxoIds: [String]
+        let gapLimit: UInt32?
+    }
+
+    /// `failed` ids retry as-is — per-VTXO transient errors, the configured
+    /// scan already proved ownership. `foreign` ids retry with a widened gap
+    /// limit — foreign means no key was derivable within the configured
+    /// limit, so only a wider scan can prove they're ours (v0.24+). The two
+    /// buckets stay separate passes: merging them would make every transient
+    /// failure pay the widened scan's worst case.
+    static func retryPasses(failedIds: [String], foreignIds: [String], widenedGapLimit: UInt32) -> [RetryPass] {
+        var passes: [RetryPass] = []
+        if !failedIds.isEmpty {
+            passes.append(RetryPass(bucket: .failed, vtxoIds: failedIds, gapLimit: nil))
+        }
+        if !foreignIds.isEmpty {
+            passes.append(RetryPass(bucket: .foreign, vtxoIds: foreignIds, gapLimit: widenedGapLimit))
+        }
+        return passes
+    }
 }
 
 extension BarkWalletFFI {
@@ -574,7 +603,7 @@ extension BarkWalletFFI {
             case .accept:
                 if let report {
                     logRecoveryReport(report)
-                    await retryFailedRecoveries(from: report, wallet: wallet)
+                    await retryRecoveries(from: report, wallet: wallet)
                 }
                 return wallet
 
@@ -605,15 +634,27 @@ extension BarkWalletFFI {
         }
     }
 
-    /// Retries the VTXO ids a recovery scan bucketed as `failed` (per-VTXO
-    /// transient errors; the scan itself still completed).
-    private func retryFailedRecoveries(from report: RecoveryReport, wallet: Wallet) async {
-        guard !report.failed.vtxoIds.isEmpty else { return }
-        do {
-            let retried = try await wallet.recoverVtxos(vtxoIds: report.failed.vtxoIds)
-            Self.logger.info("Recovery retry of \(report.failed.vtxoIds.count) failed id(s): recovered \(retried.recovered.vtxoIds.count) (\(retried.recovered.totalSats) sats), still failed \(retried.failed.vtxoIds.count)")
-        } catch {
-            Self.logger.warning("Recovery retry of failed ids errored: \(error)")
+    /// Retries the VTXO ids a recovery scan couldn't import: `failed` ids
+    /// as-is (per-VTXO transient errors; the scan itself still completed),
+    /// `foreign` ids with the widest accepted gap limit, since their keys
+    /// were beyond the configured scan horizon (v0.24+). An errored pass is
+    /// logged and skipped — the import itself never fails here.
+    private func retryRecoveries(from report: RecoveryReport, wallet: Wallet) async {
+        let passes = ImportRecoveryLogic.retryPasses(
+            failedIds: report.failed.vtxoIds,
+            foreignIds: report.foreign.vtxoIds,
+            widenedGapLimit: maxVtxoKeyGapLimit()
+        )
+        for pass in passes {
+            do {
+                let retried = try await wallet.recoverVtxos(vtxoIds: pass.vtxoIds, gapLimit: pass.gapLimit)
+                Self.logger.info("Recovery retry of \(pass.vtxoIds.count) \(pass.bucket.rawValue) id(s) (gap limit \(pass.gapLimit.map(String.init) ?? "configured")): recovered \(retried.recovered.vtxoIds.count) (\(retried.recovered.totalSats) sats), still failed \(retried.failed.vtxoIds.count), still foreign \(retried.foreign.vtxoIds.count)")
+                if pass.bucket == .foreign && !retried.foreign.vtxoIds.isEmpty {
+                    Self.logger.warning("Foreign after widened scan (another wallet's, or keyed beyond \(maxVtxoKeyGapLimit()) indices): \(retried.foreign.vtxoIds)")
+                }
+            } catch {
+                Self.logger.warning("Recovery retry of \(pass.bucket.rawValue) ids errored: \(error)")
+            }
         }
     }
 
@@ -631,7 +672,7 @@ extension BarkWalletFFI {
             Self.logger.warning("Recovery scan failed VTXO ids (retryable via recoverVtxos): \(report.failed.vtxoIds)")
         }
         if !report.foreign.vtxoIds.isEmpty {
-            Self.logger.warning("Recovery scan foreign VTXO ids (possibly beyond gap limit): \(report.foreign.vtxoIds)")
+            Self.logger.warning("Recovery scan foreign VTXO ids (retrying with widened gap limit): \(report.foreign.vtxoIds)")
         }
     }
 

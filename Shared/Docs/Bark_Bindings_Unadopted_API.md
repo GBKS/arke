@@ -5,9 +5,9 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.19.0** (bark **v0.6.1**), pinned to
-`master` @ `644d010`. Compared against `Shared/Data/BarkWalletProtocol.swift`
-and actual `BarkWalletFFI` usage on 2026-08-23.
+**Baseline:** bark-ffi-bindings **v0.24.0** (bark **v0.7.1**), pinned to
+`master` @ `788c6f2`. Compared against `Shared/Data/BarkWalletProtocol.swift`
+and actual `BarkWalletFFI` usage on 2026-09-17.
 
 **Maintenance:** on every bindings bump, diff the new `WalletProtocol` in the
 package checkout against the previous version (the DerivedData checkout at
@@ -16,6 +16,63 @@ the release commits) and add new methods here. When an item is adopted, move
 it to the Adopted-since list at the bottom with the date. Sibling doc:
 `Bark_Bindings_Feedback.md` (things bark should change; this doc is things
 *we* haven't used yet).
+
+---
+
+## New in v0.24.0 (bark v0.7.1)
+
+Theme: the VTXO key gap limit became configurable (hardcoded 50 →
+`Config.vtxoKeyGapLimit`, default 250). Full diff and repo impact in
+`Migrations/Bark-0.23.0-to-0.24.0/`. Adopted immediately: the
+`recoverVtxos(vtxoIds:gapLimit:)` override (widened `foreign`-ids retry in
+the import recovery path, 2026-09-17 — see Adopted-since). Unadopted:
+
+### `importVtxos(encodedVtxos:args:) -> [String]` — batch VTXO import
+
+Imports several VTXOs under a single key scan and a single write (not just a
+loop over `importVtxo`). Returns the ids now held — stored by this call or
+already present — so a failed batch is retryable. One failure discards the
+whole batch unless `args.allowPartial`. No adoption target exists:
+`WalletManager.importVtxo` currently has zero callers. Adopt when a
+multi-VTXO import feature appears (e.g. mailbox batch receive); the
+kept-ids return plus `allowPartial: true` is the natural retry contract.
+
+### `ImportVtxoArgs` knobs on `importVtxo` (all fields defaulted)
+
+`gapLimit: UInt32?` (per-call override of the configured scan limit),
+`skipStatusCheck: Bool` (skip the per-VTXO server state check — faster but
+can leave spent VTXOs marked spendable), `allowPartial: Bool` (batch-only,
+see above). The app's `importVtxo` wrapper passes none of these; mirror them
+onto `BarkWalletProtocol` when the first real caller needs a non-default.
+
+### `defaultVtxoKeyGapLimit() -> UInt32` / `maxVtxoKeyGapLimit() -> UInt32`
+
+Free functions returning the default (250) and the cap (100_000; higher
+values are rejected at wallet open/create — "an unbounded limit is unbounded
+work"). `maxVtxoKeyGapLimit()` is adopted by the widened foreign retry;
+`defaultVtxoKeyGapLimit()` remains unused — natural validation bound if a
+user-configurable gap limit ever ships in settings.
+
+---
+
+## New in v0.23.0 (bark v0.7.0)
+
+Catch-up entry (this doc was not updated at the 0.23 bump on 2026-09-08).
+Additive lifecycle/recovery/exit-fee surface; full diff in
+`Migrations/Bark-0.19.0-to-0.23.0/01-api-changes.md`. Adopted at the bump:
+`stopDaemonWait()` (all shutdown paths). Still unadopted — tracked as
+checklist items under "Bark 0.23 Migration" in `Open_Follow_Ups.md`:
+
+- **`OnchainWallet.initialScan(birthdayHeight:)`** — recovers pre-existing
+  onchain history on seed import; `sync()` alone never finds it.
+- **`estimateEmergencyExitFee(...)`** — exit pre-flight showing broadcast vs
+  claim fees; `fundable == false` should block/warn. Slow (syncs first).
+- **`recoveryStatus()`** — distinguishes a failed recovery scan from one that
+  never ran; the import path still infers from `recoveryReport()` nil-ness.
+- **`RoundState.state: RoundFlowKind` / `scheduledHeight`** — richer round
+  progress than the `ongoing` bool the app reads today.
+- **Externally funded board** (`boardFundingAddress` / `boardPsbt`) and
+  **`OnchainWallet.evictTx(txid:)`** — no current feature target.
 
 ---
 
@@ -167,7 +224,8 @@ nobody re-discovers them as "missing":
 | Binding method | Where used |
 | --- | --- |
 | `maintenance()` | `BarkWalletFFI+WalletCreation.swift` (last-resort diagnostic) |
-| `recoverVtxos(vtxoIds:)` / `recoveryReport()` | `BarkWalletFFI+WalletCreation.swift` (import recovery scan) |
+| `recoverVtxos(vtxoIds:gapLimit:)` / `recoveryReport()` | `BarkWalletFFI+WalletCreation.swift` (import recovery scan; widened `foreign` retry since v0.24) |
+| `maxVtxoKeyGapLimit()` | `BarkWalletFFI+WalletCreation.swift` (widened retry's gap limit) |
 | `refreshVtxos(vtxoIds:)` | `BarkWalletFFI+VTXO.swift` |
 | `offboardVtxos(vtxoIds:bitcoinAddress:)` | `BarkWalletFFI+Exit.swift` |
 | `tryClaimAllLightningReceives(wait:)` | `BarkWalletFFI+Lightning.swift` |
@@ -185,4 +243,8 @@ the FFI, policy lives in `WalletManager`).
 
 (Move items here with the date when they land on the protocol / in a feature.)
 
-- — nothing yet.
+- **`recoverVtxos` `gapLimit:` override + `maxVtxoKeyGapLimit()`** —
+  2026-09-17, same day as the v0.24 bump: the import recovery path now
+  retries `foreign`-bucketed ids with the widest accepted gap limit
+  (`ImportRecoveryLogic.retryPasses`, pinned by `ImportRecoveryLogicTests`).
+  Internal to `BarkWalletFFI`, not on the protocol.
