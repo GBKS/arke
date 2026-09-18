@@ -4,6 +4,9 @@
     "—" : {
       "shouldTranslate" : false
     },
+    "…%@" : {
+
+    },
     "(%@)" : {
       "shouldTranslate" : false
     },
@@ -53,6 +56,9 @@
           }
         }
       }
+    },
+    "%@ UTC" : {
+
     },
     "%@...%@" : {
       "localizations" : {
@@ -2772,6 +2778,17 @@
         }
       }
     },
+    "action_clear_background_events" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear events"
+          }
+        }
+      }
+    },
     "action_clear_contact" : {
       "localizations" : {
         "de" : {
@@ -3580,6 +3597,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "查看已產生的地址"
+          }
+        }
+      }
+    },
+    "action_view_background_events" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "View events"
           }
         }
       }
@@ -9914,6 +9942,28 @@
         }
       }
     },
+    "data_background_activity" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Background Activity"
+          }
+        }
+      }
+    },
+    "data_background_events_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Background Events"
+          }
+        }
+      }
+    },
     "data_behind_curtain" : {
       "localizations" : {
         "de" : {
@@ -9938,6 +9988,325 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "幕後一覽"
+          }
+        }
+      }
+    },
+    "data_bg_auth_expires_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Relay auth expires"
+          }
+        }
+      }
+    },
+    "data_bg_check_relay" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Check relay registration"
+          }
+        }
+      }
+    },
+    "data_bg_checking_relay" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Asking the relay…"
+          }
+        }
+      }
+    },
+    "data_bg_clear_confirm_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Clear all background events?"
+          }
+        }
+      }
+    },
+    "data_bg_event_bgtask_scheduled" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Background task requested"
+          }
+        }
+      }
+    },
+    "data_bg_event_bgtask_wake" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Background task ran"
+          }
+        }
+      }
+    },
+    "data_bg_event_cold_launch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "App launched"
+          }
+        }
+      }
+    },
+    "data_bg_event_mailbox_push" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Mailbox push"
+          }
+        }
+      }
+    },
+    "data_bg_event_registration" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Relay registration"
+          }
+        }
+      }
+    },
+    "data_bg_event_timer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Refresh timer fired"
+          }
+        }
+      }
+    },
+    "data_bg_event_wake_push" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Auth wake push"
+          }
+        }
+      }
+    },
+    "data_bg_last_bg_wake_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last background wake"
+          }
+        }
+      }
+    },
+    "data_bg_last_registration_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last registration"
+          }
+        }
+      }
+    },
+    "data_bg_last_wake_push_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last wake push"
+          }
+        }
+      }
+    },
+    "data_bg_next_bgtask_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next background task"
+          }
+        }
+      }
+    },
+    "data_bg_next_timer_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next timer refresh"
+          }
+        }
+      }
+    },
+    "data_bg_no_events" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No background events yet"
+          }
+        }
+      }
+    },
+    "data_bg_notifications_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notifications"
+          }
+        }
+      }
+    },
+    "data_bg_push_token_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Push token"
+          }
+        }
+      }
+    },
+    "data_bg_relay_registrations_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Relay registrations"
+          }
+        }
+      }
+    },
+    "data_bg_relay_unavailable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Wallet or relay service not available"
+          }
+        }
+      }
+    },
+    "data_bg_value_missing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Missing"
+          }
+        }
+      }
+    },
+    "data_bg_value_never" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Never"
+          }
+        }
+      }
+    },
+    "data_bg_value_none" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "—"
+          }
+        }
+      }
+    },
+    "data_bg_value_none_scheduled" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None scheduled"
+          }
+        }
+      }
+    },
+    "data_bg_value_off" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "data_bg_value_on" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "data_bg_value_present" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Present"
+          }
+        }
+      }
+    },
+    "data_bg_value_system_discretion" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "At system discretion"
           }
         }
       }

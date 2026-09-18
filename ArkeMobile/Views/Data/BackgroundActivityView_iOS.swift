@@ -33,6 +33,15 @@ struct BackgroundActivitySectionView_iOS: View {
     var reloadTrigger: Int = 0
     @Environment(WalletManager.self) private var walletManager
     @State private var status: BackgroundActivityStatus?
+    @State private var relayCheck: RelayCheckState = .idle
+
+    enum RelayCheckState {
+        case idle
+        case loading
+        case loaded(RelayRegistrationsResponse)
+        case unavailable
+        case failed(String)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -45,6 +54,8 @@ struct BackgroundActivitySectionView_iOS: View {
 
             if let status {
                 BackgroundActivityStatusRows(status: status)
+
+                relayCheckContent
 
                 NavigationLink {
                     BackgroundActivityView_iOS()
@@ -74,7 +85,65 @@ struct BackgroundActivitySectionView_iOS: View {
         }
     }
 
+    /// On-demand relay cross-check: the status rows above are the app's side
+    /// of the registration story; this asks the relay for its side. A button,
+    /// not automatic - a diagnostics section shouldn't create network traffic
+    /// just by being scrolled past.
+    @ViewBuilder
+    private var relayCheckContent: some View {
+        switch relayCheck {
+        case .idle:
+            Button {
+                Task { await checkRelay() }
+            } label: {
+                HStack {
+                    Text(String(localized: "data_bg_check_relay", defaultValue: "Check relay registration"))
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
+            }
+
+        case .loading:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(String(localized: "data_bg_checking_relay", defaultValue: "Asking the relay…"))
+                    .foregroundStyle(.secondary)
+            }
+
+        case .loaded(let response):
+            RelayCrossCheckResultRows(response: response)
+
+        case .unavailable:
+            Text(String(localized: "data_bg_relay_unavailable", defaultValue: "Wallet or relay service not available"))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+        case .failed(let message):
+            ErrorBox(errorMessage: message)
+        }
+    }
+
+    private func checkRelay() async {
+        relayCheck = .loading
+        do {
+            if let response = try await walletManager.fetchRelayRegistrations() {
+                relayCheck = .loaded(response)
+            } else {
+                relayCheck = .unavailable
+            }
+        } catch {
+            relayCheck = .failed(error.localizedDescription)
+        }
+    }
+
     private func load() async {
+        // X-Ray's reload button should re-verify, not show a stale answer
+        relayCheck = .idle
+
         let events = await BackgroundEventJournal.shared.recentEvents(limit: 500)
         let pending = await BackgroundTaskCoordinator.shared.pendingRefreshRequest()
 
@@ -176,6 +245,36 @@ struct BackgroundActivityStatusRows: View {
             return "\(when) (\(trigger))"
         }
         return when
+    }
+}
+
+// MARK: - Relay cross-check result
+
+struct RelayCrossCheckResultRows: View {
+    let response: RelayRegistrationsResponse
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            LabeledValueRow(
+                String(localized: "data_bg_relay_registrations_label", defaultValue: "Relay registrations"),
+                value: "\(response.count)",
+                valueColor: response.count == 0 ? .orange : nil
+            )
+
+            // Device tokens arrive pre-truncated from the relay (last 8 chars)
+            ForEach(Array(response.registrations.enumerated()), id: \.offset) { _, registration in
+                HStack {
+                    Text("…\(registration.device_token_suffix)")
+                        .font(.footnote.monospaced())
+                    Spacer()
+                    Text(registration.updated_at.map { "\($0) UTC" } ?? "—")
+                        .font(.footnote.monospaced())
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.leading, 10)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -364,4 +463,16 @@ struct BackgroundEventRow: View {
     NavigationStack {
         BackgroundActivityView_iOS(previewEvents: [])
     }
+}
+
+#Preview("Relay cross-check") {
+    RelayCrossCheckResultRows(response: RelayRegistrationsResponse(
+        mailbox_id: "a1b2c3d4",
+        count: 2,
+        registrations: [
+            .init(apns_topic: "GBKS.Arke", device_token_suffix: "9f3a17c2", updated_at: "2026-09-18 13:11:30"),
+            .init(apns_topic: "GBKS.Arke", device_token_suffix: "04de88b1", updated_at: "2026-09-12 08:02:11"),
+        ]
+    ))
+    .padding()
 }

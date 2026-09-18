@@ -619,6 +619,9 @@ the last line, no in-app "background updates are off" plumbing for now).
 ## References
 
 - [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) — Phase 1 detail
+- [Background_Activity_Journal.md](Background_Activity_Journal.md) —
+  planned on-device event journal + X-Ray screen making this plan's wake
+  layers user-visible (OSLogStore can't read past sessions in-app)
 - [APNS_MAILBOX_SPEC.md](../APNS_MAILBOX_SPEC.md) — relay registration contract
 - `Shared/Services/LightningClaimService.swift`, `ExitProgressionService.swift`,
   `VTXORefreshService.swift`, `RelayRegistrationService.swift` — the passes

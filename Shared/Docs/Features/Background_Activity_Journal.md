@@ -5,7 +5,36 @@ X-Ray — so a user (or a developer without a tethered device) can see
 whether wakes, registrations, and background passes are actually
 happening. The client-side counterpart to the relay's event logging.
 
-Status: **PLANNED** (2026-09-17). No code yet.
+Status: **PHASES 1+2 DONE** (2026-09-18) — journal + all seven
+instrumentation points + compaction on scenePhase→active, and the X-Ray
+surface (`BackgroundActivitySectionView_iOS` status header in DataView +
+`BackgroundActivityView_iOS` event list with clear) are shipped; 248
+mobile tests green, zero new warnings, catalog keys extracted (English
+only — de/ja/zh-Hant passes pending like other recent strings). Screen
+confirmed working on device 2026-09-18 (screenshots). **Phase 3 also DONE
+2026-09-18**: on-demand "Check relay registration" row (typed
+`fetchRegistrations` over GET /v1/registrations — the relay truncates
+device tokens server-side to an 8-char suffix; response carries no auth
+expiry, so the row shows presence + per-device updated_at) and the
+journal section appended to `DebugLogExporter` output. Still open:
+Phase 1 item 4 (simulated BGTask wake → journal rows readable at next
+foreground launch — a device/simulator debugger run; the new screen is
+the natural place to check) and an on-device look at the cross-check row.
+
+**First field findings (2026-09-18, from device screenshots — both fixed
+same day):** the journal immediately surfaced (1) every foreground launch
+registering with the relay twice (`token_change` + `foreground`, seconds
+apart — the launch flow and APNs token observer both fire, each minting a
+new token the hash dedupe can't catch; fixed with a 1h freshness dedupe
+in `mintAndRegisterWithRelay`, defeated by a changed device token and by
+`forceRefresh()` so timer/BGTask/wake-push paths always re-register —
+pinned by `RelayRegistrationFreshnessTests`), and (2) `coldLaunch`
+elapsed times inflated by iOS prewarming (up to hours of dwell; fixed by
+detecting `ActivePrewarm` — prewarmed launches journal
+`detail: "prewarmed"` with no elapsed, and the OSLog wallet-ready line
+now carries the flag too). `bgTaskScheduled` details are now local-time
+ISO. Small open polish: the events list bottom row can sit under the
+floating tab pill.
 
 ## Goal
 

@@ -41,6 +41,22 @@ struct RelayUnregisterRequest: Codable {
     let device_token: String
 }
 
+/// GET /v1/registrations response - what the relay currently holds for a
+/// mailbox. Device tokens arrive pre-truncated (`device_token_suffix` is the
+/// last 8 chars); `updated_at` is the relay's sqlite CURRENT_TIMESTAMP
+/// ("YYYY-MM-DD HH:MM:SS", UTC).
+struct RelayRegistrationsResponse: Codable {
+    struct Registration: Codable {
+        let apns_topic: String
+        let device_token_suffix: String
+        let updated_at: String?
+    }
+
+    let mailbox_id: String
+    let count: Int
+    let registrations: [Registration]
+}
+
 struct RelayRegisterResponse: Codable {
     let status: String
     /// Expiry of the registered authorization (UNIX seconds), read out of the
@@ -296,8 +312,9 @@ class RelayRegistrationService {
         }
     }
     
-    /// Lists registrations for a mailbox
-    func listRegistrations(mailboxId: String) async throws -> String {
+    /// Fetches what the relay currently holds for a mailbox (X-Ray
+    /// cross-check row - the relay's side of the registration story).
+    func fetchRegistrations(mailboxId: String) async throws -> RelayRegistrationsResponse {
         let url = URL(string: "\(relayBaseURL)/v1/registrations?mailbox_id=\(mailboxId)")!
 
         var request = URLRequest(url: url)
@@ -314,7 +331,7 @@ class RelayRegistrationService {
             throw try parseErrorResponse(data: data, statusCode: httpResponse.statusCode, response: httpResponse)
         }
 
-        return String(data: data, encoding: .utf8) ?? "{}"
+        return try JSONDecoder().decode(RelayRegistrationsResponse.self, from: data)
     }
     
     // MARK: - Authorization Refresh

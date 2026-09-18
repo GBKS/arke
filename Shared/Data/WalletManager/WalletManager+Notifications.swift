@@ -70,6 +70,15 @@ extension WalletManager {
         relayRegistrationService?.nextRefreshDate
     }
 
+    /// Asks the relay what it currently holds for this wallet's mailbox
+    /// (X-Ray cross-check row). Returns nil when the wallet or relay service
+    /// isn't available; throws on network/decode failure.
+    func fetchRelayRegistrations() async throws -> RelayRegistrationsResponse? {
+        guard let wallet, let relayService = relayRegistrationService else { return nil }
+        let mailboxId = try wallet.mailboxIdentifier()
+        return try await relayService.fetchRegistrations(mailboxId: mailboxId)
+    }
+
     /// Background-wake variant of `registerForPushNotifications()`: does the
     /// minimum to keep the relay authorization fresh from a background launch —
     /// opens the wallet database if needed but skips full initialization

@@ -245,6 +245,15 @@ See `Features/Background_Execution.md` (Phase 1 done, soak running).
   current wallet's mailbox id → `refreshed`/`.newData` + `trigger:
   "wake_push"` at the relay; bogus mailbox id → "ignoring stale wake" +
   `nothingToDo`; terminated-not-force-quit cold launch needs a real device.
+- [ ] **Background activity journal + X-Ray screen** (plan:
+  `Features/Background_Activity_Journal.md`): ALL 3 PHASES DONE 2026-09-18
+  (journal + 7 instrumentation points, X-Ray section/screen — device-
+  verified via screenshots, relay cross-check row, DebugLogExporter
+  journal section); first field findings (double registration, prewarm-
+  inflated launch times) found and fixed same day. Remaining:
+  simulated-wake journal verify (plan Phase 1 item 4), on-device look at
+  the cross-check row, events-list bottom row can sit under the floating
+  tab pill, and de/ja/zh-Hant passes for the ~28 new X-Ray strings.
 - [ ] **Phase 2**: mailbox push wake → full background pass. Relay stays dumb
   *except* the auth-expiry wake (Decision 2 amendment, 2026-09-17).
 

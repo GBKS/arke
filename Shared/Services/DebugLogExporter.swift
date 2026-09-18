@@ -47,11 +47,16 @@ nonisolated enum DebugLogExporter {
     ///     mode) appended to the metadata header.
     /// - Returns: The URL of the written log file (ready to hand to a share sheet).
     static func generateLogFile(hours: Int = 24, contextLines: [String] = []) async throws -> URL {
+        // The background event journal persists across sessions where
+        // OSLogStore can't (current-process scope) - append it so background
+        // history shows up in user-submitted diagnostics.
+        let journalEvents = await BackgroundEventJournal.shared.recentEvents(limit: 200)
+
         // Reading the unified log can be slow; keep it off the main thread.
-        try await Task.detached(priority: .userInitiated) {
+        return try await Task.detached(priority: .userInitiated) {
             let body = try collectLogBody(hours: hours)
             let header = makeHeader(contextLines: contextLines, entryCount: body.entryCount)
-            let contents = header + "\n" + body.text
+            let contents = header + "\n" + body.text + "\n" + makeJournalSection(events: journalEvents)
 
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("arke-debug-\(fileTimestamp()).log")
@@ -107,6 +112,33 @@ nonisolated enum DebugLogExporter {
         case .fault:     return "FAULT"
         @unknown default: return "?"
         }
+    }
+
+    // MARK: - Background event journal section
+
+    /// One line per journal event, newest first, local-time ISO timestamps.
+    /// The events carry no secrets by construction (Background_Activity_Journal.md).
+    private static func makeJournalSection(events: [BackgroundEvent]) -> String {
+        var lines = ["===== Background event journal (newest first, \(events.count) events) ====="]
+
+        if events.isEmpty {
+            lines.append("(no journal events)")
+        } else {
+            let formatter = ISO8601DateFormatter()
+            formatter.timeZone = .current
+            for event in events {
+                var parts = [formatter.string(from: event.date), event.kind.rawValue]
+                if let outcome = event.outcome { parts.append(outcome) }
+                if let trigger = event.trigger { parts.append("trigger=\(trigger)") }
+                if let elapsedMs = event.elapsedMs { parts.append("\(elapsedMs)ms") }
+                if let detail = event.detail { parts.append(detail) }
+                parts.append("pid=\(event.pid)")
+                lines.append(parts.joined(separator: "  "))
+            }
+        }
+
+        lines.append("==========================")
+        return lines.joined(separator: "\n") + "\n"
     }
 
     // MARK: - Header
