@@ -145,6 +145,18 @@ extension WalletManager {
     /// the foreground and background registration paths - callers own the
     /// gating (initialization, settings, keychain).
     private func mintAndRegisterWithRelay(trigger: RelayRegistrationTrigger) async -> Bool {
+        // Launch double-fire dedupe (journal finding, 2026-09-18): the launch
+        // flow and the APNs token observer both register within seconds, each
+        // minting a new token the hash dedupe can't catch. Skip while the
+        // registration is fresh; a changed device token or forceRefresh()
+        // (timer/BGTask/wake-push paths) defeats freshness. Skips aren't
+        // journaled - the journal records actual relay traffic only.
+        let currentToken = UserDefaults.standard.string(forKey: "apns_device_token")
+        if relayRegistrationService?.isRegistrationFresh(currentDeviceToken: currentToken) == true {
+            Self.logger.info("Skipping relay registration (trigger: \(trigger.rawValue, privacy: .public)) - current registration is fresh")
+            return true
+        }
+
         let success = await mintAndRegisterWithRelayCore(trigger: trigger)
         BackgroundEventJournal.record(
             .relayRegistration,

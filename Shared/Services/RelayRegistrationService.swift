@@ -80,6 +80,17 @@ class RelayRegistrationService {
     /// Timestamp when authorization expires
     private var authExpiresAt: Date?
 
+    /// When the last successful registration happened, and with which APNs
+    /// device token - drives the launch-time freshness dedupe (see
+    /// `isRegistrationFresh(currentDeviceToken:)`)
+    private var lastRegisteredAt: Date?
+    private var lastRegisteredDeviceToken: String?
+
+    /// A registration younger than this is "fresh": re-minting would be pure
+    /// churn (each mint produces a new token, so the hash dedupe can't catch
+    /// launch double-fires)
+    private let freshRegistrationWindow: TimeInterval = 60 * 60
+
     /// TTL for authorization token. Matches the expiry `bark-ffi`'s
     /// `mailbox_authorization()` bakes in (see bark-ffi/src/core/wallet.rs)
     /// so our local bookkeeping doesn't drift from the real token lifetime.
@@ -96,6 +107,40 @@ class RelayRegistrationService {
     /// for the X-Ray background activity header.
     var authorizationExpiresAt: Date? {
         authExpiresAt
+    }
+
+    /// Whether the current registration is fresh enough that re-minting would
+    /// be pure churn. The launch flow and the APNs token observer both
+    /// register within seconds at every launch (journal finding, 2026-09-18);
+    /// each mints a brand-new token, so the hash dedupe never catches it.
+    /// A changed device token always defeats freshness - the relay must learn
+    /// new tokens immediately. `forceRefresh()` clears freshness, so the
+    /// timer, BGTask, and wake-push paths always re-register.
+    func isRegistrationFresh(currentDeviceToken: String?) -> Bool {
+        Self.isRegistrationFresh(
+            registeredAt: lastRegisteredAt,
+            expiresAt: authExpiresAt,
+            registeredDeviceToken: lastRegisteredDeviceToken,
+            currentDeviceToken: currentDeviceToken,
+            now: Date(),
+            window: freshRegistrationWindow
+        )
+    }
+
+    /// Pure freshness decision, extracted for unit tests.
+    nonisolated static func isRegistrationFresh(
+        registeredAt: Date?,
+        expiresAt: Date?,
+        registeredDeviceToken: String?,
+        currentDeviceToken: String?,
+        now: Date,
+        window: TimeInterval
+    ) -> Bool {
+        guard let registeredAt, let expiresAt,
+              let currentDeviceToken, currentDeviceToken == registeredDeviceToken else {
+            return false
+        }
+        return now.timeIntervalSince(registeredAt) < window && now < expiresAt
     }
 
     /// When the next in-process (foreground) auth refresh should run (expiry
@@ -187,6 +232,8 @@ class RelayRegistrationService {
             // bug) - fall back to the local TTL rather than let it drive an
             // immediate re-refresh loop.
             lastAuthHash = authHash
+            lastRegisteredAt = Date()
+            lastRegisteredDeviceToken = deviceToken
             let reportedExpiry = response.authorization_expires_at.map { Date(timeIntervalSince1970: $0) }
             if let reportedExpiry, reportedExpiry > Date() {
                 authExpiresAt = reportedExpiry
@@ -210,6 +257,7 @@ class RelayRegistrationService {
             if case .unauthorized = error {
                 lastAuthHash = nil
                 authExpiresAt = nil
+                lastRegisteredAt = nil
             }
             
             throw error
@@ -235,6 +283,7 @@ class RelayRegistrationService {
             // Clear state
             lastAuthHash = nil
             authExpiresAt = nil
+            lastRegisteredAt = nil
             refreshTimer?.cancel()
 
             // No registration left to keep fresh
@@ -306,6 +355,7 @@ class RelayRegistrationService {
     func forceRefresh() {
         lastAuthHash = nil
         authExpiresAt = nil
+        lastRegisteredAt = nil
         refreshTimer?.cancel()
     }
     
