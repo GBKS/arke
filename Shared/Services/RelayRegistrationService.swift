@@ -91,6 +91,13 @@ class RelayRegistrationService {
     /// Timer for scheduled authorization refresh
     private var refreshTimer: Task<Void, Never>?
 
+    /// Expiry of the authorization the relay currently holds, as far as this
+    /// session knows; nil until a successful registration. Read-only exposure
+    /// for the X-Ray background activity header.
+    var authorizationExpiresAt: Date? {
+        authExpiresAt
+    }
+
     /// When the next in-process (foreground) auth refresh should run (expiry
     /// minus buffer); nil until a successful registration. This and the BGTask
     /// date (`backgroundRefreshDate`) both derive from the same
@@ -243,21 +250,21 @@ class RelayRegistrationService {
     /// Lists registrations for a mailbox
     func listRegistrations(mailboxId: String) async throws -> String {
         let url = URL(string: "\(relayBaseURL)/v1/registrations?mailbox_id=\(mailboxId)")!
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         addAuthHeader(to: &request)
-        
+
         let (data, response) = try await URLSession.shared.data(for: request)
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw RelayError.invalidResponse
         }
-        
+
         guard httpResponse.statusCode == 200 else {
             throw try parseErrorResponse(data: data, statusCode: httpResponse.statusCode, response: httpResponse)
         }
-        
+
         return String(data: data, encoding: .utf8) ?? "{}"
     }
     
@@ -284,6 +291,7 @@ class RelayRegistrationService {
             guard let self, !Task.isCancelled else { return }
 
             Self.logger.notice("🔄 Auto-refreshing authorization (foreground timer fired)")
+            BackgroundEventJournal.record(.foregroundTimerFired)
 
             // Clear cached state so the upcoming registerDevice() call (made
             // by the handler with access to the wallet) isn't skipped as a

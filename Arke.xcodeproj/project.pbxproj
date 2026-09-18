@@ -260,6 +260,7 @@
 				Services/AddressGenerationStrategy.swift,
 				Services/AddressService.swift,
 				Services/AddressType.swift,
+				Services/BackgroundEventJournal.swift,
 				Services/BackgroundTaskCoordinator.swift,
 				Services/BalanceService.swift,
 				Services/BlockTimestampService.swift,

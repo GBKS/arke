@@ -56,6 +56,8 @@ struct DataView_iOS: View {
 
                 FeeRatesSectionView(reloadTrigger: reloadTrigger)
 
+                BackgroundActivitySectionView_iOS(reloadTrigger: reloadTrigger)
+
                 DebugLogExportButton_iOS()
 
                 /*

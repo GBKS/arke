@@ -138,7 +138,9 @@ class AppDelegate_iOS: NSObject, UIApplicationDelegate, UNUserNotificationCenter
                 object: nil
             )
             Self.logger.debug("NotificationCenter.post completed - wallet refresh triggered")
-            
+
+            BackgroundEventJournal.record(.mailboxPush, detail: notificationType)
+
             completionHandler(.newData)
             return
         } else {

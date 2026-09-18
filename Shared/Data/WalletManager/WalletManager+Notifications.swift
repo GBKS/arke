@@ -59,6 +59,17 @@ extension WalletManager {
         relayRegistrationService?.backgroundRefreshDate
     }
 
+    /// Read-only registration state for the X-Ray background activity header
+    /// (this session's knowledge only; history lives in the event journal).
+    var relayAuthExpiry: Date? {
+        relayRegistrationService?.authorizationExpiresAt
+    }
+
+    /// When the in-process timer will next re-mint, if a registration is active.
+    var relayAuthNextForegroundRefresh: Date? {
+        relayRegistrationService?.nextRefreshDate
+    }
+
     /// Background-wake variant of `registerForPushNotifications()`: does the
     /// minimum to keep the relay authorization fresh from a background launch —
     /// opens the wallet database if needed but skips full initialization
@@ -134,6 +145,16 @@ extension WalletManager {
     /// the foreground and background registration paths - callers own the
     /// gating (initialization, settings, keychain).
     private func mintAndRegisterWithRelay(trigger: RelayRegistrationTrigger) async -> Bool {
+        let success = await mintAndRegisterWithRelayCore(trigger: trigger)
+        BackgroundEventJournal.record(
+            .relayRegistration,
+            outcome: success ? "success" : "failure",
+            trigger: trigger.rawValue
+        )
+        return success
+    }
+
+    private func mintAndRegisterWithRelayCore(trigger: RelayRegistrationTrigger) async -> Bool {
         guard let wallet = wallet,
               let relayService = relayRegistrationService else {
             Self.logger.warning("Cannot register for push - wallet or relay service not available")

@@ -116,6 +116,11 @@ final class BackgroundTaskCoordinator: Sendable {
             // Pass-complete field data line (Background_Execution.md, Phase 1)
             let elapsed = String(format: "%.2f", Date().timeIntervalSince(started))
             Self.logger.notice("✅ BGAppRefreshTask relay auth pass complete (outcome: \(String(describing: outcome), privacy: .public), \(elapsed, privacy: .public)s)")
+            BackgroundEventJournal.record(
+                .bgTaskWake,
+                outcome: String(describing: outcome),
+                elapsedMs: Int(Date().timeIntervalSince(started) * 1000)
+            )
             task.setTaskCompleted(success: outcome != .failed)
         }
     }
@@ -163,6 +168,11 @@ final class BackgroundTaskCoordinator: Sendable {
             // Pass-complete field data line (Background_Execution.md, Phase 1)
             let elapsed = String(format: "%.2f", Date().timeIntervalSince(started))
             Self.logger.notice("✅ mailbox_auth_refresh pass complete (outcome: \(String(describing: outcome), privacy: .public), \(elapsed, privacy: .public)s)")
+            BackgroundEventJournal.record(
+                .wakePush,
+                outcome: String(describing: outcome),
+                elapsedMs: Int(Date().timeIntervalSince(started) * 1000)
+            )
             completion(outcome)
         }
     }
@@ -181,12 +191,34 @@ final class BackgroundTaskCoordinator: Sendable {
             try BGTaskScheduler.shared.submit(request)
             let when = earliestBeginDate.map { "\($0)" } ?? "at scheduler's discretion"
             Self.logger.info("📅 Scheduled \(Self.refreshTaskIdentifier) (earliest: \(when, privacy: .public))")
+            // Requested-at vs the next bgTaskWake row is the per-device
+            // BGTask-grant picture (Background_Activity_Journal.md).
+            // Local-time ISO (offset included) so the row reads without a
+            // UTC conversion.
+            let journalFormatter = ISO8601DateFormatter()
+            journalFormatter.timeZone = .current
+            BackgroundEventJournal.record(
+                .bgTaskScheduled,
+                detail: earliestBeginDate.map { journalFormatter.string(from: $0) } ?? "discretion"
+            )
         } catch BGTaskScheduler.Error.unavailable {
             // Expected on simulator and for app extensions — not an error in
             // the field
             Self.logger.info("ℹ️ BGTaskScheduler unavailable (simulator?) — refresh not scheduled")
         } catch {
             Self.logger.error("❌ Failed to schedule \(Self.refreshTaskIdentifier): \(error)")
+        }
+    }
+
+    /// For the X-Ray background activity header: whether a refresh request is
+    /// currently pending with the scheduler, and its requested earliest date
+    /// (nil = at the scheduler's discretion).
+    func pendingRefreshRequest() async -> (isPending: Bool, earliest: Date?) {
+        await withCheckedContinuation { continuation in
+            BGTaskScheduler.shared.getPendingTaskRequests { requests in
+                let request = requests.first { $0.identifier == Self.refreshTaskIdentifier }
+                continuation.resume(returning: (request != nil, request?.earliestBeginDate))
+            }
         }
     }
 

@@ -153,12 +153,19 @@ struct Arke_mobile: App {
                 Task {
                     await walletManager.exitProgressionService?.rescheduleCheckInRemindersIfNeeded()
                 }
-            } else if newPhase == .active && oldPhase == .background {
-                // User brought app to foreground - check if we have active exits
-                Task {
-                    if let service = walletManager.exitProgressionService,
-                       await service.hasActiveExits() {
-                        await service.userCheckedIn()
+            } else if newPhase == .active {
+                // Trim the background-event journal to its caps — foreground
+                // only, so the background wake path stays pure-append
+                // (Background_Activity_Journal.md)
+                Task { await BackgroundEventJournal.shared.compactIfNeeded() }
+
+                if oldPhase == .background {
+                    // User brought app to foreground - check if we have active exits
+                    Task {
+                        if let service = walletManager.exitProgressionService,
+                           await service.hasActiveExits() {
+                            await service.userCheckedIn()
+                        }
                     }
                 }
             }
