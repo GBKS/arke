@@ -26,9 +26,11 @@ Implementation notes (2026-09-21):
 - Manual refresh now returns a `ManualRefreshOutcome`
   (`scheduled` / `nothingToDo` / `alreadyInProgress`) and
   `refreshVTXOsManually()` throws when the service is missing. Without this,
-  the modal reported success for the `isChecking` skip introduced by Phase 2 —
-  a plausible tap given `start()` runs a network-bound check on every
-  foreground.
+  the modal reported success for the `isChecking` skip introduced by Phase 2.
+  (Correction 2026-09-21: originally justified as "a plausible tap given
+  `start()` runs a check on every foreground" — the check is per *launch*,
+  so this is a cold-launch race, not a foreground one. Narrower than
+  claimed, but the modal still must not report a refresh it didn't start.)
 - Scope decision: the three Data/debug force-refresh paths stay direct
   callers by design (`VTXOListView` ×2 platforms,
   `VTXODeveloperActionsView`, `DataView_iOS`'s `maintenanceDelegated()` —
@@ -61,7 +63,7 @@ Three independent writers schedule refreshes from overlapping VTXO pools:
 
 | Writer | Selection | Trigger |
 |--------|-----------|---------|
-| `VTXORefreshService.checkAndRefreshVTXOs()` | `spendableVtxos()` + fee-schedule free window (+ signet 10% lifespan cap) | hourly timer; immediate check on `start()` (every foreground) |
+| `VTXORefreshService.checkAndRefreshVTXOs()` | `spendableVtxos()` + fee-schedule free window (+ signet 10% lifespan cap) | immediate check on `start()` — **once per app launch**, from `performInitialization()` — then an hourly `Timer` |
 | Manual UI (`RefreshModalView`, `VTXOListView`) | `getVtxosToRefresh()` via `BalanceRefreshStatusViewModel.vtxosNeedingRefresh` | user tap on the balance card |
 | bark daemon | `get_vtxos_to_refresh()` (expiry threshold, exit depth, dust) | first attempt event of **every** round (F6) |
 
@@ -77,6 +79,18 @@ is bark's default; 144 blocks is the figure our own code mirrors
 but not actually under our control. Root cause: the app has no notion of
 "this VTXO is already being refreshed", and only bookkeeps a per-check
 `isChecking` flag that does nothing across checks or writers.
+
+**Check cadence (corrected 2026-09-21 — earlier text here said "every
+foreground", which is wrong).** `vtxoRefreshService.start()` is called once
+from `WalletManager.performInitialization()`, so the immediate check runs
+**per app launch**, not per foreground: no `.active` /
+`willEnterForeground` handler touches the service, and
+`triggerVTXORefreshCheck()` has no caller anywhere in the app. After launch
+only the hourly `Timer` fires, and a main-run-loop timer doesn't fire while
+the app is suspended. `stop()` happens only on wallet deletion / migration
+reset. Net cadence: **once per launch, then hourly while not suspended.**
+This matters both for reasoning about how often a check races another
+writer, and for how to force a check during device verification (§6).
 
 ## 2. Verified bark facts
 
@@ -161,10 +175,16 @@ reach it: `hasVtxosToRefresh` ANDs `!hasActiveRefresh`, so a stuck pending
 movement hides the "Refresh now" button entirely, and the modal's own list
 (`BalanceRefreshStatusViewModel.loadData()`) filters by the being-refreshed
 set with no valve, which would disable the confirm button anyway. Net: a
-near-expiry VTXO behind a stuck entry is rescued only by the hourly /
-on-foreground auto check. That is sufficient to prevent expiry (the window is
-144 blocks ≈ 6h on mainnet, and the check runs at least once per foreground),
-so this is recorded rather than fixed.
+near-expiry VTXO behind a stuck entry is rescued only by the auto check.
+
+Whether that suffices depends on the real cadence, which is **once per app
+launch, then hourly while not suspended** (see §1 — the earlier claim of
+"at least once per foreground" was wrong). Against a 144-block window
+(≈24h on mainnet, ≈6h on signet) an hourly foreground check clears it
+easily, and any launch does too. The residual case is an app left suspended
+for the whole window with no launch — then nothing fires. Recorded rather
+than fixed: the user-visible fallback is that a stuck entry keeps the card
+on "Refreshing", and the UI offers no manual override.
 
 ### 3.1 Deviation: `hasActiveRefresh` stays movement-only
 
@@ -220,9 +240,15 @@ Two further conditions, both found on review 2026-09-21 and both fixed:
 
 - **Read-your-own-writes.** `TransactionService.refreshTransactions()` runs
   through `TaskDeduplicationManager`, which *joins* an in-flight task rather
-  than starting a new one. A refresh started before our write (by
-  `WalletNotificationService` on a bark event, or by `performRefresh()`'s
-  task group on foreground) would satisfy the call with pre-write data.
+  than starting a new one. A refresh started before our write would satisfy
+  the call with pre-write data. Real producers of the `"transactions"` key:
+  `WalletNotificationService` on a bark event (the likeliest, since round
+  progression emits them), `performRefresh()`'s task group at launch, any
+  pull-to-refresh, and `WalletManager+Notifications`' push-driven
+  `refresh()`. (Correction 2026-09-21: an earlier draft said
+  "`performRefresh()`'s task group on foreground" — no foreground path calls
+  `refresh()`; the app-level triggers are launch, pull-to-refresh, and
+  notifications.)
   `refreshAfterVTXOChange()` now uses `refreshTransactionsAfterWrite()` →
   `TaskDeduplicationManager.executeFresh`, which drains any in-flight task
   and then fetches fresh. Draining rather than bypassing matters:
@@ -381,35 +407,87 @@ being-refreshed × valve), 9 tests. Still untested, deliberately deferred:
 
 ## 6. On-device verification (definition of done)
 
-On the signet wallet (precondition: a VTXO that `getVtxosToRefresh()`
-actually returns — on signet expiry is ~1 day, so either wait for one to age
-into the window or fund a fresh VTXO and come back near its expiry):
-1. **Phase 1 gate — parsing.** Immediately after scheduling, log the raw
-   movement and the parsed model:
-   `subsystemName`, `subsystemKind`, `status`, `inputVtxoIds`, and the
-   resulting `category`/`status` on the `TransactionModel`. Pass = category
-   `.refresh`, status `.pending`, inputs populated. **Anything else means the
-   canonical signal is empty and Guard C is inert**, regardless of the unit
-   tests passing — so check this one first, before the behavioural steps.
-2. Tap "Refresh now" → card flips to "Refreshing" promptly and stays there
-   until the round confirms; no second "Refresh now" in between. The modal
-   shows "Refresh started", not "Already refreshing".
-3. While the delegated request is pending, force the hourly/foreground check
-   → log shows the eligible VTXOs excluded, no duplicate
-   `refreshVtxosDelegated` call, no duplicate pending movement in Activity.
-4. Tap "Refresh now" while a check is known to be running (e.g. immediately
-   on foreground) → modal shows "Already refreshing" and no second schedule
-   is issued. Confirms the `ManualRefreshOutcome` plumbing.
+Run on the iPhone against the signet wallet. No log reading required — every
+check below is visible in the UI.
+
+### Precondition (get this wrong and the run proves nothing)
+
+The balance card must be showing the orange **"Refresh now"** with a non-zero
+amount. That means `getVtxosToRefresh()` is actually returning something. If
+it shows a countdown ("Refresh in …") there is nothing to schedule and every
+step below passes trivially.
+
+Signet VTXOs expire in ~1 day, so either use one that has aged into the
+window or fund a fresh one and come back near its expiry.
+
+### Step 1 — Parsing gate. Do this first.
+
+The only check not visible as behaviour, and the one failure mode the 273
+green unit tests cannot see.
+
+Tap "Refresh now", then open the new pending refresh row in Activity →
+technical details (`TransactionTechnicalDetailsView` already shows all three
+fields):
+
+| Field | Must read |
+|-------|-----------|
+| Category | `refresh` |
+| Subsystem name | `bark.round` |
+| Subsystem kind | `refresh` |
+
+`MovementCategory` returns `.refresh` **only** for
+`subsystemName == "bark.round"` *and* `subsystemKind == "refresh"`;
+anything else maps to `.unknown`. Since `hasActiveRefresh`,
+`vtxoIdsBeingRefreshed()` and Guard C all key on `.refresh`, a mismatch
+means **the whole signal is permanently empty and Guard C is inert** while
+every unit test still passes. If this fails, stop — the fix is in
+`MovementCategory`'s mapping, not in anything this doc built.
+
+### Step 2 — The card flips (read-your-own-writes)
+
+From the same tap: the modal shows **"Refresh started"** (not "Already
+refreshing"), and the balance card goes orange → blue **"Refreshing"**
+promptly — while the sheet is still up or immediately on dismiss, not
+minutes later and not only after a pull-to-refresh.
+
+Late or missing flip means the post-write refetch isn't reaching the readers
+(§3.2).
+
+### Step 3 — No duplicate schedule (Guard C)
+
+While that refresh is still pending, force another check: **kill the app and
+cold-relaunch it.**
+
+Background → foreground does *not* work — the immediate check runs from
+`performInitialization()` on launch only (see §1 cadence). There is no
+foreground trigger and no debug button.
+
+Pass: Activity gains **no** second pending refresh row, and the card stays
+on "Refreshing".
+
+### Step 4 — Raced tap (optional)
+
+Cold-launch and tap "Refresh now" inside the launch check's network window
+(a few seconds) → modal reads **"Already refreshing"**. Confirms the
+`ManualRefreshOutcome` plumbing. Fiddly to time by hand; treat as a bonus
+rather than a gate.
+
+### Not covered here
+
+The `unusable_inputs` → `.alreadyIssuedByServer` path needs the server to
+reject an already-issued participation, which can't be provoked reliably from
+the app. Left to field observation.
 
 ## 7. Constraint for Background Execution Phase 2
 
 `BackgroundTaskCoordinator` documents "delegated refresh kickoff" as intended
-`cash.arke.refresh` short-pass scope, but `VTXORefreshService` is
-foreground-only by design (`start()`/`stop()` are driven by foreground
-transitions). A background pass that calls `refreshVtxosDelegated` directly
-would get **neither** Guard C nor the `isChecking` gate, adding a sixth
-writer that races the foreground check — and background is where a stale
-`transactions` read is most likely, since no view is driving `loadData()`.
+`cash.arke.refresh` short-pass scope, but `VTXORefreshService` is effectively
+foreground-only: it starts once per launch and then relies on a main-run-loop
+`Timer` that doesn't fire while suspended (§1 cadence). A background pass
+that calls `refreshVtxosDelegated` directly would get **neither** Guard C nor
+the `isChecking` gate, adding a sixth writer that races the launch/hourly
+check — and background is where a stale `transactions` read is most likely,
+since no view is driving `loadData()`.
 
 When Phase 2 lands (`Background_Execution` plan), route it through
 `VTXORefreshService.refreshManually()` rather than the wallet API, and make

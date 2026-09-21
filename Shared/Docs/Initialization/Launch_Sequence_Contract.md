@@ -66,10 +66,12 @@ Enforced: `WalletManager.swift` (`performRefresh`, addresses-first step). Test: 
 exclusion reads `WalletManager.transactions` — the unified service's
 *stored* merge, populated by `performRefresh()`. Start the service first and
 the launch-time check sees an empty transaction list, so Guard C is silently
-inert exactly when a double-schedule is most likely (foreground check plus
-the daemon joining the next round). The same dependency is why
-`refreshAfterVTXOChange()` must call `mergeTransactions()` and not just the
-Ark-only refetch (2026-09-21, `Features/Refresh_Deduplication.md` §3.2).
+inert. That matters more than it sounds: the immediate check is the service's
+**only** trigger besides the hourly timer (nothing restarts it on
+foreground), so the launch check is a large share of all checks ever run.
+The same dependency is why `refreshAfterVTXOChange()` must call
+`mergeTransactions()` and not just the Ark-only refetch (2026-09-21,
+`Features/Refresh_Deduplication.md` §§1, 3.2).
 Enforced: `WalletManager.performInitialization()` (`await refresh()` precedes
 the `start()` block). Test: none — ordering is positional.
 
