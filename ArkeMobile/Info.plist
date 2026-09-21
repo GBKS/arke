@@ -2,40 +2,28 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>cash.arke.refresh</string>
+		<string>cash.arke.maintenance</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_arkepayment._tcp</string>
+		<string>_arkepayment._udp</string>
+	</array>
+	<key>RelayAPIToken</key>
+	<string>c2776c8d7b973823206261209dbf87064106bc4d0da4a285dc4fd343fa22c41e</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>cash.arke.refresh</string>
-		<string>cash.arke.maintenance</string>
-	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>RelayAPIToken</key>
-	<string>c2776c8d7b973823206261209dbf87064106bc4d0da4a285dc4fd343fa22c41e</string>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Arké uses local network to securely exchange payment information with nearby users.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_arkepayment._tcp</string>
-		<string>_arkepayment._udp</string>
-	</array>
-	<key>NSNearbyInteractionUsageDescription</key>
-	<string>Arké uses Nearby Interaction to detect when you're close to another user for seamless payment information exchange.</string>
-	<key>NSNearbyInteractionAllowOnceUsageDescription</key>
-	<string>Allow Arké to detect nearby users once to exchange payment information.</string>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
-	<key>NFCReaderUsageDescription</key>
-	<string>Arké uses NFC to scan payment information from contactless tags.</string>
 </dict>
 </plist>
