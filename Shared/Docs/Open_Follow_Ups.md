@@ -439,6 +439,20 @@ bindings.
 See `Features/Desktop_Parity.md` (onboarding, settings, launch/registration
 done).
 
+- [ ] **ArkeDesktop build is broken — duplicate doc basenames (regression).**
+  `xcodebuild -scheme 'Arké' -destination platform=macOS` fails with four
+  "Multiple commands produce …" errors for `01-api-changes.md`,
+  `02-migration-plan.md`, `04-completion-report.md`, `README.md`. Same class
+  of break as the 2026-07-09 `PHASE_3_COMPLETE` collision: ArkeDesktop
+  flat-copies `Docs/` into `Contents/Resources`, so duplicate basenames
+  collide. Cause: `Docs/Migrations/Bark-0.19.0-to-0.23.0/` and
+  `Docs/Migrations/Bark-0.23.0-to-0.24.0/` (8 files) were never added to the
+  ArkeDesktop `membershipExceptions` list, unlike the other five migration
+  folders. Fix is an **Xcode UI pass** (uncheck ArkeDesktop membership for
+  those 8 files) — not a hand edit of `project.pbxproj`. Predates the refresh
+  work; verified identical at `HEAD~2`. Worth adding a Migrations-folder
+  checklist item to the bindings-bump routine so the next one doesn't repeat
+  it.
 - [ ] **Exit UI** on desktop.
 - [ ] **Notifications** on desktop.
 
