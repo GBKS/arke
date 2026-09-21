@@ -399,6 +399,8 @@ struct BackgroundEventRow: View {
             String(localized: "data_bg_event_mailbox_push", defaultValue: "Mailbox push")
         case .relayRegistration:
             String(localized: "data_bg_event_registration", defaultValue: "Relay registration")
+        case .staleMailboxUnregister:
+            String(localized: "data_bg_event_stale_unregister", defaultValue: "Stale mailbox unregistered")
         case .bgTaskScheduled:
             String(localized: "data_bg_event_bgtask_scheduled", defaultValue: "Background task requested")
         case .foregroundTimerFired:
@@ -414,6 +416,7 @@ struct BackgroundEventRow: View {
         case .wakePush: "antenna.radiowaves.left.and.right"
         case .mailboxPush: "tray.and.arrow.down"
         case .relayRegistration: "checkmark.seal"
+        case .staleMailboxUnregister: "xmark.seal"
         case .bgTaskScheduled: "calendar.badge.clock"
         case .foregroundTimerFired: "timer"
         case .coldLaunch: "power"

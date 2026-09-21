@@ -71,3 +71,53 @@ struct RelayRegistrationFreshnessTests {
         #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: 23 * 3600, registeredToken: nil))
     }
 }
+
+/// Pins the stale-wake decision for `mailbox_auth_refresh` pushes
+/// (SWIFT_AUTH_WAKE_SPEC.md work item 2): a wake for the current wallet's
+/// mailbox re-registers; a wake for any other mailbox unregisters the
+/// orphaned pair. The relay lowercases mailbox ids, so the match must be
+/// case-insensitive — a hex-case difference must never be mistaken for a
+/// replaced wallet.
+@Suite("Stale Wake Decision Tests")
+struct StaleWakeDecisionTests {
+
+    @Test("An identical mailbox id is the current mailbox")
+    func exactMatchIsCurrent() {
+        #expect(RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "a3f09b2c11dd44ee",
+            currentMailboxId: "a3f09b2c11dd44ee"
+        ))
+    }
+
+    @Test("The match is case-insensitive in both directions")
+    func matchIsCaseInsensitive() {
+        #expect(RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "a3f09b2c11dd44ee",
+            currentMailboxId: "A3F09B2C11DD44EE"
+        ))
+        #expect(RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "A3F09B2C11DD44EE",
+            currentMailboxId: "a3f09b2c11dd44ee"
+        ))
+    }
+
+    @Test("A different mailbox id is stale")
+    func differentIdIsStale() {
+        #expect(!RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "deadbeef00000000",
+            currentMailboxId: "a3f09b2c11dd44ee"
+        ))
+    }
+
+    @Test("A truncated or extended id is stale, not a prefix match")
+    func prefixIsNotAMatch() {
+        #expect(!RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "a3f09b2c",
+            currentMailboxId: "a3f09b2c11dd44ee"
+        ))
+        #expect(!RelayRegistrationService.isWakeForCurrentMailbox(
+            payloadMailboxId: "a3f09b2c11dd44ee00",
+            currentMailboxId: "a3f09b2c11dd44ee"
+        ))
+    }
+}

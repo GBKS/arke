@@ -10091,6 +10091,17 @@
         }
       }
     },
+    "data_bg_event_stale_unregister" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Stale mailbox unregistered"
+          }
+        }
+      }
+    },
     "data_bg_event_timer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

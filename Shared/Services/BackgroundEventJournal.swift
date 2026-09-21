@@ -25,6 +25,9 @@ nonisolated struct BackgroundEvent: Codable, Equatable, Sendable {
         case mailboxPush = "mailbox_push"
         /// A `/v1/register` attempt finished
         case relayRegistration = "relay_registration"
+        /// A stale wake named a mailbox this device no longer holds; the
+        /// orphaned relay registration was DELETEd (or the attempt failed)
+        case staleMailboxUnregister = "stale_mailbox_unregister"
         /// A BGAppRefreshTask request was submitted (detail = requested date)
         case bgTaskScheduled = "bg_task_scheduled"
         /// The in-process auth refresh timer fired

@@ -159,6 +159,18 @@ class RelayRegistrationService {
         return now.timeIntervalSince(registeredAt) < window && now < expiresAt
     }
 
+    /// Pure wake-targeting decision for `mailbox_auth_refresh` pushes,
+    /// extracted for unit tests: the wake is for the current wallet when the
+    /// payload's mailbox id matches case-insensitively (the relay lowercases
+    /// ids; bark-ffi has returned mixed case). A mismatch means the wallet on
+    /// this device was replaced and the wake names an orphaned registration.
+    nonisolated static func isWakeForCurrentMailbox(
+        payloadMailboxId: String,
+        currentMailboxId: String
+    ) -> Bool {
+        currentMailboxId.caseInsensitiveCompare(payloadMailboxId) == .orderedSame
+    }
+
     /// When the next in-process (foreground) auth refresh should run (expiry
     /// minus buffer); nil until a successful registration. This and the BGTask
     /// date (`backgroundRefreshDate`) both derive from the same
@@ -282,30 +294,45 @@ class RelayRegistrationService {
     
     /// Unregisters device from the relay
     func unregisterDevice(mailboxId: String, deviceToken: String) async throws {
+        try await sendUnregisterRequest(mailboxId: mailboxId, deviceToken: deviceToken)
+
+        // Clear state
+        lastAuthHash = nil
+        authExpiresAt = nil
+        lastRegisteredAt = nil
+        refreshTimer?.cancel()
+
+        // No registration left to keep fresh
+        #if os(iOS)
+        BackgroundTaskCoordinator.shared.cancelRefresh()
+        #endif
+    }
+
+    /// Unregisters a mailbox/device pair this device NO LONGER holds (wallet
+    /// was replaced; the wake push named the old mailbox). Same DELETE as
+    /// `unregisterDevice`, but touches none of the current wallet's
+    /// registration state — clearing the expiry/freshness bookkeeping or
+    /// cancelling the timer/BGTask here would break the CURRENT registration's
+    /// refresh chain. Idempotent on the relay side (`removed: 0` is a 200).
+    func unregisterStaleMailbox(mailboxId: String, deviceToken: String) async throws {
+        try await sendUnregisterRequest(mailboxId: mailboxId, deviceToken: deviceToken)
+    }
+
+    /// Shared DELETE /v1/register request; callers own any state changes
+    private func sendUnregisterRequest(mailboxId: String, deviceToken: String) async throws {
         let request = RelayUnregisterRequest(
             mailbox_id: mailboxId,
             device_token: deviceToken
         )
-        
+
         do {
             let response: RelayUnregisterResponse = try await makeRequest(
                 path: "/v1/register",
                 method: "DELETE",
                 body: request
             )
-            
+
             Self.logger.notice("✅ Device unregistered: \(response.status, privacy: .public)")
-
-            // Clear state
-            lastAuthHash = nil
-            authExpiresAt = nil
-            lastRegisteredAt = nil
-            refreshTimer?.cancel()
-
-            // No registration left to keep fresh
-            #if os(iOS)
-            BackgroundTaskCoordinator.shared.cancelRefresh()
-            #endif
         } catch let error as RelayError {
             Self.logger.error("❌ Unregistration failed: \(error.localizedDescription, privacy: .public)")
             throw error

@@ -574,7 +574,12 @@ the one sanctioned exception to Decision 2, since the relay already holds
 the token expiry). The client handles the wake via
 `BackgroundTaskCoordinator.handleAuthWakePush`, reuses the BGTask's relay
 auth pass, and reports a `trigger` field on every registration so the
-relay can count which refresh paths actually run.
+relay can count which refresh paths actually run. A wake naming a mailbox
+this device no longer holds (wallet replaced) unregisters the orphaned
+pair from the relay (`unregisterStaleMailbox` — same DELETE, but none of
+the current registration's state) instead of ignoring it; that wake is
+the only place such orphans can ever be cleaned up, since APNs keeps the
+device token valid while the app is installed.
 
 What stays contingent here is the alarm clock for deadlines only the app
 can compute — exit checkpoints and refresh blockheights. Build it only if

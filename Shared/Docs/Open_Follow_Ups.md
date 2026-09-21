@@ -240,11 +240,19 @@ See `Features/Background_Execution.md` (Phase 1 done, soak running).
 - [x] **BGTask grant frequency**: ~~evaluate soak results~~ answered from the
   relay side 2026-09-17 (124/151 mailboxes expired — not often enough); the
   `trigger` field on `/v1/register` now measures it server-side per wake path.
-- [ ] **Auth wake push: on-device verify** (implemented 2026-09-17, see
-  `SWIFT_AUTH_WAKE_SPEC.md` acceptance criteria): `simctl push` with the
-  current wallet's mailbox id → `refreshed`/`.newData` + `trigger:
-  "wake_push"` at the relay; bogus mailbox id → "ignoring stale wake" +
-  `nothingToDo`; terminated-not-force-quit cold launch needs a real device.
+- [ ] **Auth wake push: verify from field data** (implemented 2026-09-17,
+  stale-mailbox unregister added 2026-09-21, see `SWIFT_AUTH_WAKE_SPEC.md`
+  acceptance criteria). Decision 2026-09-21: shipped without manual
+  push-simulation tests; verify passively instead. Watch for: (a) X-Ray
+  journal rows — "Auth wake push · refreshed" and "Stale mailbox
+  unregistered · success · wake_push" with expiry/BGTask rows untouched;
+  (b) relay side — `trigger: "wake_push"` registrations under
+  `auth_refresh.refreshes_after_wake`, and DELETE /v1/register with
+  `removed: 1` shortly after a wake for that mailbox. Caveats: the DELETE
+  carries no trigger field (relay can only attribute by wake→DELETE
+  correlation), and orphans past their 7-wake budget never get another
+  wake — "no signal" ≠ broken. Terminated-not-force-quit cold launch shows
+  up as a fresh pid in the journal when it happens.
 - [ ] **Background activity journal + X-Ray screen** (plan:
   `Features/Background_Activity_Journal.md`): ALL 3 PHASES DONE 2026-09-18
   (journal + 7 instrumentation points, X-Ray section/screen — device-

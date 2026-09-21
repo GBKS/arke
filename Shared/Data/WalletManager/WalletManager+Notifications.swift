@@ -124,7 +124,8 @@ extension WalletManager {
 
         // A wake push names the mailbox it was sent for. If the wallet on this
         // device was replaced since that registration, the wake is stale -
-        // ignore it (the current wallet's own refresh chain is unaffected)
+        // unregister the orphaned pair instead of minting anything (the
+        // current wallet's own refresh chain is unaffected)
         if let expectedMailboxId {
             guard let wallet else {
                 Self.logger.warning("Background relay auth refresh: no wallet to compare mailbox id against")
@@ -132,9 +133,12 @@ extension WalletManager {
             }
             do {
                 let currentMailboxId = try wallet.mailboxIdentifier()
-                guard currentMailboxId.caseInsensitiveCompare(expectedMailboxId) == .orderedSame else {
-                    Self.logger.notice("Background relay auth refresh: wake targets mailbox \(expectedMailboxId.prefix(8), privacy: .public)... but current wallet holds \(currentMailboxId.prefix(8), privacy: .public)... - ignoring stale wake")
-                    return .nothingToDo
+                guard RelayRegistrationService.isWakeForCurrentMailbox(
+                    payloadMailboxId: expectedMailboxId,
+                    currentMailboxId: currentMailboxId
+                ) else {
+                    Self.logger.notice("Background relay auth refresh: wake targets mailbox \(expectedMailboxId.prefix(8), privacy: .public)... but current wallet holds \(currentMailboxId.prefix(8), privacy: .public)... - unregistering stale mailbox")
+                    return await unregisterStaleMailboxFromWake(staleMailboxId: expectedMailboxId)
                 }
             } catch {
                 Self.logger.error("Background relay auth refresh: failed to read mailbox id: \(error.localizedDescription)")
@@ -148,6 +152,50 @@ extension WalletManager {
         relayRegistrationService?.forceRefresh()
 
         return await mintAndRegisterWithRelay(trigger: trigger) ? .refreshed : .failed
+    }
+
+    /// Cleans up the orphaned registration a stale wake names: the wallet on
+    /// this device was replaced, nothing can renew that mailbox's token any
+    /// more, and APNs never reports the device token invalid (the app is
+    /// still installed) - so without this DELETE the relay keeps a dead
+    /// worker and daily wakes alive forever. Deliberately does NOT mint,
+    /// register, or touch the current wallet's registration state.
+    /// - Returns: `.nothingToDo` on success or when unregistering is
+    ///   impossible (no token/service); `.failed` on a request error, so the
+    ///   relay's next scheduled wake retries the cleanup.
+    private func unregisterStaleMailboxFromWake(staleMailboxId: String) async -> RelayAuthRefreshOutcome {
+        guard let relayService = relayRegistrationService else {
+            Self.logger.warning("Stale mailbox cleanup: no relay service available - skipping")
+            return .nothingToDo
+        }
+        guard let deviceToken = UserDefaults.standard.string(forKey: "apns_device_token"),
+              !deviceToken.isEmpty else {
+            Self.logger.warning("Stale mailbox cleanup: no APNs device token - skipping")
+            return .nothingToDo
+        }
+
+        do {
+            // The relay stores lowercased ids; DELETE matches exactly
+            try await relayService.unregisterStaleMailbox(
+                mailboxId: staleMailboxId.lowercased(),
+                deviceToken: deviceToken
+            )
+            Self.logger.notice("Stale mailbox cleanup: unregistered \(staleMailboxId.prefix(8), privacy: .public)... from relay")
+            BackgroundEventJournal.record(
+                .staleMailboxUnregister,
+                outcome: "success",
+                trigger: RelayRegistrationTrigger.wakePush.rawValue
+            )
+            return .nothingToDo
+        } catch {
+            Self.logger.error("Stale mailbox cleanup: failed to unregister \(staleMailboxId.prefix(8), privacy: .public)...: \(error.localizedDescription)")
+            BackgroundEventJournal.record(
+                .staleMailboxUnregister,
+                outcome: "failure",
+                trigger: RelayRegistrationTrigger.wakePush.rawValue
+            )
+            return .failed
+        }
     }
 
     /// Mints mailbox credentials and registers with the relay. Shared core of
