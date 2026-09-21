@@ -10,7 +10,7 @@ import ArkeUI
 
 struct MovementData: Codable {
     let id: Int
-    let status: String                          // "Pending", "Finished", "Failed", "Cancelled"
+    let status: String                          // bark wire strings: "pending", "successful", "failed", "canceled" (single l)
     let subsystemKind: String                   // "send" | "receive" | other subsystem-specific
     let subsystemName: String                   // e.g., "bark.arkoor", "bark.lightning"
     let intendedBalanceSat: Int64

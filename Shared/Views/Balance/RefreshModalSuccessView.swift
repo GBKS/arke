@@ -9,8 +9,13 @@ import SwiftUI
 import ArkeUI
 
 struct RefreshModalSuccessView: View {
+    /// Headline and body vary by outcome — a newly scheduled refresh and one
+    /// that was already under way are both successes, but only one of them
+    /// started something (see `ManualRefreshOutcome`).
+    var title: String = String(localized: "status_refresh_started", defaultValue: "Refresh started")
+    var message: String = String(localized: "balance_refresh_background", defaultValue: "You can close this modal and the refresh will continue in the background.")
     let onDone: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 25) {
             #if os(iOS)
@@ -27,10 +32,10 @@ struct RefreshModalSuccessView: View {
             
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
-                    Text(String(localized: "status_refresh_started", defaultValue: "Refresh started"))
+                    Text(title)
                         .font(.system(.title, design: .serif))
-                    
-                    Text(String(localized: "balance_refresh_background", defaultValue: "You can close this modal and the refresh will continue in the background."))
+
+                    Text(message)
                         .font(.title3)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

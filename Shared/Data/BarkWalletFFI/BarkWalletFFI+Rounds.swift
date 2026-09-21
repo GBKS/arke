@@ -90,6 +90,32 @@ extension BarkWalletFFI {
         }
     }
     
+    func pendingRoundInputVtxos() async throws -> [Vtxo] {
+        // VTXOs locked as inputs of an issued pending round. Empty for
+        // delegated refreshes that the server hasn't issued into a round yet
+        // (those are covered by their pending movement instead).
+
+        if isPreview {
+            return []
+        }
+
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        do {
+            let vtxos = try await wallet.pendingRoundInputVtxos()
+            Self.logger.info("Retrieved \(vtxos.count) pending round input VTXOs")
+            return vtxos
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error getting pending round input VTXOs: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to get pending round input VTXOs: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error getting pending round input VTXOs: \(error)")
+            throw error
+        }
+    }
+
     func progressPendingRounds() async throws {
         // Progress pending rounds
         

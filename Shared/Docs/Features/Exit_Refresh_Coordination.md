@@ -37,6 +37,17 @@ bark repo (`gitlab.com/ark-bitcoin/bark`).
 | 4 | `start_exit_for_vtxos` leaves VTXO state untouched ("that happens in `progress_exits` once we've actually broadcast the exit chain"); movement goes Pending → Successful or **Canceled** | `bark/src/exit/mod.rs` (~line 200) |
 | 5 | Movement status strings: `pending` / `successful` / `failed` / **`canceled`** (single l) | `bark/src/movement/mod.rs:24-27` |
 | 6 | Delegated refreshes (`refresh_vtxos_delegated`, `maybe_schedule_maintenance_refresh_delegated`) execute **server-side at the next round even if the app is closed** | `bark/src/lib.rs` |
+| 7 | `try_cancel()` errors for `NonInteractivePending` — a **delegated** participation cannot be cancelled via `cancelPendingRound` | `bark/src/round/mod.rs` ~328 (@0.7.1) |
+| 8 | bark-0.7.1 (our bindings 0.24) has **no re-delegation machinery** (added later upstream): when the server replaces an older delegated participation with a duplicate, the older local round state + pending movement linger until sync reconciliation, with no self-heal | 0.7.1 ↔ master diff |
+
+Corrections verified at the `bark-0.7.1` tag (2026-09-21, spike for
+`Refresh_Deduplication.md`): the daemon performs maintenance refresh **only**
+via the interactive first-attempt join (fact 1);
+`maybe_schedule_maintenance_refresh_delegated` (fact 6) is the
+delegated-maintenance API behind `maintenanceDelegated()`, not something the
+daemon calls. Also: bark creates the refresh **movement at scheduling time**
+(`Pending`, with input ids), before server registration — see fact table in
+`Refresh_Deduplication.md` §2.
 
 Consequence of 1+2+4: **bark's own daemon can refresh a VTXO mid-exit and
 cancel the user's exit, and the app cannot intercept it.** This is the
@@ -157,17 +168,24 @@ population exposed to the race.
   would be cancelled by it"). Advisory only — never gates the Start button
   (design principle 1). Signal is the new canonical
   `WalletManager.hasActiveRefresh` (pending `.refresh` transactions;
-  `BalanceRefreshStatusViewModel` now delegates to it). Does *not* cover
-  server-side pending delegated rounds or daemon maintenance refreshes — those
-  remain in the pre-flight item below. (2026-07-13)
+  `BalanceRefreshStatusViewModel` now delegates to it). ~~Does *not* cover
+  server-side pending delegated rounds or daemon maintenance refreshes.~~
+  Correction 2026-09-21: bark writes the refresh movement at scheduling /
+  join time, so pending `.refresh` transactions DO cover delegated-scheduled
+  and daemon-initiated refreshes on this device (facts in
+  `Refresh_Deduplication.md` §2); what remains uncovered is another device's
+  activity and a tiny movement-before-round-row crash window. (2026-07-13)
 
 ### Open — app side (exit view scope)
 
 - **Force-move pre-flight (supersedes "Guard A").** Before starting the exit:
   - Server reachable → advisory: a cooperative offboard is cheaper/faster;
     force move is the emergency path. Proceed allowed (fail-open, §3.3).
-  - Pending delegated rounds exist → require cancel-and-proceed
-    (`cancelPendingRound`); never a dead end.
+  - Pending delegated rounds exist → **cancel-and-proceed does not work for
+    delegated participations** (`try_cancel` errors on
+    `NonInteractivePending`, fact 7 — correction 2026-09-21). Redesign as
+    wait-or-warn: surface the pending refresh, offer "wait for it to settle"
+    or an informed proceed; never a dead end.
   - Show time/cost estimates from the wallet's own exit data (chain depth,
     `exitTxWeightWu`).
 - **Stop signing during an active exit.** On force-move start: stop the

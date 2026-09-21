@@ -41,19 +41,6 @@ class BalanceRefreshStatusViewModel {
         vtxos.filter { $0.state != .spent }
     }
     
-    /// Get the set of VTXO IDs that are currently being refreshed in pending transactions
-    var vtxosBeingRefreshed: Set<String> {
-        guard hasActiveRefresh else { return Set() }
-        
-        // Get all pending refresh transactions
-        let pendingRefreshes = walletManager.transactions.filter {
-            $0.category == .refresh && $0.status == .pending
-        }
-        
-        // Collect all VTXO IDs that are inputs to these transactions
-        return Set(pendingRefreshes.flatMap { $0.inputVtxoIds })
-    }
-    
     var hasActiveRefresh: Bool {
         walletManager.hasActiveRefresh
     }
@@ -107,16 +94,20 @@ class BalanceRefreshStatusViewModel {
             latestBlockHeight = await walletManager.getEstimatedBlockHeight()
             nextRoundStartTime = try? await walletManager.nextRoundStartTime()
             
-            // Load VTXOs needing refresh from SDK
+            // Load VTXOs needing refresh from SDK, excluding those already in
+            // an in-flight refresh.
+            //
+            // What this buys: `vtxoIdsBeingRefreshed()` also covers VTXOs
+            // locked by an issued pending round, which the previous
+            // movement-only filter missed. The `if hasActiveRefresh` gate it
+            // replaces was redundant, not a blind spot — the old helper
+            // already returned an empty set when no refresh was pending, and
+            // `hasVtxosToRefresh` still ANDs `!hasActiveRefresh`. The
+            // "Refresh now" symptom is addressed by the post-schedule refetch
+            // instead (Refresh_Deduplication.md Phase 1).
             let vtxosFromSDK = try await walletManager.getVTXOsNeedingRefresh()
-            
-            // Filter out VTXOs that are already being refreshed
-            if hasActiveRefresh {
-                let beingRefreshed = vtxosBeingRefreshed
-                vtxosNeedingRefresh = vtxosFromSDK.filter { !beingRefreshed.contains($0.id) }
-            } else {
-                vtxosNeedingRefresh = vtxosFromSDK
-            }
+            let beingRefreshed = await walletManager.vtxoIdsBeingRefreshed()
+            vtxosNeedingRefresh = vtxosFromSDK.filter { !beingRefreshed.contains($0.id) }
         } catch {
             print("BalanceRefreshStatusViewModel: \(error)")
         }

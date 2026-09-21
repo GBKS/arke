@@ -12,8 +12,25 @@ import Bark
 import OSLog
 import UserNotifications
 
+/// Outcome of a manual refresh request.
+///
+/// `refreshManually()` can legitimately do nothing — no candidates after the
+/// exclusions, or a check already holding the gate. Callers need to tell that
+/// apart from a real schedule, otherwise the UI reports success for a refresh
+/// that never happened (see Refresh_Deduplication.md).
+enum ManualRefreshOutcome {
+    /// A delegated refresh was registered; the server will execute it.
+    case scheduled(RoundState)
+    /// The call reached bark but no round was created — nothing needed
+    /// refreshing, or everything was excluded (mid-exit / already in flight).
+    case nothingToDo
+    /// A refresh check was already running. Its exclusions cover the same
+    /// VTXOs, so this request was intentionally dropped rather than raced.
+    case alreadyInProgress
+}
+
 /// Service responsible for automatically refreshing VTXOs when refreshes are free
-/// 
+///
 /// This service monitors VTXOs and automatically triggers refreshes when refresh is 
 /// completely free (0 sats) according to the server's fee schedule.
 ///
@@ -175,16 +192,26 @@ class VTXORefreshService {
             }
             
             // Step 2: Get all VTXOs that could potentially be refreshed.
-            // Since bark 0.11.3 (MR #2117) VTXOs stay spendable while a unilateral
-            // exit is in progress, so mid-exit VTXOs must be excluded here:
-            // refreshing one spends it and self-cancels the exit (VtxoAlreadySpent).
-            // See Docs/Features/Exit_Refresh_Coordination.md.
+            // Two exclusions (see RefreshExclusion):
+            // - Guard B: mid-exit VTXOs stay spendable since bark 0.11.3
+            //   (MR #2117); refreshing one spends it and self-cancels the
+            //   exit (Exit_Refresh_Coordination.md).
+            // - Guard C: VTXOs already in an in-flight refresh — delegated
+            //   inputs stay spendable until the server issues the round, so
+            //   re-selecting them here would double-schedule
+            //   (Refresh_Deduplication.md).
             let exitingIds = await exitingVtxoIds()
+            let beingRefreshedIds = await walletManager?.vtxoIdsBeingRefreshed() ?? []
             let allSpendable = try await wallet.spendableVtxos()
-            let vtxos = allSpendable.filter { !exitingIds.contains($0.id) }
+            let vtxos = RefreshExclusion.filter(
+                allSpendable,
+                exitingIds: exitingIds,
+                beingRefreshedIds: beingRefreshedIds,
+                currentBlockHeight: currentBlockHeight
+            )
 
             if vtxos.count < allSpendable.count {
-                Self.logger.info("Excluded \(allSpendable.count - vtxos.count) VTXO(s) with an in-progress exit from auto-refresh")
+                Self.logger.info("Excluded \(allSpendable.count - vtxos.count) VTXO(s) from auto-refresh (in-progress exit or in-flight refresh)")
             }
 
             if vtxos.isEmpty {
@@ -245,12 +272,14 @@ class VTXORefreshService {
             // Step 6: Schedule notification for next refresh
             await scheduleNextRefreshNotification()
             
-            // Success
+            // Success — count as a refresh only when one was actually scheduled
             lastCheckTime = Date()
-            lastRefreshTime = Date()
-            autoRefreshCount += 1
+            if roundState != nil {
+                lastRefreshTime = Date()
+                autoRefreshCount += 1
+            }
             lastError = nil
-            
+
             let duration = Date().timeIntervalSince(startTime)
             Self.logger.info("Auto-refresh completed in \(String(format: "%.2f", duration))s (total session count: \(self.autoRefreshCount))")
             
@@ -402,30 +431,53 @@ class VTXORefreshService {
     /// Manually refresh VTXOs (exposed for UI triggers)
     /// This bypasses the auto-refresh logic and always refreshes all VTXOs that need it
     /// Uses delegated refresh so the app doesn't need to stay online until the round starts
-    func refreshManually() async throws {
+    ///
+    /// - Returns: What actually happened, so the caller can avoid reporting
+    ///   success for a no-op (`ManualRefreshOutcome`).
+    func refreshManually() async throws -> ManualRefreshOutcome {
         Self.logger.info("Manual refresh requested")
 
-        // Get VTXOs that need refresh. Bark's selection includes VTXOs with an
-        // in-progress exit (they stay spendable until the exit chain broadcasts);
-        // refreshing one would self-cancel the exit, so exclude them.
-        let exitingIds = await exitingVtxoIds()
-        let vtxos = try await wallet.getVtxosToRefresh()
-            .filter { !exitingIds.contains($0.id) }
-
-        if !vtxos.isEmpty {
-            let vtxoIds = vtxos.map { $0.id }
-            let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
-            
-            if let roundState = roundState {
-                Self.logger.info("Manual delegated refresh scheduled for \(vtxoIds.count) VTXO(s), Round ID: \(roundState.id)")
-            } else {
-                Self.logger.info("No refresh scheduled for \(vtxoIds.count) VTXO(s)")
-            }
-            
-            await walletManager?.refreshAfterVTXOChange()
-        } else {
-            Self.logger.debug("No VTXOs need refreshing")
+        // Same gate as the auto check: interleaving would let each path read
+        // a pre-exclusion snapshot of the other's work. If a check is mid-run
+        // it covers the same VTXOs, so skipping is safe.
+        guard !isChecking else {
+            Self.logger.info("Refresh check already in progress — manual request skipped")
+            return .alreadyInProgress
         }
+        isChecking = true
+        defer { isChecking = false }
+
+        // Get VTXOs that need refresh. Exclusions mirror the auto path
+        // (see RefreshExclusion): mid-exit VTXOs (Guard B) and VTXOs already
+        // in an in-flight refresh (Guard C, Refresh_Deduplication.md).
+        let exitingIds = await exitingVtxoIds()
+        let beingRefreshedIds = await walletManager?.vtxoIdsBeingRefreshed() ?? []
+        let vtxos = RefreshExclusion.filter(
+            try await wallet.getVtxosToRefresh(),
+            exitingIds: exitingIds,
+            beingRefreshedIds: beingRefreshedIds,
+            currentBlockHeight: walletManager?.estimatedBlockHeight
+        )
+
+        guard !vtxos.isEmpty else {
+            Self.logger.debug("No VTXOs need refreshing")
+            return .nothingToDo
+        }
+
+        let vtxoIds = vtxos.map { $0.id }
+        let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
+
+        // Refetch either way — the exclusions are derived from transaction
+        // state, so the next read must see whatever this call wrote.
+        await walletManager?.refreshAfterVTXOChange()
+
+        guard let roundState else {
+            Self.logger.info("No refresh scheduled for \(vtxoIds.count) VTXO(s)")
+            return .nothingToDo
+        }
+
+        Self.logger.info("Manual delegated refresh scheduled for \(vtxoIds.count) VTXO(s), Round ID: \(roundState.id)")
+        return .scheduled(roundState)
     }
     
     /// IDs of VTXOs currently in the unilateral exit process (any state).
@@ -503,12 +555,16 @@ class VTXORefreshService {
             
             Self.logger.info("Scheduling refresh notification for \(notificationDate) (\(secondsUntilRefresh)s from now, block \(nextFreeRefreshHeight))")
             
-            // Request notification authorization
+            // Check notification authorization; prompt only while undetermined —
+            // a denied status is respected without re-requesting every cycle.
             let center = UNUserNotificationCenter.current()
-            let authorized = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-            
-            guard authorized else {
-                Self.logger.warning("Notification authorization denied")
+            var authStatus = await center.notificationSettings().authorizationStatus
+            if authStatus == .notDetermined {
+                _ = try await center.requestAuthorization(options: [.alert, .sound, .badge])
+                authStatus = await center.notificationSettings().authorizationStatus
+            }
+            guard authStatus == .authorized || authStatus == .provisional else {
+                Self.logger.warning("Notifications not authorized (status: \(authStatus.rawValue)) — reminder not scheduled")
                 return
             }
             

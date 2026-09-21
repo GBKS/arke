@@ -130,6 +130,7 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     func cancelAllPendingRounds() async throws
     func cancelPendingRound(roundId: UInt32) async throws
     func pendingRoundStates() async throws -> [RoundState]
+    func pendingRoundInputVtxos() async throws -> [Vtxo]
     func progressPendingRounds() async throws
     func syncPendingBoards() async throws
     func nextRoundStartTime() async throws -> UInt64

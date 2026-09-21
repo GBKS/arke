@@ -491,6 +491,35 @@ variant would help clients avoid burning indices.
 
 ---
 
+### 2.7 Delegated refresh: no dedupe, no cancel path, no self-heal for replaced participations
+
+Verified against bark source at the `bark-0.7.1` tag (2026-09-21 — the
+release our bindings 0.24 wrap):
+
+- `get_vtxos_to_refresh` / `spendable_vtxos` don't exclude inputs that
+  already have a live delegated participation — delegated inputs stay
+  spendable until the server issues them into a round (`bark/src/lib.rs`
+  selection; test coverage in `round.rs`). Every scheduler (our auto
+  service, our UI, the daemon, a second device) therefore re-selects and
+  re-submits the same inputs.
+- On a duplicate registration the server silently deletes the older pending
+  participation (`round/mod.rs` ~275-288). At 0.7.1 the older local round
+  state has no re-delegation machinery (added later upstream), so it just
+  lingers until sync reconciliation — pending movement and all.
+- `cancel_pending_round`'s `try_cancel()` errors for `NonInteractivePending`,
+  so a delegated participation can't be cancelled client-side either — this
+  also weakens the abandon path asked for in §1.6.
+
+We've built client-side exclusion (`Refresh_Deduplication.md`, Guard C in
+`RefreshExclusion`), but it can't cover a second device racing the same
+inputs.
+
+**Ask:** (a) delegated selection excludes inputs with a live participation —
+or document server-side replacement as the intended contract; (b) allow
+cancelling a `NonInteractivePending` participation; (c) ship/backport the
+re-delegation self-heal so a replaced participation doesn't strand local
+pending state.
+
 ## Priority 3 — ergonomics and polish
 
 **Lightning**
@@ -647,3 +676,4 @@ pattern we're asking you to extend everywhere:
 | 15 | Recovery scan: run whenever never-completed, explicit outcome, retried connect, public re-scan | Wipe-and-reopen retry loop in wallet import |
 | 16 | Expired-VTXO semantics: exit viability, re-issue policy, explicit state | Users seeing "spendable" balance they can't move |
 | 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) | Silent, inexplicable balance shrinkage after seed import |
+| 18 | Delegated refresh: selection excludes live participations; cancel for `NonInteractivePending`; re-delegation self-heal (§2.7) | Guard C exclusion + near-expiry safety valve in `RefreshExclusion` |

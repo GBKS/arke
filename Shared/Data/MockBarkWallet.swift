@@ -602,6 +602,11 @@ class MockBarkWallet: BarkWalletProtocol {
         return []
     }
     
+    func pendingRoundInputVtxos() async throws -> [Vtxo] {
+        print("📋 Mock: Getting pending round input VTXOs")
+        return []
+    }
+
     func progressPendingRounds() async throws {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         print("🔄 Mock: Progressing pending rounds")

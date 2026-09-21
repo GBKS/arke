@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
-import Bark
 import ArkeUI
 
 private enum RefreshModalState: Hashable {
     case form
+    /// A refresh was scheduled by this tap.
     case success
+    /// Nothing was scheduled, but nothing failed either. Carries its own copy
+    /// because the two reasons need different wording — nothing to do vs. a
+    /// check already holding the gate — and neither may claim a refresh this
+    /// tap didn't start (Refresh_Deduplication.md).
+    case noChange(title: String, message: String)
     case error(String)
 }
 
@@ -47,9 +52,16 @@ struct RefreshModalView: View {
                 ))
             case .success:
                 RefreshModalSuccessView {
-                    print("DEBUG: RefreshModalSuccessView onDone called")
                     onRefreshComplete?()
-                    print("DEBUG: About to call dismiss")
+                    shouldDismiss = true
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
+            case .noChange(let title, let message):
+                RefreshModalSuccessView(title: title, message: message) {
+                    onRefreshComplete?()
                     shouldDismiss = true
                 }
                 .transition(.asymmetric(
@@ -96,34 +108,33 @@ struct RefreshModalView: View {
         isLoading = true
         
         do {
-            // Get VTXO IDs from view model (already filtered for urgency and excluding those being refreshed)
-            guard let viewModel = viewModel else {
-                throw NSError(domain: "RefreshModal", code: -1, userInfo: [
-                    NSLocalizedDescriptionKey: "View model not initialized"
-                ])
-            }
-            
-            let vtxoIds = viewModel.vtxosNeedingRefresh.map { $0.id }
-            let totalVTXOs = viewModel.vtxos.count
-            print("🔄 [RefreshModal] Found \(vtxoIds.count) VTXOs (out of \(totalVTXOs) total) that need refreshing")
-            
-            // Refresh VTXOs using delegated mode (non-blocking)
-            let roundState = try await manager.refreshVtxosDelegated(vtxoIds: vtxoIds)
-            
-            let endTime = Date()
-            let duration = endTime.timeIntervalSince(startTime)
-            
-            if let roundState = roundState {
-                // Refresh was scheduled
-                let ongoingText = roundState.ongoing ? " (ongoing)" : ""
-                print("✅ [RefreshModal] Refresh completed in \(String(format: "%.2f", duration))s, scheduled in round #\(roundState.id)\(ongoingText)")
-            } else {
-                // No refresh was needed
-                print("✅ [RefreshModal] Refresh completed in \(String(format: "%.2f", duration))s, VTXOs are already fresh")
-            }
-            
+            // Route through VTXORefreshService so selection and the exit /
+            // in-flight-refresh exclusions live in one place, and the
+            // post-schedule refetch flips the balance card to "Refreshing"
+            // without waiting for sheet dismissal (Refresh_Deduplication.md).
+            let outcome = try await manager.refreshVTXOsManually()
+
+            let duration = Date().timeIntervalSince(startTime)
+            print("✅ [RefreshModal] Refresh request completed in \(String(format: "%.2f", duration))s: \(outcome)")
+
             isLoading = false
-            state = .success
+            switch outcome {
+            case .scheduled:
+                state = .success
+            case .nothingToDo:
+                // Reachable even though the confirm button requires a
+                // non-empty list: the modal's list isn't exit-filtered, so
+                // every candidate can still drop out in the service.
+                state = .noChange(
+                    title: String(localized: "status_refresh_not_needed", defaultValue: "Nothing to refresh"),
+                    message: String(localized: "balance_refresh_not_needed", defaultValue: "These VTXOs are either still fresh or already part of a refresh. Nothing new was scheduled.")
+                )
+            case .alreadyInProgress:
+                state = .noChange(
+                    title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
+                    message: String(localized: "balance_refresh_already_underway", defaultValue: "A refresh check is already running and covers these VTXOs. Nothing new was scheduled.")
+                )
+            }
         } catch {
             let endTime = Date()
             let duration = endTime.timeIntervalSince(startTime)

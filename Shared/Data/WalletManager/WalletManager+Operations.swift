@@ -370,7 +370,14 @@ extension WalletManager {
     }
     
     /// Manually refresh VTXOs (for UI triggers)
-    func refreshVTXOsManually() async throws {
-        try await vtxoRefreshService?.refreshManually()
+    ///
+    /// Throws rather than no-ops when the service is missing: the caller shows
+    /// a success screen on return, so a silent skip would claim a refresh that
+    /// never happened (Refresh_Deduplication.md).
+    func refreshVTXOsManually() async throws -> ManualRefreshOutcome {
+        guard let vtxoRefreshService = vtxoRefreshService else {
+            throw BarkErrorArke.commandFailed("VTXO refresh service not initialized")
+        }
+        return try await vtxoRefreshService.refreshManually()
     }
 }

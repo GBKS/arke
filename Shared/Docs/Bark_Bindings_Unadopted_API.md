@@ -162,9 +162,9 @@ Methods present in the bindings before v0.18.0 that neither
   **`pendingLightningSendVtxos() -> [Vtxo]`** — in-flight lightning sends.
   We only surface the failure end (`stuckFailedLightningSends`); the happy
   path in progress is invisible.
-- **`pendingRoundInputVtxos() -> [Vtxo]`** — VTXOs tied up in a pending
-  round. Could explain "missing" balance while a round is in progress
-  (balance dips are currently unexplained in the UI).
+- ~~**`pendingRoundInputVtxos() -> [Vtxo]`**~~ — adopted 2026-09-21, see §4.
+  Remaining idea from this entry: explaining "missing" balance in the UI
+  while a round is in progress (balance dips are currently unexplained).
 
 ### History & contacts
 
@@ -248,3 +248,9 @@ the FFI, policy lives in `WalletManager`).
   retries `foreign`-bucketed ids with the widest accepted gap limit
   (`ImportRecoveryLogic.retryPasses`, pinned by `ImportRecoveryLogicTests`).
   Internal to `BarkWalletFFI`, not on the protocol.
+- **`pendingRoundInputVtxos()`** — 2026-09-21, on the protocol
+  (`BarkWalletFFI+Rounds.swift`). Belt-and-braces half of the
+  "being refreshed" signal in `WalletManager.vtxoIdsBeingRefreshed()`
+  (Guard C, `Refresh_Deduplication.md`); note it is **empty** for delegated
+  refreshes until the server issues the round — the pending refresh
+  movement covers that window.

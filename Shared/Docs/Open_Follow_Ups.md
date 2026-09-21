@@ -209,6 +209,55 @@ tight, but the gaps are structural:
   expiry-deadline reminders from the toggle, or warning that disabling
   notifications risks missed refresh deadlines.
 
+## VTXO Refresh (guiding doc: `Features/Refresh_Deduplication.md`)
+
+Diagnosed 2026-09-21: three writers (auto service, manual UI, bark daemon)
+schedule refreshes from overlapping pools with no "already being refreshed"
+exclusion; balance card shows "Refresh now" during an ongoing refresh. Bark
+facts verified at the bark-0.7.1 tag (our 0.24 bindings). Approved and
+implemented 2026-09-21 (`RefreshExclusion` unit-tested 9/9, mobile build
+green):
+
+- [~] **Phase 1 — visibility bugs — partial 2026-09-21**: modal routed
+  through the service (refetch included); **status** mapping verified
+  statically. The **category** mapping is still unverified and is the half
+  that can silently empty the whole signal — `.refresh` requires
+  `subsystemName == "bark.round"` *and* `subsystemKind == "refresh"`. Folded
+  into the on-device gate below.
+- [x] **Phase 2 — Guard C — done 2026-09-21**: `vtxoIdsBeingRefreshed()`,
+  `RefreshExclusion` pure filter (+ near-expiry safety valve), exclusion in
+  both service paths, `pendingRoundInputVtxos()` adopted; debug
+  `VTXOListView` force-refresh deliberately left direct (see doc).
+- [x] **Phase 3 — balance card — done 2026-09-21** with one recorded
+  deviation: the "Refresh now" side is as specified; "Refreshing" still keys
+  on `hasActiveRefresh` (movement-only) because it's a sync property and the
+  round-input half needs an await (doc §3.1).
+- [x] **Phase 4 — piggybacks — done 2026-09-21**: refresh stats only on
+  actual schedules; notification auth prompted only while undetermined.
+- [x] **Phase 5 — upstream + doc corrections — done 2026-09-21**: feedback
+  doc §2.7 / ask 18; `Exit_Refresh_Coordination.md` facts 7+8 + two
+  corrections (cancel path, `hasActiveRefresh` coverage).
+- [x] **Manual-refresh outcome — done 2026-09-21**: `ManualRefreshOutcome`
+  so the modal stops reporting success for the `isChecking` skip;
+  `refreshVTXOsManually()` throws on a missing service.
+- [ ] **On-device signet verification** (doc §6, 4 steps): parsing gate
+  first (log `subsystemName`/`subsystemKind`/`category` right after
+  scheduling), then card flips to "Refreshing", no duplicate schedule from
+  the hourly/foreground check, and "Already refreshing" on a raced tap.
+- [ ] **Extract + translate 4 new keys**: `status_refresh_not_needed`,
+  `balance_refresh_not_needed`, `status_refresh_already_underway`,
+  `balance_refresh_already_underway` (the `ManualRefreshOutcome` screens).
+  Absent from `Shared/Localizable.xcstrings` — they render their
+  `defaultValue:` English until an **IDE** build extracts them
+  (`xcodebuild` doesn't), then need de/ja/zh-Hant. Don't hand-add values;
+  re-extraction empties them.
+- [ ] **Deferred, recorded in the doc**: near-expiry safety valve is
+  auto-path-only (no UI route to it, §3); `findVTXOsForAutoRefresh` (fee
+  window + signet cap) still embedded and untested, and
+  `vtxoIdsBeingRefreshed()` has no test seam (§5); refresh modal's displayed
+  list/amount can diverge from what the service actually refreshes (no exit
+  exclusion, no valve) — revisit after the device run.
+
 ## Startup & Initialization
 
 - [ ] **Startup wallet detection review follow-ups**: 8 items listed in
