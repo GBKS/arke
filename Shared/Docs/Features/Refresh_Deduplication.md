@@ -7,7 +7,10 @@ fixed.**
 
 Implementation notes (2026-09-21):
 - Phase 1 (**partial**): `RefreshModalView` now routes through
-  `refreshVTXOsManually()`, which subsumes the refetch fix. Of the two halves
+  `refreshVTXOsManually()`, and `refreshAfterVTXOChange()` republishes into
+  the unified transaction list — without that second half the refetch never
+  reached the readers and Guard C's primary signal was inert (details in the
+  §4 Phase 1 note). Of the two halves
   of the parsing check, only **status** was verified statically —
   `mapMovementStatus` lowercases and handles `pending`, unknowns default to
   `.pending`; the stale status comment in `MovementData.swift` corrected. The
@@ -26,17 +29,22 @@ Implementation notes (2026-09-21):
   the modal reported success for the `isChecking` skip introduced by Phase 2 —
   a plausible tap given `start()` runs a network-bound check on every
   foreground.
-- Scope decision: the Data/debug `VTXOListView` force-refresh buttons stay
-  direct callers by design — they force-refresh **all** spendable VTXOs as a
-  power tool, and the server's replace semantics is the point there. Not
-  routed through the service, and therefore also outside the `isChecking`
-  gate. Accepted cost: such a tap can strand a local pending round state that
-  does not self-heal at 0.7.1 (F9). Acceptable for a debug affordance;
-  it would not be for a user-facing button.
+- Scope decision: the three Data/debug force-refresh paths stay direct
+  callers by design (`VTXOListView` ×2 platforms,
+  `VTXODeveloperActionsView`, `DataView_iOS`'s `maintenanceDelegated()` —
+  full list in §3.2). They force the server's hand as a power tool, and the
+  replace semantics is the point there. Not routed through the service, and
+  therefore also outside the `isChecking` gate. Accepted cost: such a tap can
+  strand a local pending round state that does not self-heal at 0.7.1 (F9).
+  Acceptable for a debug affordance; it would not be for a user-facing
+  button.
+- `refreshAfterVTXOChange()` now republishes the unified transaction merge —
+  see the §4 Phase 1 note. Pre-existing staleness bug, but Guard C's primary
+  signal depended on it.
 
 Companion to `Exit_Refresh_Coordination.md` (which coordinates refresh vs
 *exit*; this doc coordinates refresh vs *refresh*). Facts below feed three
-corrections back into that doc — see §7.
+corrections back into that doc — see §8.
 
 ## 1. Problem
 
@@ -57,11 +65,18 @@ Three independent writers schedule refreshes from overlapping VTXO pools:
 | Manual UI (`RefreshModalView`, `VTXOListView`) | `getVtxosToRefresh()` via `BalanceRefreshStatusViewModel.vtxosNeedingRefresh` | user tap on the balance card |
 | bark daemon | `get_vtxos_to_refresh()` (expiry threshold, exit depth, dust) | first attempt event of **every** round (F6) |
 
+"Three" counts *classes* of writer; the manual-UI row covers four distinct
+app-side call sites, of which two end up gated — enumerated in §3.2.
+
 The windows overlap by construction: the fee-free window sits near expiry,
-exactly where the daemon's `vtxoRefreshExpiryThreshold` (we pin 144 blocks)
-kicks in. Root cause: the app has no notion of "this VTXO is already being
-refreshed", and only bookkeeps a per-check `isChecking` flag that does
-nothing across checks or writers.
+exactly where the daemon's `vtxo_refresh_expiry_threshold` kicks in. We do
+**not** pin that value — the FFI config passes `nil` ("use defaults"), so it
+is bark's default; 144 blocks is the figure our own code mirrors
+(`RefreshExclusion.hardExpiryThresholdBlocks`,
+`ArkConfigModel.vtxoRefreshThresholdBlocks`), pinned against drift by a test
+but not actually under our control. Root cause: the app has no notion of
+"this VTXO is already being refreshed", and only bookkeeps a per-check
+`isChecking` flag that does nothing across checks or writers.
 
 ## 2. Verified bark facts
 
@@ -94,7 +109,13 @@ double-accepting), but concretely harmful:
   (`Exit_Refresh_Coordination.md`);
 - if the first request was already issued, the second call surfaces
   `unusable_inputs` to the user as "Refresh Failed" — for a refresh that is
-  in fact running.
+  in fact running. **Fixed 2026-09-21:** `ManualRefreshOutcome
+  .alreadyIssuedByServer` maps this to "Already refreshing", and the auto
+  path stops recording it in `lastError`. Detection is by message text
+  (`isAlreadyIssuedRejection`) because the FFI collapses every `Bark.Error`
+  into `BarkWalletFFIError.configurationError(_:)` and discards the variant
+  — deliberately narrow, anything unrecognised stays an error. Surfacing
+  typed FFI errors is an Open_Follow_Ups item.
 
 Prevention app-side is the only mitigation until a bindings bump picks up
 upstream's re-delegation logic.
@@ -161,6 +182,60 @@ card's "Refreshing" state uses half of it.** If a case ever turns up with
 locked round inputs and no pending movement, the card will under-report while
 the exclusion still holds.
 
+### 3.2 Signal completeness ≠ gating completeness
+
+Two different claims, easy to conflate:
+
+- **Signal** is writer-complete. F1 means bark writes the movement at
+  scheduling time, so `vtxoIdsBeingRefreshed()` sees *any* writer's work,
+  including ones this app doesn't route.
+- **Gating** is not. Five app-side sites can schedule a refresh; two consult
+  the signal:
+
+| Site | Consults Guard C |
+|------|------------------|
+| `VTXORefreshService.checkAndRefreshVTXOs()` | yes |
+| `VTXORefreshService.refreshManually()` (balance modal) | yes |
+| `VTXOListView.swift` + `VTXOListView_iOS.swift` force-refresh | no |
+| `VTXODeveloperActionsView.swift` single-VTXO `refreshVtxoDelegated` | no |
+| `DataView_iOS.swift` `maintenanceDelegated()` | no |
+
+All three ungated sites are Data/debug surfaces, and the scope decision in
+the status notes covers them: they exist to force the server's hand, and the
+replace semantics is the point. Recorded here because the decision was
+originally written as if `VTXOListView` were the only one.
+
+`maintenanceDelegated()` is the notable one — it's bark-side selection
+(`maybe_schedule_maintenance_refresh_delegated`), so it can schedule VTXOs we
+never saw. Fine for a debug button, not fine if it ever moves to a
+user-facing surface.
+
+**Prerequisite for the signal to work at all:** `vtxoIdsBeingRefreshed()`
+reads `WalletManager.transactions`, i.e. the unified service's *stored*
+merge. `refreshAfterVTXOChange()` must republish it (it calls
+`mergeTransactions()`); the Ark-only `transactionService.refreshTransactions()`
+alone does not, and for a while didn't — see the §4 Phase 1 note.
+
+Two further conditions, both found on review 2026-09-21 and both fixed:
+
+- **Read-your-own-writes.** `TransactionService.refreshTransactions()` runs
+  through `TaskDeduplicationManager`, which *joins* an in-flight task rather
+  than starting a new one. A refresh started before our write (by
+  `WalletNotificationService` on a bark event, or by `performRefresh()`'s
+  task group on foreground) would satisfy the call with pre-write data.
+  `refreshAfterVTXOChange()` now uses `refreshTransactionsAfterWrite()` →
+  `TaskDeduplicationManager.executeFresh`, which drains any in-flight task
+  and then fetches fresh. Draining rather than bypassing matters:
+  `upsertTransactionsFromServerData` awaits mid-loop while holding a
+  pre-fetched snapshot, so two concurrent runs could both insert the same row.
+- **The error path writes too.** Per F1 bark creates the `Pending` movement
+  *before* server registration, so a throw from `refreshVtxosDelegated` can
+  leave a movement behind. Both paths now refetch before propagating —
+  scoped to the scheduling call, so read-only failures earlier in the check
+  (e.g. offline) don't trigger an hourly refetch. Without this, a failed
+  schedule left the app blind to a lingering `Pending` entry and re-offering
+  "Refresh now" for it, which F5/F9 turn into stranded local round state.
+
 ## 4. Plan
 
 ### Phase 1 — App-side visibility bugs (likely explains symptom 2)
@@ -172,6 +247,33 @@ so `hasActiveRefresh` *should* flip promptly. Two suspects on our side:
   after scheduling (the refetch only happens via the dismiss completion's
   `manager.refresh()`). Fix: call `refreshAfterVTXOChange()` on success,
   like the auto path does.
+
+  **This diagnosis was incomplete, found 2026-09-21 on review.** Routing
+  through `refreshAfterVTXOChange()` was *not* sufficient, because that
+  method refetched the wrong layer: it called the Ark-only
+  `transactionService.refreshTransactions()`, while every reader
+  (`hasActiveRefresh`, `vtxoIdsBeingRefreshed()`, the balance card) goes
+  through `WalletManager.transactions` →
+  `unifiedTransactionService.allTransactions`, a **stored** merge whose only
+  writer was `mergeTransactions()`, called solely from
+  `WalletManager.performRefresh()`. No observer bridged the two.
+
+  Consequences before the fix:
+  - the **auto path never merged at all**, so after an automatic schedule the
+    movement half of the signal stayed stale indefinitely. Combined with F3
+    (`pendingRoundInputVtxos()` empty before issuance) the whole union was
+    empty in the scheduled-but-not-issued window — Guard C inert in exactly
+    the window it exists for, and the next hourly check free to
+    double-schedule;
+  - the **manual path** only updated on sheet dismissal via
+    `onRefreshComplete` → `manager.refresh()`, which is symptom 2 as
+    originally reported.
+
+  Fix: `refreshAfterVTXOChange()` now calls
+  `unifiedTransactionService?.mergeTransactions()` after the Ark refetch.
+  Local merge, no extra FFI. This was a pre-existing staleness bug affecting
+  all six callers (round progression ×2, exit live-activity, notification
+  handler), not just refresh — but Guard C's primary signal depended on it.
 - Verify our movement parsing keeps a scheduled-but-not-issued refresh
   movement as `.refresh`/`.pending` with `inputVtxoIds` populated
   (`TransactionService+Parsing.swift` transfer-operation path).
@@ -256,7 +358,7 @@ FFI and the rest of the plan proceeds unchanged.
   `NonInteractivePending` leaves no cancel path for delegated refreshes;
   (c) note the re-delegation machinery upstream as a concrete reason for the
   next bindings bump.
-- Apply the §7 corrections to `Exit_Refresh_Coordination.md`.
+- Apply the §8 corrections to `Exit_Refresh_Coordination.md`.
 - `Open_Follow_Ups.md` entry for anything deferred.
 
 ## 5. Tests
@@ -299,7 +401,23 @@ into the window or fund a fresh VTXO and come back near its expiry):
    on foreground) → modal shows "Already refreshing" and no second schedule
    is issued. Confirms the `ManualRefreshOutcome` plumbing.
 
-## 7. Corrections owed to Exit_Refresh_Coordination.md
+## 7. Constraint for Background Execution Phase 2
+
+`BackgroundTaskCoordinator` documents "delegated refresh kickoff" as intended
+`cash.arke.refresh` short-pass scope, but `VTXORefreshService` is
+foreground-only by design (`start()`/`stop()` are driven by foreground
+transitions). A background pass that calls `refreshVtxosDelegated` directly
+would get **neither** Guard C nor the `isChecking` gate, adding a sixth
+writer that races the foreground check — and background is where a stale
+`transactions` read is most likely, since no view is driving `loadData()`.
+
+When Phase 2 lands (`Background_Execution` plan), route it through
+`VTXORefreshService.refreshManually()` rather than the wallet API, and make
+sure `refreshAfterVTXOChange()` has run before the exclusion is computed.
+`refreshManually()` doesn't require `isRunning`, so it is safe to call while
+the service is stopped.
+
+## 8. Corrections owed to Exit_Refresh_Coordination.md
 
 1. **`cancelPendingRound` is not a remedy for pending delegated rounds**
    (F8) — the open force-move pre-flight item prescribes cancel-and-proceed;

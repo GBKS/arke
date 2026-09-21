@@ -98,9 +98,24 @@ extension WalletManager {
     /// Also reschedules VTXO refresh notifications based on the new VTXO set
     func refreshAfterVTXOChange() async {
         await balanceService?.refreshAfterTransaction()
-        await transactionService?.refreshTransactions()
+
+        // Read-your-own-writes: the plain `refreshTransactions()` joins an
+        // in-flight fetch, which may have read bark before our write landed
+        // (`WalletNotificationService` and `performRefresh()` both start one).
+        await transactionService?.refreshTransactionsAfterWrite()
+
+        // Republish into the unified list. `transactionService` is the Ark-only
+        // service; `WalletManager.transactions` reads
+        // `unifiedTransactionService.allTransactions`, which is a *stored*
+        // merge — without this, every reader keeps seeing the pre-change list
+        // until an unrelated full `refresh()` happens to run. That staleness
+        // made `hasActiveRefresh` and `vtxoIdsBeingRefreshed()` blind to a
+        // refresh this app just scheduled, which is Guard C's primary signal
+        // (Refresh_Deduplication.md §3.2). Local merge only — no extra FFI.
+        await unifiedTransactionService?.mergeTransactions()
+
         transactionVersion += 1
-        
+
         // Reschedule VTXO refresh notification based on new VTXO set
         await vtxoRefreshService?.scheduleNextRefreshNotification()
     }

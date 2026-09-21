@@ -10,6 +10,7 @@
 import Testing
 import Foundation
 import Bark
+import ArkeUI
 
 #if os(iOS)
 @testable import ArkeMobile
@@ -147,6 +148,29 @@ struct RefreshExclusionTests {
         )
         #expect(result.map { $0.id } == ["b"])
     }
+
+    // MARK: - Threshold invariant
+
+    @Test("Valve threshold matches the config accessor's default")
+    func valveThresholdMatchesConfigDefault() {
+        // We don't pin bark's vtxo_refresh_expiry_threshold (the FFI config
+        // passes nil), so this constant is a mirror of the default that
+        // `ArkConfigModel.vtxoRefreshThresholdBlocks` also encodes. If either
+        // drifts, the valve opens later than bark considers a VTXO urgent and
+        // a stuck entry could hold a VTXO past expiry — so fail loudly here
+        // instead. See RefreshExclusion.hardExpiryThresholdBlocks.
+        let configWithoutThreshold = ArkConfigModel(
+            serverAddress: "https://example.test",
+            network: "signet",
+            vtxoRefreshExpiryThreshold: nil
+        )
+        #expect(
+            configWithoutThreshold.vtxoRefreshThresholdBlocks
+                == UInt32(RefreshExclusion.hardExpiryThresholdBlocks)
+        )
+    }
+
+    // MARK: - Interaction
 
     @Test("Exit exclusion wins over the safety valve when both apply")
     func exitBeatsValve() {

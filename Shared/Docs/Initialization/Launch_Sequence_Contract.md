@@ -61,6 +61,18 @@ revealed; on a fresh import the first balance read must come after the
 reveal or it reports zero (fixed 2026-08-12, commit `fc9a006`-adjacent).
 Enforced: `WalletManager.swift` (`performRefresh`, addresses-first step). Test: none.
 
+**7a. `vtxoRefreshService.start()` must come after the first `refresh()`.**
+`start()` runs an immediate `checkAndRefreshVTXOs()`, whose Guard C
+exclusion reads `WalletManager.transactions` — the unified service's
+*stored* merge, populated by `performRefresh()`. Start the service first and
+the launch-time check sees an empty transaction list, so Guard C is silently
+inert exactly when a double-schedule is most likely (foreground check plus
+the daemon joining the next round). The same dependency is why
+`refreshAfterVTXOChange()` must call `mergeTransactions()` and not just the
+Ark-only refetch (2026-09-21, `Features/Refresh_Deduplication.md` §3.2).
+Enforced: `WalletManager.performInitialization()` (`await refresh()` precedes
+the `start()` block). Test: none — ordering is positional.
+
 ## Exit progression and Live Activities (iOS)
 
 **8. Launch order: reattach → first `checkAndProgressExits` → `recreateMissingActivities` → reminder re-arm.**

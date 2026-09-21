@@ -6171,6 +6171,28 @@
         }
       }
     },
+    "balance_refresh_already_scheduled" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These VTXOs are already part of a refresh the server has scheduled. It will complete on its own."
+          }
+        }
+      }
+    },
+    "balance_refresh_already_underway" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A refresh check is already running and covers these VTXOs. Nothing new was scheduled."
+          }
+        }
+      }
+    },
     "balance_refresh_background" : {
       "localizations" : {
         "de" : {
@@ -6223,6 +6245,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%@ 後更新"
+          }
+        }
+      }
+    },
+    "balance_refresh_not_needed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These VTXOs are either still fresh or already part of a refresh. Nothing new was scheduled."
           }
         }
       }
@@ -22712,6 +22745,28 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "已接收"
+          }
+        }
+      }
+    },
+    "status_refresh_already_underway" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Already refreshing"
+          }
+        }
+      }
+    },
+    "status_refresh_not_needed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nothing to refresh"
           }
         }
       }

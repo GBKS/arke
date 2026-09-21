@@ -39,8 +39,18 @@ extension WalletManager {
 
     /// IDs of VTXOs already part of an in-flight refresh (Guard C input):
     /// inputs of pending refresh transactions ∪ inputs locked by an issued
-    /// pending round (belt-and-braces; empty before issuance). Covers all
-    /// three refresh writers — auto service, manual UI, and the bark daemon.
+    /// pending round (belt-and-braces; empty before issuance).
+    ///
+    /// The *signal* is writer-complete: bark writes the refresh movement at
+    /// scheduling time, so this sees any writer's work — the auto service, the
+    /// manual UI, the bark daemon, and the debug force-refresh paths. Which
+    /// scheduling sites actually *consult* it is a narrower set (both
+    /// `VTXORefreshService` paths only; the Data/debug views deliberately
+    /// don't) — see Refresh_Deduplication.md §3.2.
+    ///
+    /// Requires `transactions` to be current: it reads the unified service's
+    /// stored merge, which `refreshAfterVTXOChange()` republishes.
+    ///
     /// Fail-open: the round-input lookup error is swallowed — a missed
     /// exclusion only risks a benign duplicate schedule, while blocking a
     /// refresh could miss a near-expiry renewal

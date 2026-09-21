@@ -240,13 +240,71 @@ green):
 - [x] **Manual-refresh outcome — done 2026-09-21**: `ManualRefreshOutcome`
   so the modal stops reporting success for the `isChecking` skip;
   `refreshVTXOsManually()` throws on a missing service.
+- [x] **Stale unified-transaction merge — fixed 2026-09-21**:
+  `refreshAfterVTXOChange()` refetched the Ark-only service while every
+  reader goes through `unifiedTransactionService.allTransactions`, a stored
+  merge written only by `performRefresh()`. Guard C's primary signal was
+  therefore inert after an auto-schedule, and the card only updated on sheet
+  dismissal. Now calls `mergeTransactions()`. Affected all six callers, not
+  just refresh.
+- [x] **Read-your-own-writes on the post-write refetch — fixed 2026-09-21**:
+  `refreshTransactions()` joins an in-flight dedup task, so a fetch started
+  before the write could satisfy the call. Added
+  `TaskDeduplicationManager.executeFresh` (drains, then fetches fresh — not a
+  bypass, because the upsert awaits mid-loop and can't run concurrently with
+  itself) and `TransactionService.refreshTransactionsAfterWrite()`.
+- [x] **Error paths refetch — fixed 2026-09-21**: bark writes the Pending
+  movement before server registration (F1), so a throw could leave the app
+  blind to it. Both scheduling paths refetch before propagating, scoped to
+  the scheduling call so offline checks don't refetch hourly.
+- [x] **`unusable_inputs` no longer reads as failure — fixed 2026-09-21**:
+  mapped to `ManualRefreshOutcome.alreadyIssuedByServer` → "Already
+  refreshing"; auto path stops setting `lastError`.
+- [ ] **`TaskDeduplicationManager.cancel`/`cancelAll` have never worked**
+  (found 2026-09-21, pre-existing). Both branches cast to `Task<Any, Error>`
+  / `Task<Any, Never>`, and `Task` is invariant in both generic parameters —
+  verified empirically, those casts can never match a concrete task. So
+  `cancel(key:)` is a no-op, and `cancelAll()` cancels nothing while still
+  running `tasks.removeAll()`: it clears the registry with operations still
+  in flight, which would let the next `execute` start a **concurrent
+  duplicate** on any key and defeat the manager's whole purpose.
+  Impact today is low — the only caller is `ServiceContainer.cleanup()` on
+  the *ServiceContainer* instance (contacts/tags/addresses keys) at app
+  teardown via the root view's `onDisappear`, and `"transactions"` lives on
+  `WalletManager`'s separate instance, which nothing cancels. Becomes sharp
+  if `cancelAll` is ever called mid-session or the two managers are
+  consolidated. Fix: store type-erased cancel closures alongside each task
+  instead of casting. `generations` is likewise not cleared by either method
+  (harmless — bounded by distinct key count).
+- [ ] **`refreshTransactionsAfterWrite()` costs an extra `getMovements()`
+  under contention**: it drains the in-flight fetch *and* runs its own, so a
+  contended post-write refetch does two full FFI fetches plus two upsert
+  passes over all movements, where before there were zero extra. Event-driven
+  only, so accepted for now. A cheaper design: track a write sequence and
+  join the in-flight fetch when it already observed our write, instead of
+  always refetching.
+- [ ] **Surface typed errors across the bark FFI boundary**: every
+  `Bark.Error` is collapsed into `BarkWalletFFIError.configurationError(_:)`,
+  so callers can only recover by string-matching the message — which is what
+  `isAlreadyIssuedRejection` does today. Contradicts the
+  "typed errors at the FFI boundary, policy in `WalletManager`" convention.
+  Worth a dedicated error case per recoverable bark variant, starting with
+  `unusable_inputs`.
+- [ ] **Thread the live refresh-expiry threshold into `RefreshExclusion`**:
+  the valve hardcodes 144 to mirror bark's `vtxo_refresh_expiry_threshold`,
+  which we don't pin (FFI config passes `nil`). A test pins it against
+  `ArkConfigModel.vtxoRefreshThresholdBlocks`, but the real fix is reading
+  the live value from `getConfig()` with the constant as fallback — needs a
+  cached `arkConfig` on `WalletManager` (there isn't one today) to avoid an
+  FFI call per check.
 - [ ] **On-device signet verification** (doc §6, 4 steps): parsing gate
   first (log `subsystemName`/`subsystemKind`/`category` right after
   scheduling), then card flips to "Refreshing", no duplicate schedule from
   the hourly/foreground check, and "Already refreshing" on a raced tap.
-- [ ] **Extract + translate 4 new keys**: `status_refresh_not_needed`,
+- [ ] **Extract + translate 5 new keys**: `status_refresh_not_needed`,
   `balance_refresh_not_needed`, `status_refresh_already_underway`,
-  `balance_refresh_already_underway` (the `ManualRefreshOutcome` screens).
+  `balance_refresh_already_underway`, `balance_refresh_already_scheduled`
+  (the `ManualRefreshOutcome` screens).
   Absent from `Shared/Localizable.xcstrings` — they render their
   `defaultValue:` English until an **IDE** build extracts them
   (`xcodebuild` doesn't), then need de/ja/zh-Hant. Don't hand-add values;

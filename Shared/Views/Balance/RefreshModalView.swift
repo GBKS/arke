@@ -134,6 +134,14 @@ struct RefreshModalView: View {
                     title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
                     message: String(localized: "balance_refresh_already_underway", defaultValue: "A refresh check is already running and covers these VTXOs. Nothing new was scheduled.")
                 )
+            case .alreadyIssuedByServer:
+                // The server rejected the request because the refresh is
+                // already committed to a round. That's the user's goal, so
+                // it reads as success, not "Refresh Failed".
+                state = .noChange(
+                    title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
+                    message: String(localized: "balance_refresh_already_scheduled", defaultValue: "These VTXOs are already part of a refresh the server has scheduled. It will complete on its own.")
+                )
             }
         } catch {
             let endTime = Date()

@@ -20,8 +20,17 @@ enum RefreshExclusion {
     /// or a server-replaced duplicate, which doesn't self-heal on our bark
     /// release — must never block a renewal this close to expiry. Worst case
     /// is a benign duplicate the server resolves by replacement; the
-    /// alternative is losing the VTXO to expiry. Matches the app's
-    /// `vtxoRefreshExpiryThreshold` (BarkWalletFFI+Configuration.swift).
+    /// alternative is losing the VTXO to expiry.
+    ///
+    /// This mirrors bark's own `vtxo_refresh_expiry_threshold`, which we do
+    /// **not** pin — `BarkWalletFFI+Configuration.swift` passes `nil` ("use
+    /// defaults"), so the live value is bark's default and could move on a
+    /// bindings bump. The authoritative runtime accessor is
+    /// `ArkConfigModel.vtxoRefreshThresholdBlocks` (same 144 fallback), read
+    /// back via `getConfig()`; `RefreshExclusionTests` pins the two together
+    /// so a drift in either fails a test rather than silently narrowing the
+    /// valve. Threading the live config value in here is the better fix and
+    /// is listed in Open_Follow_Ups.
     static let hardExpiryThresholdBlocks = 144
 
     /// Filter VTXOs that may be handed to a refresh call.

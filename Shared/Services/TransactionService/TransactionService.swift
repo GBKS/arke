@@ -124,13 +124,36 @@ class TransactionService {
     
     // MARK: - Transaction Operations
     
-    /// Refresh transactions with deduplication using upsert strategy
+    /// Refresh transactions with deduplication using upsert strategy.
+    ///
+    /// Deduplicated: if a refresh is already in flight this **joins** it
+    /// rather than starting a new one, so on return the newest data is only
+    /// as fresh as whenever that in-flight fetch called `getMovements()`.
+    /// Fine for "show me transactions"; not safe after writing wallet state —
+    /// use `refreshTransactionsAfterWrite()` for that.
     func refreshTransactions() async {
         await taskManager.execute(key: "transactions") {
             await self.performRefreshTransactions()
         }
     }
-    
+
+    /// Refresh transactions with a guarantee that the fetch observes writes
+    /// made before this call ("read your own writes").
+    ///
+    /// Awaits any in-flight refresh first — so we neither stampede nor cancel
+    /// someone else's work — and then performs a fresh fetch, because that
+    /// earlier fetch may have read bark before our write landed. Callers that
+    /// just changed wallet state (refresh scheduled, exit progressed, round
+    /// completed) must use this: joining a stale fetch left
+    /// `hasActiveRefresh` and `vtxoIdsBeingRefreshed()` blind to a refresh
+    /// the app had just scheduled (`Features/Refresh_Deduplication.md` §3.2).
+    func refreshTransactionsAfterWrite() async {
+        await taskManager.executeFresh(key: "transactions") {
+            await self.performRefreshTransactions()
+        }
+    }
+
+
     private func performRefreshTransactions() async {
         isRefreshing = true
         defer { isRefreshing = false }

@@ -27,6 +27,24 @@ enum ManualRefreshOutcome {
     /// A refresh check was already running. Its exclusions cover the same
     /// VTXOs, so this request was intentionally dropped rather than raced.
     case alreadyInProgress
+    /// The server rejected the inputs because an earlier delegated request
+    /// for them was already issued into a round (bark `unusable_inputs`,
+    /// F5). Not a failure: the refresh the user asked for is running — we
+    /// just didn't schedule it. Surfacing this as an error told users
+    /// "Refresh Failed" for a refresh in flight (Refresh_Deduplication.md §2).
+    case alreadyIssuedByServer
+}
+
+/// Whether a scheduling error is bark telling us the inputs are already
+/// committed to a round, rather than a real failure.
+///
+/// Matched on message text because the FFI collapses every `Bark.Error` into
+/// `BarkWalletFFIError.configurationError(_:)`, discarding the variant —
+/// see the Open_Follow_Ups item about surfacing typed FFI errors. Narrow by
+/// design: anything unrecognised stays an error.
+func isAlreadyIssuedRejection(_ error: Swift.Error) -> Bool {
+    let message = error.localizedDescription.lowercased()
+    return message.contains("unusable_inputs") || message.contains("unusable inputs")
 }
 
 /// Service responsible for automatically refreshing VTXOs when refreshes are free
@@ -257,14 +275,36 @@ class VTXORefreshService {
             // Using delegated refresh so the app doesn't need to stay online until the round starts
             let vtxoIds = eligibleVTXOs.map { $0.id }
             Self.logger.info("Scheduling automatic delegated refresh for \(vtxoIds.count) VTXO(s)...")
-            let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
-            
+
+            let roundState: RoundState?
+            do {
+                roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
+            } catch {
+                // Scoped to the scheduling call only: bark writes the Pending
+                // refresh movement before server registration (F1), so a
+                // throw here can leave a movement the app can't see. Steps
+                // 1-3 can't have written anything, so their failures must not
+                // trigger this refetch — an offline check would otherwise do
+                // a full transaction refetch every hour.
+                await walletManager?.refreshAfterVTXOChange()
+
+                if isAlreadyIssuedRejection(error) {
+                    // Inputs already committed to a round (F5) — the refresh
+                    // is running; this attempt was redundant, not a failure.
+                    Self.logger.info("Auto-refresh inputs already issued into a round — treating as in-flight, not a failure")
+                    lastCheckTime = Date()
+                    lastError = nil
+                    return
+                }
+                throw error
+            }
+
             if let roundState = roundState {
                 Self.logger.info("Delegated refresh scheduled, Round ID: \(roundState.id)")
             } else {
                 Self.logger.info("No refresh scheduled (VTXOs may not need refresh yet)")
             }
-            
+
             // Step 5: Refresh balances and transactions
             await walletManager?.refreshAfterVTXOChange()
             Self.logger.debug("Refreshed balances and transactions")
@@ -284,16 +324,18 @@ class VTXORefreshService {
             Self.logger.info("Auto-refresh completed in \(String(format: "%.2f", duration))s (total session count: \(self.autoRefreshCount))")
             
         } catch {
-            // Log error but don't stop the service
+            // Log error but don't stop the service. No refetch here — the
+            // scheduling call does its own (see step 4); everything else in
+            // this method is read-only, so there are no writes to republish.
             let errorMessage = error.localizedDescription
             Self.logger.error("Error during check: \(errorMessage)")
             lastError = errorMessage
             lastCheckTime = Date()
-            
+
             // Continue running despite errors - will retry on next interval
         }
     }
-    
+
     /// Find VTXOs that should be auto-refreshed
     /// 
     /// Returns VTXOs where:
@@ -465,10 +507,27 @@ class VTXORefreshService {
         }
 
         let vtxoIds = vtxos.map { $0.id }
-        let roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
 
-        // Refetch either way — the exclusions are derived from transaction
-        // state, so the next read must see whatever this call wrote.
+        let roundState: RoundState?
+        do {
+            roundState = try await wallet.refreshVtxosDelegated(vtxoIds: vtxoIds)
+        } catch {
+            // bark writes the Pending refresh movement *before* server
+            // registration (F1), so a throw can leave a movement behind.
+            // Refetch before propagating or the app stays blind to it — and
+            // a blind app re-offers "Refresh now" for VTXOs that already
+            // have a lingering Pending entry (F5/F9 → stranded round state).
+            await walletManager?.refreshAfterVTXOChange()
+
+            if isAlreadyIssuedRejection(error) {
+                Self.logger.info("Server rejected \(vtxoIds.count) VTXO(s) as already issued into a round — treating as in-flight, not a failure")
+                return .alreadyIssuedByServer
+            }
+            throw error
+        }
+
+        // Refetch on both no-op and success — the exclusions are derived from
+        // transaction state, so the next read must see whatever this wrote.
         await walletManager?.refreshAfterVTXOChange()
 
         guard let roundState else {
