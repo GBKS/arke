@@ -7,6 +7,7 @@ This section contains practical guides for working with the codebase, including 
 - **setup.md** - Getting started with the development environment
 - **testing-patterns.md** - Testing strategies, patterns, and examples used in the project
 - **common-tasks.md** - Frequently needed development workflows and how to perform them
+- **Change_Review_Playbook.md** - How to review a change and which review to ask for; method-specific prompts, and the two-pass build/adversarial shape
 
 ## Purpose
 

@@ -224,11 +224,14 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Development/ (4 files) ✅ GOOD STRUCTURE
+### Development/ (5 files) ✅ GOOD STRUCTURE
 
-- `intro.md`, `setup.md`, `testing-patterns.md`, `common-tasks.md`
+- `intro.md`, `setup.md`, `testing-patterns.md`, `common-tasks.md`,
+  `Change_Review_Playbook.md` (added 2026-09-21)
 
-**Assessment:** Valuable, current. Keep as-is.
+**Assessment:** Valuable, current. Keep as-is. Note the four original files
+predate the `Title_Case_With_Underscores` convention; new additions here
+follow it.
 
 ---
 
