@@ -188,3 +188,105 @@ struct WalletWipeCoverageTests {
         #expect(fullWipeKeys.contains("com.arke.wallet.networkConfigId"))
     }
 }
+
+// MARK: - Deletion Strategy
+
+@Suite("Deletion Strategy Evidence")
+struct DeletionStrategyTests {
+
+    @Test("Other devices present keeps the deletion local")
+    func othersPresentIsLocalOnly() {
+        #expect(WalletDataCleanupService.deletionStrategy(for: .othersPresent) == .localOnly)
+    }
+
+    @Test("A readable, empty registry unlocks the full wipe")
+    func noneFoundPromptsForCloudData() {
+        #expect(WalletDataCleanupService.deletionStrategy(for: .noneFound) == .promptForCloudData)
+    }
+
+    @Test("An unreadable registry must never offer the full wipe")
+    func undeterminedIsConservative() {
+        // The asymmetry that makes this the only safe default: a wrong "last
+        // device" deletes the synchronizable seed account-wide and is
+        // unrecoverable without a written phrase, while a wrong "local only"
+        // just leaves data to clean up later
+        #expect(WalletDataCleanupService.deletionStrategy(for: .undetermined) == .localOnly)
+    }
+
+    @Test("Only a definitively empty registry maps to the destructive strategy")
+    func fullWipeHasExactlyOnePrecondition() {
+        // Over allCases, not a hand-listed array: a newly added evidence kind
+        // that falls through to .promptForCloudData must fail here
+        let destructive = WalletDataCleanupService.OtherDeviceEvidence.allCases
+            .filter { WalletDataCleanupService.deletionStrategy(for: $0) == .promptForCloudData }
+        #expect(destructive == [.noneFound])
+    }
+}
+
+// MARK: - Fast Device Registry (KVS mirror)
+
+@Suite("KVS Device Registry Scan")
+struct KVSDeviceRegistryTests {
+
+    private static let prefix = DeviceRegistrationService.registeredDevicesPrefix
+    private static let hash = "Zm9vYmFyaGFzaA=="   // base64, as the real PBKDF2 hash is
+    private static let me = "11111111-1111-1111-1111-111111111111"
+    private static let other = "22222222-2222-2222-2222-222222222222"
+
+    @Test("A sibling device registration is seen")
+    func findsOtherDevice() {
+        let keys = [
+            "\(Self.prefix)\(Self.hash).\(Self.me)",
+            "\(Self.prefix)\(Self.hash).\(Self.other)"
+        ]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: Self.hash, currentDeviceId: Self.me)
+        #expect(found == [Self.other])
+    }
+
+    @Test("This device alone reads as no others — the only case that unlocks a full wipe")
+    func excludesSelf() {
+        let keys = ["\(Self.prefix)\(Self.hash).\(Self.me)"]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: Self.hash, currentDeviceId: Self.me)
+        #expect(found.isEmpty)
+    }
+
+    @Test("Registrations for another wallet are ignored")
+    func scopedToWalletHash() {
+        let keys = ["\(Self.prefix)b3RoZXJoYXNo.\(Self.other)"]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: Self.hash, currentDeviceId: Self.me)
+        #expect(found.isEmpty)
+    }
+
+    @Test("Unrelated KVS keys are ignored")
+    func ignoresForeignKeys() {
+        let keys = [
+            "com.arke.wallet.mnemonicHash",
+            "com.arke.wallet.networkConfigId",
+            "device_\(Self.other)_isPrimary",
+            "\(Self.prefix)\(Self.hash).\(Self.other)"
+        ]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: Self.hash, currentDeviceId: Self.me)
+        #expect(found == [Self.other])
+    }
+
+    @Test("A prefix with no device ID is not a device")
+    func ignoresEmptyDeviceId() {
+        let keys = ["\(Self.prefix)\(Self.hash)."]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: Self.hash, currentDeviceId: Self.me)
+        #expect(found.isEmpty)
+    }
+
+    @Test("A wallet hash that prefixes another wallet's hash doesn't leak")
+    func prefixCollisionIsScoped() {
+        // "abc" must not match keys belonging to wallet "abcdef"
+        let keys = ["\(Self.prefix)abcdef.\(Self.other)"]
+        let found = DeviceRegistrationService.otherRegisteredDeviceIds(
+            kvsKeys: keys, walletHash: "abc", currentDeviceId: Self.me)
+        #expect(found.isEmpty)
+    }
+}

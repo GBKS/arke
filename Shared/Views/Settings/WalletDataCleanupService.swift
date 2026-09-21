@@ -52,26 +52,51 @@ class WalletDataCleanupService {
     
     // MARK: - Public API
     
+    /// What the device registry was able to tell us about other devices.
+    /// `CaseIterable` so the strategy test can assert over *every* case — a new
+    /// evidence kind that silently maps to the destructive strategy must fail a test.
+    enum OtherDeviceEvidence: Equatable, CaseIterable {
+        case othersPresent   // at least one other device is registered for this wallet
+        case noneFound       // registry readable and empty — this really is the last device
+        case undetermined    // registry unreadable (no context, keychain/fetch error)
+    }
+
+    /// Pure strategy decision, extracted for testability.
+    ///
+    /// `.undetermined` resolves to `.localOnly` on purpose. The two strategies are
+    /// not symmetric: guessing "local only" on a genuine last device orphans the
+    /// seed and iCloud data (recoverable — delete again once the registry reads),
+    /// while guessing "last device" on a live multi-device account deletes the
+    /// synchronizable seed account-wide and is unrecoverable without a written
+    /// phrase. An unreadable registry is not evidence of being alone.
+    nonisolated static func deletionStrategy(for evidence: OtherDeviceEvidence) -> DeletionStrategy {
+        switch evidence {
+        case .othersPresent, .undetermined:
+            return .localOnly
+        case .noneFound:
+            return .promptForCloudData
+        }
+    }
+
     /// Determine the appropriate deletion strategy based on device registry
     func getDeletionStrategy() async -> DeletionStrategy {
+        let evidence: OtherDeviceEvidence
+
         do {
-            let hasOthers = try await deviceRegistrationService.hasOtherActiveDevices()
-            
-            if hasOthers {
-                // Other devices exist - safe to delete locally only
-                return .localOnly
-            } else {
-                // Last device - need to ask user about iCloud data
-                return .promptForCloudData
-            }
+            // Scope the question to the account's wallet; a nil hash makes
+            // hasOtherActiveDevices answer conservatively on its own
+            let hasOthers = try await deviceRegistrationService.hasOtherActiveDevices(
+                walletHash: getHashFromUbiquitousStore()
+            )
+            evidence = hasOthers ? .othersPresent : .noneFound
         } catch {
             #if DEBUG
             print("⚠️ [WalletDataCleanupService] Failed to check other devices: \(error.localizedDescription)")
             #endif
-            
-            // Fallback to prompt if we can't determine
-            return .promptForCloudData
+            evidence = .undetermined
         }
+
+        return Self.deletionStrategy(for: evidence)
     }
     
     /// Delete wallet data with specified strategy
@@ -821,7 +846,9 @@ enum SharedStateWipeCoverage {
 }
 
 /// Deletion strategy based on device registry state
-enum DeletionStrategy {
+/// `nonisolated` so the pure `deletionStrategy(for:)` decision and its tests can
+/// compare values outside the main actor
+nonisolated enum DeletionStrategy: Equatable {
     case localOnly             // Delete seed + unregister device, keep iCloud data
     case promptForCloudData    // Ask user if they want to delete iCloud data too
     

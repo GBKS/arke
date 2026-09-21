@@ -43,7 +43,9 @@ class DeviceRegistrationService {
     private let deviceIdAccount = "deviceId"
     private let lastHeartbeatKey = "com.arke.device.lastHeartbeat"
     private let heartbeatInterval: TimeInterval = 24 * 60 * 60  // 24 hours
-    private let registeredDevicesPrefix = "com.arke.device.registered."  // For fast device registry in KV store
+    /// Key prefix for the fast device registry in iCloud KVS. Static so the pure
+    /// key-parsing helper (`otherRegisteredDeviceIds`) can share it with the writers.
+    nonisolated static let registeredDevicesPrefix = "com.arke.device.registered."
     
     // MARK: - Cached Values
     
@@ -448,11 +450,19 @@ class DeviceRegistrationService {
         )
         
         if let registration = try? modelContext.fetch(descriptor).first {
+            let walletHash = registration.walletHash
+
             modelContext.delete(registration)
             try modelContext.save()
-            
+
+            // Remove the fast-registry mirror too, exactly as unlinkDevice() does.
+            // Leaving it behind used to strand a ghost entry that outlived the
+            // SwiftData row; now that hasOtherActiveDevices() reads the mirror, a
+            // ghost would block every remaining device's full wipe forever.
+            unregisterDeviceFromKVStore(deviceId: deviceId, walletHash: walletHash)
+
             Self.logger.debug("Unregistered current device")
-            
+
             await loadRegisteredDevices()
         }
     }
@@ -544,24 +554,103 @@ class DeviceRegistrationService {
     }
     
     /// Gets all devices except the current one
-    func getOtherDevices() async throws -> [DeviceRegistration] {
+    /// - Parameter walletHash: When provided, only considers devices registered for
+    ///   that wallet - registrations left over from another (test) wallet must not
+    ///   count, the same scoping `getPrimaryDevice(walletHash:)` applies
+    func getOtherDevices(walletHash: String? = nil) async throws -> [DeviceRegistration] {
         guard let modelContext = modelContext else {
             throw DeviceRegistrationError.noModelContext
         }
-        
+
         let currentDeviceId = try getOrCreateDeviceId()
-        
-        let descriptor = FetchDescriptor<DeviceRegistration>(
-            predicate: #Predicate { $0.deviceId != currentDeviceId && $0.isActive == true },
-            sortBy: [SortDescriptor(\.lastSeenAt, order: .reverse)]
-        )
-        
+
+        let descriptor: FetchDescriptor<DeviceRegistration>
+        if let walletHash = walletHash {
+            descriptor = FetchDescriptor<DeviceRegistration>(
+                predicate: #Predicate {
+                    $0.deviceId != currentDeviceId && $0.isActive == true && $0.walletHash == walletHash
+                },
+                sortBy: [SortDescriptor(\.lastSeenAt, order: .reverse)]
+            )
+        } else {
+            descriptor = FetchDescriptor<DeviceRegistration>(
+                predicate: #Predicate { $0.deviceId != currentDeviceId && $0.isActive == true },
+                sortBy: [SortDescriptor(\.lastSeenAt, order: .reverse)]
+            )
+        }
+
         return try modelContext.fetch(descriptor)
     }
-    
-    /// Checks if there are other active devices besides the current one
-    func hasOtherActiveDevices() async throws -> Bool {
-        let others = try await getOtherDevices()
+
+    /// Device IDs the fast KVS registry knows about for a wallet, excluding this device.
+    ///
+    /// Pure and testable. Keys are `com.arke.device.registered.<walletHash>.<deviceId>`;
+    /// the wallet hash is base64 (PBKDF2, no dots) and device IDs are UUID strings
+    /// (no dots), so a prefix match isolates the device ID exactly.
+    nonisolated static func otherRegisteredDeviceIds(
+        kvsKeys: [String],
+        walletHash: String,
+        currentDeviceId: String
+    ) -> Set<String> {
+        let prefix = "\(registeredDevicesPrefix)\(walletHash)."
+        var ids: Set<String> = []
+
+        for key in kvsKeys where key.hasPrefix(prefix) {
+            let deviceId = String(key.dropFirst(prefix.count))
+            guard !deviceId.isEmpty, deviceId != currentDeviceId else { continue }
+            ids.insert(deviceId)
+        }
+
+        return ids
+    }
+
+    /// Checks if there are other active devices registered for this wallet.
+    ///
+    /// Consults the fast iCloud KVS registry BEFORE the CloudKit-backed SwiftData
+    /// registry. This ordering is load-bearing, not an optimization: KVS converges
+    /// in seconds while a CloudKit import can take minutes or never arrive offline,
+    /// and a joining secondary that asks this question inside that window would
+    /// otherwise be told it is the last device — which routes the delete flow to a
+    /// full wipe and destroys the account's shared seed (Multi_Device_Design.md,
+    /// Principle 3). Detection already routes launch on KVS; the deletion scope,
+    /// the one irreversible decision, must not read the slower store alone.
+    ///
+    /// KVS entries carry no staleness filter: their timestamp is "last registered",
+    /// not "last seen" (heartbeats don't refresh it), so ageing them out would drop
+    /// live devices. A KVS ghost therefore blocks the full wipe until it is unlinked
+    /// — the conservative direction, and the remedy S7's blockers list is designed
+    /// to surface.
+    ///
+    /// - Parameter walletHash: the wallet to scope the question to. `nil` or empty
+    ///   means the account wallet is unknown (KVS detached after an iCloud
+    ///   sign-out, S10) — the KVS registry can't be queried without it, so this
+    ///   falls back to the unscoped SwiftData check, which is exactly the
+    ///   pre-2026-09-21 behaviour. Answering a blanket "others exist" instead
+    ///   was tried and reverted: it buys no safety (the dangerous case — a
+    ///   joining secondary — always has a hash, since detection routes on it)
+    ///   while making the wallet undeletable on a signed-out device, and a
+    ///   local-only deletion with no hash records no tombstone, so the retained
+    ///   seed resurrects the wallet on the next launch.
+    func hasOtherActiveDevices(walletHash: String?) async throws -> Bool {
+        guard let walletHash, !walletHash.isEmpty else {
+            Self.logger.warning("hasOtherActiveDevices called without a wallet hash — falling back to the unscoped registry check")
+            let others = try await getOtherDevices()
+            return others.contains { !$0.isStale }
+        }
+
+        let currentDeviceId = try getOrCreateDeviceId()
+
+        let kvsDeviceIds = Self.otherRegisteredDeviceIds(
+            kvsKeys: Array(NSUbiquitousKeyValueStore.default.dictionaryRepresentation.keys),
+            walletHash: walletHash,
+            currentDeviceId: currentDeviceId
+        )
+        if !kvsDeviceIds.isEmpty {
+            Self.logger.info("Fast KVS registry shows \(kvsDeviceIds.count) other device(s) for this wallet")
+            return true
+        }
+
+        let others = try await getOtherDevices(walletHash: walletHash)
         // Filter out stale devices
         return others.contains { !$0.isStale }
     }
@@ -951,7 +1040,7 @@ class DeviceRegistrationService {
     /// This syncs much faster than CloudKit and prevents race conditions during app reinstall
     private func registerDeviceInKVStore(deviceId: String, walletHash: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
-        let key = "\(registeredDevicesPrefix)\(walletHash).\(deviceId)"
+        let key = "\(Self.registeredDevicesPrefix)\(walletHash).\(deviceId)"
         
         // Store timestamp when device was registered
         kvStore.set(Date().timeIntervalSince1970, forKey: key)
@@ -963,7 +1052,7 @@ class DeviceRegistrationService {
     /// Removes a device from the KV store registry
     private func unregisterDeviceFromKVStore(deviceId: String, walletHash: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
-        let key = "\(registeredDevicesPrefix)\(walletHash).\(deviceId)"
+        let key = "\(Self.registeredDevicesPrefix)\(walletHash).\(deviceId)"
         
         kvStore.removeObject(forKey: key)
         kvStore.synchronize()
@@ -976,7 +1065,7 @@ class DeviceRegistrationService {
     func clearDeviceRegistrationsFromKVStore(walletHash: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
         let allKeys = kvStore.dictionaryRepresentation.keys
-        let prefix = "\(registeredDevicesPrefix)\(walletHash)."
+        let prefix = "\(Self.registeredDevicesPrefix)\(walletHash)."
         
         // Find and remove all keys for this wallet
         let keysToRemove = allKeys.filter { $0.hasPrefix(prefix) }
@@ -1003,7 +1092,7 @@ class DeviceRegistrationService {
         // Get all device IDs from KV store
         var kvDeviceIds: Set<String> = []
         for key in allKVKeys {
-            if key.hasPrefix(registeredDevicesPrefix) {
+            if key.hasPrefix(Self.registeredDevicesPrefix) {
                 // Extract deviceId from key: "com.arke.device.registered.<walletHash>.<deviceId>"
                 let components = key.split(separator: ".")
                 if let deviceId = components.last {

@@ -43,8 +43,10 @@ awaiting Christoph's call — the items below assume acceptance:
   call site is currently commented out — nothing is gated today.
 - [ ] **S7 build — active devices block full wipe**: blockers list with
   unlink-first paths, informed "delete anyway" override behind the security
-  check, `getDeletionStrategy()` error fallback flipped to conservative,
-  "wallet deleted elsewhere" cleanup-offer state on surviving devices.
+  check, "wallet deleted elsewhere" cleanup-offer state on surviving devices.
+  (The `getDeletionStrategy()` fallback part landed early and separately on
+  2026-09-21 — see Wallet Deletion & Device Registry. The override valve is
+  now load-bearing: KVS ghosts block indefinitely, with no staleness cutoff.)
 - [ ] **S5 build — migration assistant**: orchestration + copy over existing
   primitives (S2 join → promote → S6 retire), entry points on both devices;
   DELETE `migrateToThisDevice()` (writes `isPrimaryDevice` without
@@ -60,9 +62,30 @@ awaiting Christoph's call — the items below assume acceptance:
 - [ ] **PROPOSED — phrase-confirmation on full wipe** (failure modes §A):
   final "Delete everything" asks for two recovery-phrase words — consent +
   backup-existence proof before destroying the last seed copies.
-- [ ] **Device-backup-twin identity problem** (failure modes §B): restored
-  device backups duplicate the device-ID keychain item across two physical
-  devices; needs a design (liveness nonce / install-scoped identity).
+- [x] **Device-backup-twin identity problem — DROPPED 2026-09-21**, premise
+  was wrong: the device-ID item is `WhenUnlockedThisDeviceOnly`, and Apple
+  documents that such items do not migrate to a new device (absent after
+  restoring another device's backup). A restored device generates a fresh ID
+  and registers as a new device — an ordinary S11 ghost, not a shared
+  identity. No liveness nonce needed.
+
+## Test Infrastructure
+
+- [ ] **The macOS (`Arké`) test suite fails ~68 of 272 tests, and has for an
+  unknown length of time** — measured 2026-09-22 on a clean tree, so it is
+  pre-existing and unrelated to any current work. It is also **flaky, not
+  deterministic**: two consecutive clean-tree runs shared 65 failures but each
+  had 2-3 unique ones. The failing set spans nearly every suite
+  (`AddressValidator`, `LightningInvoiceParser`, `TaskDeduplicationManager`,
+  `ExitStore`, `MetadataImportService`, …) while iOS runs the same Shared
+  tests 283/283 green, which points at shared mutable state across parallel
+  macOS test hosts (keychain, UserDefaults, KVS) rather than 68 real bugs —
+  `TombstonePersistenceTests` and `KeychainAccessibilityMigrationTests` both
+  mutate process-wide state. Consequence: **desktop regressions are currently
+  undetectable**, because a new failure can't be distinguished from the noise.
+  Worth fixing before the desktop parity work (`.serialized` suites, or
+  scratch-scoped keychain/defaults) — the current "ignore desktop" workflow
+  hides this rather than costing nothing.
 
 ## Wallet Deletion & Device Registry
 
@@ -113,11 +136,60 @@ awaiting Christoph's call — the items below assume acceptance:
   `checkForNoPrimaryDevice()` on launch/foreground and show a callout with a
   deep link to the existing `PromoteDeviceSheet`. Shipped UX for now is the
   passive Linked Devices flow plus the pointer in the delete-confirmation copy.
-- [ ] **Decide the fail-safe direction of `getDeletionStrategy()`'s error
-  fallback**: when the other-devices check fails, it falls back to
-  `.promptForCloudData` — i.e. a full wipe — even if other devices actually
-  exist. The shown copy is accurate, but the conservative fallback would be
-  `.localOnly` (keeps cloud data at the cost of possible leftovers).
+- [x] **Fail-safe direction of `getDeletionStrategy()`'s error fallback —
+  DECIDED + DONE 2026-09-21**: an unreadable registry now resolves to
+  `.localOnly`. Extracted as the pure
+  `WalletDataCleanupService.deletionStrategy(for:)` over an
+  `OtherDeviceEvidence` enum, so `.noneFound` is the *only* input that can
+  reach the destructive strategy — pinned by `DeletionStrategyTests`,
+  including a test that fails if a newly added evidence case defaults to
+  full wipe.
+- [x] **Full wipe offered to a non-last device (CloudKit lag) — FIXED
+  2026-09-21**: found by a claims audit of `Multi_Device_Design.md`, never
+  observed in the field. `hasOtherActiveDevices()` read only the
+  CloudKit-backed SwiftData registry, so a secondary that asked before the
+  primary's record was imported (seconds to never, when offline) was told it
+  was the last device — "Delete Everything" would then have removed the
+  synchronizable seed account-wide. Now `hasOtherActiveDevices(walletHash:)`
+  consults the fast KVS mirror first (previously written on every
+  registration and read by nothing), is scoped to the wallet hash on both
+  sides, and answers "others exist" when the hash is unknown.
+  `unregisterCurrentDevice()` now clears its KVS entry too, as
+  `unlinkDevice()` always did — otherwise a local-only delete would leave a
+  ghost that blocks every future full wipe. Tests: `KVSDeviceRegistryTests`.
+  282/282 green on iOS. **Not yet on-device verified** — folds into the
+  two-device verify below (add: delete on a freshly joined secondary while
+  CloudKit is still importing → must say "Delete from This Device").
+- [ ] **A KVS-only ghost is invisible and unremovable**: the full-wipe check
+  now reads the KVS registry, but Linked Devices lists SwiftData
+  registrations. If a device's KVS entry outlives its CloudKit record (record
+  lost, or an iOS restore onto new hardware that regenerates the device ID),
+  it blocks the full wipe with nothing to unlink in the UI. Remedies: list
+  KVS-only entries as blockers (S7 does this naturally), or have
+  `cleanupKVStoreRegistry()` — which already computes exactly this orphan set
+  and is itself never called — run on launch.
+- [ ] **Blocked-strategy copy**: the conservative `.localOnly` fallback shows
+  "Other devices have this wallet", which is a guess in the error case. Needs
+  a third user-facing state ("couldn't check — try again") = new strings
+  across de/ja/zh-Hant, so it was deliberately not bundled with the fix. S7's
+  blockers list supersedes this if built first.
+- [ ] **`checkReadOnlyMode()` infers primary** (`WalletManager.swift:503-514`):
+  a missing or unreadable device registration sets `isReadOnlyMode = false`,
+  i.e. full spend rights — contradicting Principle 2 and contract rule 15.
+  Registration correctly refuses to infer primary; the spend gate doesn't.
+  Reachable via self-unlink (`LinkedDevicesView_iOS.swift:46`), which the
+  capability matrix doesn't model. UNVERIFIED — needs a self-unlink →
+  relaunch run before deciding the fix.
+- [ ] **Dead device-registry code**: `cleanupStaleDevices()` and
+  `migrateToThisDevice()` both have zero call sites (verified 2026-09-21);
+  `DeleteLocallyConfirmationView` is never instantiated. Delete
+  `migrateToThisDevice()` with the S5 work — it bypasses the
+  `becamePrimaryAt` bookkeeping reconciliation depends on.
+- [ ] **Delete flow has no partial-failure handling**
+  (`DeleteWalletSettingView.swift:205-236`): `deleteWalletData()` runs first,
+  then `walletManager.deleteWallet()`. If the second throws, shared state is
+  already destroyed but the user stays in-app with no navigation, and
+  `isDeleting` is never reset on the success path either.
 - [ ] **Remove the dead `showNoPrimaryDeviceBanner` NotificationCenter post**
   (`DeviceRegistrationService.demoteThisDevice`): nothing observes it, and as
   an in-process notification it can't reach other devices anyway.

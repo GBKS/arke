@@ -229,12 +229,18 @@ User wants the wallet gone from all devices and iCloud.
 
 **The stale-ghost question (Christoph): "you lost or sold your old phone and
 forgot to deregister it — could that stale registration block the full
-deletion?"** Answer, today: yes, for up to 30 days. `hasOtherActiveDevices()`
-filters out registrations with no heartbeat for 30+ days, so old ghosts stop
-blocking eventually — but inside that window the strategy silently downgrades
-to local-only with no device names, no explanation, and no unlink path in the
-delete flow. And a sold-but-not-erased phone that someone keeps opening
-heartbeats forever: it blocks permanently (see Failure modes §C).
+deletion?"** Answer, since 2026-09-21: yes, indefinitely, and that is now
+deliberate. `hasOtherActiveDevices(walletHash:)` consults the fast iCloud KVS
+registry before the CloudKit-backed SwiftData one, and KVS entries carry no
+staleness filter — their timestamp is "last registered", not "last seen"
+(heartbeats never refresh it), so ageing them out would drop live devices. The
+SwiftData side still applies the 30-day `isStale` cutoff. Net: a KVS ghost
+blocks the full wipe until it is unlinked. That is the conservative direction
+and it is exactly what the blockers list below is for; the cost of the old
+30-day-timeout behaviour was the reverse failure, which is unrecoverable (see
+Our-code faults §D, 2026-09-21). In the meantime the strategy still downgrades
+to local-only silently — no device names, no explanation, no unlink path in
+the delete flow.
 
 **Proposal:** replace the timeout with recognition. An *active* registered
 device blocks the full wipe — but every blocker is shown by name and
@@ -254,10 +260,12 @@ wait. Design details:
   matters much less — recognition replaces waiting either way.
 - *Override valve:* "Delete everything anyway" stays available behind the
   security check plus explicit consequence copy — registry ghosts and
-  CloudKit outages must not permanently prevent deletion. This also settles
-  the open `getDeletionStrategy()` fallback question: with blocking UX, the
-  error fallback flips to blocked/local-only (conservative), because full
-  wipe is now an explicit, informed choice rather than a default.
+  CloudKit outages must not permanently prevent deletion. This is now the
+  only way out of a blocked wipe, because the `getDeletionStrategy()` fallback
+  question was settled early and separately: DONE 2026-09-21, an unreadable
+  registry resolves to local-only (`WalletDataCleanupService.deletionStrategy(for:)`,
+  pinned by `DeletionStrategyTests`). Full wipe must be an explicit, informed
+  choice, never a default reached by error.
 - *Remote aftermath:* devices that survive a (overridden) full wipe observe
   the KVS hash removal and show a "wallet was deleted on another device"
   state offering local cleanup. Cleanup is offered, never automatic — a KVS
@@ -340,8 +348,10 @@ detection.
 
 ### S11 — Device sold/erased without saying goodbye (stale registrations) ⚠️
 A device that was wiped externally never unregisters; its heartbeat goes
-stale. Any surviving device can unlink it (S4); `cleanupStaleDevices(30d)`
-exists for automatic hygiene.
+stale. Any surviving device can unlink it (S4). `cleanupStaleDevices(30d)`
+exists but has **zero call sites** (verified 2026-09-21) — nothing prunes
+ghosts automatically, and since the full-wipe check now consults the KVS
+mirror without a staleness cutoff, unlink is the only way to clear a blocker.
 
 Walkthrough:
 - **Sees:** an old device lingering in Settings → Linked Devices ("last seen 3 months ago").
@@ -431,12 +441,16 @@ what happens → impact → mitigation → status.
   reconciliation winner (rare; needs near-simultaneous claims + skew). →
   Accepted for now; server-side arbitration is the eventual fix.
   Status: accepted risk, follow-up exists.
-- **Device backup restored onto a second phone.** The device-ID keychain item
-  is non-synchronizable but travels in encrypted device backups — two
-  physical devices can end up sharing one registry identity. → Heartbeat/
-  primary/unlink confusion between the twins. → Undesigned; would need a
-  liveness nonce or install-scoped identity component. Status: OPEN, known
-  iOS pitfall, unhandled.
+- **Device backup restored onto a second phone.** CORRECTED 2026-09-21 — the
+  twin scenario does not occur. The device-ID item is written
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
+  (`DeviceRegistrationService.getOrCreateDeviceId()`), and Apple documents
+  that items with this attribute "do not migrate to a new device. Thus, after
+  restoring from a backup of a different device, these items will not be
+  present." The restored device finds no ID, generates a fresh one, and
+  registers as a new device. → Real effect is a duplicate/ghost registration,
+  not a shared identity. → Covered by unlink (S11); no liveness nonce needed.
+  Status: CLOSED as mis-specified; the ghost it does produce is ordinary S11.
 
 ### C. Malicious
 
@@ -476,12 +490,30 @@ list) inside them.
 
 ### D. Our-code faults
 
-The recurring pattern — three incidents now — is **a device-scoped action
+The recurring pattern — four incidents now — is **a device-scoped action
 destroying account-scoped state**: the FFI deleting the synced seed on every
 deletion (2026-08-19), and `deleteWallet()` clearing the shared network
 config from iCloud KVS on a local-only delete, stranding the live secondary
 on default-mainnet with a signet db that refused to open (2026-08-20, found
-by the two-device verify). Defenses live elsewhere and are referenced, not
+by the two-device verify).
+
+The fourth (2026-09-21, found by a claims audit of this document, never
+observed in the field) is the same fault one level up — not the deletion but
+the *decision*: `getDeletionStrategy()` derived "this is the last device" from
+the CloudKit-backed SwiftData registry alone. A joining secondary asks that
+question before CloudKit imports the primary's record — seconds to never, when
+offline — and was told it was alone, so the delete flow offered "Delete
+Everything" and would have removed the synchronizable seed account-wide.
+Detection has always routed launch on the *fast* KVS hash; only the
+irreversible decision read the slow store. Two fixes, both test-pinned:
+`hasOtherActiveDevices(walletHash:)` consults the KVS mirror first (which
+until then was written on every registration and never read by anything), and
+an unreadable registry resolves to local-only instead of full wipe.
+**Generalised rule: a decision whose wrong answer destroys account-scoped
+state must read the fastest-converging store available, and must treat "I
+don't know" as "not alone."**
+
+Defenses live elsewhere and are referenced, not
 duplicated: launch contract rules 14–21 (invariants with incident history),
 `WalletWipeCoverageTests` (SwiftData schema drift), `SharedStateWipeCoverage`
 (keychain/KVS keys with declared deletion scopes), `WalletDeletionRejoinTests`
@@ -529,6 +561,22 @@ before it:
    copy.
 9. Desktop parity for promote/demote UI (S3).
 10. Devices-list scoping + automatic stale cleanup (S11).
-11. Device-backup-twin identity problem (Failure modes §B): needs a design
-    (liveness nonce or install-scoped identity); low frequency, real
-    confusion when it hits.
+11. ~~Device-backup-twin identity problem~~ — DROPPED 2026-09-21, the premise
+    was wrong (Failure modes §B).
+12. Blocked-strategy copy (from the 2026-09-21 fix): an unreadable registry
+    now yields `.localOnly`, whose UI copy claims "Other devices have this
+    wallet" — true in the normal case, a guess in the error case. Needs a
+    third user-facing state ("couldn't check — try again"), which means new
+    strings across de/ja/zh-Hant, so it was not bundled with the fix. S7's
+    blockers list supersedes it if built first.
+13. `checkReadOnlyMode()` infers primary (`WalletManager.swift:503-514`): a
+    missing or unreadable device registration sets `isReadOnlyMode = false`,
+    i.e. full spend rights. That contradicts Principle 2 and contract rule 15
+    — registration correctly refuses to infer primary, but the spend gate
+    does it anyway. Reachable via self-unlink, which
+    `LinkedDevicesView_iOS.swift:46` offers and the capability matrix doesn't
+    model. UNVERIFIED: needs a self-unlink → relaunch run to confirm a device
+    can spend while the registry says it is secondary.
+14. Nothing calls `cleanupStaleDevices()` (S11), and `migrateToThisDevice()`
+    has zero call sites — delete it (item 7 above) rather than leaving a
+    reconciliation-bypassing method available.
