@@ -497,17 +497,25 @@ class TagService {
             let tagDescriptor = FetchDescriptor<PersistentTag>()
             let persistentTags = try modelContext.fetch(tagDescriptor)
             
+            // Resolve each tag's transactions once — the aggregates each run
+            // their own fetch now that they no longer walk cached relationships
             let statistics = persistentTags.map { tag in
-                TagStatistic(
+                let transactions = tag.associatedTransactions
+                let sent = transactions.filter { $0.type == "sent" }.reduce(0) { $0 + $1.amount }
+                let received = transactions.filter { $0.type == "received" }.reduce(0) { $0 + $1.amount }
+                let offchainFees = transactions.reduce(0) { $0 + ($1.fees ?? 0) }
+                let onchainFees = transactions.reduce(0) { $0 + ($1.onchainFeeSat ?? 0) }
+
+                return TagStatistic(
                     tagId: tag.id,
                     tagName: tag.displayName,
-                    transactionCount: tag.transactionCount,
-                    totalAmount: tag.totalTransactionAmount,
-                    sentAmount: tag.sentAmount,
-                    receivedAmount: tag.receivedAmount,
-                    offchainFees: tag.offchainFees,
-                    onchainFees: tag.onchainFees,
-                    totalFees: tag.totalFees
+                    transactionCount: transactions.count,
+                    totalAmount: received - sent,
+                    sentAmount: sent,
+                    receivedAmount: received,
+                    offchainFees: offchainFees,
+                    onchainFees: onchainFees,
+                    totalFees: offchainFees + onchainFees
                 )
             }
             

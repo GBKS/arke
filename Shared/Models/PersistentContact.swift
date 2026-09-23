@@ -65,10 +65,42 @@ final class PersistentContact {
     }
     
     // Get all transactions that have this contact
+    //
+    // Fetch-resolved, like PersistentTransaction.associatedTags and for the
+    // same reason: the cached `contactAssignments` array can keep listing rows
+    // a CloudKit import has already deleted, and reading one of those
+    // instances traps ("model instance was invalidated", 2026-09-23).
     var associatedTransactions: [PersistentTransaction] {
-        (contactAssignments ?? []).compactMap { $0.transaction }
+        guard let modelContext else {
+            return (contactAssignments ?? []).compactMap { $0.transaction }
+        }
+
+        let contactId = self.id
+        let descriptor = FetchDescriptor<TransactionContactAssignment>(
+            predicate: #Predicate { $0.contact?.id == contactId }
+        )
+
+        let assignments = (try? modelContext.fetch(descriptor)) ?? []
+        return assignments.compactMap { $0.transaction }
     }
-    
+
+    /// Addresses resolved through a fetch instead of the cached `addresses`
+    /// relationship — same invalidation hazard as `associatedTransactions`.
+    var liveAddresses: [PersistentContactAddress] {
+        guard let modelContext else {
+            return addresses ?? []
+        }
+
+        let contactId = self.id
+        var descriptor = FetchDescriptor<PersistentContactAddress>(
+            predicate: #Predicate { $0.contact?.id == contactId }
+        )
+        descriptor.sortBy = [SortDescriptor(\.createdAt, order: .forward)]
+
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+
     // Count of associated transactions
     var transactionCount: Int {
         contactAssignments?.count ?? 0

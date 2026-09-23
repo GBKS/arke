@@ -15,6 +15,13 @@ import ArkeUI
 extension ContactModel {
     /// Initialize from persistent contact
     init(from persistentContact: PersistentContact) {
+        // One resolution for the count and both amounts: each of those
+        // aggregates runs its own fetch now that they no longer walk cached
+        // relationships (see PersistentContact.associatedTransactions).
+        let transactions = persistentContact.associatedTransactions
+        let sent = transactions.filter { $0.type == "sent" }.reduce(0) { $0 + $1.amount }
+        let received = transactions.filter { $0.type == "received" }.reduce(0) { $0 + $1.amount }
+
         self.init(
             id: persistentContact.id,
             cachedName: persistentContact.cachedName,
@@ -25,10 +32,10 @@ extension ContactModel {
             contactType: persistentContact.type,
             nativeContactID: persistentContact.nativeContactID,
             lastSyncedFromNative: persistentContact.lastSyncedFromNative,
-            transactionCount: persistentContact.transactionCount,
-            sentAmount: persistentContact.sentAmount,
-            receivedAmount: persistentContact.receivedAmount,
-            addresses: (persistentContact.addresses ?? []).map { ContactAddressModel(from: $0) }
+            transactionCount: transactions.count,
+            sentAmount: sent,
+            receivedAmount: received,
+            addresses: persistentContact.liveAddresses.map { ContactAddressModel(from: $0) }
         )
     }
 

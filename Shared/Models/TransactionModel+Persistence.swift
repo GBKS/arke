@@ -9,6 +9,10 @@
 //  linked onchain child transactions. Kept here so the model stays free of
 //  SwiftData and remains previewable in isolation.
 //
+//  `TransactionMetadataSnapshot` at the bottom is the bulk form of the same
+//  bridging, for lists that would otherwise resolve tags and contacts once per
+//  row per layout pass.
+//
 
 import Foundation
 import SwiftData
@@ -20,6 +24,16 @@ extension TransactionModel {
 
     init(from persistentTransaction: PersistentTransaction) {
         self.init(
+            from: persistentTransaction,
+            tags: persistentTransaction.associatedTags.map { TagModel(from: $0) },
+            contacts: persistentTransaction.associatedContacts.map { ContactModel(from: $0) }
+        )
+    }
+
+    /// Bridging init for callers that already resolved this transaction's tags
+    /// and contacts in bulk — see `TransactionMetadataSnapshot`.
+    init(from persistentTransaction: PersistentTransaction, tags: [TagModel], contacts: [ContactModel]) {
+        self.init(
             txid: persistentTransaction.txid,
             movementId: persistentTransaction.movementId,
             recipientIndex: persistentTransaction.recipientIndex,
@@ -29,8 +43,8 @@ extension TransactionModel {
             status: persistentTransaction.transactionStatus,
             address: persistentTransaction.address,
             notes: persistentTransaction.notes,
-            associatedTags: persistentTransaction.associatedTags.map { TagModel(from: $0) },
-            associatedContacts: persistentTransaction.associatedContacts.map { ContactModel(from: $0) },
+            associatedTags: tags,
+            associatedContacts: contacts,
             fees: persistentTransaction.fees,
             onchainFeeSat: persistentTransaction.onchainFeeSat,
             subsystemCategory: persistentTransaction.subsystemCategory,
@@ -187,5 +201,88 @@ extension TransactionModel {
             return nil
         }
         return BitcoinFormatter.shared.formatAmount(total)
+    }
+}
+
+// MARK: - Bulk Metadata Resolution
+
+/// Tags and contacts for every transaction in the store, resolved in two
+/// fetches and handed to rows as value types.
+///
+/// Lists need this for two reasons:
+///
+/// 1. Correctness. Resolving per row means reading `PersistentTransaction`
+///    relationships during layout, and the cached relationship arrays can
+///    point at rows a CloudKit import has already deleted — the 2026-09-23
+///    "model instance was invalidated" trap (see
+///    `PersistentTransaction.associatedTags`).
+/// 2. Cost. SwiftUI reads a row's body while measuring it, so the per-row
+///    fetch pair would run for every visible row on every layout pass. One
+///    snapshot per render replaces that with two fetches for the whole list,
+///    in the same order of work as the list's own `@Query`.
+///
+/// Build it and read it inside a single synchronous main-actor pass. What it
+/// holds are copies and stay valid, but a snapshot kept across an `await`
+/// describes a store state that may have moved on.
+struct TransactionMetadataSnapshot {
+    private let tagsByTxid: [String: [TagModel]]
+    private let contactsByTxid: [String: [ContactModel]]
+
+    /// Empty snapshot, for previews and views rendered without a context.
+    init() {
+        self.tagsByTxid = [:]
+        self.contactsByTxid = [:]
+    }
+
+    init(modelContext: ModelContext) {
+        var tagDescriptor = FetchDescriptor<TransactionTagAssignment>()
+        // Assignment order, so tag labels don't reshuffle between renders
+        tagDescriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
+
+        // A tag or contact shared by many transactions is converted once:
+        // ContactModel in particular resolves the contact's own amounts and
+        // addresses, which is work worth doing per contact, not per assignment.
+        var tagModels: [UUID: TagModel] = [:]
+        var tags: [String: [TagModel]] = [:]
+        for assignment in (try? modelContext.fetch(tagDescriptor)) ?? [] {
+            guard let txid = assignment.transaction?.txid, let tag = assignment.tag else { continue }
+            let model = tagModels[tag.id] ?? TagModel(from: tag)
+            tagModels[tag.id] = model
+            tags[txid, default: []].append(model)
+        }
+
+        var contactDescriptor = FetchDescriptor<TransactionContactAssignment>()
+        contactDescriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
+
+        var contactModels: [UUID: ContactModel] = [:]
+        var contacts: [String: [ContactModel]] = [:]
+        for assignment in (try? modelContext.fetch(contactDescriptor)) ?? [] {
+            guard let txid = assignment.transaction?.txid, let contact = assignment.contact else { continue }
+            let model = contactModels[contact.id] ?? ContactModel(from: contact)
+            contactModels[contact.id] = model
+            contacts[txid, default: []].append(model)
+        }
+
+        self.tagsByTxid = tags
+        self.contactsByTxid = contacts
+    }
+
+    func tags(forTxid txid: String) -> [TagModel] {
+        tagsByTxid[txid] ?? []
+    }
+
+    func contacts(forTxid txid: String) -> [ContactModel] {
+        contactsByTxid[txid] ?? []
+    }
+
+    /// Whether the transaction carries the given tag — the filtered-list test,
+    /// answered from the snapshot instead of a relationship walk.
+    func transaction(withTxid txid: String, hasTagWithId tagId: UUID) -> Bool {
+        tags(forTxid: txid).contains { $0.id == tagId }
+    }
+
+    /// Whether the transaction carries the given contact.
+    func transaction(withTxid txid: String, hasContactWithId contactId: UUID) -> Bool {
+        contacts(forTxid: txid).contains { $0.id == contactId }
     }
 }

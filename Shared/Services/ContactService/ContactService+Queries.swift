@@ -86,14 +86,20 @@ extension ContactService {
             let contactDescriptor = FetchDescriptor<PersistentContact>()
             let persistentContacts = try modelContext.fetch(contactDescriptor)
             
+            // Resolve each contact's transactions once — the aggregates each run
+            // their own fetch now that they no longer walk cached relationships
             let statistics = persistentContacts.map { contact in
-                ContactStatistic(
+                let transactions = contact.associatedTransactions
+                let sent = transactions.filter { $0.type == "sent" }.reduce(0) { $0 + $1.amount }
+                let received = transactions.filter { $0.type == "received" }.reduce(0) { $0 + $1.amount }
+
+                return ContactStatistic(
                     contactId: contact.id,
                     contactName: contact.displayName,
-                    transactionCount: contact.transactionCount,
-                    totalAmount: contact.totalTransactionAmount,
-                    sentAmount: contact.sentAmount,
-                    receivedAmount: contact.receivedAmount,
+                    transactionCount: transactions.count,
+                    totalAmount: received - sent,
+                    sentAmount: sent,
+                    receivedAmount: received,
                     lastActivity: contact.updatedAt
                 )
             }

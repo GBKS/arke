@@ -36,32 +36,44 @@ struct TransactionList: View {
         self.onShowFaucet = onShowFaucet
     }
     
-    // Filtered transactions based on tag/contact
-    private var filteredTransactions: [PersistentTransaction] {
+    // Tags and contacts for every row, resolved in one pass per render instead
+    // of per row. Reading dataVersion registers the dependency that tag and
+    // contact assignment changes bump, so rows re-resolve with the list.
+    private var metadataSnapshot: TransactionMetadataSnapshot {
+        _ = walletManager.dataVersion
+
+        return TransactionMetadataSnapshot(modelContext: modelContext)
+    }
+
+    // Filtered transactions based on tag/contact. Filtering off the snapshot
+    // keeps the relationship arrays out of it — walking those is what trapped
+    // when a CloudKit import deleted an assignment row mid-layout.
+    private func filteredTransactions(
+        with metadata: TransactionMetadataSnapshot
+    ) -> [PersistentTransaction] {
         if let contact = filterContact {
             // Filter by contact
             let contactId = contact.id
-            return allTransactions.filter { transaction in
-                (transaction.contactAssignments ?? []).contains { assignment in
-                    assignment.contact?.id == contactId
-                }
+            return allTransactions.filter {
+                metadata.transaction(withTxid: $0.txid, hasContactWithId: contactId)
             }
         } else if let tag = filterTag {
             // Filter by tag
             let tagId = tag.id
-            return allTransactions.filter { transaction in
-                (transaction.tagAssignments ?? []).contains { assignment in
-                    assignment.tag?.id == tagId
-                }
+            return allTransactions.filter {
+                metadata.transaction(withTxid: $0.txid, hasTagWithId: tagId)
             }
         } else {
             // No filter
             return allTransactions
         }
     }
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {            
+        let metadata = metadataSnapshot
+        let visibleTransactions = filteredTransactions(with: metadata)
+
+        return VStack(alignment: .leading, spacing: 0) {
             // Transaction List
             if walletManager.isInitialLoading && allTransactions.isEmpty {
                 VStack(spacing: 16) {
@@ -74,7 +86,7 @@ struct TransactionList: View {
                 }
                 .padding(.vertical, 16)
                 .padding(.horizontal)
-            } else if filteredTransactions.isEmpty {
+            } else if visibleTransactions.isEmpty {
                 VStack {
                     TransactionListEmptyState(
                         filterTag: filterTag,
@@ -85,9 +97,11 @@ struct TransactionList: View {
                 .padding(.top, 60)
             } else {
                 LazyVStack(spacing: 0) {
-                    ForEach(filteredTransactions, id: \.txid) { persistentTransaction in
+                    ForEach(visibleTransactions, id: \.txid) { persistentTransaction in
                         PersistentTransactionListItem(
                             persistentTransaction: persistentTransaction,
+                            tags: metadata.tags(forTxid: persistentTransaction.txid),
+                            contacts: metadata.contacts(forTxid: persistentTransaction.txid),
                             selectedTransaction: $selectedTransaction
                         )
                         .transition(.asymmetric(
@@ -95,14 +109,14 @@ struct TransactionList: View {
                             removal: .opacity
                         ))
                         
-                        if persistentTransaction.txid != filteredTransactions.last?.txid {
+                        if persistentTransaction.txid != visibleTransactions.last?.txid {
                             Divider()
                                 .padding(.leading, 68) // Align with text content
                                 .padding(.trailing, 12)
                         }
                     }
                 }
-                .animation(.spring(duration: 0.4, bounce: 0.15), value: filteredTransactions.map { $0.txid })
+                .animation(.spring(duration: 0.4, bounce: 0.15), value: visibleTransactions.map { $0.txid })
                 .background(.background)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 12)

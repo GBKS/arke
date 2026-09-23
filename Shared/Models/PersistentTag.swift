@@ -47,8 +47,23 @@ final class PersistentTag {
     }
     
     // Get all transactions that have this tag
+    //
+    // Fetch-resolved, like PersistentTransaction.associatedTags and for the
+    // same reason: the cached `tagAssignments` array can keep listing rows a
+    // CloudKit import has already deleted, and reading one of those instances
+    // traps ("model instance was invalidated", 2026-09-23).
     var associatedTransactions: [PersistentTransaction] {
-        (tagAssignments ?? []).compactMap { $0.transaction }
+        guard let modelContext else {
+            return (tagAssignments ?? []).compactMap { $0.transaction }
+        }
+
+        let tagId = self.id
+        let descriptor = FetchDescriptor<TransactionTagAssignment>(
+            predicate: #Predicate { $0.tag?.id == tagId }
+        )
+
+        let assignments = (try? modelContext.fetch(descriptor)) ?? []
+        return assignments.compactMap { $0.transaction }
     }
     
     // Count of associated transactions

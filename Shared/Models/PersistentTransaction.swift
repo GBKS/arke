@@ -198,20 +198,46 @@ final class PersistentTransaction {
     }
     
     // MARK: - Tag Convenience Methods
-    
+
     /// Get all tags associated with this transaction
+    ///
+    /// Resolved through a fetch rather than by walking the cached
+    /// `tagAssignments` array. That array can outlive the rows it points at:
+    /// the CloudKit import deletes assignment rows on its own context while
+    /// this transaction's already-materialized relationship keeps listing
+    /// them, and reading any property of such an instance traps with "This
+    /// model instance was invalidated because its backing data could no
+    /// longer be found the store" (2026-09-23, second device mid-import).
+    /// A fetch returns only rows that exist as of this call, and store merges
+    /// are delivered on the main actor, so values read in the same
+    /// synchronous pass can't be pulled out from under us.
     var associatedTags: [PersistentTag] {
-        (tagAssignments ?? []).compactMap { $0.tag }
+        guard let modelContext else {
+            // Not in a context (never inserted, or already removed): there is
+            // nothing to fetch, and an unmanaged relationship has no store
+            // rows to lose.
+            return (tagAssignments ?? []).compactMap { $0.tag }
+        }
+
+        let txid = self.txid
+        var descriptor = FetchDescriptor<TransactionTagAssignment>(
+            predicate: #Predicate { $0.transaction?.txid == txid }
+        )
+        // Assignment order, so tag labels don't reshuffle between renders
+        descriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
+
+        let assignments = (try? modelContext.fetch(descriptor)) ?? []
+        return assignments.compactMap { $0.tag }
     }
-    
+
     /// Get count of tags on this transaction
     var tagCount: Int {
         tagAssignments?.count ?? 0
     }
-    
+
     /// Check if transaction has a specific tag
     func hasTag(_ tag: PersistentTag) -> Bool {
-        (tagAssignments ?? []).contains { $0.tag?.id == tag.id }
+        associatedTags.contains { $0.id == tag.id }
     }
     
     /// Check if transaction has any tags
@@ -222,18 +248,31 @@ final class PersistentTransaction {
     // MARK: - Contact Convenience Methods
     
     /// Get all contacts associated with this transaction
+    ///
+    /// Fetch-resolved for the same reason as `associatedTags`.
     var associatedContacts: [PersistentContact] {
-        (contactAssignments ?? []).compactMap { $0.contact }
+        guard let modelContext else {
+            return (contactAssignments ?? []).compactMap { $0.contact }
+        }
+
+        let txid = self.txid
+        var descriptor = FetchDescriptor<TransactionContactAssignment>(
+            predicate: #Predicate { $0.transaction?.txid == txid }
+        )
+        descriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
+
+        let assignments = (try? modelContext.fetch(descriptor)) ?? []
+        return assignments.compactMap { $0.contact }
     }
-    
+
     /// Get count of contacts on this transaction
     var contactCount: Int {
         contactAssignments?.count ?? 0
     }
-    
+
     /// Check if transaction has a specific contact
     func hasContact(_ contact: PersistentContact) -> Bool {
-        (contactAssignments ?? []).contains { $0.contact?.id == contact.id }
+        associatedContacts.contains { $0.id == contact.id }
     }
     
     /// Check if transaction has any contacts
