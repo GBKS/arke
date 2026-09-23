@@ -263,8 +263,20 @@ extension WalletManager {
     }
     
     /// Create default contacts if needed
+    ///
+    /// Seeding is primary-only, for the reason spelled out on
+    /// `createDefaultTagsIfNeeded()`: "no contacts exist" is also true on a
+    /// secondary device until its first CloudKit import lands, so it would
+    /// create its own faucet contact alongside the primary's. The avatar
+    /// re-encode is a convergent repair of already-synced rows, not seeding, so
+    /// it still runs on either kind of device.
     func createDefaultContactsIfNeeded() async {
-        await contactService.createDefaultContactsIfNeeded()
+        if isReadOnlyMode {
+            Self.logger.info("⏭️ [WalletManager] Read-only device — not seeding default contacts")
+        } else {
+            await contactService.createDefaultContactsIfNeeded()
+        }
+
         await contactService.reencodeOversizedAvatarsIfNeeded()
     }
 }

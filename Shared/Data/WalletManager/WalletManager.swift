@@ -699,15 +699,11 @@ class WalletManager {
                !currentDevice.walletHash.isEmpty {
                 Self.logger.info("✅ [WalletManager] Device registered with wallet hash - enabling read-only access")
                 isInitialized = true
-                
-                // Create default tags if needed (uses CloudKit)
-                await createDefaultTagsIfNeeded()
-                
-                if !isMainnet {
-                    // Create default contacts if needed (uses CloudKit)
-                    await createDefaultContactsIfNeeded()
-                }
-                
+
+                // No default tags or contacts here: seeding is the primary
+                // device's job (see createDefaultTagsIfNeeded), and the
+                // primary's copies arrive over CloudKit.
+
                 // Load addresses from database (CloudKit-synced)
                 await readOnlyAddressService?.loadAddresses()
                 Self.logger.info("📍 [WalletManager] Loaded addresses from database in read-only mode")

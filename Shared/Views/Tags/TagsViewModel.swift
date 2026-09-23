@@ -38,6 +38,16 @@ final class TagsViewModel {
     var hasTags: Bool {
         !walletManager.tags.isEmpty
     }
+
+    /// Whether to offer the "add default tags" shortcut.
+    ///
+    /// Hidden on a secondary device: seeding the wallet's defaults is the
+    /// primary device's job, and here the list is empty only until the first
+    /// CloudKit import lands — pressing it would duplicate the primary's set.
+    /// Creating individual tags by hand stays available.
+    var canAddDefaultTags: Bool {
+        !walletManager.isReadOnlyMode
+    }
     
     /// All tags from the wallet manager
     var tags: [TagModel] {

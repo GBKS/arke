@@ -68,7 +68,19 @@ extension WalletManager {
     }
     
     /// Create default tags if needed
+    ///
+    /// Primary devices only. The seeding condition is "no tags exist", which is
+    /// briefly true on a secondary device too — the store is empty until the
+    /// first CloudKit import lands — so a secondary would create its own nine
+    /// defaults and then receive the primary's, leaving 18 (2026-09-23, second
+    /// iPhone). Default data belongs to the wallet, not to the device, so only
+    /// the device that owns the wallet seeds it.
     func createDefaultTagsIfNeeded() async {
+        guard !isReadOnlyMode else {
+            Self.logger.info("⏭️ [WalletManager] Read-only device — not seeding default tags")
+            return
+        }
+
         await tagService.createDefaultTagsIfNeeded()
     }
     

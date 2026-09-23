@@ -268,13 +268,15 @@ struct TagsView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             
-            Button(String(localized: "tags_add_default_tags", defaultValue: "Add default tags")) {
-                Task {
-                    await viewModel.createDefaultTags()
+            if viewModel.canAddDefaultTags {
+                Button(String(localized: "tags_add_default_tags", defaultValue: "Add default tags")) {
+                    Task {
+                        await viewModel.createDefaultTags()
+                    }
                 }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
         }
         .frame(maxWidth: 400)
         .frame(maxHeight: .infinity)

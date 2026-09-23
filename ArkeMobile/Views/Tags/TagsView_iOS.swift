@@ -208,12 +208,14 @@ struct TagsView_iOS: View {
                 }
                 .buttonStyle(.borderedProminent)
                 
-                Button(String(localized: "button_add_default_tags", defaultValue: "Add Default Tags")) {
-                    Task {
-                        await viewModel.createDefaultTags()
+                if viewModel.canAddDefaultTags {
+                    Button(String(localized: "button_add_default_tags", defaultValue: "Add Default Tags")) {
+                        Task {
+                            await viewModel.createDefaultTags()
+                        }
                     }
+                    .buttonStyle(.bordered)
                 }
-                .buttonStyle(.bordered)
             }
         }
         .listRowBackground(Color.clear)
