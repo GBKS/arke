@@ -161,6 +161,84 @@ awaiting Christoph's call — the items below assume acceptance:
 
 ## Wallet Deletion & Device Registry
 
+- [ ] **NEXT UP — the wallet cannot be deleted from the account, and every
+  reinstall silently re-adopts it** (found 2026-09-23 immediately after the
+  rule 23 fix; unrelated to it). Deleting the wallet on device B and then on
+  device A a minute later takes the **local-only** path on *both* — device A's
+  delete dialog still says "other devices will keep access" — so
+  `clearEverywhere()` never runs and the seed, KVS hash, network config,
+  backups and CloudKit rows all survive. Every later reinstall then finds the
+  seed and the hash, adopts the wallet, and (per the create/import-only claim
+  policy) registers non-primary, landing on a read-only activity screen. Four
+  distinct defects, worst first:
+
+  1. **The last-device check loses to KVS lag.**
+     `hasOtherActiveDevices(walletHash:)` consults the KVS mirror before
+     SwiftData — deliberate and load-bearing, since a joining secondary that
+     reads the slower store would wipe the shared seed — but B's unregister
+     hasn't propagated to A's KVS cache yet, so A sees a key for a device that
+     is already gone. KVS entries have no staleness cutoff, and **S7's
+     informed "delete anyway" override is not built**, so there is no way out
+     from inside the app. The S7 entry's own warning ("the override valve is
+     now load-bearing: KVS ghosts block indefinitely") is exactly this.
+  2. **The two surfaces disagree, which makes it undiagnosable.** Linked
+     Devices reads the CloudKit registry and says "1 device"; the delete
+     dialog reads KVS and says others exist. Whatever the fix for (1), these
+     must agree, or name the blocking device.
+  3. **A phantom primary is invented.** `SecurityService.swift:243` does
+     `primaryDevice?.deviceName ?? "Another Device"`, so an account with
+     *zero* primaries reports `walletActiveElsewhere(deviceName: "Another
+     Device")`. The honest state is "no primary — promote this device".
+  4. **Self-inflicted demotion.** A fresh adopt registers `isPrimary=false`,
+     writes `device_<id>_isPrimary = false` to KVS, and then
+     `shouldBlockWalletAccess()` layer 2 reads back its own write and logs
+     "🛑 Blocked: iCloud KV store indicates demotion". Right outcome here,
+     wrong reason, misleading log.
+
+  Note the device ID survives app deletion (local keychain, non-synchronizable
+  — Apple documents that such items don't migrate, but they do survive an app
+  delete/reinstall on the same device), so a reinstall is the *same* device to
+  the registry while its UserDefaults tombstone is gone. Related: the tombstone
+  item and the explicit device-linking proposal in Startup & Initialization,
+  and S7/S11 in `Architecture/Multi_Device_Design.md`.
+- [x] **Local-only deletion destroyed every tag and contact assignment in the
+  account** — FIXED and **two-device verified 2026-09-23** (contract rule 23):
+  after deleting the wallet on the secondary, the primary kept its activity
+  list *and* its tag/contact assignments. Found on the same two-device verify:
+  deleting on the secondary blanked the primary's activity list. Third instance
+  of the rule 19/21 fault class — a device-scoped action destroying account-scoped state,
+  one call after the strategy-aware service did the right thing.
+
+  *Cause.* `WalletDataCleanupService` correctly skips all cloud data for
+  `.localOnly`, but `DeleteWalletSettingView.swift:215` then calls
+  `walletManager.deleteWallet()`, which takes no strategy and ran
+  `resetManagerState()` → `clearTransactionModels()` (deleting every
+  `PersistentTransaction`) and `resetBalancesAndDeletePersisted()`. Those
+  models are CloudKit-mirrored (`SwiftDataHelper.swift:49-51`,
+  `cloudKitDatabase: .private`), so the deletes replicated account-wide.
+  Transactions returned on the primary's next refresh (re-upserted from bark
+  movements — verified on device), but `PersistentTransaction` cascades to
+  `TransactionTagAssignment` **and** `TransactionContactAssignment`
+  (`PersistentTransaction.swift:49, 53`), and those are unrecoverable: bark
+  knows nothing about tags. Balance cache rows went too — invisible on a
+  primary (reads bark live), 0 balance on another read-only device.
+  `closeWallet()` shared the same reset and would have done the same while
+  deleting nothing; it has no callers today.
+
+  *Fix.* `resetManagerState()` is in-memory-only and uses
+  `BalanceService.resetBalancesInMemory()`, which had existed unused since the
+  service was written. Both row-deleting methods were removed outright rather
+  than gated, so no future caller can reintroduce this; the cleanup service
+  already deletes both on a full wipe, and it runs first, so nothing is lost.
+  `TransactionDeletionBlastRadiusTests` pins the cascade. The wipe-coverage
+  test could not have caught this: it asserts the cleanup service's declared
+  lists, not strays in other files.
+
+  *Accepted behaviour change:* the rows now stay after a local-only delete, so
+  if any transient screen renders the activity list before routing to the
+  rejoin screen it shows the account's transactions instead of an empty list.
+  Not observed on the verify; the deleting device routed to the rejoin screen
+  as rule 20 requires.
 - [x] **Shared network config deleted by local-only deletion — FIXED
   2026-08-20**: found by the first two-device verify — deleting the wallet on
   the primary cleared the iCloud KVS network config, stranding the secondary
@@ -483,7 +561,41 @@ green):
   matrix pinned by `ImportRecoveryLogicTests` (contract rule 2).
 - [ ] **Next pure-logic extraction**: wallet-detection decisions (contract
   rules 3/4/14 — overlaps the optional Phase 5 refactor above).
-- [ ] **NEXT UP — the wallet can run a whole session on the wrong network**.
+- [ ] **The wallet can run a whole session on the wrong network** — FIXED
+  2026-09-23 (contract rule 22), **on-device verify pending**. Step 0-pre is
+  now `WalletManager.reconcileNetworkConfigBeforeWalletOpen()`: it syncs from
+  iCloud and re-applies the account's network to the wallet object on every
+  path that opens the wallet — `performInitialization` and the background wake
+  in `WalletManager+Notifications` — and skips entirely when the wallet is
+  already open, because create/import save locally and mirror to iCloud
+  asynchronously (syncing there would overwrite the newer local value and
+  re-point a live wallet). An unresolvable cached id yields `.noUsableConfig`,
+  never `load()`'s mainnet fallback. `hasSavedConfig()` is gone — its "no local
+  config" framing was the bug. Decision covered by
+  `NetworkConfigReconciliationTests` (8 cases); 309/309 mobile, macOS builds.
+
+  **Fresh-install re-apply VERIFIED on device 2026-09-23.** A reinstall joining
+  an existing signet account logged, in order: `No saved config found, using
+  default: Bitcoin Mainnet` → `Synced network configuration from iCloud: signet
+  (was none)` → `🌐 Network config mismatch before wallet open — wallet was
+  built on Bitcoin Mainnet, account says Bitcoin Signet; re-applying` →
+  `Updating network configuration to: Bitcoin Signet`, and a later pass logged
+  `🌐 Network config in sync before wallet open: Bitcoin Signet`. No mainnet
+  database was created. A signet import on the primary also completed normally,
+  which exercises the skip-when-open guard without proving it by log.
+
+  **Remaining: observe the create-a-wallet guard.** On a fresh simulator,
+  create a wallet on signet and expect `🌐 Network config: wallet already open
+  on Bitcoin Signet — leaving it alone`, *not* a re-apply; then relaunch and
+  confirm the chosen network survived. Watch it in Xcode's console (run with
+  ⌘R, filter `Network config`) — `Logger` interpolation defaults to private, so
+  Console.app without a debugger attached may render the network names as
+  `<private>`; consider marking those four interpolations `privacy: .public`,
+  as ~10 other files already do for non-sensitive diagnostics. A
+  stale-but-present local config takes the same `.reapply` branch as the
+  verified case and is covered by the unit tests; it's only reproducible by
+  hand on macOS (edit the container plist after `killall cfprefsd`).
+  Original write-up:
   Two observations on the second iPhone, 2026-09-23:
   1. *Stale local config.* The device had `mainnet` in UserDefaults while iCloud
      said `signet`. `BarkWalletFFI` was built on mainnet at
@@ -507,11 +619,13 @@ green):
   network**, and the next launch (cache now corrected) hits the network-mismatch
   refusal that looked like total data loss in the 2026-08-20 incident.
 
-  Direction: make step 0-pre reconcile unconditionally — compare the wallet's
-  current network against the freshly-synced config and re-apply when they
-  differ, before anything opens the wallet — rather than gating on "no local
-  config". `updateNetworkConfig` already exists. Relates to the
-  network-mismatch self-heal item under Wallet Deletion & Device Registry.
+  Direction as implemented: reconcile before *every* open and never after,
+  rather than "unconditionally" — the create/import-then-`initialize()` flow
+  runs with the wallet open and a local config newer than iCloud's, where an
+  unconditional sync would have reintroduced the same wrong-network db from the
+  other direction. Relates to the network-mismatch self-heal item under Wallet
+  Deletion & Device Registry. The explicit device-linking gate below would
+  retire this patch rather than inherit it.
 - [ ] **Reinstalling after a local wallet deletion silently rejoins**: the
   deletion tombstone is `UserDefaults`
   (`SecurityService.localDeletionTombstoneKey`), which app deletion wipes, while
