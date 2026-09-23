@@ -16,44 +16,15 @@ import OSLog
 extension TransactionService {
     
     // MARK: Transaction Management
-    
-    /// Clear all persisted transactions from SwiftData
-    func clearTransactionModels() async {
-        guard let modelContext = modelContext else {
-            Self.logger.warning("No model context available for clearing transactions")
-            return
-        }
-        
-        do {
-            // Fetch all persisted transactions
-            let descriptor = FetchDescriptor<PersistentTransaction>()
-            let persistentTransactions = try modelContext.fetch(descriptor)
-            
-            // Count tagged transactions before deletion
-            let taggedTransactionsCount = persistentTransactions.filter { !(($0.tagAssignments ?? []).isEmpty) }.count
-            let totalTagAssignments = persistentTransactions.flatMap { $0.tagAssignments ?? [] }.count
-            
-            // Delete all transactions (cascade will handle tag assignments)
-            for transaction in persistentTransactions {
-                modelContext.delete(transaction)
-            }
-            
-            // Save changes
-            try modelContext.save()
-            
-            // Reset loaded state
-            hasLoadedTransactions = false
-            
-            Self.logger.info("Cleared \(persistentTransactions.count) persisted transactions")
-            if totalTagAssignments > 0 {
-                Self.logger.info("Also cleared \(totalTagAssignments) tag assignments from \(taggedTransactionsCount) tagged transactions")
-            }
-            
-        } catch {
-            Self.logger.error("Failed to clear persisted transactions: \(error)")
-        }
-    }
-    
+
+    // NOTE: there is deliberately no "clear all transactions" method here.
+    // `PersistentTransaction` is CloudKit-mirrored and cascades to
+    // `TransactionTagAssignment` / `TransactionContactAssignment`, so a bulk
+    // delete from this device-scoped service wipes the account's transactions
+    // *and* all of the user's tag and contact assignments — which is exactly
+    // what a local-only wallet deletion did until 2026-09-23. Bulk deletion is
+    // `WalletDataCleanupService`'s alone, on a full wipe (contract rule 23).
+
     /// Clean up orphaned transactions that no longer exist on the server but have been locally tagged
     /// This is a manual cleanup method that can be called when needed
     func cleanupOrphanedTaggedTransactions() async {

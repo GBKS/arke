@@ -595,8 +595,17 @@ extension WalletManager {
             .appendingPathComponent("bark-data-ffi")
     }
     
-    /// Reset all manager and service state after wallet deletion
-    /// Clears all cached data, stops background services, and resets flags
+    /// Reset all manager and service state after wallet deletion or close.
+    /// Stops background services and clears in-memory state — and **only**
+    /// in-memory state: SwiftData rows are CloudKit-mirrored, so deleting them
+    /// here replicates account-wide. This method used to call
+    /// `clearTransactionModels()` and delete the persisted balances, which on a
+    /// local-only deletion destroyed every transaction row, and with it (via
+    /// `.cascade`) every tag and contact assignment in the account — the
+    /// primary's activity list went blank while the deletion was supposed to
+    /// touch this device alone (2026-09-23; contract rule 23, same fault class
+    /// as rules 19 and 21). Row deletion belongs to `WalletDataCleanupService`,
+    /// which owns the strategy and already wipes both on a full wipe.
     private func resetManagerState() async {
         // Stop all background services
         exitProgressionService?.stop()
@@ -614,14 +623,15 @@ extension WalletManager {
         hasEverSyncedSuccessfully = false
         UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
 
-        // Reset balance service state
-        balanceService?.arkBalance = nil
-        balanceService?.onchainBalance = nil
-        balanceService?.totalBalance = nil
-        balanceService?.error = nil
-        
-        // Reset transaction service state (clear transactions)
-        await transactionService?.clearTransactionModels()
+        // Reset balance service state (in-memory; the persisted rows are the
+        // account's and are wiped by WalletDataCleanupService on a full wipe)
+        balanceService?.resetBalancesInMemory()
+
+        // Reset transaction service state. `transactions` is a computed fetch
+        // from SwiftData, so there is no in-memory list to clear — and the rows
+        // must stay. Post-deletion routing sends a local-only delete to the
+        // rejoin screen and a full wipe to onboarding (contract rule 20), so no
+        // transaction list is presented from here either way.
         transactionService?.error = nil
         transactionService?.hasLoadedTransactions = false
 
@@ -629,9 +639,6 @@ extension WalletManager {
         addressService?.arkAddress = ""
         addressService?.onchainAddress = ""
         addressService?.error = nil
-
-        // Clear persisted balance data (full deletion for wallet removal)
-        balanceService?.resetBalancesAndDeletePersisted()
 
         // Clear in-memory exit state (persistent exit history is cleared by
         // WalletDataCleanupService during wallet deletion)

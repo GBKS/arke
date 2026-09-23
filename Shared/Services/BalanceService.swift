@@ -194,9 +194,13 @@ class BalanceService {
     
     // MARK: - State Reset
     
-    /// Reset only in-memory balance state without deleting persisted data
-    /// Use this for temporary resets (e.g., device migration, service restarts)
-    /// The persisted balances will be reloaded on next startup or sync from CloudKit
+    /// Reset in-memory balance state, leaving the persisted rows alone.
+    /// The only reset this service offers, including for wallet deletion and
+    /// close: `ArkBalanceModel` / `OnchainBalanceModel` are CloudKit-mirrored,
+    /// so deleting them from here replicates account-wide and zeroes a
+    /// read-only device's displayed balance. Deleting them is
+    /// `WalletDataCleanupService.deleteBalanceCache()`'s job, on a full wipe
+    /// (contract rule 23). The rows reload on the next startup or sync.
     func resetBalancesInMemory() {
         arkBalance = nil
         onchainBalance = nil
@@ -204,23 +208,7 @@ class BalanceService {
         error = nil
         print("🔄 Balance state reset (in-memory only, persisted data preserved)")
     }
-    
-    /// Reset all balance state AND delete persisted data
-    /// Only use this for complete wallet deletion scenarios
-    func resetBalancesAndDeletePersisted() {
-        arkBalance = nil
-        onchainBalance = nil
-        totalBalance = nil
-        error = nil
-        
-        // Clear persisted balance data
-        Task {
-            await clearPersistedArkBalance()
-            await clearPersistedOnchainBalance()
-        }
-        print("🔄 Balance state reset (including persisted data deletion)")
-    }
-    
+
     /// Check if any balance data is available
     var hasBalanceData: Bool {
         arkBalance != nil && onchainBalance != nil
@@ -363,31 +351,6 @@ extension BalanceService {
         }
     }
     
-    /// Clear persisted Ark balance from SwiftData
-    private func clearPersistedArkBalance() async {
-        guard let modelContext = modelContext else {
-            print("⚠️ No model context available for clearing persisted Ark balance")
-            return
-        }
-        
-        do {
-            let descriptor = FetchDescriptor<ArkBalanceModel>(
-                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
-            )
-            let existingBalances = try modelContext.fetch(descriptor)
-            
-            for balance in existingBalances {
-                modelContext.delete(balance)
-            }
-            
-            try modelContext.save()
-            print("🗑️ Cleared persisted Ark balance")
-            
-        } catch {
-            print("❌ Failed to clear persisted Ark balance: \(error)")
-        }
-    }
-    
     /// Load persisted Onchain balance from SwiftData (synchronous version for instant UI display)
     private func loadPersistedOnchainBalanceSync() {
         guard let modelContext = modelContext else {
@@ -464,28 +427,4 @@ extension BalanceService {
         }
     }
     
-    /// Clear persisted Onchain balance from SwiftData
-    private func clearPersistedOnchainBalance() async {
-        guard let modelContext = modelContext else {
-            print("⚠️ No model context available for clearing persisted Onchain balance")
-            return
-        }
-        
-        do {
-            let descriptor = FetchDescriptor<OnchainBalanceModel>(
-                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
-            )
-            let existingBalances = try modelContext.fetch(descriptor)
-            
-            for balance in existingBalances {
-                modelContext.delete(balance)
-            }
-            
-            try modelContext.save()
-            print("🗑️ Cleared persisted Onchain balance")
-            
-        } catch {
-            print("❌ Failed to clear persisted Onchain balance: \(error)")
-        }
-    }
 }
