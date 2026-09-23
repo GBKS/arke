@@ -68,6 +68,78 @@ awaiting Christoph's call — the items below assume acceptance:
   restoring another device's backup). A restored device generates a fresh ID
   and registers as a new device — an ordinary S11 ghost, not a shared
   identity. No liveness nonce needed.
+- [x] **Read-only devices never re-read their synced data — FIXED
+  2026-09-23**: `ReadOnlyBalanceService` / `ReadOnlyAddressService` read the
+  CloudKit-synced rows once at init, which on a fresh install happens *before*
+  the first import lands, so the second iPhone showed a 0 balance and an empty
+  receive address for the whole session (correct after a relaunch).
+  `ReadOnlyBalanceService.refreshBalances()` had no callers at all, and
+  `WalletManager.refreshBalances()` forwarded only to the primary
+  `balanceService`. Both services now observe `cloudKitDataDidChange` (the
+  `DeviceRegistrationService` pattern), `refreshBalances()` is routed by mode,
+  and `performRefresh()` short-circuits in read-only mode to re-read synced
+  data instead of running server work that can only fail. The balance
+  singletons also resolve newest-first, since CloudKit forbids the unique
+  constraint that would keep `ark_balance` single. `ReadOnlySyncedDataTests`.
+  Still needs the two-device on-device verify (below).
+- [ ] **On-device verify on the second iPhone**: with the app already running,
+  move funds on the primary and confirm the secondary's balance updates without
+  a relaunch; check the receive screen shows an address; pull-to-refresh leaves
+  no error banner. Then reinstall on the secondary and confirm it ends up with
+  9 tags and 1 faucet contact, not 18 and 3.
+  Partial field evidence 2026-09-23: after a reinstall the balance and activity
+  appeared later in the same session without a relaunch, which is the observer
+  doing its job — confirm in the log that
+  `Loaded Ark balance from CloudKit (spendable: …)` follows a
+  `[CloudKit] Remote change detected` round.
+- [ ] **A payment on the primary does not promptly update the secondary's
+  balance**, while tags and activity do. Narrowed 2026-09-23: tags edited *on
+  the primary* appeared on the secondary immediately, so
+  `cloudKitDataDidChange` fired and `ReadOnlyBalanceService.refreshBalances()`
+  ran in that same round — the re-read is not the problem. One hypothesis is
+  already disproved: it is not a stale registered object, because a
+  cross-context in-place row update *is* visible to the re-fetch
+  (`ReadOnlySyncedDataTests/balancePicksUpInPlaceUpdate`). That leaves the
+  write/export side — either the primary did not persist a balance update at
+  that moment or the record was not in that export. Evidence needed: the
+  primary's log around the payment (does `💾 Updated persisted Ark balance`
+  appear?) paired with the secondary's
+  `📱 Loaded Ark balance from CloudKit (spendable: N)` — N says what the store
+  actually held. Check the rapid-fire item below at the same time.
+- [ ] **`CloudKitObserver` drops remote-change notifications instead of
+  deferring them**: the publisher already spaces emissions ≥1.5s apart via
+  `debounce`, and `handleRemoteChange` then returns early for anything arriving
+  within `minimumChangeInterval` (2.0s) of the last handled one — with no
+  re-schedule. So an emission landing in the 1.5–2.0s band is discarded, and
+  that batch's changes stay invisible until some later, unrelated change.
+  `@Query`-backed UI is unaffected (it observes the store directly); anything
+  refreshed *only* by `cloudKitDataDidChange` inherits the hole — which is most
+  of the read-only path. Tell: `⏭️ [CloudKit] Ignoring rapid-fire notification`.
+- [ ] **A freshly installed secondary shows an empty wallet with no
+  explanation** for as long as the first CloudKit import takes (over a minute
+  observed 2026-09-23 — it reads as "the wallet is broken").
+  `ReadOnlyBalanceService` already knows it is in this state ("waiting for
+  CloudKit sync"); surface it as a "syncing from iCloud" state instead of a
+  0 balance and an empty activity list.
+- [x] **Secondary devices seeded their own default tags and contacts — FIXED
+  2026-09-23**: the seeding condition is "none exist", which is briefly true on
+  a secondary device too (empty store until the first CloudKit import), so
+  `initializeReadOnlyMode()` created its own 9 default tags and the faucet
+  contact and then received the primary's — observed 18 tags and 3 contacts on
+  the second iPhone. Seeding is now primary-only: guarded in
+  `WalletManager.createDefaultTagsIfNeeded()` /
+  `createDefaultContactsIfNeeded()` (so the TagsView "add default tags"
+  shortcut can't do it either — that button is hidden on secondaries via
+  `TagsViewModel.canAddDefaultTags`), and the calls are gone from read-only
+  init. The avatar re-encode still runs on either kind of device: it repairs
+  already-synced rows rather than creating data. No unit test —
+  `WalletManager` has no test harness in this project — so this one rests on
+  the on-device check below.
+- [ ] **Clean up the duplicate defaults already in the account**: the second
+  iPhone's extra 9 tags and 2 contacts are in CloudKit now. Needs a decision:
+  hand-delete on a device, or a one-shot dedup by name that re-points tag and
+  contact assignments before deleting the loser (`PersistentTag` has no unique
+  constraint, so a merge has to move `tagAssignments` first).
 
 ## Test Infrastructure
 
@@ -411,6 +483,61 @@ green):
   matrix pinned by `ImportRecoveryLogicTests` (contract rule 2).
 - [ ] **Next pure-logic extraction**: wallet-detection decisions (contract
   rules 3/4/14 — overlaps the optional Phase 5 refactor above).
+- [ ] **NEXT UP — the wallet can run a whole session on the wrong network**.
+  Two observations on the second iPhone, 2026-09-23:
+  1. *Stale local config.* The device had `mainnet` in UserDefaults while iCloud
+     said `signet`. `BarkWalletFFI` was built on mainnet at
+     `WalletManager.init`; `syncFromiCloud()` later corrected the cache and
+     posted `networkConfigDidSyncFromiCloud` — which **nothing observes** — so
+     the correction only took effect on the next launch.
+  2. *Fresh install (wallet deleted, app deleted, reinstalled).* No local config
+     at all, so `performInitialization()`'s step 0-pre recovery
+     (`WalletManager.swift`, contract rule 21) should have fired. It didn't:
+     its guard is `!hasSavedConfig()`, and MainView's `.task` →
+     `syncFromiCloud()` had already written signet into UserDefaults seconds
+     earlier, so the guard read false and skipped both the sync *and* the
+     `wallet?.updateNetworkConfig(recovered)` that fixes the wallet object. The
+     recovery path is disarmed by the very sync that fetched the value. Tell:
+     the `⚠️ No local network config` warning never prints, and the session
+     fetches `mempool.second.tech/api` (mainnet, height 968278) instead of
+     `esplora.signet.2nd.dev`.
+
+  Read-only devices get off lightly — they never open the wallet, so no mainnet
+  db is created. **On a primary device the same race opens bark on the wrong
+  network**, and the next launch (cache now corrected) hits the network-mismatch
+  refusal that looked like total data loss in the 2026-08-20 incident.
+
+  Direction: make step 0-pre reconcile unconditionally — compare the wallet's
+  current network against the freshly-synced config and re-apply when they
+  differ, before anything opens the wallet — rather than gating on "no local
+  config". `updateNetworkConfig` already exists. Relates to the
+  network-mismatch self-heal item under Wallet Deletion & Device Registry.
+- [ ] **Reinstalling after a local wallet deletion silently rejoins**: the
+  deletion tombstone is `UserDefaults`
+  (`SecurityService.localDeletionTombstoneKey`), which app deletion wipes, while
+  the seed (iCloud Keychain) and the wallet hash (KVS) survive — so detection
+  says "wallet exists" and routes into the wallet instead of `RejoinWalletView`
+  (observed 2026-09-23). Defensible as designed; decide whether a reinstall
+  after a local delete should land on the rejoin screen, which means storing the
+  tombstone somewhere that survives app deletion — the keychain device-ID slot
+  (`WhenUnlockedThisDeviceOnly`, non-synchronizable) has exactly that lifetime.
+  **Likely superseded** by the explicit device linking proposal below: a link
+  marker whose absence means "ask" needs no survival mechanism at all.
+- [ ] **DECIDE — explicit device linking** (PROPOSAL written 2026-09-23 in
+  `Architecture/Multi_Device_Design.md`, cross-cutting section after S13, with
+  pointers on S2/S6/S9): should an install ever adopt the account's wallet
+  silently, or should it disclose what it found and have the user acknowledge
+  it once? Single-action disclosure, not a two-button choice — principle 1
+  (one wallet per iCloud account) means there is nothing to decline into.
+  Four open questions are listed in the proposal; it needs a decision before
+  any of it is built, and it would absorb both the tombstone item above and the
+  "freshly installed secondary shows an empty wallet" item.
+- [ ] **~600 lines of `CoreData: error` on a first launch after reinstall**: the
+  App Group's `Library/Application Support` directory doesn't exist yet, so
+  adding the persistent store fails and Core Data recovers ("Recovery attempt …
+  was successful"). Harmless but it buries real errors, and that launch took
+  13.8s just to register the device. Create the directory before building the
+  container.
 
 ## Background Execution
 
@@ -585,6 +712,42 @@ done).
   it.
 - [ ] **Exit UI** on desktop.
 - [ ] **Notifications** on desktop.
+
+## SwiftData / CloudKit Invalidation
+
+Context: on 2026-09-23 the second iPhone crashed on launch rendering the
+activity list — the CloudKit import deleted a `TransactionTagAssignment` row
+while `PersistentTransaction.associatedTags` was walking the transaction's
+already-materialized `tagAssignments` array, and reading the dead instance
+trapped ("This model instance was invalidated because its backing data could no
+longer be found the store"). The rule that came out of it: **resolve
+relationships with a fetch and read the results in the same synchronous
+main-actor pass; never read element properties off a cached relationship array
+that may have been materialized in an earlier pass.** Fixed for the transaction
+list path (`associatedTags`/`associatedContacts`, `PersistentTag`/
+`PersistentContact.associatedTransactions`, `liveAddresses`, plus the bulk
+`TransactionMetadataSnapshot` the lists render from), covered by
+`TransactionMetadataResolutionTests`.
+
+- [ ] **On-device verify on the second iPhone**: launch during the initial
+  CloudKit import (the crash repro), then assign/unassign a tag from the
+  transaction detail and confirm the list label updates (the `dataVersion`
+  dependency moved from the row to the list), and check a tag-filtered and a
+  contact-filtered list.
+- [ ] **`TransactionCardStackView_iOS` holds `[PersistentTransaction]`** in
+  `@State` for the overlay's lifetime and re-converts on index/`dataVersion`
+  changes. Tag and contact resolution is safe now, but if an import deletes the
+  movement row itself while the overlay is open, reading the transaction's own
+  properties still traps. Fix: have the presenting list pass txids (safe to read
+  at tap time) and re-fetch the window; needs the entrance/drag choreography
+  re-verified on device, so it was left out of the 2026-09-23 pass.
+- [ ] **`MetadataExportService` walks cached assignment arrays** (it needs
+  `assignedDate`, which the snapshot drops). Synchronous from fetch to write, so
+  exposure is limited to transactions the list registered earlier; rewrite as a
+  grouped fetch of the assignment tables if export ever traps.
+- [ ] **`PendingPaymentMetadata.associatedTags`** still walks its cached
+  `tagAssignments`. Send-flow only and locally created moments before use, and
+  the type has no stable id to fetch by — revisit if the send sheet ever traps.
 
 ## UI / Refactors
 

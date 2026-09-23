@@ -128,6 +128,8 @@ Walkthrough:
 - **End state:** device is a secondary; the first device remains primary.
 
 Status: shipped (`Read_Only_Mode.md`); part of the standing two-device verify.
+The "no onboarding" step is under review — see the explicit device linking
+proposal after S13.
 
 ### S3 — Deliberate primary swap (both devices accessible) ⚠️
 User promotes the secondary; the old primary observes the KVS
@@ -222,7 +224,11 @@ Walkthrough:
 - **If they change their mind:** one tap rejoins; the wallet restores from the preserved iCloud backup.
 
 Status: shipped 2026-08-19 (`Wallet_Deletion_And_Rejoin.md`); the two-device
-on-device verify is the gate.
+on-device verify is the gate. Known hole: the tombstone lives in UserDefaults,
+so deleting the *app* after "delete from this device" loses it and the reinstall
+goes straight into the wallet rather than the rejoin screen (observed
+2026-09-23). The explicit device linking proposal after S13 would cover that
+case without needing a tombstone that survives app deletion.
 
 ### S7 — Delete the wallet everywhere ◻ (PROPOSED 2026-08-19 — awaiting decision)
 User wants the wallet gone from all devices and iCloud.
@@ -319,7 +325,8 @@ Walkthrough:
 - **Worth knowing:** deleting the app is NOT "delete from this device" — it doesn't unregister the device or remove anything from the account.
 
 Status: works via the detection/restore paths; part of startup-detection
-hardening, no dedicated verify.
+hardening, no dedicated verify. The "no onboarding, no questions" step is under
+review — see the explicit device linking proposal after S13.
 
 ### S10 — iCloud sign-out or Apple-ID switch on a device ◻ (decided 2026-08-19)
 Signing out of iCloud removes synced keychain items and detaches KVS; the
@@ -385,6 +392,150 @@ Walkthrough:
 - **Does (on any surviving device):** Settings → Linked Devices → unlink the lost one.
 - **Behind the scenes:** registration removed; spending was never possible from the lost device (it wasn't primary).
 - **Security note:** same as S4 — if the lost device may be unlocked in someone else's hands, the recovery phrase on it is the real exposure; consider moving funds.
+
+## Cross-cutting PROPOSAL — explicit device linking ◻ (PROPOSED 2026-09-23 — awaiting decision)
+
+Touches S2, S6 and S9. Their walkthroughs describe today's behaviour and are
+unchanged until this is decided.
+
+**The question (Christoph): "I am wondering if any install should ever just
+join a wallet. Maybe it's nicer for the user to see a message about how they
+already have an existing wallet, and whether they want to use it. Sometimes
+we're a bit overeager in just instantly doing things for users, when a tiny bit
+of friction is technically safer and allows the user to better follow along."**
+
+Today, adoption is silent. S2: "**Sees:** no onboarding — the wallet appears
+directly, in read-only mode". S9: "the wallet loads normally — no onboarding, no
+questions." Observed on a second iPhone 2026-09-23: after deleting the wallet in
+the app *and* deleting the app, a reinstall went straight into the wallet in
+read-only mode. Nothing was wrong with that path — it is what the code is
+written to do — but it read as the app having decided something on its own.
+
+**Why it is worth changing**, strongest argument first:
+
+1. **It gives startup a place to wait** (Christoph, 2026-09-23: "it may simplify
+   the application/wallet startup logic by not instantly trying to reconcile all
+   the data when iCloud/Keychain/etc might still be syncing"). Today a fresh
+   install decides from partially-arrived state and patches up afterwards. Every
+   defect found in the 2026-09-23 two-device session is that one shape:
+
+   | Defect | Decided too early from | Compensated by |
+   |---|---|---|
+   | Activity-list launch crash | rows mutating mid-import while the list rendered | fetch-resolved relationships |
+   | 0 balance, empty receive address | rows not imported yet | CloudKit observers on the read-only services |
+   | 18 tags, 3 contacts | "no tags exist", true only because the import had not landed | primary-only seeding |
+   | Whole session on mainnet | UserDefaults config read before the KVS reconciliation | still open |
+   | Route churn | detection ran before the KVS demotion arrived | re-detection a minute later |
+
+   The compensation is visible in one launch of the reinstall log:
+   `Initialized AddressService for primary mode` *and*
+   `Initialized ReadOnlyAddressService` in the same session, with
+   `route=wallet` at launch becoming `route=read-only` 60s later. None of that
+   is a bug in a specific place — it is the cost of having no state for "the
+   account has a wallet and this install has not taken it up yet". **The link
+   gate introduces that missing state**, and lets the fresh-install path
+   reconcile the network config *before* the bark wallet is constructed (killing
+   the mainnet race structurally rather than fixing its guard), let the first
+   import land behind the screen, evaluate "are there tags?" when the answer is
+   meaningful, and register the device once instead of register → re-detect →
+   re-register.
+2. Adoption is the only device-state transition in the model that happens with
+   no user action. Create, import, promote, demote, unlink, rejoin and delete
+   are all explicit and all have screens. Linking is the exception, and the
+   inconsistency is the tell.
+3. The user cannot learn the multi-device model if the system never mentions it.
+   A wallet appears holding history made elsewhere, with sending disabled, and
+   nothing ever says why. That explanation is needed anyway — this is the honest
+   place to put it.
+4. It is one-time friction at the one moment the user is already in a setup
+   frame of mind.
+
+**Scope discipline — what it does *not* buy.** Three limits, recorded so the
+rationale above does not drift into over-claiming:
+
+- **It does not replace steady-state robustness.** After linking, CloudKit keeps
+  delivering changes for the life of the install. The invalidation-safe reads
+  and the read-only refresh observers stay load-bearing; reading this proposal
+  as "the patches can go now" reintroduces the first two rows of that table.
+  The gate removes *first-launch* races only.
+- **The wait must be bounded.** iCloud Keychain can take minutes or never
+  deliver (Keychain off) — S2's `seedNotSynced` sub-case exists for exactly
+  that. "Wait until consistent" would lock a user out of their own read-only
+  wallet, so: wait with a deadline, then proceed and explain.
+- **It does not touch the common path.** A primary device's ordinary launch,
+  where most of the launch-sequence complexity lives, is unaffected.
+
+**What this is not:** a security control. If someone else holds the iCloud
+account and installs Arké, a confirmation does not stop them — they confirm.
+The mitigations for that threat are the "new device joined your wallet"
+notification to existing devices (failure modes §C) and the primary-claim
+policy (principle 2). This proposal should be argued on comprehension and
+consistency, or the real mitigation never gets built.
+
+### Shape: disclosure, not a choice
+
+A first draft offered "Link this device" with a "Not now" escape. That is wrong,
+and principle 1 is why: one wallet per iCloud account. Declining cannot lead
+anywhere — a second wallet is refused in code
+(`BarkErrorArke.walletAlreadyOnAccount`), so "Not now" leaves the user on a dead
+end whose only exit is the button they just declined. A fork whose alternative
+is "look at a wall" is the overeagerness problem restated, not its fix.
+
+So: **a single-action disclosure.** The screen tells the user what was found and
+what will happen, and they acknowledge it. Recorded here so the two-button
+version is not re-proposed.
+
+- Names the wallet's origin (primary device name, creation date) so the user
+  recognises it as theirs.
+- States the consequence: this device starts read-only until promoted; the
+  recovery phrase is already in iCloud Keychain.
+- One action. No decline button — closing the app is the natural "not now", and
+  the next launch offers it again.
+- Natural home for the first-import wait, which today shows an empty wallet with
+  a 0 balance for as long as the CloudKit import takes (over a minute observed
+  2026-09-23).
+
+**Vocabulary: "link", not "join".** The app already says "Unlink Device",
+"Linked Devices", "All linked devices will lose access"; "join" appears nowhere,
+and it implies joining someone else's thing rather than adding another of your
+own devices to your own wallet.
+
+### Trigger, and why it retires the tombstone problem
+
+Ask when the account has a wallet (KVS hash and/or synced seed) **and this
+install has no record of having linked it**. Never on a launch where that record
+exists, so the ~0.13s definitive-detection path is untouched for everyone who is
+already set up. Creating or importing here *is* the link and records it.
+
+The record is per-install state whose **absence** means "ask", so UserDefaults is
+the correct home and being wiped by app deletion is the desired behaviour. Note
+the symmetry with the open tombstone item: the local-deletion tombstone needed
+to *survive* app deletion to work and didn't
+(`SecurityService.localDeletionTombstoneKey`, wiped on delete — which is why the
+reinstall above rejoined silently). A link marker needs to *not* survive, and
+doesn't. Fail-safe by construction, and it makes "move the tombstone into the
+keychain" unnecessary: the reinstall-after-delete case falls out of the same
+screen.
+
+### Open questions (decide before building)
+
+- Does a **primary** device reinstalling see the same screen? Recommend yes,
+  same copy minus the read-only line.
+- Really no decline button? Recommend none — with one wallet per account there
+  is nothing to decline into, and a parked state is a fourth thing to maintain.
+- When the seed arrives later on a device that linked while read-only (S2
+  sub-case), is that a second acknowledgement? Recommend no — the link already
+  covered it.
+- Must a background or push wake refuse to initialise the wallet on an unlinked
+  install? Needs checking — the BGTask handler registers regardless of route.
+
+### On acceptance
+
+New detection route (`accountWalletAwaitingLink`, between "wallet exists" and
+"show wallet"); one screen plus strings, which pulls in a de/ja/zh-Hant pass
+(`Localization/Translation_Rollout_Plan.md`); a Launch_Sequence_Contract rule
+("never adopt an account wallet without a recorded local link"); rewrites of the
+S2, S6 and S9 walkthroughs; and the tombstone follow-up closed as superseded.
 
 ## Failure modes
 
