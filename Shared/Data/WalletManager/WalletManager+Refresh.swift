@@ -123,6 +123,13 @@ extension WalletManager {
     /// Refresh all balances when notification channel is lagging
     /// Called by WalletNotificationService
     func refreshBalances() async {
+        // A read-only device has no wallet session to query — its balances are
+        // CloudKit-synced rows, so re-read those instead.
+        if isReadOnlyMode {
+            readOnlyBalanceService?.refreshBalances()
+            return
+        }
+
         await balanceService?.refreshBalances()
     }
 }

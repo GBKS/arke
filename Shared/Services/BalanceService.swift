@@ -293,8 +293,12 @@ extension BalanceService {
         }
         
         do {
+            // Newest first: the row is a singleton by convention, but CloudKit
+            // forbids unique constraints, so two devices can each create an
+            // "ark_balance" row and an unsorted `.first` would pick arbitrarily.
             let descriptor = FetchDescriptor<ArkBalanceModel>(
-                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let persistedBalances = try modelContext.fetch(descriptor)
             
@@ -330,9 +334,11 @@ extension BalanceService {
         }
         
         do {
-            // Try to find existing balance record
+            // Try to find existing balance record (newest first, so a
+            // duplicate row can't shadow the one other devices are reading)
             let descriptor = FetchDescriptor<ArkBalanceModel>(
-                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let existingBalances = try modelContext.fetch(descriptor)
             
@@ -390,8 +396,10 @@ extension BalanceService {
         }
         
         do {
+            // Newest first — see loadPersistedArkBalanceSync
             let descriptor = FetchDescriptor<OnchainBalanceModel>(
-                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let persistedBalances = try modelContext.fetch(descriptor)
             
@@ -427,9 +435,11 @@ extension BalanceService {
         }
         
         do {
-            // Try to find existing balance record
+            // Try to find existing balance record (newest first — see
+            // updateArkBalanceFromResponse)
             let descriptor = FetchDescriptor<OnchainBalanceModel>(
-                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let existingBalances = try modelContext.fetch(descriptor)
             

@@ -29,6 +29,9 @@ class ReadOnlyAddressService {
 
     private let modelContext: ModelContext
 
+    /// Token for the CloudKit change observer, so it is only installed once
+    @ObservationIgnored private var cloudKitChangeObserver: NSObjectProtocol?
+
     // MARK: - Initialization
 
     init(modelContext: ModelContext) {
@@ -36,6 +39,30 @@ class ReadOnlyAddressService {
 
         // Load cached addresses immediately
         updateCachedAddresses()
+
+        observeCloudKitChanges()
+    }
+
+    // MARK: - CloudKit Change Observation
+
+    /// Re-reads the address rows whenever CloudKit imports records mid-session.
+    /// Like the balances, these are read once at init, which on a fresh install
+    /// happens before the first import lands — leaving the receive screen empty
+    /// for the rest of the session (2026-09-23, second iPhone).
+    /// CloudKitObserver already debounces the underlying remote-change
+    /// notifications.
+    private func observeCloudKitChanges() {
+        guard cloudKitChangeObserver == nil else { return }
+
+        cloudKitChangeObserver = NotificationCenter.default.addObserver(
+            forName: .cloudKitDataDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updateCachedAddresses()
+            }
+        }
     }
 
     // MARK: - Public Methods

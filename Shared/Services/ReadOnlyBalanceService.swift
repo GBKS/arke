@@ -29,9 +29,12 @@ class ReadOnlyBalanceService {
     var error: String?
     
     // MARK: - Dependencies
-    
+
     private var modelContext: ModelContext?
-    
+
+    /// Token for the CloudKit change observer, so it is only installed once
+    @ObservationIgnored private var cloudKitChangeObserver: NSObjectProtocol?
+
     // MARK: - Computed Properties for UI
     
     /// True if there are any pending balances
@@ -49,19 +52,46 @@ class ReadOnlyBalanceService {
     init() {
         // No dependencies needed for read-only mode
     }
-    
+
     // MARK: - Model Context Setup
-    
+
     /// Set the model context and load persisted balances
     func setModelContext(_ context: ModelContext) {
         self.modelContext = context
-        
+
         // Load persisted balances synchronously for instant UI display
         loadPersistedArkBalanceSync()
         loadPersistedOnchainBalanceSync()
         updateTotalBalance()
+
+        observeCloudKitChanges()
     }
-    
+
+    // MARK: - CloudKit Change Observation
+
+    /// Re-reads the balance rows whenever CloudKit imports records mid-session.
+    /// Without this, a secondary device shows whatever was in the store at
+    /// launch for the rest of the session: the load above runs once, and on a
+    /// fresh install it runs *before* the first import lands, so the balance
+    /// stays 0 until the next launch (2026-09-23, second iPhone). Nothing else
+    /// refreshes it — pull-to-refresh is wallet/server work, which a read-only
+    /// device doesn't do. CloudKitObserver already debounces the underlying
+    /// remote-change notifications.
+    private func observeCloudKitChanges() {
+        guard cloudKitChangeObserver == nil else { return }
+
+        cloudKitChangeObserver = NotificationCenter.default.addObserver(
+            forName: .cloudKitDataDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.refreshBalances()
+            }
+        }
+    }
+
+
     // MARK: - Balance Loading
     
     /// Load persisted Ark balance from SwiftData (synchronous)
@@ -72,11 +102,15 @@ class ReadOnlyBalanceService {
         }
         
         do {
+            // Newest first: the row is a singleton by convention, but CloudKit
+            // forbids unique constraints, so two devices can each create an
+            // "ark_balance" row and an unsorted `.first` would pick arbitrarily.
             let descriptor = FetchDescriptor<ArkBalanceModel>(
-                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" }
+                predicate: #Predicate<ArkBalanceModel> { $0.id == "ark_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let persistedBalances = try modelContext.fetch(descriptor)
-            
+
             if let persistedBalance = persistedBalances.first {
                 self.arkBalance = persistedBalance
                 print("📱 [ReadOnlyBalanceService] Loaded Ark balance from CloudKit (spendable: \(persistedBalance.spendableSat) sats)")
@@ -96,11 +130,13 @@ class ReadOnlyBalanceService {
         }
         
         do {
+            // Newest first — see loadPersistedArkBalanceSync
             let descriptor = FetchDescriptor<OnchainBalanceModel>(
-                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" }
+                predicate: #Predicate<OnchainBalanceModel> { $0.id == "onchain_balance" },
+                sortBy: [SortDescriptor(\.lastUpdated, order: .reverse)]
             )
             let persistedBalances = try modelContext.fetch(descriptor)
-            
+
             if let persistedBalance = persistedBalances.first {
                 self.onchainBalance = persistedBalance
                 print("📱 [ReadOnlyBalanceService] Loaded Onchain balance from CloudKit (spendable: \(persistedBalance.spendableSat) sats)")

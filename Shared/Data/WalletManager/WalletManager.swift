@@ -772,15 +772,25 @@ class WalletManager {
         }
         #endif
         
-        defer { 
+        defer {
             hasLoadedOnce = true
         }
-        
-        guard wallet != nil else { 
-            error = "Wallet not initialized"
-            return 
+
+        // A read-only device has no server session: every step below would fail
+        // and leave an error banner behind. Its data arrives over CloudKit, so
+        // pull-to-refresh means "re-read what has synced".
+        if isReadOnlyMode {
+            Self.logger.info("🔒 [Refresh] Read-only mode — re-reading CloudKit-synced data")
+            readOnlyBalanceService?.refreshBalances()
+            await readOnlyAddressService?.loadAddresses()
+            return
         }
-        
+
+        guard wallet != nil else {
+            error = "Wallet not initialized"
+            return
+        }
+
         // Track if any server communication succeeded
         var anyServerCallSucceeded = false
         
