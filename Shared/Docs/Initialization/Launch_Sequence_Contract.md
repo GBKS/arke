@@ -189,16 +189,74 @@ default-mainnet, whose signet db then failed to open with a network mismatch
 that looked like total data loss (2026-08-20). Same fault class as rule 19.
 `clearLocal()` vs `clearEverywhere()` make the scope explicit; the inventory
 of shared keys and their scopes lives in `SharedStateWipeCoverage`. Related:
-initialization recovers a missing local config from iCloud before the first
-wallet open (`performInitialization` step 0-pre) instead of silently
-defaulting to mainnet.
+rule 22 reconciles the wallet's network against that shared config before the
+first open instead of silently defaulting to mainnet.
 Enforced: `NetworkConfigPersistence.swift`, `WalletDataCleanupService.swift`
 (`SharedStateWipeCoverage`), `WalletManager.swift` (step 0-pre).
 Test: `WalletDeletionRejoinTests` (inventory consistency).
 
+**22. Every path that opens the wallet reconciles its network against the account first — and no path reconciles after.**
+The wallet object is built in `WalletManager.init` from the UserDefaults
+cache, which can be absent (reinstall, local deletion + rejoin) or
+stale-but-present (a switch that reached iCloud but not this device). Either
+way bark opens on the wrong network: a full session against the wrong chain,
+then rule 21's mismatch refusal on the next launch. Gating the recovery on
+"no local config" is what allowed it — `syncFromiCloud()` writes the very key
+the guard read, so MainView's `.task` sync disarmed it seconds before
+`initialize()` ran (2026-09-23). The second half of the rule is not optional:
+create/import set the network, save it locally, and mirror to iCloud
+*asynchronously*, then call `initialize()` with the wallet already open — so
+after an open the local value is the newer one, and syncing would overwrite a
+just-saved config with a stale iCloud id and re-point a live wallet. Hence the
+skip-when-open guard, and hence `reconciliation()` returning `.noUsableConfig`
+rather than `load()`'s mainnet fallback for an unresolvable id. Network config
+is the *only* class of state where the account's value overwrites this
+device's (payment data is never synced; the primary flag uses a deterministic
+winner rule) — and only in the window before an open.
+Enforced: `WalletManager.swift`
+(`reconcileNetworkConfigBeforeWalletOpen`, step 0-pre),
+`WalletManager+Notifications.swift` (background wake open),
+`NetworkConfigPersistence.swift` (`reconciliation`).
+Test: `NetworkConfigReconciliationTests` (the decision; the skip-when-open
+guard and the call-before-open ordering are code-only — sweep: grep
+`openWalletIfNeeded`, every call site must reconcile first).
+
+**23. Only `WalletDataCleanupService` deletes CloudKit-mirrored rows; every service-level reset is in-memory.**
+`WalletManager.deleteWallet()` takes no strategy parameter, so its
+`resetManagerState()` ran identically for a local-only delete and a full wipe
+— and it called `TransactionService.clearTransactionModels()` plus
+`BalanceService.resetBalancesAndDeletePersisted()`. Those models are in
+`appSchemaModels` with `cloudKitDatabase: .private`, so the deletes replicated
+account-wide: deleting the wallet on a secondary blanked the primary's activity
+list, and because `PersistentTransaction` cascades to
+`TransactionTagAssignment` and `TransactionContactAssignment`, it destroyed
+every tag and contact assignment in the account (2026-09-23). The transactions
+returned on the primary's next refresh — re-upserted from bark movements — but
+the assignments are unrecoverable, since bark knows nothing about them. Same
+fault class as rules 19 and 21: a device-scoped action destroying
+account-scoped state, one call after the strategy-aware service did the right
+thing. Both dangerous methods were deleted rather than gated —
+`resetBalancesInMemory()` already existed for this and had never been wired up.
+Note the limit of the existing coverage test: it asserts that
+`WalletWipeCoverage` accounts for every schema model, which says nothing about
+strays in other files.
+Enforced: `WalletManager+Wallet.swift` (`resetManagerState`),
+`TransactionService+Utilities.swift` (comment in place of the method),
+`BalanceService.swift` (`resetBalancesInMemory` is the only reset).
+Test: `TransactionDeletionBlastRadiusTests` (the cascade, not the call site —
+sweep: `grep "modelContext.delete"`, every hit outside
+`WalletDataCleanupService` must be a single-row delete, a dedup
+(`TransactionService+Upsert`, `SwiftDataHelper`, `BackupStatus`), or a
+user-initiated bulk action. The sweep as of 2026-09-23 has two of the last
+kind, both currently unwired: `TagService.deleteAllTags()` and
+`ContactService.deleteAllContacts()`. Account-wide is *correct* for those —
+the user is asking to delete their tags everywhere — but neither may ever be
+called from a deletion, reset, or migration path.)
+
 ## Test gaps
 
-Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17. Covered since
+Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17, 22 (decision
+covered, ordering not), 23 (blast radius covered, call sites not). Covered since
 2026-08-14: rule 8 (`LaunchSequence`, `ExitProgressionLogic.swift`) and
 rule 2's decision matrix (`ImportRecoveryLogic`,
 `BarkWalletFFI+WalletCreation.swift`) — the pattern to follow for the rest.

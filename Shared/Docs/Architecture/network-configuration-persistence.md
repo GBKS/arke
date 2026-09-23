@@ -28,7 +28,8 @@ We implemented a UserDefaults-based persistence layer that:
 1. **Shared/Data/NetworkConfigPersistence.swift** (NEW)
    - Utility class for saving/loading network configuration
    - Uses centralized UserDefaults key
-   - Provides: `save()`, `load()`, `clear()`, `hasSavedConfig()`
+   - Provides: `save()`, `load()`, `clearLocal()`, `clearEverywhere()`,
+     `savedConfigId()`, `syncFromiCloud()`, `reconciliation()`
 
 2. **Shared/Helpers/UserSettings.swift** (MODIFIED)
    - Added `networkConfigKey` constant for centralized key management
@@ -73,14 +74,26 @@ App launches
     ↓
 WalletManager.init()
     ↓
-NetworkConfigPersistence.load() ← NEW
+NetworkConfigPersistence.load()
     ↓
 Reads UserDefaults["com.arke.wallet.networkConfigId"] → "mainnet"
     ↓
-BarkWalletFFI(networkConfig: .mainnet)
+BarkWalletFFI(networkConfig: .mainnet)   ← may be stale or absent
     ↓
-tryOpenExistingWallet() uses mainnet servers ✅
+performInitialization() step 0-pre:
+reconcileNetworkConfigBeforeWalletOpen()
+    ↓
+skip if already open  ·  else syncFromiCloud() + reconciliation()
+    ↓
+wallet.updateNetworkConfig(.signet) when the account disagrees
+    ↓
+tryOpenExistingWallet() uses the account's network ✅
 ```
+
+The cache is only a launch-time guess: it is written by create/import and can
+be absent or stale. Step 0-pre makes the account's value authoritative in the
+window before an open, and only there — see Launch_Sequence_Contract rule 22
+for why reconciling *after* an open is forbidden.
 
 ### Wallet Deletion Flow
 

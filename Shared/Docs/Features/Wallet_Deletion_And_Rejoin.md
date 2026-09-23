@@ -79,6 +79,26 @@ mnemonic keychain item, the ubiquitous hash, and CloudKit data during deletion.
 shutdown + wallet-directory removal. This matches the existing convention that
 the FFI layer carries no app policy.
 
+**Violated by the service layer until 2026-09-23** (contract rule 23).
+`WalletManager.deleteWallet()` takes no strategy, and its `resetManagerState()`
+called `TransactionService.clearTransactionModels()` and
+`BalanceService.resetBalancesAndDeletePersisted()` on *every* deletion. Those
+rows are CloudKit-mirrored, so a local-only delete on a secondary wiped the
+account's transactions — and via `.cascade`, every tag and contact assignment
+the user had made. Both methods are now deleted; `resetManagerState()` resets
+in-memory state only, using the `resetBalancesInMemory()` that had existed
+unused since the service was written. Two lessons worth keeping:
+
+- "Local-only" is a property of *what you delete*, not of where you delete it.
+  A `modelContext.delete` on a synced model is an account-wide action wherever
+  it is written.
+- The schema-coverage test below cannot catch this class. It asserts that every
+  model has a declared fate *in the cleanup service*; a stray bulk delete in
+  another file is invisible to it. `TransactionDeletionBlastRadiusTests` pins
+  what such a delete destroys, and the standing sweep is
+  `grep "modelContext.delete"` — every hit outside the cleanup service must be
+  a single-row or dedup delete.
+
 ### Tombstone
 
 A device-local UserDefaults marker (NOT iCloud KVS, NOT CloudKit — it describes
