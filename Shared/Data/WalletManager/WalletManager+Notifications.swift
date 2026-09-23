@@ -114,8 +114,11 @@ extension WalletManager {
 
         // A background launch skips the UI flow that normally calls initialize().
         // Minting a mailbox authorization only needs the wallet database open,
-        // not the full refresh pipeline - so open it directly.
+        // not the full refresh pipeline - so open it directly. Reconcile the
+        // network first: this is a wallet-open path like any other, and headless
+        // is exactly where a wrong-network db would go unnoticed (contract rule 22).
         if !isInitialized, let ffiWallet = wallet as? BarkWalletFFI {
+            await reconcileNetworkConfigBeforeWalletOpen()
             guard await ffiWallet.openWalletIfNeeded() else {
                 Self.logger.error("Background relay auth refresh: wallet failed to open")
                 return .failed

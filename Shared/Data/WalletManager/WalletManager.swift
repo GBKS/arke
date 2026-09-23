@@ -514,26 +514,67 @@ class WalletManager {
         }
     }
     
+    /// Points the wallet object at the network the account says this wallet is on,
+    /// before any path opens the wallet database (contract rule 22).
+    ///
+    /// The wallet is built in `init` from the local UserDefaults cache, which can be
+    /// missing (reinstall, local deletion + rejoin) or stale-but-present (a network
+    /// switch that reached iCloud but not this device). Either way bark then opens on
+    /// the wrong network: a whole session against the wrong chain, and on the next
+    /// launch — cache corrected by then — the network-mismatch refusal that looked
+    /// like total data loss in the 2026-08-20 incident.
+    ///
+    /// Gating this on "no local config" is what let it happen: `syncFromiCloud()`
+    /// writes the same UserDefaults key the guard read, so MainView's `.task` sync
+    /// disarmed the recovery seconds before `initialize()` ran (2026-09-23), and the
+    /// stale-but-present case was never covered at all.
+    ///
+    /// Reconciling only *before* an open matters as much as reconciling at all: the
+    /// create/import paths set the network, save it locally, and mirror to iCloud
+    /// asynchronously, then call `initialize()` with the wallet already open. There
+    /// the local value is the newer one, so syncing would overwrite the just-saved
+    /// config with a stale iCloud id and re-point a live wallet.
+    ///
+    /// Internal, not private: the background wake path in
+    /// `WalletManager+Notifications` opens the wallet too and must reconcile first.
+    func reconcileNetworkConfigBeforeWalletOpen() async {
+        guard let wallet else { return }
+
+        if (wallet as? BarkWalletFFI)?.isWalletOpen == true {
+            Self.logger.info("🌐 Network config: wallet already open on \(wallet.networkConfig.name) — leaving it alone")
+            return
+        }
+
+        await NetworkConfigPersistence.syncFromiCloud()
+
+        switch NetworkConfigPersistence.reconciliation(
+            walletNetworkId: wallet.networkConfig.id,
+            cachedConfigId: NetworkConfigPersistence.savedConfigId()
+        ) {
+        case .inSync:
+            Self.logger.info("🌐 Network config in sync before wallet open: \(wallet.networkConfig.name)")
+
+        case .reapply(let config):
+            Self.logger.warning("🌐 Network config mismatch before wallet open — wallet was built on \(wallet.networkConfig.name), account says \(config.name); re-applying")
+            wallet.updateNetworkConfig(config)
+
+        case .noUsableConfig:
+            // Normal on a first install: onboarding sets the network. Only a problem
+            // when a wallet exists that the default network could fail to open.
+            if securityService.hasMnemonic() {
+                Self.logger.error("❌ No usable network config locally or in iCloud — wallet open will use \(wallet.networkConfig.name) and may fail with a network mismatch")
+            } else {
+                Self.logger.notice("🌐 No network config yet — onboarding will set one (wallet object on \(wallet.networkConfig.name))")
+            }
+        }
+    }
+
     private func performInitialization(forceReadOnly: Bool? = nil) async {
         Self.logger.info("🔧 [WalletManager] Starting initialization...")
 
-        // Step 0-pre: Recover a missing network config from iCloud BEFORE
-        // anything opens the wallet. A device can lose its local copy (local
-        // deletion + rejoin, reinstall) while the account still knows the
-        // network; without this, load() silently defaults to mainnet and bark
-        // rejects the existing signet/testnet db with a network mismatch
-        // (2026-08-20 incident; contract rule 21).
-        if !NetworkConfigPersistence.hasSavedConfig() {
-            Self.logger.warning("⚠️ No local network config — attempting iCloud recovery before wallet open")
-            await NetworkConfigPersistence.syncFromiCloud()
-            if NetworkConfigPersistence.hasSavedConfig() {
-                let recovered = NetworkConfigPersistence.load()
-                wallet?.updateNetworkConfig(recovered)
-                Self.logger.info("✅ Recovered network config from iCloud: \(recovered.name)")
-            } else {
-                Self.logger.error("❌ No network config locally or in iCloud — wallet open will use the default network and may fail with a network mismatch")
-            }
-        }
+        // Step 0-pre: Reconcile the wallet's network against the account BEFORE
+        // anything opens the wallet (contract rule 22).
+        await reconcileNetworkConfigBeforeWalletOpen()
 
         // Step 0a: CRITICAL - Check demotion status BEFORE opening wallet
         if await shouldBlockWalletAccess() {

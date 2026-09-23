@@ -22,8 +22,38 @@ class NetworkConfigPersistence {
     private nonisolated static let iCloudKey = "com.arke.wallet.networkConfigId"
 
     /// Notification posted when a background iCloud sync updates the locally cached config.
-    /// Observers (e.g. WalletManager) can re-read the config in response.
+    /// Observers can re-read the config in response. Nothing observes it today: the
+    /// launch paths reconcile ahead of the first wallet open instead (see
+    /// `reconciliation(walletNetworkId:cachedConfigId:)`), and re-pointing a wallet
+    /// that is already open would invalidate its database handle.
     static let networkConfigDidSyncFromiCloud = Notification.Name("NetworkConfigPersistence.didSyncFromiCloud")
+
+    /// What to do with a wallet's network after reconciling the cache with iCloud.
+    enum Reconciliation: Equatable {
+        /// The wallet already runs on the cached network - nothing to do.
+        case inSync
+        /// The wallet runs on a different network than the account does; re-apply
+        /// this config before anything opens the wallet database.
+        case reapply(NetworkConfig)
+        /// No network config is available, or the cached id can't be resolved to a
+        /// known network. Leave the wallet alone: a `load()`-style mainnet fallback
+        /// here would re-point a correctly-running signet wallet at mainnet, which
+        /// is the failure this reconciliation exists to prevent.
+        case noUsableConfig
+    }
+
+    /// Decide whether a wallet's network needs re-applying, given the cached config id.
+    /// Pure: resolves ids only, touches neither UserDefaults nor iCloud, so the
+    /// decision is unit-testable (`NetworkConfigReconciliationTests`).
+    /// - Parameters:
+    ///   - walletNetworkId: `NetworkConfig.id` the wallet object currently carries.
+    ///   - cachedConfigId: Raw id from the local cache, i.e. `savedConfigId()`.
+    static func reconciliation(walletNetworkId: String, cachedConfigId: String?) -> Reconciliation {
+        guard let cachedConfigId, let cached = findConfig(byId: cachedConfigId) else {
+            return .noUsableConfig
+        }
+        return cached.id == walletNetworkId ? .inSync : .reapply(cached)
+    }
 
     /// Save the network configuration ID to UserDefaults (synchronous) and iCloud (background)
     /// - Parameter networkConfig: The network configuration to persist
@@ -136,10 +166,11 @@ class NetworkConfigPersistence {
         logger.info("Network configuration cleared from local and iCloud storage")
     }
 
-    /// Check if a network configuration has been saved locally.
-    /// Checks the UserDefaults cache only — safe to call synchronously, never touches iCloud.
-    /// - Returns: True if a network config is saved, false otherwise
-    static func hasSavedConfig() -> Bool {
-        return UserDefaults.standard.string(forKey: UserDefaults.networkConfigKey) != nil
+    /// The raw network config id in the local cache, if any.
+    /// Reads the UserDefaults cache only — safe to call synchronously, never touches iCloud.
+    /// Returns the id unresolved; `reconciliation(walletNetworkId:cachedConfigId:)` decides
+    /// what an unknown id means.
+    static func savedConfigId() -> String? {
+        UserDefaults.standard.string(forKey: UserDefaults.networkConfigKey)
     }
 }

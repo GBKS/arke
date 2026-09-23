@@ -15,7 +15,14 @@ import OSLog
 extension BarkWalletFFI {
     
     // MARK: - Wallet Opening
-    
+
+    /// Whether the bark wallet database handle is currently open.
+    /// Callers that reconcile configuration before an open need this to tell
+    /// "about to open" from "already running" — see `WalletManager`'s step 0-pre.
+    var isWalletOpen: Bool {
+        wallet != nil
+    }
+
     /// Explicitly opens the wallet if one exists and hasn't been opened yet
     /// This should be called after initialization when you're ready to use the wallet
     /// - Returns: `true` if wallet was opened or already open, `false` if no wallet exists
