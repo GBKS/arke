@@ -20,10 +20,14 @@ struct LinkedDevicesView_iOS: View {
     @State private var showPromoteSheet = false
     @State private var noPrimaryDeviceDetected = false
     @State private var hasPrimaryDevice = false
+    /// The merged two-store view. Read for the mirror-only entries the registry
+    /// can't show, and for the wallet hash that scopes this list.
+    @State private var otherDeviceReport: OtherDeviceReport?
+    @State private var accountWalletHash: String?
     
     var body: some View {
         List {
-            Text(otherDevices.isEmpty
+            Text(!hasAnyOtherDevice
                  ? String(localized: "linked_devices_single_device_description",
                           defaultValue: "You're using Arké on one device. Install Arké on another iPhone or iPad signed in to the same iCloud, and it'll appear here automatically. View-only at first, ready to take over if you need it.")
                  : String(localized: "linked_devices_multiple_devices_description",
@@ -60,6 +64,13 @@ struct LinkedDevicesView_iOS: View {
                             onMakePrimary: { makeDevicePrimary(device) }
                         )
                     }
+                }
+
+                // Devices the fast mirror knows about but this device's registry
+                // copy does not. Shown without unlink actions because there is no
+                // row to unlink — see UnsyncedDeviceRow.
+                ForEach(otherDeviceReport?.mirrorOnly ?? []) { device in
+                    UnsyncedDeviceRow(device: device)
                 }
             }
             
@@ -145,14 +156,10 @@ struct LinkedDevicesView_iOS: View {
             })
         }
         .task {
-            await deviceService.loadRegisteredDevices()
-            await checkForNoPrimaryDevice()
-            await checkForPrimaryDevice()
+            await reload()
         }
         .refreshable {
-            await deviceService.loadRegisteredDevices()
-            await checkForNoPrimaryDevice()
-            await checkForPrimaryDevice()
+            await reload()
         }
         .confirmationDialog(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
             isPresented: $showingUnlinkConfirmation,
@@ -186,15 +193,31 @@ struct LinkedDevicesView_iOS: View {
         }
     }
     
+    /// Other devices registered to *this* wallet.
+    ///
+    /// The wallet-hash scoping matches what the deletion decision has always
+    /// applied. Without it this list also counted registrations left behind by
+    /// other (test) wallets, so the two surfaces could disagree in both
+    /// directions — too many devices here, or too few.
     private var otherDevices: [DeviceRegistration] {
         deviceService.registeredDevices.filter { device in
             do {
                 let currentDeviceId = try deviceService.getOrCreateDeviceId()
-                return device.deviceId != currentDeviceId && device.isActive
+                guard device.deviceId != currentDeviceId, device.isActive else { return false }
+                // A missing hash means the account wallet is unknown (iCloud
+                // sign-out, S10); stay unscoped rather than show nothing
+                guard let accountWalletHash else { return true }
+                return device.walletHash == accountWalletHash
             } catch {
                 return false
             }
         }.sorted { $0.lastSeenAt > $1.lastSeenAt }
+    }
+
+    /// Whether anything other than this device holds the wallet — including the
+    /// mirror-only entries, which are what the delete flow actually blocks on.
+    private var hasAnyOtherDevice: Bool {
+        !otherDevices.isEmpty || !(otherDeviceReport?.mirrorOnly.isEmpty ?? true)
     }
     
     // MARK: - Actions
@@ -242,6 +265,18 @@ struct LinkedDevicesView_iOS: View {
         }
     }
     
+    private func reload() async {
+        accountWalletHash = deviceService.accountWalletHash()
+        await deviceService.loadRegisteredDevices()
+
+        // Mirror entries are the ones the delete flow blocks on, so this list
+        // has to read the same merged report the delete flow does
+        otherDeviceReport = try? await deviceService.currentOtherDeviceReport()
+
+        await checkForNoPrimaryDevice()
+        await checkForPrimaryDevice()
+    }
+
     private func checkForNoPrimaryDevice() async {
         do {
             noPrimaryDeviceDetected = try await deviceService.checkForNoPrimaryDevice()

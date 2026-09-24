@@ -15,6 +15,12 @@ struct DeleteWalletSettingView: View {
     @State private var isDeleting = false
     @State private var deleteError: String?
     @State private var deletionStrategy: DeletionStrategy?
+    /// Which devices keep this deletion local. Nil while checking, and also when
+    /// the registries couldn't be read — see `introText`.
+    @State private var blockerReport: OtherDeviceReport?
+    /// Set when the user takes the informed override. Reset on sheet dismissal so
+    /// it can never leak into a subsequent, ordinary deletion.
+    @State private var overrideRequested = false
     @State private var isCheckingDevices = true
     @State private var deletionSummary: DeletionSummary?
     
@@ -150,6 +156,29 @@ struct DeleteWalletSettingView: View {
                         .tint(Color.Arke.red)
                         .disabled(isDeleting)
                         .padding(.top, 15)
+
+                        // The way out of a blocked full wipe. Deliberately plain
+                        // and secondary: the blocking evidence is usually right,
+                        // and this path destroys the account's seed. But without
+                        // it the wallet cannot be removed from the account at
+                        // all — a mirror entry for a device that is genuinely
+                        // gone blocks forever, with no staleness cutoff that
+                        // could safely age it out (2026-09-23).
+                        if showsOverrideOption {
+                            Button {
+                                overrideRequested = true
+                                showingDeletionConfirmation = true
+                            } label: {
+                                Text(String(localized: "button_delete_from_account_anyway",
+                                            defaultValue: "Delete from the account anyway…"))
+                                    .font(.callout)
+                                    .fontWeight(.medium)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(.Arke.red)
+                            .disabled(isDeleting)
+                            .padding(.top, 10)
+                        }
                     }
                 }
             }
@@ -159,29 +188,65 @@ struct DeleteWalletSettingView: View {
         .task {
             await checkDevices()
         }
-        .sheet(isPresented: $showingDeletionConfirmation) {
+        .sheet(isPresented: $showingDeletionConfirmation, onDismiss: { overrideRequested = false }) {
             if let strategy = deletionStrategy {
                 DeletePermanentlyConfirmationView(
                     deletionStrategy: strategy,
                     onConfirm: {
-                        // Only wipe shared data (CloudKit, iCloud backup, seed) when
-                        // this is the last device; with other active devices the
-                        // wallet keeps living on them and one can be promoted
-                        await deleteWallet(includeCloudData: strategy == .promptForCloudData)
+                        // Shared data (CloudKit, iCloud backup, seed) goes only
+                        // when this is the last device — or when the user has
+                        // explicitly overridden that verdict
+                        await deleteWallet(
+                            includeCloudData: WalletDataCleanupService.includesCloudData(
+                                strategy: strategy,
+                                overrideConfirmed: overrideRequested
+                            )
+                        )
                     },
                     onBack: {
                         showingDeletionConfirmation = false
-                    }
+                    },
+                    isOverride: overrideRequested,
+                    blockers: blockerReport?.others ?? []
                 )
             }
         }
     }
+
+    /// Whether to offer the informed override.
+    ///
+    /// Only when the verdict is `.localOnly`, i.e. something is blocking. Not
+    /// offered for `.promptForCloudData`, where the ordinary path already wipes
+    /// everything and a second door would be noise.
+    private var showsOverrideOption: Bool {
+        deletionStrategy == .localOnly
+    }
     
-    /// Strategy-specific intro; neutral while the device check is still running
+    /// Strategy-specific intro; neutral while the device check is still running.
+    ///
+    /// The `.localOnly` copy names the devices that keep the wallet, because the
+    /// unqualified claim ("your other devices keep access") was unfalsifiable
+    /// from inside the app: it reads the fast KVS mirror while Linked Devices
+    /// reads the CloudKit registry, and on 2026-09-23 they disagreed with no way
+    /// for the user to tell which was right.
     private var introText: String {
         switch deletionStrategy {
         case .localOnly:
-            return String(localized: "settings_delete_warning_local_only", defaultValue: "This will permanently delete your wallet from this device. Your other devices keep access to the wallet.")
+            guard let report = blockerReport else {
+                // Registries unreadable — the strategy is conservative by
+                // design, and the copy must not invent devices to justify it
+                return String(localized: "settings_delete_warning_check_failed", defaultValue: "This will permanently delete your wallet from this device. Your other devices couldn't be checked, so the wallet stays on the account.")
+            }
+
+            let names = report.others.compactMap(\.deviceName)
+            if !names.isEmpty {
+                return String(format: String(localized: "settings_delete_warning_local_only_named %@", defaultValue: "This will permanently delete your wallet from this device. Still registered elsewhere: %@."),
+                              names.formatted(.list(type: .and)))
+            }
+
+            // Blockers exist but nothing can name them: mirror entries whose
+            // registry rows haven't arrived, or never will
+            return String(localized: "settings_delete_warning_local_only_unnamed", defaultValue: "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet.")
         case .promptForCloudData:
             return String(localized: "settings_delete_warning_icloud", defaultValue: "This will permanently delete your wallet from this device and iCloud. All linked devices will lose access.")
         case nil:
@@ -192,12 +257,13 @@ struct DeleteWalletSettingView: View {
     private func checkDevices() async {
         isCheckingDevices = true
         deleteError = nil
-        
-        // Get deletion strategy based on other devices
-        let strategy = await cleanupService.getDeletionStrategy()
-        
+
+        // Strategy and evidence together: the copy above names the blockers
+        let assessment = await cleanupService.assessDeletion()
+
         await MainActor.run {
-            deletionStrategy = strategy
+            deletionStrategy = assessment.strategy
+            blockerReport = assessment.report
             isCheckingDevices = false
         }
     }

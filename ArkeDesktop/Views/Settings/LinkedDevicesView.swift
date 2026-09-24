@@ -15,6 +15,10 @@ struct LinkedDevicesView: View {
     @State private var showingUnlinkConfirmation = false
     @State private var isUnlinking = false
     @State private var errorMessage: String?
+    /// The merged two-store view. Read for the mirror-only entries the registry
+    /// can't show, and for the wallet hash that scopes this list.
+    @State private var otherDeviceReport: OtherDeviceReport?
+    @State private var accountWalletHash: String?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -66,7 +70,31 @@ struct LinkedDevicesView: View {
                             }
                         }
                     }
-                    
+
+                    // Devices the fast mirror knows about but this device's
+                    // registry copy does not. No unlink action: there is no row
+                    // to unlink — see UnsyncedDeviceRow.
+                    if let mirrorOnly = otherDeviceReport?.mirrorOnly, !mirrorOnly.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(String(localized: "settings_unsynced_devices",
+                                        defaultValue: "Not Yet Synced"))
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.secondary)
+                                .textCase(.uppercase)
+
+                            ForEach(mirrorOnly) { device in
+                                UnsyncedDeviceRow(device: device)
+                                    .padding(12)
+                                    .background(Color.orange.opacity(0.05))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+                        }
+                    }
+
                     // Danger zone
                     if !otherDevices.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -126,7 +154,12 @@ struct LinkedDevicesView: View {
         }
         .frame(minWidth: 600, minHeight: 400)
         .task {
+            accountWalletHash = deviceService.accountWalletHash()
             await deviceService.loadRegisteredDevices()
+
+            // Mirror entries are the ones the delete flow blocks on, so this
+            // list has to read the same merged report the delete flow does
+            otherDeviceReport = try? await deviceService.currentOtherDeviceReport()
         }
         .alert(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
                isPresented: $showingUnlinkConfirmation, presenting: deviceToUnlink) { device in
@@ -167,11 +200,21 @@ struct LinkedDevicesView: View {
         }
     }
     
+    /// Other devices registered to *this* wallet.
+    ///
+    /// The wallet-hash scoping matches what the deletion decision has always
+    /// applied. Without it this list also counted registrations left behind by
+    /// other (test) wallets, so the two surfaces could disagree in both
+    /// directions — too many devices here, or too few.
     private var otherDevices: [DeviceRegistration] {
         deviceService.registeredDevices.filter { device in
             do {
                 let currentDeviceId = try deviceService.getOrCreateDeviceId()
-                return device.deviceId != currentDeviceId && device.isActive
+                guard device.deviceId != currentDeviceId, device.isActive else { return false }
+                // A missing hash means the account wallet is unknown (iCloud
+                // sign-out, S10); stay unscoped rather than show nothing
+                guard let accountWalletHash else { return true }
+                return device.walletHash == accountWalletHash
             } catch {
                 return false
             }

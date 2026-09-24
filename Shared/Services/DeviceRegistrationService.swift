@@ -350,9 +350,7 @@ class DeviceRegistrationService {
                 // Ensure device is registered in KV store with current primary status
                 self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash)
 
-                let kvStore = NSUbiquitousKeyValueStore.default
-                kvStore.set(existing.isPrimaryDevice, forKey: "device_\(deviceId)_isPrimary")
-                kvStore.synchronize()
+                self.writeOwnPrimaryFlag(existing.isPrimaryDevice, deviceId: deviceId)
 
                 Self.logger.info("Updated existing device registration")
             } else {
@@ -366,9 +364,7 @@ class DeviceRegistrationService {
 
                 // Store primary status in KV store (read by shouldBlockWalletAccess and
                 // the MainView demotion/promotion observers)
-                let kvStore = NSUbiquitousKeyValueStore.default
-                kvStore.set(shouldBePrimary, forKey: "device_\(deviceId)_isPrimary")
-                kvStore.synchronize()
+                self.writeOwnPrimaryFlag(shouldBePrimary, deviceId: deviceId)
 
                 // Create new registration
                 let registration = DeviceRegistration(
@@ -449,22 +445,29 @@ class DeviceRegistrationService {
             predicate: #Predicate { $0.deviceId == deviceId }
         )
         
-        if let registration = try? modelContext.fetch(descriptor).first {
-            let walletHash = registration.walletHash
+        let registration = try? modelContext.fetch(descriptor).first
 
+        if let registration {
             modelContext.delete(registration)
             try modelContext.save()
-
-            // Remove the fast-registry mirror too, exactly as unlinkDevice() does.
-            // Leaving it behind used to strand a ghost entry that outlived the
-            // SwiftData row; now that hasOtherActiveDevices() reads the mirror, a
-            // ghost would block every remaining device's full wipe forever.
-            unregisterDeviceFromKVStore(deviceId: deviceId, walletHash: walletHash)
-
-            Self.logger.debug("Unregistered current device")
-
-            await loadRegisteredDevices()
         }
+
+        // Remove the fast-registry mirror unconditionally, and for every wallet
+        // hash — this device is leaving, so none of its entries are valid.
+        //
+        // This used to sit inside `if let registration`, so a missing row meant
+        // the mirror entry survived: a fresh adopt whose CloudKit row hadn't
+        // imported yet, a row already collapsed by dedupeOwnRecords, or an
+        // unreadable context all left a permanent ghost. Since the mirror is what
+        // the deletion decision reads, that ghost blocks every *remaining*
+        // device's full wipe indefinitely — and each reinstall of this device
+        // re-writes it, so it never ages out. Clearing across hashes also removes
+        // the case where the row's hash and the account's hash disagree.
+        let removedMirrorEntries = removeMirrorEntries(deviceId: deviceId)
+
+        Self.logger.debug("Unregistered current device (registry row existed: \(registration != nil), mirror entries removed: \(removedMirrorEntries))")
+
+        await loadRegisteredDevices()
     }
     
     // MARK: - Heartbeat System
@@ -606,20 +609,32 @@ class DeviceRegistrationService {
 
     /// Checks if there are other active devices registered for this wallet.
     ///
-    /// Consults the fast iCloud KVS registry BEFORE the CloudKit-backed SwiftData
-    /// registry. This ordering is load-bearing, not an optimization: KVS converges
-    /// in seconds while a CloudKit import can take minutes or never arrive offline,
-    /// and a joining secondary that asks this question inside that window would
-    /// otherwise be told it is the last device — which routes the delete flow to a
-    /// full wipe and destroys the account's shared seed (Multi_Device_Design.md,
+    /// Thin wrapper over `otherDeviceReport(walletHash:)` — see that method for
+    /// the store-ordering rationale. Kept as the answer the deletion strategy
+    /// needs; callers that must *show* the blocking devices use the report.
+    func hasOtherActiveDevices(walletHash: String?) async throws -> Bool {
+        try await otherDeviceReport(walletHash: walletHash).hasOthers
+    }
+
+    /// Every other device the account's registries say still holds this wallet.
+    ///
+    /// Reads the fast iCloud KVS registry AND the CloudKit-backed SwiftData
+    /// registry, and lets KVS evidence stand on its own. That precedence is
+    /// load-bearing, not an optimization: KVS converges in seconds while a
+    /// CloudKit import can take minutes or never arrive offline, and a joining
+    /// secondary that asks this question inside that window would otherwise be
+    /// told it is the last device — which routes the delete flow to a full wipe
+    /// and destroys the account's shared seed (Multi_Device_Design.md,
     /// Principle 3). Detection already routes launch on KVS; the deletion scope,
     /// the one irreversible decision, must not read the slower store alone.
     ///
-    /// KVS entries carry no staleness filter: their timestamp is "last registered",
-    /// not "last seen" (heartbeats don't refresh it), so ageing them out would drop
-    /// live devices. A KVS ghost therefore blocks the full wipe until it is unlinked
-    /// — the conservative direction, and the remedy S7's blockers list is designed
-    /// to surface.
+    /// KVS entries carry no staleness filter: their timestamp is "last
+    /// registered", not "last seen" (heartbeats don't refresh it), so ageing them
+    /// out would drop live devices. A mirror-only entry therefore blocks the full
+    /// wipe indefinitely — the conservative direction. Unlike the boolean it
+    /// replaces, this report says *which* devices block and whether each one has
+    /// a registry row, because a mirror-only entry has no remedy in the delete
+    /// flow today: `unlinkDevice` needs a row to delete.
     ///
     /// - Parameter walletHash: the wallet to scope the question to. `nil` or empty
     ///   means the account wallet is unknown (KVS detached after an iCloud
@@ -631,28 +646,198 @@ class DeviceRegistrationService {
     ///   while making the wallet undeletable on a signed-out device, and a
     ///   local-only deletion with no hash records no tombstone, so the retained
     ///   seed resurrects the wallet on the next launch.
-    func hasOtherActiveDevices(walletHash: String?) async throws -> Bool {
-        guard let walletHash, !walletHash.isEmpty else {
-            Self.logger.warning("hasOtherActiveDevices called without a wallet hash — falling back to the unscoped registry check")
-            let others = try await getOtherDevices()
-            return others.contains { !$0.isStale }
-        }
-
+    /// - Throws: only when *neither* store could be read. An unreadable registry
+    ///   with corroborating mirror entries still answers "others exist"; an
+    ///   unreadable registry with an empty mirror is genuine ignorance, and the
+    ///   caller must map it to the conservative strategy rather than to "alone".
+    func otherDeviceReport(walletHash: String?) async throws -> OtherDeviceReport {
         let currentDeviceId = try getOrCreateDeviceId()
 
-        let kvsDeviceIds = Self.otherRegisteredDeviceIds(
-            kvsKeys: Array(NSUbiquitousKeyValueStore.default.dictionaryRepresentation.keys),
-            walletHash: walletHash,
-            currentDeviceId: currentDeviceId
-        )
-        if !kvsDeviceIds.isEmpty {
-            Self.logger.info("Fast KVS registry shows \(kvsDeviceIds.count) other device(s) for this wallet")
-            return true
+        guard let walletHash, !walletHash.isEmpty else {
+            Self.logger.warning("Other-device check without a wallet hash — falling back to the unscoped registry check")
+            let others = try await getOtherDevices()
+            return Self.otherDeviceReport(
+                kvsEntries: [:],
+                walletHash: nil,
+                registryDevices: others.map(Self.snapshot(of:)),
+                currentDeviceId: currentDeviceId,
+                registryError: nil,
+                now: Date()
+            )
         }
 
-        let others = try await getOtherDevices(walletHash: walletHash)
-        // Filter out stale devices
-        return others.contains { !$0.isStale }
+        // Tolerate an unreadable registry: the mirror alone can still prove that
+        // others exist, and that proof is the one that must not be lost
+        var registryDevices: [RegistryDeviceSnapshot] = []
+        var registryError: Error?
+        do {
+            registryDevices = try await getOtherDevices(walletHash: walletHash).map(Self.snapshot(of:))
+        } catch {
+            registryError = error
+            Self.logger.warning("Device registry unreadable during the other-device check: \(error.localizedDescription)")
+        }
+
+        let report = Self.otherDeviceReport(
+            kvsEntries: NSUbiquitousKeyValueStore.default.dictionaryRepresentation,
+            walletHash: walletHash,
+            registryDevices: registryDevices,
+            currentDeviceId: currentDeviceId,
+            registryError: registryError,
+            now: Date()
+        )
+
+        // Neither store had anything to say — propagate the ignorance instead of
+        // letting it read as "this is the last device"
+        if let registryError, !report.hasOthers {
+            throw registryError
+        }
+
+        if report.hasOthers {
+            Self.logger.info("Other-device check: \(report.others.count) device(s) hold this wallet (\(report.mirrorOnly.count) mirror-only)")
+        }
+
+        return report
+    }
+
+    /// The account's wallet hash, as launch detection and the deletion decision
+    /// both see it.
+    ///
+    /// Surfaces that list devices need it to scope themselves to the wallet
+    /// actually in use — an unscoped list shows leftover registrations from other
+    /// (test) wallets, and the delete flow has always been scoped, so an unscoped
+    /// list is also a way for the two to disagree.
+    func accountWalletHash() -> String? {
+        ServiceContainer.shared.securityService.getUbiquitousHash()
+    }
+
+    /// `otherDeviceReport(walletHash:)` for the account's current wallet.
+    ///
+    /// The one entry point for UI: every surface that tells the user something
+    /// about other devices must read this, so the devices list and the delete
+    /// dialog cannot drift apart the way they did on 2026-09-23 (Linked Devices
+    /// said "1 device" while the delete dialog said others kept access).
+    func currentOtherDeviceReport() async throws -> OtherDeviceReport {
+        try await otherDeviceReport(walletHash: accountWalletHash())
+    }
+
+    /// Pure-data view of a registry row. `@MainActor` because it reads the model.
+    private static func snapshot(of device: DeviceRegistration) -> RegistryDeviceSnapshot {
+        RegistryDeviceSnapshot(
+            deviceId: device.deviceId,
+            deviceName: device.deviceName,
+            walletHash: device.walletHash,
+            lastSeenAt: device.lastSeenAt,
+            isActive: device.isActive
+        )
+    }
+
+    /// Merges the two registries into one answer. Pure and testable: the stores
+    /// disagree in practice, and which of them wins each question is exactly the
+    /// part worth pinning.
+    ///
+    /// The blocking set is deliberately identical to the boolean this replaced:
+    /// every non-stale registry row, plus every mirror entry regardless of what
+    /// the registry says about it. A stale registry row does not block on its
+    /// own, but a mirror entry for that same device does — and then the row's
+    /// name is used, since naming a blocker beats calling it unknown.
+    ///
+    /// - Parameters:
+    ///   - kvsEntries: `NSUbiquitousKeyValueStore.dictionaryRepresentation`, warts
+    ///     and all — it also holds the wallet hash, network config and primary
+    ///     flags, so non-registry keys and non-numeric values must be ignored.
+    ///   - walletHash: `nil` when the account wallet is unknown: the mirror can't
+    ///     be queried without it and the registry is read unscoped.
+    ///   - registryError: what went wrong reading the registry, if anything. Only
+    ///     recorded here; whether it is fatal depends on the mirror.
+    ///   - now: injected so staleness is deterministic under test.
+    nonisolated static func otherDeviceReport(
+        kvsEntries: [String: Any],
+        walletHash: String?,
+        registryDevices: [RegistryDeviceSnapshot],
+        currentDeviceId: String,
+        registryError: Error?,
+        now: Date,
+        staleThresholdDays: Int = 30
+    ) -> OtherDeviceReport {
+        let mirrorIds: Set<String>
+        var registeredAt: [String: Date] = [:]
+
+        if let walletHash, !walletHash.isEmpty {
+            mirrorIds = otherRegisteredDeviceIds(
+                kvsKeys: Array(kvsEntries.keys),
+                walletHash: walletHash,
+                currentDeviceId: currentDeviceId
+            )
+            let prefix = "\(registeredDevicesPrefix)\(walletHash)."
+            for deviceId in mirrorIds {
+                // Written as a timeIntervalSince1970 Double; anything else is not
+                // ours to interpret, and a missing timestamp must not drop the
+                // entry — it still blocks
+                if let seconds = kvsEntries["\(prefix)\(deviceId)"] as? Double {
+                    registeredAt[deviceId] = Date(timeIntervalSince1970: seconds)
+                }
+            }
+        } else {
+            mirrorIds = []
+        }
+
+        // Rows for other devices, scoped to this wallet when we know it
+        let candidates = registryDevices.filter { device in
+            guard device.deviceId != currentDeviceId, device.isActive else { return false }
+            guard let walletHash, !walletHash.isEmpty else { return true }
+            return device.walletHash == walletHash
+        }
+        let namesByDeviceId = Dictionary(
+            registryDevices.map { ($0.deviceId, $0.deviceName) },
+            uniquingKeysWith: { first, _ in first }
+        )
+
+        let staleThreshold = TimeInterval(staleThresholdDays * 24 * 60 * 60)
+        var others: [OtherWalletDevice] = []
+        var claimed: Set<String> = []
+
+        for device in candidates {
+            let isStale = now.timeIntervalSince(device.lastSeenAt) > staleThreshold
+            // A stale row blocks only when the mirror corroborates it
+            guard !isStale || mirrorIds.contains(device.deviceId) else { continue }
+
+            claimed.insert(device.deviceId)
+            others.append(OtherWalletDevice(
+                deviceId: device.deviceId,
+                deviceName: device.deviceName.isEmpty ? nil : device.deviceName,
+                lastSeenAt: device.lastSeenAt,
+                registeredAt: registeredAt[device.deviceId],
+                isStale: isStale,
+                source: .registry
+            ))
+        }
+
+        for deviceId in mirrorIds.subtracting(claimed).sorted() {
+            // No active registry row for this wallet: either the CloudKit import
+            // hasn't landed (seconds to never, offline) or it never will, because
+            // the row was deleted without its mirror entry. `unlinkDevice` cannot
+            // clear these — there is no row to delete.
+            let name = namesByDeviceId[deviceId]
+            others.append(OtherWalletDevice(
+                deviceId: deviceId,
+                deviceName: (name?.isEmpty ?? true) ? nil : name,
+                lastSeenAt: nil,
+                registeredAt: registeredAt[deviceId],
+                isStale: false,      // unknowable: the mirror has no heartbeat
+                source: .kvsOnly
+            ))
+        }
+
+        // Most recently heard from first; mirror-only entries fall back to their
+        // registration date, which is the only timestamp they have
+        others.sort { lhs, rhs in
+            let lhsDate = lhs.lastSeenAt ?? lhs.registeredAt ?? .distantPast
+            let rhsDate = rhs.lastSeenAt ?? rhs.registeredAt ?? .distantPast
+            if lhsDate != rhsDate { return lhsDate > rhsDate }
+            return lhs.deviceId < rhs.deviceId
+        }
+
+        return OtherDeviceReport(others: others, registryUnreadable: registryError != nil)
     }
     
     /// Gets the current device registration
@@ -837,9 +1022,7 @@ class DeviceRegistrationService {
         try modelContext?.save()
 
         // 6. Update iCloud KV Store for faster sync
-        let kvStore = NSUbiquitousKeyValueStore.default
-        kvStore.set(false, forKey: "device_\(currentDevice.deviceId)_isPrimary")
-        kvStore.synchronize()
+        writeOwnPrimaryFlag(false, deviceId: currentDevice.deviceId)
 
         // 7. Set local UserDefaults flag for instant detection on next launch
         UserDefaults.standard.set(true, forKey: "device_\(currentDevice.deviceId)_wasDemoted")
@@ -880,9 +1063,7 @@ class DeviceRegistrationService {
         try modelContext?.save()
 
         // 6. Update iCloud KV Store for faster sync
-        let kvStore = NSUbiquitousKeyValueStore.default
-        kvStore.set(true, forKey: "device_\(currentDevice.deviceId)_isPrimary")
-        kvStore.synchronize()
+        writeOwnPrimaryFlag(true, deviceId: currentDevice.deviceId)
 
         // 7. Clear any demotion flags
         UserDefaults.standard.removeObject(forKey: "device_\(currentDevice.deviceId)_wasDemoted")
@@ -961,9 +1142,7 @@ class DeviceRegistrationService {
 
             // Clear any stale demotion breadcrumbs so the winning claim survives the
             // next launch - shouldBlockWalletAccess reads both before initialization
-            let kvStore = NSUbiquitousKeyValueStore.default
-            kvStore.set(true, forKey: "device_\(deviceId)_isPrimary")
-            kvStore.synchronize()
+            writeOwnPrimaryFlag(true, deviceId: deviceId)
             UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
             return
         }
@@ -974,9 +1153,7 @@ class DeviceRegistrationService {
         current.demotedAt = Date()
         try? modelContext.save()
 
-        let kvStore = NSUbiquitousKeyValueStore.default
-        kvStore.set(false, forKey: "device_\(deviceId)_isPrimary")
-        kvStore.synchronize()
+        writeOwnPrimaryFlag(false, deviceId: deviceId)
 
         UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
 
@@ -1025,9 +1202,7 @@ class DeviceRegistrationService {
             // shouldBlockWalletAccess treats as a demotion at every launch. Reset
             // the flag to match the surviving record or the device wedges in
             // read-only despite being primary.
-            let kvStore = NSUbiquitousKeyValueStore.default
-            kvStore.set(true, forKey: "device_\(deviceId)_isPrimary")
-            kvStore.synchronize()
+            writeOwnPrimaryFlag(true, deviceId: deviceId)
             UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
         }
 
@@ -1035,7 +1210,34 @@ class DeviceRegistrationService {
     }
 
     // MARK: - Fast Device Registry (NSUbiquitousKeyValueStore)
-    
+
+    /// Local breadcrumb recording that *this* device wrote its own KVS primary
+    /// flag, and what it wrote.
+    ///
+    /// Every writer of `device_<id>_isPrimary` in this file targets this device's
+    /// own ID — nothing anywhere writes another device's flag, and promote/demote
+    /// act only on the current device. `WalletManager.shouldBlockWalletAccess`
+    /// layer 2 reads that flag to catch a demotion, so without this breadcrumb it
+    /// cannot tell a demotion from its own registration having written `false`
+    /// seconds earlier, and logged a fresh secondary's perfectly normal
+    /// registration as "🛑 iCloud KV store indicates demotion".
+    ///
+    /// Deliberately local (UserDefaults, not KVS): it records what happened on
+    /// this device, and syncing it would make it answer a different question.
+    nonisolated static func selfWrotePrimaryFlagKey(deviceId: String) -> String {
+        "device_\(deviceId)_selfWroteIsPrimary"
+    }
+
+    /// Mirrors this device's primary status to iCloud KVS and leaves the
+    /// breadcrumb. Use this rather than writing the flag directly.
+    private func writeOwnPrimaryFlag(_ isPrimary: Bool, deviceId: String) {
+        let kvStore = NSUbiquitousKeyValueStore.default
+        kvStore.set(isPrimary, forKey: "device_\(deviceId)_isPrimary")
+        kvStore.synchronize()
+
+        UserDefaults.standard.set(isPrimary, forKey: Self.selfWrotePrimaryFlagKey(deviceId: deviceId))
+    }
+
     /// Registers a device in the fast KV store registry
     /// This syncs much faster than CloudKit and prevents race conditions during app reinstall
     private func registerDeviceInKVStore(deviceId: String, walletHash: String) {
@@ -1049,6 +1251,34 @@ class DeviceRegistrationService {
         Self.logger.debug("Registered device in KV store: \(deviceId)")
     }
     
+    /// Every fast-mirror key belonging to a device, across all wallet hashes.
+    ///
+    /// Pure and testable. Keys are `com.arke.device.registered.<walletHash>.<deviceId>`;
+    /// wallet hashes are base64 (no dots) and device IDs are UUIDs (no dots), so
+    /// matching the `.<deviceId>` suffix isolates the device exactly — the same
+    /// reasoning `otherRegisteredDeviceIds` relies on from the other end.
+    nonisolated static func mirrorKeys(forDeviceId deviceId: String, in kvsKeys: [String]) -> [String] {
+        guard !deviceId.isEmpty else { return [] }
+        return kvsKeys.filter { $0.hasPrefix(registeredDevicesPrefix) && $0.hasSuffix(".\(deviceId)") }
+    }
+
+    /// Removes a device's fast-mirror entries for every wallet hash.
+    /// - Returns: how many entries were removed, for logging.
+    @discardableResult
+    private func removeMirrorEntries(deviceId: String) -> Int {
+        let kvStore = NSUbiquitousKeyValueStore.default
+        let keys = Self.mirrorKeys(forDeviceId: deviceId, in: Array(kvStore.dictionaryRepresentation.keys))
+
+        for key in keys {
+            kvStore.removeObject(forKey: key)
+        }
+        if !keys.isEmpty {
+            kvStore.synchronize()
+        }
+
+        return keys.count
+    }
+
     /// Removes a device from the KV store registry
     private func unregisterDeviceFromKVStore(deviceId: String, walletHash: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
@@ -1131,6 +1361,80 @@ struct PrimaryDeviceCandidate {
     let deviceId: String
     let becamePrimaryAt: Date?
     let registeredAt: Date
+}
+
+/// Pure-data view of a device-registry row, extracted for testability: the
+/// SwiftData model can't be built without a container, and the merge rules in
+/// `otherDeviceReport` are the part worth testing.
+nonisolated struct RegistryDeviceSnapshot: Equatable, Sendable {
+    let deviceId: String
+    let deviceName: String
+    let walletHash: String
+    let lastSeenAt: Date
+    let isActive: Bool
+}
+
+/// Another device that the account says still holds this wallet.
+///
+/// Merged from the two stores that disagree in practice: the CloudKit-backed
+/// SwiftData registry, which has names and heartbeats but converges slowly, and
+/// the iCloud KVS mirror, which has neither but converges first and is what the
+/// deletion decision must not ignore.
+nonisolated struct OtherWalletDevice: Equatable, Identifiable, Sendable {
+    enum Source: Equatable, Sendable {
+        /// Backed by an active registry row for this wallet, so it has a name, a
+        /// heartbeat, and `unlinkDevice` can remove it.
+        case registry
+        /// Present only in the KVS mirror. Either the CloudKit row hasn't
+        /// imported yet (seconds to never, when offline) or it never will,
+        /// because the row was deleted without its mirror entry. `unlinkDevice`
+        /// cannot clear these: it throws `deviceNotFound` with no row to delete.
+        case kvsOnly
+    }
+
+    let deviceId: String
+    /// `nil` when no registry row anywhere carries a name for this device — the
+    /// honest state for a mirror entry whose row never arrived. A `.kvsOnly`
+    /// device can still be named if an inactive or foreign-wallet row knows it.
+    let deviceName: String?
+    /// Last heartbeat. Registry-backed devices only.
+    let lastSeenAt: Date?
+    /// When the device last *registered*. This is what the mirror stores, and it
+    /// is NOT a heartbeat — registration writes it and heartbeats never refresh
+    /// it, which is why mirror entries cannot be aged out (S7).
+    let registeredAt: Date?
+    /// Heartbeat older than the staleness threshold. Always `false` for
+    /// `.kvsOnly`, where staleness is unknowable rather than known to be false.
+    let isStale: Bool
+    let source: Source
+
+    var id: String { deviceId }
+}
+
+/// The answer to "is this really the last device?", with its reasons intact.
+///
+/// Replaces a `Bool` that could not explain itself: the delete flow used it to
+/// tell the user "your other devices keep access" while Linked Devices, reading
+/// the other store, said there was only one device. Anything shown to the user
+/// about blocking devices must come from here, so the two surfaces cannot drift
+/// apart again.
+nonisolated struct OtherDeviceReport: Equatable, Sendable {
+    /// Every device that keeps a deletion local, most recently heard from first.
+    let others: [OtherWalletDevice]
+
+    /// The registry could not be read at all. `others` then holds mirror entries
+    /// only, so its contents are a floor, not a total.
+    let registryUnreadable: Bool
+
+    /// Whether anything at all blocks treating this as the last device.
+    var hasOthers: Bool { !others.isEmpty }
+
+    /// Blockers with an active registry row — the ones `unlinkDevice` can clear.
+    var unlinkable: [OtherWalletDevice] { others.filter { $0.source == .registry } }
+
+    /// Blockers that exist only in the mirror. These have no remedy in today's
+    /// delete flow and are why the informed override is load-bearing.
+    var mirrorOnly: [OtherWalletDevice] { others.filter { $0.source == .kvsOnly } }
 }
 
 // MARK: - Error Types

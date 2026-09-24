@@ -7684,6 +7684,28 @@
         }
       }
     },
+    "button_delete_everywhere_anyway" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete Everywhere Anyway"
+          }
+        }
+      }
+    },
+    "button_delete_from_account_anyway" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete from the account anyway…"
+          }
+        }
+      }
+    },
     "button_delete_from_device" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -15813,6 +15835,39 @@
         }
       }
     },
+    "linked_devices_unsynced_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Unrecognized device"
+          }
+        }
+      }
+    },
+    "linked_devices_unsynced_device_description" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Registered to this wallet on this iCloud account. Its details haven't reached this device."
+          }
+        }
+      }
+    },
+    "linked_devices_unsynced_device_registered %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Registered %@. Its details haven't reached this device."
+          }
+        }
+      }
+    },
     "maintenance_boarding" : {
       "localizations" : {
         "de" : {
@@ -19191,6 +19246,17 @@
         }
       }
     },
+    "rejoin_message_no_primary" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This iCloud account has a wallet, but no device is currently set up to spend from it. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."
+          }
+        }
+      }
+    },
     "rejoin_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -20058,6 +20124,39 @@
         }
       }
     },
+    "settings_delete_override_acknowledge" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "I have my recovery phrase written down. I understand every device on this iCloud account loses this wallet."
+          }
+        }
+      }
+    },
+    "settings_delete_override_blockers %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Still registered to this wallet: %@. If you no longer have them, continuing removes the wallet from the account anyway."
+          }
+        }
+      }
+    },
+    "settings_delete_override_blockers_unnamed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Another device on this iCloud account is still registered to this wallet, but its details never reached this device. If that device is gone, continuing removes the wallet from the account anyway."
+          }
+        }
+      }
+    },
     "settings_delete_permanent_warning_everywhere" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -20116,6 +20215,17 @@
         }
       }
     },
+    "settings_delete_permanent_warning_override" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This removes the wallet from this device, from iCloud, and from every other device on this iCloud account — including the recovery phrase in iCloud Keychain. Only a phrase you wrote down can restore it."
+          }
+        }
+      }
+    },
     "settings_delete_wallet_title" : {
       "localizations" : {
         "de" : {
@@ -20140,6 +20250,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "永久移除你的錢包"
+          }
+        }
+      }
+    },
+    "settings_delete_warning_check_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device. Your other devices couldn't be checked, so the wallet stays on the account."
           }
         }
       }
@@ -20202,7 +20323,7 @@
       }
     },
     "settings_delete_warning_local_only" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20226,6 +20347,28 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "這將從此裝置永久刪除你的錢包。其他裝置仍可存取這個錢包。"
+          }
+        }
+      }
+    },
+    "settings_delete_warning_local_only_named %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device. Still registered elsewhere: %@."
+          }
+        }
+      }
+    },
+    "settings_delete_warning_local_only_unnamed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet."
           }
         }
       }

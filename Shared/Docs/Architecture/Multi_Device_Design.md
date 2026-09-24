@@ -285,10 +285,33 @@ Walkthrough (proposed):
 - **Behind the scenes:** seed removed from iCloud Keychain, wallet hash, iCloud data, and backups deleted, local files wiped.
 - **Other devices (override case):** show "This wallet was deleted on another device" and *offer* local cleanup — nothing is destroyed remotely without a tap.
 
-Status: proposed; not built. If accepted, it supersedes the old "bless
-device-by-device vs remote wipe" question — the answer would be
-device-by-device with visibility, blocking, and an informed override; no
-remote-wipe protocol.
+Status: **partially built 2026-09-24** — the disclosure and the override valve
+shipped; the unlink-first flow did not.
+
+The warning above stopped being hypothetical on 2026-09-23: a mirror ghost
+blocked the full wipe with no way out, so **the wallet could not be removed from
+the account at all**, and each reinstall re-adopted it. Built in response
+(contract rule 24, `Open_Follow_Ups.md`):
+
+- *Blockers are named, not implied.* `otherDeviceReport(walletHash:)` merges the
+  two registries into one value marking each blocker `.registry` or `.kvsOnly`;
+  the delete screen names them, Linked Devices shows mirror-only entries as
+  "Unrecognized device", and both read that same value so they cannot disagree
+  again. A third "couldn't check" state replaced the copy that asserted other
+  devices exist when the registry was unreadable.
+- *The override valve exists.* `.localOnly` reaches a full wipe only via
+  "Delete from the account anyway…", gated on a recovery-phrase
+  acknowledgement, and `includesCloudData(strategy:overrideConfirmed:)` is
+  test-pinned as the sole route.
+- *Not built:* unlink-in-flow. It needs `forgetUnsyncedDevice(_:)` because
+  `unlinkDevice` can't touch a row-less mirror entry, and it adds a second,
+  gentler-looking door to the same irreversible outcome — deferred to the full
+  build with per-blocker confirmation. Also not built: the phrase-confirmation
+  proposal below, and the "wallet deleted elsewhere" cleanup-offer state.
+
+If accepted in full, it supersedes the old "bless device-by-device vs remote
+wipe" question — the answer would be device-by-device with visibility,
+blocking, and an informed override; no remote-wipe protocol.
 
 ### S8 — All devices lost: recover on a brand-new device ⚠️
 Two sub-cases. (a) Same iCloud account: the new device syncs the keychain
@@ -663,6 +686,18 @@ an unreadable registry resolves to local-only instead of full wipe.
 **Generalised rule: a decision whose wrong answer destroys account-scoped
 state must read the fastest-converging store available, and must treat "I
 don't know" as "not alone."**
+
+The fifth (2026-09-23, found on two iPhones) is that rule's own cost, unpaid.
+Reading the fast store first is right, but the fast store has no staleness
+cutoff, so its evidence cannot be falsified — and with S7's override unbuilt,
+**the wallet became undeletable from the account**, re-adopted by every
+reinstall. Two surfaces reading different stores ("1 device" vs "other devices
+keep access") made it undiagnosable. A sixth, found in the same code: the mirror
+cleanup in `unregisterCurrentDevice()` was nested inside a successful row fetch,
+so a device whose row hadn't imported left a ghost that no later deletion could
+clear. **Generalised rule: a conservative guard on an irreversible action needs
+an escape hatch and a name for what it is blocking on, or it converts a
+recoverable failure into a permanent one** (contract rule 24).
 
 Defenses live elsewhere and are referenced, not
 duplicated: launch contract rules 14–21 (invariants with incident history),

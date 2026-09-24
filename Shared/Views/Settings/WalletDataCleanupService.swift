@@ -78,27 +78,74 @@ class WalletDataCleanupService {
         }
     }
 
+    /// The deletion strategy plus the evidence behind it.
+    ///
+    /// The delete flow needs both: the strategy decides what gets deleted, and
+    /// the report is what lets the screen *name* the devices that keep the
+    /// deletion local. Copy derived from the strategy alone is how the dialog
+    /// came to assert "your other devices keep access" on an account whose
+    /// devices list showed one device (2026-09-23).
+    struct DeletionAssessment {
+        let strategy: DeletionStrategy
+        /// The blockers behind `.localOnly`. Nil when the registries could not be
+        /// read at all — the `.undetermined` case, where claiming anything about
+        /// other devices would be a guess.
+        let report: OtherDeviceReport?
+    }
+
     /// Determine the appropriate deletion strategy based on device registry
     func getDeletionStrategy() async -> DeletionStrategy {
-        let evidence: OtherDeviceEvidence
+        await assessDeletion().strategy
+    }
 
+    /// Determine the deletion strategy, keeping the evidence for the UI.
+    func assessDeletion() async -> DeletionAssessment {
         do {
             // Scope the question to the account's wallet; a nil hash makes
-            // hasOtherActiveDevices answer conservatively on its own
-            let hasOthers = try await deviceRegistrationService.hasOtherActiveDevices(
+            // otherDeviceReport answer conservatively on its own
+            let report = try await deviceRegistrationService.otherDeviceReport(
                 walletHash: getHashFromUbiquitousStore()
             )
-            evidence = hasOthers ? .othersPresent : .noneFound
+            return DeletionAssessment(
+                strategy: Self.deletionStrategy(for: report.hasOthers ? .othersPresent : .noneFound),
+                report: report
+            )
         } catch {
             #if DEBUG
             print("⚠️ [WalletDataCleanupService] Failed to check other devices: \(error.localizedDescription)")
             #endif
-            evidence = .undetermined
+            return DeletionAssessment(
+                strategy: Self.deletionStrategy(for: .undetermined),
+                report: nil
+            )
         }
-
-        return Self.deletionStrategy(for: evidence)
     }
     
+    /// Whether a deletion removes account-shared state (the synchronizable seed,
+    /// the KVS wallet hash, the network config, backups, CloudKit rows).
+    ///
+    /// `.localOnly` becoming a full wipe requires `overrideConfirmed` — the
+    /// informed "delete everywhere anyway" escape hatch. It exists because the
+    /// blocking evidence is unfalsifiable from inside the app: the fast mirror
+    /// has no staleness cutoff (its timestamp is "last registered", not "last
+    /// seen"), so a mirror entry for a device that is genuinely gone blocks the
+    /// full wipe forever and the wallet cannot be removed from the account at all
+    /// (2026-09-23). The override must stay the *only* path from `.localOnly` to
+    /// a full wipe: no error, no timeout and no retry may reach it, because a
+    /// wrong full wipe destroys the seed account-wide and is unrecoverable
+    /// without a written phrase.
+    nonisolated static func includesCloudData(
+        strategy: DeletionStrategy,
+        overrideConfirmed: Bool
+    ) -> Bool {
+        switch strategy {
+        case .promptForCloudData:
+            return true
+        case .localOnly:
+            return overrideConfirmed
+        }
+    }
+
     /// Delete wallet data with specified strategy
     /// - Parameter includeCloudData: If true, deletes all data from CloudKit. If false, only local data.
     /// - Returns: Summary of what was deleted
@@ -839,9 +886,20 @@ enum SharedStateWipeCoverage {
         Entry(key: "com.arke.wallet.mnemonicHash",         store: "iCloud KVS",      scope: .fullWipeOnly),
         Entry(key: "com.arke.wallet.networkConfigId",      store: "iCloud KVS",      scope: .fullWipeOnly),
         Entry(key: "device_<id>_* (registration mirror)",  store: "iCloud KVS",      scope: .fullWipeOnly),
+        // The fast device registry that the deletion decision reads. Listed as
+        // fullWipeOnly because that is the only path that clears *other* devices'
+        // entries (clearDeviceRegistrationsFromKVStore); this device's own entries
+        // are removed by unregisterCurrentDevice on every deletion, local-only
+        // included — leaving one behind blocks every remaining device's full wipe
+        // forever (2026-09-23).
+        Entry(key: "com.arke.device.registered.<hash>.<id>", store: "iCloud KVS",    scope: .fullWipeOnly),
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
-        Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal)
+        Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),
+        // Deliberately survives deletion: re-registration rewrites it, and
+        // clearing it would make the next launch report a routine secondary
+        // registration as an unexplained demotion
+        Entry(key: "device_<id>_selfWroteIsPrimary",       store: "UserDefaults",    scope: .deviceLocal)
     ]
 }
 

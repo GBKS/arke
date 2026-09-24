@@ -12,10 +12,27 @@ struct DeletePermanentlyConfirmationView: View {
     let deletionStrategy: DeletionStrategy
     let onConfirm: () async -> Void
     let onBack: () -> Void
-    
+
+    /// True when the user is overriding a `.localOnly` verdict to wipe the whole
+    /// account anyway. The consequence is the same as any full wipe, but the
+    /// premise is not: the registries say other devices still hold this wallet,
+    /// and the user is asserting otherwise. So this path names what blocks it and
+    /// demands an explicit acknowledgement before the destructive gesture unlocks.
+    var isOverride: Bool = false
+
+    /// Devices the registries say still hold the wallet, for the override copy.
+    var blockers: [OtherWalletDevice] = []
+
     @Environment(\.walletDataCleanupService) private var cleanupService
     @State private var isDeleting = false
     @State private var deleteError: String?
+    /// Gate on the override path only. The seed is the one thing a wrong full
+    /// wipe destroys irrecoverably, so the user confirms they hold it offline.
+    @State private var acknowledgedRecoveryPhrase = false
+
+    private var isConfirmEnabled: Bool {
+        !isDeleting && (!isOverride || acknowledgedRecoveryPhrase)
+    }
     
     var body: some View {
         ZStack {
@@ -66,6 +83,10 @@ struct DeletePermanentlyConfirmationView: View {
                             .foregroundColor(.white.opacity(0.9))
                             .multilineTextAlignment(.center)
                             .lineSpacing(6)
+
+                        if isOverride {
+                            overrideAcknowledgement
+                        }
                         
                         /*
                         // Warning callout for iCloud
@@ -167,7 +188,7 @@ struct DeletePermanentlyConfirmationView: View {
                         text: String(localized: "button_slide_to_delete", defaultValue: "Slide to Delete"),
                         icon: "trash.fill",
                         tintColor: Color.Arke.red,
-                        isEnabled: !isDeleting
+                        isEnabled: isConfirmEnabled
                     ) {
                         Task {
                             await performDeletion()
@@ -194,7 +215,7 @@ struct DeletePermanentlyConfirmationView: View {
                     .buttonStyle(.glassProminent)
                     .controlSize(.large)
                     .tint(Color.Arke.red)
-                    .disabled(isDeleting)
+                    .disabled(!isConfirmEnabled)
                     #endif
                     
                     /*
@@ -211,7 +232,58 @@ struct DeletePermanentlyConfirmationView: View {
         }
     }
     
+    /// The override's consequence, named devices and all, plus the one
+    /// acknowledgement that stands between the user and an unrecoverable wipe.
+    private var overrideAcknowledgement: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(blockerSummary)
+                .font(.callout)
+                .foregroundColor(.white.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
+
+            Toggle(isOn: $acknowledgedRecoveryPhrase) {
+                Text(String(localized: "settings_delete_override_acknowledge",
+                            defaultValue: "I have my recovery phrase written down. I understand every device on this iCloud account loses this wallet."))
+                    .font(.callout)
+                    .foregroundColor(.white)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .tint(Color.Arke.red)
+            .disabled(isDeleting)
+        }
+        .padding(18)
+        .background {
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.black.opacity(0.45))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(Color.Arke.red.opacity(0.5), lineWidth: 1)
+                }
+        }
+        .padding(.top, 10)
+    }
+
+    /// Names what the registries think is still out there. A mirror-only entry
+    /// has no name, and saying so is the point — an unnameable blocker is exactly
+    /// the situation the override exists for.
+    private var blockerSummary: String {
+        let names = blockers.compactMap(\.deviceName)
+
+        if !names.isEmpty {
+            return String(format: String(localized: "settings_delete_override_blockers %@",
+                                         defaultValue: "Still registered to this wallet: %@. If you no longer have them, continuing removes the wallet from the account anyway."),
+                          names.formatted(.list(type: .and)))
+        }
+
+        return String(localized: "settings_delete_override_blockers_unnamed",
+                      defaultValue: "Another device on this iCloud account is still registered to this wallet, but its details never reached this device. If that device is gone, continuing removes the wallet from the account anyway.")
+    }
+
     private var confirmButtonTitle: String {
+        if isOverride {
+            return String(localized: "button_delete_everywhere_anyway", defaultValue: "Delete Everywhere Anyway")
+        }
+
         switch deletionStrategy {
         case .localOnly:
             return String(localized: "button_delete_from_device", defaultValue: "Delete from This Device")
@@ -221,6 +293,10 @@ struct DeletePermanentlyConfirmationView: View {
     }
 
     private var warningText: String {
+        if isOverride {
+            return String(localized: "settings_delete_permanent_warning_override", defaultValue: "This removes the wallet from this device, from iCloud, and from every other device on this iCloud account — including the recovery phrase in iCloud Keychain. Only a phrase you wrote down can restore it.")
+        }
+
         switch deletionStrategy {
         case .localOnly:
             return String(localized: "settings_delete_permanent_warning_local_only", defaultValue: "All wallet data will be permanently deleted from this device. Your other devices keep this wallet — open one of them to make it the active device.")

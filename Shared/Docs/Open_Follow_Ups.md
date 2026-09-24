@@ -161,46 +161,121 @@ awaiting Christoph's call — the items below assume acceptance:
 
 ## Wallet Deletion & Device Registry
 
-- [ ] **NEXT UP — the wallet cannot be deleted from the account, and every
-  reinstall silently re-adopts it** (found 2026-09-23 immediately after the
+- [ ] **NEXT UP — two-device on-device verify of the deletion override**
+  (code landed 2026-09-24, contract rule 24). This is the gate for calling the
+  work below done; deletion changes are never done without one. Check, with two
+  linked devices: (a) Linked Devices and the delete screen agree on how many
+  other devices hold the wallet, and the delete screen *names* them; (b) delete
+  on device B, then on A within the KVS propagation window — A still takes the
+  local-only path (correct) but now names B as the blocker and offers "Delete
+  from the account anyway…"; (c) taking the override with the acknowledgement
+  toggle wipes the seed, KVS hash, network config, backups and CloudKit rows,
+  and a reinstall lands on **onboarding**, not a read-only activity screen;
+  (d) a mirror-only ghost renders as "Unrecognized device" in Linked Devices
+  rather than being invisible; (e) the fresh-secondary launch logs
+  "🔒 Read-only: this device is registered as a secondary", not "🛑 Blocked …
+  indicates demotion".
+- [x] **The wallet could not be deleted from the account, and every reinstall
+  re-adopted it — FIXED 2026-09-24** (found 2026-09-23 immediately after the
   rule 23 fix; unrelated to it). Deleting the wallet on device B and then on
-  device A a minute later takes the **local-only** path on *both* — device A's
-  delete dialog still says "other devices will keep access" — so
-  `clearEverywhere()` never runs and the seed, KVS hash, network config,
-  backups and CloudKit rows all survive. Every later reinstall then finds the
-  seed and the hash, adopts the wallet, and (per the create/import-only claim
-  policy) registers non-primary, landing on a read-only activity screen. Four
-  distinct defects, worst first:
+  device A a minute later took the **local-only** path on *both* — device A's
+  delete dialog still said "other devices will keep access" — so
+  `clearEverywhere()` never ran and the seed, KVS hash, network config,
+  backups and CloudKit rows all survived. Every later reinstall then found the
+  seed and the hash, adopted the wallet, and (per the create/import-only claim
+  policy) registered non-primary, landing on a read-only activity screen.
 
-  1. **The last-device check loses to KVS lag.**
-     `hasOtherActiveDevices(walletHash:)` consults the KVS mirror before
-     SwiftData — deliberate and load-bearing, since a joining secondary that
-     reads the slower store would wipe the shared seed — but B's unregister
-     hasn't propagated to A's KVS cache yet, so A sees a key for a device that
-     is already gone. KVS entries have no staleness cutoff, and **S7's
-     informed "delete anyway" override is not built**, so there is no way out
-     from inside the app. The S7 entry's own warning ("the override valve is
-     now load-bearing: KVS ghosts block indefinitely") is exactly this.
-  2. **The two surfaces disagree, which makes it undiagnosable.** Linked
-     Devices reads the CloudKit registry and says "1 device"; the delete
-     dialog reads KVS and says others exist. Whatever the fix for (1), these
-     must agree, or name the blocking device.
-  3. **A phantom primary is invented.** `SecurityService.swift:243` does
-     `primaryDevice?.deviceName ?? "Another Device"`, so an account with
-     *zero* primaries reports `walletActiveElsewhere(deviceName: "Another
-     Device")`. The honest state is "no primary — promote this device".
-  4. **Self-inflicted demotion.** A fresh adopt registers `isPrimary=false`,
-     writes `device_<id>_isPrimary = false` to KVS, and then
-     `shouldBlockWalletAccess()` layer 2 reads back its own write and logs
-     "🛑 Blocked: iCloud KV store indicates demotion". Right outcome here,
-     wrong reason, misleading log.
+  Scope taken: the reduced S7 (blocker disclosure + informed override), not the
+  full S7 build. The store ordering was left alone — it is correct, and the only
+  safe way out of a block it creates is a user override. Five defects, worst
+  first:
+
+  1. **The last-device check loses to KVS lag** — mitigated, not "fixed", and
+     deliberately so. `hasOtherActiveDevices(walletHash:)` still consults the
+     KVS mirror before SwiftData, because a joining secondary reading the slower
+     store would wipe the shared seed. What changed is that the block is now
+     escapable: `includesCloudData(strategy:overrideConfirmed:)` makes an
+     explicit, acknowledged override the *only* route from `.localOnly` to a
+     full wipe, and `DeletePermanentlyConfirmationView` gates it on a
+     "I have my recovery phrase written down" toggle. `hasOtherActiveDevices`
+     is now a thin wrapper over the new `otherDeviceReport(walletHash:)`.
+  2. **The two surfaces disagreed, which made it undiagnosable** — fixed.
+     `otherDeviceReport(walletHash:)` merges both stores into one value that
+     marks each blocker `.registry` or `.kvsOnly`, and every surface reads it:
+     the delete screen names blockers (or says it couldn't check — the
+     third state that was derived-work item 12), and Linked Devices renders
+     mirror-only entries as `UnsyncedDeviceRow` instead of hiding them. Linked
+     Devices also gained the **wallet-hash scoping** the deletion decision
+     always had (derived-work item 10's display half).
+  3. **A phantom primary was invented** — fixed. `WalletState`'s device name is
+     now `String?`; `SecurityService.swift:243` and the second site,
+     `lookupPrimaryDeviceName` (which fed the *rejoin* screen, so this was
+     user-visible, in hardcoded English inside localized copy), return nil for
+     a zero-primary account. `RejoinWalletView` has copy for it.
+  4. **Self-inflicted demotion** — fixed, and it was worse than "misleading
+     log": **every** write of `device_<id>_isPrimary` in the codebase targets
+     the writer's own device, and promote/demote act only on the current device,
+     so layer 2's cross-device demotion had *no reachable trigger* — its own
+     registration write was the only thing it ever fired on. A local
+     `device_<id>_selfWroteIsPrimary` breadcrumb (written at the single new
+     choke point `writeOwnPrimaryFlag`) now distinguishes the cases.
+     `MirrorPrimaryVerdict` deliberately has no "demoted by another device"
+     case, because nothing can currently tell us that.
+  5. **`unregisterCurrentDevice` generated permanent ghosts** — fixed; not in
+     the original write-up. The mirror cleanup sat inside
+     `if let registration = try? fetch(...)`, with no else, so a device whose
+     CloudKit row hadn't imported yet (fresh adopt), had been collapsed by
+     `dedupeOwnRecords`, or was unreadable deleted its wallet and left its
+     mirror entry behind **forever** — and since the mirror is what the deletion
+     decision reads, that ghost blocks every *remaining* device's full wipe, and
+     each reinstall of that device re-writes it. Now cleared unconditionally and
+     across every wallet hash (`mirrorKeys(forDeviceId:in:)`), which also kills
+     the row-hash-vs-account-hash mismatch case.
 
   Note the device ID survives app deletion (local keychain, non-synchronizable
   — Apple documents that such items don't migrate, but they do survive an app
   delete/reinstall on the same device), so a reinstall is the *same* device to
-  the registry while its UserDefaults tombstone is gone. Related: the tombstone
-  item and the explicit device-linking proposal in Startup & Initialization,
-  and S7/S11 in `Architecture/Multi_Device_Design.md`.
+  the registry while its UserDefaults tombstone is gone. The silent
+  re-adoption half is left to the explicit device-linking proposal
+  (`Multi_Device_Design.md`, cross-cutting section after S13) on purpose:
+  strengthening the tombstone here would build that twice.
+- [ ] **Unlink-first for mirror-only ghosts** (deliberately *not* built
+  2026-09-24). S7's primary remedy is "I no longer have this device → unlink it
+  here", but `unlinkDevice` throws `deviceNotFound` with no registry row to
+  delete, so a mirror-only ghost needs a new `forgetUnsyncedDevice(_:)` that
+  removes mirror entries directly. Skipped because it is *redundant for
+  unblocking* — the override already gets the user out — while adding a second
+  route to the same irreversible outcome with gentler copy, and because
+  removing a live device's mirror entry (its row merely hasn't imported) tells
+  the remaining device it is alone and unlocks the seed-destroying wipe. Build
+  it with the full S7 blockers UX, where it is per-device and confirmed, and
+  fail it closed when the registry can't be read.
+- [ ] **Translate the new deletion strings** for de/ja/zh-Hant after an IDE
+  build extracts them: `settings_delete_warning_local_only_named %@`,
+  `settings_delete_warning_local_only_unnamed`,
+  `settings_delete_warning_check_failed`, `settings_delete_override_blockers %@`,
+  `settings_delete_override_blockers_unnamed`,
+  `settings_delete_override_acknowledge`,
+  `settings_delete_permanent_warning_override`,
+  `button_delete_from_account_anyway`, `button_delete_everywhere_anyway`,
+  `rejoin_message_no_primary`, `linked_devices_unsynced_device`,
+  `linked_devices_unsynced_device_description`,
+  `linked_devices_unsynced_device_registered %@`, `settings_unsynced_devices`.
+  Thirteen of those were extracted by the 2026-09-24 build and are `new` in
+  `Shared/Localizable.xcstrings`; **`settings_unsynced_devices` is not in the
+  catalog at all** because it is desktop-only and `xcodebuild` doesn't run
+  extraction for ArkeDesktop — same as `settings_other_devices_count`, which
+  still carries no `extractionState`. It renders from its `defaultValue`
+  meanwhile, and an IDE build will extract it. `settings_delete_warning_local_only`
+  is now correctly `stale` (not deleted, de/ja/zh-Hant values intact) — it is the
+  string that made the false claim.
+- [ ] **Collapse `shouldBlockWalletAccess`'s three layers** (surfaced
+  2026-09-24 while fixing defect 4). Layer 2 has no unique job: the KVS flag it
+  reads is only ever written by the device reading it, and a genuine
+  self-demotion already sets layer 1's `wasDemoted`. Left in place because
+  layer 3 (`getCurrentDevice()`) returns nil on a fresh install and so does not
+  block, which would hand a brand-new secondary spend rights — the same hole as
+  derived-work item 13. Fix that first, then reduce the layers.
 - [x] **Local-only deletion destroyed every tag and contact assignment in the
   account** — FIXED and **two-device verified 2026-09-23** (contract rule 23):
   after deleting the wallet on the secondary, the primary kept its activity

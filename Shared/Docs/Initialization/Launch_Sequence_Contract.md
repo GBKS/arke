@@ -253,6 +253,40 @@ kind, both currently unwired: `TagService.deleteAllTags()` and
 the user is asking to delete their tags everywhere — but neither may ever be
 called from a deletion, reset, or migration path.)
 
+**24. Evidence that blocks an irreversible action must be nameable on screen and overridable by the user.**
+The counterpart to rule 23's lesson: rule 23 keeps a device-scoped action from
+destroying account-scoped state, and this one keeps the *guard* against that
+from becoming a cage. `hasOtherActiveDevices(walletHash:)` reads the fast iCloud
+KVS mirror before the CloudKit registry — correct and load-bearing, since a
+joining secondary reading the slower store would be told it was the last device
+and would wipe the account's shared seed. But the mirror has no staleness cutoff
+(its timestamp is written at registration and heartbeats never refresh it), so a
+mirror entry for a device that is genuinely gone blocked the full wipe forever,
+and S7's informed override had never been built. Result: **the wallet could not
+be deleted from the account at all**, and every reinstall re-adopted it
+(2026-09-23). Worse, the two surfaces disagreed — Linked Devices read the
+registry and said "1 device" while the delete dialog read the mirror and said
+others kept access — so the state was undiagnosable from inside the app.
+Three obligations follow. (a) One source: anything the UI says about other
+devices comes from `otherDeviceReport(walletHash:)`, which merges both stores
+and marks mirror-only entries, never from one store per screen. (b) Name the
+blockers, including "unrecognized device" when only the mirror knows one — an
+unnameable blocker is the case the override exists for. (c) `.localOnly` reaches
+a full wipe only through an explicit, acknowledged override
+(`includesCloudData(strategy:overrideConfirmed:)`); no error, timeout or retry
+may reach one. Also fixed here: `unregisterCurrentDevice()` cleared the mirror
+only inside `if let registration`, so a device whose row hadn't imported (fresh
+adopt) or had already been deduped left a permanent ghost that each reinstall
+re-wrote.
+Enforced: `DeviceRegistrationService.swift`
+(`otherDeviceReport`, `mirrorKeys(forDeviceId:in:)`, `unregisterCurrentDevice`),
+`WalletDataCleanupService.swift` (`assessDeletion`, `includesCloudData`),
+`DeleteWalletSettingView.swift` / `DeletePermanentlyConfirmationView.swift`
+(named blockers, acknowledged override), `LinkedDevicesView*.swift`
+(mirror-only rows, wallet-hash scoping).
+Test: `OtherDeviceReportTests`, `FullWipeOverrideTests`,
+`MirrorKeySelectionTests`.
+
 ## Test gaps
 
 Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17, 22 (decision

@@ -1099,6 +1099,54 @@ class WalletManager {
         }
     }
     
+    /// What the iCloud KVS primary-flag mirror says about this device, for
+    /// `shouldBlockWalletAccess` layer 2.
+    ///
+    /// The layer exists to catch a demotion faster than the CloudKit-backed
+    /// registry can report it, but the flag it reads is only ever written by the
+    /// device that reads it (`DeviceRegistrationService.writeOwnPrimaryFlag` —
+    /// nothing writes another device's flag). A fresh secondary therefore read
+    /// back the `false` its own registration had just written and logged
+    /// "🛑 Blocked: iCloud KV store indicates demotion": the right outcome for
+    /// the wrong reason. Splitting the cases keeps the outcome and fixes the
+    /// claim; no case asserts *who* demoted this device, because nothing in the
+    /// codebase can currently tell us that.
+    nonisolated enum MirrorPrimaryVerdict: Equatable {
+        /// No flag written yet (fresh install before registration). The mirror
+        /// has no opinion and must not be read as one.
+        case noOpinion
+        /// The mirror says this device holds primary.
+        case primary
+        /// The mirror says this device does not hold primary. `selfWritten` is
+        /// true when this device's own registration wrote that — an ordinary
+        /// secondary, not a demotion.
+        case notPrimary(selfWritten: Bool)
+
+        var blocksWalletAccess: Bool {
+            switch self {
+            case .noOpinion, .primary:
+                return false
+            case .notPrimary:
+                return true
+            }
+        }
+    }
+
+    /// Pure decision behind layer 2, extracted for testability.
+    ///
+    /// A missing breadcrumb (`selfWroteValue == nil`) resolves to
+    /// `selfWritten: false`: installs that predate the breadcrumb have no record
+    /// either way, and claiming they wrote the flag themselves would be a guess.
+    /// Blocking is unaffected — only the log line differs.
+    nonisolated static func mirrorPrimaryVerdict(
+        mirrorValue: Bool?,
+        selfWroteValue: Bool?
+    ) -> MirrorPrimaryVerdict {
+        guard let mirrorValue else { return .noOpinion }
+        guard !mirrorValue else { return .primary }
+        return .notPrimary(selfWritten: selfWroteValue == false)
+    }
+
     /// Multi-layered check if device has been demoted
     /// This runs BEFORE wallet initialization to prevent race conditions
     func shouldBlockWalletAccess() async -> Bool {
@@ -1115,14 +1163,31 @@ class WalletManager {
         // Layer 2: Check iCloud KV store (local cache).
         // Access off the main actor — the first touch of NSUbiquitousKeyValueStore.default
         // can block on I/O, which on the launch path can trip the watchdog (SIGKILL 0xdead10cc).
-        let kvIndicatesDemotion = await Task.detached(priority: .utility) { () -> Bool in
+        let mirrorVerdict = await Task.detached(priority: .utility) { () -> MirrorPrimaryVerdict in
             let kvStore = NSUbiquitousKeyValueStore.default
-            let isPrimaryInKVStore = kvStore.bool(forKey: "device_\(deviceId)_isPrimary")
-            // Check if key exists (bool returns false for both "false" and "doesn't exist")
-            return kvStore.object(forKey: "device_\(deviceId)_isPrimary") != nil && !isPrimaryInKVStore
+            let flagKey = "device_\(deviceId)_isPrimary"
+            // bool(forKey:) returns false for both "false" and "absent", and those
+            // are different answers: absent means the mirror has no opinion
+            let mirrorValue: Bool? = kvStore.object(forKey: flagKey) != nil
+                ? kvStore.bool(forKey: flagKey)
+                : nil
+            let selfWroteValue = UserDefaults.standard.object(
+                forKey: DeviceRegistrationService.selfWrotePrimaryFlagKey(deviceId: deviceId)
+            ) as? Bool
+
+            return Self.mirrorPrimaryVerdict(mirrorValue: mirrorValue, selfWroteValue: selfWroteValue)
         }.value
-        if kvIndicatesDemotion {
-            Self.logger.info("🛑 [WalletManager] Blocked: iCloud KV store indicates demotion")
+
+        if mirrorVerdict.blocksWalletAccess {
+            switch mirrorVerdict {
+            case .notPrimary(selfWritten: true):
+                // The common, boring case: this device registered as a secondary
+                // and mirrored its own status. Read-only is correct and nothing
+                // was taken away, so don't cry demotion.
+                Self.logger.info("🔒 [WalletManager] Read-only: this device is registered as a secondary (iCloud KV mirror)")
+            default:
+                Self.logger.info("🛑 [WalletManager] Blocked: iCloud KV mirror says this device is not primary, and this device didn't write that")
+            }
             return true
         }
         

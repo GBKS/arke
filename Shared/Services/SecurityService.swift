@@ -275,20 +275,33 @@ class SecurityService {
     }
     
     /// Best-effort lookup of the primary device's name for user-facing routing
-    /// states; falls back to a generic label when the registry can't be read
-    private func lookupPrimaryDeviceName(walletHash: String) async -> String {
-        var primaryDeviceName = "Another Device"
-        if modelContext != nil {
-            do {
-                let deviceService = ServiceContainer.shared.deviceRegistrationService
-                if let primaryDevice = try await deviceService.getPrimaryDevice(walletHash: walletHash) {
-                    primaryDeviceName = primaryDevice.deviceName
-                }
-            } catch {
-                Self.logger.warning("⚠️ Failed to look up primary device: \(error)")
-            }
+    /// states.
+    ///
+    /// Returns nil when the account has no primary device, when the registry
+    /// can't be read, or when the record carries an empty name — all three are
+    /// "we cannot name it", and the caller must say so rather than show a
+    /// placeholder. The previous "Another Device" fallback was injected into
+    /// localized copy as a hardcoded English string and asserted a fact (some
+    /// other device holds the wallet) that is false for a zero-primary account.
+    private func lookupPrimaryDeviceName(walletHash: String) async -> String? {
+        guard modelContext != nil else { return nil }
+
+        do {
+            let deviceService = ServiceContainer.shared.deviceRegistrationService
+            let primaryDevice = try await deviceService.getPrimaryDevice(walletHash: walletHash)
+            return Self.displayableDeviceName(primaryDevice?.deviceName)
+        } catch {
+            Self.logger.warning("⚠️ Failed to look up primary device: \(error)")
+            return nil
         }
-        return primaryDeviceName
+    }
+
+    /// A device name is displayable only if it exists and isn't blank — registry
+    /// rows default `deviceName` to `""`, which would render as an empty gap in
+    /// the middle of a sentence.
+    private static func displayableDeviceName(_ name: String?) -> String? {
+        guard let name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return name
     }
 
     /// Internal method that performs the actual wallet state detection
@@ -318,7 +331,7 @@ class SecurityService {
             case .rejoin:
                 lastDetectionWasDefinitive = true
                 let deviceName = await lookupPrimaryDeviceName(walletHash: accountHash ?? tombstoneHash)
-                Self.logger.info("Local deletion tombstone active — routing to rejoin (primary: \(deviceName), kvsHashPresent: \(accountHash != nil))")
+                Self.logger.info("Local deletion tombstone active — routing to rejoin (primary: \(deviceName ?? "none registered"), kvsHashPresent: \(accountHash != nil))")
                 return .walletAvailableToRejoin(deviceName: deviceName)
             case .stale:
                 Self.logger.info("Local deletion tombstone stale (account wallet definitively gone or replaced) — clearing")
@@ -395,7 +408,7 @@ class SecurityService {
             // only the primary-device name we can show.
             let primaryDeviceName = await lookupPrimaryDeviceName(walletHash: cloudWalletHash)
 
-            Self.logger.info("📱 Wallet hash found but no local seed - entering read-only mode (seed not synced)")
+            Self.logger.info("📱 Wallet hash found but no local seed - entering read-only mode (seed not synced, primary: \(primaryDeviceName ?? "none registered"))")
             return .walletActiveElsewhere(deviceName: primaryDeviceName)
         }
         
@@ -914,12 +927,18 @@ enum WalletState: Equatable {
     case unknown                // Initial state, not yet checked
     case noWallet              // No wallet exists anywhere
     case walletWithSeed        // Full wallet with local seed
-    case walletActiveElsewhere(deviceName: String)  // Wallet exists but this device can't spend
-                                                    // (not primary, or seed not synced here yet -
-                                                    // see ConnectionStatus.readOnlyReason)
-    case walletAvailableToRejoin(deviceName: String)  // This install deliberately deleted the wallet
-                                                      // locally; the account still has it — offer
-                                                      // rejoin, never onboarding/create
+    // Wallet exists but this device can't spend (not primary, or seed not synced
+    // here yet - see ConnectionStatus.readOnlyReason).
+    //
+    // `deviceName` is nil when the account has no primary device registered, or
+    // when the registry couldn't be read. It used to default to "Another Device",
+    // which made a zero-primary account indistinguishable from an ordinary
+    // secondary and hid the one state whose remedy is promoting *this* device.
+    // Callers that display it must handle nil rather than substitute a name.
+    case walletActiveElsewhere(deviceName: String?)
+    // This install deliberately deleted the wallet locally; the account still has
+    // it — offer rejoin, never onboarding/create. Same nil semantics as above.
+    case walletAvailableToRejoin(deviceName: String?)
 }
 
 enum MnemonicValidationResult {

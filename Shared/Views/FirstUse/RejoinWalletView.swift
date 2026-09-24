@@ -18,8 +18,13 @@ import ArkeUI
 /// finds the still-synced seed and restores the wallet on this device.
 /// See Wallet_Deletion_And_Rejoin.md.
 struct RejoinWalletView: View {
-    /// Name of the device currently holding the primary role, for display
-    let primaryDeviceName: String
+    /// Name of the device currently holding the primary role, for display.
+    ///
+    /// Nil when the account has no primary device registered (or the registry
+    /// couldn't be read). Rejoining is still the right and only action — the
+    /// wallet is on the account either way — so this only changes the wording,
+    /// which must not claim a device that isn't there.
+    let primaryDeviceName: String?
 
     /// Called when the user chooses to rejoin; the owner clears the tombstone
     /// and re-runs detection
@@ -36,7 +41,7 @@ struct RejoinWalletView: View {
                 .font(.system(.title, design: .serif))
                 .multilineTextAlignment(.center)
 
-            Text(String(localized: "rejoin_message %@", defaultValue: "This iCloud account has a wallet on \(primaryDeviceName). You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."))
+            Text(message)
                 .font(.title3)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -52,8 +57,22 @@ struct RejoinWalletView: View {
         .frame(maxWidth: 480)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    /// Names the holding device when we know it; otherwise says the wallet is on
+    /// the account without inventing a device for it.
+    private var message: String {
+        guard let primaryDeviceName else {
+            return String(localized: "rejoin_message_no_primary", defaultValue: "This iCloud account has a wallet, but no device is currently set up to spend from it. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet.")
+        }
+
+        return String(localized: "rejoin_message %@", defaultValue: "This iCloud account has a wallet on \(primaryDeviceName). You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet.")
+    }
 }
 
-#Preview {
+#Preview("Primary device known") {
     RejoinWalletView(primaryDeviceName: "Christoph's iPhone") {}
+}
+
+#Preview("No primary device") {
+    RejoinWalletView(primaryDeviceName: nil) {}
 }

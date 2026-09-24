@@ -423,6 +423,7 @@
 				Views/Settings/ProfilePhotoPickerView.swift,
 				Views/Settings/RecoveryPhraseSettingView.swift,
 				Views/Settings/ThemeSettingView.swift,
+				Views/Settings/UnsyncedDeviceRow.swift,
 				Views/Settings/UserProfileSettingView.swift,
 				Views/Settings/WalletDataCleanupService.swift,
 				Views/Tags/Editor/TagEditor.swift,
