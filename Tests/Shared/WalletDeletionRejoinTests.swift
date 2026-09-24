@@ -332,6 +332,118 @@ struct FullWipeOverrideTests {
     }
 }
 
+// MARK: - When the override is offered
+
+/// The override valve shipped gated only on `.localOnly`, so it appeared on a
+/// perfectly healthy two-device account — an unrecoverable account-wide wipe
+/// offered one tap below copy that correctly said the wallet was on the primary
+/// (reported 2026-09-24). It belongs only where there is no other way out.
+@Suite("Override Availability")
+struct OverrideAvailabilityTests {
+
+    private static func device(
+        _ id: String,
+        source: OtherWalletDevice.Source,
+        isStale: Bool = false,
+        name: String? = "Christoph's iPhone"
+    ) -> OtherWalletDevice {
+        OtherWalletDevice(
+            deviceId: id,
+            deviceName: name,
+            lastSeenAt: Date(timeIntervalSince1970: 1_700_000_000),
+            registeredAt: Date(timeIntervalSince1970: 1_699_000_000),
+            isStale: isStale,
+            source: source
+        )
+    }
+
+    @Test("A healthy named blocker does not get an override")
+    func healthyBlockerHasNoOverride() {
+        // The regression: delete-on-secondary with a live registered primary.
+        // The remedies are to delete it there or unlink it here, not to wipe
+        // the account
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .registry)],
+            registryUnreadable: false
+        )
+
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+    }
+
+    @Test("A mirror-only blocker gets an override")
+    func mirrorOnlyBlockerGetsOverride() {
+        // unlinkDevice throws deviceNotFound with no row to delete, so without
+        // the override this is the dead end that made the wallet undeletable
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil)],
+            registryUnreadable: false
+        )
+
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+    }
+
+    @Test("A stale blocker kept alive by the mirror gets an override")
+    func staleBlockerGetsOverride() {
+        // Sourced .registry, so the mirrorOnly check misses it; it only still
+        // blocks because the mirror has no staleness cutoff
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .registry, isStale: true)],
+            registryUnreadable: false
+        )
+
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+    }
+
+    @Test("An unreadable registry gets an override")
+    func unreadableRegistryGetsOverride() {
+        // Both stores unreadable: report is nil. An outage must not make the
+        // wallet permanently undeletable
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: nil))
+
+        // Registry unreadable but the mirror had blockers
+        let partial = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil)],
+            registryUnreadable: true
+        )
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: partial))
+    }
+
+    @Test("One doubtful blocker among healthy ones is enough")
+    func anyDoubtfulBlockerIsEnough() {
+        let report = OtherDeviceReport(
+            others: [
+                Self.device("a", source: .registry),
+                Self.device("b", source: .kvsOnly, name: nil)
+            ],
+            registryUnreadable: false
+        )
+
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+    }
+
+    @Test("The last device is never offered an override")
+    func lastDeviceHasNoOverride() {
+        // .promptForCloudData already wipes everything; a second door is noise
+        let empty = OtherDeviceReport(others: [], registryUnreadable: false)
+
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: empty))
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: nil))
+    }
+
+    @Test("Offering the override never decides the wipe on its own")
+    func offeringIsNotConfirming() {
+        // The two decisions must stay independent: this one is presentation,
+        // includesCloudData is the irreversible one and needs confirmation
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil)],
+            registryUnreadable: false
+        )
+
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(!WalletDataCleanupService.includesCloudData(strategy: .localOnly, overrideConfirmed: false))
+    }
+}
+
 // MARK: - Mirror key selection (ghost cleanup)
 
 /// `unregisterCurrentDevice` only cleared the mirror when a registry row

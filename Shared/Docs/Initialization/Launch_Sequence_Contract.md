@@ -274,7 +274,11 @@ blockers, including "unrecognized device" when only the mirror knows one — an
 unnameable blocker is the case the override exists for. (c) `.localOnly` reaches
 a full wipe only through an explicit, acknowledged override
 (`includesCloudData(strategy:overrideConfirmed:)`); no error, timeout or retry
-may reach one. Also fixed here: `unregisterCurrentDevice()` cleared the mirror
+may reach one — and that override is *offered* only where the block is doubtful
+(`shouldOfferOverride(strategy:report:)`: a mirror-only blocker, a stale row the
+mirror keeps alive, or an unreadable registry). Gating it on `.localOnly` alone
+shipped it onto healthy two-device accounts, which inverts the rule: an
+escape hatch presented as a routine option is its own hazard. Also fixed here: `unregisterCurrentDevice()` cleared the mirror
 only inside `if let registration`, so a device whose row hadn't imported (fresh
 adopt) or had already been deduped left a permanent ghost that each reinstall
 re-wrote.

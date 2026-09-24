@@ -239,8 +239,22 @@ awaiting Christoph's call — the items below assume acceptance:
   re-adoption half is left to the explicit device-linking proposal
   (`Multi_Device_Design.md`, cross-cutting section after S13) on purpose:
   strengthening the tombstone here would build that twice.
+- [x] **Override offered on a healthy two-device account — FIXED 2026-09-24**,
+  same day, found by the two-device verify below. `showsOverrideOption` was
+  `deletionStrategy == .localOnly`, and `.localOnly` is the verdict whenever
+  *anything* blocks — including one live, correctly-registered primary. So the
+  delete screen named the primary correctly and then offered to wipe the account
+  anyway, directly beneath. Now `WalletDataCleanupService.shouldOfferOverride(strategy:report:)`
+  requires the block to be doubtful: a mirror-only blocker, a stale row the
+  mirror keeps alive, or an unreadable registry. `OverrideAvailabilityTests`
+  pins it, including that offering the override and *confirming* the wipe stay
+  independent decisions. Not reproducible on a re-test, probably because the
+  option sits below the fold on that scrolling screen — the condition itself was
+  unconditional, so treat the fix as pinned by tests rather than by observation.
 - [ ] **Unlink-first for mirror-only ghosts** (deliberately *not* built
-  2026-09-24). S7's primary remedy is "I no longer have this device → unlink it
+  2026-09-24). Now the *only* remedy for a healthy-but-unwanted blocker, since
+  the override is no longer offered there: the paths out are "delete it on that
+  device" or "unlink it here", and the latter is exactly what this item builds. S7's primary remedy is "I no longer have this device → unlink it
   here", but `unlinkDevice` throws `deviceNotFound` with no registry row to
   delete, so a mirror-only ghost needs a new `forgetUnsyncedDevice(_:)` that
   removes mirror entries directly. Skipped because it is *redundant for
@@ -636,8 +650,8 @@ green):
   matrix pinned by `ImportRecoveryLogicTests` (contract rule 2).
 - [ ] **Next pure-logic extraction**: wallet-detection decisions (contract
   rules 3/4/14 — overlaps the optional Phase 5 refactor above).
-- [ ] **The wallet can run a whole session on the wrong network** — FIXED
-  2026-09-23 (contract rule 22), **on-device verify pending**. Step 0-pre is
+- [x] **The wallet can run a whole session on the wrong network** — FIXED
+  2026-09-23 (contract rule 22), **both branches verified 2026-09-24**. Step 0-pre is
   now `WalletManager.reconcileNetworkConfigBeforeWalletOpen()`: it syncs from
   iCloud and re-applies the account's network to the wallet object on every
   path that opens the wallet — `performInitialization` and the background wake
@@ -659,17 +673,34 @@ green):
   database was created. A signet import on the primary also completed normally,
   which exercises the skip-when-open guard without proving it by log.
 
-  **Remaining: observe the create-a-wallet guard.** On a fresh simulator,
-  create a wallet on signet and expect `🌐 Network config: wallet already open
-  on Bitcoin Signet — leaving it alone`, *not* a re-apply; then relaunch and
-  confirm the chosen network survived. Watch it in Xcode's console (run with
-  ⌘R, filter `Network config`) — `Logger` interpolation defaults to private, so
-  Console.app without a debugger attached may render the network names as
-  `<private>`; consider marking those four interpolations `privacy: .public`,
-  as ~10 other files already do for non-sensitive diagnostics. A
-  stale-but-present local config takes the same `.reapply` branch as the
-  verified case and is covered by the unit tests; it's only reproducible by
-  hand on macOS (edit the container plist after `killall cfprefsd`).
+  **Skip-when-open guard VERIFIED on a fresh simulator 2026-09-24** (erased
+  iPhone 18 Pro, iOS 27.0, app installed via `simctl`, no debugger attached).
+  Creating a signet wallet logged, in order: `Network configuration saved:
+  Bitcoin Signet (ID: signet)` → `initialize() CALLED` from
+  `MainView_iOS.swift:169` → `Starting initialization...` → `🌐 Network config:
+  wallet already open on Bitcoin Signet — leaving it alone` → `Device is
+  primary` → `Wallet already open`. Exactly one reconcile-branch line in the
+  whole session: no `.reapply`, no `.inSync`, no `.noUsableConfig`. Relaunching
+  then logged `Network config loaded: Bitcoin Signet` → `route=wallet` → `🌐
+  Network config in sync before wallet open: Bitcoin Signet` → `wallet exists on
+  Bitcoin Signet`, so the chosen network survived and the *other* side of the
+  guard (wallet not yet open → `.inSync`) is covered too. Both remaining
+  sub-checks done; the item is closed.
+
+  Note on the `<private>` worry: network names rendered **in full** on the
+  simulator with no debugger attached, read via
+  `xcrun simctl spawn booted log show --last 15m --info --debug --predicate
+  'subsystem == "GBKS.Arke"'`. Simulator log reads don't redact private data, so
+  the concern applies to *physical-device* logs only. The suggestion to mark
+  those four interpolations `privacy: .public` (as ~10 other files already do
+  for non-sensitive diagnostics) still stands on its own merits — undecided, not
+  done. Beware: `log show` omits `info`-level lines unless `--info --debug` is
+  passed; without them this check silently shows nothing.
+
+  A stale-but-present local config takes the same `.reapply` branch as the
+  2026-09-23 device verify and is covered by the unit tests; it's only
+  reproducible by hand on macOS (edit the container plist after
+  `killall cfprefsd`).
   Original write-up:
   Two observations on the second iPhone, 2026-09-23:
   1. *Stale local config.* The device had `mainnet` in UserDefaults while iCloud

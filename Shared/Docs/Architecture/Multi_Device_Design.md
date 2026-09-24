@@ -299,10 +299,17 @@ the account at all**, and each reinstall re-adopted it. Built in response
   "Unrecognized device", and both read that same value so they cannot disagree
   again. A third "couldn't check" state replaced the copy that asserted other
   devices exist when the registry was unreadable.
-- *The override valve exists.* `.localOnly` reaches a full wipe only via
-  "Delete from the account anyway…", gated on a recovery-phrase
+- *The override valve exists, and stays rare.* `.localOnly` reaches a full wipe
+  only via "Delete from the account anyway…", gated on a recovery-phrase
   acknowledgement, and `includesCloudData(strategy:overrideConfirmed:)` is
-  test-pinned as the sole route.
+  test-pinned as the sole route. It is *offered* only where the block is
+  doubtful — a mirror-only blocker, a stale row the mirror keeps alive, or an
+  unreadable registry (`shouldOfferOverride(strategy:report:)`). When every
+  blocker is a fresh, named, registry-backed device the override is hidden,
+  because S7's own remedies (delete it there, unlink it here) are the right
+  answers and an account-wide wipe one tap below them reads as routine. The
+  first cut gated on `.localOnly` alone and showed up on a healthy two-device
+  account (2026-09-24).
 - *Not built:* unlink-in-flow. It needs `forgetUnsyncedDevice(_:)` because
   `unlinkDevice` can't touch a row-less mirror entry, and it adds a second,
   gentler-looking door to the same irreversible outcome — deferred to the full

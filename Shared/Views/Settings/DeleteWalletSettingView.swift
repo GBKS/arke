@@ -213,13 +213,16 @@ struct DeleteWalletSettingView: View {
         }
     }
 
-    /// Whether to offer the informed override.
-    ///
-    /// Only when the verdict is `.localOnly`, i.e. something is blocking. Not
-    /// offered for `.promptForCloudData`, where the ordinary path already wipes
-    /// everything and a second door would be noise.
+    /// Whether to offer the informed override — see
+    /// `WalletDataCleanupService.shouldOfferOverride(strategy:report:)` for why
+    /// a healthy, named blocker does not qualify.
     private var showsOverrideOption: Bool {
-        deletionStrategy == .localOnly
+        guard let deletionStrategy else { return false }
+
+        return WalletDataCleanupService.shouldOfferOverride(
+            strategy: deletionStrategy,
+            report: blockerReport
+        )
     }
     
     /// Strategy-specific intro; neutral while the device check is still running.

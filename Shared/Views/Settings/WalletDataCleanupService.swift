@@ -146,6 +146,38 @@ class WalletDataCleanupService {
         }
     }
 
+    /// Whether the delete flow should offer the informed "delete from the
+    /// account anyway" override.
+    ///
+    /// Only when the block is *doubtful*, meaning there is no other way out:
+    /// a mirror-only blocker (no registry row, so `unlinkDevice` throws
+    /// `deviceNotFound` and nothing can even name the device), a blocker whose
+    /// registry row is stale and is only still blocking because the mirror
+    /// corroborates it, or a registry that couldn't be read at all.
+    ///
+    /// Deliberately **not** offered when every blocker is a fresh, named,
+    /// registry-backed device. The wallet is then demonstrably alive elsewhere
+    /// and the honest remedies are to delete it there or unlink it here;
+    /// putting an unrecoverable account-wide wipe one tap below that copy reads
+    /// as a routine option. S7 places the override *after* a blockers list with
+    /// those remedies — until that list exists, this keeps the valve where it is
+    /// load-bearing instead of offering it on a healthy two-device account.
+    ///
+    /// - Parameter report: the evidence behind the strategy; `nil` means the
+    ///   registries could not be read (`.undetermined`), which must stay
+    ///   escapable or an outage makes the wallet undeletable.
+    nonisolated static func shouldOfferOverride(
+        strategy: DeletionStrategy,
+        report: OtherDeviceReport?
+    ) -> Bool {
+        guard strategy == .localOnly else { return false }
+        guard let report else { return true }
+
+        return report.registryUnreadable
+            || !report.mirrorOnly.isEmpty
+            || report.others.contains(where: \.isStale)
+    }
+
     /// Delete wallet data with specified strategy
     /// - Parameter includeCloudData: If true, deletes all data from CloudKit. If false, only local data.
     /// - Returns: Summary of what was deleted
