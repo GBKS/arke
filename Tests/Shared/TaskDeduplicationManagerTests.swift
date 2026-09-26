@@ -162,6 +162,56 @@ struct TaskDeduplicationManagerTests {
         #expect(manager.runningTaskKeys.isEmpty)
     }
 
+    @Test("execute arriving after a drain joins the fresh task rather than running concurrently")
+    func executeJoinsFreshTaskAfterDrain() async {
+        // The interleaving that matters: executeFresh drains an
+        // execute-created task; when that drained task finishes, its creator's
+        // cleanup must not deregister the fresh task — otherwise an `execute`
+        // arriving while the fresh task still runs finds no key and starts a
+        // concurrent run, the exact double-upsert hazard the drain prevents.
+        let manager = TaskDeduplicationManager()
+        let firstGate = Probe()
+        let freshGate = Probe()
+        var freshStarted = 0
+        var joinerRan = 0
+
+        let first = Task { @MainActor in
+            await manager.execute(key: "k") { await firstGate.wait() }
+        }
+        await Task.yield()
+
+        let fresh = Task { @MainActor in
+            await manager.executeFresh(key: "k") {
+                freshStarted += 1
+                await freshGate.wait()
+            }
+        }
+        await Task.yield()
+
+        // Finish the drained task: the fresh operation starts, and — crucially
+        // — the first `execute` caller resumes and runs its cleanup path.
+        firstGate.release()
+        _ = await first.value
+        await Task.yield()
+
+        // An execute arriving now must JOIN the still-running fresh task.
+        let joiner = Task { @MainActor in
+            await manager.execute(key: "k") {
+                joinerRan += 1
+                await freshGate.wait()
+            }
+        }
+        await Task.yield()
+
+        freshGate.release()
+        _ = await fresh.value
+        _ = await joiner.value
+
+        #expect(freshStarted == 1)
+        #expect(joinerRan == 0)                   // joined: its own closure never ran
+        #expect(manager.runningTaskKeys.isEmpty)  // and no cascade residue remains
+    }
+
     @Test("Concurrent executeFresh calls both run and leave no stale key")
     func concurrentExecuteFreshDoesNotLeak() async {
         // Two overlapping forced refreshes: the later one claims the key, so

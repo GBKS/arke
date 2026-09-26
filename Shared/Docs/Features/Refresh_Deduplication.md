@@ -256,6 +256,12 @@ Two further conditions, both found on review 2026-09-21 and both fixed:
   pre-fetched snapshot, so two concurrent runs could both insert the same row.
 - **The error path writes too.** Per F1 bark creates the `Pending` movement
   *before* server registration, so a throw from `refreshVtxosDelegated` can
+  (Fixed 2026-09-24: the drained task's own `execute` creator used to remove
+  the key unconditionally on completion, deregistering the still-running
+  fresh task — so an `execute` arriving during the fresh run started a
+  concurrent one, the exact double-insert hazard the drain exists to prevent.
+  Both `execute` variants now remove the key only if it is still their own
+  task; pinned by `executeJoinsFreshTaskAfterDrain`.)
   leave a movement behind. Both paths now refetch before propagating —
   scoped to the scheduling call, so read-only failures earlier in the check
   (e.g. offline) don't trigger an hourly refetch. Without this, a failed

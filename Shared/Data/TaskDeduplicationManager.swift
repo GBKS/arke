@@ -41,15 +41,16 @@ class TaskDeduplicationManager {
             try await operation()
         }
         tasks[key] = task
-        
-        do {
-            let result = try await task.value
-            tasks.removeValue(forKey: key)
-            return result
-        } catch {
-            tasks.removeValue(forKey: key)
-            throw error
+
+        // Only clear if the key still belongs to this task — an `executeFresh`
+        // may have replaced it while we were suspended; removing its
+        // registration would let later callers run concurrently with it.
+        defer {
+            if let current = tasks[key] as? Task<T, Error>, current == task {
+                tasks.removeValue(forKey: key)
+            }
         }
+        return try await task.value
     }
     
     /// Execute a non-throwing operation with deduplication by key
@@ -67,9 +68,14 @@ class TaskDeduplicationManager {
             await operation()
         }
         tasks[key] = task
-        
+
         let result = await task.value
-        tasks.removeValue(forKey: key)
+        // Only clear if the key still belongs to this task — an `executeFresh`
+        // may have replaced it while we were suspended; removing its
+        // registration would let later callers run concurrently with it.
+        if let current = tasks[key] as? Task<T, Never>, current == task {
+            tasks.removeValue(forKey: key)
+        }
         return result
     }
 
