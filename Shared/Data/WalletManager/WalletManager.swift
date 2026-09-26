@@ -597,6 +597,14 @@ class WalletManager {
             Self.logger.info("🌐 Network config in sync before wallet open: \(wallet.networkConfig.name)")
 
         case .reapply(let config):
+            // Re-check after the awaits above: the guard at the top goes
+            // stale across suspension points, and the background wake path
+            // isn't serialized with the "initialize" funnel — re-pointing a
+            // wallet that opened mid-reconcile is exactly what rule 22 forbids
+            if (wallet as? BarkWalletFFI)?.isWalletOpen == true {
+                Self.logger.warning("🌐 Network config mismatch, but the wallet opened during reconciliation — leaving it alone (rule 22)")
+                return
+            }
             Self.logger.warning("🌐 Network config mismatch before wallet open — wallet was built on \(wallet.networkConfig.name), account says \(config.name); re-applying")
             wallet.updateNetworkConfig(config)
 
@@ -750,14 +758,6 @@ class WalletManager {
         }
     }
     
-    /// Initialize wallet in read-only mode (secondary device with CloudKit sync only)
-    private func initializeReadOnlyMode() async {
-        Self.logger.info("🔒 [WalletManager] Initializing in READ-ONLY mode (CloudKit sync only)")
-        
-        // Initialize ReadOnlyAddressService if not already done
-        // (It might not exist if setModelContext was called before isReadOnlyMode was set)
-        if readOnlyAddressService == nil, let context = modelContext {
-            readOnlyAddressService = ReadOnlyAddressService(modelContext: context)
     /// Seed default tags/contacts per `defaultDataSeedingDecision`: created
     /// wallets seed immediately (provably nothing to import), read-only
     /// devices never seed, and every other launch — imports, reinstalls,
@@ -795,6 +795,14 @@ class WalletManager {
         }
     }
 
+    /// Initialize wallet in read-only mode (secondary device with CloudKit sync only)
+    private func initializeReadOnlyMode() async {
+        Self.logger.info("🔒 [WalletManager] Initializing in READ-ONLY mode (CloudKit sync only)")
+        
+        // Initialize ReadOnlyAddressService if not already done
+        // (It might not exist if setModelContext was called before isReadOnlyMode was set)
+        if readOnlyAddressService == nil, let context = modelContext {
+            readOnlyAddressService = ReadOnlyAddressService(modelContext: context)
             Self.logger.info("📍 [WalletManager] Initialized ReadOnlyAddressService in initializeReadOnlyMode")
         }
         

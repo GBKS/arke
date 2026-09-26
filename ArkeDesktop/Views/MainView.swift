@@ -109,10 +109,9 @@ struct MainView: View {
             // Subscribe to NSUbiquitousKeyValueStore changes
             subscribeToUbiquitousStoreChanges()
 
-            // Reconcile the network config with iCloud in the background (off the launch path)
-            Task.detached(priority: .utility) {
-                await NetworkConfigPersistence.syncFromiCloud()
-            }
+            // No unconditional network-config sync here: reconciliation runs
+            // before every wallet open (contract rule 22) — see the note in
+            // MainView_iOS. Removed 2026-09-25.
 
             // Set model context first - fast operation
             print("🔍 [MainView] Setting model context...")

@@ -196,10 +196,12 @@ struct MainView_iOS: View {
             // Subscribe to NSUbiquitousKeyValueStore changes
             subscribeToUbiquitousStoreChanges()
 
-            // Reconcile the network config with iCloud in the background (off the launch path)
-            Task.detached(priority: .utility) {
-                await NetworkConfigPersistence.syncFromiCloud()
-            }
+            // No unconditional network-config sync here: reconciliation runs
+            // before every wallet open (contract rule 22), which makes this
+            // redundant pre-open — and harmful when it loses the race with the
+            // open, flipping the local cache under runtime readers (metadata
+            // export/import network stamping) while the wallet runs on the
+            // old network. Removed 2026-09-25.
 
             // Subscribe to foreground notifications for heartbeat updates
             subscribeToForegroundNotifications()

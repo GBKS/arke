@@ -38,7 +38,7 @@ We implemented a UserDefaults-based persistence layer that:
    - Updated `init()` to load saved network config with priority:
      1. Explicit parameter (for testing/overrides)
      2. Saved config from UserDefaults
-     3. Default to signet (fallback)
+     3. Default to mainnet (`load()`'s fallback — deliberately not signet)
 
 4. **Shared/Data/WalletManager/WalletManager+Wallet.swift** (MODIFIED)
    - `createWallet()`: Saves network config after creation
@@ -100,42 +100,41 @@ for why reconciling *after* an open is forbidden.
 ```
 User deletes wallet
     ↓
-WalletManager.deleteWallet()
+WalletDataCleanupService (strategy-aware)
     ↓
-NetworkConfigPersistence.clear() ← NEW (Step 5)
-    ↓
-WalletDataCleanupService.clearUserDefaults()
+clearUserDefaults() → NetworkConfigPersistence.clearLocal()   (every deletion)
+clearEverywhere() — the iCloud KVS copy too                   (full wipe ONLY:
+    on a local-only deletion the KVS copy is the remaining
+    devices' network identity — contract rule 21)
     ↓
 Removes UserDefaults["com.arke.wallet.networkConfigId"]
     ↓
-Next launch defaults to signet (for new wallet)
+Next launch: load() defaults to mainnet; onboarding sets the network
 ```
 
 ## Implementation Details
 
-### NetworkConfigPersistence.swift
+### NetworkConfigPersistence.swift (shape as of 2026-09-25 — see source for full doc comments)
 
 ```swift
 class NetworkConfigPersistence {
-    static func save(_ networkConfig: NetworkConfig) {
-        UserDefaults.standard.set(networkConfig.id, forKey: UserDefaults.networkConfigKey)
-        UserDefaults.standard.synchronize()
-    }
-    
-    static func load() -> NetworkConfig? {
-        guard let savedId = UserDefaults.standard.string(forKey: UserDefaults.networkConfigKey) else {
-            return nil
-        }
-        
-        // Match against predefined networks
-        let predefinedNetworks: [NetworkConfig] = [.mainnet, .signet, .testnet]
-        return predefinedNetworks.first(where: { $0.id == savedId })
-    }
-    
-    static func clear() {
-        UserDefaults.standard.removeObject(forKey: UserDefaults.networkConfigKey)
-        UserDefaults.standard.synchronize()
-    }
+    /// Saves locally and mirrors to iCloud KVS via a detached task
+    static func save(_ networkConfig: NetworkConfig) { ... }
+
+    /// NON-optional: unresolvable or missing ids fall back to .mainnet.
+    /// The reconciliation path deliberately does NOT use this fallback —
+    /// `reconciliation()` returns `.noUsableConfig` instead, because a
+    /// mainnet fallback would re-point a running signet wallet (rule 22).
+    static func load() -> NetworkConfig { ... }
+
+    static func savedConfigId() -> String? { ... }
+    static func syncFromiCloud() async { ... }
+    static func reconciliation(walletNetworkId:cachedConfigId:) -> Reconciliation { ... }
+
+    /// This device's cache only
+    static func clearLocal() { ... }
+    /// Local + the account's iCloud KVS copy — full wipe only (rule 21)
+    static func clearEverywhere() { ... }
 }
 ```
 
@@ -154,13 +153,11 @@ extension UserDefaults {
 init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
     let config: NetworkConfig
     if let explicitConfig = networkConfig {
-        config = explicitConfig  // Priority 1: Explicit parameter
-    } else if let savedConfig = NetworkConfigPersistence.load() {
-        config = savedConfig  // Priority 2: Saved config ← NEW
+        config = explicitConfig              // Priority 1: Explicit parameter
     } else {
-        config = NetworkConfig.signet  // Priority 3: Default
+        config = NetworkConfigPersistence.load()  // Priority 2: saved, else mainnet
     }
-    
+
     setupWallet(useMock: shouldUseMock, networkConfig: config)
     initializeServices()
 }
@@ -177,26 +174,37 @@ init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
 
 ## Edge Cases Handled
 
-1. **No saved config**: Falls back to signet (default behavior)
-2. **Invalid saved ID**: Returns nil, falls back to default
-3. **Wallet deletion**: Config cleared in both WalletManager and WalletDataCleanupService
+1. **No saved config**: `load()` falls back to mainnet at init time;
+   reconciliation answers `.noUsableConfig` (never a silent fallback) and
+   onboarding sets the network
+2. **Invalid saved ID** (e.g. a `custom_<UUID>` id): same split — `load()`
+   falls back to mainnet, `reconciliation()` reports `.noUsableConfig`
+3. **Wallet deletion**: strategy-aware — `clearLocal()` on every deletion,
+   `clearEverywhere()` only on the last-device full wipe (rule 21)
 4. **Testing**: Can override config with explicit parameter
-5. **Custom networks**: Currently warns and returns nil (future enhancement)
 
-## Future Enhancements
+## Implemented Since (formerly "future enhancements")
 
-1. **Custom Network Support**: Persist full custom network details (not just ID)
-2. **iCloud Sync**: Use NSUbiquitousKeyValueStore for cross-device sync
-3. **Validation**: Validate loaded config against actual wallet data on open
-4. **Migration**: Detect and migrate wallets created before this feature
+1. **iCloud Sync**: implemented and load-bearing — `save()` mirrors to
+   NSUbiquitousKeyValueStore, `syncFromiCloud()` +
+   `reconcileNetworkConfigBeforeWalletOpen()` make the account's value
+   authoritative in the window before a wallet open (rule 22)
+
+## Still Open
+
+1. **Custom Network Support**: `custom_<UUID>` ids can't be resolved by
+   `findConfig`; no UI constructs one today, so latent only
+2. **Validation**: Validate loaded config against actual wallet data on open —
+   there is still no recovery path when the ACCOUNT's value is the stale one
+   (the open fails with a mismatch every launch and no user-facing escape)
 
 ## Testing Checklist
 
-- [x] Build succeeds with no errors
+- [x] Reconciliation decision matrix: `NetworkConfigReconciliationTests`
 - [ ] Create mainnet wallet, restart app, verify mainnet config loaded
 - [ ] Create signet wallet, restart app, verify signet config loaded
-- [ ] Delete wallet, verify network config cleared
-- [ ] Fresh install (no saved config), verify defaults to signet
+- [ ] Delete wallet, verify network config cleared per strategy
+- [ ] Fresh install (no saved config): onboarding sets the network
 
 ## Related Files
 
@@ -208,3 +216,6 @@ init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
 ## Revision History
 
 - 2026-04-30: Initial implementation (UserDefaults-based persistence)
+- 2026-09-25: Claims audit — corrected the stale signet-fallback claims
+  (actual fallback is mainnet), the pre-KVS code samples, and the "iCloud sync
+  is future work" listing (implemented and load-bearing since rule 22)
