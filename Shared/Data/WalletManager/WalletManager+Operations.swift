@@ -111,6 +111,12 @@ extension WalletManager {
         }
         return try await wallet.getExitVtxos()
     }
+
+    /// IDs of VTXOs currently mid-exit, fail-open (empty on error) — the
+    /// exit-exclusion set for callers that can't import the FFI types.
+    func exitingVtxoIds() async -> Set<String> {
+        Set(((try? await getExitVtxos()) ?? []).map { $0.vtxoId })
+    }
     
     /// Start exit process for specific VTXOs
     func startExitForVTXOs(vtxo_ids: [String]) async throws -> String {

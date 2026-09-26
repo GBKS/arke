@@ -107,7 +107,14 @@ class BalanceRefreshStatusViewModel {
             // instead (Refresh_Deduplication.md Phase 1).
             let vtxosFromSDK = try await walletManager.getVTXOsNeedingRefresh()
             let beingRefreshed = await walletManager.vtxoIdsBeingRefreshed()
-            vtxosNeedingRefresh = vtxosFromSDK.filter { !beingRefreshed.contains($0.id) }
+            // Also exclude VTXOs mid-exit (Guard B, fail-open like the service
+            // path) so the modal's list and amount match what the service will
+            // actually schedule — without this the confirmation can overstate
+            // the refresh, and "Refresh now" appears for an all-mid-exit set.
+            let exitingIds = await walletManager.exitingVtxoIds()
+            vtxosNeedingRefresh = vtxosFromSDK.filter {
+                !beingRefreshed.contains($0.id) && !exitingIds.contains($0.id)
+            }
         } catch {
             print("BalanceRefreshStatusViewModel: \(error)")
         }

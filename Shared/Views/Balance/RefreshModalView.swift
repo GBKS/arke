@@ -123,8 +123,9 @@ struct RefreshModalView: View {
                 state = .success
             case .nothingToDo:
                 // Reachable even though the confirm button requires a
-                // non-empty list: the modal's list isn't exit-filtered, so
-                // every candidate can still drop out in the service.
+                // non-empty list and the modal now exit-filters: a candidate
+                // can still start exiting, or join an in-flight refresh,
+                // between the modal's load and the service's own check.
                 state = .noChange(
                     title: String(localized: "status_refresh_not_needed", defaultValue: "Nothing to refresh"),
                     message: String(localized: "balance_refresh_not_needed", defaultValue: "These VTXOs are either still fresh or already part of a refresh. Nothing new was scheduled.")
