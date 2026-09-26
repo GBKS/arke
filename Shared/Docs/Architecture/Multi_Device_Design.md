@@ -302,14 +302,31 @@ the account at all**, and each reinstall re-adopted it. Built in response
 - *The override valve exists, and stays rare.* `.localOnly` reaches a full wipe
   only via "Delete from the account anyway…", gated on a recovery-phrase
   acknowledgement, and `includesCloudData(strategy:overrideConfirmed:)` is
-  test-pinned as the sole route. It is *offered* only where the block is
-  doubtful — a mirror-only blocker, a stale row the mirror keeps alive, or an
-  unreadable registry (`shouldOfferOverride(strategy:report:)`). When every
-  blocker is a fresh, named, registry-backed device the override is hidden,
-  because S7's own remedies (delete it there, unlink it here) are the right
-  answers and an account-wide wipe one tap below them reads as routine. The
-  first cut gated on `.localOnly` alone and showed up on a healthy two-device
-  account (2026-09-24).
+  test-pinned as the sole route. It is *offered* only where EVERY blocker is
+  doubtful — a mirror-only entry older than the 48h settle window, a stale row
+  the mirror keeps alive, or an unreadable registry
+  (`shouldOfferOverride(strategy:report:now:)`). A mirror-only entry younger
+  than the window is treated as a healthy blocker: it is most likely a live
+  device whose CloudKit row is still importing, exactly the state a freshly
+  joined partner device sits in. When any blocker is healthy the override is
+  hidden — one old ghost must not unlock a wipe that also destroys a live
+  device's seed; the mixed-case remedy is to unlink the healthy blocker first
+  (all-doubtful gating decided 2026-09-25, replacing any-doubtful). The first
+  cut gated on `.localOnly` alone and showed up on a healthy two-device
+  account (2026-09-24). Execution re-derives the same predicate from FRESH
+  evidence immediately before the first destructive step
+  (`fullWipeStillJustified`); if a device registered while the confirmation
+  sheet sat open, the wipe aborts with `fullWipeScopeInvalidated` having
+  deleted nothing, and the screen resurfaces the new blockers. The
+  keychain-seed delete also moved to the END of the wipe sequence
+  (2026-09-25), so any earlier step's failure leaves the seed intact and the
+  retry is idempotent. Clock-skew note: `registeredAt` is stamped by the
+  other device's clock; future skew reads as young → healthy → no override
+  (safe direction), past skew reads as aged → override offered, same residual
+  as before, still behind the acknowledgement. No skew silently unlocks a
+  wipe. The periodic KVS cleanup (`cleanupKVStoreRegistry`) was deleted
+  2026-09-25 — any future mirror pruning must go through the per-blocker
+  unlink flow.
 - *Not built:* unlink-in-flow. It needs `forgetUnsyncedDevice(_:)` because
   `unlinkDevice` can't touch a row-less mirror entry, and it adds a second,
   gentler-looking door to the same irreversible outcome — deferred to the full

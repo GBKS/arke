@@ -179,13 +179,18 @@ struct WalletWipeCoverageTests {
     @Test("The seed, wallet hash, and network config are full-wipe-only")
     func criticalSharedStateIsFullWipeOnly() {
         // The two incident keys plus the seed: a device-scoped deletion must
-        // never destroy these (2026-08-19 seed, 2026-08-20 network config)
+        // never destroy these (2026-08-19 seed, 2026-08-20 network config).
+        // The mirror entry is pinned too: it is the blocking evidence the
+        // deletion decision reads, and the periodic cleanup that would have
+        // pruned other devices' entries was deleted 2026-09-25 — rescoping
+        // this entry must fail a test, not a review.
         let fullWipeKeys = SharedStateWipeCoverage.entries
             .filter { if case .fullWipeOnly = $0.scope { return true }; return false }
             .map(\.key)
         #expect(fullWipeKeys.contains("com.arke.wallet / mnemonic"))
         #expect(fullWipeKeys.contains("com.arke.wallet.mnemonicHash"))
         #expect(fullWipeKeys.contains("com.arke.wallet.networkConfigId"))
+        #expect(fullWipeKeys.contains("com.arke.device.registered.<hash>.<id>"))
     }
 }
 
@@ -341,17 +346,26 @@ struct FullWipeOverrideTests {
 @Suite("Override Availability")
 struct OverrideAvailabilityTests {
 
+    /// Injected everywhere so recency is deterministic under test.
+    private static let now = Date(timeIntervalSince1970: 1_700_000_000)
+
+    /// An aged mirror registration — well past the settle window, the ghost
+    /// shape that motivated the override.
+    private static let agedRegistration = now.addingTimeInterval(-30 * 24 * 60 * 60)
+
     private static func device(
         _ id: String,
         source: OtherWalletDevice.Source,
         isStale: Bool = false,
-        name: String? = "Christoph's iPhone"
+        name: String? = "Christoph's iPhone",
+        registeredAt: Date? = agedRegistration
     ) -> OtherWalletDevice {
         OtherWalletDevice(
             deviceId: id,
             deviceName: name,
-            lastSeenAt: Date(timeIntervalSince1970: 1_700_000_000),
-            registeredAt: Date(timeIntervalSince1970: 1_699_000_000),
+            // Production mirror-only entries have no heartbeat
+            lastSeenAt: source == .kvsOnly ? nil : now,
+            registeredAt: registeredAt,
             isStale: isStale,
             source: source
         )
@@ -367,10 +381,10 @@ struct OverrideAvailabilityTests {
             registryUnreadable: false
         )
 
-        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
     }
 
-    @Test("A mirror-only blocker gets an override")
+    @Test("An aged mirror-only blocker gets an override")
     func mirrorOnlyBlockerGetsOverride() {
         // unlinkDevice throws deviceNotFound with no row to delete, so without
         // the override this is the dead end that made the wallet undeletable
@@ -379,7 +393,63 @@ struct OverrideAvailabilityTests {
             registryUnreadable: false
         )
 
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
+    }
+
+    @Test("A fresh mirror-only blocker gets NO override")
+    func freshMirrorOnlyBlockerGetsNoOverride() {
+        // The live-joining-partner scenario: a device joined an hour ago and
+        // its CloudKit row is still in flight. Offering the override here put
+        // an account-wide seed wipe one acknowledgement away from a healthy
+        // device (2026-09-24 review finding).
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil, registeredAt: Self.now.addingTimeInterval(-3600))],
+            registryUnreadable: false
+        )
+
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
+    }
+
+    @Test("The settle window boundary is exact")
+    func settleWindowBoundary() {
+        let atWindow = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil,
+                                 registeredAt: Self.now.addingTimeInterval(-WalletDataCleanupService.mirrorSettleWindow))],
+            registryUnreadable: false
+        )
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: atWindow, now: Self.now))
+
+        let justInside = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil,
+                                 registeredAt: Self.now.addingTimeInterval(-WalletDataCleanupService.mirrorSettleWindow + 1))],
+            registryUnreadable: false
+        )
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: justInside, now: Self.now))
+    }
+
+    @Test("A mirror entry with no readable timestamp stays doubtful")
+    func missingMirrorTimestampStaysDoubtful() {
+        // The write path always stamps, so a stampless entry is corrupt or
+        // ancient; treating it as healthy would recreate the undeletable-wallet
+        // dead end
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil, registeredAt: nil)],
+            registryUnreadable: false
+        )
+
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
+    }
+
+    @Test("A future registration timestamp reads as healthy")
+    func futureRegisteredAtReadsAsHealthy() {
+        // Clock skew pins the safe direction: a future-skewed stamp reads as
+        // young → likely live → no override
+        let report = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil, registeredAt: Self.now.addingTimeInterval(3600))],
+            registryUnreadable: false
+        )
+
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
     }
 
     @Test("A stale blocker kept alive by the mirror gets an override")
@@ -391,25 +461,37 @@ struct OverrideAvailabilityTests {
             registryUnreadable: false
         )
 
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
     }
 
-    @Test("An unreadable registry gets an override")
+    @Test("An unreadable registry gets an override — unless the mirror shows a fresh device")
     func unreadableRegistryGetsOverride() {
         // Both stores unreadable: report is nil. An outage must not make the
         // wallet permanently undeletable
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: nil))
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: nil, now: Self.now))
 
-        // Registry unreadable but the mirror had blockers
+        // Registry unreadable but the mirror had an AGED blocker → escapable
         let partial = OtherDeviceReport(
             others: [Self.device("a", source: .kvsOnly, name: nil)],
             registryUnreadable: true
         )
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: partial))
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: partial, now: Self.now))
+
+        // Registry unreadable but the mirror shows a FRESH device → that is
+        // positive evidence of a likely-live device; no override
+        let freshPartial = OtherDeviceReport(
+            others: [Self.device("a", source: .kvsOnly, name: nil, registeredAt: Self.now.addingTimeInterval(-3600))],
+            registryUnreadable: true
+        )
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: freshPartial, now: Self.now))
     }
 
-    @Test("One doubtful blocker among healthy ones is enough")
-    func anyDoubtfulBlockerIsEnough() {
+    @Test("A healthy blocker vetoes the override even beside a ghost")
+    func mixedHealthyAndGhostBlockersGetNoOverride() {
+        // Decided 2026-09-25 (replaced the any-doubtful rule): one old ghost
+        // must not unlock a wipe that also destroys a healthy named device's
+        // seed. The remedy in the mixed case is to unlink the healthy device
+        // first — then the ghost alone is all-doubtful and the override appears.
         let report = OtherDeviceReport(
             others: [
                 Self.device("a", source: .registry),
@@ -418,7 +500,7 @@ struct OverrideAvailabilityTests {
             registryUnreadable: false
         )
 
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
     }
 
     @Test("The last device is never offered an override")
@@ -426,8 +508,8 @@ struct OverrideAvailabilityTests {
         // .promptForCloudData already wipes everything; a second door is noise
         let empty = OtherDeviceReport(others: [], registryUnreadable: false)
 
-        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: empty))
-        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: nil))
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: empty, now: Self.now))
+        #expect(!WalletDataCleanupService.shouldOfferOverride(strategy: .promptForCloudData, report: nil, now: Self.now))
     }
 
     @Test("Offering the override never decides the wipe on its own")
@@ -439,8 +521,236 @@ struct OverrideAvailabilityTests {
             registryUnreadable: false
         )
 
-        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report))
+        #expect(WalletDataCleanupService.shouldOfferOverride(strategy: .localOnly, report: report, now: Self.now))
         #expect(!WalletDataCleanupService.includesCloudData(strategy: .localOnly, overrideConfirmed: false))
+    }
+}
+
+// MARK: - Full wipe revalidation (pre-wipe recheck)
+
+/// The screen's assessment can be minutes old by the time the user confirms,
+/// and a device can register (its KVS mirror lands in seconds) in that window.
+/// `deleteWalletData` re-derives the verdict from fresh evidence immediately
+/// before the first destructive step; these pin the decision it uses.
+@Suite("Full Wipe Revalidation")
+struct FullWipeRevalidationTests {
+
+    private static let now = Date(timeIntervalSince1970: 1_700_000_000)
+
+    private static func assessment(_ strategy: DeletionStrategy, others: [OtherWalletDevice] = [], reportNil: Bool = false) -> WalletDataCleanupService.DeletionAssessment {
+        WalletDataCleanupService.DeletionAssessment(
+            strategy: strategy,
+            report: reportNil ? nil : OtherDeviceReport(others: others, registryUnreadable: false)
+        )
+    }
+
+    private static func healthyDevice() -> OtherWalletDevice {
+        OtherWalletDevice(deviceId: "a", deviceName: "Christoph's iPhone",
+                          lastSeenAt: now, registeredAt: now.addingTimeInterval(-3600),
+                          isStale: false, source: .registry)
+    }
+
+    private static func agedGhost() -> OtherWalletDevice {
+        OtherWalletDevice(deviceId: "g", deviceName: nil,
+                          lastSeenAt: nil, registeredAt: now.addingTimeInterval(-30 * 24 * 60 * 60),
+                          isStale: false, source: .kvsOnly)
+    }
+
+    @Test("A genuine last device still proceeds")
+    func lastDeviceStillLastProceeds() {
+        #expect(WalletDataCleanupService.fullWipeStillJustified(
+            assessment: Self.assessment(.promptForCloudData),
+            overrideConfirmed: false, now: Self.now))
+    }
+
+    @Test("A device that appeared mid-confirmation aborts the wipe")
+    func newBlockerAbortsUnconfirmedWipe() {
+        // The TOCTOU kill shot: screen said last device, partner joined while
+        // the sheet sat open, fresh evidence says .localOnly → abort
+        #expect(!WalletDataCleanupService.fullWipeStillJustified(
+            assessment: Self.assessment(.localOnly, others: [Self.healthyDevice()]),
+            overrideConfirmed: false, now: Self.now))
+    }
+
+    @Test("An override survives while the block stays doubtful")
+    func overrideSurvivesWhileBlockStaysDoubtful() {
+        #expect(WalletDataCleanupService.fullWipeStillJustified(
+            assessment: Self.assessment(.localOnly, others: [Self.agedGhost()]),
+            overrideConfirmed: true, now: Self.now))
+    }
+
+    @Test("An override aborts when a healthy blocker appears")
+    func overrideAbortsWhenHealthyBlockerAppears() {
+        // The override was confirmed against ghost-only evidence; a live
+        // device arriving invalidates that basis
+        #expect(!WalletDataCleanupService.fullWipeStillJustified(
+            assessment: Self.assessment(.localOnly, others: [Self.healthyDevice(), Self.agedGhost()]),
+            overrideConfirmed: true, now: Self.now))
+    }
+
+    @Test("A registry outage at confirmation time does not strand the override")
+    func registryOutageAtConfirmTimeDoesNotStrandTheOverride() {
+        // (.localOnly, nil report) is the .undetermined shape; the override
+        // must stay usable through an outage or the wallet is undeletable again
+        #expect(WalletDataCleanupService.fullWipeStillJustified(
+            assessment: Self.assessment(.localOnly, reportNil: true),
+            overrideConfirmed: true, now: Self.now))
+    }
+
+    @Test("Revalidation can veto a wipe but never invent one")
+    func revalidationNeverInventsAWipe() {
+        // For every strategy × override: justified ⇒ includesCloudData.
+        // The recheck narrows the confirmed scope; it must never widen it.
+        let assessments: [WalletDataCleanupService.DeletionAssessment] = [
+            Self.assessment(.promptForCloudData),
+            Self.assessment(.localOnly),
+            Self.assessment(.localOnly, others: [Self.healthyDevice()]),
+            Self.assessment(.localOnly, others: [Self.agedGhost()]),
+            Self.assessment(.localOnly, reportNil: true),
+            Self.assessment(.promptForCloudData, reportNil: true)
+        ]
+        for assessment in assessments {
+            for overrideConfirmed in [true, false] {
+                let justified = WalletDataCleanupService.fullWipeStillJustified(
+                    assessment: assessment, overrideConfirmed: overrideConfirmed, now: Self.now)
+                if justified {
+                    #expect(WalletDataCleanupService.includesCloudData(
+                        strategy: assessment.strategy, overrideConfirmed: overrideConfirmed))
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Deletion assessment orchestration
+
+/// The pure-layer tests above pin the decisions; these pin the WIRING — the
+/// mappings inside `assessDeletion` and the recheck inside `deleteWalletData`.
+/// A regression there (e.g. an error path mapped to `.noneFound`) would bypass
+/// every pinned invariant while all the pure tests stay green.
+@MainActor
+@Suite("Deletion Assessment Orchestration")
+struct DeletionAssessmentOrchestrationTests {
+
+    private struct RegistryUnavailable: Error {}
+
+    private static func makeService() -> WalletDataCleanupService {
+        WalletDataCleanupService(taskManager: TaskDeduplicationManager())
+    }
+
+    private static func report(others: [OtherWalletDevice]) -> OtherDeviceReport {
+        OtherDeviceReport(others: others, registryUnreadable: false)
+    }
+
+    private static func healthyDevice() -> OtherWalletDevice {
+        OtherWalletDevice(deviceId: "a", deviceName: "Christoph's iPhone",
+                          lastSeenAt: Date(), registeredAt: Date().addingTimeInterval(-3600),
+                          isStale: false, source: .registry)
+    }
+
+    @Test("Blockers map to .localOnly with the report attached")
+    func blockersMapToLocalOnlyWithReportAttached() async {
+        let service = Self.makeService()
+        let expected = Self.report(others: [Self.healthyDevice()])
+        service.otherDeviceReportProvider = { _ in expected }
+
+        let assessment = await service.assessDeletion()
+
+        #expect(assessment.strategy == .localOnly)
+        #expect(assessment.report == expected)   // the evidence survives to the UI
+    }
+
+    @Test("An empty report maps to the full-wipe prompt")
+    func emptyReportMapsToFullWipePrompt() async {
+        let service = Self.makeService()
+        service.otherDeviceReportProvider = { _ in Self.report(others: []) }
+
+        let assessment = await service.assessDeletion()
+
+        #expect(assessment.strategy == .promptForCloudData)
+    }
+
+    @Test("A provider throw maps to the conservative strategy with a nil report")
+    func providerThrowMapsToConservativeNilReport() async {
+        let service = Self.makeService()
+        service.otherDeviceReportProvider = { _ in throw RegistryUnavailable() }
+
+        let assessment = await service.assessDeletion()
+
+        // Pins the mapping even if deletionStrategy(for:) is bypassed in a
+        // refactor: no error path may reach the destructive strategy
+        #expect(assessment.strategy == WalletDataCleanupService.deletionStrategy(for: .undetermined))
+        #expect(assessment.report == nil)
+    }
+
+    @Test("The pre-wipe recheck aborts on fresh evidence, before anything destructive")
+    func revalidationRunsOnFreshEvidence() async {
+        let service = Self.makeService()
+        // The stale screen verdict said "last device"; the fresh evidence at
+        // execution time has a blocker
+        service.otherDeviceReportProvider = { _ in Self.report(others: [Self.healthyDevice()]) }
+
+        do {
+            _ = try await service.deleteWalletData(strategy: .promptForCloudData, overrideConfirmed: false)
+            Issue.record("Expected fullWipeScopeInvalidated")
+        } catch let WalletCleanupError.fullWipeScopeInvalidated(fresh) {
+            // The abort carries the fresh assessment for the UI, and it fired
+            // BEFORE performDeleteWalletData — no noModelContext error despite
+            // the service having no model context, which proves nothing
+            // destructive was reached.
+            #expect(fresh.strategy == .localOnly)
+            #expect(fresh.report?.others.count == 1)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+}
+
+// MARK: - Registry error propagation
+
+/// Pure rule behind the other-device check: an unreadable registry with
+/// corroborating mirror entries still answers "others exist"; with an empty
+/// mirror it is genuine ignorance and must propagate.
+@Suite("Registry Error Propagation")
+struct RegistryErrorPropagationTests {
+
+    private struct RegistryUnavailable: Error {}
+
+    private static func report(others: [OtherWalletDevice], unreadable: Bool) -> OtherDeviceReport {
+        OtherDeviceReport(others: others, registryUnreadable: unreadable)
+    }
+
+    private static func mirrorGhost() -> OtherWalletDevice {
+        OtherWalletDevice(deviceId: "g", deviceName: nil, lastSeenAt: nil,
+                          registeredAt: Date(timeIntervalSince1970: 1_690_000_000),
+                          isStale: false, source: .kvsOnly)
+    }
+
+    @Test("An error with an empty mirror propagates")
+    func errorWithEmptyMirrorPropagates() {
+        let error = DeviceRegistrationService.registryErrorToPropagate(
+            report: Self.report(others: [], unreadable: true),
+            registryError: RegistryUnavailable()
+        )
+        #expect(error is RegistryUnavailable)
+    }
+
+    @Test("An error with mirror blockers is swallowed — the mirror still answers")
+    func errorWithMirrorBlockersIsSwallowed() {
+        let error = DeviceRegistrationService.registryErrorToPropagate(
+            report: Self.report(others: [Self.mirrorGhost()], unreadable: true),
+            registryError: RegistryUnavailable()
+        )
+        #expect(error == nil)
+    }
+
+    @Test("No error propagates nothing")
+    func noErrorPropagatesNothing() {
+        let error = DeviceRegistrationService.registryErrorToPropagate(
+            report: Self.report(others: [], unreadable: false),
+            registryError: nil
+        )
+        #expect(error == nil)
     }
 }
 

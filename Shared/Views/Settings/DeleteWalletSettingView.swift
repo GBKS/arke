@@ -188,20 +188,22 @@ struct DeleteWalletSettingView: View {
         .task {
             await checkDevices()
         }
-        .sheet(isPresented: $showingDeletionConfirmation, onDismiss: { overrideRequested = false }) {
+        .sheet(isPresented: $showingDeletionConfirmation, onDismiss: {
+            overrideRequested = false
+            // Re-check on every dismissal: the user may have backed out after
+            // the evidence changed, and the scope-invalidated abort lands here
+            // too — either way the screen should show current blockers.
+            Task { await checkDevices() }
+        }) {
             if let strategy = deletionStrategy {
                 DeletePermanentlyConfirmationView(
                     deletionStrategy: strategy,
                     onConfirm: {
-                        // Shared data (CloudKit, iCloud backup, seed) goes only
-                        // when this is the last device — or when the user has
-                        // explicitly overridden that verdict
-                        await deleteWallet(
-                            includeCloudData: WalletDataCleanupService.includesCloudData(
-                                strategy: strategy,
-                                overrideConfirmed: overrideRequested
-                            )
-                        )
+                        // The service derives the scope (shared data goes only
+                        // when this is the last device, or on the explicit
+                        // override) and re-checks the evidence at the moment
+                        // of the wipe
+                        await deleteWallet(strategy: strategy, overrideConfirmed: overrideRequested)
                     },
                     onBack: {
                         showingDeletionConfirmation = false
@@ -271,30 +273,51 @@ struct DeleteWalletSettingView: View {
         }
     }
     
-    private func deleteWallet(includeCloudData: Bool) async {
+    private func deleteWallet(strategy: DeletionStrategy, overrideConfirmed: Bool) async {
         isDeleting = true
         deleteError = nil
         deletionSummary = nil
-        
+
         do {
-            // Delete all wallet data using the cleanup service
-            let summary = try await cleanupService.deleteWalletData(includeCloudData: includeCloudData)
-            
+            // Delete all wallet data using the cleanup service (which
+            // re-derives the scope from fresh evidence before the first
+            // destructive step)
+            let summary = try await cleanupService.deleteWalletData(
+                strategy: strategy,
+                overrideConfirmed: overrideConfirmed
+            )
+
             // Delete from WalletManager (this clears local wallet state from bark)
             _ = try await walletManager.deleteWallet()
-            
+
             // Store summary
             deletionSummary = summary
-            
+
             #if DEBUG
             print("✅ [DeleteWalletSettingView] Deletion complete: \(summary.summaryDescription)")
             #endif
-            
+
             // Call the completion handler to navigate back to onboarding
             await MainActor.run {
                 onWalletDeleted?()
                 // Dismiss the confirmation sheet so onboarding flow is visible
                 showingDeletionConfirmation = false
+            }
+        } catch let WalletCleanupError.fullWipeScopeInvalidated(fresh) {
+            // The pre-wipe recheck found a device the screen's assessment
+            // didn't know about. Nothing was deleted — surface the updated
+            // blockers and drop the override (it was confirmed against
+            // evidence that no longer holds).
+            #if DEBUG
+            print("🛑 [DeleteWalletSettingView] Full wipe aborted: device evidence changed mid-confirmation")
+            #endif
+            await MainActor.run {
+                deletionStrategy = fresh.strategy
+                blockerReport = fresh.report
+                overrideRequested = false
+                showingDeletionConfirmation = false
+                deleteError = WalletCleanupError.fullWipeScopeInvalidated(fresh).localizedDescription
+                isDeleting = false
             }
         } catch {
             await MainActor.run {

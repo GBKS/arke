@@ -85,12 +85,24 @@ class WalletDataCleanupService {
     /// deletion local. Copy derived from the strategy alone is how the dialog
     /// came to assert "your other devices keep access" on an account whose
     /// devices list showed one device (2026-09-23).
-    struct DeletionAssessment {
+    ///
+    /// `nonisolated`/`Sendable` so it can travel inside the
+    /// `fullWipeScopeInvalidated` error payload.
+    nonisolated struct DeletionAssessment: Sendable {
         let strategy: DeletionStrategy
         /// The blockers behind `.localOnly`. Nil when the registries could not be
         /// read at all — the `.undetermined` case, where claiming anything about
         /// other devices would be a guess.
         let report: OtherDeviceReport?
+    }
+
+    /// Test seam. Nil in production → the real DeviceRegistrationService.
+    /// Takes the wallet hash so tests can also pin what hash is passed.
+    var otherDeviceReportProvider: ((String?) async throws -> OtherDeviceReport)?
+
+    private func fetchOtherDeviceReport(walletHash: String?) async throws -> OtherDeviceReport {
+        if let otherDeviceReportProvider { return try await otherDeviceReportProvider(walletHash) }
+        return try await deviceRegistrationService.otherDeviceReport(walletHash: walletHash)
     }
 
     /// Determine the appropriate deletion strategy based on device registry
@@ -103,7 +115,7 @@ class WalletDataCleanupService {
         do {
             // Scope the question to the account's wallet; a nil hash makes
             // otherDeviceReport answer conservatively on its own
-            let report = try await deviceRegistrationService.otherDeviceReport(
+            let report = try await fetchOtherDeviceReport(
                 walletHash: getHashFromUbiquitousStore()
             )
             return DeletionAssessment(
@@ -146,44 +158,118 @@ class WalletDataCleanupService {
         }
     }
 
+    /// How long a mirror-only entry must sit without its CloudKit row before
+    /// the block it imposes counts as doubtful. The mirror entry proves the
+    /// device had iCloud connectivity at registration; on a healthy account
+    /// its CloudKit row imports within seconds-to-minutes, and the
+    /// pathological-but-benign cases (APNs/CloudKit throttling, Low Power
+    /// Mode, background-sync deferral, joined-then-went-offline) resolve
+    /// within hours. 48h bounds all of those with margin, while the ghosts
+    /// that motivated the override (2026-09-23) are weeks old — a genuine
+    /// ghost's override is delayed by at most two days, once.
+    nonisolated static let mirrorSettleWindow: TimeInterval = 48 * 60 * 60
+
+    /// A blocker with no other way out. Registry-backed: only when stale (the
+    /// mirror is what keeps it blocking). Mirror-only: only once older than
+    /// the settle window — a younger entry is most likely a live device whose
+    /// CloudKit row is still in flight. A mirror entry with NO readable
+    /// timestamp stays doubtful: the write path always stamps, so a stampless
+    /// entry is corrupt or ancient, and treating it as healthy would recreate
+    /// the undeletable-wallet dead end.
+    nonisolated static func isDoubtfulBlocker(_ device: OtherWalletDevice, now: Date) -> Bool {
+        switch device.source {
+        case .registry:
+            return device.isStale
+        case .kvsOnly:
+            guard let registeredAt = device.registeredAt else { return true }
+            return now.timeIntervalSince(registeredAt) >= mirrorSettleWindow
+        }
+    }
+
     /// Whether the delete flow should offer the informed "delete from the
     /// account anyway" override.
     ///
-    /// Only when the block is *doubtful*, meaning there is no other way out:
-    /// a mirror-only blocker (no registry row, so `unlinkDevice` throws
-    /// `deviceNotFound` and nothing can even name the device), a blocker whose
-    /// registry row is stale and is only still blocking because the mirror
-    /// corroborates it, or a registry that couldn't be read at all.
+    /// Only when EVERY blocker is *doubtful*, meaning there is no other way
+    /// out for any of them: a mirror-only blocker older than the settle
+    /// window (no registry row, so `unlinkDevice` throws `deviceNotFound`),
+    /// a blocker whose registry row is stale and is only still blocking
+    /// because the mirror corroborates it, or a registry that couldn't be
+    /// read at all (with, at most, doubtful mirror evidence).
     ///
-    /// Deliberately **not** offered when every blocker is a fresh, named,
-    /// registry-backed device. The wallet is then demonstrably alive elsewhere
-    /// and the honest remedies are to delete it there or unlink it here;
-    /// putting an unrecoverable account-wide wipe one tap below that copy reads
-    /// as a routine option. S7 places the override *after* a blockers list with
-    /// those remedies — until that list exists, this keeps the valve where it is
-    /// load-bearing instead of offering it on a healthy two-device account.
+    /// Deliberately **not** offered when any blocker is a fresh, named,
+    /// registry-backed device or a young mirror-only entry (a live device in
+    /// its normal CloudKit-import window). The wallet is then demonstrably —
+    /// or most likely — alive elsewhere, and the honest remedies are to
+    /// delete it there or unlink it here first; a single old ghost must not
+    /// unlock a wipe that also destroys a healthy device's seed. (All-doubtful
+    /// gating decided 2026-09-25; it replaced any-doubtful, and the mixed case
+    /// now requires unlinking the healthy blocker before the override appears.)
+    ///
+    /// This predicate is shared verbatim by `fullWipeStillJustified`, so what
+    /// is offered and what is executed cannot drift apart.
     ///
     /// - Parameter report: the evidence behind the strategy; `nil` means the
     ///   registries could not be read (`.undetermined`), which must stay
     ///   escapable or an outage makes the wallet undeletable.
     nonisolated static func shouldOfferOverride(
         strategy: DeletionStrategy,
-        report: OtherDeviceReport?
+        report: OtherDeviceReport?,
+        now: Date = Date()
     ) -> Bool {
         guard strategy == .localOnly else { return false }
         guard let report else { return true }
 
-        return report.registryUnreadable
-            || !report.mirrorOnly.isEmpty
-            || report.others.contains(where: \.isStale)
+        if report.registryUnreadable {
+            // Mirror evidence only — but a fresh mirror entry still vetoes
+            return report.others.allSatisfy { isDoubtfulBlocker($0, now: now) }
+        }
+
+        guard !report.others.isEmpty else { return false }
+        return report.others.allSatisfy { isDoubtfulBlocker($0, now: now) }
     }
 
-    /// Delete wallet data with specified strategy
-    /// - Parameter includeCloudData: If true, deletes all data from CloudKit. If false, only local data.
+    /// Re-derived at execution time from a fresh assessment. A full wipe may
+    /// proceed only when the fresh evidence still supports the scope the user
+    /// confirmed: a genuine last device, or an override whose blockers are
+    /// all still doubtful. Anything else aborts before the first destructive
+    /// step. Shares `shouldOfferOverride` so revalidation can only veto what
+    /// offering allowed — never widen it.
+    nonisolated static func fullWipeStillJustified(
+        assessment: DeletionAssessment,
+        overrideConfirmed: Bool,
+        now: Date
+    ) -> Bool {
+        switch assessment.strategy {
+        case .promptForCloudData:
+            return true
+        case .localOnly:
+            guard overrideConfirmed else { return false }
+            return shouldOfferOverride(strategy: .localOnly, report: assessment.report, now: now)
+        }
+    }
+
+    /// Delete wallet data for the given strategy and override intent. The
+    /// service — not the view — derives whether cloud data is included, and a
+    /// full wipe re-derives it from FRESH evidence immediately before the
+    /// first destructive step: the screen's assessment may be minutes old,
+    /// and a device can register (its KVS mirror lands in seconds) in that
+    /// window. If the fresh evidence no longer supports the confirmed scope,
+    /// this throws `fullWipeScopeInvalidated` having deleted nothing — never
+    /// a silent downgrade, because the user confirmed a different action than
+    /// the one that would run.
     /// - Returns: Summary of what was deleted
-    func deleteWalletData(includeCloudData: Bool) async throws -> DeletionSummary {
+    func deleteWalletData(strategy: DeletionStrategy, overrideConfirmed: Bool) async throws -> DeletionSummary {
         return try await taskManager.execute(key: "deleteWalletData") {
-            try await self.performDeleteWalletData(includeCloudData: includeCloudData)
+            let includeCloudData = Self.includesCloudData(strategy: strategy, overrideConfirmed: overrideConfirmed)
+
+            if includeCloudData {
+                let fresh = await self.assessDeletion()
+                guard Self.fullWipeStillJustified(assessment: fresh, overrideConfirmed: overrideConfirmed, now: Date()) else {
+                    throw WalletCleanupError.fullWipeScopeInvalidated(fresh)
+                }
+            }
+
+            return try await self.performDeleteWalletData(includeCloudData: includeCloudData)
         }
     }
     
@@ -202,32 +288,7 @@ class WalletDataCleanupService {
         print("🗑️ [WalletDataCleanupService] Starting wallet data deletion (includeCloudData: \(includeCloudData))")
         #endif
         
-        // Step 1: Delete keychain data — full wipe only. The mnemonic is
-        // synced via iCloud Keychain, so deleting it here would propagate to
-        // every device and permanently lock the remaining secondaries out of
-        // promotion. With other active devices the seed is shared property
-        // and must survive this device's deletion.
-        if includeCloudData {
-            updateProgress(.deletingKeychain, message: "Removing mnemonic from Keychain...")
-            do {
-                try Self.deleteKeychainItem(service: keychainService, account: mnemonicAccount)
-                summary.keychainDeleted = true
-                #if DEBUG
-                print("✅ [WalletDataCleanupService] Keychain data deleted")
-                #endif
-            } catch {
-                #if DEBUG
-                print("⚠️ [WalletDataCleanupService] Failed to delete keychain: \(error)")
-                #endif
-                throw WalletCleanupError.keychainDeletionFailed(error)
-            }
-        } else {
-            #if DEBUG
-            print("⏭️ [WalletDataCleanupService] Keeping mnemonic (wallet lives on other devices)")
-            #endif
-        }
-
-        // Step 2: Unregister device
+        // Step 1: Unregister device
         updateProgress(.unregisteringDevice, message: "Unregistering device...")
         do {
             try await deviceRegistrationService.unregisterCurrentDevice()
@@ -242,7 +303,7 @@ class WalletDataCleanupService {
             // Non-fatal, continue
         }
         
-        // Step 3: Delete cloud data if requested
+        // Step 2: Delete cloud data if requested
         if includeCloudData {
             // Get wallet hash before deleting it (needed for KV store cleanup)
             let walletHash = getHashFromUbiquitousStore()
@@ -293,7 +354,35 @@ class WalletDataCleanupService {
             print("⏭️ [WalletDataCleanupService] Skipping cloud data deletion")
             #endif
         }
-        
+
+        // Step 3: Delete keychain data — full wipe only, and deliberately the
+        // LAST destructive act (reordered 2026-09-25): the mnemonic is synced
+        // via iCloud Keychain, so deleting it propagates account-wide and is
+        // the one step no written-phrase-less user can recover from. Every
+        // fallible step above now fails with the seed intact, and a retry is
+        // idempotent (fetch+delete of gone rows is empty; SecItemDelete
+        // accepts errSecItemNotFound). With other active devices the seed is
+        // shared property and must survive this device's deletion.
+        if includeCloudData {
+            updateProgress(.deletingKeychain, message: "Removing mnemonic from Keychain...")
+            do {
+                try Self.deleteKeychainItem(service: keychainService, account: mnemonicAccount)
+                summary.keychainDeleted = true
+                #if DEBUG
+                print("✅ [WalletDataCleanupService] Keychain data deleted")
+                #endif
+            } catch {
+                #if DEBUG
+                print("⚠️ [WalletDataCleanupService] Failed to delete keychain: \(error)")
+                #endif
+                throw WalletCleanupError.keychainDeletionFailed(error)
+            }
+        } else {
+            #if DEBUG
+            print("⏭️ [WalletDataCleanupService] Keeping mnemonic (wallet lives on other devices)")
+            #endif
+        }
+
         // Step 4: Clear UserDefaults
         updateProgress(.clearingUserDefaults, message: "Clearing user preferences...")
         clearUserDefaults()
@@ -473,6 +562,9 @@ class WalletDataCleanupService {
         
         // Pre-resolve all faults before deletion to prevent "detached from context" errors
         // This includes accessing properties that may be used by conversion methods or cascading deletes
+        // (Cached-array reads are deliberate here — count-only, and this
+        // method owns and deletes the rows in the same pass, so the
+        // invalidation hazard the live* accessors guard against can't apply.)
         var tagAssignmentCount = 0
         var contactAssignmentCount = 0
         
@@ -555,6 +647,7 @@ class WalletDataCleanupService {
         let descriptor = FetchDescriptor<PersistentContact>()
         let contacts = try modelContext.fetch(descriptor)
         
+        // Count-only cached-array read; this method owns and deletes the rows
         let addressCount = contacts.reduce(0) { $0 + ($1.addresses?.count ?? 0) }
         
         for contact in contacts {
@@ -562,9 +655,6 @@ class WalletDataCleanupService {
         }
         
         #if DEBUG
-        // (Cached-array reads are deliberate here — count-only, and this
-        // method owns and deletes the rows in the same pass, so the
-        // invalidation hazard the live* accessors guard against can't apply.)
         print("🗑️ [WalletDataCleanupService] Queued \(contacts.count) contacts for deletion (cascade: \(addressCount) addresses)")
         #endif
         
@@ -647,7 +737,6 @@ class WalletDataCleanupService {
         let addresses = try modelContext.fetch(descriptor)
         
         for address in addresses {
-        // Count-only cached-array read; this method owns and deletes the rows
             modelContext.delete(address)
         }
         
@@ -708,20 +797,22 @@ struct DeletionProgress {
     }
 }
 
-/// Individual deletion steps
+/// Individual deletion steps. Raw values follow execution order (they feed
+/// the progress percentage); the keychain-seed step runs LAST among the
+/// destructive steps — see performDeleteWalletData.
 enum DeletionStep: Int, CaseIterable {
-    case deletingKeychain = 1
-    case unregisteringDevice = 2
-    case deletingCloudHash = 3
-    case deletingTransactions = 4
-    case deletingTags = 5
-    case deletingContacts = 6
-    case deletingBalanceCache = 7
-    case deletingConfiguration = 8
-    case deletingDeviceRegistry = 9
-    case deletingBackupStatus = 10
-    case deletingAddressHistory = 11
-    case deletingUserProfile = 12
+    case unregisteringDevice = 1
+    case deletingCloudHash = 2
+    case deletingTransactions = 3
+    case deletingTags = 4
+    case deletingContacts = 5
+    case deletingBalanceCache = 6
+    case deletingConfiguration = 7
+    case deletingDeviceRegistry = 8
+    case deletingBackupStatus = 9
+    case deletingAddressHistory = 10
+    case deletingUserProfile = 11
+    case deletingKeychain = 12
     case clearingUserDefaults = 13
     case finalizingDeletion = 14
     
@@ -980,7 +1071,12 @@ enum WalletCleanupError: LocalizedError {
     case keychainError(OSStatus)
     case keychainDeletionFailed(Error)
     case saveFailed(Error)
-    
+    /// The pre-wipe recheck found evidence the screen's assessment didn't
+    /// have (a device registered while the user was confirming). Nothing was
+    /// deleted; the payload carries the fresh assessment so the screen can
+    /// resurface the updated blockers.
+    case fullWipeScopeInvalidated(WalletDataCleanupService.DeletionAssessment)
+
     var errorDescription: String? {
         switch self {
         case .noModelContext:
@@ -991,6 +1087,9 @@ enum WalletCleanupError: LocalizedError {
             return "Failed to delete keychain data: \(error.localizedDescription)"
         case .saveFailed(let error):
             return "Failed to save deletion changes: \(error.localizedDescription)"
+        case .fullWipeScopeInvalidated:
+            return String(localized: "error_delete_scope_changed",
+                          defaultValue: "The device list changed while you were confirming. Nothing was deleted — review the updated list and try again.")
         }
     }
 }
