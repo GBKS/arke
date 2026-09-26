@@ -101,12 +101,15 @@ struct TransactionList_iOS: View {
                     .padding()
                 }
             } else if visibleTransactions.isEmpty {
-                // Empty state (no transactions exist)
+                // Empty state (no transactions exist) — or, on a secondary
+                // device still waiting for its first CloudKit import, the
+                // honest "we don't know yet" state
                 TransactionListEmptyState(
                     filterTag: filterTag,
                     filterContact: filterContact,
                     onShowFaucet: onShowFaucet,
-                    onNavigateToReceive: onNavigateToReceive
+                    onNavigateToReceive: onNavigateToReceive,
+                    isSyncingFromCloud: walletManager.isWaitingForInitialCloudKitSync
                 )
                 .padding(.top, 25)
             } else {

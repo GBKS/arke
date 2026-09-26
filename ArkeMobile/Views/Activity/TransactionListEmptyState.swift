@@ -18,7 +18,12 @@ struct TransactionListEmptyState: View {
         case none
         case tag(name: String)
         case contact(name: String)
-        
+        /// Secondary device whose first CloudKit import hasn't landed yet. An
+        /// empty list is the truth for every other case; here it is just "we
+        /// don't know yet", and presenting it as an empty wallet reads as a
+        /// broken one (over a minute observed on a fresh install).
+        case syncingFromCloud
+
         var title: String {
             switch self {
             case .none:
@@ -27,9 +32,11 @@ struct TransactionListEmptyState: View {
                 return String(localized: "transaction_list_empty_tag_title %@", defaultValue: "No Transactions in \"\(name)\"")
             case .contact(let name):
                 return String(localized: "transaction_list_empty_contact_title %@", defaultValue: "No Transactions with \(name)")
+            case .syncingFromCloud:
+                return String(localized: "transaction_list_syncing_title", defaultValue: "Syncing from iCloud")
             }
         }
-        
+
         func message(isTestnet: Bool) -> String? {
             switch self {
             case .none:
@@ -38,9 +45,11 @@ struct TransactionListEmptyState: View {
                 return String(localized: "transaction_list_empty_tag_message", defaultValue: "Transactions you tag will appear here")
             case .contact:
                 return String(localized: "transaction_list_empty_contact_message", defaultValue: "Transactions with this contact will appear here")
+            case .syncingFromCloud:
+                return String(localized: "transaction_list_syncing_message", defaultValue: "Your balance and activity are on their way from your other device. This can take a few minutes the first time.")
             }
         }
-        
+
         var icon: String? {
             switch self {
             case .none:
@@ -49,12 +58,18 @@ struct TransactionListEmptyState: View {
                 return "tag"
             case .contact:
                 return "person"
+            case .syncingFromCloud:
+                return "arrow.trianglehead.2.clockwise.rotate.90.icloud"
             }
         }
     }
-    
-    init(filterTag: PersistentTag? = nil, filterContact: PersistentContact? = nil, onShowFaucet: (() -> Void)? = nil, onNavigateToReceive: (() -> Void)? = nil) {
-        if let tag = filterTag {
+
+    init(filterTag: PersistentTag? = nil, filterContact: PersistentContact? = nil, onShowFaucet: (() -> Void)? = nil, onNavigateToReceive: (() -> Void)? = nil, isSyncingFromCloud: Bool = false) {
+        if isSyncingFromCloud {
+            // Takes precedence over the filter contexts: with nothing synced,
+            // "no transactions in this tag" isn't a claim we can make either
+            self.filterContext = .syncingFromCloud
+        } else if let tag = filterTag {
             self.filterContext = .tag(name: tag.name)
         } else if let contact = filterContact {
             self.filterContext = .contact(name: contact.cachedName)

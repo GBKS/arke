@@ -248,7 +248,15 @@ class WalletManager {
     var estimatedBlockHeight: Int? {
         balanceService?.estimatedBlockHeight
     }
-    
+
+    /// A secondary device that hasn't received its first CloudKit import yet.
+    /// Only ever true in read-only mode — a primary reads bark directly, so
+    /// "no rows yet" there means an empty wallet, not a pending sync.
+    var isWaitingForInitialCloudKitSync: Bool {
+        guard isReadOnlyMode else { return false }
+        return readOnlyBalanceService?.isWaitingForInitialSync ?? true
+    }
+
     // MARK: - Initialization
     init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
         #if DEBUG

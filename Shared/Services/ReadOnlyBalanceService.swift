@@ -46,6 +46,17 @@ class ReadOnlyBalanceService {
     var hasSpendableBalance: Bool {
         totalBalance?.hasSpendableBalance ?? false
     }
+
+    /// True while neither balance row has arrived from CloudKit yet — a freshly
+    /// installed secondary device, where the first import can take well over a
+    /// minute. `updateTotalBalance()` substitutes zero-balance models so the UI
+    /// always has something to render, which means "synced, and you have 0
+    /// sats" and "nothing has synced yet" look identical without this flag.
+    /// Surfaced so the UI can say "syncing from iCloud" instead of presenting
+    /// an empty wallet as fact.
+    var isWaitingForInitialSync: Bool {
+        arkBalance == nil && onchainBalance == nil
+    }
     
     // MARK: - Initialization
     
