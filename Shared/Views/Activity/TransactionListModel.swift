@@ -84,13 +84,25 @@ final class TransactionListModel {
     }
     
     // MARK: - Private Fetch Methods
-    
+
+    /// Bulk-bridge fetched rows through one metadata snapshot — the
+    /// single-arg `TransactionModel(from:)` runs a fetch pair per transaction
+    /// plus a full aggregation per contact (2026-09-24 review finding).
+    private func bridge(_ persistentTransactions: [PersistentTransaction], context: ModelContext) -> [TransactionModel] {
+        let snapshot = TransactionMetadataSnapshot(modelContext: context)
+        return persistentTransactions.map {
+            TransactionModel(from: $0,
+                             tags: snapshot.tags(forTxid: $0.txid),
+                             contacts: snapshot.contacts(forTxid: $0.txid))
+        }
+    }
+
     /// Get all transactions (no filter)
     private func allTransactions(context: ModelContext) -> [TransactionModel] {
         let fetchDescriptor = createFetchDescriptor()
         do {
             let persistentTransactions = try context.fetch(fetchDescriptor)
-            return persistentTransactions.map { TransactionModel(from: $0) }
+            return bridge(persistentTransactions, context: context)
         } catch {
             print("Error fetching transactions: \(error)")
             return []
@@ -126,7 +138,7 @@ final class TransactionListModel {
             )
             
             let persistentTransactions = try context.fetch(transactionDescriptor)
-            return persistentTransactions.map { TransactionModel(from: $0) }
+            return bridge(persistentTransactions, context: context)
         } catch {
             print("Error fetching transactions for tag: \(error)")
             return []
@@ -162,7 +174,7 @@ final class TransactionListModel {
             )
             
             let persistentTransactions = try context.fetch(transactionDescriptor)
-            return persistentTransactions.map { TransactionModel(from: $0) }
+            return bridge(persistentTransactions, context: context)
         } catch {
             print("Error fetching transactions for contact: \(error)")
             return []

@@ -84,16 +84,27 @@ class TransactionService {
     
     // MARK: - Properties
     
-    /// Get all transactions from SwiftData as UI models
+    /// Get all transactions from SwiftData as UI models.
+    ///
+    /// Bulk-bridged through one `TransactionMetadataSnapshot` per call: the
+    /// single-arg `TransactionModel(from:)` runs a fetch pair per transaction
+    /// plus a full transaction aggregation per contact, which made every
+    /// refresh O(transactions × contact usage) on the main actor (2026-09-24
+    /// review finding).
     var transactions: [TransactionModel] {
         guard let modelContext = modelContext else {
             return []
         }
-        
+
         do {
             let descriptor = FetchDescriptor<PersistentTransaction>(sortBy: [SortDescriptor(\.date, order: .reverse)])
             let persistentTransactions = try modelContext.fetch(descriptor)
-            return persistentTransactions.map { TransactionModel(from: $0) }
+            let snapshot = TransactionMetadataSnapshot(modelContext: modelContext)
+            return persistentTransactions.map {
+                TransactionModel(from: $0,
+                                 tags: snapshot.tags(forTxid: $0.txid),
+                                 contacts: snapshot.contacts(forTxid: $0.txid))
+            }
         } catch {
             Self.logger.error("Failed to fetch transactions: \(error.localizedDescription)")
             return []

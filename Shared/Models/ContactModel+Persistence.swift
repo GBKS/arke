@@ -39,6 +39,32 @@ extension ContactModel {
         )
     }
 
+    /// Row-weight conversion: identity + display fields + addresses (one
+    /// fetch). The aggregate fields stay nil — they are Optional on
+    /// ContactModel and every consumer nil-guards (formattedTransactionCount
+    /// etc.). Computing them walks every one of the contact's transactions,
+    /// which made bridging a transaction list O(M²) per frequent contact and
+    /// turned each refresh into thousands of main-actor fetches (2026-09-24
+    /// review finding). Use the full `init(from:)` only on contact-detail and
+    /// statistics surfaces, where the aggregates are the point.
+    init(rowFrom persistentContact: PersistentContact) {
+        self.init(
+            id: persistentContact.id,
+            cachedName: persistentContact.cachedName,
+            notes: persistentContact.notes,
+            avatarData: persistentContact.avatarData,
+            createdAt: persistentContact.createdAt,
+            updatedAt: persistentContact.updatedAt,
+            contactType: persistentContact.type,
+            nativeContactID: persistentContact.nativeContactID,
+            lastSyncedFromNative: persistentContact.lastSyncedFromNative,
+            transactionCount: nil,
+            sentAmount: nil,
+            receivedAmount: nil,
+            addresses: persistentContact.liveAddresses.map { ContactAddressModel(from: $0) }
+        )
+    }
+
     /// Convert to persistent model
     func toPersistentContact() -> PersistentContact {
         let persistentContact = PersistentContact(

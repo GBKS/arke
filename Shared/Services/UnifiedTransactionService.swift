@@ -121,9 +121,15 @@ class UnifiedTransactionService {
             return
         }
         
-        // Get ark transactions (already as TransactionModel)
+        // Get ark transactions (already as TransactionModel; bulk-bridged
+        // through the ark service's own snapshot)
         let arkTransactions = arkService.transactions
-        
+
+        // One metadata snapshot for the whole onchain pass — the per-row
+        // relationship accessors would run a fetch pair per transaction plus
+        // a full aggregation per contact (2026-09-24 review finding)
+        let metadata = TransactionMetadataSnapshot(modelContext: modelContext)
+
         // Convert onchain transactions to TransactionModel
         let onchainTransactions = onchainService.onchainTransactions.compactMap { onchain -> TransactionModel? in
             // Find or create persistent transaction for metadata (tags, contacts, notes)
@@ -131,10 +137,10 @@ class UnifiedTransactionService {
                 onchain,
                 modelContext: modelContext
             )
-            
+
             // Convert to TransactionModel
             // Properly handles self-transfers by using isSelfTransfer flag
-            return convertOnchainToTransactionModel(onchain, persistent: persistent)
+            return convertOnchainToTransactionModel(onchain, persistent: persistent, metadata: metadata)
         }
         
         // Merge and deduplicate by txid (in case of overlaps)
@@ -225,10 +231,13 @@ class UnifiedTransactionService {
     /// - Parameters:
     ///   - onchain: The onchain transaction model from BDK
     ///   - persistent: The linked PersistentTransaction for metadata
+    ///   - metadata: The merge pass's bulk snapshot; keyed by the persistent
+    ///     row's `onchain_…` txid, the same string built below
     /// - Returns: A TransactionModel compatible with the existing UI
     private func convertOnchainToTransactionModel(
         _ onchain: OnchainTransactionModel,
-        persistent: PersistentTransaction
+        persistent: PersistentTransaction,
+        metadata: TransactionMetadataSnapshot
     ) -> TransactionModel {
         
         // For sent transactions, the amount should exclude fees
@@ -256,8 +265,8 @@ class UnifiedTransactionService {
             status: onchain.isConfirmed ? .confirmed : .pending,
             address: nil,
             notes: persistent.notes,
-            associatedTags: persistent.associatedTags.map { TagModel(from: $0) },
-            associatedContacts: persistent.associatedContacts.map { ContactModel(from: $0) },
+            associatedTags: metadata.tags(forTxid: persistent.txid),
+            associatedContacts: metadata.contacts(forTxid: persistent.txid),
             fees: nil,
             onchainFeeSat: onchain.fee.map { Int($0) },
             subsystemCategory: "onchain_transaction",

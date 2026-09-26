@@ -22,6 +22,13 @@ extension TransactionModel {
 
     // MARK: - Initialize from PersistentTransaction
 
+    /// Single-item bridging: runs a fetch pair for this transaction's tags
+    /// and contacts, and a full transaction aggregation per contact. Fine for
+    /// cold, bounded call sites (detail views, single rows, search, log
+    /// output); NEVER map a whole list or a refresh pass through this — build
+    /// one `TransactionMetadataSnapshot` and use the two-arg init instead
+    /// (2026-09-24 review finding: this in a loop made refreshes O(M²) per
+    /// frequent contact).
     init(from persistentTransaction: PersistentTransaction) {
         self.init(
             from: persistentTransaction,
@@ -206,8 +213,10 @@ extension TransactionModel {
 
 // MARK: - Bulk Metadata Resolution
 
-/// Tags and contacts for every transaction in the store, resolved in two
-/// fetches and handed to rows as value types.
+/// Tags and contacts for every transaction in the store, resolved in bulk and
+/// handed to rows as value types. Real cost: two assignment-table fetches
+/// plus one address fetch per distinct contact — no per-transaction fetches
+/// and no per-contact transaction aggregation.
 ///
 /// Lists need this for two reasons:
 ///
@@ -218,7 +227,7 @@ extension TransactionModel {
 ///    `PersistentTransaction.associatedTags`).
 /// 2. Cost. SwiftUI reads a row's body while measuring it, so the per-row
 ///    fetch pair would run for every visible row on every layout pass. One
-///    snapshot per render replaces that with two fetches for the whole list,
+///    snapshot per render replaces that with the bulk fetches above,
 ///    in the same order of work as the list's own `@Query`.
 ///
 /// Build it and read it inside a single synchronous main-actor pass. What it
@@ -239,9 +248,10 @@ struct TransactionMetadataSnapshot {
         // Assignment order, so tag labels don't reshuffle between renders
         tagDescriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
 
-        // A tag or contact shared by many transactions is converted once:
-        // ContactModel in particular resolves the contact's own amounts and
-        // addresses, which is work worth doing per contact, not per assignment.
+        // A tag or contact shared by many transactions is converted once.
+        // Contacts use the row-weight conversion: the full init aggregates
+        // over every one of the contact's transactions, which no list row
+        // reads and which made this snapshot O(M²) for a frequent contact.
         var tagModels: [UUID: TagModel] = [:]
         var tags: [String: [TagModel]] = [:]
         for assignment in (try? modelContext.fetch(tagDescriptor)) ?? [] {
@@ -258,7 +268,7 @@ struct TransactionMetadataSnapshot {
         var contacts: [String: [ContactModel]] = [:]
         for assignment in (try? modelContext.fetch(contactDescriptor)) ?? [] {
             guard let txid = assignment.transaction?.txid, let contact = assignment.contact else { continue }
-            let model = contactModels[contact.id] ?? ContactModel(from: contact)
+            let model = contactModels[contact.id] ?? ContactModel(rowFrom: contact)
             contactModels[contact.id] = model
             contacts[txid, default: []].append(model)
         }
