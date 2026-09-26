@@ -106,21 +106,46 @@ awaiting Christoph's call — the items below assume acceptance:
   appear?) paired with the secondary's
   `📱 Loaded Ark balance from CloudKit (spendable: N)` — N says what the store
   actually held. Check the rapid-fire item below at the same time.
-- [ ] **`CloudKitObserver` drops remote-change notifications instead of
-  deferring them**: the publisher already spaces emissions ≥1.5s apart via
-  `debounce`, and `handleRemoteChange` then returns early for anything arriving
-  within `minimumChangeInterval` (2.0s) of the last handled one — with no
-  re-schedule. So an emission landing in the 1.5–2.0s band is discarded, and
-  that batch's changes stay invisible until some later, unrelated change.
-  `@Query`-backed UI is unaffected (it observes the store directly); anything
-  refreshed *only* by `cloudKitDataDidChange` inherits the hole — which is most
-  of the read-only path. Tell: `⏭️ [CloudKit] Ignoring rapid-fire notification`.
-- [ ] **A freshly installed secondary shows an empty wallet with no
-  explanation** for as long as the first CloudKit import takes (over a minute
-  observed 2026-09-23 — it reads as "the wallet is broken").
-  `ReadOnlyBalanceService` already knows it is in this state ("waiting for
-  CloudKit sync"); surface it as a "syncing from iCloud" state instead of a
-  0 balance and an empty activity list.
+- [x] **`CloudKitObserver` dropped remote-change notifications instead of
+  deferring them — FIXED 2026-09-24**: the publisher already spaces emissions
+  ≥1.5s apart via `debounce`, and `handleRemoteChange` then returned early for
+  anything arriving within `minimumChangeInterval` (2.0s) of the last handled
+  one — with no re-schedule. Since debounce only emits after 1.5s of quiet, the
+  whole 1.5–2.0s band was live and routinely hit, and those batches were
+  discarded until some later, unrelated change. `@Query`-backed UI was
+  unaffected (it observes the store directly); anything refreshed *only* by
+  `cloudKitDataDidChange` inherited the hole — most of the read-only path.
+  Now the decision is the pure `RemoteChangeThrottle.decide(...)`
+  (handle now / defer by the remainder / fold into an already-pending
+  deferral), pinned by `RemoteChangeThrottleTests` (8 cases, including the
+  1.5–2.0s band, the coalesce, and a backwards clock jump). New tells:
+  `⏳ [CloudKit] Rapid-fire notification deferred …s` and
+  `🔁 … folded into the pending deferred refresh`; the old
+  `⏭️ Ignoring rapid-fire notification` line is gone, so its presence in a log
+  means an old build.
+
+  This is a **candidate cause of the balance item below** — not a confirmed
+  one. It explains the exact shape (tags via `@Query` updated, balance via
+  notification didn't), but the write side was never ruled out, so keep
+  collecting the paired log lines.
+- [x] **A freshly installed secondary showed an empty wallet with no
+  explanation — FIXED 2026-09-24** for the activity list: over a minute
+  observed 2026-09-23, and it reads as "the wallet is broken".
+  `ReadOnlyBalanceService.isWaitingForInitialSync` (neither balance row has
+  arrived) now feeds `WalletManager.isWaitingForInitialCloudKitSync`, and
+  `TransactionListEmptyState` gained a `.syncingFromCloud` context that takes
+  precedence over the tag/contact filter contexts — with nothing synced,
+  "no transactions in this tag" isn't a claim we can make either. Two new
+  strings (`transaction_list_syncing_title`, `transaction_list_syncing_message`)
+  on `defaultValue:`, so they need extraction + de/ja/zh-Hant like the rest.
+  Remaining: the **balance card still reads 0** in that window (it renders a
+  substituted zero-balance model); decide whether it gets the same treatment
+  or stays quiet. Desktop's `TransactionList` takes the same component but was
+  not wired — it has no read-only mode yet. Also remaining: the gate is
+  balance-based, so a balance batch that lands before the transaction batch
+  drops the syncing state early, and a primary that never persisted balance
+  rows leaves it up indefinitely (no timeout); the honest upgrade is
+  `NSPersistentCloudKitContainer`'s import events.
 - [x] **Secondary devices seeded their own default tags and contacts — FIXED
   2026-09-23**: the seeding condition is "none exist", which is briefly true on
   a secondary device too (empty store until the first CloudKit import), so
@@ -135,11 +160,40 @@ awaiting Christoph's call — the items below assume acceptance:
   already-synced rows rather than creating data. No unit test —
   `WalletManager` has no test harness in this project — so this one rests on
   the on-device check below.
+  **Superseded 2026-09-25 — the role-based guard was a half-fix** (review
+  finding): the hazard is *store-not-yet-imported*, not device role, so a
+  reinstalled PRIMARY (delete app → reinstall → import seed) still seeded
+  duplicates before the account's originals imported. Seeding is now
+  import-gated (contract rule 26): created wallets seed immediately (provably
+  nothing to import), everything else waits for `CloudKitFirstImportGate`
+  (first finished successful CloudKit import event; 90 s timeout) — decision
+  pinned by `DefaultDataSeedingDecisionTests`, and the faucet contact gained
+  insert-time store dedup as the timeout backstop. The role guards stay as
+  defense in depth. On-device: the 2026-09-26 two-device session covered the
+  deletion flow; the seeding scenarios were not separately reported, so they
+  stay listed: (1) reinstalled primary →
+  exactly 9 tags + 1 faucet + customs, gate-wait log line; (2) fresh account →
+  seeds immediately, no 90 s wait; (3) reinstalled secondary → never seeds;
+  (4) iCloud signed out + import → seeds after ~90 s timeout log
+  (`log show --info --debug`, or the info lines vanish).
 - [ ] **Clean up the duplicate defaults already in the account**: the second
   iPhone's extra 9 tags and 2 contacts are in CloudKit now. Needs a decision:
   hand-delete on a device, or a one-shot dedup by name that re-points tag and
   contact assignments before deleting the loser (`PersistentTag` has no unique
-  constraint, so a merge has to move `tagAssignments` first).
+  constraint, so a merge has to move `tagAssignments` first). A post-import
+  automatic merge was considered and deferred 2026-09-25: it means deleting
+  CloudKit-mirrored rows outside `WalletDataCleanupService` — the exact fault
+  class contract rule 23 forbids — and the losing copy may carry assignments;
+  if ever built, it keeps the copy with assignments, migrates the rest, runs
+  under cleanup-service ownership, behind explicit user action.
+- [ ] **An account with no primary can never get default tags/contacts**
+  (2026-09-25, consequence of primary-only seeding): if the primary dies
+  before its seeds sync, no device seeds and `canAddDefaultTags` hides the
+  manual button everywhere. Deliberately NOT patched by showing the button
+  when no primary is visible — a registry that merely hasn't imported reads
+  as "no primary" and would re-open the duplicate window. Fold the recovery
+  into the planned active-no-primary banner/promote flow, which needs the
+  same signal.
 
 ## Test Infrastructure
 
@@ -161,9 +215,20 @@ awaiting Christoph's call — the items below assume acceptance:
 
 ## Wallet Deletion & Device Registry
 
-- [ ] **NEXT UP — two-device on-device verify of the deletion override**
-  (code landed 2026-09-24, contract rule 24). This is the gate for calling the
-  work below done; deletion changes are never done without one. Check, with two
+- [x] **Two-device on-device verify of the deletion override — DONE
+  2026-09-26** (Christoph, two linked devices, against the 2026-09-25 build
+  with the recency gate, pre-wipe recheck and seed-last ordering): the flow
+  "works much better". Individual scenarios below were not reported
+  one-by-one, so treat the checklist as passed-in-aggregate rather than
+  ticked line by line.
+- [ ] **Deletion-flow copywriting** (surfaced by the 2026-09-26 two-device
+  session, cosmetic, deferred): the strategy intro, the blockers copy, the
+  override acknowledgement and the new scope-changed banner
+  (`error_delete_scope_changed`) read correctly but need a copy pass — and
+  de/ja/zh-Hant for every key in the translation-debt list above once the
+  English settles.
+- [x] **(superseded checklist, kept for reference)** two-device verify of the
+  deletion override (code landed 2026-09-24, contract rule 24). Check, with two
   linked devices: (a) Linked Devices and the delete screen agree on how many
   other devices hold the wallet, and the delete screen *names* them; (b) delete
   on device B, then on A within the KVS propagation window — A still takes the
@@ -275,14 +340,22 @@ awaiting Christoph's call — the items below assume acceptance:
   `rejoin_message_no_primary`, `linked_devices_unsynced_device`,
   `linked_devices_unsynced_device_description`,
   `linked_devices_unsynced_device_registered %@`, `settings_unsynced_devices`.
-  Thirteen of those were extracted by the 2026-09-24 build and are `new` in
-  `Shared/Localizable.xcstrings`; **`settings_unsynced_devices` is not in the
-  catalog at all** because it is desktop-only and `xcodebuild` doesn't run
-  extraction for ArkeDesktop — same as `settings_other_devices_count`, which
-  still carries no `extractionState`. It renders from its `defaultValue`
-  meanwhile, and an IDE build will extract it. `settings_delete_warning_local_only`
-  is now correctly `stale` (not deleted, de/ja/zh-Hant values intact) — it is the
-  string that made the false claim.
+  **Extraction is no longer the gate** (re-checked 2026-09-24): every one of
+  these — `settings_unsynced_devices` now included — sits in
+  `Shared/Localizable.xcstrings` as `extracted_with_value` with an `en` entry
+  only, so `apply_translations.py` + `translation_lint.py` can run today.
+  (`settings_other_devices_count` still carries no `extractionState` but
+  already has full de/ja/zh-Hant values.)
+  `settings_delete_warning_local_only` is now correctly `stale` (not deleted,
+  de/ja/zh-Hant values intact) — it is the string that made the false claim.
+
+  Account-wide picture, same check: **80 user-facing keys have no de/ja value**
+  (zh-Hant 89 missing, incl. non-translatable symbols), spanning these
+  deletion strings, the `metadata_*` export/import set, the ~28 X-Ray
+  `data_bg_*` keys, the 5 `ManualRefreshOutcome` keys and `rejoin_*`. All
+  render their English `defaultValue` — no raw keys — so this is cosmetic for
+  a TestFlight build, but it is the whole remaining Phase 3 translation debt
+  in one number.
 - [ ] **Collapse `shouldBlockWalletAccess`'s three layers** (surfaced
   2026-09-24 while fixing defect 4). Layer 2 has no unique job: the KVS flag it
   reads is only ever written by the device reading it, and a genuine
@@ -403,10 +476,15 @@ awaiting Christoph's call — the items below assume acceptance:
   now reads the KVS registry, but Linked Devices lists SwiftData
   registrations. If a device's KVS entry outlives its CloudKit record (record
   lost, or an iOS restore onto new hardware that regenerates the device ID),
-  it blocks the full wipe with nothing to unlink in the UI. Remedies: list
-  KVS-only entries as blockers (S7 does this naturally), or have
-  `cleanupKVStoreRegistry()` — which already computes exactly this orphan set
-  and is itself never called — run on launch.
+  it blocks the full wipe with nothing to unlink in the UI. Remedy: list
+  KVS-only entries as blockers (S7 does this naturally) — shipped: the delete
+  screen names mirror-only blockers, and aged ones (48h settle window) unlock
+  the informed override. The other remedy once listed here — run
+  `cleanupKVStoreRegistry()` on launch — is struck, and the method was
+  DELETED 2026-09-25: it removed any other device's mirror entry whose
+  SwiftData row was locally absent, which is exactly the CloudKit-import-lag
+  state a freshly joined live device sits in, so one call could erase the
+  evidence that blocks an account-wide seed wipe.
 - [ ] **Blocked-strategy copy**: the conservative `.localOnly` fallback shows
   "Other devices have this wallet", which is a guess in the error case. Needs
   a third user-facing state ("couldn't check — try again") = new strings
@@ -564,6 +642,16 @@ green):
   `TaskDeduplicationManager.executeFresh` (drains, then fetches fresh — not a
   bypass, because the upsert awaits mid-loop and can't run concurrently with
   itself) and `TransactionService.refreshTransactionsAfterWrite()`.
+- [x] **`execute` clobbered `executeFresh`'s registration — fixed
+  2026-09-24** (found in review): when `executeFresh` drained an
+  `execute`-created task and took over the key, the drained task's creator
+  still removed the key unconditionally on completion — so an `execute`
+  arriving while the fresh task ran found no key and started a **concurrent
+  duplicate**, the exact double-upsert hazard the drain prevents (and the
+  stale generation left behind cascaded the clobber onto the next taker).
+  Both `execute` variants now remove the key only if it still holds their own
+  task (Task identity `==`). Mutation-verified by
+  `executeJoinsFreshTaskAfterDrain` (failed before the fix, passes after).
 - [x] **Error paths refetch — fixed 2026-09-21**: bark writes the Pending
   movement before server registration (F1), so a throw could leave the app
   blind to it. Both scheduling paths refetch before propagating, scoped to
@@ -587,6 +675,11 @@ green):
   consolidated. Fix: store type-erased cancel closures alongside each task
   instead of casting. `generations` is likewise not cleared by either method
   (harmless — bounded by distinct key count).
+  Deliberately deferred again 2026-09-24 while fixing the ownership bug
+  above: making `cancelAll` real would start genuinely cancelling
+  fund-adjacent operations (`createWallet`, `deleteWalletData`,
+  `transactions`) that were never written to be cancellation-safe — that
+  needs its own per-key review, not a piggyback.
 - [ ] **`refreshTransactionsAfterWrite()` costs an extra `getMovements()`
   under contention**: it drains the in-flight fetch *and* runs its own, so a
   contended post-write refetch does two full FFI fetches plus two upsert
@@ -624,8 +717,10 @@ green):
   auto-path-only (no UI route to it, §3); `findVTXOsForAutoRefresh` (fee
   window + signet cap) still embedded and untested, and
   `vtxoIdsBeingRefreshed()` has no test seam (§5); refresh modal's displayed
-  list/amount can diverge from what the service actually refreshes (no exit
-  exclusion, no valve) — revisit after the device run.
+  list/amount can diverge from what the service actually refreshes — narrowed
+  2026-09-24 (the modal now applies the exit exclusion too, fail-open), the
+  remaining divergence is the valve and mid-flight state changes — revisit
+  after the device run.
 
 ## Startup & Initialization
 
@@ -762,6 +857,58 @@ green):
 ## Background Execution
 
 See `Features/Background_Execution.md` (Phase 1 done, soak running).
+
+### Background runs are being killed for holding a store lock (0xdead10cc)
+
+Found 2026-09-24 in Apple's TestFlight crash data (Xcode Organizer /
+`GetTopCrashIssues`), not from the field reports or the journal. **Two of the
+three crash signatures on build 23 are the same kill**, one device each:
+
+- `Termination Reason: RUNNINGBOARD 0xdead10cc` — the process was suspended
+  while holding a file or SQLite lock, so the system killed it outright.
+- **2026-09-17, 1.8s into a background launch** (iPhone16,2, iOS 27.0): main
+  thread blocked in `open()` inside `BarkWalletFFI.getWalletDirectory()` — the
+  `.test` writability probe — while another thread ran CloudKit's
+  `PFCloudKitMetadataModelMigrator` holding a SQLite connection. The probe ran
+  on *every* `BarkWalletFFI.init`, which happens inside `App.init()`.
+- **2026-09-16** (iPhone18,1): main thread in SwiftData `DefaultStore.save` from
+  `DeviceRegistrationService.registerCurrentDevice`.
+
+Why it matters for the release: a killed background run doesn't finish its
+pass, so the wake silently achieves nothing — and this release has the relay
+sending auth wakes on its own, raising wake frequency. The journal records the
+wake but no completion row, which reads as "never granted" rather than "killed".
+
+- [x] **Probe write removed from the launch path — 2026-09-24**:
+  `getWalletDirectory()` no longer writes-and-deletes `.test` when the
+  directory already exists (it still probes right after creating one, which
+  happens once). Strictly less main-thread file I/O in `App.init()`.
+- [x] **Task assertion around the exposed writes — 2026-09-24**: new
+  `withBackgroundActivityAssertion(_:operation:)`
+  (`Shared/Services/BackgroundActivityAssertion.swift`) wraps
+  `registerCurrentDevice` (whole pass: save, devices reload, primary
+  reconcile) and the headless `openWalletIfNeeded()` in
+  `refreshRelayAuthInBackground`. Best-effort by design — a refused assertion
+  runs the work unprotected, as before. No-op off iOS.
+- [ ] **On-device confirmation**: the kills are only observable after the
+  fact. Watch Organizer for build 25+ signatures at
+  `getWalletDirectory`/`registerCurrentDevice`, and for the new
+  `⏳ Background assertion '…' expired before its work finished` /
+  `ℹ️ Background assertion '…' not granted` lines. Absence of new 0xdead10cc
+  reports over a week of wakes is the only real confirmation.
+- [ ] **Structural: a background launch still builds the whole app**.
+  `App.init()` constructs `WalletManager` → `BarkWalletFFI` (file system work)
+  and the CloudKit container before anything knows whether this launch is for
+  UI or for a wake, and an assertion can't help there — nothing is alive yet
+  to take one. Deliberately not restructured for this release (too large, and
+  the probe removal takes the measured frame out). The fix direction is a lazy
+  wallet/FFI construction so a wake path touches only what it needs; revisit
+  with Phase 2.
+- [ ] **Audit the other unprotected store writes on background-reachable
+  paths**: `unregisterCurrentDevice`, the transaction upsert in
+  `refreshTransactionsAfterWrite`, and the balance persist all save on paths a
+  mailbox push can reach. Only the two above are crash-proven, so the rest
+  were left alone rather than blanket-wrapped.
 
 - [x] **BGTask grant frequency**: ~~evaluate soak results~~ answered from the
   relay side 2026-09-17 (124/151 mailboxes expired — not often enough); the
@@ -916,20 +1063,16 @@ bindings.
 See `Features/Desktop_Parity.md` (onboarding, settings, launch/registration
 done).
 
-- [ ] **ArkeDesktop build is broken — duplicate doc basenames (regression).**
-  `xcodebuild -scheme 'Arké' -destination platform=macOS` fails with four
-  "Multiple commands produce …" errors for `01-api-changes.md`,
-  `02-migration-plan.md`, `04-completion-report.md`, `README.md`. Same class
-  of break as the 2026-07-09 `PHASE_3_COMPLETE` collision: ArkeDesktop
+- [x] **ArkeDesktop duplicate-doc-basename build break — FIXED 2026-09-21**
+  (commit `834a1f4`), re-verified green 2026-09-24:
+  `xcodebuild -scheme 'Arké' -destination platform=macOS` builds. ArkeDesktop
   flat-copies `Docs/` into `Contents/Resources`, so duplicate basenames
-  collide. Cause: `Docs/Migrations/Bark-0.19.0-to-0.23.0/` and
-  `Docs/Migrations/Bark-0.23.0-to-0.24.0/` (8 files) were never added to the
-  ArkeDesktop `membershipExceptions` list, unlike the other five migration
-  folders. Fix is an **Xcode UI pass** (uncheck ArkeDesktop membership for
-  those 8 files) — not a hand edit of `project.pbxproj`. Predates the refresh
-  work; verified identical at `HEAD~2`. Worth adding a Migrations-folder
-  checklist item to the bindings-bump routine so the next one doesn't repeat
-  it.
+  collide; `Docs/Migrations/Bark-0.19.0-to-0.23.0/` and
+  `Docs/Migrations/Bark-0.23.0-to-0.24.0/` (8 files) plus the review playbook
+  were never added to the ArkeDesktop `membershipExceptions` list, unlike the
+  other five migration folders. Still open as a process item: add a
+  Migrations-folder exclusion step to the bindings-bump checklist so the next
+  bump doesn't repeat it (third occurrence of this break).
 - [ ] **Exit UI** on desktop.
 - [ ] **Notifications** on desktop.
 
@@ -949,6 +1092,21 @@ list path (`associatedTags`/`associatedContacts`, `PersistentTag`/
 `TransactionMetadataSnapshot` the lists render from), covered by
 `TransactionMetadataResolutionTests`.
 
+Extended to the **write paths** 2026-09-25 (review finding: the fix had
+covered reads but not writes): new `liveTagAssignments`/`liveContactAssignments`
+on `PersistentTransaction`, `liveAssignments` on tag/contact, and a live
+accessor on `PendingPaymentMetadata` (whole-table fetch + `persistentModelID`
+filter — no domain key, table holds only unmatched sends); the count/bool
+accessors (`tagCount`, `hasTags`, `transactionCount`, `addressCount`, …) now
+share the same fetches so they can't disagree with the resolved lists; swept
+auto-tagging, pending-metadata application, the Send flow's replace-assignment
+deletes, `ContactAddressService`'s primary-flag loops, `WalletManager+Contacts`
+address learning, `PaymentInfoReceivedSheet`, and import/export. Remaining
+cached-array reads are count/isEmpty-only and annotated in place. Dead code
+removed: `cacheExistingTagAssignments`, the `TransactionModel+OnchainAdapter`
+statics (file emptied — needs an Xcode pass to delete). Pinned by
+`TransactionMetadataWritePathTests` (8 tests, second-context deletes).
+
 - [ ] **On-device verify on the second iPhone**: launch during the initial
   CloudKit import (the crash repro), then assign/unassign a tag from the
   transaction detail and confirm the list label updates (the `dataVersion`
@@ -961,13 +1119,32 @@ list path (`associatedTags`/`associatedContacts`, `PersistentTag`/
   properties still traps. Fix: have the presenting list pass txids (safe to read
   at tap time) and re-fetch the window; needs the entrance/drag choreography
   re-verified on device, so it was left out of the 2026-09-23 pass.
-- [ ] **`MetadataExportService` walks cached assignment arrays** (it needs
-  `assignedDate`, which the snapshot drops). Synchronous from fetch to write, so
-  exposure is limited to transactions the list registered earlier; rewrite as a
-  grouped fetch of the assignment tables if export ever traps.
-- [ ] **`PendingPaymentMetadata.associatedTags`** still walks its cached
-  `tagAssignments`. Send-flow only and locally created moments before use, and
-  the type has no stable id to fetch by — revisit if the send sheet ever traps.
+- [x] **`MetadataExportService` walks cached assignment arrays — FIXED
+  2026-09-25**: exports now build from `liveTagAssignments`/
+  `liveContactAssignments` (which carry `assignedDate`), so an export can
+  neither trap nor emit rows a CloudKit import deleted. Pinned by
+  `exportOmitsDeletedAssignments`.
+- [x] **`PendingPaymentMetadata.associatedTags` — FIXED 2026-09-25**: the
+  "no stable id" blocker dissolved — the live accessor fetches the whole
+  `PendingTagAssignment` table (tiny: only unmatched sends) and filters by
+  `persistentModelID`, which is instance metadata and can't fire a fault.
+  Pinned by `pendingMetadataLiveAssignments`.
+- [x] **Fetch-based accessors made the refresh path a fetch storm — FIXED
+  2026-09-25** (review finding on eb4f520): the single-arg
+  `TransactionModel(from:)` runs a fetch pair per transaction, and
+  `ContactModel(from:)` aggregates over every one of the contact's
+  transactions — mapping whole lists through them made each refresh
+  O(transactions × contact usage) on the main actor. Hot paths
+  (`TransactionService.transactions`, `UnifiedTransactionService`'s onchain
+  merge, `TransactionListModel`) now bulk-bridge through one
+  `TransactionMetadataSnapshot` per pass, and the snapshot uses a new
+  row-weight `ContactModel(rowFrom:)` (aggregates nil — no list row reads
+  them). Cold single-item sites deliberately stay on the single-arg init (its
+  doc comment now warns against loops). Equivalence pinned by
+  `TransactionBridgingEquivalenceTests`; a non-asserting `ContinuousClock`
+  measurement lives in `bridgingCostMeasurement`. Candidate follow-up if the
+  contacts screen ever lags: `ContactService`'s own loads still use the full
+  aggregating init per contact — a statistics-service join would batch it.
 
 ## UI / Refactors
 

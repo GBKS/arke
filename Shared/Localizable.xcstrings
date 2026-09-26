@@ -12888,6 +12888,17 @@
         }
       }
     },
+    "error_delete_scope_changed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The device list changed while you were confirming. Nothing was deleted — review the updated list and try again."
+          }
+        }
+      }
+    },
     "error_enter_recovery_phrase" : {
       "localizations" : {
         "de" : {
@@ -21828,6 +21839,17 @@
         }
       }
     },
+    "settings_unsynced_devices" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not Yet Synced"
+          }
+        }
+      }
+    },
     "status_available" : {
       "localizations" : {
         "de" : {
@@ -26129,6 +26151,28 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "隨時可以開始"
+          }
+        }
+      }
+    },
+    "transaction_list_syncing_message" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your balance and activity are on their way from your other device. This can take a few minutes the first time."
+          }
+        }
+      }
+    },
+    "transaction_list_syncing_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Syncing from iCloud"
           }
         }
       }

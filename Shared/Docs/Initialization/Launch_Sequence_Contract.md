@@ -126,9 +126,15 @@ Enforced: `ExitProgressionService+LiveActivity.swift`
 **14. Check demotion before opening the wallet.**
 A demoted device must fall back to read-only mode without touching the seed;
 the layered check (UserDefaults → iCloud KV → CloudKit cache) runs as step 0
-of initialization.
+of initialization. Since 2026-09-25 the background wake path honors it too:
+its headless open (`refreshRelayAuthInBackground`) checks
+`shouldBlockWalletAccess()` before opening and answers `.nothingToDo` — a
+demoted ex-primary with a leftover local db must not open bark on every wake,
+and the new primary owns the mailbox, so retrying would never succeed.
 Enforced: `WalletManager.swift` (`performInitialization`,
-`shouldBlockWalletAccess`). Test: none (reconciliation half is tested, see 15).
+`shouldBlockWalletAccess`), `WalletManager+Notifications.swift`
+(`refreshRelayAuthInBackground`, headless open). Test: none (reconciliation
+half is tested, see 15).
 
 **15. Primary status is claimed only by explicit create/import — never inferred by detection paths.**
 "First device" inference under sync lag created two primaries; detection
@@ -211,8 +217,16 @@ just-saved config with a stale iCloud id and re-point a live wallet. Hence the
 skip-when-open guard, and hence `reconciliation()` returning `.noUsableConfig`
 rather than `load()`'s mainnet fallback for an unresolvable id. Network config
 is the *only* class of state where the account's value overwrites this
-device's (payment data is never synced; the primary flag uses a deterministic
-winner rule) — and only in the window before an open.
+device's (bark's wallet database is device-authoritative and never overwritten
+by the account — transaction *metadata* does sync, see rule 23; the primary
+flag uses a deterministic winner rule) — and only in the window before an
+open. Two 2026-09-25 hardenings: the `.reapply` branch re-checks
+`isWalletOpen` after its awaits (the top guard goes stale across suspension
+points, and the background wake path isn't serialized with the "initialize"
+funnel), and MainView's unconditional `syncFromiCloud()` was removed on both
+platforms — redundant pre-open, and when it lost the race with the open it
+flipped the cache under runtime `load()` readers (metadata export/import
+network stamping) while the wallet ran on the old network.
 Enforced: `WalletManager.swift`
 (`reconcileNetworkConfigBeforeWalletOpen`, step 0-pre),
 `WalletManager+Notifications.swift` (background wake open),
@@ -291,10 +305,61 @@ Enforced: `DeviceRegistrationService.swift`
 Test: `OtherDeviceReportTests`, `FullWipeOverrideTests`,
 `MirrorKeySelectionTests`.
 
+**25. Store and file writes on background-reachable paths hold a task assertion; `App.init()` does no filesystem probing.**
+A process suspended while holding a SQLite or file lock is killed outright —
+`RUNNINGBOARD 0xdead10cc` — and two of the three TestFlight crash signatures on
+build 23 were exactly that, on background runs: a SwiftData save in
+`registerCurrentDevice`, and `BarkWalletFFI.getWalletDirectory()`'s `.test`
+writability probe 1.8s into a background launch while CloudKit's metadata
+migrator held a connection on another thread (2026-09-24, found in Organizer,
+never in our own logs). The kill is invisible from inside the app: the journal
+records the wake and no completion, which reads as "iOS never granted us time"
+rather than "we were killed mid-write". Two halves: take the assertion
+*before* starting the write (`withBackgroundActivityAssertion`, per Apple's
+guidance), and don't do avoidable filesystem work in the App's initializer,
+which a background launch runs in full before anything knows the launch is
+headless. The assertion is best-effort — a refused one runs the work
+unprotected — so it lowers the odds rather than closing the hole; the real fix
+for the launch half is lazy wallet construction, deliberately deferred.
+Enforced: `BackgroundActivityAssertion.swift`,
+`DeviceRegistrationService.swift` (`registerCurrentDevice`),
+`WalletManager+Notifications.swift` (background wallet open),
+`BarkWalletFFI.swift` (`getWalletDirectory`).
+Test: none — the failure is a system kill, only observable in Organizer.
+
+**26. Default data is seeded only after the first CloudKit import pass completes, or when provably nothing can import — device role alone is not the guard.**
+The seeding condition is "no local rows", which is briefly true on ANY fresh
+install of an existing account: the store is empty until the first import
+lands. The first guard (2026-09-23) was role-based and only covered
+secondaries — a reinstalled primary (delete app → reinstall → import seed)
+still seeded 9 fresh-UUID tags plus the faucet contact seconds before the
+account's originals imported, and the duplicates synced account-wide
+(2026-09-24 review finding). The decision is now
+`defaultDataSeedingDecision(isReadOnlyMode:origin:firstImportCompleted:)`:
+read-only never seeds; `.created` seeds immediately (creation refuses when any
+account wallet signal exists, so a created wallet provably has nothing to
+import); everything else waits for `CloudKitFirstImportGate` — a finished,
+successful `NSPersistentCloudKitContainer` import event, which fires on fresh
+accounts too (the import completes having found nothing) — with a 90 s timeout
+so an iCloud-signed-out import doesn't starve. The timeout residual is capped
+by insert-time dedup against the STORE: tags always fetched per name;
+contacts fetch for an existing faucet row since 2026-09-25 (the in-memory
+`contactCount` check can be stale against a just-landed import). The TagsView
+"add default tags" button stays ungated — explicit user intent.
+Enforced: `WalletManager.swift` (`defaultDataSeedingDecision`,
+`seedDefaultDataIfAppropriate`), `CloudKitObserver.swift`
+(`CloudKitFirstImportGate`), `ContactService+DefaultContacts.swift`
+(insert-time dedup), `TagService.swift` (per-name fetch, pre-existing).
+Test: `DefaultDataSeedingDecisionTests` (decision matrix + gate filter truth
+table). On-device gate: reinstalled primary must end at exactly 9 tags +
+1 faucet contact + customs.
+
 ## Test gaps
 
 Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17, 22 (decision
-covered, ordering not), 23 (blast radius covered, call sites not). Covered since
+covered, ordering not), 23 (blast radius covered, call sites not), 25 (not
+testable in-process — a system kill), 26 (decision covered; the gate's wiring
+to real import events is on-device only). Covered since
 2026-08-14: rule 8 (`LaunchSequence`, `ExitProgressionLogic.swift`) and
 rule 2's decision matrix (`ImportRecoveryLogic`,
 `BarkWalletFFI+WalletCreation.swift`) — the pattern to follow for the rest.
