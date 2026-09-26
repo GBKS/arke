@@ -208,7 +208,8 @@ struct MetadataImportService {
         var contactsByAddress: [String: PersistentContact] = [:]
         var contactsByName: [String: PersistentContact] = [:]
         for contact in localContacts {
-            for address in contact.addresses ?? [] {
+            // liveAddresses: the cached array can hold import-deleted rows
+            for address in contact.liveAddresses {
                 contactsByAddress[address.normalizedAddress] = contact
             }
             contactsByName[MetadataImportPolicy.normalize(contact.cachedName)] = contact
@@ -264,13 +265,15 @@ struct MetadataImportService {
                 transaction.notes = annotation.notes
             }
 
-            let existingTagIds = Set((transaction.tagAssignments ?? []).compactMap { $0.tag?.id })
+            // Fetch-resolved (associatedTags/associatedContacts): the cached
+            // assignment arrays can list rows a CloudKit import already deleted
+            let existingTagIds = Set(transaction.associatedTags.map(\.id))
             for assignment in annotation.tagAssignments {
                 guard let tag = tagForImportedId[assignment.tagId], !existingTagIds.contains(tag.id) else { continue }
                 context.insert(TransactionTagAssignment(tag: tag, transaction: transaction, assignedDate: assignment.assignedDate))
             }
 
-            let existingContactIds = Set((transaction.contactAssignments ?? []).compactMap { $0.contact?.id })
+            let existingContactIds = Set(transaction.associatedContacts.map(\.id))
             for assignment in annotation.contactAssignments {
                 guard let contact = contactForImportedId[assignment.contactId], !existingContactIds.contains(contact.id) else { continue }
                 context.insert(TransactionContactAssignment(contact: contact, transaction: transaction, assignedDate: assignment.assignedDate))
@@ -327,7 +330,8 @@ struct MetadataImportService {
             var byAddress: [String: UUID] = [:]
             var byName: [String: UUID] = [:]
             for contact in contacts {
-                for address in contact.addresses ?? [] {
+                // liveAddresses: the cached array can hold import-deleted rows
+                for address in contact.liveAddresses {
                     byAddress[address.normalizedAddress] = contact.id
                 }
                 byName[MetadataImportPolicy.normalize(contact.cachedName)] = contact.id
@@ -350,8 +354,10 @@ struct MetadataImportService {
     /// Add imported addresses the contact doesn't have yet. Never flips an
     /// existing primary; an imported primary only applies if none is set.
     private static func mergeAddresses(from imported: ExportedContact, into contact: PersistentContact, context: ModelContext) {
-        var existingNormalized = Set((contact.addresses ?? []).map(\.normalizedAddress))
-        var hasPrimary = (contact.addresses ?? []).contains { $0.isPrimary }
+        // liveAddresses: the cached array can hold import-deleted rows
+        let currentAddresses = contact.liveAddresses
+        var existingNormalized = Set(currentAddresses.map(\.normalizedAddress))
+        var hasPrimary = currentAddresses.contains { $0.isPrimary }
 
         for importedAddress in imported.addresses {
             let normalized = MetadataImportPolicy.normalize(importedAddress.address)

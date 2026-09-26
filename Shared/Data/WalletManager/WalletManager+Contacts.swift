@@ -127,16 +127,19 @@ extension WalletManager {
             return 0
         }
         
-        // Check if the contact already has this address
-        let hasAddress = contact.addresses?.contains { 
-            $0.normalizedAddress == normalizedAddress 
-        } ?? false
-        
+        // Check if the contact already has this address. Fetch-resolved: the
+        // cached `addresses` array can list rows a CloudKit import already
+        // deleted, and reading their properties traps.
+        let liveAddresses = contact.liveAddresses
+        let hasAddress = liveAddresses.contains {
+            $0.normalizedAddress == normalizedAddress
+        }
+
         // Add the address to the contact if it's new
         if !hasAddress {
             do {
                 // Determine if this should be the primary address
-                let isPrimary = contact.addresses?.isEmpty ?? true
+                let isPrimary = liveAddresses.isEmpty
                 
                 let newAddress = try await contactAddressService.validateAndCreateAddress(
                     address,
@@ -171,8 +174,10 @@ extension WalletManager {
         }
         
         // Filter to only transactions without any contact assignments
+        // (fetch-based hasContacts; the loop is bounded by same-address
+        // transactions, so the per-item fetch stays cheap)
         let unassignedTransactions = allTransactionsWithAddress.filter { tx in
-            (tx.contactAssignments?.isEmpty ?? true) && tx.txid != transactionTxid
+            !tx.hasContacts && tx.txid != transactionTxid
         }
         
         // Bulk assign the contact to all unassigned transactions

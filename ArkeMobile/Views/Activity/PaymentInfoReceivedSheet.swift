@@ -28,12 +28,14 @@ struct PaymentInfoReceivedSheet: View {
         BIP21URIHelper.parseBIP21URI(receivedInfo.bip21URI)
     }
     
-    // Check if this address already exists in contacts
+    // Check if this address already exists in contacts.
+    // liveAddresses (fetch-resolved): reading elements of the cached array
+    // can trap on rows a CloudKit import already deleted.
     private var existingContact: PersistentContact? {
         contacts.first { contact in
-            contact.addresses?.contains { address in
+            contact.liveAddresses.contains { address in
                 address.normalizedAddress == parsedURI.address.lowercased()
-            } ?? false
+            }
         }
     }
     

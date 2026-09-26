@@ -245,13 +245,13 @@ public struct SendMetadataSection: View {
         
         // If transaction already exists, apply directly to it as well
         if let transaction = findMatchedTransaction() {
-            // Remove existing contact assignments
-            if let existingAssignments = transaction.contactAssignments {
-                for assignment in existingAssignments {
-                    modelContext.delete(assignment)
-                }
+            // Remove existing contact assignments. Fetch-resolved: deleting
+            // through the cached array can hit rows a CloudKit import already
+            // removed, which traps on first property access.
+            for assignment in transaction.liveContactAssignments {
+                modelContext.delete(assignment)
             }
-            
+
             // Add new contact assignment
             if let contact = selectedContact {
                 let assignment = TransactionContactAssignment(
@@ -294,13 +294,12 @@ public struct SendMetadataSection: View {
         }
         
         // Apply to pending metadata
-        // Remove all existing tag assignments
-        if let existingAssignments = metadata.tagAssignments {
-            for assignment in existingAssignments {
-                modelContext.delete(assignment)
-            }
+        // Remove all existing tag assignments (fetch-resolved — see the
+        // contact-assignment note above; the row deletes make resetting the
+        // cached array redundant)
+        for assignment in metadata.liveTagAssignments {
+            modelContext.delete(assignment)
         }
-        metadata.tagAssignments = []
         
         // Add new tag assignments to pending metadata
         for tag in selectedTags {
@@ -313,13 +312,11 @@ public struct SendMetadataSection: View {
         
         // If transaction already exists, apply directly to it as well
         if let transaction = findMatchedTransaction() {
-            // Remove existing tag assignments from transaction
-            if let existingTransactionTags = transaction.tagAssignments {
-                for assignment in existingTransactionTags {
-                    modelContext.delete(assignment)
-                }
+            // Remove existing tag assignments from transaction (fetch-resolved)
+            for assignment in transaction.liveTagAssignments {
+                modelContext.delete(assignment)
             }
-            
+
             // Add new tag assignments to transaction
             for tag in selectedTags {
                 let assignment = TransactionTagAssignment(

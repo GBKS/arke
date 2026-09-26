@@ -64,15 +64,14 @@ final class PersistentContact {
         nativeContactID != nil
     }
     
-    // Get all transactions that have this contact
-    //
-    // Fetch-resolved, like PersistentTransaction.associatedTags and for the
-    // same reason: the cached `contactAssignments` array can keep listing rows
-    // a CloudKit import has already deleted, and reading one of those
-    // instances traps ("model instance was invalidated", 2026-09-23).
-    var associatedTransactions: [PersistentTransaction] {
+    // Live assignment rows for this contact, fetch-resolved like
+    // PersistentTransaction.liveTagAssignments and for the same reason: the
+    // cached `contactAssignments` array can keep listing rows a CloudKit
+    // import has already deleted, and reading one of those instances traps
+    // ("model instance was invalidated", 2026-09-23).
+    var liveAssignments: [TransactionContactAssignment] {
         guard let modelContext else {
-            return (contactAssignments ?? []).compactMap { $0.transaction }
+            return contactAssignments ?? []
         }
 
         let contactId = self.id
@@ -80,8 +79,12 @@ final class PersistentContact {
             predicate: #Predicate { $0.contact?.id == contactId }
         )
 
-        let assignments = (try? modelContext.fetch(descriptor)) ?? []
-        return assignments.compactMap { $0.transaction }
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    // Get all transactions that have this contact (fetch-resolved)
+    var associatedTransactions: [PersistentTransaction] {
+        liveAssignments.compactMap { $0.transaction }
     }
 
     /// Addresses resolved through a fetch instead of the cached `addresses`
@@ -101,9 +104,11 @@ final class PersistentContact {
     }
 
 
-    // Count of associated transactions
+    // Count of associated transactions (fetch-resolved, so it can't disagree
+    // with associatedTransactions when an import deleted rows under the
+    // cached array)
     var transactionCount: Int {
-        contactAssignments?.count ?? 0
+        liveAssignments.count
     }
     
     // Total amount (net: received - sent)
@@ -134,23 +139,25 @@ final class PersistentContact {
     
     // MARK: - Address Management
     
-    /// Get the primary address if one exists
+    /// Get the primary address if one exists (fetch-resolved via
+    /// `liveAddresses` — reading a cached address row's properties can trap
+    /// mid-import)
     var primaryAddress: PersistentContactAddress? {
-        addresses?.first { $0.isPrimary }
+        liveAddresses.first { $0.isPrimary }
     }
-    
+
     /// Get addresses by format
     func addresses(for format: AddressFormat) -> [PersistentContactAddress] {
-        (addresses ?? []).filter { $0.format == format }
+        liveAddresses.filter { $0.format == format }
     }
-    
+
     /// Get addresses compatible with a specific network
     func addresses(for networkConfig: NetworkConfig) -> [PersistentContactAddress] {
-        (addresses ?? []).filter { $0.isCompatibleWith(networkConfig) }
+        liveAddresses.filter { $0.isCompatibleWith(networkConfig) }
     }
-    
-    /// Count of addresses
+
+    /// Count of addresses (fetch-resolved)
     var addressCount: Int {
-        addresses?.count ?? 0
+        liveAddresses.count
     }
 }

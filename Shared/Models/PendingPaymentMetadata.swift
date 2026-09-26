@@ -83,15 +83,35 @@ final class PendingPaymentMetadata {
     }
     
     // MARK: - Computed Properties
-    
-    /// Get all tags associated with this pending payment
-    var associatedTags: [PersistentTag] {
-        (tagAssignments ?? []).compactMap { $0.tag }
+
+    /// Live tag-assignment rows, fetch-resolved like
+    /// `PersistentTransaction.liveTagAssignments` and for the same reason:
+    /// the cached `tagAssignments` array can keep listing rows a CloudKit
+    /// import has already deleted, and reading one of those instances traps.
+    /// There is no domain key to predicate on, so this fetches the whole
+    /// table (only unmatched sends, so it stays tiny) and filters by row
+    /// identity in memory — `persistentModelID` is instance metadata, not a
+    /// stored property, so comparing it can't fire a fault.
+    var liveTagAssignments: [PendingTagAssignment] {
+        guard let modelContext else {
+            return tagAssignments ?? []
+        }
+
+        let selfID = persistentModelID
+        var descriptor = FetchDescriptor<PendingTagAssignment>()
+        descriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
+        let all = (try? modelContext.fetch(descriptor)) ?? []
+        return all.filter { $0.pendingMetadata?.persistentModelID == selfID }
     }
-    
-    /// Check if this pending payment has any tags
+
+    /// Get all tags associated with this pending payment (fetch-resolved)
+    var associatedTags: [PersistentTag] {
+        liveTagAssignments.compactMap { $0.tag }
+    }
+
+    /// Check if this pending payment has any tags (fetch-resolved)
     var hasTags: Bool {
-        !(tagAssignments ?? []).isEmpty
+        !liveTagAssignments.isEmpty
     }
     
     /// Check if this pending payment has a contact

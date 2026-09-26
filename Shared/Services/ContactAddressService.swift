@@ -100,12 +100,12 @@ class ContactAddressService {
                 throw ContactServiceError.contactNotFound(contactId)
             }
             
-            // If setting as primary, remove primary status from other addresses
+            // If setting as primary, remove primary status from other addresses.
+            // liveAddresses (fetch-resolved): writing through the cached array
+            // can hit rows a CloudKit import already deleted, which traps.
             if isPrimary {
-                if let addresses = contact.addresses {
-                    for existingAddress in addresses {
-                        existingAddress.isPrimary = false
-                    }
+                for existingAddress in contact.liveAddresses {
+                    existingAddress.isPrimary = false
                 }
             }
             
@@ -164,11 +164,11 @@ class ContactAddressService {
                 throw ContactServiceError.addressNotFound(updatedAddress.id)
             }
             
-            // If setting as primary, remove primary status from other addresses for this contact
+            // If setting as primary, remove primary status from other addresses
+            // for this contact (liveAddresses — see performCreateAddress)
             if updatedAddress.isPrimary && !persistentAddress.isPrimary {
-                if let contact = persistentAddress.contact,
-                   let addresses = contact.addresses {
-                    for otherAddress in addresses where otherAddress.id != updatedAddress.id {
+                if let contact = persistentAddress.contact {
+                    for otherAddress in contact.liveAddresses where otherAddress.id != updatedAddress.id {
                         otherAddress.isPrimary = false
                     }
                 }
@@ -266,16 +266,15 @@ class ContactAddressService {
                 throw ContactServiceError.contactNotFound(contactId)
             }
             
-            // Find the target address
-            guard let targetAddress = contact.addresses?.first(where: { $0.id == addressId }) else {
+            // Find the target address (liveAddresses — see performCreateAddress)
+            let liveAddresses = contact.liveAddresses
+            guard let targetAddress = liveAddresses.first(where: { $0.id == addressId }) else {
                 throw ContactServiceError.addressNotFound(addressId)
             }
-            
+
             // Remove primary status from all addresses for this contact
-            if let addresses = contact.addresses {
-                for address in addresses {
-                    address.isPrimary = false
-                }
+            for address in liveAddresses {
+                address.isPrimary = false
             }
             
             // Set the target address as primary

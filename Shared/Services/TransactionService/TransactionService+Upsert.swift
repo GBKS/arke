@@ -85,6 +85,9 @@ extension TransactionService {
                         // Preserve existing tag assignments - they survive server updates
                         // No need to explicitly restore them as they're already attached to the existing transaction
                         // The SwiftData relationship will maintain the connections automatically
+                        // (count-only cached-array read, log stat — no element
+                        // properties touched, so the invalidation hazard
+                        // doesn't apply)
                         if !(existingTransaction.tagAssignments ?? []).isEmpty {
                             preservedTagCount += (existingTransaction.tagAssignments ?? []).count
                         }
@@ -354,6 +357,8 @@ extension TransactionService {
         var orphanedTagCount = 0
         
         for orphanedTransaction in orphanedTransactions {
+            // Count-only cached-array read (log stat) — no element properties
+            // touched, so the invalidation hazard doesn't apply
             let tagAssignments = orphanedTransaction.tagAssignments ?? []
             if !tagAssignments.isEmpty {
                 orphanedTagCount += tagAssignments.count

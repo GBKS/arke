@@ -46,15 +46,14 @@ final class PersistentTag {
         emoji.isEmpty ? name : "\(emoji) \(name)"
     }
     
-    // Get all transactions that have this tag
-    //
-    // Fetch-resolved, like PersistentTransaction.associatedTags and for the
-    // same reason: the cached `tagAssignments` array can keep listing rows a
-    // CloudKit import has already deleted, and reading one of those instances
-    // traps ("model instance was invalidated", 2026-09-23).
-    var associatedTransactions: [PersistentTransaction] {
+    // Live assignment rows for this tag, fetch-resolved like
+    // PersistentTransaction.liveTagAssignments and for the same reason: the
+    // cached `tagAssignments` array can keep listing rows a CloudKit import
+    // has already deleted, and reading one of those instances traps
+    // ("model instance was invalidated", 2026-09-23).
+    var liveAssignments: [TransactionTagAssignment] {
         guard let modelContext else {
-            return (tagAssignments ?? []).compactMap { $0.transaction }
+            return tagAssignments ?? []
         }
 
         let tagId = self.id
@@ -62,13 +61,19 @@ final class PersistentTag {
             predicate: #Predicate { $0.tag?.id == tagId }
         )
 
-        let assignments = (try? modelContext.fetch(descriptor)) ?? []
-        return assignments.compactMap { $0.transaction }
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
-    
-    // Count of associated transactions
+
+    // Get all transactions that have this tag (fetch-resolved)
+    var associatedTransactions: [PersistentTransaction] {
+        liveAssignments.compactMap { $0.transaction }
+    }
+
+    // Count of associated transactions (fetch-resolved, so it can't disagree
+    // with associatedTransactions when an import deleted rows under the
+    // cached array)
     var transactionCount: Int {
-        tagAssignments?.count ?? 0
+        liveAssignments.count
     }
     
     // Total amount (net: received - sent)

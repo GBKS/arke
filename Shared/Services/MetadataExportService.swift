@@ -122,7 +122,9 @@ struct MetadataExportService {
                 contactType: contact.contactType,
                 createdAt: contact.createdAt,
                 updatedAt: contact.updatedAt,
-                addresses: (contact.addresses ?? [])
+                // liveAddresses (fetch-resolved): the cached array can hold
+                // rows a CloudKit import already deleted, which trap on read
+                addresses: contact.liveAddresses
                     .sorted { $0.createdAt < $1.createdAt }
                     .map {
                         ExportedContactAddress(id: $0.id, address: $0.address, format: $0.formatRawValue,
@@ -138,12 +140,15 @@ struct MetadataExportService {
         let transactions = try context.fetch(FetchDescriptor<PersistentTransaction>(sortBy: [SortDescriptor(\.txid)]))
         let annotations: [ExportedTransactionAnnotation] = transactions.compactMap { transaction in
             let notes = transaction.notes?.isEmpty == false ? transaction.notes : nil
-            let tagAssignments = (transaction.tagAssignments ?? []).compactMap { assignment in
+            // live*Assignments (fetch-resolved, assignedDate-sorted): walking
+            // the cached arrays can trap on import-deleted rows, and the
+            // export must not emit rows that no longer exist
+            let tagAssignments = transaction.liveTagAssignments.compactMap { assignment in
                 assignment.tag.map { ExportedTagAssignment(tagId: $0.id, assignedDate: assignment.assignedDate) }
-            }.sorted { $0.assignedDate < $1.assignedDate }
-            let contactAssignments = (transaction.contactAssignments ?? []).compactMap { assignment in
+            }
+            let contactAssignments = transaction.liveContactAssignments.compactMap { assignment in
                 assignment.contact.map { ExportedContactAssignment(contactId: $0.id, assignedDate: assignment.assignedDate) }
-            }.sorted { $0.assignedDate < $1.assignedDate }
+            }
 
             guard notes != nil || !tagAssignments.isEmpty || !contactAssignments.isEmpty else { return nil }
             return ExportedTransactionAnnotation(txid: transaction.txid, notes: notes,

@@ -273,12 +273,9 @@ extension TransactionService {
         
         // Transfer contact assignment
         if let contact = pendingMetadata.contact {
-            // Check if transaction already has this contact
-            let hasContact = transaction.contactAssignments?.contains(where: { 
-                $0.contact?.id == contact.id 
-            }) ?? false
-            
-            if !hasContact {
+            // Fetch-based check: the cached assignment array can list rows a
+            // CloudKit import already deleted.
+            if !transaction.hasContact(contact) {
                 let assignment = TransactionContactAssignment(
                     contact: contact,
                     transaction: transaction
@@ -289,25 +286,17 @@ extension TransactionService {
             }
         }
         
-        // Transfer tag assignments
-        if let pendingTags = pendingMetadata.tagAssignments {
-            for pendingTagAssignment in pendingTags {
-                guard let tag = pendingTagAssignment.tag else { continue }
-                
-                // Check if transaction already has this tag
-                let hasTag = transaction.tagAssignments?.contains(where: { 
-                    $0.tag?.id == tag.id 
-                }) ?? false
-                
-                if !hasTag {
-                    let assignment = TransactionTagAssignment(
-                        tag: tag,
-                        transaction: transaction
-                    )
-                    context.insert(assignment)
-                    appliedCount += 1
-                    Self.logger.debug("🏷️ Applied tag '\(tag.name)' to transaction: \(transaction.txid)")
-                }
+        // Transfer tag assignments (both sides fetch-based — the cached
+        // arrays can list rows a CloudKit import already deleted)
+        for tag in pendingMetadata.associatedTags {
+            if !transaction.hasTag(tag) {
+                let assignment = TransactionTagAssignment(
+                    tag: tag,
+                    transaction: transaction
+                )
+                context.insert(assignment)
+                appliedCount += 1
+                Self.logger.debug("🏷️ Applied tag '\(tag.name)' to transaction: \(transaction.txid)")
             }
         }
         

@@ -556,6 +556,8 @@ class TagService {
             }
             
             let tagCount = allTags.count
+            // Count-only read of the cached array (log line) — no element
+            // properties touched, so the invalidation hazard doesn't apply
             let assignmentCount = allTags.reduce(0) { $0 + ($1.tagAssignments?.count ?? 0) }
             
             // Delete all tags (cascade will handle assignments)

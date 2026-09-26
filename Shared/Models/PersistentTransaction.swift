@@ -199,7 +199,8 @@ final class PersistentTransaction {
     
     // MARK: - Tag Convenience Methods
 
-    /// Get all tags associated with this transaction
+    /// Live tag-assignment rows for this transaction, fetch-resolved and
+    /// sorted by assignment date.
     ///
     /// Resolved through a fetch rather than by walking the cached
     /// `tagAssignments` array. That array can outlive the rows it points at:
@@ -211,12 +212,12 @@ final class PersistentTransaction {
     /// A fetch returns only rows that exist as of this call, and store merges
     /// are delivered on the main actor, so values read in the same
     /// synchronous pass can't be pulled out from under us.
-    var associatedTags: [PersistentTag] {
+    var liveTagAssignments: [TransactionTagAssignment] {
         guard let modelContext else {
             // Not in a context (never inserted, or already removed): there is
             // nothing to fetch, and an unmanaged relationship has no store
             // rows to lose.
-            return (tagAssignments ?? []).compactMap { $0.tag }
+            return tagAssignments ?? []
         }
 
         let txid = self.txid
@@ -226,33 +227,39 @@ final class PersistentTransaction {
         // Assignment order, so tag labels don't reshuffle between renders
         descriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
 
-        let assignments = (try? modelContext.fetch(descriptor)) ?? []
-        return assignments.compactMap { $0.tag }
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
-    /// Get count of tags on this transaction
+    /// Get all tags associated with this transaction (fetch-resolved, see
+    /// `liveTagAssignments`).
+    var associatedTags: [PersistentTag] {
+        liveTagAssignments.compactMap { $0.tag }
+    }
+
+    /// Get count of tags on this transaction (fetch-resolved, so it can't
+    /// disagree with `associatedTags` when an import deleted rows under the
+    /// cached array)
     var tagCount: Int {
-        tagAssignments?.count ?? 0
+        liveTagAssignments.count
     }
 
     /// Check if transaction has a specific tag
     func hasTag(_ tag: PersistentTag) -> Bool {
         associatedTags.contains { $0.id == tag.id }
     }
-    
+
     /// Check if transaction has any tags
     var hasTags: Bool {
-        !(tagAssignments ?? []).isEmpty
+        !liveTagAssignments.isEmpty
     }
-    
+
     // MARK: - Contact Convenience Methods
-    
-    /// Get all contacts associated with this transaction
-    ///
-    /// Fetch-resolved for the same reason as `associatedTags`.
-    var associatedContacts: [PersistentContact] {
+
+    /// Live contact-assignment rows, fetch-resolved for the same reason as
+    /// `liveTagAssignments`.
+    var liveContactAssignments: [TransactionContactAssignment] {
         guard let modelContext else {
-            return (contactAssignments ?? []).compactMap { $0.contact }
+            return contactAssignments ?? []
         }
 
         let txid = self.txid
@@ -261,23 +268,27 @@ final class PersistentTransaction {
         )
         descriptor.sortBy = [SortDescriptor(\.assignedDate, order: .forward)]
 
-        let assignments = (try? modelContext.fetch(descriptor)) ?? []
-        return assignments.compactMap { $0.contact }
+        return (try? modelContext.fetch(descriptor)) ?? []
     }
 
-    /// Get count of contacts on this transaction
+    /// Get all contacts associated with this transaction (fetch-resolved).
+    var associatedContacts: [PersistentContact] {
+        liveContactAssignments.compactMap { $0.contact }
+    }
+
+    /// Get count of contacts on this transaction (fetch-resolved)
     var contactCount: Int {
-        contactAssignments?.count ?? 0
+        liveContactAssignments.count
     }
 
     /// Check if transaction has a specific contact
     func hasContact(_ contact: PersistentContact) -> Bool {
         associatedContacts.contains { $0.id == contact.id }
     }
-    
+
     /// Check if transaction has any contacts
     var hasContacts: Bool {
-        !(contactAssignments ?? []).isEmpty
+        !liveContactAssignments.isEmpty
     }
     
     // MARK: - Notes Convenience Methods

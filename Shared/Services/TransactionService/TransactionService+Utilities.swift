@@ -42,7 +42,10 @@ extension TransactionService {
             )
             let taggedTransactions = try modelContext.fetch(taggedDescriptor)
             
-            // Filter for those that actually have tags (since relationship is optional)
+            // Filter for those that actually have tags (since relationship is
+            // optional). isEmpty/count-only cached-array reads in this method
+            // are deliberate (log-only manual cleanup); element-property reads
+            // below go through the fetch-based associatedTags.
             let actuallyTaggedTransactions = taggedTransactions.filter { !(($0.tagAssignments ?? []).isEmpty) }
             
             if !actuallyTaggedTransactions.isEmpty {

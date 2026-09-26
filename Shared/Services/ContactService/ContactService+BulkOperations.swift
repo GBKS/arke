@@ -39,7 +39,9 @@ extension ContactService {
             
             let contactCount = allContacts.count
             
-            // Count addresses and assignments before deletion
+            // Count addresses and assignments before deletion (count-only
+            // cached-array reads; this method owns and deletes the rows in
+            // the same pass, so the invalidation hazard doesn't apply)
             var totalAddresses = 0
             var totalAssignments = 0
             for contact in allContacts {

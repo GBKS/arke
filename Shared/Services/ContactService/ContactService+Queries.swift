@@ -50,12 +50,11 @@ extension ContactService {
             
             let assignments = try modelContext.fetch(assignmentDescriptor)
             
-            // Extract contacts and convert to UI models
-            // Note: We need to manually access addresses within the model context
+            // Extract contacts and convert to UI models. The conversion
+            // resolves addresses through fetches (liveAddresses), so the old
+            // pre-load of the cached relationship is no longer needed.
             let contactModels: [ContactModel] = assignments.compactMap { assignment in
                 guard let contact = assignment.contact else { return nil }
-                // Access addresses to ensure they're loaded before conversion
-                _ = contact.addresses
                 return ContactModel(from: contact)
             }
             return contactModels

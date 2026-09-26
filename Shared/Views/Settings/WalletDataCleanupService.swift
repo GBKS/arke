@@ -562,6 +562,9 @@ class WalletDataCleanupService {
         }
         
         #if DEBUG
+        // (Cached-array reads are deliberate here — count-only, and this
+        // method owns and deletes the rows in the same pass, so the
+        // invalidation hazard the live* accessors guard against can't apply.)
         print("🗑️ [WalletDataCleanupService] Queued \(contacts.count) contacts for deletion (cascade: \(addressCount) addresses)")
         #endif
         
@@ -644,6 +647,7 @@ class WalletDataCleanupService {
         let addresses = try modelContext.fetch(descriptor)
         
         for address in addresses {
+        // Count-only cached-array read; this method owns and deletes the rows
             modelContext.delete(address)
         }
         

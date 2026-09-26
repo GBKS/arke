@@ -55,28 +55,6 @@ extension TransactionService {
         return balanceTag
     }
     
-    // MARK: Tag Assignment Preservation
-    
-    /// Cache existing tag assignments for preservation during updates
-    /// This method is primarily for logging and verification - SwiftData relationships handle preservation automatically
-    private func cacheExistingTagAssignments(from transactions: [PersistentTransaction]) async -> [String: [TransactionTagAssignment]] {
-        var cache: [String: [TransactionTagAssignment]] = [:]
-        
-        for transaction in transactions {
-            let tagAssignments = transaction.tagAssignments ?? []
-            if !tagAssignments.isEmpty {
-                cache[transaction.txid] = tagAssignments
-            }
-        }
-        
-        let totalTagAssignments = cache.values.flatMap { $0 }.count
-        if totalTagAssignments > 0 {
-            Self.logger.info("🏷️ Found \(totalTagAssignments) existing tag assignments across \(cache.count) transactions")
-        }
-        
-        return cache
-    }
-    
     // MARK: Public Methods
     
     /// Automatically tag an internal transfer with the "Balance" system tag
@@ -90,14 +68,12 @@ extension TransactionService {
         do {
             // Get or create the "Balance" system tag
             let balanceTag = try await getOrCreateBalanceSystemTag()
-            
-            // Check if this transaction already has the Balance tag
-            let existingAssignments = transaction.tagAssignments ?? []
-            let alreadyTagged = existingAssignments.contains { assignment in
-                assignment.tag?.id == balanceTag.id
-            }
-            
-            if alreadyTagged {
+
+            // Check if this transaction already has the Balance tag.
+            // `hasTag` is fetch-based, which both survives the await above (a
+            // CloudKit import can delete cached assignment rows during it) and
+            // checks store truth rather than a stale relationship array.
+            if transaction.hasTag(balanceTag) {
                 // Already tagged, skip
                 return
             }
@@ -153,13 +129,11 @@ extension TransactionService {
                 return false
             }
             
-            // Check if this transaction already has this contact assigned (shouldn't happen for new transactions, but defensive)
-            let contactAssignments = transaction.contactAssignments ?? []
-            let alreadyAssigned = contactAssignments.contains {
-                $0.contact?.id == contact.id
-            }
-            
-            if alreadyAssigned {
+            // Check if this transaction already has this contact assigned
+            // (shouldn't happen for new transactions, but defensive).
+            // Fetch-based: the cached assignment array can list rows a
+            // CloudKit import already deleted.
+            if transaction.hasContact(contact) {
                 // Already assigned, skip
                 return false
             }
