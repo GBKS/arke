@@ -118,10 +118,33 @@ extension WalletManager {
         // network first: this is a wallet-open path like any other, and headless
         // is exactly where a wrong-network db would go unnoticed (contract rule 22).
         if !isInitialized, let ffiWallet = wallet as? BarkWalletFFI {
-            await reconcileNetworkConfigBeforeWalletOpen()
-            guard await ffiWallet.openWalletIfNeeded() else {
+            // Opening bark's database takes a SQLite lock, and this is the one
+            // path that does it with no UI in front of it. Suspended mid-open
+            // means a 0xdead10cc kill, so hold an assertion across it — the
+            // BGTask's own window doesn't cover a wake push, and neither
+            // window survives the system deciding to suspend us early.
+            enum HeadlessOpen { case opened, demoted, failed }
+            let outcome = await withBackgroundActivityAssertion("background-wallet-open") { () -> HeadlessOpen in
+                // Rule 14: check demotion BEFORE opening — a demoted ex-primary
+                // with a leftover local db must not open bark from a headless
+                // wake (the two-open-wallets hazard step 0a exists to prevent).
+                // Inside the assertion because the check's KVS layer can block
+                // on first access, same cost as the launch path.
+                if await shouldBlockWalletAccess() { return .demoted }
+                await reconcileNetworkConfigBeforeWalletOpen()
+                return await ffiWallet.openWalletIfNeeded() ? .opened : .failed
+            }
+            switch outcome {
+            case .demoted:
+                // .nothingToDo, not .failed: the new primary owns the mailbox,
+                // so retrying this wake chain would never succeed
+                Self.logger.notice("Background relay auth refresh: device demoted - not opening the wallet")
+                return .nothingToDo
+            case .failed:
                 Self.logger.error("Background relay auth refresh: wallet failed to open")
                 return .failed
+            case .opened:
+                break
             }
         }
 

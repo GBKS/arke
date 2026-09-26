@@ -305,6 +305,26 @@ class DeviceRegistrationService {
     ///   - allowPrimaryClaim: Whether this registration may claim primary status
     ///     (true only for create/import flows)
     func registerCurrentDevice(walletHash: String, hasSeed: Bool, allowPrimaryClaim: Bool = false) async throws {
+        // The assertion wraps the whole pass — save, devices reload and
+        // primary reconcile all write — and also covers joining an in-flight
+        // registration. Registration runs on launch and on every foreground
+        // pass, so it regularly overlaps the app heading to the background,
+        // and a process suspended mid-save is killed for holding the store's
+        // SQLite lock (0xdead10cc; TestFlight build 23 died in this save).
+        try await withBackgroundActivityAssertion("device-registration") {
+            try await self.registerCurrentDeviceUnprotected(
+                walletHash: walletHash,
+                hasSeed: hasSeed,
+                allowPrimaryClaim: allowPrimaryClaim
+            )
+        }
+    }
+
+    private func registerCurrentDeviceUnprotected(
+        walletHash: String,
+        hasSeed: Bool,
+        allowPrimaryClaim: Bool
+    ) async throws {
         return try await taskManager.execute(key: "registerCurrentDevice") {
             guard let modelContext = self.modelContext else {
                 throw DeviceRegistrationError.noModelContext

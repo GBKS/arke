@@ -273,17 +273,16 @@ class BarkWalletFFI: BarkWalletProtocol {
                 logger.error("Failed to create wallet directory: \(error)")
             }
         } else {
+            // Deliberately no writability probe here. This runs on *every*
+            // BarkWalletFFI.init, which happens inside the App's own init —
+            // including background launches, where the process can be
+            // suspended mid-write and killed for holding a file lock
+            // (RUNNINGBOARD 0xdead10cc; TestFlight build 23 died in exactly
+            // this frame, 1.8s into a background launch, while CloudKit was
+            // setting up its store on another thread). An existing directory
+            // was already probed when it was created, and a genuinely
+            // unwritable one surfaces as a wallet-open error anyway.
             logger.debug("FFI Wallet directory exists: \(walletDir.path)")
-            
-            // Verify existing directory is writable
-            let testFile = walletDir.appendingPathComponent(".test")
-            do {
-                try "test".write(to: testFile, atomically: true, encoding: .utf8)
-                try fileManager.removeItem(at: testFile)
-                logger.debug("Wallet directory is writable")
-            } catch {
-                logger.warning("Existing wallet directory may not be writable: \(error)")
-            }
         }
         
         return walletDir

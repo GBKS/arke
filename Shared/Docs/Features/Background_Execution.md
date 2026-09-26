@@ -217,6 +217,36 @@ data for this. Measure it early (Phase 1 logging) — it decides whether
 app-refresh tasks are viable at all or whether everything heavy needs
 `BGProcessingTask`.
 
+### 4. A background run that holds a store lock gets killed, not suspended
+
+Added 2026-09-24 from TestFlight crash data (build 23), because it invalidates
+the mental model above: the constraint isn't only "will iOS grant us time" —
+it's that **being suspended mid-write is fatal**. A process holding a SQLite or
+file lock when the system suspends it is killed with
+`Termination Reason: RUNNINGBOARD 0xdead10cc`. Two of build 23's three crash
+signatures were that kill, on background runs: a SwiftData save in
+`registerCurrentDevice`, and a wallet-directory probe write 1.8s into a
+background launch while CloudKit's metadata migrator held a connection.
+
+Consequences for everything below:
+
+- Any store or file write on a wake path takes an assertion first
+  (`withBackgroundActivityAssertion`). Apple's rule is to take it *before*
+  starting the work — requesting one as you're already being suspended can
+  lose the race.
+- A kill is **invisible from inside the app**. The journal gets a wake row and
+  no completion row, which looks identical to "the pass was cancelled" or
+  "iOS never granted the window". So the BGTask-grant numbers this doc's
+  Phase 1 was built to measure are a *lower* bound: some of those missing
+  completions were kills, not refusals. Organizer is the only place the
+  difference shows.
+- The 30s-window budget in constraint 3 is not the binding limit if we're
+  killed at second 2.
+
+See rule 25 in `Initialization/Launch_Sequence_Contract.md` and the
+Background Execution section of `Open_Follow_Ups.md` for the remaining items
+(notably: a background launch still constructs the whole app in `App.init()`).
+
 ## Use cases → primitives
 
 ### Incoming Lightning payments (hardest: latency is seconds)
