@@ -103,7 +103,8 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     func progressExits(feeRateSatPerVb: UInt64?) async throws -> [ExitProgressStatus]
     func syncExits() async throws
     func syncForceExitedVtxos() async throws
-    func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction
+    /// Empty `vtxoIds` with `drainAll == false` throws instead of sweeping (v0.25+); unclaimable ids are skipped
+    func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction
     func listClaimableExits() async throws -> [ExitVtxo]
     func getExitVtxos() async throws -> [ExitVtxo]
     func hasPendingExits() async throws -> Bool
@@ -186,7 +187,8 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     // MARK: - Mailbox Operations
     
     func mailboxIdentifier() throws -> String
-    func mailboxAuthorization() throws -> String
+    /// Hex authorization letting the holder read this wallet's mailbox for `expirySecs` from now; cannot be revoked early (v0.25+)
+    func mailboxAuthorization(expirySecs: UInt32) throws -> String
     
     // MARK: - Network Safety Methods
     

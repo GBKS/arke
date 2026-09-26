@@ -179,12 +179,13 @@ extension WalletManager {
         return try await wallet.allExitsClaimableAtHeight()
     }
     
-    /// Drain claimable exits to an onchain address
-    func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
+    /// Drain claimable exits to an onchain address. Pass `drainAll: true` to
+    /// sweep every claimable exit; an empty `vtxoIds` alone throws (bark 0.25+).
+    func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
-        return try await wallet.drainExits(vtxoIds: vtxoIds, address: address, feeRateSatPerVb: feeRateSatPerVb)
+        return try await wallet.drainExits(vtxoIds: vtxoIds, drainAll: drainAll, address: address, feeRateSatPerVb: feeRateSatPerVb)
     }
     
     // MARK: - Round Operations

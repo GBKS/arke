@@ -10223,13 +10223,13 @@
         }
       }
     },
-    "data_bg_next_timer_label" : {
+    "data_bg_next_renewal_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Next timer refresh"
+            "value" : "Next auth renewal"
           }
         }
       }

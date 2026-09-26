@@ -345,21 +345,21 @@ extension BarkWalletFFI {
         }
     }
 
-    func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
+    func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         // Drain claimable exits to an address
-        
+
         if isPreview {
             return ExitClaimTransaction(psbtBase64: "mock_psbt", feeSats: 1000)
         }
-        
+
         guard let wallet = wallet else {
             throw BarkWalletFFIError.walletNotInitialized
         }
-        
-        Self.logger.debug("Draining exits via FFI, VTXO count: \(vtxoIds.isEmpty ? "all" : "\(vtxoIds.count)"), Destination: \(address)")
-        
+
+        Self.logger.debug("Draining exits via FFI, VTXO count: \(drainAll ? "all" : "\(vtxoIds.count)"), Destination: \(address)")
+
         do {
-            let claimTx = try await wallet.drainExits(vtxoIds: vtxoIds, address: address, feeRateSatPerVb: feeRateSatPerVb)
+            let claimTx = try await wallet.drainExits(vtxoIds: vtxoIds, drainAll: drainAll, address: address, feeRateSatPerVb: feeRateSatPerVb)
             
             Self.logger.info("Exit claim transaction created, Fee: \(claimTx.feeSats) sats")
             

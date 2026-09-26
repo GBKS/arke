@@ -511,9 +511,9 @@ class MockBarkWallet: BarkWalletProtocol {
         print("🔄 Mock: Syncing force-exited VTXOs")
     }
     
-    func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
+    func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         try await Task.sleep(nanoseconds: 1_000_000_000)
-        print("💸 Mock: Draining \(vtxoIds.isEmpty ? "all" : "\(vtxoIds.count)") exits to \(address)")
+        print("💸 Mock: Draining \(drainAll ? "all" : "\(vtxoIds.count)") exits to \(address)")
         return ExitClaimTransaction(
             psbtBase64: "mock_psbt_base64_string",
             feeSats: 1000
@@ -695,7 +695,7 @@ class MockBarkWallet: BarkWalletProtocol {
         return LightningReceive(
             paymentHash: paymentHash,
             invoice: "lnbc1mock...",
-            amountSats: 0,
+            amountSats: 10_000,  // settled receives always carry the paid amount
             state: "settled",
             paymentPreimage: nil,
             settledAt: Int64(Date().timeIntervalSince1970),
@@ -799,8 +799,8 @@ class MockBarkWallet: BarkWalletProtocol {
         return "02a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890"
     }
     
-    func mailboxAuthorization() throws -> String {
-        print("🔐 Mock: Getting mailbox authorization")
+    func mailboxAuthorization(expirySecs: UInt32) throws -> String {
+        print("🔐 Mock: Getting mailbox authorization (expires in \(expirySecs)s)")
         return "mock_authorization_token_abc123def456"
     }
     

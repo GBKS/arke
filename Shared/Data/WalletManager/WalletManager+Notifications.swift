@@ -51,23 +51,17 @@ extension WalletManager {
         _ = await mintAndRegisterWithRelay(trigger: trigger)
     }
 
-    /// Date the BGTask fallback should be scheduled at (midpoint of the
-    /// token's remaining life), if a registration is active. Drives the
-    /// BGTask request date; the in-process timer keeps its own tighter
-    /// expiry-minus-buffer deadline inside RelayRegistrationService.
-    var relayAuthBackgroundRefreshDate: Date? {
-        relayRegistrationService?.backgroundRefreshDate
+    /// When the current authorization should be renewed (midpoint of its
+    /// life), if a registration is active. The one date the BGTask request,
+    /// the in-process timer, the launch/foreground check and X-Ray all use.
+    var relayAuthRenewalDate: Date? {
+        relayRegistrationService?.renewalDate
     }
 
     /// Read-only registration state for the X-Ray background activity header
-    /// (this session's knowledge only; history lives in the event journal).
+    /// (persisted across launches; history lives in the event journal).
     var relayAuthExpiry: Date? {
         relayRegistrationService?.authorizationExpiresAt
-    }
-
-    /// When the in-process timer will next re-mint, if a registration is active.
-    var relayAuthNextForegroundRefresh: Date? {
-        relayRegistrationService?.nextRefreshDate
     }
 
     /// Asks the relay what it currently holds for this wallet's mailbox
@@ -228,15 +222,19 @@ extension WalletManager {
     /// the foreground and background registration paths - callers own the
     /// gating (initialization, settings, keychain).
     private func mintAndRegisterWithRelay(trigger: RelayRegistrationTrigger) async -> Bool {
-        // Launch double-fire dedupe (journal finding, 2026-09-18): the launch
-        // flow and the APNs token observer both register within seconds, each
-        // minting a new token the hash dedupe can't catch. Skip while the
-        // registration is fresh; a changed device token or forceRefresh()
-        // (timer/BGTask/wake-push paths) defeats freshness. Skips aren't
-        // journaled - the journal records actual relay traffic only.
+        // Proactive-renewal gate: mint only when the persisted registration
+        // says so - none known, device token changed, other wallet's mailbox,
+        // or the token is past the midpoint of its 30-day life. Otherwise a
+        // launch, a foreground return or the APNs token observer (which all
+        // fire every launch) would each mint a new token the hash dedupe
+        // can't catch. forceRefresh() (timer/BGTask/wake-push paths) clears
+        // the state so those always re-register. Skips aren't journaled -
+        // the journal records actual relay traffic only.
         let currentToken = UserDefaults.standard.string(forKey: "apns_device_token")
-        if relayRegistrationService?.isRegistrationFresh(currentDeviceToken: currentToken) == true {
-            Self.logger.info("Skipping relay registration (trigger: \(trigger.rawValue, privacy: .public)) - current registration is fresh")
+        if let relayService = relayRegistrationService,
+           let currentMailboxId = try? wallet?.mailboxIdentifier(),
+           !relayService.needsRenewal(currentDeviceToken: currentToken, currentMailboxId: currentMailboxId) {
+            Self.logger.info("Skipping relay registration (trigger: \(trigger.rawValue, privacy: .public)) - authorization not yet due for renewal")
             return true
         }
 
@@ -266,7 +264,9 @@ extension WalletManager {
         do {
             // Get mailbox credentials from wallet
             let mailboxId = try wallet.mailboxIdentifier()
-            let authorizationHex = try wallet.mailboxAuthorization()
+            let authorizationHex = try wallet.mailboxAuthorization(
+                expirySecs: RelayRegistrationService.mailboxAuthorizationExpirySecs
+            )
 
             // Get Ark server URL from config
             let config = try await wallet.getConfig()

@@ -470,7 +470,14 @@ class WalletDataCleanupService {
 
         // Reset initial sync completion marker
         UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
-        
+
+        // Forget the relay registration bookkeeping — a wallet created or
+        // imported after this must mint its own mailbox authorization, not
+        // read the old wallet's expiry and decide no renewal is needed
+        for key in UserDefaults.relayRegistrationKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+
         #if DEBUG
         print("🗑️ [WalletDataCleanupService] Cleared balance privacy, notification settings, network config, and address icons preference")
         #endif
@@ -1023,6 +1030,9 @@ enum SharedStateWipeCoverage {
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
         Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),
+        // Relay registration bookkeeping (RelayRegistrationService.PersistedRegistration);
+        // cleared so a new wallet on this device mints its own authorization
+        Entry(key: "com.arke.relay.* (5 keys)",            store: "UserDefaults",    scope: .deviceLocal),
         // Deliberately survives deletion: re-registration rewrites it, and
         // clearing it would make the next launch report a routine secondary
         // registration as an unexplained demotion

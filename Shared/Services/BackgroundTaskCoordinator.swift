@@ -109,7 +109,7 @@ final class BackgroundTaskCoordinator: Sendable {
             // Re-submit with the real deadline now that registration state is
             // fresh (registerDevice's success path also submits — a harmless
             // double-replace with the same date)
-            if let deadline = await MainActor.run(body: { Self.walletManager?.relayAuthBackgroundRefreshDate }) {
+            if let deadline = await MainActor.run(body: { Self.walletManager?.relayAuthRenewalDate }) {
                 self.scheduleRefresh(earliestBeginDate: deadline)
             }
 

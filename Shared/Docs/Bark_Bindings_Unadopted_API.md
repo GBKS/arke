@@ -5,9 +5,9 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.24.0** (bark **v0.7.1**), pinned to
-`master` @ `788c6f2`. Compared against `Shared/Data/BarkWalletProtocol.swift`
-and actual `BarkWalletFFI` usage on 2026-09-17.
+**Baseline:** bark-ffi-bindings **v0.25.0** (bark **v0.7.1**), pinned to
+`master` @ `157b0fc`. Compared against `Shared/Data/BarkWalletProtocol.swift`
+and actual `BarkWalletFFI` usage on 2026-09-26.
 
 **Maintenance:** on every bindings bump, diff the new `WalletProtocol` in the
 package checkout against the previous version (the DerivedData checkout at
@@ -18,6 +18,23 @@ it to the Adopted-since list at the bottom with the date. Sibling doc:
 *we* haven't used yet).
 
 ---
+
+## New in v0.25.0 (bark v0.7.1)
+
+Theme: "stop guessing" — three signatures changed, nothing was added. Full
+diff and repo impact in `Migrations/Bark-0.24.0-to-0.25.0/`. All three
+changes were adopted at the bump (see Adopted-since); **nothing from this
+release is unadopted.** For the record, the one knob we deliberately don't
+use:
+
+### `drainExits(… drainAll: true …)` — sweep every claimable exit
+
+The app always passes an explicit id list with `drainAll: false`
+(`ExitClaimSequence`, pinned by `ExitClaimSequenceTests`). A sweep would let
+bark choose the set, and `ExitClaimTransaction` still doesn't report which
+ids ended up in the PSBT, so we'd lose the claim-tx ↔ VTXO link that
+`recordClaim` persists. Not a feature target; recorded so nobody "adopts"
+it as a simplification.
 
 ## New in v0.24.0 (bark v0.7.1)
 
@@ -254,3 +271,13 @@ the FFI, policy lives in `WalletManager`).
   (Guard C, `Refresh_Deduplication.md`); note it is **empty** for delegated
   refreshes until the server issues the round — the pending refresh
   movement covers that window.
+- **`mailboxAuthorization(expirySecs:)`** — 2026-09-26, same day as the
+  v0.25 bump, on the protocol. Our own ask: the lifetime is now
+  `RelayRegistrationService.mailboxAuthorizationExpirySecs` (30 days),
+  renewed at mid-life; registration state is persisted across launches
+  (`PersistedRegistration`, pinned by `RelayRegistrationRenewalTests` /
+  `RelayRegistrationPersistenceTests`).
+- **`drainExits(vtxoIds:drainAll:…)`** — 2026-09-26, on the protocol and
+  `ExitClaimWallet`; always `drainAll: false` (see v0.25 section above).
+- **`LightningReceive.amountSats: UInt64?`** — 2026-09-26; no UI surface
+  today (debug reads only), fixtures updated.

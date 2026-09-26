@@ -19,7 +19,7 @@ struct BackgroundActivityStatus {
     var notificationsEnabled = false
     var hasAPNSToken = false
     var tokenExpiry: Date?
-    var nextForegroundRefresh: Date?
+    var nextRenewal: Date?
     var hasPendingBGTask = false
     var pendingBGTaskDate: Date?
     var lastRegistration: BackgroundEvent?
@@ -151,7 +151,7 @@ struct BackgroundActivitySectionView_iOS: View {
             notificationsEnabled: UserDefaults.standard.bool(forKey: "notifications_enabled"),
             hasAPNSToken: UserDefaults.standard.string(forKey: "apns_device_token")?.isEmpty == false,
             tokenExpiry: walletManager.relayAuthExpiry,
-            nextForegroundRefresh: walletManager.relayAuthNextForegroundRefresh,
+            nextRenewal: walletManager.relayAuthRenewalDate,
             hasPendingBGTask: pending.isPending,
             pendingBGTaskDate: pending.earliest,
             lastRegistration: events.first { $0.kind == .relayRegistration && $0.outcome == "success" },
@@ -190,8 +190,8 @@ struct BackgroundActivityStatusRows: View {
             )
 
             LabeledValueRow(
-                String(localized: "data_bg_next_timer_label", defaultValue: "Next timer refresh"),
-                value: Self.formatted(status.nextForegroundRefresh)
+                String(localized: "data_bg_next_renewal_label", defaultValue: "Next auth renewal"),
+                value: Self.formatted(status.nextRenewal)
             )
 
             LabeledValueRow(
@@ -439,7 +439,7 @@ struct BackgroundEventRow: View {
         notificationsEnabled: true,
         hasAPNSToken: true,
         tokenExpiry: Date().addingTimeInterval(20 * 3600),
-        nextForegroundRefresh: Date().addingTimeInterval(19 * 3600),
+        nextRenewal: Date().addingTimeInterval(14 * 86_400),
         hasPendingBGTask: true,
         pendingBGTaskDate: Date().addingTimeInterval(10 * 3600),
         lastRegistration: BackgroundEvent(kind: .relayRegistration, outcome: "success", trigger: "wake_push", ts: Date().timeIntervalSince1970 - 300, pid: 1),

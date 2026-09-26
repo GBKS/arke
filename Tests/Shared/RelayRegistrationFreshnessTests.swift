@@ -2,11 +2,12 @@
 //  RelayRegistrationFreshnessTests.swift
 //  Arke
 //
-//  Pins the launch-time registration dedupe (journal finding 2026-09-18:
-//  launch flow + APNs token observer both register within seconds, each
-//  minting a new token the hash dedupe can't catch). A registration is
-//  fresh only when recent, unexpired, and made with the SAME device token —
-//  a changed token must always re-register immediately.
+//  Pins the proactive-renewal rule for the relay's mailbox authorization
+//  (Migrations/Bark-0.24.0-to-0.25.0, Phase 2): tokens live 30 days and are
+//  renewed once past the midpoint of their ACTUAL life. The unsolicited paths
+//  (launch, foreground, APNs token observer) all fire every launch, so the
+//  rule is what keeps them from minting a fresh token each time. A changed
+//  device token or a different mailbox must always renew immediately.
 //
 
 import Foundation
@@ -18,57 +19,179 @@ import Testing
 @testable import ArkeDesktop
 #endif
 
-@Suite("Relay Registration Freshness Tests")
-struct RelayRegistrationFreshnessTests {
+@Suite("Relay Registration Renewal Tests")
+struct RelayRegistrationRenewalTests {
 
-    private let now = Date(timeIntervalSince1970: 1_000_000)
-    private let window: TimeInterval = 3600
+    private let day: TimeInterval = 86_400
+    private let registeredAt = Date(timeIntervalSince1970: 1_000_000)
 
-    private func fresh(
-        registeredSecondsAgo: TimeInterval?,
-        expiresInSeconds: TimeInterval?,
+    /// A 30-day token registered at `registeredAt`, asked about `elapsed`
+    /// seconds later.
+    private func needsRenewal(
+        elapsed: TimeInterval,
+        lifetime: TimeInterval = 30 * 86_400,
         registeredToken: String? = "token-a",
-        currentToken: String? = "token-a"
+        currentToken: String? = "token-a",
+        registeredMailbox: String? = "a3f09b2c11dd44ee",
+        currentMailbox: String = "a3f09b2c11dd44ee"
     ) -> Bool {
-        RelayRegistrationService.isRegistrationFresh(
-            registeredAt: registeredSecondsAgo.map { now.addingTimeInterval(-$0) },
-            expiresAt: expiresInSeconds.map { now.addingTimeInterval($0) },
+        RelayRegistrationService.needsRenewal(
+            registeredAt: registeredAt,
+            expiresAt: registeredAt.addingTimeInterval(lifetime),
             registeredDeviceToken: registeredToken,
             currentDeviceToken: currentToken,
-            now: now,
-            window: window
+            registeredMailboxId: registeredMailbox,
+            currentMailboxId: currentMailbox,
+            now: registeredAt.addingTimeInterval(elapsed)
         )
     }
 
-    @Test("A recent, unexpired registration with the same token is fresh")
-    func recentRegistrationIsFresh() {
-        #expect(fresh(registeredSecondsAgo: 60, expiresInSeconds: 23 * 3600))
+    @Test("The renewal date is the midpoint of the token's actual life")
+    func renewalDateIsMidpoint() {
+        let expiresAt = registeredAt.addingTimeInterval(30 * day)
+        let renewal = RelayRegistrationService.renewalDate(registeredAt: registeredAt, expiresAt: expiresAt)
+        #expect(renewal == registeredAt.addingTimeInterval(15 * day))
     }
 
-    @Test("Older than the window is stale")
-    func oldRegistrationIsStale() {
-        #expect(!fresh(registeredSecondsAgo: 2 * 3600, expiresInSeconds: 21 * 3600))
-        // Boundary: exactly the window is stale (strict <)
-        #expect(!fresh(registeredSecondsAgo: window, expiresInSeconds: 23 * 3600))
+    @Test("A fresh 30-day token is not renewed on subsequent launches")
+    func freshTokenIsNotRenewed() {
+        #expect(!needsRenewal(elapsed: 60))
+        #expect(!needsRenewal(elapsed: 1 * day))
+        #expect(!needsRenewal(elapsed: 14 * day))
     }
 
-    @Test("An expired token is never fresh, regardless of age")
-    func expiredTokenIsStale() {
-        #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: -1))
+    @Test("Renewal starts exactly at the midpoint, not a second before")
+    func midpointBoundary() {
+        #expect(!needsRenewal(elapsed: 15 * day - 1))
+        #expect(needsRenewal(elapsed: 15 * day))
+        #expect(needsRenewal(elapsed: 29 * day))
     }
 
-    @Test("A changed device token defeats freshness")
-    func changedTokenDefeatsFreshness() {
-        #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: 23 * 3600,
-                       registeredToken: "token-a", currentToken: "token-b"))
+    @Test("An expired token is renewed")
+    func expiredTokenIsRenewed() {
+        #expect(needsRenewal(elapsed: 40 * day))
     }
 
-    @Test("Missing state is never fresh")
-    func missingStateIsStale() {
-        #expect(!fresh(registeredSecondsAgo: nil, expiresInSeconds: 23 * 3600))
-        #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: nil))
-        #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: 23 * 3600, currentToken: nil))
-        #expect(!fresh(registeredSecondsAgo: 60, expiresInSeconds: 23 * 3600, registeredToken: nil))
+    /// The midpoint follows the relay-reported lifetime, not the 30-day
+    /// constant: a relay that capped the token to 24h must not read as
+    /// "less than half remains" on every launch.
+    @Test("A relay-capped 24h token renews at 12h, not on every launch")
+    func cappedTokenUsesActualLifetime() {
+        #expect(!needsRenewal(elapsed: 60, lifetime: day))
+        #expect(!needsRenewal(elapsed: 11 * 3600, lifetime: day))
+        #expect(needsRenewal(elapsed: 12 * 3600, lifetime: day))
+    }
+
+    @Test("A changed device token renews immediately")
+    func changedTokenRenews() {
+        #expect(needsRenewal(elapsed: 60, registeredToken: "token-a", currentToken: "token-b"))
+    }
+
+    @Test("A registration for another wallet's mailbox renews immediately")
+    func otherMailboxRenews() {
+        #expect(needsRenewal(elapsed: 60, registeredMailbox: "deadbeef00000000"))
+    }
+
+    @Test("Mailbox ids compare case-insensitively")
+    func mailboxCaseInsensitive() {
+        #expect(!needsRenewal(elapsed: 60, registeredMailbox: "A3F09B2C11DD44EE"))
+    }
+
+    @Test("Missing state always renews")
+    func missingStateRenews() {
+        let now = registeredAt.addingTimeInterval(60)
+        let expiresAt = registeredAt.addingTimeInterval(30 * day)
+
+        #expect(RelayRegistrationService.needsRenewal(
+            registeredAt: nil, expiresAt: expiresAt,
+            registeredDeviceToken: "token-a", currentDeviceToken: "token-a",
+            registeredMailboxId: "m", currentMailboxId: "m", now: now))
+        #expect(RelayRegistrationService.needsRenewal(
+            registeredAt: registeredAt, expiresAt: nil,
+            registeredDeviceToken: "token-a", currentDeviceToken: "token-a",
+            registeredMailboxId: "m", currentMailboxId: "m", now: now))
+        #expect(needsRenewal(elapsed: 60, currentToken: nil))
+        #expect(needsRenewal(elapsed: 60, registeredToken: nil))
+        #expect(needsRenewal(elapsed: 60, registeredMailbox: nil))
+    }
+}
+
+/// Pins the UserDefaults round trip of the persisted registration: what a
+/// cold launch reads back must be what the last successful registration
+/// wrote, and clearing must leave nothing behind that a new wallet could
+/// inherit.
+@Suite("Relay Registration Persistence Tests")
+struct RelayRegistrationPersistenceTests {
+
+    private func isolatedDefaults() -> UserDefaults {
+        let suite = "RelayRegistrationPersistenceTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        return defaults
+    }
+
+    @Test("Nothing persisted reads as an empty registration")
+    func emptyByDefault() {
+        let defaults = isolatedDefaults()
+        #expect(RelayRegistrationService.load(from: defaults) == .empty)
+    }
+
+    @Test("A registration survives the round trip with second precision")
+    func roundTrip() {
+        let defaults = isolatedDefaults()
+        let registration = RelayRegistrationService.PersistedRegistration(
+            authHash: "abc123",
+            expiresAt: Date(timeIntervalSince1970: 1_700_000_000),
+            registeredAt: Date(timeIntervalSince1970: 1_697_408_000),
+            deviceToken: "device-token",
+            mailboxId: "a3f09b2c11dd44ee"
+        )
+
+        RelayRegistrationService.persist(registration, to: defaults)
+
+        #expect(RelayRegistrationService.load(from: defaults) == registration)
+    }
+
+    @Test("Persisting .empty removes every key")
+    func emptyClearsKeys() {
+        let defaults = isolatedDefaults()
+        RelayRegistrationService.persist(
+            RelayRegistrationService.PersistedRegistration(
+                authHash: "abc123",
+                expiresAt: Date(timeIntervalSince1970: 1_700_000_000),
+                registeredAt: Date(timeIntervalSince1970: 1_697_408_000),
+                deviceToken: "device-token",
+                mailboxId: "a3f09b2c11dd44ee"
+            ),
+            to: defaults
+        )
+
+        RelayRegistrationService.persist(.empty, to: defaults)
+
+        for key in UserDefaults.relayRegistrationKeys {
+            #expect(defaults.object(forKey: key) == nil, "\(key) should be removed")
+        }
+        #expect(RelayRegistrationService.load(from: defaults) == .empty)
+    }
+
+    /// The wipe path removes the keys directly (no service instance around);
+    /// the key list it iterates must be the same one the service writes.
+    @Test("The wipe key list covers every persisted field")
+    func wipeKeyListIsComplete() {
+        let defaults = isolatedDefaults()
+        RelayRegistrationService.persist(
+            RelayRegistrationService.PersistedRegistration(
+                authHash: "h", expiresAt: Date(), registeredAt: Date(),
+                deviceToken: "t", mailboxId: "m"
+            ),
+            to: defaults
+        )
+
+        for key in UserDefaults.relayRegistrationKeys {
+            defaults.removeObject(forKey: key)
+        }
+
+        #expect(RelayRegistrationService.load(from: defaults) == .empty)
     }
 }
 

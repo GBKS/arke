@@ -354,6 +354,25 @@ Test: `DefaultDataSeedingDecisionTests` (decision matrix + gate filter truth
 table). On-device gate: reinstalled primary must end at exactly 9 tags +
 1 faucet contact + customs.
 
+**27. Relay push registration at launch and foreground is gated by the persisted authorization state — it mints only when renewal is due, never unconditionally.**
+The mailbox authorization the relay holds lives 30 days (bark-ffi 0.25,
+`RelayRegistrationService.mailboxAuthorizationExpirySecs`) and cannot be
+revoked early, so re-minting on every launch is pure churn. The launch
+`.task`, the `.active` scenePhase return and the APNs token observer all
+route through `mintAndRegisterWithRelay`, which consults
+`RelayRegistrationService.needsRenewal` against state persisted in
+UserDefaults (`com.arke.relay.*`): renew only when no registration is
+known, the device token changed, the registration was for another wallet's
+mailbox, or the token is past the midpoint of its actual life. The
+solicited paths (timer, BGTask, wake push) `forceRefresh()` first and are
+exempt — they run because something asked for a refresh. Wallet deletion
+and unregister clear the persisted state so a new wallet cannot inherit
+"not due". Added 2026-09-26 (`Migrations/Bark-0.24.0-to-0.25.0/`).
+Enforced: `WalletManager+Notifications.swift` (`mintAndRegisterWithRelay`),
+`RelayRegistrationService.swift` (`needsRenewal`, `PersistedRegistration`),
+`WalletDataCleanupService.swift` (`clearUserDefaults`). Tests:
+`RelayRegistrationRenewalTests`, `RelayRegistrationPersistenceTests`.
+
 ## Test gaps
 
 Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17, 22 (decision

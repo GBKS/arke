@@ -24,6 +24,18 @@
 > fresh token's expiry-minus-buffer (0.06s warm; cold-launch timing comes
 > from Phase 1 field data). Also verified: the opted-out branch
 > (notifications disabled → "nothing to do", success, no relay call).
+>
+> **Amended 2026-09-26 (bark-ffi 0.25):** the 24h assumption throughout this
+> plan is gone. `mailboxAuthorization(expirySecs:)` takes the lifetime, and
+> the app mints **30-day** tokens
+> (`RelayRegistrationService.mailboxAuthorizationExpirySecs`). Registration
+> state is now **persisted** (`PersistedRegistration`, UserDefaults
+> `com.arke.relay.*`), and one shared `renewalDate` — the midpoint of the
+> token's actual life — replaces `nextRefreshDate` (expiry − 1h) and the
+> "now + remaining/2" BGTask date. The in-process timer, the BGTask request,
+> the launch/foreground check (`needsRenewal`) and X-Ray all read it; the
+> `.active` scenePhase now also triggers a gated re-registration. Full
+> design: `Migrations/Bark-0.24.0-to-0.25.0/02-migration-plan.md` Phase 2.
 
 ## Goal
 
@@ -35,7 +47,8 @@ notifications just because the user hasn't opened the app recently.
 ## Context
 
 - `bark-ffi`'s `mailbox_authorization()` mints a token with a fixed 24h
-  expiry (`bark-ffi/src/core/wallet.rs`).
+  expiry (`bark-ffi/src/core/wallet.rs`). *(Since 0.25 the lifetime is a
+  parameter; we pass 30 days — see the 2026-09-26 amendment above.)*
 - The relay (`arke-apns-relay-node`) is handed that token once at
   `POST /v1/register` and reuses it for every backfill/subscribe call and
   every reconnect until it receives a fresh one. It cannot mint its own —

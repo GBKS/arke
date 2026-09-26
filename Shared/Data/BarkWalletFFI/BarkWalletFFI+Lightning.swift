@@ -149,7 +149,8 @@ extension BarkWalletFFI {
                 // Build status string
                 var status = "Invoice Status:\n"
                 status += "  Payment Hash: \(receiveStatus.paymentHash)\n"
-                status += "  Amount: \(receiveStatus.amountSats) sats\n"
+                // nil = amountless invoice not yet settled (v0.25+; was reported as 0)
+                status += "  Amount: \(receiveStatus.amountSats.map { "\($0) sats" } ?? "any amount (pending)")\n"
                 status += "  State: \(receiveStatus.state)\n"
 
                 switch receiveStatus.state {
@@ -211,7 +212,8 @@ extension BarkWalletFFI {
                 return [
                     "payment_hash": receive.paymentHash,
                     "invoice": receive.invoice,
-                    "amount_sats": receive.amountSats,
+                    // JSON null for an amountless invoice not yet settled (v0.25+)
+                    "amount_sats": receive.amountSats.map { $0 as Any } ?? NSNull(),
                     "state": receive.state,
                     "settled_at": receive.settledAt as Any,
                     "status": status
@@ -490,7 +492,7 @@ extension BarkWalletFFI {
             return LightningReceive(
                 paymentHash: paymentHash,
                 invoice: "lnbc1preview...",
-                amountSats: 0,
+                amountSats: nil,  // amountless invoice, not yet settled (v0.25+)
                 state: "awaiting-payment",
                 paymentPreimage: nil,
                 settledAt: nil,
@@ -521,7 +523,7 @@ extension BarkWalletFFI {
             return LightningReceive(
                 paymentHash: paymentHash,
                 invoice: "lnbc1preview...",
-                amountSats: 0,
+                amountSats: 10_000,  // settled receives always carry the paid amount
                 state: "settled",
                 paymentPreimage: nil,
                 settledAt: Int64(Date().timeIntervalSince1970),

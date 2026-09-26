@@ -121,6 +121,15 @@ movement, and/or accept a client-supplied idempotency/metadata key.
 (`wallet.setMovementMetadata(id, json)` or a parameter on send) would delete
 this entire subsystem.
 
+**Addendum 2026-09-26 (0.25) — `drainExits` has the same shape of gap.**
+0.25 documents that well-formed but unclaimable ids are *skipped*, yet
+`ExitClaimTransaction` is still just `{ psbtBase64, feeSats }`. We link the
+claim tx to the VTXOs we *asked* for (`recordClaim`), so an id that raced to
+unclaimable between `listClaimableExits()` and `drainExits()` gets a claim
+link to a tx it isn't in. **Ask:** add `vtxoIds: [String]` (the ids actually
+in the PSBT) or `skippedVtxoIds` to `ExitClaimTransaction`. Parsing the PSBT
+inputs client-side would work but duplicates what bark just computed.
+
 ---
 
 ### 1.4 Cancelled exit movements are re-finished on every sync
@@ -652,6 +661,13 @@ pattern we're asking you to extend everywhere:
   under `tech.second.bark` has been invaluable for field debugging.
 - **Doc comments** on newer fields (`exitDepth`, `exitTxWeightWu`,
   `LightningSend.hasFailedRevocation`) are exactly the right level of detail.
+- **`mailboxAuthorization(expirySecs:)` (0.25)** — our ask, shipped: the
+  fixed 24h lifetime left most of our relay registrations expired between
+  iOS background grants; a caller-chosen lifetime (we use 30 days) fixes it
+  at the root. Likewise `LightningReceive.amountSats` going optional instead
+  of reporting `0` for amountless invoices, and `drainExits` refusing to
+  sweep on an empty id list — all three are "stop making the client guess"
+  changes, exactly the direction §1.1/§1.2 ask for.
 
 ## Summary of asks
 
@@ -677,3 +693,4 @@ pattern we're asking you to extend everywhere:
 | 16 | Expired-VTXO semantics: exit viability, re-issue policy, explicit state | Users seeing "spendable" balance they can't move |
 | 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) | Silent, inexplicable balance shrinkage after seed import |
 | 18 | Delegated refresh: selection excludes live participations; cancel for `NonInteractivePending`; re-delegation self-heal (§2.7) | Guard C exclusion + near-expiry safety valve in `RefreshExclusion` |
+| 19 | `ExitClaimTransaction.vtxoIds` / `skippedVtxoIds` — which ids the claim PSBT actually contains (§1.3 addendum) | Claim links recorded for VTXOs bark skipped |

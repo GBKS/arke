@@ -66,7 +66,7 @@ from the timer," not "rewrite the logic."
 | `ExitProgressionService` | 5min | `progressExits`, auto-claim claimable exits, `syncExits`, update Live Activities |
 | `VTXORefreshService` | 1h | free-window refreshes — already uses `refreshVtxosDelegated` |
 | `RoundProgressionService` | 60s | round state polling |
-| `RelayRegistrationService` | ~23h `Task.sleep` | re-mint the 24h mailbox auth token via `onNeedsRefresh` |
+| `RelayRegistrationService` | `Task.sleep` to the token's mid-life (~15d since bark-ffi 0.25; was ~23h) | re-mint the 30-day mailbox auth token via `onNeedsRefresh` |
 
 ### An existing background wake channel
 
@@ -112,7 +112,9 @@ So for incoming Lightning payments the message plumbing (mailbox → relay
 push, not a wake — turning it into one is a **small relay payload change**
 (APNs allows `alert` + `content-available: 1` on the same push). The whole
 channel also lives only as long as the relay holds a non-expired mailbox
-authorization (24h TTL), which is the gap the relay auth plan closes. And
+authorization (24h TTL at the time of writing; 30 days since bark-ffi 0.25,
+renewed at mid-life — `Migrations/Bark-0.24.0-to-0.25.0/`), which is the gap
+the relay auth plan closes. And
 even a delivered wake currently only refreshes; it doesn't claim or run
 the other maintenance passes.
 

@@ -162,7 +162,8 @@ class LightningClaimService {
 
             // Log details of all pending receives for debugging
             for (index, receive) in pendingReceives.enumerated() {
-                Self.logger.debug("Receive #\(index + 1): \(receive.amountSats) sats, state: \(receive.state), payment hash: \(String(receive.paymentHash.prefix(16)))...")
+                // amountSats is nil for an amountless invoice not yet settled (v0.25+)
+                Self.logger.debug("Receive #\(index + 1): \(receive.amountSats.map { "\($0) sats" } ?? "amount pending"), state: \(receive.state), payment hash: \(String(receive.paymentHash.prefix(16)))...")
             }
 
             if claimableBalance == 0 {
@@ -188,7 +189,7 @@ class LightningClaimService {
 
             Self.logger.info("📋 Found \(claimableReceives.count) receive(s) ready to claim")
             for receive in claimableReceives {
-                Self.logger.debug("• \(receive.amountSats) sats - Payment hash: \(String(receive.paymentHash.prefix(16)))...")
+                Self.logger.debug("• \(receive.amountSats.map { "\($0) sats" } ?? "amount pending") - Payment hash: \(String(receive.paymentHash.prefix(16)))...")
             }
 
             // Step 4: Claim all pending receives

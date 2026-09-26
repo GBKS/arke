@@ -7,6 +7,10 @@ stale). Last consolidated: 2026-08-12.
 
 ## Localization
 
+- [ ] **Translate `data_bg_next_renewal_label` ("Next auth renewal")** — new
+  X-Ray row key from the bark 0.25 migration (replaced
+  `data_bg_next_timer_label`, whose de/ja/zh-Hant values were dropped by the
+  build-time re-extraction). Run `apply_translations.py` for de/ja/zh-Hant.
 - [ ] **Native-speaker review of the de/ja first pass** (all 1,090 × 2 values are
   `needs_review`, translated 2026-08-18): start with the glossary's ⚠️ terms
   (Übertrag, Rechnung, Hauptgerät/Zweitgerät); filter by "Needs Review" in
@@ -1012,6 +1016,42 @@ in all shutdown paths. Deferred adoption (see plan §2.2-2.4, §Phase 3):
   TaskDeduplicationManager/queueing layer. Check if it reproduces before
   digging (Xcode-tethered timings are otherwise ignorable; untethered
   cold-launch budget is 2.84s).
+
+## Bark 0.25 Migration (shipped 2026-09-26)
+
+Guiding docs: `Migrations/Bark-0.24.0-to-0.25.0/`. Shipped: `drainAll`
+plumbing (always `false`; empty-ids guard in `ExitClaimSequence`),
+`mailboxAuthorization(expirySecs:)` with 30-day tokens
+(`RelayRegistrationService.mailboxAuthorizationExpirySecs`), persisted relay
+registration state + mid-life renewal rule (`needsRenewal` / `renewalDate`)
++ foreground trigger, `LightningReceive.amountSats` optional handling.
+Open:
+
+- [x] **On-device: first registration after the update — verified 2026-09-26**
+  (Christoph, iPhone, signet): first run registered; second run's post-init
+  path logged "Skipping relay registration (trigger: foreground) -
+  authorization not yet due for renewal" and made no relay call; X-Ray shows
+  "Relay auth expires" 30 days out and "Next auth renewal" 15 days out
+  (log: `Shared/Docs/debug_logs.txt`, line 1120).
+- [ ] **On-device: the day-15 renewal** — verified by the journal when it
+  happens, or sooner on the simulator by backdating
+  `com.arke.relay.lastRegisteredAt` / `com.arke.relay.authExpiresAt` with
+  `xcrun simctl spawn booted defaults write <bundle-id> <key> -float <epoch>`
+  and relaunching (02-migration-plan.md §Judgment calls 6).
+- [ ] **Relay-side confirmation** — after a week, check relay registration
+  counts per trigger drop to roughly one per device per 15 days; the
+  pre-expiry wakes (2h/1h) should stop firing for updated devices.
+- [ ] **`ExitClaimTransaction` included-ids gap** — 0.25 skips unclaimable
+  ids silently and the result doesn't say which ids are in the PSBT, so
+  `recordClaim` links every *requested* id. Asked upstream
+  (`Bark_Bindings_Feedback.md` §1.3 addendum); no app workaround planned.
+- [ ] **Multi_Device_Design S7 note** — a deleted wallet's 30-day mailbox
+  authorization stays valid on the Ark server (cannot be revoked); read-only
+  and the mailbox holds nothing new, but worth a sentence in the
+  delete-everywhere scenario.
+- [x] **Xcode Docs exclusion for the new Migrations folder — done 2026-09-26**
+  (Christoph, Xcode UI): the four 0.25 doc files are excluded from
+  ArkeDesktop's flat Docs copy (`project.pbxproj`).
 
 ## Bark 0.24 Migration (shipped 2026-09-17)
 

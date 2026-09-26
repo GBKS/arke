@@ -38,19 +38,20 @@ extension BarkWalletFFI {
         }
     }
     
-    func mailboxAuthorization() throws -> String {
-        // Get mailbox authorization token
-        
+    func mailboxAuthorization(expirySecs: UInt32) throws -> String {
+        // Get mailbox authorization token, valid for expirySecs from now.
+        // The lifetime is the caller's policy (v0.25+; was a fixed 24h).
+
         if isPreview {
             return "mock_authorization_token"
         }
-        
+
         guard let wallet = wallet else {
             throw BarkWalletFFIError.walletNotInitialized
         }
-        
+
         do {
-            return try wallet.mailboxAuthorization()
+            return try wallet.mailboxAuthorization(expirySecs: expirySecs)
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error getting mailbox authorization: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to get mailbox authorization: \(error.localizedDescription)")

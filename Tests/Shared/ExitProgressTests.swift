@@ -479,6 +479,7 @@ struct ExitClaimSequenceTests {
     final class RecordingClaimWallet: ExitClaimWallet {
         var log: [String] = []
         var drainedVtxoIds: [String]?
+        var drainedAll: Bool?
         var drainedFeeRate: UInt64??
         var failBroadcast = false
 
@@ -487,9 +488,10 @@ struct ExitClaimSequenceTests {
             return "bcrt1q_test_address"
         }
 
-        func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
+        func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
             log.append("drainExits")
             drainedVtxoIds = vtxoIds
+            drainedAll = drainAll
             drainedFeeRate = feeRateSatPerVb
             return ExitClaimTransaction(psbtBase64: "cHNidP_test", feeSats: 3376)
         }
@@ -558,6 +560,65 @@ struct ExitClaimSequenceTests {
         // The drain sees the same ids and the fee override passed in
         #expect(wallet.drainedVtxoIds == ["vtxo_a", "vtxo_b"])
         #expect(wallet.drainedFeeRate == .some(nil))
+    }
+
+    /// "Claim all" in the app means the full claimable set passed as explicit
+    /// ids — never bark's `drainAll` sweep, which would pick the set without
+    /// telling us which VTXOs ended up in the PSBT (bark 0.25 semantics).
+    @Test("Claiming the full claimable set passes explicit ids, not drainAll")
+    func testClaimAllUsesExplicitIds() async throws {
+        let wallet = RecordingClaimWallet()
+        let allClaimable = ["vtxo_a", "vtxo_b", "vtxo_c"]
+
+        try await ExitClaimSequence.run(
+            claimableVtxoIds: allClaimable,
+            wallet: wallet,
+            feeRateSatPerVb: nil,
+            effects: ExitClaimSequence.Effects(recordClaim: { _, _, _ in }, snapshotStatuses: { _ in })
+        )
+
+        #expect(wallet.drainedVtxoIds == allClaimable)
+        #expect(wallet.drainedAll == false)
+    }
+
+    @Test("Claiming a subset passes just those ids with drainAll false")
+    func testClaimSubsetUsesExplicitIds() async throws {
+        let wallet = RecordingClaimWallet()
+
+        try await ExitClaimSequence.run(
+            claimableVtxoIds: ["vtxo_b"],
+            wallet: wallet,
+            feeRateSatPerVb: 7,
+            effects: ExitClaimSequence.Effects(recordClaim: { _, _, _ in }, snapshotStatuses: { _ in })
+        )
+
+        #expect(wallet.drainedVtxoIds == ["vtxo_b"])
+        #expect(wallet.drainedAll == false)
+        #expect(wallet.drainedFeeRate == .some(7))
+    }
+
+    /// Since bark 0.25 an empty id list without drainAll is an FFI error; the
+    /// sequence fails before touching the wallet so nothing is fetched,
+    /// drained, broadcast or recorded for a claim that cannot succeed.
+    @Test("Empty id list fails before any wallet call or effect")
+    func testEmptyIdsFailBeforeWallet() async {
+        let wallet = RecordingClaimWallet()
+        var effectsRan = false
+
+        await #expect(throws: ExitClaimSequence.ClaimError.noVtxoIds) {
+            try await ExitClaimSequence.run(
+                claimableVtxoIds: [],
+                wallet: wallet,
+                feeRateSatPerVb: nil,
+                effects: ExitClaimSequence.Effects(
+                    recordClaim: { _, _, _ in effectsRan = true },
+                    snapshotStatuses: { _ in effectsRan = true }
+                )
+            )
+        }
+
+        #expect(!effectsRan)
+        #expect(wallet.log.isEmpty)
     }
 
     @Test("Broadcast failure stops the sequence before any persistence effect")

@@ -19,7 +19,11 @@ import OSLog
 /// implement just these five methods.
 protocol ExitClaimWallet {
     func getOnchainAddress() async throws -> String
-    func drainExits(vtxoIds: [String], address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction
+    /// Build a PSBT claiming exited VTXOs to `address`. Draining everything
+    /// must be asked for with `drainAll`; an empty `vtxoIds` with
+    /// `drainAll == false` throws rather than sweeping (bark 0.25). Ids parse
+    /// all-or-nothing; well-formed ids that are not claimable are skipped.
+    func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction
     func extractTxFromPsbt(psbtBase64: String) throws -> String
     func broadcastTx(txHex: String) async throws -> String
     func progressExits(feeRateSatPerVb: UInt64?) async throws -> [ExitProgressStatus]
@@ -139,6 +143,14 @@ enum ExitClaimSequence {
 
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ExitClaim")
 
+    enum ClaimError: Swift.Error, Equatable {
+        /// The sequence was asked to claim nothing. Since bark 0.25 an empty
+        /// id list is an error at the FFI too (sweeping needs `drainAll`),
+        /// but failing here keeps the wallet round-trip and the address
+        /// fetch out of a call that cannot succeed.
+        case noVtxoIds
+    }
+
     struct Effects {
         /// Persist the claim fee and link the claim tx to its movements
         /// (claim txid, fee sats, drained VTXO ids)
@@ -155,10 +167,17 @@ enum ExitClaimSequence {
         feeRateSatPerVb: UInt64?,
         effects: Effects
     ) async throws -> String {
+        guard !claimableVtxoIds.isEmpty else { throw ClaimError.noVtxoIds }
+
         let address = try await wallet.getOnchainAddress()
 
+        // Always an explicit id list, never `drainAll`: the caller knows
+        // exactly which exits it asked to claim, and recordClaim below links
+        // those ids to the claim tx. A sweep would let bark pick the set
+        // without telling us which VTXOs ended up in the PSBT.
         let claimTx = try await wallet.drainExits(
             vtxoIds: claimableVtxoIds,
+            drainAll: false,
             address: address,
             feeRateSatPerVb: feeRateSatPerVb
         )

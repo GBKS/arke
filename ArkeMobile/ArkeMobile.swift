@@ -139,9 +139,11 @@ struct Arke_mobile: App {
                 // Safety-net BGTask submit: guarantees a pending refresh
                 // request exists even if no foreground path scheduled one
                 // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4).
-                // Uses the mid-life BGTask date when a registration is active.
+                // Uses the shared renewal date when a registration is active
+                // (a fixed date, so repeated backgrounding re-submits the same
+                // request instead of pushing it later each time).
                 BackgroundTaskCoordinator.shared.scheduleRefresh(
-                    earliestBeginDate: walletManager.relayAuthBackgroundRefreshDate
+                    earliestBeginDate: walletManager.relayAuthRenewalDate
                 )
 
                 Task {
@@ -166,6 +168,14 @@ struct Arke_mobile: App {
                            await service.hasActiveExits() {
                             await service.userCheckedIn()
                         }
+                    }
+
+                    // Proactive relay-auth renewal: a no-op until the mailbox
+                    // authorization is past the midpoint of its 30-day life,
+                    // then mints and sends a fresh token immediately
+                    // (Migrations/Bark-0.24.0-to-0.25.0, Phase 2c)
+                    Task {
+                        await walletManager.registerForPushNotifications(trigger: .foreground)
                     }
                 }
             }

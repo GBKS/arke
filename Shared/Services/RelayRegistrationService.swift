@@ -90,73 +90,116 @@ class RelayRegistrationService {
     
     // MARK: - State
     
-    /// Last authorization hash sent to relay (to avoid redundant re-registrations)
-    private var lastAuthHash: String?
-    
-    /// Timestamp when authorization expires
-    private var authExpiresAt: Date?
+    /// Registration bookkeeping that must survive a cold launch. Tokens live
+    /// `mailboxAuthorizationExpirySecs` (30 days); kept in memory only, every
+    /// launch would re-mint and re-register — the churn the long lifetime
+    /// exists to remove. Written through to UserDefaults on every change
+    /// (`UserDefaults.relay*Key`). The authorization hex itself is never
+    /// stored, only its hash. `nonisolated` so the pure load/persist helpers
+    /// and their tests can compare values off the main actor.
+    nonisolated struct PersistedRegistration: Equatable {
+        /// SHA-256 of the last authorization sent (dedupe; never the token)
+        var authHash: String?
+        /// Expiry of the authorization the relay holds (relay-reported when available)
+        var expiresAt: Date?
+        /// When the last successful registration happened
+        var registeredAt: Date?
+        /// APNs device token that registration was made with
+        var deviceToken: String?
+        /// Mailbox that registration was for — a replaced wallet must not
+        /// inherit the old wallet's "no renewal needed"
+        var mailboxId: String?
 
-    /// When the last successful registration happened, and with which APNs
-    /// device token - drives the launch-time freshness dedupe (see
-    /// `isRegistrationFresh(currentDeviceToken:)`)
-    private var lastRegisteredAt: Date?
-    private var lastRegisteredDeviceToken: String?
+        static let empty = PersistedRegistration()
+    }
 
-    /// A registration younger than this is "fresh": re-minting would be pure
-    /// churn (each mint produces a new token, so the hash dedupe can't catch
-    /// launch double-fires)
-    private let freshRegistrationWindow: TimeInterval = 60 * 60
+    private var registration: PersistedRegistration {
+        didSet { Self.persist(registration, to: defaults) }
+    }
+    private let defaults: UserDefaults
 
-    /// TTL for authorization token. Matches the expiry `bark-ffi`'s
-    /// `mailbox_authorization()` bakes in (see bark-ffi/src/core/wallet.rs)
-    /// so our local bookkeeping doesn't drift from the real token lifetime.
-    private let authTTL: TimeInterval = 24 * 60 * 60
+    /// Lifetime requested for each mailbox authorization we mint
+    /// (`mailboxAuthorization(expirySecs:)`, bark-ffi 0.25+). 30 days: the
+    /// old fixed 24h left 124 of 151 relay mailboxes with expired tokens
+    /// because iOS rarely granted the background refresh in time
+    /// (SWIFT_AUTH_WAKE_SPEC.md). A token cannot be revoked early, so this is
+    /// also how long a leaked token can read the mailbox — a deliberate
+    /// trade-off (Migrations/Bark-0.24.0-to-0.25.0). The only place the
+    /// number lives; `authTTL` derives from it.
+    static let mailboxAuthorizationExpirySecs: UInt32 = 30 * 86_400
 
-    /// Refresh authorization this many seconds before expiry (default 1 hour)
-    private let authRefreshBuffer: TimeInterval = 60 * 60
+    /// Local assumption of the token lifetime when the relay doesn't report
+    /// one (older relay versions); derived so it can't drift from the mint.
+    private let authTTL: TimeInterval = TimeInterval(RelayRegistrationService.mailboxAuthorizationExpirySecs)
 
     /// Timer for scheduled authorization refresh
     private var refreshTimer: Task<Void, Never>?
 
-    /// Expiry of the authorization the relay currently holds, as far as this
-    /// session knows; nil until a successful registration. Read-only exposure
-    /// for the X-Ray background activity header.
+    /// Expiry of the authorization the relay currently holds; nil until a
+    /// successful registration. Read-only exposure for the X-Ray background
+    /// activity header.
     var authorizationExpiresAt: Date? {
-        authExpiresAt
+        registration.expiresAt
     }
 
-    /// Whether the current registration is fresh enough that re-minting would
-    /// be pure churn. The launch flow and the APNs token observer both
-    /// register within seconds at every launch (journal finding, 2026-09-18);
-    /// each mints a brand-new token, so the hash dedupe never catches it.
-    /// A changed device token always defeats freshness - the relay must learn
-    /// new tokens immediately. `forceRefresh()` clears freshness, so the
-    /// timer, BGTask, and wake-push paths always re-register.
-    func isRegistrationFresh(currentDeviceToken: String?) -> Bool {
-        Self.isRegistrationFresh(
-            registeredAt: lastRegisteredAt,
-            expiresAt: authExpiresAt,
-            registeredDeviceToken: lastRegisteredDeviceToken,
+    /// The one date every renewal path shares — the launch/foreground check,
+    /// the in-process timer, the BGTask request and X-Ray: the midpoint of
+    /// the token's actual life. One derived date, so the paths can't drift
+    /// (the old BGTask date was "now + remaining/2", re-read on every
+    /// backgrounding, so it crept toward expiry). nil until a successful
+    /// registration.
+    var renewalDate: Date? {
+        guard let registeredAt = registration.registeredAt,
+              let expiresAt = registration.expiresAt else { return nil }
+        return Self.renewalDate(registeredAt: registeredAt, expiresAt: expiresAt)
+    }
+
+    /// Whether the unsolicited paths (launch, foreground) should mint and
+    /// re-register now. The solicited paths (timer, BGTask, wake push) call
+    /// `forceRefresh()` first and never consult this — they only run when
+    /// the relay or the scheduler asked for a refresh.
+    func needsRenewal(currentDeviceToken: String?, currentMailboxId: String) -> Bool {
+        Self.needsRenewal(
+            registeredAt: registration.registeredAt,
+            expiresAt: registration.expiresAt,
+            registeredDeviceToken: registration.deviceToken,
             currentDeviceToken: currentDeviceToken,
-            now: Date(),
-            window: freshRegistrationWindow
+            registeredMailboxId: registration.mailboxId,
+            currentMailboxId: currentMailboxId,
+            now: Date()
         )
     }
 
-    /// Pure freshness decision, extracted for unit tests.
-    nonisolated static func isRegistrationFresh(
+    /// Midpoint of the authorization's *actual* life as the relay reported
+    /// it. Deliberately not "expiresAt − lifetime/2" from the constant: if
+    /// the relay ever capped a token to a shorter window, that would read as
+    /// "less than half remains" on every launch and re-mint each time.
+    nonisolated static func renewalDate(registeredAt: Date, expiresAt: Date) -> Date {
+        registeredAt.addingTimeInterval(expiresAt.timeIntervalSince(registeredAt) / 2)
+    }
+
+    /// Pure renewal decision, extracted for unit tests. Renew when no
+    /// registration is known, the APNs device token changed (the relay must
+    /// learn new tokens immediately), the registration was for another
+    /// mailbox (wallet replaced), or the token is past the midpoint of its
+    /// life. Mailbox ids compare case-insensitively (bark-ffi has returned
+    /// mixed case; the relay lowercases).
+    nonisolated static func needsRenewal(
         registeredAt: Date?,
         expiresAt: Date?,
         registeredDeviceToken: String?,
         currentDeviceToken: String?,
-        now: Date,
-        window: TimeInterval
+        registeredMailboxId: String?,
+        currentMailboxId: String,
+        now: Date
     ) -> Bool {
         guard let registeredAt, let expiresAt,
-              let currentDeviceToken, currentDeviceToken == registeredDeviceToken else {
-            return false
+              let currentDeviceToken, currentDeviceToken == registeredDeviceToken,
+              let registeredMailboxId,
+              registeredMailboxId.caseInsensitiveCompare(currentMailboxId) == .orderedSame else {
+            return true
         }
-        return now.timeIntervalSince(registeredAt) < window && now < expiresAt
+        return now >= renewalDate(registeredAt: registeredAt, expiresAt: expiresAt)
     }
 
     /// Pure wake-targeting decision for `mailbox_auth_refresh` pushes,
@@ -171,40 +214,62 @@ class RelayRegistrationService {
         currentMailboxId.caseInsensitiveCompare(payloadMailboxId) == .orderedSame
     }
 
-    /// When the next in-process (foreground) auth refresh should run (expiry
-    /// minus buffer); nil until a successful registration. This and the BGTask
-    /// date (`backgroundRefreshDate`) both derive from the same
-    /// `authExpiresAt`, so the paths can't drift if the TTL policy changes.
-    var nextRefreshDate: Date? {
-        authExpiresAt?.addingTimeInterval(-authRefreshBuffer)
-    }
-
-    /// When the BGTask fallback should ask to run: the midpoint of the token's
-    /// remaining life, not expiry minus the tight foreground buffer.
-    /// `earliestBeginDate` is advisory — iOS routinely runs the task hours
-    /// late, and field data (SWIFT_AUTH_WAKE_SPEC.md) showed it usually misses
-    /// a 1h window before a 24h expiry. Costs about one extra registration per
-    /// day; the foreground timer keeps the tight buffer.
-    var backgroundRefreshDate: Date? {
-        guard let authExpiresAt else { return nil }
-        return Date().addingTimeInterval(authExpiresAt.timeIntervalSinceNow / 2)
-    }
-
-    /// Called shortly before the current authorization expires so the caller
-    /// can mint a fresh one (via the wallet) and re-register. Without this,
-    /// a registered mailbox goes silently stale once its token expires and
-    /// is never renewed until something else happens to re-register it.
+    /// Called when the in-process timer reaches `renewalDate` so the caller
+    /// can mint a fresh authorization (via the wallet) and re-register.
+    /// Without this, a registered mailbox goes silently stale once its token
+    /// expires and is never renewed until something else happens to
+    /// re-register it.
     var onNeedsRefresh: (() async -> Void)?
 
     // MARK: - Initialization
 
-    init(relayBaseURL: String = "https://relay.arke.cash", relayAPIToken: String? = nil) {
+    init(
+        relayBaseURL: String = "https://relay.arke.cash",
+        relayAPIToken: String? = nil,
+        defaults: UserDefaults = .standard
+    ) {
         self.relayBaseURL = relayBaseURL
         self.relayAPIToken = relayAPIToken
+        self.defaults = defaults
+        // WalletManager recreates this service on every wallet init and nils
+        // it on close, so the instance can't be the memory - the defaults are
+        self.registration = Self.load(from: defaults)
     }
-    
+
     deinit {
         refreshTimer?.cancel()
+    }
+
+    // MARK: - Persistence
+
+    /// Reads the persisted registration; missing keys read as nil, so a
+    /// first launch after the update (or after a wipe) yields `.empty` and
+    /// `needsRenewal` says mint.
+    nonisolated static func load(from defaults: UserDefaults) -> PersistedRegistration {
+        func date(_ key: String) -> Date? {
+            let interval = defaults.double(forKey: key)
+            return interval > 0 ? Date(timeIntervalSince1970: interval) : nil
+        }
+        return PersistedRegistration(
+            authHash: defaults.string(forKey: UserDefaults.relayAuthHashKey),
+            expiresAt: date(UserDefaults.relayAuthExpiresAtKey),
+            registeredAt: date(UserDefaults.relayRegisteredAtKey),
+            deviceToken: defaults.string(forKey: UserDefaults.relayRegisteredDeviceTokenKey),
+            mailboxId: defaults.string(forKey: UserDefaults.relayRegisteredMailboxIdKey)
+        )
+    }
+
+    /// Writes the registration through; nil fields remove their key so
+    /// `.empty` and "never registered" are indistinguishable on read.
+    nonisolated static func persist(_ registration: PersistedRegistration, to defaults: UserDefaults) {
+        func set(_ value: Any?, _ key: String) {
+            if let value { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+        }
+        set(registration.authHash, UserDefaults.relayAuthHashKey)
+        set(registration.expiresAt?.timeIntervalSince1970, UserDefaults.relayAuthExpiresAtKey)
+        set(registration.registeredAt?.timeIntervalSince1970, UserDefaults.relayRegisteredAtKey)
+        set(registration.deviceToken, UserDefaults.relayRegisteredDeviceTokenKey)
+        set(registration.mailboxId, UserDefaults.relayRegisteredMailboxIdKey)
     }
     
     // MARK: - Public API
@@ -212,7 +277,7 @@ class RelayRegistrationService {
     /// Registers device with the relay
     /// - Parameters:
     ///   - mailboxId: Hex-encoded mailbox identifier
-    ///   - authorizationHex: Mailbox authorization token (24h expiry, see bark-ffi)
+    ///   - authorizationHex: Mailbox authorization token (`mailboxAuthorizationExpirySecs` lifetime)
     ///   - arkAddr: Ark server URL
     ///   - deviceToken: APNs device token (64-char hex)
     ///   - apnsTopic: App bundle identifier
@@ -227,7 +292,7 @@ class RelayRegistrationService {
     ) async throws {
         // Check if we need to re-register based on auth hash
         let authHash = hashAuthorization(authorizationHex)
-        if authHash == lastAuthHash, let expiresAt = authExpiresAt, Date() < expiresAt {
+        if authHash == registration.authHash, let expiresAt = registration.expiresAt, Date() < expiresAt {
             Self.logger.info("ℹ️ Skipping registration - auth unchanged and not expired")
             return
         }
@@ -253,39 +318,43 @@ class RelayRegistrationService {
             
             Self.logger.notice("✅ Device registered: \(response.status, privacy: .public)")
             
-            // Update state. Prefer the relay-reported expiry (read out of the
-            // token itself) over the local authTTL assumption, so a TTL change
-            // in bark-ffi needs no app change. A non-future expiry on a token
-            // the relay just accepted is contradictory (clock skew or relay
-            // bug) - fall back to the local TTL rather than let it drive an
-            // immediate re-refresh loop.
-            lastAuthHash = authHash
-            lastRegisteredAt = Date()
-            lastRegisteredDeviceToken = deviceToken
+            // Update (and persist) state. Prefer the relay-reported expiry
+            // (read out of the token itself) over the local authTTL
+            // assumption, so a lifetime change needs no relay coordination. A
+            // non-future expiry on a token the relay just accepted is
+            // contradictory (clock skew or relay bug) - fall back to the local
+            // TTL rather than let it drive an immediate re-refresh loop.
+            let now = Date()
             let reportedExpiry = response.authorization_expires_at.map { Date(timeIntervalSince1970: $0) }
-            if let reportedExpiry, reportedExpiry > Date() {
-                authExpiresAt = reportedExpiry
+            let expiresAt: Date
+            if let reportedExpiry, reportedExpiry > now {
+                expiresAt = reportedExpiry
             } else {
-                authExpiresAt = Date().addingTimeInterval(authTTL)
+                expiresAt = now.addingTimeInterval(authTTL)
             }
+            registration = PersistedRegistration(
+                authHash: authHash,
+                expiresAt: expiresAt,
+                registeredAt: now,
+                deviceToken: deviceToken,
+                mailboxId: mailboxId
+            )
 
-            // Schedule refresh
+            // Schedule the in-process renewal timer
             scheduleAuthRefresh()
 
-            // Mirror the in-process timer with a BGTask request — the fallback
-            // for when the process is suspended or killed before the timer can
-            // fire, asked for early (mid-life) because iOS grants it late
+            // Mirror the timer with a BGTask request at the same renewal
+            // date — the fallback for when the process is suspended or killed
+            // before the timer can fire
             #if os(iOS)
-            BackgroundTaskCoordinator.shared.scheduleRefresh(earliestBeginDate: backgroundRefreshDate)
+            BackgroundTaskCoordinator.shared.scheduleRefresh(earliestBeginDate: renewalDate)
             #endif
         } catch let error as RelayError {
             Self.logger.error("❌ Registration failed: \(error.localizedDescription, privacy: .public)")
-            
+
             // On auth error, clear cached state to force fresh registration next time
             if case .unauthorized = error {
-                lastAuthHash = nil
-                authExpiresAt = nil
-                lastRegisteredAt = nil
+                registration = .empty
             }
             
             throw error
@@ -296,10 +365,8 @@ class RelayRegistrationService {
     func unregisterDevice(mailboxId: String, deviceToken: String) async throws {
         try await sendUnregisterRequest(mailboxId: mailboxId, deviceToken: deviceToken)
 
-        // Clear state
-        lastAuthHash = nil
-        authExpiresAt = nil
-        lastRegisteredAt = nil
+        // Clear state (persisted too - the next opt-in must mint afresh)
+        registration = .empty
         refreshTimer?.cancel()
 
         // No registration left to keep fresh
@@ -363,16 +430,17 @@ class RelayRegistrationService {
     
     // MARK: - Authorization Refresh
     
-    /// Schedules automatic refresh before authorization expires
+    /// Schedules the in-process renewal at `renewalDate`. In practice the app
+    /// is rarely resident for the ~15 days this sleeps; it matters for a
+    /// device that stays awake (an iPad on a stand) and otherwise defers to
+    /// the launch/foreground check and the BGTask.
     private func scheduleAuthRefresh() {
         // Cancel existing timer
         refreshTimer?.cancel()
 
-        // Sleep until expiry minus buffer, from the real (possibly
-        // relay-reported) expiry rather than the fixed TTL constant; the
-        // floor keeps a short-lived token from spinning a refresh loop
-        guard let refreshDate = nextRefreshDate else { return }
-        let refreshDelay = max(refreshDate.timeIntervalSinceNow, 60)
+        // The floor keeps a short-lived token from spinning a refresh loop
+        guard let renewalDate else { return }
+        let refreshDelay = max(renewalDate.timeIntervalSinceNow, 60)
 
         refreshTimer = Task { [weak self] in
             do {
@@ -388,18 +456,19 @@ class RelayRegistrationService {
 
             // Clear cached state so the upcoming registerDevice() call (made
             // by the handler with access to the wallet) isn't skipped as a
-            // no-op duplicate, then mint + send a fresh authorization.
-            self.lastAuthHash = nil
-            self.authExpiresAt = nil
+            // no-op duplicate, then mint + send a fresh authorization. Not
+            // forceRefresh(): that cancels this very task, and a cancelled
+            // task's URLSession call throws before it reaches the relay.
+            self.registration = .empty
             await self.onNeedsRefresh?()
         }
     }
-    
-    /// Forces immediate re-registration (call this after auth errors)
+
+    /// Forces immediate re-registration: the solicited paths (BGTask, wake
+    /// push, auth errors) call this so the next mint is never skipped as
+    /// fresh or as an unchanged duplicate.
     func forceRefresh() {
-        lastAuthHash = nil
-        authExpiresAt = nil
-        lastRegisteredAt = nil
+        registration = .empty
         refreshTimer?.cancel()
     }
     

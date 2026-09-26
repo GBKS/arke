@@ -6,7 +6,7 @@ Keep the relay supplied with a non-expired mailbox authorization even when iOS d
 
 ## Context
 
-- `bark-ffi`'s `mailbox_authorization()` mints tokens with a fixed 24h expiry. Once the relay's copy expires, the mailbox stops delivering pushes until the app re-registers.
+- `bark-ffi`'s `mailbox_authorization()` mints tokens with a fixed 24h expiry. Once the relay's copy expires, the mailbox stops delivering pushes until the app re-registers. *(Amended 2026-09-26: bark-ffi 0.25 made the lifetime a parameter and the app now mints 30-day tokens — `RelayRegistrationService.mailboxAuthorizationExpirySecs` — renewed proactively at the midpoint of the token's life on launch/foreground/BGTask. The relay side of this spec is unchanged: it still reads the expiry out of the token and schedules wakes from it; with mid-life renewal those wakes should rarely come due. See `Migrations/Bark-0.24.0-to-0.25.0/`.)*
 - The app already refreshes in the foreground (in-process timer) and in the background (`BGAppRefreshTask`, identifier `cash.arke.refresh`, via `WalletManager.refreshRelayAuthInBackground()`).
 - Field data from the relay (2026-09-17): 124 of 151 registered mailboxes held an expired authorization, including mailboxes registered only 1–2 days earlier. `BGAppRefreshTask` alone is not keeping tokens alive.
 - The relay now reads the expiry out of the token and sends a **silent wake-up push** when it is about to lapse, or has. This amends Decision 2 in `Background_Execution.md`: the relay acts on its own initiative in exactly this one case, using nothing but the expiry inside the token the app gave it.
@@ -82,4 +82,4 @@ Simulate the push on a device or simulator with a payload file:
 xcrun simctl push booted <bundle-id> wake.apns
 ```
 
-Known limits (accepted, per Decision 4): iOS throttles silent pushes, delays them in Low Power Mode, and never launches a force-quit app for them. A longer-lived token from bark-ffi remains the more robust fix; this covers the gap until then and the long tail after it.
+Known limits (accepted, per Decision 4): iOS throttles silent pushes, delays them in Low Power Mode, and never launches a force-quit app for them. A longer-lived token from bark-ffi remains the more robust fix; this covers the gap until then and the long tail after it. *(2026-09-26: that fix shipped — bark-ffi 0.25 `mailboxAuthorization(expirySecs:)`, 30 days in the app. The wake schedule stays as the safety net.)*

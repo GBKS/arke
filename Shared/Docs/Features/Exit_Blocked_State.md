@@ -178,6 +178,20 @@ Two pre-existing subtleties noticed while reading the post-claim log:
   daemon. Deliberately narrow (not "any unclaimed exit") so terminal states
   like vtxoAlreadySpent don't trigger perpetual re-progression.
 
+## Note: "filtered down to nothing" claim errors (bark 0.25, 2026-09-26)
+
+Since bark-ffi 0.25 `drainExits` throws when the id list contains no
+claimable VTXO (sweeping needs an explicit `drainAll`, which the app never
+passes — `ExitClaimSequence` always names its ids). The only way to hit it:
+every id becomes unclaimable between `listClaimableExits()` and
+`drainExits()`. The error lands in the existing per-VTXO claim-blocked
+recording in `ExitProgressionService.checkAndProgressExits` and shows as a
+blocked claim with bark's message until the next tick's `listClaimableExits`
+no longer returns those VTXOs. Self-healing; no dedicated handling. Also
+new in 0.25: well-formed but unclaimable ids are *skipped* silently, and
+`ExitClaimTransaction` doesn't say which ids made it into the PSBT — see
+`Bark_Bindings_Feedback.md` §1.3 addendum.
+
 ## Out of scope (deliberately)
 
 - Predicting blockage before an attempt.
