@@ -181,3 +181,111 @@ struct ReadOnlySyncedDataTests {
         #expect(service.onchainAddress == "tb1qsecondary")
     }
 }
+
+/// The observer that feeds everything above used to *drop* remote-change
+/// notifications that arrived too soon after the last handled one: a 1.5s
+/// `debounce` followed by a 2.0s minimum interval with an early return and no
+/// re-schedule, so anything landing in the 1.5–2.0s band was lost until some
+/// later, unrelated change. Since debounce only emits after 1.5s of quiet,
+/// that band is routinely hit. Everything refreshed *only* by
+/// `cloudKitDataDidChange` inherited the hole — i.e. most of the read-only
+/// path, while `@Query`-backed UI updated normally.
+@Suite("Remote Change Throttle")
+struct RemoteChangeThrottleTests {
+
+    private let interval: TimeInterval = 2.0
+    private let now = Date(timeIntervalSince1970: 1_700_000_000)
+
+    @Test("The first notification is handled immediately")
+    func firstIsHandled() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now, lastHandled: nil, minimumInterval: interval, deferralPending: false
+        ) == .handleNow)
+    }
+
+    @Test("A notification past the interval is handled immediately")
+    func pastIntervalIsHandled() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-2.5),
+            minimumInterval: interval,
+            deferralPending: false
+        ) == .handleNow)
+    }
+
+    @Test("A notification exactly at the interval is handled immediately")
+    func atIntervalIsHandled() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-interval),
+            minimumInterval: interval,
+            deferralPending: false
+        ) == .handleNow)
+    }
+
+    /// The regression this whole type exists for: the debounce guarantees
+    /// ≥1.5s between emissions, so this is the band that was being discarded.
+    @Test("A notification in the debounce/interval band is deferred, not dropped")
+    func rapidFireIsDeferred() {
+        guard case .deferBy(let delay) = RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-1.6),
+            minimumInterval: interval,
+            deferralPending: false
+        ) else {
+            Issue.record("Expected a deferral")
+            return
+        }
+        // 1.6 is not exactly representable, so Date arithmetic at real-world
+        // magnitudes leaves ~2.4e-8 of error — exact equality would fail.
+        #expect(abs(delay - 0.4) < 0.0001)
+    }
+
+    @Test("The deferral only waits out the remaining time")
+    func deferralWaitsRemainderOnly() {
+        guard case .deferBy(let delay) = RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-0.5),
+            minimumInterval: interval,
+            deferralPending: false
+        ) else {
+            Issue.record("Expected a deferral")
+            return
+        }
+        #expect(abs(delay - 1.5) < 0.0001)
+    }
+
+    @Test("A second rapid-fire notification folds into the pending deferral")
+    func secondRapidFireCoalesces() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-1.6),
+            minimumInterval: interval,
+            deferralPending: true
+        ) == .coalesceIntoPendingDeferral)
+    }
+
+    /// A pending deferral must not swallow a notification that is *due* — it
+    /// is handled now and the stale deferral is cancelled.
+    @Test("A pending deferral does not suppress a due notification")
+    func pendingDeferralDoesNotSuppressDueNotification() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(-5),
+            minimumInterval: interval,
+            deferralPending: true
+        ) == .handleNow)
+    }
+
+    /// A backwards clock jump (NTP correction, timezone-independent) would
+    /// otherwise compute a deferral longer than the interval itself.
+    @Test("A last-handled timestamp in the future defers by at most the interval")
+    func futureTimestampClampsToInterval() {
+        #expect(RemoteChangeThrottle.decide(
+            now: now,
+            lastHandled: now.addingTimeInterval(60),
+            minimumInterval: interval,
+            deferralPending: false
+        ) == .deferBy(interval))
+    }
+}
