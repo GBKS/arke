@@ -329,7 +329,7 @@ class DeviceRegistrationService {
             guard let modelContext = self.modelContext else {
                 throw DeviceRegistrationError.noModelContext
             }
-            
+
             let deviceId = try self.getOrCreateDeviceId()
             let deviceName = self.getDeviceName()
             let platform = self.getDevicePlatform()
@@ -708,8 +708,8 @@ class DeviceRegistrationService {
 
         // Neither store had anything to say — propagate the ignorance instead of
         // letting it read as "this is the last device"
-        if let registryError, !report.hasOthers {
-            throw registryError
+        if let errorToPropagate = Self.registryErrorToPropagate(report: report, registryError: registryError) {
+            throw errorToPropagate
         }
 
         if report.hasOthers {
@@ -738,6 +738,15 @@ class DeviceRegistrationService {
     /// said "1 device" while the delete dialog said others kept access).
     func currentOtherDeviceReport() async throws -> OtherDeviceReport {
         try await otherDeviceReport(walletHash: accountWalletHash())
+    }
+
+    /// An unreadable registry with corroborating mirror entries still answers
+    /// "others exist"; with an empty mirror it is genuine ignorance and must
+    /// propagate — otherwise it reads as "last device" downstream, which is
+    /// the destructive direction.
+    nonisolated static func registryErrorToPropagate(report: OtherDeviceReport, registryError: Error?) -> Error? {
+        guard let registryError, !report.hasOthers else { return nil }
+        return registryError
     }
 
     /// Pure-data view of a registry row. `@MainActor` because it reads the model.
@@ -934,28 +943,32 @@ class DeviceRegistrationService {
             throw DeviceRegistrationError.deviceNotFound
         }
         
-        let walletHash = registration.walletHash
-        
         // Delete the registration (could also set isActive = false to keep history)
         modelContext.delete(registration)
         try modelContext.save()
-        
-        // Also remove from KV store
-        unregisterDeviceFromKVStore(deviceId: deviceId, walletHash: walletHash)
-        
+
+        // Also remove from the KV store mirror — across ALL wallet hashes,
+        // same rationale as unregisterCurrentDevice (2026-09-24): a mirror
+        // entry left under a different hash keeps blocking that wallet's full
+        // wipe with nothing to unlink. Multi-wallet test devices lose their
+        // other-wallet entry too; accepted.
+        removeMirrorEntries(deviceId: deviceId)
+
         Self.logger.debug("Unlinked device: \(deviceId)")
-        
+
         await loadRegisteredDevices()
     }
-    
-    /// Unlinks all devices except the current one
+
+    /// Unlinks all devices except the current one, scoped to the account's
+    /// wallet — an unscoped pass would also unlink registrations belonging to
+    /// other (test) wallets. Nil hash keeps the unscoped fallback.
     func unlinkAllOtherDevices() async throws {
-        let others = try await getOtherDevices()
-        
+        let others = try await getOtherDevices(walletHash: accountWalletHash())
+
         for device in others {
             try await unlinkDevice(device.deviceId)
         }
-        
+
         Self.logger.debug("Unlinked \(others.count) other devices")
     }
     
@@ -1299,17 +1312,6 @@ class DeviceRegistrationService {
         return keys.count
     }
 
-    /// Removes a device from the KV store registry
-    private func unregisterDeviceFromKVStore(deviceId: String, walletHash: String) {
-        let kvStore = NSUbiquitousKeyValueStore.default
-        let key = "\(Self.registeredDevicesPrefix)\(walletHash).\(deviceId)"
-        
-        kvStore.removeObject(forKey: key)
-        kvStore.synchronize()
-        
-        Self.logger.debug("Unregistered device from KV store: \(deviceId)")
-    }
-    
     /// Clears all device registrations from KV store for a specific wallet
     /// Used when importing a wallet fresh with mnemonic + backup to avoid conflicts
     func clearDeviceRegistrationsFromKVStore(walletHash: String) {
@@ -1329,49 +1331,13 @@ class DeviceRegistrationService {
         Self.logger.debug("Cleared \(keysToRemove.count) device registration(s) from KV store for wallet")
     }
     
-    /// Cleans up device registry entries for devices that no longer exist in SwiftData
-    /// Call this periodically to keep KV store in sync with CloudKit
-    func cleanupKVStoreRegistry() async throws {
-        guard let modelContext = modelContext else {
-            throw DeviceRegistrationError.noModelContext
-        }
-        
-        let kvStore = NSUbiquitousKeyValueStore.default
-        let allKVKeys = kvStore.dictionaryRepresentation.keys
-        
-        // Get all device IDs from KV store
-        var kvDeviceIds: Set<String> = []
-        for key in allKVKeys {
-            if key.hasPrefix(Self.registeredDevicesPrefix) {
-                // Extract deviceId from key: "com.arke.device.registered.<walletHash>.<deviceId>"
-                let components = key.split(separator: ".")
-                if let deviceId = components.last {
-                    kvDeviceIds.insert(String(deviceId))
-                }
-            }
-        }
-        
-        // Get all device IDs from SwiftData
-        let descriptor = FetchDescriptor<DeviceRegistration>()
-        let allDevices = try modelContext.fetch(descriptor)
-        let swiftDataDeviceIds = Set(allDevices.map { $0.deviceId })
-        
-        // Remove KV store entries for devices that don't exist in SwiftData
-        let orphanedDeviceIds = kvDeviceIds.subtracting(swiftDataDeviceIds)
-        
-        for deviceId in orphanedDeviceIds {
-            // Find the wallet hash for this device by checking all KV keys
-            for key in allKVKeys where key.contains(deviceId) {
-                kvStore.removeObject(forKey: key)
-            }
-        }
-        
-        if !orphanedDeviceIds.isEmpty {
-            kvStore.synchronize()
-            
-            Self.logger.debug("Cleaned up \(orphanedDeviceIds.count) orphaned KV store entries")
-        }
-    }
+    // `cleanupKVStoreRegistry()` was deleted 2026-09-25. It removed any OTHER
+    // device's mirror entry whose SwiftData row was locally absent — which is
+    // exactly the CloudKit-import-lag condition the mirror exists to survive
+    // (a fresh install's row can take seconds to never to arrive). One future
+    // caller would have deleted live devices' blocking evidence and re-opened
+    // the account-wide seed-wipe hole. Any future mirror pruning must go
+    // through the per-blocker unlink flow, where the user names the device.
 }
 
 // MARK: - Supporting Types
