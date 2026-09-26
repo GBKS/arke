@@ -227,6 +227,35 @@ awaiting Christoph's call — the items below assume acceptance:
   (`error_delete_scope_changed`) read correctly but need a copy pass — and
   de/ja/zh-Hant for every key in the translation-debt list above once the
   English settles.
+- [ ] **Ghost-device incident 2026-09-26 — four hardening follow-ups,
+  deliberately deferred to ship first.** With three installs (two iPhones,
+  a MacBook) the primary showed an "Unrecognized device" that outlived the
+  other installs' deletions and, being younger than the 48h settle window,
+  blocked the full wipe with no override (working as designed). The
+  primary's log pinned the shape — registry: 1 row (self); mirror: 1 entry
+  for another device ID — and it cleared through the intended remedy:
+  rejoin on the ghost's device, in-app "Delete from This Device", wait for
+  KVS propagation, relaunch the primary. Likeliest causes, in order: an
+  install deleted from the home screen without an in-app delete first (its
+  mirror entry survives by construction, and a later reinstall re-stamps it
+  fresh); an in-app delete whose KVS removal never uploaded because the app
+  was uninstalled right after (`synchronize()` only flushes to disk); or the
+  mirror clear being skipped — in `unregisterCurrentDevice` it sits behind
+  the `modelContext` guard, `getOrCreateDeviceId()` and the registry
+  `save()`, and the cleanup service treats an unregister failure as
+  non-fatal with a DEBUG-only print. Follow-ups: (1) make the mirror clear
+  unconditional and first (or in a `defer`), and surface a failed unregister
+  in the deletion summary — typed error + test; (2) re-run the device
+  assessment and refresh Linked Devices on
+  `NSUbiquitousKeyValueStore.didChangeExternallyNotification` when registry
+  keys change — today the primary needs a relaunch to see a cleared ghost
+  (the "restart to see the latest data" Christoph hit); (3) log each
+  blocker's device-ID prefix and `registeredAt` in the
+  "Other-device check" line so a log answers which device and how old;
+  (4) a debug-only override of `mirrorSettleWindow`, since a genuine ghost
+  created during testing blocks for two days by design. Not a candidate: a
+  "forget this device" action without the phrase acknowledgement — same
+  door to the same irreversible outcome (S7 reasoning).
 - [x] **(superseded checklist, kept for reference)** two-device verify of the
   deletion override (code landed 2026-09-24, contract rule 24). Check, with two
   linked devices: (a) Linked Devices and the delete screen agree on how many
