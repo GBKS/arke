@@ -89,11 +89,45 @@ class WalletManager {
     /// transaction list shows its empty state immediately (no skeleton), while an
     /// imported wallet may have history, so the skeleton shows from the moment the
     /// wallet UI appears until the first sync completes.
+    /// Also drives default-data seeding: `.created` proves there is nothing to
+    /// import (creation refuses when any account wallet signal exists), so a
+    /// created wallet seeds immediately while every other launch waits for the
+    /// first CloudKit import (see `defaultDataSeedingDecision`).
     enum FreshWalletOrigin {
         case created
         case imported
     }
     var freshWalletOrigin: FreshWalletOrigin?
+
+    /// Latches when the first CloudKit import pass completes. Created in
+    /// `init` so the observer is installed before MainView starts CloudKit
+    /// sync — no early import can be missed.
+    let cloudKitFirstImportGate = CloudKitFirstImportGate()
+
+    /// Whether default tags/contacts may be seeded right now, and how.
+    ///
+    /// The hazard is *store-not-yet-imported*, not device role: the seeding
+    /// condition is "no local rows", which is briefly true on ANY fresh
+    /// install of an existing account — including a reinstalled primary,
+    /// which the role-based guard (92e47f8) didn't cover and which seeded
+    /// account-wide duplicates (2026-09-24 review finding).
+    enum DefaultDataSeedingDecision: Equatable {
+        case seedNow
+        case waitForFirstImport
+        case doNotSeed
+    }
+
+    nonisolated static func defaultDataSeedingDecision(
+        isReadOnlyMode: Bool,
+        origin: FreshWalletOrigin?,
+        firstImportCompleted: Bool
+    ) -> DefaultDataSeedingDecision {
+        if isReadOnlyMode { return .doNotSeed }
+        // A created wallet provably has nothing to import: createWallet
+        // refuses when any account wallet signal exists
+        if origin == .created { return .seedNow }
+        return firstImportCompleted ? .seedNow : .waitForFirstImport
+    }
     
     /// Counter for active refresh calls (used to track concurrent refresh attempts)
     private var activeRefreshCount: Int = 0
@@ -222,7 +256,15 @@ class WalletManager {
     var hasSpendableBalance: Bool {
         isReadOnlyMode ? (readOnlyBalanceService?.hasSpendableBalance ?? false) : (balanceService?.hasSpendableBalance ?? false)
     }
-    
+
+    /// A secondary device that hasn't received its first CloudKit import yet.
+    /// Only ever true in read-only mode — a primary reads bark directly, so
+    /// "no rows yet" there means an empty wallet, not a pending sync.
+    var isWaitingForInitialCloudKitSync: Bool {
+        guard isReadOnlyMode else { return false }
+        return readOnlyBalanceService?.isWaitingForInitialSync ?? true
+    }
+
     var isInitialLoading: Bool {
         guard !hasLoadedOnce && !(transactionService?.hasLoadedTransactions ?? false) else {
             return false
@@ -248,15 +290,7 @@ class WalletManager {
     var estimatedBlockHeight: Int? {
         balanceService?.estimatedBlockHeight
     }
-
-    /// A secondary device that hasn't received its first CloudKit import yet.
-    /// Only ever true in read-only mode — a primary reads bark directly, so
-    /// "no rows yet" there means an empty wallet, not a pending sync.
-    var isWaitingForInitialCloudKitSync: Bool {
-        guard isReadOnlyMode else { return false }
-        return readOnlyBalanceService?.isWaitingForInitialSync ?? true
-    }
-
+    
     // MARK: - Initialization
     init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
         #if DEBUG
@@ -675,13 +709,11 @@ class WalletManager {
             // This updates the persistent cache loaded earlier with fresh data
             await refreshExitCache()
             
-            // Create default tags if needed (after data is loaded)
-            await createDefaultTagsIfNeeded()
-            
-            if !isMainnet {
-                // Create default contacts if needed (after data is loaded)
-                await createDefaultContactsIfNeeded()
-            }
+            // Seed default tags/contacts if appropriate (after data is
+            // loaded): created wallets seed now, everything else waits for
+            // the first CloudKit import so a reinstall can't duplicate the
+            // account's existing defaults
+            await seedDefaultDataIfAppropriate()
             
             // Ensure arkInfo is loaded before starting services that depend on it
             if arkInfo == nil {
@@ -726,6 +758,43 @@ class WalletManager {
         // (It might not exist if setModelContext was called before isReadOnlyMode was set)
         if readOnlyAddressService == nil, let context = modelContext {
             readOnlyAddressService = ReadOnlyAddressService(modelContext: context)
+    /// Seed default tags/contacts per `defaultDataSeedingDecision`: created
+    /// wallets seed immediately (provably nothing to import), read-only
+    /// devices never seed, and every other launch — imports, reinstalls,
+    /// ordinary launches with an empty-looking store — waits for the first
+    /// CloudKit import (90 s timeout so an iCloud-signed-out import doesn't
+    /// starve; insert-time dedup is the backstop for the timeout residual).
+    func seedDefaultDataIfAppropriate() async {
+        switch Self.defaultDataSeedingDecision(
+            isReadOnlyMode: isReadOnlyMode,
+            origin: freshWalletOrigin,
+            firstImportCompleted: cloudKitFirstImportGate.firstImportCompleted
+        ) {
+        case .doNotSeed:
+            Self.logger.info("🌱 Default-data seeding: read-only device — not seeding")
+
+        case .seedNow:
+            await runSeedingFunnels()
+
+        case .waitForFirstImport:
+            Self.logger.info("🌱 Default-data seeding: waiting for the first CloudKit import before deciding")
+            Task { [weak self] in
+                guard let self else { return }
+                _ = await self.cloudKitFirstImportGate.waitForFirstImport(timeout: .seconds(90))
+                // The role can flip while we wait (demotion mid-launch)
+                guard !self.isReadOnlyMode else { return }
+                await self.runSeedingFunnels()
+            }
+        }
+    }
+
+    private func runSeedingFunnels() async {
+        await createDefaultTagsIfNeeded()
+        if !isMainnet {
+            await createDefaultContactsIfNeeded()
+        }
+    }
+
             Self.logger.info("📍 [WalletManager] Initialized ReadOnlyAddressService in initializeReadOnlyMode")
         }
         

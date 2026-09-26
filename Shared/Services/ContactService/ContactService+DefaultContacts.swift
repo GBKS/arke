@@ -36,11 +36,26 @@ extension ContactService {
             print("❌ Cannot create default contacts: no model context")
             return
         }
-        
+
         isLoading = true
         defer { isLoading = false }
-        
+
         do {
+            // Insert-time dedup against the STORE, mirroring what
+            // TagService.createDefaultTagsIfNeeded does per name: the caller's
+            // contactCount == 0 check reads the in-memory cache, which can be
+            // stale against a CloudKit import that just landed — and this is
+            // the backstop for the import-gate timeout (a reinstall that
+            // proceeds after 90 s must still not duplicate the faucet contact)
+            let faucetType = ContactType.faucet.rawValue
+            let existingFaucet = FetchDescriptor<PersistentContact>(
+                predicate: #Predicate { $0.contactType == faucetType }
+            )
+            if let existing = try? modelContext.fetch(existingFaucet), !existing.isEmpty {
+                print("ℹ️ Faucet contact already in the store (\(existing.count)) — skipping default contact creation")
+                await loadContacts()
+                return
+            }
             var avatarData: Data?
 
             // Downscale the bundled asset — storing it raw put a full-res PNG

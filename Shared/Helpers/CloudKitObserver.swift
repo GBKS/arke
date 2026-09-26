@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import CoreData
 import Combine
+import os
 
 /// Observes CloudKit remote change notifications and triggers SwiftData refreshes
 /// This enables real-time sync across devices when changes are made
@@ -185,6 +186,118 @@ enum RemoteChangeThrottle {
 
         if deferralPending { return .coalesceIntoPendingDeferral }
         return .deferBy(minimumInterval - elapsed)
+    }
+}
+
+// MARK: - First-Import Gate
+
+/// Latches when the first CloudKit import pass of this launch completes.
+///
+/// Why this exists: default-data seeding used to run whenever the local store
+/// looked empty, which is briefly true on ANY fresh install of an existing
+/// account — the CloudKit import hasn't landed yet. A reinstalled primary
+/// seeded 9 fresh-UUID tags plus the faucet contact seconds before the
+/// account's originals imported, and the duplicates synced everywhere
+/// (2026-09-24 review finding; the role-based guard only covered
+/// secondaries). "The first import finished" is the signal that the local
+/// store now reflects the account — including the fresh-account case, where
+/// the import completes having found nothing to import.
+///
+/// Observes `NSPersistentCloudKitContainer.eventChangedNotification` by name
+/// with `object: nil`, which works even though SwiftData hides the container.
+/// Install it BEFORE CloudKit sync starts so no early import can be missed —
+/// WalletManager creates it in `init`.
+///
+/// Lives in this file rather than its own because adding a Shared file needs
+/// an Xcode target-membership pass; extract it when one happens anyway.
+@MainActor
+@Observable
+final class CloudKitFirstImportGate {
+
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "CloudKitImportGate")
+
+    /// True once a CloudKit import event has finished successfully this launch.
+    private(set) var firstImportCompleted = false
+
+    @ObservationIgnored private var observer: NSObjectProtocol?
+    @ObservationIgnored private var waiters: [CheckedContinuation<Void, Never>] = []
+
+    init() {
+        observer = NotificationCenter.default.addObserver(
+            forName: NSPersistentCloudKitContainer.eventChangedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                as? NSPersistentCloudKitContainer.Event
+            guard let event else { return }
+            let opens = Self.opensGate(
+                eventTypeIsImport: event.type == .import,
+                finished: event.endDate != nil,
+                succeeded: event.succeeded
+            )
+            guard opens else { return }
+            // Delivered on the main queue (see addObserver above)
+            MainActor.assumeIsolated {
+                self?.latch()
+            }
+        }
+    }
+
+    deinit {
+        if let observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    /// The event filter, extracted because `NSPersistentCloudKitContainer.Event`
+    /// has no public initializer — this is the unit-testable part.
+    /// Only a FINISHED, SUCCESSFUL IMPORT opens the gate: setup/export events
+    /// say nothing about remote data, an unfinished import may still deliver
+    /// rows, and a failed one delivered nothing.
+    nonisolated static func opensGate(eventTypeIsImport: Bool, finished: Bool, succeeded: Bool) -> Bool {
+        eventTypeIsImport && finished && succeeded
+    }
+
+    private func latch() {
+        guard !firstImportCompleted else { return }
+        firstImportCompleted = true
+        Self.logger.info("✅ First CloudKit import pass completed — gate open")
+        let pending = waiters
+        waiters.removeAll()
+        pending.forEach { $0.resume() }
+    }
+
+    /// Waits until the first import completes, or until `timeout` passes.
+    /// - Returns: true when the gate opened, false on timeout. Callers that
+    ///   proceed on timeout accept the residual duplicate risk (insert-time
+    ///   dedup is the backstop) rather than starving forever — e.g. an
+    ///   iCloud-signed-out import never sees an import event.
+    func waitForFirstImport(timeout: Duration) async -> Bool {
+        if firstImportCompleted { return true }
+
+        let waitTask = Task { @MainActor in
+            await withCheckedContinuation { continuation in
+                if firstImportCompleted {
+                    continuation.resume()
+                } else {
+                    waiters.append(continuation)
+                }
+            }
+        }
+
+        let timeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: timeout)
+            guard let self, !self.firstImportCompleted else { return }
+            Self.logger.notice("⏱️ First-import gate timed out — proceeding without it")
+            let pending = self.waiters
+            self.waiters.removeAll()
+            pending.forEach { $0.resume() }
+        }
+
+        await waitTask.value
+        timeoutTask.cancel()
+        return firstImportCompleted
     }
 }
 
