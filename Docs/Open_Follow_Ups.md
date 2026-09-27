@@ -1266,8 +1266,8 @@ done).
   list). (2) `git mv Shared/Docs Docs` moved all 229 docs to the repo root,
   outside any synchronized folder, so they belong to no target; Xcode pruned
   all 213 stale `Docs/...` entries from the Desktop exception list by
-  itself. (3) Mobile build green via Xcode; Desktop build NOT run (desktop
-  currently ignored). (4) All `Shared/Docs` path references rewritten to
+  itself. (3) Mobile build green via Xcode; Desktop build NOT run at the time — it
+  turned out broken, see the ActivityKit item below. (4) All `Shared/Docs` path references rewritten to
   `Docs` (11 Swift comments, 19 docs, assistant memory). The unique-basename
   rule and the per-bump Migrations-exclusion step are retired
   (`Documentation_Inventory.md` updated). Pre-check: nothing in Docs is
@@ -1277,6 +1277,28 @@ done).
   `Images/cover-animation.mp4` — referenced by no code — are in the iOS
   bundle for the first time (Desktop already had the avatars). Decide:
   delete them, or exclude them from Mobile in the File Inspector.
+- [x] **Desktop build broken by e744bb6, FIXED same day (2026-09-27) — `'ActivityAttributes' is
+  unavailable in macOS`** at `Shared/Models/ExitProgressActivityAttributes.swift:15`.
+  Cause: when Xcode rewrote the project after the Docs move it dropped the
+  ArkeDesktop "Exceptions for Shared" set *entirely* — not just the 213 Docs
+  entries but also its two other entries, `Models/ExitProgressActivityAttributes.swift`
+  and `Images/cover-animation.mp4` (the working copy still showed them
+  right after the move; Xcode's later save removed them before the commit).
+  So macOS now compiles the attributes file, which imports ActivityKit
+  unguarded, while its sibling `ExitProgressionService+LiveActivity.swift`
+  is already wrapped in `#if canImport(ActivityKit) && os(iOS)`.
+  **Fix applied (approved):** wrapped the attributes file in the same
+  `#if canImport(ActivityKit) && os(iOS)` guard — one island, no
+  project-file exclusion to lose again (exception sets were rewritten
+  twice today). Safe because the only consumers are the guarded extension
+  and the iOS-only ArkeWidgets target, and the app-level `ExitState` enum
+  in that file is never used on macOS (all other code uses `Bark.ExitState`).
+  Alternative: re-tick the exclusion in Xcode's File Inspector — fragile.
+  Verified: `xcodebuild -scheme 'Arké' -destination platform=macOS` and
+  `-scheme 'Arke mobile' -destination 'generic/platform=iOS Simulator'`
+  (widgets included) both green. Side effect of the same loss:
+  `cover-animation.mp4` (unreferenced) now ships in the macOS bundle too —
+  covered by the dead-images item above.
 - [ ] **Exit UI** on desktop.
 - [ ] **Notifications** on desktop.
 

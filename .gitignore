@@ -44,7 +44,7 @@ fastlane/test_output
 iOSInjectionProject/
 
 # Scratch device-log dumps for debugging sessions
-Shared/Docs/debug_logs*.txt
+Docs/debug_logs*.txt
 
 # Generated localization audit output (rerun Scripts/localization_audit.py)
 Scripts/audit_output/

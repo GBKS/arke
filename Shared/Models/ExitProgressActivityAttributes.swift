@@ -5,7 +5,12 @@
 //  Live Activity attributes for exit progression
 //  Created by Claude on 5/12/26.
 //
+//  iOS-only island: ActivityKit's types are unavailable on macOS, and this
+//  file is a member of every target (Shared is attached to both apps, and
+//  ArkeWidgets opts in). Same guard as ExitProgressionService+LiveActivity.
+//
 
+#if canImport(ActivityKit) && os(iOS)
 import ActivityKit
 import Foundation
 
@@ -61,3 +66,4 @@ nonisolated enum ExitState: String, Codable, Hashable {
     case claimed
     case unparsed
 }
+#endif
