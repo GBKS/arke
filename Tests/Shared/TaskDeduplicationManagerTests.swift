@@ -7,7 +7,7 @@
 //  bearing: post-write callers must observe their own writes, and joining a
 //  fetch that started earlier silently returns pre-write data — which left
 //  Guard C blind to a refresh the app had just scheduled.
-//  See Shared/Docs/Features/Refresh_Deduplication.md §3.2.
+//  See Docs/Features/Refresh_Deduplication.md §3.2.
 //
 
 import Testing

@@ -3,7 +3,7 @@
 //  Arké
 //
 //  Single definition point for localized strings used at 3+ call sites
-//  (decision D2 in Shared/Docs/Localization/Default_Value_Migration_Plan.md).
+//  (decision D2 in Docs/Localization/Default_Value_Migration_Plan.md).
 //  Keeping one defaultValue per key prevents copy drift between call sites
 //  and extraction conflicts in Localizable.xcstrings.
 //

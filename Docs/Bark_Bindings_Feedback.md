@@ -640,7 +640,7 @@ re-scan API) are now §1.7.
 the error-type collapse, `sendArkoorPayment`'s return-type change, the DB
 filename rename, *and* the exit-state renames in one release — with no
 upstream migration guide. We wrote our own binding-diff documents to migrate
-(`Shared/Docs/Migrations/…`), and had to do the same for 0.6.3 → 0.7.0.
+(`Docs/Migrations/…`), and had to do the same for 0.6.3 → 0.7.0.
 A short upstream CHANGELOG with breaking changes flagged, per release, would
 meaningfully cut integration cost for every binding consumer.
 

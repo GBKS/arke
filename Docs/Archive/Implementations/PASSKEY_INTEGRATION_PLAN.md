@@ -558,7 +558,7 @@ Arke/Arké mobile/Views/Settings/
 ├─ BackupModeManagementView_iOS.swift
 └─ PasskeyMigrationPromptView_iOS.swift (Phase 5)
 
-Arke/Shared/Docs/
+Arke/Docs/
 └─ PASSKEY_USER_GUIDE.md (user-facing)
 ```
 

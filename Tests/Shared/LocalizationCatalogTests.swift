@@ -3,7 +3,7 @@
 //  Arke
 //
 //  Guard for the defaultValue: migration (see
-//  Shared/Docs/Localization/Default_Value_Migration_Plan.md): every active
+//  Docs/Localization/Default_Value_Migration_Plan.md): every active
 //  snake_case key must carry English — either a stringUnit value or plural
 //  variation values — and keys present in both catalogs must not drift.
 //  A key without English renders as the raw key in the UI.

@@ -108,7 +108,7 @@ unchanged.
 - **Upstream (report):** match `VtxoAlreadySpent` before the spent-guard (it's
   terminal), or compare state *kinds* for `state_changed`, or make
   `finish_movement` idempotent for already-finished movements. Add to
-  `Shared/Docs/Bark_Bindings_Feedback.md`.
+  `Docs/Bark_Bindings_Feedback.md`.
 - **App-side mitigation (works regardless):** in `updateExistingTransaction`,
   don't move a transaction's date once it is in a terminal status and the
   incoming status is the same terminal status (concretely: skip the date

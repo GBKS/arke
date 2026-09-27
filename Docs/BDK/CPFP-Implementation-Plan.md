@@ -891,8 +891,8 @@ The implementation is successful when:
 
 ### Code Files
 - `Arke/Shared/Data/BDKOnchainWallet.swift` - Implementation location
-- `Arke/Shared/Docs/API/Bark_Types.md` - CpfpParams documentation
-- `Arke/Shared/Docs/BDK/BDK-Implementation-Complete.md` - Current status
+- `Arke/Docs/API/Bark_Types.md` - CpfpParams documentation
+- `Arke/Docs/BDK/BDK-Implementation-Complete.md` - Current status
 
 ### External Resources
 - BDK Documentation: https://docs.rs/bdk/

@@ -17,7 +17,7 @@ gives you the merchant-terminal shape, where an always-on till mints invoices
 that sign straight to a treasury address it can't touch.
 
 For Arke this dovetails with the background-execution work
-(`Shared/Docs/Features/`, mailbox push wake): the phone is the *recipient*
+(`Docs/Features/`, mailbox push wake): the phone is the *recipient*
 side, so someone has to run the always-on invoicing service.
 
 ## 2. Restore from seed phrase alone

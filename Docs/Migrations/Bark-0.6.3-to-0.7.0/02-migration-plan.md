@@ -363,5 +363,5 @@ Migration is complete when:
 
 ## References
 
-- `Shared/Docs/bark-api-changes.md` - Complete API diff documentation
+- `Docs/bark-api-changes.md` - Complete API diff documentation
 - Bark library source code - For LightningSendStatus enum definition and behavior

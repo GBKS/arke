@@ -172,7 +172,7 @@ propagated via iCloud Keychain sync.
 Even after the migration, the background entry point must treat "keychain
 unavailable" as a normal branch — it still happens between reboot and
 first unlock, and the startup wallet detection hardening
-(`Shared/Docs/Initialization/`) already deals with the same failure mode
+(`Docs/Initialization/`) already deals with the same failure mode
 at cold launch/prewarming. Keep the two consistent; never treat it as
 "no wallet".
 
@@ -671,7 +671,7 @@ the last line, no in-app "background updates are off" plumbing for now).
 - `~/workspace/arke-apns-relay-node` — relay source; `src/apns-sender.js`
   (push types per mailbox message), `protos/mailbox_server.proto`
   (mailbox message types)
-- `Shared/Docs/Initialization/` — startup wallet detection hardening (same
+- `Docs/Initialization/` — startup wallet detection hardening (same
   keychain-unavailable failure mode)
 - Apple: BackgroundTasks framework (`BGAppRefreshTask`, `BGProcessingTask`,
   `BGContinuedProcessingTask`), ActivityKit push updates

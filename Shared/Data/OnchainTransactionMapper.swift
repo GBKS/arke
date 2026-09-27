@@ -4,7 +4,7 @@
 //
 //  Maps bark's OnchainWallet.transactions() output to OnchainTransactionModel,
 //  replacing the BDKTransactionReader history pipeline.
-//  See Shared/Docs/Features/BDK_Transaction_Reader_Removal.md.
+//  See Docs/Features/BDK_Transaction_Reader_Removal.md.
 //
 
 import Foundation

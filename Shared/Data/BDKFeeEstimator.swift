@@ -7,7 +7,7 @@
 //  Formerly BDKTransactionReader, which also served transaction history;
 //  history now comes from bark's OnchainWallet.transactions() and this
 //  wallet is created lazily on the first fee estimate (see
-//  Shared/Docs/Features/BDK_Transaction_Reader_Removal.md). It exists only
+//  Docs/Features/BDK_Transaction_Reader_Removal.md). It exists only
 //  because bark exposes no fee-estimation / drain-preview API on its
 //  onchain wallet (feedback §2.5b) — once that ships, this file goes away
 //  along with the bdk-swift dependency.

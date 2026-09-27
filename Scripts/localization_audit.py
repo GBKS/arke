@@ -4,7 +4,7 @@
 Cross-references both .xcstrings catalogs against every Swift call site,
 classifies keys, and emits per-feature work lists under Scripts/audit_output/.
 
-See Shared/Docs/Localization/Default_Value_Migration_Plan.md (Phase 0).
+See Docs/Localization/Default_Value_Migration_Plan.md (Phase 0).
 Rerun after each migration batch to refresh the work lists.
 """
 

@@ -4,7 +4,7 @@
 //
 //  Unit tests for the pure refresh-exclusion filter (Guard B: mid-exit
 //  VTXOs, Guard C: already-in-flight refreshes with the near-expiry safety
-//  valve). See Shared/Docs/Features/Refresh_Deduplication.md.
+//  valve). See Docs/Features/Refresh_Deduplication.md.
 //
 
 import Testing

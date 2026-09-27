@@ -444,7 +444,7 @@ private func formatFeeRateInError(_ error: String) -> String {
 
 ### Action 2: Document Exit Balance Requirements (PRIORITY 2)
 
-**File**: Create `Shared/Docs/Exit-Requirements.md`
+**File**: Create `Docs/Exit-Requirements.md`
 
 **Content**: Document minimum balance requirements:
 - Small VTXO (< 1,000 sats): 15,000 sats onchain minimum

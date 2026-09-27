@@ -26,11 +26,11 @@ extension WalletManager {
     /// Whether a VTXO refresh is currently pending. This is the canonical
     /// "ongoing refresh" signal — a pending refresh settles before an exit
     /// chain and would cancel a concurrently started forced move
-    /// (see Shared/Docs/Features/Exit_Refresh_Coordination.md).
+    /// (see Docs/Features/Exit_Refresh_Coordination.md).
     /// Bark writes the refresh movement at scheduling time, so this also
     /// covers delegated refreshes the server hasn't issued into a round yet
     /// and daemon-initiated maintenance refreshes
-    /// (see Shared/Docs/Features/Refresh_Deduplication.md).
+    /// (see Docs/Features/Refresh_Deduplication.md).
     var hasActiveRefresh: Bool {
         transactions.contains {
             $0.category == .refresh && $0.status == .pending

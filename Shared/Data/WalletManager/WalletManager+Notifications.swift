@@ -94,7 +94,7 @@ extension WalletManager {
         // Keychain-unavailable (device between reboot and first unlock) is a
         // normal branch: report failure so the wake chain retries, and never
         // treat it as "no wallet" (same failure mode the startup detection
-        // hardening handles - see Shared/Docs/Initialization/)
+        // hardening handles - see Docs/Initialization/)
         switch SecurityService.mnemonicKeychainStatus() {
         case .found:
             break

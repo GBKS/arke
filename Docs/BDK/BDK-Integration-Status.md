@@ -175,7 +175,7 @@ If BDK integration proves too complex:
 - **BDK Swift**: https://github.com/bitcoindevkit/bdk-swift
 - **BDK Docs**: https://docs.rs/bdk/latest/bdk/
 - **BDK Book**: https://bitcoindevkit.org/
-- **Bark Docs**: `Arke/Shared/Docs/API/Bark_Types.md`
+- **Bark Docs**: `Arke/Docs/API/Bark_Types.md`
 
 ## Files Modified
 
@@ -183,7 +183,7 @@ If BDK integration proves too complex:
 Created:
 - Arke/Shared/Data/BDKOnchainWallet.swift
 - Arke/Shared/Models/OnchainTransactionModel.swift
-- Arke/Shared/Docs/BDK-Integration-Status.md
+- Arke/Docs/BDK-Integration-Status.md
 
 Modified:
 - Arke/Shared/Data/BarkWalletFFI.swift

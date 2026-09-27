@@ -269,7 +269,7 @@ For Lightning send of 4476 sats:
 ## References
 
 - Original Issue: Lightning send-max failed with fee estimation of 42,623,534 sats
-- Debug Logs: `Shared/Docs/debug_logs.txt`
+- Debug Logs: `Docs/debug_logs.txt`
 - Related Files:
   - `Shared/Helpers/PaymentDestinationSelector.swift`
   - `Shared/Views/Send/SendViewModel/SendViewModel+ComputedProperties.swift`

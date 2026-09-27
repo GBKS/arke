@@ -70,7 +70,7 @@ docs' `apiChecksumMismatch` warning applies only to manual-swap workflows.
   strictly stronger guarantee; shutdown paths may take marginally longer, which is
   the point.
 
-## Deferred (tracked in Shared/Docs/Open_Follow_Ups.md)
+## Deferred (tracked in Docs/Open_Follow_Ups.md)
 
 - `initialScanOnchain(birthdayHeight:)` on import — needs a new "scanning" UI state
   + on-device import verification (plan §2.2).

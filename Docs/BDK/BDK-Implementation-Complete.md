@@ -206,7 +206,7 @@ Improved:
 - Shared/Data/BDKOnchainWallet.swift (transaction amounts, fees, sync)
 
 Created:
-- Shared/Docs/BDK-Implementation-Complete.md (this file)
+- Docs/BDK-Implementation-Complete.md (this file)
 
 Previous files (unchanged):
 - Shared/Models/OnchainTransactionModel.swift

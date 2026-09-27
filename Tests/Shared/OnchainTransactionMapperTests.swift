@@ -4,7 +4,7 @@
 //
 //  Tests for the bark WalletTransaction → OnchainTransactionModel mapping
 //  that replaced the BDKTransactionReader history pipeline (see
-//  Shared/Docs/Features/BDK_Transaction_Reader_Removal.md). The raw-tx
+//  Docs/Features/BDK_Transaction_Reader_Removal.md). The raw-tx
 //  fixtures are real signet transactions from the Phase 0 A/B wallet, so
 //  the expected values are network-verified.
 //

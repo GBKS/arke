@@ -1,6 +1,6 @@
 # Localization Guidelines - Arké
 
-This document is the single source of truth for localization in the Arké project: where strings live, how keys are named, and the rules that keep `Localizable.xcstrings` healthy. Accessibility-specific guidance (VoiceOver labels, hints, values) lives in `Shared/Docs/Features/Accessibility.md`, which follows the key conventions defined here.
+This document is the single source of truth for localization in the Arké project: where strings live, how keys are named, and the rules that keep `Localizable.xcstrings` healthy. Accessibility-specific guidance (VoiceOver labels, hints, values) lives in `Docs/Features/Accessibility.md`, which follows the key conventions defined here.
 
 ---
 

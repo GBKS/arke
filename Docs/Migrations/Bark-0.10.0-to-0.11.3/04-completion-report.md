@@ -189,8 +189,8 @@ user-facing message is ever needed, extract via `if case .Inner(let m) = error`.
 - `Shared/Views/Data/VTXOListView.swift`
 
 **Docs (2)**
-- `Shared/Docs/Migrations/Bark-0.10.0-to-0.11.3/01-api-changes.md`
-- `Shared/Docs/Migrations/Bark-0.10.0-to-0.11.3/02-migration-plan.md`
+- `Docs/Migrations/Bark-0.10.0-to-0.11.3/01-api-changes.md`
+- `Docs/Migrations/Bark-0.10.0-to-0.11.3/02-migration-plan.md`
 
 **Total: 24 files (22 code + 2 docs)**
 

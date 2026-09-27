@@ -4,7 +4,7 @@
 //
 //  Package-internal single definition point for localized strings used at
 //  3+ call sites (decision D2 in
-//  Shared/Docs/Localization/Default_Value_Migration_Plan.md). Mirrors the
+//  Docs/Localization/Default_Value_Migration_Plan.md). Mirrors the
 //  app-side Shared/Helpers/L10n.swift; both modules keep their own namespace
 //  (this one is internal, so it never collides with the app's L10n).
 //

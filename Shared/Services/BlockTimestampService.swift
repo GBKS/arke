@@ -4,7 +4,7 @@
 //
 //  Resolves block timestamps by hash from Esplora. Bark's BlockRef carries
 //  height + hash but no block time, and onchain transaction dates come from
-//  the block time — see Shared/Docs/Features/BDK_Transaction_Reader_Removal.md.
+//  the block time — see Docs/Features/BDK_Transaction_Reader_Removal.md.
 //
 
 import Foundation

@@ -19,7 +19,7 @@ Usage: migrate_defaultvalue.py <path-prefix> [--module] [--accessors k1,k2,...]
   --module       package target: inserted lookups get `bundle: .module`
   --accessors    keys routed to L10n accessors (the L10n file must exist)
 
-See Shared/Docs/Localization/Default_Value_Migration_Plan.md.
+See Docs/Localization/Default_Value_Migration_Plan.md.
 """
 
 import json

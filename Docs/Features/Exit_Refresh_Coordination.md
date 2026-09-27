@@ -8,7 +8,7 @@ as a stalled, eternally pending "Forcing Move".
 **Bark version verified against:** tag `bark-0.3.0`
 (= bindings release `v0.11.3+bark-0.3.0`). **Re-verify §2 on every bark bump.**
 
-Related: `Shared/Docs/Migrations/Bark-0.10.0-to-0.11.3/05-vtxo-exited-and-already-spent.md`
+Related: `Docs/Migrations/Bark-0.10.0-to-0.11.3/05-vtxo-exited-and-already-spent.md`
 (state parsing — done; Live Activity / banner follow-up phases — still open).
 
 ## 1. The race in one paragraph

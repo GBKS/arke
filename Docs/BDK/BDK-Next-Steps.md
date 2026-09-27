@@ -288,6 +288,6 @@ The only critical remaining issue is thread safety enforcement. Everything else 
 **Implementation Date**: 2026-02-26  
 **Files Modified**:
 - `Shared/Data/BarkWalletFFI.swift` (3 locations)
-- `Shared/Docs/BDK-Next-Steps.md` (this file)
+- `Docs/BDK-Next-Steps.md` (this file)
 
 **Next Action**: Test the background sync behavior, then implement thread safety.

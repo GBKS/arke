@@ -10,13 +10,13 @@ This document outlines the accessibility standards and patterns used in the Ark�
 2. **Interactive elements must have clear labels** - Users should understand what each button/control does
 3. **Provide context through hints** - Explain what happens when an action is taken
 4. **Expose state through values** - Show current selections, status, or progress
-5. **Use semantic naming** - Follow the key naming conventions in `Shared/Docs/Localization/Localization_Guidelines.md`
+5. **Use semantic naming** - Follow the key naming conventions in `Docs/Localization/Localization_Guidelines.md`
 
 ---
 
 ## Localization Key Naming
 
-General key naming conventions — including `action_`, `button_`, `status_`, and all other prefixes — are defined in **`Shared/Docs/Localization/Localization_Guidelines.md`**. Accessibility labels reuse those keys where they exist (e.g. `.accessibilityLabel("button_cancel")`).
+General key naming conventions — including `action_`, `button_`, `status_`, and all other prefixes — are defined in **`Docs/Localization/Localization_Guidelines.md`**. Accessibility labels reuse those keys where they exist (e.g. `.accessibilityLabel("button_cancel")`).
 
 The three accessibility-specific prefixes are defined here:
 
@@ -137,7 +137,7 @@ Corresponding localization entries:
 
 ## Localization String Requirements
 
-Every localization key used in code **must** have an English value defined in `Localizable.xcstrings` — a missing value renders the raw key in the UI. See "Rules" in `Shared/Docs/Localization/Localization_Guidelines.md` for details and examples.
+Every localization key used in code **must** have an English value defined in `Localizable.xcstrings` — a missing value renders the raw key in the UI. See "Rules" in `Docs/Localization/Localization_Guidelines.md` for details and examples.
 
 ---
 
@@ -399,7 +399,7 @@ For catalog-side anti-patterns (missing values, duplicate keys, concatenation), 
 | State value | `accessibility_value_` | `accessibility_value_note_present` |
 | General accessibility | `accessibility_` | `accessibility_balance_label` |
 
-For all other prefixes (`action_`, `button_`, `status_`, `label_`, feature prefixes, etc.), see `Shared/Docs/Localization/Localization_Guidelines.md`.
+For all other prefixes (`action_`, `button_`, `status_`, `label_`, feature prefixes, etc.), see `Docs/Localization/Localization_Guidelines.md`.
 
 ---
 

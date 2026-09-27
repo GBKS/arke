@@ -1065,7 +1065,7 @@ Open:
   path logged "Skipping relay registration (trigger: foreground) -
   authorization not yet due for renewal" and made no relay call; X-Ray shows
   "Relay auth expires" 30 days out and "Next auth renewal" 15 days out
-  (log: `Shared/Docs/debug_logs.txt`, line 1120).
+  (log: `Docs/debug_logs.txt`, line 1120).
 - [ ] **On-device: the day-15 renewal** — verified by the journal when it
   happens, or sooner on the simulator by backdating
   `com.arke.relay.lastRegisteredAt` / `com.arke.relay.authExpiresAt` with
@@ -1174,7 +1174,29 @@ done).
   were never added to the ArkeDesktop `membershipExceptions` list, unlike the
   other five migration folders. Still open as a process item: add a
   Migrations-folder exclusion step to the bindings-bump checklist so the next
-  bump doesn't repeat it (third occurrence of this break).
+  bump doesn't repeat it (third occurrence of this break). **Superseded by
+  the item below** — a folder-level exclusion makes the per-bump step and
+  the unique-basename rule unnecessary.
+- [x] **Docs out of every target — DONE 2026-09-27** (decided by Christoph:
+  "it's just documentation, there is no code there"). What actually
+  happened, in order: (1) Christoph ticked ArkeMobile on the `Shared`
+  synchronized folder; Xcode deleted the 313-entry Mobile inclusion list and
+  attached Shared to the target — Mobile now gets every Shared file
+  automatically, same as Desktop (ArkeWidgets stays opt-in with its 3-file
+  list). (2) `git mv Shared/Docs Docs` moved all 229 docs to the repo root,
+  outside any synchronized folder, so they belong to no target; Xcode pruned
+  all 213 stale `Docs/...` entries from the Desktop exception list by
+  itself. (3) Mobile build green via Xcode; Desktop build NOT run (desktop
+  currently ignored). (4) All `Shared/Docs` path references rewritten to
+  `Docs` (11 Swift comments, 19 docs, assistant memory). The unique-basename
+  rule and the per-bump Migrations-exclusion step are retired
+  (`Documentation_Inventory.md` updated). Pre-check: nothing in Docs is
+  bundle-loaded at runtime.
+- [ ] **Dead Shared images now ship in the Mobile bundle**: with Mobile
+  attached to Shared, `Images/avatar-{female,male}-{1..4}.jpg` (8 files) and
+  `Images/cover-animation.mp4` — referenced by no code — are in the iOS
+  bundle for the first time (Desktop already had the avatars). Decide:
+  delete them, or exclude them from Mobile in the File Inspector.
 - [ ] **Exit UI** on desktop.
 - [ ] **Notifications** on desktop.
 
@@ -1250,6 +1272,24 @@ statics (file emptied — needs an Xcode pass to delete). Pinned by
 
 ## UI / Refactors
 
+- [ ] **Standardize `Docs/` filenames** (assessed 2026-09-27,
+  Christoph: "makes sense"; unblocked 2026-09-27 — Docs now live at the repo
+  root outside every target, so renames need no Xcode pass). State: 157 living docs — 35 already `Title_Case_With_Underscores`,
+  58 SCREAMING_SNAKE, 19 kebab-case, 19 mixed, 26 numbered Migrations files
+  (+ READMEs). Not a blanket rename: (1) finish `Documentation_Inventory.md`
+  Steps 25–26, then triage every SCREAMING/kebab file whose status is
+  complete/superseded into `Archive/` (Archive keeps original names) —
+  Send/ (11), Security device separation/ (6), Initialization issue
+  write-ups (7), BDK/ (6), Address history/ (4) are the bulk, ~50–60 files;
+  (2) rename the ~30–40 survivors folder by folder via Xcode (XcodeMV) or
+  `git mv` (case-only renames need `git mv`), fixing inbound links (mostly
+  0–4 per file; `API/model-definitions.md` has 9), the three Swift comments
+  that name off-convention docs (`SWIFT_AUTH_WAKE_SPEC`,
+  `RELAY_AUTH_BACKGROUND_REFRESH_PLAN`, `STARTUP_WALLET_DETECTION_PLAN`),
+  and the assistant memory notes (32 doc names referenced); (3) write the
+  declared exceptions into the inventory's naming section: Migrations
+  folders keep `README.md` + `01-/02-/04-` numbering, root `README.md`
+  stays, Archive keeps names.
 - [ ] **Previewable models extraction, Phase 3b** (paused; opportunistic,
   per feature area). See `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md`.
 - [ ] **Live Activity across device migration**: `closeWallet()` /

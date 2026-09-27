@@ -433,4 +433,4 @@ The implementation provides a solid foundation for Bitcoin onchain operations in
 - `Shared/Data/BDKOnchainWallet.swift`
 - `Shared/Models/OnchainTransactionModel.swift`
 - `Shared/Data/BarkWalletFFI.swift` (line 1253)
-- `Shared/Docs/BDK-Improvements-2026-02-26.md` (new)
+- `Docs/BDK-Improvements-2026-02-26.md` (new)
