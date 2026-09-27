@@ -27,7 +27,7 @@ detailed work items there).
    silent `mailbox_auth_refresh` push when the mailbox authorization it
    holds is about to lapse (or has), derived from nothing but the expiry
    inside the token the app gave it (see
-   [SWIFT_AUTH_WAKE_SPEC.md](../SWIFT_AUTH_WAKE_SPEC.md); prompted by
+   [SWIFT_AUTH_WAKE_SPEC.md](../Archive/Implementations/SWIFT_AUTH_WAKE_SPEC.md); prompted by
    relay-side field data — 124 of 151 registered mailboxes held expired
    tokens, so BGTasks alone weren't keeping the push channel alive).
    Everything else stands: it forwards mailbox messages, may later fire
@@ -97,7 +97,7 @@ from the timer," not "rewrite the logic."
   to `WalletManager.refresh()`.
 - **Since 2026-09-17** the relay also sends one push type of its own (not
   forwarded from the mailbox): the silent `mailbox_auth_refresh` wake
-  (SWIFT_AUTH_WAKE_SPEC.md, Decision 2 amendment). `AppDelegate_iOS`
+  (see "Auth wake push" under Architecture; Decision 2 amendment). `AppDelegate_iOS`
   routes it *before* the generic `contains("mailbox")` match, into
   `BackgroundTaskCoordinator.handleAuthWakePush` → the relay auth pass —
   it re-registers and never triggers a full `refresh()`.
@@ -394,7 +394,7 @@ expiry it already holds. Its remaining planned addition is an
   relay-decided "auth about to expire" push: the app requests a wake at
   expiry-minus-buffer instead, keeping the relay's behavior uniform.~~
   *Superseded 2026-09-17:* the auth case is now handled by the relay's
-  own `mailbox_auth_refresh` push (SWIFT_AUTH_WAKE_SPEC.md) — field data
+  own `mailbox_auth_refresh` push (see "Auth wake push" below) — field data
   showed waiting for a uniform mechanism was costing the push channel.
   The alarm-clock API remains scoped to deadlines only the app can
   compute (exit checkpoints, refresh blockheights).
@@ -404,6 +404,90 @@ property than BGTask's advisory `earliestBeginDate` — but they still have
 an iOS budget, can be deferred somewhat, and never launch a force-quit
 app. Hence fallback, not foundation (Decision 3): build it only if
 Phase 1 field data shows BGTasks alone don't fire often enough.
+
+### Auth wake push (`mailbox_auth_refresh`) — shipped 2026-09-17/21
+
+The one case where the relay acts on its own (Decision 2 amendment). It
+reads the expiry out of the mailbox authorization the app gave it and sends
+a silent wake when the token is about to lapse or has lapsed. Merged here
+2026-09-27 from the archived spec
+(`../Archive/Implementations/SWIFT_AUTH_WAKE_SPEC.md`); all five work items
+shipped (routing + mint/register 2026-09-17, stale-mailbox unregister
+2026-09-21, `trigger` field, real-expiry scheduling, mid-life BGTask date).
+bark-ffi 0.25 (2026-09-26) then made the token lifetime a parameter — the
+app mints 30-day tokens (`RelayRegistrationService.mailboxAuthorizationExpirySecs`)
+renewed at mid-life on launch/foreground/BGTask, so these wakes should
+rarely come due; the schedule stays as the safety net.
+
+**Payload** (`apns-push-type: background`, priority 5, no alert, no sound,
+`apns-collapse-id` per mailbox):
+
+```json
+{ "aps": { "content-available": 1 },
+  "type": "mailbox_auth_refresh",
+  "mailbox_id": "<MAILBOX_ID_HEX>",
+  "authorization_expires_at": 1789735092 }
+```
+
+`authorization_expires_at` is UNIX seconds and may be in the past. Relay
+schedule per token: 2h before expiry, 1h before if no re-registration
+arrived, then 1h after and once a day after that, 7 sends in total; any
+successful `POST /v1/register` with a new token resets it. Only devices
+registered for that mailbox receive it — users with notifications
+disabled are never registered.
+
+**App-side rules** (`AppDelegate_iOS` → `BackgroundTaskCoordinator.handleAuthWakePush`):
+
+- Route `type == "mailbox_auth_refresh"` *before* the generic
+  `contains("mailbox")` branch, which would otherwise run a full
+  `WalletManager.refresh()` that syncs but never re-registers.
+- Run the same core as the BGTask: `WalletManager.refreshRelayAuthInBackground(expectedMailboxId:trigger:)`
+  (settings/keychain gating, minimal `openWalletIfNeeded` on a cold
+  background launch, mint + `/v1/register`). It returns
+  `RelayAuthRefreshOutcome` (refreshed / nothingToDo / failed).
+- Call the fetch completion handler exactly once: `.newData` on a
+  successful re-registration, `.noData` when there was nothing to do,
+  `.failed` on error — iOS budgets future background time from this, so
+  never report `.newData` on failure. Stay inside the ~30 s window (25 s
+  timeout task).
+- **Wake for a different mailbox** (`mailbox_id` ≠ current wallet's: the
+  wallet was replaced on this device): the registration is an orphan
+  nothing else can renew — APNs never invalidates the token while the app
+  is installed. Send `DELETE /v1/register` for the payload's mailbox id +
+  current device token via `RelayRegistrationService.unregisterStaleMailbox`
+  (idempotent, `removed: 0` is success; touches none of the current
+  wallet's registration state), journal `.staleMailboxUnregister`, complete
+  `.noData` (`.failed` on request error so the next daily wake retries).
+  Match rule: `RelayRegistrationService.isWakeForCurrentMailbox`.
+- Every `POST /v1/register` carries a `trigger` (lowercase + underscores,
+  ≤ 32 chars; anything else is recorded as `unspecified`), so BGTask grant
+  frequency is measured server-side per wake path:
+
+  | Value | When |
+  |---|---|
+  | `foreground` | app launch / foreground refresh |
+  | `timer` | in-process expiry timer (`onNeedsRefresh`) |
+  | `background_task` | `BGAppRefreshTask` handler |
+  | `wake_push` | handling `mailbox_auth_refresh` |
+  | `token_change` | APNs device token changed |
+
+- The `201` response's `authorization_expires_at` drives `authExpiresAt`
+  (fallback: local TTL); the BGTask request date is the midpoint of the
+  token's remaining life, the foreground timer keeps a tight buffer — both
+  derive from the same expiry so they cannot drift.
+
+**Acceptance (verified 2026-09-17/21, journal + relay insights):** a wake
+while backgrounded yields exactly one `POST /v1/register` with
+`trigger: "wake_push"`; same from a terminated (not force-quit) state;
+notifications disabled → no relay call, `.noData`; keychain unavailable →
+`.failed`, no crash, no "no wallet" state written; a wake never triggers
+a full `refresh()`; the other mailbox push types are unchanged. Known
+limits (Decision 4): iOS throttles silent pushes, delays them in Low Power
+Mode, never launches a force-quit app.
+
+**Simulating the wake:** write the payload above (with the current
+wallet's mailbox id, `authorization_expires_at: 0`) to `wake.apns` and run
+`xcrun simctl push booted <bundle-id> wake.apns`.
 
 ### Local notifications: the guaranteed layer
 
@@ -601,7 +685,7 @@ The app-requested alarm-clock endpoint described in the relay section.
 is answered for the auth case — relay-side field data (124 of 151
 registered mailboxes with expired tokens) showed they don't, and rather
 than building this API for it, the relay now sends auth-expiry wake-ups
-on its own initiative (`mailbox_auth_refresh`, SWIFT_AUTH_WAKE_SPEC.md —
+on its own initiative (`mailbox_auth_refresh`, see "Auth wake push" under Architecture —
 the one sanctioned exception to Decision 2, since the relay already holds
 the token expiry). The client handles the wake via
 `BackgroundTaskCoordinator.handleAuthWakePush`, reuses the BGTask's relay
@@ -641,7 +725,7 @@ it would send.
   2026-09-17, from the relay side rather than the device-log soak:* not
   often enough to hit a 1h window before a 24h expiry (124 of 151
   registered mailboxes held expired tokens). Responses: the relay now
-  sends `mailbox_auth_refresh` wake pushes (SWIFT_AUTH_WAKE_SPEC.md), the
+  sends `mailbox_auth_refresh` wake pushes (see "Auth wake push" under Architecture), the
   BGTask request date widened to the token's mid-life, and every
   registration now carries a `trigger` field so grant frequency is
   measured server-side per wake path from here on. Still open for the
@@ -659,7 +743,8 @@ the last line, no in-app "background updates are off" plumbing for now).
 - [Background_Activity_Journal.md](Background_Activity_Journal.md) —
   planned on-device event journal + X-Ray screen making this plan's wake
   layers user-visible (OSLogStore can't read past sessions in-app)
-- [APNS_MAILBOX_SPEC.md](../APNS_MAILBOX_SPEC.md) — relay registration contract
+- [Relay_Registration_API.md](../API/Relay_Registration_API.md) — relay registration contract (`/v1/register`)
+- [SWIFT_AUTH_WAKE_SPEC.md](../Archive/Implementations/SWIFT_AUTH_WAKE_SPEC.md) — original auth-wake spec (archived; merged into "Auth wake push" above)
 - `Shared/Services/LightningClaimService.swift`, `ExitProgressionService.swift`,
   `VTXORefreshService.swift`, `RelayRegistrationService.swift` — the passes
 - `Shared/Services/ExitProgressionNotifications.swift` — check-in

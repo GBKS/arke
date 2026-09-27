@@ -98,7 +98,7 @@ class AppDelegate_iOS: NSObject, UIApplicationDelegate, UNUserNotificationCenter
             return
         }
         
-        // Relay-initiated auth wake (SWIFT_AUTH_WAKE_SPEC.md): re-register the
+        // Relay-initiated auth wake (Docs/Features/Background_Execution.md, "Auth wake push"): re-register the
         // mailbox authorization instead of syncing. Must be routed before the
         // generic contains("mailbox") branch below, which would funnel it into
         // a full refresh() that never re-registers. The completion handler is

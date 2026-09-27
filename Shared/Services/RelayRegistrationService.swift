@@ -22,7 +22,7 @@ struct RelayRegisterRequest: Codable {
 
 /// What prompted a registration. Sent to the relay (optional `trigger` field
 /// on POST /v1/register) so refresh-path frequencies can be counted
-/// server-side instead of from device logs (SWIFT_AUTH_WAKE_SPEC.md).
+/// server-side instead of from device logs (Docs/Features/Background_Execution.md, "Auth wake push").
 enum RelayRegistrationTrigger: String, Sendable {
     /// App launch / foreground refresh
     case foreground
@@ -122,7 +122,7 @@ class RelayRegistrationService {
     /// (`mailboxAuthorization(expirySecs:)`, bark-ffi 0.25+). 30 days: the
     /// old fixed 24h left 124 of 151 relay mailboxes with expired tokens
     /// because iOS rarely granted the background refresh in time
-    /// (SWIFT_AUTH_WAKE_SPEC.md). A token cannot be revoked early, so this is
+    /// (Docs/Features/Background_Execution.md, "Auth wake push"). A token cannot be revoked early, so this is
     /// also how long a leaked token can read the mailbox — a deliberate
     /// trade-off (Migrations/Bark-0.24.0-to-0.25.0). The only place the
     /// number lives; `authTTL` derives from it.

@@ -24,6 +24,7 @@ Welcome to the project documentation. It is organized to help you understand the
 ## Bark (the Ark wallet library)
 
 - [Bark Types](API/Bark_Types.md), [Bark Daemon](API/Bark_Daemon.md) — FFI type and daemon reference
+- [Relay Registration API](API/Relay_Registration_API.md) — the push relay contract (`/v1/register`)
 - [Bark Bindings Unadopted API](Bark_Bindings_Unadopted_API.md) — binding surface the app has not adopted yet; roadmap inspiration
 - [Bark Bindings Feedback](Bark_Bindings_Feedback.md) — issues and asks for the upstream bark developers
 - [Migrations/](Migrations/) — one folder per bindings bump (`README`, `01-api-changes`, `02-migration-plan`, `04-completion-report`), from 0.6.3 through 0.25.0
@@ -33,12 +34,12 @@ Welcome to the project documentation. It is organized to help you understand the
 
 - Exits: [Exit Architecture](Features/Exit_Architecture.md), [Exit Blocked State](Features/Exit_Blocked_State.md), [Exit Completion Issues](Features/Exit_Completion_Issues.md), [Exit Refresh Coordination](Features/Exit_Refresh_Coordination.md)
 - Refresh: [Refresh Deduplication](Features/Refresh_Deduplication.md)
-- Background: [Background Execution](Features/Background_Execution.md), [Background Activity Journal](Features/Background_Activity_Journal.md), [Auth Wake Spec](SWIFT_AUTH_WAKE_SPEC.md), [APNs Mailbox Spec](APNS_MAILBOX_SPEC.md)
+- Background: [Background Execution](Features/Background_Execution.md), [Background Activity Journal](Features/Background_Activity_Journal.md), [Relay Registration API](API/Relay_Registration_API.md)
 - Devices and wallet lifecycle: [Read-Only Mode](Features/Read_Only_Mode.md), [Wallet Deletion and Rejoin](Features/Wallet_Deletion_And_Rejoin.md), [Device Registry Reference](Device_Registry_Reference.md), [Wallet First Initialization](Initialization/Wallet_First_Initialization.md), [Startup Wallet Detection Plan](Initialization/STARTUP_WALLET_DETECTION_PLAN.md)
-- Payments: [SendView Architecture](Send/SendView_Architecture.md), [Payment Destination Selector](Payment%20destination%20selection/PAYMENT_DESTINATION_SELECTOR.md), [Send Metadata](Features/send-metadata-enhancement.md), [LNURL Pay](Features/LNURL_Pay.md), [Lightning Fee Estimation Issues](LIGHTNING_FEE_ESTIMATION_ISSUES.md), [Quick Payment Source Guide](QUICK_PAYMENT_SOURCE_GUIDE.md)
+- Payments: [SendView Architecture](Send/SendView_Architecture.md), [Payment Destination Selector](Payment%20destination%20selection/PAYMENT_DESTINATION_SELECTOR.md), [Send Metadata](Features/send-metadata-enhancement.md), [LNURL Pay](Features/LNURL_Pay.md)
 - Data: [Balance Persistence](Features/balance-persistence.md), [Tag System](Features/tag-system.md), [Metadata Export/Import](Features/Metadata_Export_Import.md), [Address History Plan](Address%20history/ADDRESS_HISTORY_PLAN.md), [BDK Transaction Reader Removal](Features/BDK_Transaction_Reader_Removal.md)
 - Contacts: [Default Contact](Contacts/Default_Contact.md), [Contact Address Deletion](Contacts/Contact_Address_Deletion.md)
-- UI and platform: [Desktop Parity](Features/Desktop_Parity.md), [Accessibility](Features/Accessibility.md), [Intro Video Player](Features/Intro_Video_Player.md), [Scratch Card](Features/Scratch_Card.md), [Signet Faucet](Features/Signet_Faucet.md), [BIP39](Features/BIP39.md)
+- UI and platform: [Theme System](Features/Theme_System.md), [Desktop Parity](Features/Desktop_Parity.md), [Accessibility](Features/Accessibility.md), [Intro Video Player](Features/Intro_Video_Player.md), [Scratch Card](Features/Scratch_Card.md), [Signet Faucet](Features/Signet_Faucet.md), [BIP39](Features/BIP39.md)
 - Refactors in flight: [Previewable Models Extraction Plan](PREVIEWABLE_MODELS_EXTRACTION_PLAN.md) (paused at Phase 3b)
 
 ## Localization

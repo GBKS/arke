@@ -2818,6 +2818,7 @@
       }
     },
     "action_clear_payment_request" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

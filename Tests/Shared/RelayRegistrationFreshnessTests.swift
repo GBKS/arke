@@ -196,7 +196,7 @@ struct RelayRegistrationPersistenceTests {
 }
 
 /// Pins the stale-wake decision for `mailbox_auth_refresh` pushes
-/// (SWIFT_AUTH_WAKE_SPEC.md work item 2): a wake for the current wallet's
+/// (Docs/Features/Background_Execution.md, "Auth wake push", stale-mailbox rule): a wake for the current wallet's
 /// mailbox re-registers; a wake for any other mailbox unregisters the
 /// orphaned pair. The relay lowercases mailbox ids, so the match must be
 /// case-insensitive — a hex-case difference must never be mistaken for a

@@ -128,7 +128,7 @@ final class BackgroundTaskCoordinator: Sendable {
     // MARK: - Auth Wake Push Handling
 
     /// Entry point for the relay's `mailbox_auth_refresh` silent push
-    /// (SWIFT_AUTH_WAKE_SPEC.md): runs the same relay auth pass as the BGTask
+    /// (Docs/Features/Background_Execution.md, "Auth wake push"): runs the same relay auth pass as the BGTask
     /// and reports the outcome for the fetch completion handler. This path has
     /// no BGTask `expirationHandler`, so a timeout just inside the ~30s push
     /// window cancels in-flight work instead; the completion is still called

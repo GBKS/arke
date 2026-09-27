@@ -146,7 +146,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 ### Content consolidation (larger, do last)
 
 - [x] **Step 24:** ✅ 2026-07-09 — Merged the 3 Send/ architecture docs into `Send/SendView_Architecture.md` (git mv of SENDVIEW_OVERVIEW preserves history; the two REFACTORING docs deleted, content merged). Rewritten against the code: SendViewModel is now 11 files in `Shared/Views/Send/SendViewModel/`, flow views live in `Flows/`, `AmountInputSection` moved to ArkéUI, iOS clipboard check is now explicit-paste (not on-appear), and SendView_iOS gained QR camera scanning. Fixed 1 inbound link in PAYMENT_DESTINATION_SELECTOR + 1 mention in SENDVIEW_MIGRATION_CHECKLIST.
-- [x] **Step 25:** ✅ 2026-09-27 (partial) — archived `BEFORE_AFTER_COMPARISON` (AddressValidator refactor, shipped), `NETWORK_MISMATCH_UX_CHANGES` (describes the removed `ClipboardAddressBanner`), `FIX_DATABASE_ERROR_AFTER_DELETION` and `Fee-Calculation-Analysis` (both resolved). Kept for the rename pass (Step 27): `DataVersionObservation` (→ Architecture/, pattern still live in 13 files), `process-state-service-implementation` (→ Architecture/, `ProcessStateService` exists; drop the gone `OngoingUnilateralExit`), `BitcoinFormatter-Locale-Guide` (→ Localization/), `APNS_MAILBOX_SPEC` (relay endpoint contract still accurate; keep as API reference or fold into `Features/Background_Execution.md` — Christoph's call).
+- [x] **Step 25:** ✅ 2026-09-27 (partial) — archived `BEFORE_AFTER_COMPARISON` (AddressValidator refactor, shipped), `NETWORK_MISMATCH_UX_CHANGES` (describes the removed `ClipboardAddressBanner`), `FIX_DATABASE_ERROR_AFTER_DELETION` and `Fee-Calculation-Analysis` (both resolved). Kept for the rename pass (Step 27): `DataVersionObservation` (→ Architecture/, pattern still live in 13 files), `process-state-service-implementation` (→ Architecture/, `ProcessStateService` exists; drop the gone `OngoingUnilateralExit`), `BitcoinFormatter-Locale-Guide` (→ Localization/), `APNS_MAILBOX_SPEC` → became `API/Relay_Registration_API.md` the same day.
 - [x] **Step 26:** ✅ 2026-09-27 — `README.md` rewritten against the living tree (start-here section, Bark section, Migrations/, all Features, Localization, Archive pointer, naming policy).
 
 ### 2026-09-27 archive pass (Steps 25–26 + verify-then-archive backlog)
@@ -165,7 +165,7 @@ All 47 candidates below were checked against the code first (identifiers grepped
 - **`Features/`:** theme-system-implementation (colour-palette plan; what shipped is `AppTheme.swift`'s 4 image themes — no living theme doc exists, consider writing `Features/Theme_System.md`), send-metadata-enhancement_phase_0_complete → `Archive/Implementations/`.
 - **`Payment destination selection/`:** BUG_FIXES_SUMMARY → `Fixes/`.
 
-**Held for judgment (not moved):** `SWIFT_AUTH_WAKE_SPEC.md` (edited 2026-09-26, 7 inbound links — merge the payload contract into `Features/Background_Execution.md` first), `LIGHTNING_FEE_ESTIMATION_ISSUES.md` (one item still "Partially Fixed" — move open items to `Open_Follow_Ups.md` before archiving), `QUICK_PAYMENT_SOURCE_GUIDE.md` (merge its title table into `SendView_Architecture.md`), `APNS_MAILBOX_SPEC.md` (see Step 25).
+**Held items — resolved 2026-09-27 (Christoph approved the recommendations):** `SWIFT_AUTH_WAKE_SPEC.md` merged into `Features/Background_Execution.md` ("Auth wake push" section) and archived; `LIGHTNING_FEE_ESTIMATION_ISSUES.md` archived to `Fixes/` after carrying its one open item into `Open_Follow_Ups.md` → Payments / Send; `QUICK_PAYMENT_SOURCE_GUIDE.md` merged into `Send/SendView_Architecture.md` (Send Modes) and archived to `SendView/`; `APNS_MAILBOX_SPEC.md` reframed as a reference → `API/Relay_Registration_API.md` (adds the 2026-09 contract additions: `trigger`, `authorization_expires_at`, expired-token 400). New: `Features/Theme_System.md` written against `AppTheme.swift` (the archived colour-first plan was never built). Dead code removed alongside: `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
 
 - [ ] **Step 27 — rename pass:** the ~30 living off-convention files (`STARTUP_WALLET_DETECTION_PLAN`, `PAYMENT_DESTINATION_SELECTOR`, `ADDRESS_HISTORY_PLAN` → `Features/Address_History`, `send-metadata-enhancement` → `Features/Send_Metadata`, `balance-persistence`, `tag-system`, the `intro.md`/kebab files in Architecture/API/Development/Features, `DataVersionObservation`, `process-state-service-implementation`, `BitcoinFormatter-Locale-Guide`, `PREVIEWABLE_MODELS_EXTRACTION_PLAN`, `Device_Registry_Reference` is fine). Plain `git mv` now — no Xcode pass needed. Update inbound links (link checker: `/tmp/fixlinks.py`-style resolver — re-create as `Scripts/doc_link_check.py` if kept), the Swift comments naming `STARTUP_WALLET_DETECTION_PLAN`/`SWIFT_AUTH_WAKE_SPEC`, and the assistant memory notes.
 
@@ -222,7 +222,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### API/ (5 files) ✅ GOOD STRUCTURE
+### API/ (6 files) ✅ GOOD STRUCTURE — `Relay_Registration_API.md` added 2026-09-27 (was root `APNS_MAILBOX_SPEC.md`)
 
 - `intro.md`, `model-definitions.md`, `service-interfaces.md`
 - `Bark_Types.md` (534-line Bark API type reference) and `Bark_Daemon.md` — moved in from root 2026-07-09 (Step 17)

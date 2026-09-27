@@ -95,6 +95,15 @@ enum SendMode {
 - Quick mode can transition to Manual (confirmed) when the user accepts a bare address.
 - `clearAll()` resets any mode back to Manual (entering).
 
+`PaymentRequestSource` (in `Flows/QuickPaymentView.swift`: `clipboard`,
+`qrCode`, `deepLink`, `manual`, `nfc`) records where a detected request
+came from. Each case carries a `displayName` ("clipboard", "QR code",
+"link", "input", …) and an SF Symbol; `QuickPaymentView` builds its title
+from source + content type — "Payment request found in QR code" vs.
+"Address found in clipboard" — and tints the icon by network
+compatibility. `source` defaults to `.clipboard`; set it at the entry
+point (QR scanner, `bitcoin:`/`lightning:` URL handler, NFC reader).
+
 ## Manual-Entry UX Model: Input vs. Confirmed
 
 The manual flow deliberately separates two stages, so users never see a raw BIP-21 URI in an editable field:

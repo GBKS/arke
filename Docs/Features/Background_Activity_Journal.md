@@ -229,7 +229,7 @@ or the files app later); 2 and 3 are small and can land together.
   limitation this works around, and the Phase 3 hookup
 - `ArkeMobile/Views/Data/DataView_iOS.swift` — X-Ray root (mobile)
 - [Background_Execution.md](Background_Execution.md) — the wake layers
-  this observes; [SWIFT_AUTH_WAKE_SPEC.md](../SWIFT_AUTH_WAKE_SPEC.md) —
+  this observes; [SWIFT_AUTH_WAKE_SPEC.md](../Archive/Implementations/SWIFT_AUTH_WAKE_SPEC.md) —
   the acceptance criteria this makes testable
 - Relay-side counterpart: `/insights/v1/summary` event counters
   (arke-apns-relay-node)

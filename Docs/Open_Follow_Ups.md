@@ -1160,6 +1160,22 @@ bindings.
   extended with the seed-import invisible-funds case, pagination noted
   under Priority 3, summary table rows 7/7b/7c.
 
+## Payments / Send
+
+- [ ] **Lightning fee estimation falls back silently**: when
+  `PaymentDestinationSelector.estimateFee()` fails for a Lightning
+  destination it logs an error and uses a static estimate (20 sats), so
+  the fee shown can differ from the fee paid and a too-low estimate can
+  fail the payment. Logging was improved 2026-06-23; the user-facing part
+  is still open — surface "estimate unavailable" in the UI or block the
+  send until the estimate succeeds. Carried over 2026-09-27 from
+  `Archive/Fixes/LIGHTNING_FEE_ESTIMATION_ISSUES.md` (item 3); the rest of
+  that doc is resolved.
+- [x] **`PaymentRequestInfoBanner` removed 2026-09-27** as dead code (defined,
+  never referenced); its only string key `action_clear_payment_request`
+  becomes an orphan the next catalog re-extraction prunes. Git history:
+  `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
+
 ## Desktop Parity
 
 See `Features/Desktop_Parity.md` (onboarding, settings, launch/registration
@@ -1278,13 +1294,11 @@ statics (file emptied — needs an Xcode pass to delete). Pinned by
   verification (living 152 → 105; details + per-file evidence in
   `Documentation_Inventory.md` → "2026-09-27 archive pass"). 24 links
   auto-repointed, plain-text mentions and 2 Swift comments by hand; README
-  rewritten. **Held for Christoph:** `SWIFT_AUTH_WAKE_SPEC.md` (edited
-  2026-09-26, 7 inbound links — merge the payload contract into
-  `Features/Background_Execution.md` before archiving?),
-  `LIGHTNING_FEE_ESTIMATION_ISSUES.md` (one item still "Partially Fixed"),
-  `QUICK_PAYMENT_SOURCE_GUIDE.md` (merge its title table into
-  `SendView_Architecture.md`?), `APNS_MAILBOX_SPEC.md` (keep as
-  `API/Relay_Registration_API.md` or fold into Background_Execution?).
+  rewritten. **Held items resolved 2026-09-27** (approved): auth-wake spec merged into
+  `Features/Background_Execution.md` + archived; lightning fee-estimation
+  issues archived (open item → Payments / Send above); quick-payment source
+  guide merged into `SendView_Architecture.md` + archived; APNS spec →
+  `API/Relay_Registration_API.md`; `Features/Theme_System.md` written.
   **Next — Batch 2 = inventory Step 27, rename pass:** ~30 living
   off-convention files → `Title_Case_With_Underscores` via plain `git mv`
   (case-only renames need `git mv`); rewrite `ADDRESS_HISTORY_PLAN` into
@@ -1361,7 +1375,7 @@ settings row; both themes still point at the original assets). Remaining:
   case + General-section row in the desktop SettingsView, opening the
   shared `ThemeSettingView`; unblocked by moving the theme art into
   `Shared/Media.xcassets` (see below). Pending: visual pass on macOS.
-- [ ] **Reconcile the April theme plan doc**
+- [x] **Reconcile the April theme plan doc — 2026-09-27**: plan archived (never built); `Features/Theme_System.md` now documents the shipped image-based system; the palette idea lives on in the item below. Original note:
   (`Archive/Implementations/theme-system-implementation.md`, commit 95c7828): sketches a
   color-first system (ThemeManager, per-theme color asset variants) that
   differs from the shipped image-only `AppTheme`; fold its palette ideas
