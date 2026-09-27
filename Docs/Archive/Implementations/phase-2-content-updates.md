@@ -3,7 +3,7 @@
 ## What Was Accomplished
 
 ### ✅ Model Definitions Updated
-**File:** `model-definitions.md`
+**File:** `Model_Definitions.md`
 - **Updated Architecture**: Reflects current unified @Model classes (not old dual-model system)
 - **Added Tag System Models**: Complete documentation of PersistentTag, TransactionTagAssignment, TagModel
 - **Enhanced Transaction Model**: Includes tag relationship properties and methods
@@ -12,7 +12,7 @@
 - **Updated Examples**: Current code patterns and ModelContainer configuration
 
 ### ✅ Comprehensive Tag System Documentation  
-**File:** `tag-system.md`
+**File:** `Tag_System.md`
 - **Complete Implementation Guide**: Consolidated all tag system implementation from 4-step development
 - **Architecture Overview**: Junction table design, service layer integration, SwiftUI patterns
 - **Data Model Details**: All tag-related models with code examples and relationships
@@ -22,7 +22,7 @@
 - **Performance & Testing**: Optimization strategies, error handling, testing approaches
 
 ### ✅ Documentation Structure Improvements
-- **Main Documentation**: Updated `Intro.md` to include tag-system.md reference
+- **Main Documentation**: Updated `Intro.md` to include Tag_System.md reference
 - **Features Index**: Updated `intro.md` to list both current features with descriptions
 - **Cross-References**: Fixed links between documents to reflect current file locations
 
@@ -69,8 +69,8 @@
 ## File Status Summary
 
 ### ✅ Updated Files:
-- `model-definitions.md` - Completely rewritten for unified architecture
-- `tag-system.md` - New comprehensive feature documentation  
+- `Model_Definitions.md` - Completely rewritten for unified architecture
+- `Tag_System.md` - New comprehensive feature documentation  
 - `Intro.md` - Updated feature links
 - `intro.md` - Updated features index
 

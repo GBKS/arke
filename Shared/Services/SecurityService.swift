@@ -423,7 +423,7 @@ class SecurityService {
     /// Note: Device registration should be done by coordinator after this call
     ///
     /// The item is always synchronizable and never ACL-protected (Decision B in
-    /// STARTUP_WALLET_DETECTION_PLAN.md): a keychain ACL would block iCloud Keychain
+    /// Startup_Wallet_Detection_Plan.md): a keychain ACL would block iCloud Keychain
     /// sync (the basis of the multi-device story) and break the existence checks that
     /// route the launch screen. Biometric gating happens at the app level via
     /// `authenticateUser()` instead.

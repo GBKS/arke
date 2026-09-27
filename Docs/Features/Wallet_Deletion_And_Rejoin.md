@@ -7,7 +7,7 @@ immediately caught two more schema/wipe drift victims (`PendingPaymentMetadata`,
 `SwiftDataHelper.appSchemaModels` and both app targets build their container
 from it; rejoin UI lives in `Shared/Views/FirstUse/RejoinWalletView.swift`.
 Owner: Christoph
-Related: `Initialization/Launch_Sequence_Contract.md`, `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`, `Features/Read_Only_Mode.md`
+Related: `Initialization/Launch_Sequence_Contract.md`, `Initialization/Startup_Wallet_Detection_Plan.md`, `Features/Read_Only_Mode.md`
 
 ## Problem statement
 

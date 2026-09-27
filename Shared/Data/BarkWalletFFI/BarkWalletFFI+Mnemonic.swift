@@ -83,7 +83,7 @@ extension BarkWalletFFI {
         Self.logger.info("Storing mnemonic securely via SecurityService (Keychain)")
         do {
             // Always stored synchronizable without a keychain ACL - biometric gating
-            // happens at the app level (see Decision B in STARTUP_WALLET_DETECTION_PLAN.md)
+            // happens at the app level (see Decision B in Startup_Wallet_Detection_Plan.md)
             try await securityService.saveMnemonic(mnemonic)
             Self.logger.info("Mnemonic stored securely in Keychain")
         } catch {

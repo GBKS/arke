@@ -106,7 +106,7 @@ Added DeviceRegistration to ModelContainer.
 ])
 ```
 
-### 4. **model-definitions.md**
+### 4. **Model_Definitions.md**
 Updated documentation with DeviceRegistration model.
 
 **Changes:**

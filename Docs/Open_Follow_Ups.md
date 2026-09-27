@@ -791,7 +791,7 @@ green):
 ## Startup & Initialization
 
 - [ ] **Startup wallet detection review follow-ups**: 8 items listed in
-  `Archive/Implementations/Initialization/REVIEW.md` / `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`
+  `Archive/Implementations/Initialization/REVIEW.md` / `Initialization/Startup_Wallet_Detection_Plan.md`
   (phases 1–4 done); optional Phase 5 refactor.
 - [x] **Seed-recovery scan never runs on import** — fixed and field-verified:
   single `Wallet.open(createWithoutServer:)` shipped
@@ -1176,6 +1176,70 @@ bindings.
   becomes an orphan the next catalog re-extraction prunes. Git history:
   `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
 
+## Code Findings From the 2026-09-27 Doc Rewrites
+
+Surfaced while rewriting four plan docs into references against the code
+(`Features/Address_History.md`, `Features/Send_Metadata.md`,
+`Architecture/Process_State_Service.md`, `Features/Balance_Persistence.md`).
+Documentation only was changed; each item below is unverified beyond the
+grep/read that found it — confirm before acting.
+
+### Address history
+- [ ] **Onchain "used" marking may rarely fire**: `linkTransactionToAddress`'s
+  `type == "received"` branch is the only thing that sets
+  `PersistentAddress.isUsed`, but `PersistentTransaction.address` is
+  documented as nil for receives (comes from `destination?.address`). If so,
+  onchain rows stay "unused" forever and the gap-limit counter climbs.
+  Verify what bark puts in movement destinations for receives.
+- [ ] **Dead surface**: `AddressGenerationStrategy.discovered` (never
+  assigned), `AddressError.invalidAddressType`/`.addressNotFound`,
+  `PersistentAddress.hasBeenUsed`/`totalReceivedFormatted`,
+  `AddressService.getUnusedAddressCount`, `validateGapLimit` — no production
+  callers.
+- [ ] **Unlocalized strings**: `AddressHistoryView` section titles, the
+  gap-limit alert text, `effectiveTypeDisplayName`,
+  `AddressError.errorDescription` are hard-coded English.
+- [ ] `generateNewAddress` checks for duplicates *after* calling bark, so a
+  duplicate still consumes a revealed index.
+- [ ] `AddressService.loadAddresses()` dumps a call-stack trace in DEBUG on
+  every call.
+- [ ] No unit tests cover `AddressService` or `linkTransactionToAddress`
+  (only the read-only service is tested).
+
+### Send metadata
+- [ ] `SendNoteEditorSheet.maxCharacters = 500` is declared but never
+  enforced; `PersistentTransaction.notes` comment says 1000. Pick one and
+  enforce it.
+- [ ] Dead code: `SendMetadataSection.iconView(systemName:isFilled:)`;
+  `SendModalContentView.stateMessage` only referenced from a commented-out
+  block; its `.error` video branch still says "Phase 3b will add an
+  error-specific video".
+- [ ] `PendingPaymentMetadata.matchedTxid` is documented "for debugging" but
+  is load-bearing (priority-0 matching + `findMatchedTransaction()`) — fix
+  the comment.
+
+### Process state
+- [ ] **Connection quality is binary in practice**: `updateConnectionStatus`'s
+  `quality:` is never passed, so `.good`/`.poor`, `from(lastSuccessfulSync:)`,
+  `from(latencyMs:)`, `incrementReconnectionAttempt()`, `updateQuality(from:)`
+  are unused.
+- [ ] **CloudKit-merge duplicates never cleaned**: `loadPersistedData` takes
+  `.first` without dedupe while `BackupStatus.getSingleton` and
+  `SwiftDataHelper.uniqueness.cleanupDuplicateBackupStatus()` exist with
+  zero callers.
+- [ ] `vtxoHealth`, `shouldShowBackupReminder`, `needsAttention` /
+  `attentionSummary` / `attentionItemCount` have no view consumers on either
+  platform (only `connectionStatus` is read by UI); no tests target these
+  types. Decide: wire up or delete.
+- [ ] `VTXOHealth.actionMessage`, `BackupStatus.reminderMessage` are
+  hard-coded English.
+
+### Balance persistence
+- [ ] `BalanceService.loadPersistedArkBalance()` /
+  `loadPersistedOnchainBalance()` are private async "compatibility" wrappers
+  with zero callers; the models' `isValid` only changes a log line. No direct
+  unit coverage of the upsert path or `init(from:)`/`update(from:)`.
+
 ## Desktop Parity
 
 See `Features/Desktop_Parity.md` (onboarding, settings, launch/registration
@@ -1288,7 +1352,7 @@ statics (file emptied — needs an Xcode pass to delete). Pinned by
 
 ## UI / Refactors
 
-- [ ] **Standardize `Docs/` filenames** (assessed 2026-09-27, Christoph:
+- [x] **Standardize `Docs/` filenames — DONE 2026-09-27** (assessed 2026-09-27, Christoph:
   "makes sense"). **Batch 1 DONE 2026-09-27:** inventory Steps 25–26 closed
   and 47 finished/superseded docs moved to `Archive/` after code
   verification (living 152 → 105; details + per-file evidence in
@@ -1299,21 +1363,18 @@ statics (file emptied — needs an Xcode pass to delete). Pinned by
   issues archived (open item → Payments / Send above); quick-payment source
   guide merged into `SendView_Architecture.md` + archived; APNS spec →
   `API/Relay_Registration_API.md`; `Features/Theme_System.md` written.
-  **Next — Batch 2 = inventory Step 27, rename pass:** ~30 living
-  off-convention files → `Title_Case_With_Underscores` via plain `git mv`
-  (case-only renames need `git mv`); rewrite `ADDRESS_HISTORY_PLAN` into
-  `Features/Address_History.md` (plan → reference), `send-metadata-enhancement`
-  → `Features/Send_Metadata.md` (trim phases), `process-state-service-implementation`
-  → `Architecture/Process_State_Service.md` (drop gone `OngoingUnilateralExit`),
-  `DataVersionObservation` → `Architecture/`, `BitcoinFormatter-Locale-Guide`
-  → `Localization/`; update inbound links (resolver script pattern in the
-  inventory), the Swift comments naming `STARTUP_WALLET_DETECTION_PLAN` /
-  `SWIFT_AUTH_WAKE_SPEC`, and the assistant memory notes. Exceptions to record
-  in the inventory's naming section: Migrations folders keep `README.md` +
-  `01-/02-/04-` numbering, root `README.md` stays, Archive keeps names.
-  Consider writing `Features/Theme_System.md` (no living theme doc exists).
+  **Batch 2 DONE 2026-09-27** (inventory Step 27): all 27 living
+  off-convention files renamed to `Title_Case_With_Underscores` with plain
+  `git mv`; four `intro.md` indexes → `README.md` (rewritten to list every
+  doc); `Address_History`, `Send_Metadata` rewritten plan → reference,
+  `Process_State_Service`, `Balance_Persistence` refreshed against the
+  code; `CloudKit/`, `Address history/`, `Payment destination selection/`
+  folders dissolved; exceptions recorded in the inventory's naming section.
+  Zero off-convention living docs remain. Follow-ups: `Features/Theme_System.md`
+  written; consider `Data samples/` → `Data_Samples/` (folder names were
+  out of scope).
 - [ ] **Previewable models extraction, Phase 3b** (paused; opportunistic,
-  per feature area). See `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md`.
+  per feature area). See `Previewable_Models_Extraction_Plan.md`.
 - [ ] **Live Activity across device migration**: `closeWallet()` /
   demotion deliberately keeps an in-flight exit's Live Activity alive
   (only wallet *deletion* ends it, since 2026-08-12). Revisit whether

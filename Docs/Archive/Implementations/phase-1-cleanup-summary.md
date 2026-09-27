@@ -61,7 +61,7 @@
 The immediate cleanup is complete. The foundation is now in place for:
 
 ### Phase 2: Content Updates
-- Update `model-definitions.md` with current unified architecture
+- Update `Model_Definitions.md` with current unified architecture
 - Add missing tag system models documentation
 - Create current-state feature documentation
 

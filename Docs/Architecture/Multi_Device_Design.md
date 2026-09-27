@@ -8,7 +8,7 @@ journey emerges, add it here FIRST and derive the work from it.
 
 Related: `Features/Read_Only_Mode.md`, `Features/Wallet_Deletion_And_Rejoin.md`,
 `Initialization/Launch_Sequence_Contract.md` (rules 14–20),
-`Initialization/STARTUP_WALLET_DETECTION_PLAN.md`.
+`Initialization/Startup_Wallet_Detection_Plan.md`.
 
 ## Principles (the physics of the system)
 

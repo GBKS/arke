@@ -175,8 +175,8 @@ The app is designed to work well with SwiftUI previews:
 ## Next Steps
 
 After completing this setup:
-1. Review the [Testing Patterns](testing-patterns.md) documentation
-2. Familiarize yourself with [Common Tasks](common-tasks.md)
+1. Review the [Testing Patterns](Testing_Patterns.md) documentation
+2. Familiarize yourself with [Common Tasks](Common_Tasks.md)
 3. Read the architectural documentation for system understanding
 4. Start with small changes to understand the codebase
 

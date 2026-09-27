@@ -30,12 +30,12 @@ I have successfully completed Phase 3 of the documentation reorganization for yo
 
 ### ✅ Successfully Created
 1. **README.md** - New main index with proper navigation structure
-2. **Architecture-system-overview.md** - Moved and updated from system-overview.md
-3. **Architecture-data-flow.md** - Moved and updated from data-flow.md  
-4. **Architecture-service-layer.md** - Moved and updated from service-layer.md
-5. **Features-balance-persistence.md** - Moved from balance-persistence.md
-6. **Features-tag-system.md** - Moved from tag-system.md
-7. **API-model-definitions.md** - Moved from model-definitions.md
+2. **Architecture-system-overview.md** - Moved and updated from System_Overview.md
+3. **Architecture-data-flow.md** - Moved and updated from Data_Flow.md  
+4. **Architecture-service-layer.md** - Moved and updated from Service_Layer.md
+5. **Features-balance-persistence.md** - Moved from Balance_Persistence.md
+6. **Features-tag-system.md** - Moved from Tag_System.md
+7. **API-model-definitions.md** - Moved from Model_Definitions.md
 8. **Archive-MIGRATION_HISTORY.md** - Moved from MIGRATION_HISTORY.md
 9. **Archive-ARK_BALANCE_MIGRATION.md** - Preserved migration documentation
 
@@ -114,12 +114,12 @@ The documentation is now ready for:
 The original files remain in place for safety, but these can now be removed as their content has been properly reorganized:
 - `Intro.md` (replaced by `README.md`)
 - `intro.md` (content integrated into feature organization)
-- `system-overview.md` (moved to `Architecture-system-overview.md`)
-- `data-flow.md` (moved to `Architecture-data-flow.md`)
-- `service-layer.md` (moved to `Architecture-service-layer.md`)
-- `balance-persistence.md` (moved to `Features-balance-persistence.md`)
-- `tag-system.md` (moved to `Features-tag-system.md`)
-- `model-definitions.md` (moved to `API-model-definitions.md`)
+- `System_Overview.md` (moved to `Architecture-system-overview.md`)
+- `Data_Flow.md` (moved to `Architecture-data-flow.md`)
+- `Service_Layer.md` (moved to `Architecture-service-layer.md`)
+- `Balance_Persistence.md` (moved to `Features-balance-persistence.md`)
+- `Tag_System.md` (moved to `Features-tag-system.md`)
+- `Model_Definitions.md` (moved to `API-model-definitions.md`)
 - `MIGRATION_HISTORY.md` (moved to `Archive-MIGRATION_HISTORY.md`)
 
 **Phase 3 Complete!** 🎉

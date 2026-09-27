@@ -26,20 +26,20 @@
 - **Total Lines:** ~56,811 lines across all files
 - **Average File Size:** ~304 lines
 - **Largest File:** LIVE_ACTIVITY_EXIT_PROGRESSION_PLAN.md (2,160 lines)
-- **Most Recent Updates:** STARTUP_WALLET_DETECTION_PLAN.md (Jul 7), RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md (Jul 6), PREVIEWABLE_MODELS_EXTRACTION_PLAN.md (Jul 1)
+- **Most Recent Updates:** Startup_Wallet_Detection_Plan.md (Jul 7), RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md (Jul 6), Previewable_Models_Extraction_Plan.md (Jul 1)
 - **Trend since last inventory (May 7):** +30 files. Growth is almost entirely large root-level plan documents. The root directory is getting worse, not better (46 → 53 files), even though several subdirectories were successfully consolidated.
 
 ### What Changed Since the May 7 Inventory
 
 **Consolidations completed:**
-- `Payment destination selection/` reduced 4 → 2 files; the new `PAYMENT_DESTINATION_SELECTOR.md` (2026-06-25) consolidates IMPLEMENTATION_SUMMARY, QUICK_REFERENCE, and the flow diagram.
+- `Payment destination selection/` reduced 4 → 2 files; the new `Payment_Destination_Selector.md` (2026-06-25) consolidates IMPLEMENTATION_SUMMARY, QUICK_REFERENCE, and the flow diagram.
 - `Send/` reduced 23 → 18 files (SENDVIEW_INTEGRATION_SUMMARY, SENDVIEW_ARCHITECTURE, SENDVIEW_QUICK_REFERENCE, SENDVIEW_TEST_SCENARIOS, SENDVIEW_FLOW_DIAGRAMS removed).
 
 **New content:**
 - `Migrations/` directory (10 files) — structured per-version Bark FFI migration docs. This is a good pattern; future migrations should follow it.
 - ~16 new root-level docs, mostly implementation plans (device migration, live activity, LNURL-pay, read-only mode, wallet backup, VTXO refresh, relay auth refresh, previewable models) plus analyses (Lightning fee estimation, linked devices/VTXO sync).
-- `Features/send-metadata-enhancement.md` (1,088 lines) + phase 0 completion doc.
-- `Initialization/STARTUP_WALLET_DETECTION_PLAN.md` — active hardening work (Phases 1–4 done as of Jul 7).
+- `Features/Send_Metadata.md` (1,088 lines) + phase 0 completion doc.
+- `Initialization/Startup_Wallet_Detection_Plan.md` — active hardening work (Phases 1–4 done as of Jul 7).
 
 **Moved:** `Movement_Onchain_Linking.md` now sits at root instead of `Movements/`.
 
@@ -63,7 +63,7 @@ The dominant new problem. Implementation plans get created at root, the work shi
 | ~~`VTXO_REFRESH_LOGIC_PLAN.md`~~ | — | ✅ Archived 2026-07-09 (shipped 2026-04-24) |
 | ~~`WALLET_BACKUP_PLAN.md`~~ | — | ✅ Archived 2026-07-09 (shipped 2026-05-07) |
 | `RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md` | Plan | Active (Jul 6) — keep at root for now |
-| `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md` | Active | Paused mid-refactor (Phase 3b next) — keep |
+| `Previewable_Models_Extraction_Plan.md` | Active | Paused mid-refactor (Phase 3b next) — keep |
 | ~~`PASSKEY_INTEGRATION_PLAN.md`~~ | — | ✅ Archived 2026-07-09, not pursued (decision: no benefit) |
 | ~~`PASSKEY_INTEGRATION_PLAN_REVIEW.md`~~ | — | ✅ Archived 2026-07-09 with the plan |
 
@@ -73,7 +73,7 @@ Was seven root-level files for one completed feature. Archived the 3 phase summa
 
 ### 3. Non-Documentation Files at Root — ✅ MOSTLY RESOLVED 2026-07-08
 
-- ~~`ExitTransactionStatus_History.md` and `ExitTransactionStatus_State.md`~~ — moved to `Data samples/` (Step 1).
+- ~~`Exit_Transaction_Status_History.md` and `Exit_Transaction_Status_State.md`~~ — moved to `Data samples/` (Step 1).
 - ~~`PASSKEY_INTEGRATION_PLAN_REVIEW.md` is a pasted conversation transcript~~ — ✅ archived with the passkey plan (Step 15, 2026-07-09).
 
 ### 4. Long-Standing Misplaced/Historical Files — ✅ ARCHIVAL HALF RESOLVED 2026-07-08
@@ -93,7 +93,7 @@ Still pending (reorganization, Steps 16–23):
 
 - ~~**Movements:** `movements.md` (root, bark movement system reference) vs `Movements/` directory vs `Movement_Onchain_Linking.md` (root). Three homes for one topic.~~ ✅ Consolidated into `Movements/` 2026-07-09 (Step 21).
 - ~~**CPFP:** `cpfp_package_relay_solution.md` + `bark_issue_cpfp_package_relay.md` (root) vs `BDK/CPFP-Implementation-Plan.md`.~~ ✅ Resolved 2026-07-09 (Step 22): both root docs archived to `Archive/Fixes/`; the BDK plan's status corrected to Superseded — the whole custom CPFP path is dead code since the switch to Bark's built-in onchain wallet.
-- ~~**Tags:** `tags-view-architecture.md` (root, Dec 2025) vs `Features/tag-system.md`.~~ ✅ Resolved 2026-07-09 (Step 23): `Features/tag-system.md` rewritten against the code as the single tag reference (it had drifted badly — claimed soft delete, 8 default tags, CloudKit sync as "future"); the view-architecture doc's lasting content merged in, original archived to `Archive/Implementations/`.
+- ~~**Tags:** `tags-view-architecture.md` (root, Dec 2025) vs `Features/Tag_System.md`.~~ ✅ Resolved 2026-07-09 (Step 23): `Features/Tag_System.md` rewritten against the code as the single tag reference (it had drifted badly — claimed soft delete, 8 default tags, CloudKit sync as "future"); the view-architecture doc's lasting content merged in, original archived to `Archive/Implementations/`.
 - ~~**Bark 0.10→0.11.3 migration:** README said "📝 Planning" though the migration shipped.~~ ✅ Status corrected 2026-07-08.
 
 ---
@@ -108,7 +108,7 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 ### Quick wins (mechanical, no judgment needed)
 
-- [x] **Step 1:** ✅ 2026-07-08 — Moved `ExitTransactionStatus_History.md` + `ExitTransactionStatus_State.md` to `Data samples/`; updated the reference in `Movement_Onchain_Linking.md`.
+- [x] **Step 1:** ✅ 2026-07-08 — Moved `Exit_Transaction_Status_History.md` + `Exit_Transaction_Status_State.md` to `Data samples/`; updated the reference in `Movement_Onchain_Linking.md`.
 - [x] **Step 2:** ✅ 2026-07-08 — Archived `DEVICE_MIGRATION_IMPLEMENTATION_PLAN.md` with a superseded-by note pointing to `_REVISED`.
 - [x] **Step 3:** ✅ 2026-07-08 — Updated `Migrations/Bark-0.10.0-to-0.11.3/README.md` status to Completed (verified via 04-completion-report.md: build green, runtime smoke tests pending).
 - [x] **Step 4:** ✅ 2026-07-08 — Archived DEVICE_REGISTRY_PHASE1/2/3_SUMMARY, DEVICE_REGISTRY_COMPLETE (intermediate snapshot), and DEVICE_REGISTRATION_RACE_CONDITION_FIX. Kept `Device_Registry_Reference.md` (renamed 2026-07-08) + `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` at root. Fixed references in Initialization/ and Security device separation/ docs; updated Archive/readme.md index.
@@ -136,12 +136,12 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 
 - [x] **Step 16:** ✅ 2026-07-09 — Consolidated the 3 BIP39 docs into new `Features/BIP39.md` (git mv of INTEGRATION_GUIDE preserves history; QUICK_REFERENCE was a subset, TROUBLESHOOTING's lasting content folded in). Rewritten against the code: the old guides documented a `Mnemonic`/`Entropy` API the anquii/BIP39 library doesn't have, and claimed 24-word phrases while the app generates 12-word (128-bit). Deleted originals per policy (content merged). No inbound links existed.
 - [x] **Step 17:** ✅ 2026-07-09 — Moved `BarkTypes.md` → `API/Bark_Types.md` (fixed 3 inbound references in the 2 BDK docs) and `daemon-functionality.md` → `API/Bark_Daemon.md` (no inbound links; chose API/ since it describes the Bark library's daemon, not app architecture; added a proper title heading).
-- [x] **Step 18:** ✅ 2026-07-09 — Moved `CloudKitSyncImplementation.md` → `CloudKit/CloudKit_Realtime_Sync.md` (doc covers the real-time NotificationCenter sync pattern); fixed the 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.
+- [x] **Step 18:** ✅ 2026-07-09 — Moved `CloudKitSyncImplementation.md` → `Architecture/CloudKit_Realtime_Sync.md` (doc covers the real-time NotificationCenter sync pattern); fixed the 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.
 - [x] **Step 19:** ✅ 2026-07-09 — Moved to `Features/` with convention renames: `Accessibility.md`, `Intro_Video_Player.md`, `Scratch_Card.md`, `Signet_Faucet.md`. No inbound links existed.
 - [x] **Step 20:** ✅ 2026-07-09 — Recreated `Contacts/` with `Default_Contact.md` + `Contact_Address_Deletion.md` (renamed from DEFAULT_CONTACT_IMPLEMENTATION / CONTACT_ADDRESS_DELETION_LOGIC); moved `WALLET_FIRST_INITIALIZATION.md` → `Initialization/Wallet_First_Initialization.md` (updated its mention in STARTUP_WALLET_DETECTION_PLAN, whose "this folder" note is now accurate).
 - [x] **Step 21:** ✅ 2026-07-09 — Consolidated movements docs into `Movements/`: `movements.md` → `Movements/Bark_Movements.md` (convention rename; also avoids a resource-copy basename clash with `Data samples/Movements.md`), `Movement_Onchain_Linking.md` moved as-is. Cross-linked the Movements/ docs; updated 3 mentions in MOVEMENT_SYSTEM_COMPLETE and the `Data samples/` path in Movement_Onchain_Linking.
 - [x] **Step 22:** ✅ 2026-07-09 — Verified the CPFP situation in code: the custom path (`BDKCpfpHelper`/`BDKOnchainWallet`) was implemented but abandoned — since the Bark 0.11 bindings update the app uses Bark's built-in BDK onchain wallet, which handles CPFP package broadcast internally; the custom files are now dead code. Archived both root docs to `Archive/Fixes/` with notes; corrected `BDK/CPFP-Implementation-Plan.md` status to Superseded. No inbound links existed.
-- [x] **Step 23:** ✅ 2026-07-09 — Resolved the tags doc split: rewrote `Features/tag-system.md` against the code (permanent delete not soft delete, 9 default tags incl. Balance system tag, CloudKit sync implemented, TagModel in ArkéUI, `PersistentTransaction`, fee-aware statistics, no TagService environment injection) and merged in the view-layer architecture from `tags-view-architecture.md`, which was archived to `Archive/Implementations/` with a note. No inbound links existed.
+- [x] **Step 23:** ✅ 2026-07-09 — Resolved the tags doc split: rewrote `Features/Tag_System.md` against the code (permanent delete not soft delete, 9 default tags incl. Balance system tag, CloudKit sync implemented, TagModel in ArkéUI, `PersistentTransaction`, fee-aware statistics, no TagService environment injection) and merged in the view-layer architecture from `tags-view-architecture.md`, which was archived to `Archive/Implementations/` with a note. No inbound links existed.
 
 ### Content consolidation (larger, do last)
 
@@ -167,7 +167,7 @@ All 47 candidates below were checked against the code first (identifiers grepped
 
 **Held items — resolved 2026-09-27 (Christoph approved the recommendations):** `SWIFT_AUTH_WAKE_SPEC.md` merged into `Features/Background_Execution.md` ("Auth wake push" section) and archived; `LIGHTNING_FEE_ESTIMATION_ISSUES.md` archived to `Fixes/` after carrying its one open item into `Open_Follow_Ups.md` → Payments / Send; `QUICK_PAYMENT_SOURCE_GUIDE.md` merged into `Send/SendView_Architecture.md` (Send Modes) and archived to `SendView/`; `APNS_MAILBOX_SPEC.md` reframed as a reference → `API/Relay_Registration_API.md` (adds the 2026-09 contract additions: `trigger`, `authorization_expires_at`, expired-token 400). New: `Features/Theme_System.md` written against `AppTheme.swift` (the archived colour-first plan was never built). Dead code removed alongside: `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
 
-- [ ] **Step 27 — rename pass:** the ~30 living off-convention files (`STARTUP_WALLET_DETECTION_PLAN`, `PAYMENT_DESTINATION_SELECTOR`, `ADDRESS_HISTORY_PLAN` → `Features/Address_History`, `send-metadata-enhancement` → `Features/Send_Metadata`, `balance-persistence`, `tag-system`, the `intro.md`/kebab files in Architecture/API/Development/Features, `DataVersionObservation`, `process-state-service-implementation`, `BitcoinFormatter-Locale-Guide`, `PREVIEWABLE_MODELS_EXTRACTION_PLAN`, `Device_Registry_Reference` is fine). Plain `git mv` now — no Xcode pass needed. Update inbound links (link checker: `/tmp/fixlinks.py`-style resolver — re-create as `Scripts/doc_link_check.py` if kept), the Swift comments naming `STARTUP_WALLET_DETECTION_PLAN`/`SWIFT_AUTH_WAKE_SPEC`, and the assistant memory notes.
+- [x] **Step 27 — rename pass: ✅ 2026-09-27.** All 27 living off-convention files renamed with `git mv` to `Title_Case_With_Underscores` (no Xcode pass needed — Docs is outside every target). Moves with the renames: `ADDRESS_HISTORY_PLAN` → `Features/Address_History.md` (rewritten plan → reference), `send-metadata-enhancement` → `Features/Send_Metadata.md` (rewritten plan → reference), `process-state-service-implementation` → `Architecture/Process_State_Service.md` (refreshed; dead `OngoingUnilateralExit` removed), `DataVersionObservation` → `Architecture/Data_Version_Observation.md`, `BitcoinFormatter-Locale-Guide` → `Localization/Bitcoin_Formatter_Locale_Guide.md`, `PAYMENT_DESTINATION_SELECTOR` → `Send/Payment_Destination_Selector.md`, `CloudKit_Realtime_Sync` → `Architecture/` (the `CloudKit/`, `Address history/`, `Payment destination selection/` folders are gone). The four `intro.md` folder indexes became `README.md` and were rewritten to list every doc in their folder. Links and path mentions rewritten by a rename-aware script (link + `dir/old.md` + bare-basename forms); the two Swift comments naming the startup plan updated. Living docs now: 0 off-convention outside the declared exceptions.
 
 **Projected impact:** Root 53 → ~12 files; total active (non-Archive) docs ~166 → ~110.
 
@@ -184,7 +184,7 @@ All 47 candidates below were checked against the code first (identifiers grepped
 - ✅ `Documentation_Inventory.md` — This file (renamed from DOCUMENTATION_INVENTORY 2026-07-08)
 
 #### Active Plans (keep at root while work is in flight)
-- ✅ `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md` (541 lines, Jul 1) — refactor paused at Phase 3b
+- ✅ `Previewable_Models_Extraction_Plan.md` (541 lines, Jul 1) — refactor paused at Phase 3b
 - ✅ `RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md` (134 lines, Jul 6) — relay auth refresh while backgrounded
 - ⚠️ `DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` (1,601 lines) — planning, not yet implemented
 
@@ -195,7 +195,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Verify status first:** APNS_MAILBOX_SPEC, Fee-Calculation-Analysis, process-state-service-implementation, DataVersionObservation *(Live Activity, VTXO refresh, and wallet backup plans verified shipped and archived 2026-07-09 — Step 14.)*
 
-**Move to subdirectories:** BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(tags-view-architecture merged into Features/tag-system and archived — Step 23, 2026-07-09.)* *(bark_issue_cpfp_package_relay + cpfp_package_relay_solution archived to Archive/Fixes/ — Step 22, 2026-07-09.)* *(movements + Movement_Onchain_Linking → Movements/ — Step 21, 2026-07-09; BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → CloudKit/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; DEFAULT_CONTACT_IMPLEMENTATION + CONTACT_ADDRESS_DELETION_LOGIC → Contacts/, WALLET_FIRST_INITIALIZATION → Initialization/ — Step 20; all 2026-07-09.)*
+**Move to subdirectories:** BitcoinFormatter-Locale-Guide (→ Archive/ with the other formatter docs). *(tags-view-architecture merged into Features/tag-system and archived — Step 23, 2026-07-09.)* *(bark_issue_cpfp_package_relay + cpfp_package_relay_solution archived to Archive/Fixes/ — Step 22, 2026-07-09.)* *(movements + Movement_Onchain_Linking → Movements/ — Step 21, 2026-07-09; BIP39 ×3 consolidated → Features/BIP39.md — Step 16; BarkTypes + daemon-functionality → API/ — Step 17; CloudKitSyncImplementation → Architecture/CloudKit_Realtime_Sync.md — Step 18; ACCESSIBILITY, INTRO_VIDEO_PLAYER_GUIDE, SCRATCH_CARD_IMPLEMENTATION, SIGNET_FAUCET_IMPLEMENTATION → Features/ — Step 19; DEFAULT_CONTACT_IMPLEMENTATION + CONTACT_ADDRESS_DELETION_LOGIC → Contacts/, WALLET_FIRST_INITIALIZATION → Initialization/ — Step 20; all 2026-07-09.)*
 
 **Reference docs, keep (find proper home):** Device_Registry_Reference, LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS (→ Architecture/?), LIGHTNING_FEE_ESTIMATION_ISSUES (current known-issues list, Jun 23), PAYMENT_DESTINATION_SELECTOR_README + QUICK_PAYMENT_SOURCE_GUIDE (→ merge with Payment destination selection/)
 
@@ -216,7 +216,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 **Status: CURRENT** — well-organized, keep as-is.
 
-- `intro.md`, `system-overview.md`, `data-flow.md`, `service-layer.md`, `network-configuration-guide.md`, `network-configuration-persistence.md`
+- `intro.md`, `System_Overview.md`, `Data_Flow.md`, `Service_Layer.md`, `Network_Configuration_Guide.md`, `Network_Configuration_Persistence.md`
 
 **Candidate addition:** `LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` from root (device linking architecture).
 
@@ -224,20 +224,20 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ### API/ (6 files) ✅ GOOD STRUCTURE — `Relay_Registration_API.md` added 2026-09-27 (was root `APNS_MAILBOX_SPEC.md`)
 
-- `intro.md`, `model-definitions.md`, `service-interfaces.md`
+- `intro.md`, `Model_Definitions.md`, `Service_Interfaces.md`
 - `Bark_Types.md` (534-line Bark API type reference) and `Bark_Daemon.md` — moved in from root 2026-07-09 (Step 17)
 
 ---
 
 ### Features/ (13 files) ✅ GOOD STRUCTURE
 
-- `intro.md`, `balance-persistence.md`, `theme-system-implementation.md`
-- `tag-system.md` — rewritten against the code 2026-07-09 (Step 23); now the single tag reference covering data, service, and view layers (absorbed root `tags-view-architecture.md`)
+- `intro.md`, `Balance_Persistence.md`, `theme-system-implementation.md`
+- `Tag_System.md` — rewritten against the code 2026-07-09 (Step 23); now the single tag reference covering data, service, and view layers (absorbed root `tags-view-architecture.md`)
 - `Read_Only_Mode.md` (Jul 9) — secondary-device read-only mode + primary device switching (distilled from the two archived plans, Steps 11–12)
 - `LNURL_Pay.md` (Jul 9) — LNURL-pay send support (distilled from the archived plan, Step 13; Bark 0.11 handles the flow natively via `payLnurl`)
 - `BIP39.md` (Jul 9) — mnemonic generation/validation/storage, consolidated from the 3 root BIP39 docs (Step 16) and corrected against the actual anquii/BIP39 API
 - `Accessibility.md`, `Intro_Video_Player.md`, `Scratch_Card.md`, `Signet_Faucet.md` — moved in from root 2026-07-09 (Step 19)
-- `send-metadata-enhancement.md` (1,088 lines, Jun 24) — active feature plan (contact/tag/note assignment during send)
+- `Send_Metadata.md` (1,088 lines, Jun 24) — active feature plan (contact/tag/note assignment during send)
 - `send-metadata-enhancement_phase_0_complete.md` — ⚠️ phase doc; fold status into the main doc and archive once the feature completes
 
 *(All planned root candidates are in: BIP39 consolidation — Step 16; accessibility, scratch card, signet faucet, intro video player — Step 19.)*
@@ -246,7 +246,7 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ### Development/ (5 files) ✅ GOOD STRUCTURE
 
-- `intro.md`, `setup.md`, `testing-patterns.md`, `common-tasks.md`,
+- `intro.md`, `Setup.md`, `Testing_Patterns.md`, `Common_Tasks.md`,
   `Change_Review_Playbook.md` (added 2026-09-21)
 
 **Assessment:** Valuable, current. Keep as-is. Note the four original files
@@ -273,7 +273,7 @@ follow it.
 ### Initialization/ (3 files) ✅ ARCHIVE PASS 2026-09-27 — `Launch_Sequence_Contract`, `Wallet_First_Initialization`, `STARTUP_WALLET_DETECTION_PLAN` remain; the rest below is archived
 
 - ✅ `INITIALIZATION_FLOWS.md` (1,444 lines) — comprehensive flow doc
-- ✅ `STARTUP_WALLET_DETECTION_PLAN.md` (Jul 7) — **ACTIVE**: launch-to-onboarding bug hardening, Phases 1–4 done, review follow-ups remain
+- ✅ `Startup_Wallet_Detection_Plan.md` (Jul 7) — **ACTIVE**: launch-to-onboarding bug hardening, Phases 1–4 done, review follow-ups remain
 - ✅ `REVIEW.md` — system review
 - ✅ `Wallet_First_Initialization.md` — moved in from root 2026-07-09 (Step 20)
 - ⚠️ `WALLET_CREATION_ISSUES.md`, `WALLET_CREATION_ISSUES_OVERVIEW.md` — verify still current
@@ -283,9 +283,9 @@ The 9 completed fix/tracing docs moved to `Archive/Fixes/` (Step 8).
 
 ---
 
-### Address history/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — only `ADDRESS_HISTORY_PLAN.md` remains (rewrite → `Features/Address_History.md` pending)
+### Address history/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — only `Address_History.md` remains (rewrite → `Features/Address_History.md` pending)
 
-- ✅ `ADDRESS_HISTORY_PLAN.md`, `ADDRESS_IMPLEMENTATION_GUIDE.md`, `ADDRESS_QUICK_REFERENCE.md`, `ADDRESS_IMPLEMENTATION_STATUS.md`
+- ✅ `Address_History.md`, `ADDRESS_IMPLEMENTATION_GUIDE.md`, `ADDRESS_QUICK_REFERENCE.md`, `ADDRESS_IMPLEMENTATION_STATUS.md`
 
 Phase docs moved to `Archive/Implementations/Address history/`, FIX_REDECLARATION_ERRORS to `Archive/Fixes/` (Step 7).
 
@@ -333,9 +333,9 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### Payment destination selection/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — `PAYMENT_DESTINATION_SELECTOR.md` remains (rename pending); BUG_FIXES_SUMMARY archived
+### Payment destination selection/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — `Payment_Destination_Selector.md` remains (rename pending); BUG_FIXES_SUMMARY archived
 
-- ✅ `PAYMENT_DESTINATION_SELECTOR.md` (Jun 25) — consolidated reference (replaced IMPLEMENTATION_SUMMARY, QUICK_REFERENCE, flow diagram)
+- ✅ `Payment_Destination_Selector.md` (Jun 25) — consolidated reference (replaced IMPLEMENTATION_SUMMARY, QUICK_REFERENCE, flow diagram)
 - ⚠️ `BUG_FIXES_SUMMARY.md` — archive candidate
 
 **Note:** Root-level `PAYMENT_DESTINATION_SELECTOR_README.md` (Nov 2025) predates the consolidated doc — likely superseded; verify and archive.
@@ -361,17 +361,17 @@ Now organized into category folders (plus `readme.md` index at Archive root):
 - `Implementations/` (46) — completed implementations and refactorings; multi-file batches keep topic subfolders (`FFI initial integration/`, `Movements/`, `Address history/`, `Contacts/`)
 - `Fixes/` (15) — completed bug-fix and tracing/diagnostic docs
 
-Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans; Step 15 added the passkey plan + review (archived unimplemented — not pursued); Step 22 added the two CPFP package-relay docs to `Fixes/`; Step 23 added the tags view architecture writeup (content merged into `Features/tag-system.md`). Archived files keep their original names per the naming policy. (Historical: until 2026-09-27 basenames also had to be unique across all of `Docs/` because the ArkeDesktop resource copy flattened paths — `Address history/PHASE_3_COMPLETE.md` was renamed `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` on 2026-07-09 after it broke the macOS build. Docs moved out of `Shared/` to the repo root on 2026-09-27, so the constraint no longer exists.)
+Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual primary assignment, LNURL-pay, live activity, VTXO refresh, and wallet backup plans; Step 15 added the passkey plan + review (archived unimplemented — not pursued); Step 22 added the two CPFP package-relay docs to `Fixes/`; Step 23 added the tags view architecture writeup (content merged into `Features/Tag_System.md`). Archived files keep their original names per the naming policy. (Historical: until 2026-09-27 basenames also had to be unique across all of `Docs/` because the ArkeDesktop resource copy flattened paths — `Address history/PHASE_3_COMPLETE.md` was renamed `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` on 2026-07-09 after it broke the macOS build. Docs moved out of `Shared/` to the repo root on 2026-09-27, so the constraint no longer exists.)
 
 ---
 
 ### Data samples/ (3 md files + JSON files)
 
-- `Movements.md`, `ExitTransactionStatus_History.md`, `ExitTransactionStatus_State.md` (the latter two are raw exit-state dumps, moved from root 2026-07-08). Keep. The `CLI/` JSON samples (bark CLI output dumps) were removed 2026-08-10 with the console feature.
+- `Movements.md`, `Exit_Transaction_Status_History.md`, `Exit_Transaction_Status_State.md` (the latter two are raw exit-state dumps, moved from root 2026-07-08). Keep. The `CLI/` JSON samples (bark CLI output dumps) were removed 2026-08-10 with the console feature.
 
 ---
 
-## Documentation Standards (Proposed)
+## Documentation Standards
 
 ### File Naming Conventions
 
@@ -380,6 +380,8 @@ Steps 5–10 added 33 files; Steps 11–14 added the read-only mode, manual prim
 - **No "SUMMARY" in names** — all docs should be summaries
 - **No phase numbers** — use git history for implementation phases
 - **Plans:** include a `**Status:**` header line and update it when work ships; move to Archive (or convert to a feature doc) once complete
+- **Declared exceptions (2026-09-27):** `Migrations/Bark-x-to-y/` folders keep `README.md` + `01-api-changes` / `02-migration-plan` / `04-completion-report` numbering (reading order); every folder index is `README.md`; `Archive/` keeps original names. Folder names may contain spaces (`Data samples/`).
+- **Location:** `Docs/` sits at the repo root outside every Xcode target — rename/move with plain `git mv`, no membership pass. Use `git mv` for case-only renames.
 
 ### Documentation Lifecycle
 
@@ -447,13 +449,13 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 |------|--------|---------|
 | 2026-09-27 | Claude Code | Archive pass: Steps 25 (partial) + 26 done and the verify-then-archive backlog cleared — 47 docs moved to Archive after code verification (root 19 → 12; Send 12 → 1; BDK, Security device separation folders archived wholesale; Initialization 8 → 3; Address history 4 → 1; Movements 5 → 2; CloudKit 4 → 1; Localization summaries → Archive/Migrations/Localization). Living 152 → 105, Archive 71 → 123. 24 links auto-repointed, plain-text mentions by hand, 2 Swift comments updated. README rewritten. Same day: `Docs/` moved from `Shared/Docs` to the repo root, outside all Xcode targets — unique-basename rule retired. Step 27 (rename pass) opened |
 | 2026-07-09 | Claude Code | Step 24 completed: merged the 3 overlapping Send/ architecture docs into `Send/SendView_Architecture.md` (Send 14 → 12, total 187 → 185). Rewrote against the code — since the Dec 2025 docs, SendViewModel was decomposed into 11 per-concern files, flow views moved to `Flows/`, `AmountInputSection` moved to the ArkéUI package, iOS clipboard reading became explicit-paste-only (availability check drives button visibility), and SendView_iOS gained a QR camera scanning mode. Fixed 2 inbound references |
-| 2026-07-09 | Claude Code | Step 23 completed: resolved the tags doc split — rewrote `Features/tag-system.md` against the code and merged in the view-layer content from root `tags-view-architecture.md`, which was archived to Archive/Implementations/ (root 20 → 19, Archive 70 → 71). The feature doc had drifted badly: claimed soft delete (delete is permanent, cascade), 8 default tags (now 9 incl. the Balance system tag auto-applied to internal transfers), CloudKit sync as future (implemented, with debounced remote-change reload), and `@Environment(TagService.self)` injection (views go through WalletManager only). Critical Issue 5 fully resolved |
+| 2026-07-09 | Claude Code | Step 23 completed: resolved the tags doc split — rewrote `Features/Tag_System.md` against the code and merged in the view-layer content from root `tags-view-architecture.md`, which was archived to Archive/Implementations/ (root 20 → 19, Archive 70 → 71). The feature doc had drifted badly: claimed soft delete (delete is permanent, cascade), 8 default tags (now 9 incl. the Balance system tag auto-applied to internal transfers), CloudKit sync as future (implemented, with debounced remote-change reload), and `@Environment(TagService.self)` injection (views go through WalletManager only). Critical Issue 5 fully resolved |
 | 2026-07-09 | Claude Code | Step 22 completed: verified CPFP in code — the custom `BDKCpfpHelper`/`BDKOnchainWallet` path was implemented but abandoned (dead code; Bark's built-in onchain wallet handles CPFP internally since the 0.11 bindings update). Archived both root package-relay docs to Archive/Fixes/ (root 22 → 20, Archive 68 → 70); corrected BDK/CPFP-Implementation-Plan status to Superseded; flagged the rest of BDK/ for the same verify-then-archive treatment. Critical Issue 5's CPFP item resolved |
 | 2026-07-09 | Claude Code | Fixed the broken ArkeDesktop build: renamed `Archive/Implementations/Address history/PHASE_3_COMPLETE.md` → `ADDRESS_HISTORY_PHASE_3_COMPLETE.md` (basename collided with the Movements file of the same name in the flattened resource copy). Documented the unique-basename requirement in the backlog notes and naming policy |
 | 2026-07-09 | Claude Code | Step 21 completed: consolidated movements docs into Movements/ — movements.md → `Movements/Bark_Movements.md` (convention rename), Movement_Onchain_Linking.md moved as-is (root 24 → 22, Movements 3 → 5). Cross-linked the Movements/ docs, updated 3 movements.md mentions in MOVEMENT_SYSTEM_COMPLETE and the Data samples path in Movement_Onchain_Linking. Critical Issue 5's movements item resolved |
 | 2026-07-09 | Claude Code | Step 20 completed: recreated Contacts/ with Default_Contact + Contact_Address_Deletion (renamed on move); WALLET_FIRST_INITIALIZATION → Initialization/Wallet_First_Initialization (root 27 → 24). Updated 1 mention in STARTUP_WALLET_DETECTION_PLAN |
 | 2026-07-09 | Claude Code | Step 19 completed: moved 4 feature docs from root to Features/ with convention renames — Accessibility, Intro_Video_Player, Scratch_Card, Signet_Faucet (root 31 → 27, Features 9 → 13). No inbound links |
-| 2026-07-09 | Claude Code | Step 18 completed: moved CloudKitSyncImplementation → `CloudKit/CloudKit_Realtime_Sync.md` (root 32 → 31, CloudKit 3 → 4); fixed 1 inbound reference |
+| 2026-07-09 | Claude Code | Step 18 completed: moved CloudKitSyncImplementation → `Architecture/CloudKit_Realtime_Sync.md` (root 32 → 31, CloudKit 3 → 4); fixed 1 inbound reference |
 | 2026-07-09 | Claude Code | Step 17 completed: moved BarkTypes → `API/Bark_Types.md` and daemon-functionality → `API/Bark_Daemon.md` (root 34 → 32, API 3 → 5). Fixed 3 inbound references in BDK docs; gave the daemon doc a proper title |
 | 2026-07-09 | Claude Code | Step 16 completed: consolidated the 3 root BIP39 docs into `Features/BIP39.md` (root 37 → 34, total 189 → 187). Rewrote content against the code — old guides documented a nonexistent `Mnemonic`/`Entropy` API and 24-word phrases; the app uses the protocol-based anquii/BIP39 API and 12-word (128-bit) mnemonics. Noted the missing-checksum-validation gap |
 | 2026-07-09 | Claude Code | Step 15 completed: archived PASSKEY_INTEGRATION_PLAN + _REVIEW to Archive/Implementations/ as **not pursued** (decision by Christoph: passkeys don't bring enough benefit; plan was never implemented). Root 39 → 37, Archive 66 → 68; stale-status plan docs now 0. Updated 1 inbound reference in LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS and the Archive index |

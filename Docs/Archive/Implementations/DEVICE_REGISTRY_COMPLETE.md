@@ -138,7 +138,7 @@ Actions:
 1. `ServiceContainer.swift` - Added deviceRegistrationService
 2. `Arke_mobile.swift` - Added to ModelContainer (iOS)
 3. `Ark.swift` - Added to ModelContainer (macOS)
-4. `model-definitions.md` - Documentation
+4. `Model_Definitions.md` - Documentation
 
 ### Modified (Phase 2):
 1. `SecurityService.swift` - Device registration, smart deletion

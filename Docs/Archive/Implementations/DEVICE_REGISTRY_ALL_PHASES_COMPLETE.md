@@ -17,7 +17,7 @@ All three phases of the device registry system are complete and ready for produc
 - `ServiceContainer.swift` - Added service
 - `Arke_mobile.swift` - Added to ModelContainer
 - `Ark.swift` - Added to ModelContainer  
-- `model-definitions.md` - Documentation
+- `Model_Definitions.md` - Documentation
 
 **Features:** Device ID management, heartbeat system, staleness detection, full CRUD operations
 
@@ -216,7 +216,7 @@ ThisDeviceOnly          Syncs Across Devices
 - `DEVICE_REGISTRY_ALL_PHASES_COMPLETE.md` - This file
 
 **Updated:**
-- `model-definitions.md` - DeviceRegistration model
+- `Model_Definitions.md` - DeviceRegistration model
 
 ---
 

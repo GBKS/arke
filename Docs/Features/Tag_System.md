@@ -102,7 +102,7 @@ final class TransactionTagAssignment {
 }
 ```
 
-`PendingTagAssignment` mirrors this shape but links a tag to `PendingPaymentMetadata` instead of a transaction — it holds tag choices made during send until the matching transaction appears (see `Features/send-metadata-enhancement.md`).
+`PendingTagAssignment` mirrors this shape but links a tag to `PendingPaymentMetadata` instead of a transaction — it holds tag choices made during send until the matching transaction appears (see `Features/Send_Metadata.md`).
 
 ## TagService
 
@@ -139,7 +139,7 @@ Notes:
 Implemented (not a future enhancement):
 
 - Models are CloudKit-compatible (see constraints above), so SwiftData/CloudKit syncs tags and assignments across linked devices.
-- `TagService` subscribes to `.cloudKitDataDidChange` (debounced 1 s) and reloads its tag cache when remote changes land. See `CloudKit/CloudKit_Realtime_Sync.md` for the notification pattern.
+- `TagService` subscribes to `.cloudKitDataDidChange` (debounced 1 s) and reloads its tag cache when remote changes land. See `Architecture/CloudKit_Realtime_Sync.md` for the notification pattern.
 - Default-tag creation batches all inserts into a single `save()` so first-run setup triggers one CloudKit sync, not nine.
 
 ### Error Handling

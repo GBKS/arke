@@ -214,7 +214,7 @@ Robust error handling with dedicated error types:
 - `DeleteWalletSettingView.swift` - UI and deletion flow with progress
 - `ServiceContainer.swift` - Service registration and dependency injection
 - `WalletManager.swift` - Wallet deletion and state reset
-- `model-definitions.md` - Data model relationships and cascade rules
+- `Model_Definitions.md` - Data model relationships and cascade rules
 
 ## Testing Considerations
 
@@ -349,7 +349,7 @@ assert(devices.isEmpty)
 - `ContactService.swift` - Contact bulk deletion method
 - `DeleteWalletSettingView.swift` - UI and deletion flow
 - `WalletManager.swift` - Wallet deletion and state reset
-- `model-definitions.md` - Data model relationships and cascade rules
+- `Model_Definitions.md` - Data model relationships and cascade rules
 
 ## Change Log
 

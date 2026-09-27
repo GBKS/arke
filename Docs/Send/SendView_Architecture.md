@@ -62,7 +62,7 @@ The Send feature follows the shared-ViewModel pattern (like TagsView/TagsViewMod
 | `+PaymentExecution.swift` | Executing Ark / onchain / Lightning / LNURL payments |
 | `+FeeEstimation.swift` / `+FeeCalculation.swift` | Per-rail fee estimates with amount-keyed caches; onchain fee priority tiers |
 | `+MaxSendable.swift` | "Send max" computation, incl. retry logic for Lightning routing fees (`isSendingMax`) |
-| `+PendingMetadata.swift` | Creates `PendingPaymentMetadata` at send time, matched to the transaction when the movement arrives (see `Features/send-metadata-enhancement.md`) |
+| `+PendingMetadata.swift` | Creates `PendingPaymentMetadata` at send time, matched to the transaction when the movement arrives (see `Features/Send_Metadata.md`) |
 | `+ComputedProperties.swift` | Derived UI state |
 | `+Helpers.swift` | Small utilities |
 
@@ -112,7 +112,7 @@ The manual flow deliberately separates two stages, so users never see a raw BIP-
    `idle / typing / valid / validBIP353Format / resolvingBIP353 / bip353Resolved(original) / invalid(message)`
 2. **`ConfirmedDestinationCard`** — once a payment request is locked in, a non-editable card shows only the *selected* destination (e.g. the Ark address picked out of a multi-option BIP-21), its metadata, and affordances to switch payment method or clear back to manual entry.
 
-Destination choice among a request's alternatives is ranked by `PaymentDestinationSelector` (see `Payment destination selection/PAYMENT_DESTINATION_SELECTOR.md`).
+Destination choice among a request's alternatives is ranked by `PaymentDestinationSelector` (see `Send/Payment_Destination_Selector.md`).
 
 ## Clipboard Behavior
 
@@ -141,6 +141,6 @@ Since then the ViewModel has been decomposed into per-concern extension files, i
 ## Related Docs
 
 - `../Archive/Implementations/SendView/` — the 11 historical send-flow docs (usage guide/examples, preview states, banner comparison, iOS-port migration checklist, payment-source flow, QR source, payment-request info banner ×3, clipboard banner enhancement), archived 2026-09-27; they describe superseded components (`ClipboardAddressBanner` is gone, `PaymentRequestInfoBanner` is unused, the send views have no `#Preview`s) — this file is the reference
-- `../Payment destination selection/PAYMENT_DESTINATION_SELECTOR.md` — destination ranking
-- `../Features/send-metadata-enhancement.md` — active metadata feature plan
+- `../Send/Payment_Destination_Selector.md` — destination ranking
+- `../Features/Send_Metadata.md` — active metadata feature plan
 - `../Features/LNURL_Pay.md` — LNURL-pay behavior

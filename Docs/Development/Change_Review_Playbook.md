@@ -1,7 +1,7 @@
 # Change Review Playbook
 
 How to review a change — and, more usefully, **what to ask for**. Companion
-to `testing-patterns.md` (what to test) and
+to `Testing_Patterns.md` (what to test) and
 `../Initialization/Launch_Sequence_Contract.md` (ordering invariants that
 review should check against).
 

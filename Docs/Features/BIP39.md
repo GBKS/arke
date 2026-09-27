@@ -74,7 +74,7 @@ let seed: Data = seedDerivator.seed(mnemonic: phrase, passphrase: "")
 
 ## Storage
 
-Mnemonics are stored **only** in the Keychain via `SecurityService` (no file-system fallback), always synchronizable and without a keychain ACL — biometric gating happens at the app level (see Decision B in `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`). For new-wallet creation, `WalletManager` handles storage; `BarkWalletFFI.storeMnemonic` is used only for import flows.
+Mnemonics are stored **only** in the Keychain via `SecurityService` (no file-system fallback), always synchronizable and without a keychain ACL — biometric gating happens at the app level (see Decision B in `Initialization/Startup_Wallet_Detection_Plan.md`). For new-wallet creation, `WalletManager` handles storage; `BarkWalletFFI.storeMnemonic` is used only for import flows.
 
 ## BIP39 Reference
 
