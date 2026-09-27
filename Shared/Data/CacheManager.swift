@@ -28,6 +28,12 @@ class CacheManager<T> {
         }
         return cached
     }
+
+    /// The most recently cached value regardless of the timeout, for callers
+    /// that can extrapolate from a stale value (block height estimation).
+    var lastKnownValue: T? {
+        cachedValue
+    }
     
     /// Check if cache is valid
     var isValid: Bool {
@@ -84,19 +90,26 @@ class WalletCacheManager {
     /// Cache for Ark info (5 minutes timeout)
     let arkInfo = CacheManager<ArkInfoModel>(timeout: 300)
     
-    /// Get estimated block height based on cached data and round interval
+    /// Estimated current block height: the last fetched height plus the
+    /// blocks that have probably been mined since, at the average block
+    /// interval. Works from the last *known* height, not the still-valid
+    /// cache — this used to read `blockHeight.value`, which is nil once the
+    /// 60s timeout passes, so every synchronous reader (the hourly
+    /// auto-refresh check, reminder scheduling) saw nil almost all the time.
+    /// It also advanced by the Ark round interval instead of block time.
+    /// Returns nil only when no height has ever been fetched.
     func getEstimatedBlockHeight() -> Int? {
-        guard let cachedHeight = blockHeight.value,
-              let arkInfoValue = arkInfo.value,
-              let roundIntervalSeconds = arkInfoValue.roundIntervalSeconds,
-              let cacheTime = blockHeight.cacheTimestamp else {
-            return blockHeight.value // Return cached value if we can't estimate
+        guard let lastHeight = blockHeight.lastKnownValue else {
+            return nil
+        }
+        guard let cacheTime = blockHeight.cacheTimestamp else {
+            return lastHeight
         }
         
-        let secondsElapsed = Date().timeIntervalSince(cacheTime)
-        let roundsElapsed = Int(secondsElapsed) / roundIntervalSeconds
+        let secondsElapsed = max(0, Date().timeIntervalSince(cacheTime))
+        let blocksElapsed = Int(secondsElapsed) / BlockTimeFormatter.secondsPerBlock
         
-        return cachedHeight + roundsElapsed
+        return lastHeight + blocksElapsed
     }
 }
 

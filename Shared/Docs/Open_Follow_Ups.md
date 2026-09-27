@@ -662,6 +662,39 @@ green):
 - [x] **Manual-refresh outcome — done 2026-09-21**: `ManualRefreshOutcome`
   so the modal stops reporting success for the `isChecking` skip;
   `refreshVTXOsManually()` throws on a missing service.
+- [x] **"Time to Refresh" reminder fired ~4x early on signet — fixed
+  2026-09-27, device-verified same day**. `scheduleNextRefreshNotification`
+  converted blocks to seconds at 150 s/block for any non-mainnet network;
+  bitcoin signet runs ~10 min/block like mainnet (measured 10.8 min/block
+  against mempool.space for 2026-09-26/27; the 2026-09-26 field log scheduled
+  for block 323884 at "4.8 h out" and the chain hadn't reached it 18 h later).
+  Because the app reschedules on every launch, the premature reminder
+  repeated. Now uses `BlockTimeFormatter.secondsPerBlock` (600, same as the
+  expiry UI) and recomputes on every foreground return
+  (`checkAndRescheduleAfterForeground`, wired in `ArkeMobile.swift`). Not
+  related to uninstall/reinstall churn — iOS drops pending local
+  notifications on uninstall and in-app deletion cancels them.
+- [x] **Hourly auto-refresh check silently skipped after 60 s — fixed
+  2026-09-27** (found alongside the above; code-level, not seen in a log).
+  `WalletCacheManager.getEstimatedBlockHeight()` read `blockHeight.value`,
+  which is nil once the 1-minute cache expires, so the synchronous
+  `estimatedBlockHeight` the hourly check and the reminder scheduler used
+  was nil unless something had fetched the height in the last minute →
+  "Missing required data … skipping". It also extrapolated by the Ark round
+  interval instead of block time. Now extrapolates from the last *known*
+  height at 600 s/block, and both service paths use the async
+  `getEstimatedBlockHeight()` which refetches on expiry.
+- [x] **Demotion left the refresh reminder pending — fixed 2026-09-27**:
+  `resetManagerStateForMigration()` now calls `cancelScheduledNotification()`
+  like the deletion path.
+- [ ] **X-Ray: list local notifications** (requested 2026-09-27, deferred
+  until the reminder fix is re-tested). Show `pendingNotificationRequests()`
+  (id, title, category, `nextTriggerDate`) and `deliveredNotifications()`
+  next to the Background Activity rows, plus the scheduler's inputs (current
+  height, target height, blocks remaining, seconds/block). iOS has no history
+  of dismissed notifications — a full history needs a
+  `localNotificationScheduled` journal kind plus journaling in the
+  `willPresent`/`didReceive` delegate hooks.
 - [x] **Stale unified-transaction merge — fixed 2026-09-21**:
   `refreshAfterVTXOChange()` refetched the Ark-only service while every
   reader goes through `unifiedTransactionService.allTransactions`, a stored

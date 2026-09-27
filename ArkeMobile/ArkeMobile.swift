@@ -177,6 +177,14 @@ struct Arke_mobile: App {
                     Task {
                         await walletManager.registerForPushNotifications(trigger: .foreground)
                     }
+
+                    // Re-check for free refreshes and recompute the "Time to
+                    // Refresh" reminder from a fresh block height, so the
+                    // time-interval trigger can't drift against the chain
+                    // for longer than one background stretch
+                    Task {
+                        await walletManager.vtxoRefreshService?.checkAndRescheduleAfterForeground()
+                    }
                 }
             }
         }

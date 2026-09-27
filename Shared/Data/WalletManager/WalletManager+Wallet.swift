@@ -654,9 +654,13 @@ extension WalletManager {
     func resetManagerStateForMigration() async {
         Self.logger.info("🔄 [WalletManager] Resetting state for migration (preserving SwiftData)...")
         
-        // Stop all background services
+        // Stop all background services. A demoted device no longer holds the
+        // wallet that a pending "Time to Refresh" reminder was scheduled for,
+        // so drop the reminder along with the service (deletion does the same
+        // in clearLocalNotificationsAndLiveActivities).
         exitProgressionService?.stop()
         roundProgressionService?.stop()
+        vtxoRefreshService?.cancelScheduledNotification()
         vtxoRefreshService?.stop()
         lightningClaimService?.stop()
         walletNotificationService?.stop()

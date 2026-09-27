@@ -179,6 +179,18 @@ class VTXORefreshService {
             await checkAndRefreshVTXOs()
         }
     }
+
+    /// Re-run the check and recompute the reminder when the app returns to
+    /// the foreground. The reminder is a fixed time interval derived from an
+    /// assumed block rate, so it drifts against the real chain while the app
+    /// is away; recomputing from a fresh block height on every foreground
+    /// return keeps that drift bounded to one background stretch.
+    func checkAndRescheduleAfterForeground() async {
+        guard isRunning else { return }
+        Self.logger.info("Foreground return — re-checking VTXOs and recomputing the refresh reminder")
+        await checkAndRefreshVTXOs()
+        await scheduleNextRefreshNotification()
+    }
     
     // MARK: - Auto-Refresh Logic
     
@@ -197,13 +209,18 @@ class VTXORefreshService {
         Self.logger.debug("Starting check at \(startTime)")
         
         do {
-            // Step 1: Get current data
+            // Step 1: Get current data. The block height goes through the
+            // async getter, which refetches once the 60s cache has expired —
+            // the synchronous `estimatedBlockHeight` property returned nil
+            // after that, so the hourly check skipped with "missing data"
+            // whenever nothing else had fetched the height in the last minute.
+            let fetchedBlockHeight = await walletManager?.getEstimatedBlockHeight() ?? nil
             guard let arkInfo = walletManager?.arkInfo,
                   let feeSchedule = arkInfo.feeSchedule,
-                  let currentBlockHeight = walletManager?.estimatedBlockHeight else {
+                  let currentBlockHeight = fetchedBlockHeight else {
                 let missingArkInfo = walletManager?.arkInfo == nil
                 let missingFeeSchedule = walletManager?.arkInfo?.feeSchedule == nil
-                let missingBlockHeight = walletManager?.estimatedBlockHeight == nil
+                let missingBlockHeight = fetchedBlockHeight == nil
                 Self.logger.warning("Missing required data - arkInfo: \(missingArkInfo), feeSchedule: \(missingFeeSchedule), blockHeight: \(missingBlockHeight), skipping")
                 lastCheckTime = Date()
                 return
@@ -564,8 +581,9 @@ class VTXORefreshService {
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
             scheduledNotificationDate = nil
             
-            // Get required data
-            guard let currentHeight = walletManager?.estimatedBlockHeight,
+            // Get required data (async height getter: refetches when the
+            // cache has expired, see checkAndRefreshVTXOs)
+            guard let currentHeight = await walletManager?.getEstimatedBlockHeight() ?? nil,
                   let arkInfo = walletManager?.arkInfo,
                   let feeSchedule = arkInfo.feeSchedule else {
                 Self.logger.debug("Cannot schedule notification - missing data")
@@ -596,15 +614,18 @@ class VTXORefreshService {
             
             Self.logger.debug("Blocks until free refresh: \(blocksUntilRefresh), current: \(currentHeight), target: \(nextFreeRefreshHeight)")
             
-            // Don't schedule if already in the window or very soon (< 10 blocks ~1.5 hours on mainnet, ~25 min on signet)
+            // Don't schedule if already in the window or very soon (< 10 blocks, ~1.5 hours)
             guard blocksUntilRefresh > 10 else {
                 Self.logger.debug("Free refresh window starts very soon (\(blocksUntilRefresh) blocks), not scheduling notification")
                 return
             }
             
-            // Convert to time based on network
-            // Mainnet/Bitcoin: ~10 min/block, Signet: ~2.5 min/block
-            let secondsPerBlock: Int = (arkInfo.network.lowercased() == "mainnet" || arkInfo.network.lowercased() == "bitcoin") ? 600 : 150
+            // Convert to time. Bitcoin signet targets the same ~10-minute
+            // block interval as mainnet (measured ~10.8 min/block on
+            // 2026-09-26/27); the previous 150s/block assumption fired the
+            // reminder ~4x early and, because the app reschedules on every
+            // launch, kept firing it. Same constant the expiry UI uses.
+            let secondsPerBlock = BlockTimeFormatter.secondsPerBlock
             let secondsUntilRefresh = blocksUntilRefresh * secondsPerBlock
             
             Self.logger.debug("Network: '\(arkInfo.network)', secondsPerBlock: \(secondsPerBlock), secondsUntilRefresh: \(secondsUntilRefresh)")
