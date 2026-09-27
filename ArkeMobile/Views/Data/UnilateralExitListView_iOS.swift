@@ -233,8 +233,11 @@ struct UnilateralExitListView_iOS: View {
             try await walletManager.syncExits()
             print("✅ Exit state fetched from server")
             
-            // Then progress all exits
-            let statuses = try await walletManager.progressExits(feeRateSatPerVb: nil)
+            // Then progress all exits. Same fee-rate rule as ExitProgressionService:
+            // nil on mainnet (bark estimates internally), app-side fast rate elsewhere
+            // because bark's estimator gets poisoned by signet fee spam.
+            let feeRate: UInt64? = walletManager.isMainnet ? nil : await walletManager.currentFeeRates().fast
+            let statuses = try await walletManager.progressExits(feeRateSatPerVb: feeRate)
 
             print("✅ Progressed \(statuses.count) exit(s)")
             for status in statuses {
