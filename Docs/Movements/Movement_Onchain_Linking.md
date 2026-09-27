@@ -1,6 +1,6 @@
 # Movement-Onchain Transaction Linking
 
-> **Related docs:** `Bark_Movements.md` (bark movement schema reference), `MOVEMENT_SYSTEM_COMPLETE.md` (app-side movement system).
+> **Related docs:** `Bark_Movements.md` (bark movement schema reference), `../Archive/Implementations/Movements/MOVEMENT_SYSTEM_COMPLETE.md` (archived completion report) (app-side movement system).
 
 ## Problem Statement
 

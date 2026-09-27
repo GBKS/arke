@@ -5,7 +5,7 @@
 **Status**: Complete ✅
 
 **Implementation Status**:
-- ✅ [Phase 0 Complete](./PHASE_0_COMPLETE.md) - Data layer foundation with matching logic (2026-06-24)
+- ✅ [Phase 0 Complete](../Archive/Implementations/send-metadata-enhancement_phase_0_complete.md) - Data layer foundation with matching logic (2026-06-24)
 - ✅ **Phase 1 Complete** - SendViewModel Integration (2026-06-24)
 - ✅ **Phase 3a Complete** - SendModalView Structural Refactor (2026-06-24)
 - ✅ **Phase 3b Complete** - Metadata UI Integration (2026-06-24)

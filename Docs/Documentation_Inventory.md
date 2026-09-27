@@ -1,7 +1,7 @@
 # Documentation Inventory & Modernization Plan
 
-**Last Updated:** July 9, 2026
-**Total Documentation Files:** 185
+**Last Updated:** September 27, 2026
+**Total Documentation Files:** 228 (105 living, 123 archived)
 **Purpose:** Comprehensive inventory of all documentation to guide modernization efforts
 
 ---
@@ -146,8 +146,28 @@ Each step is intentionally small (one commit, 15–30 min). Work top to bottom; 
 ### Content consolidation (larger, do last)
 
 - [x] **Step 24:** ✅ 2026-07-09 — Merged the 3 Send/ architecture docs into `Send/SendView_Architecture.md` (git mv of SENDVIEW_OVERVIEW preserves history; the two REFACTORING docs deleted, content merged). Rewritten against the code: SendViewModel is now 11 files in `Shared/Views/Send/SendViewModel/`, flow views live in `Flows/`, `AmountInputSection` moved to ArkéUI, iOS clipboard check is now explicit-paste (not on-appear), and SendView_iOS gained QR camera scanning. Fixed 1 inbound link in PAYMENT_DESTINATION_SELECTOR + 1 mention in SENDVIEW_MIGRATION_CHECKLIST.
-- [ ] **Step 25:** Review remaining root stragglers (`BEFORE_AFTER_COMPARISON.md`, `DataVersionObservation.md`, `process-state-service-implementation.md`, `BitcoinFormatter-Locale-Guide.md`, `FIX_DATABASE_ERROR_AFTER_DELETION.md`, `NETWORK_MISMATCH_UX_CHANGES.md`, `Fee-Calculation-Analysis.md`, `APNS_MAILBOX_SPEC.md`) — keep, move, or archive each.
-- [ ] **Step 26:** Update `README.md` links after the moves; add links to Migrations/ and the active plan docs.
+- [x] **Step 25:** ✅ 2026-09-27 (partial) — archived `BEFORE_AFTER_COMPARISON` (AddressValidator refactor, shipped), `NETWORK_MISMATCH_UX_CHANGES` (describes the removed `ClipboardAddressBanner`), `FIX_DATABASE_ERROR_AFTER_DELETION` and `Fee-Calculation-Analysis` (both resolved). Kept for the rename pass (Step 27): `DataVersionObservation` (→ Architecture/, pattern still live in 13 files), `process-state-service-implementation` (→ Architecture/, `ProcessStateService` exists; drop the gone `OngoingUnilateralExit`), `BitcoinFormatter-Locale-Guide` (→ Localization/), `APNS_MAILBOX_SPEC` (relay endpoint contract still accurate; keep as API reference or fold into `Features/Background_Execution.md` — Christoph's call).
+- [x] **Step 26:** ✅ 2026-09-27 — `README.md` rewritten against the living tree (start-here section, Bark section, Migrations/, all Features, Localization, Archive pointer, naming policy).
+
+### 2026-09-27 archive pass (Steps 25–26 + verify-then-archive backlog)
+
+All 47 candidates below were checked against the code first (identifiers grepped; fixes confirmed present; superseding living doc named) — 24 markdown links were repointed automatically, plain-text mentions by hand. Living 152 → 105, Archive 71 → 123.
+
+- **Root → `Archive/Implementations/`:** RELAY_AUTH_BACKGROUND_REFRESH_PLAN (shipped; Phase 1 of `Features/Background_Execution.md`), LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS, DEVICE_REGISTRY_ALL_PHASES_COMPLETE, DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED (superseded by `Architecture/Multi_Device_Design.md`; `emergencyTakeoverAsPrimary`/`MigrationType` gone), PAYMENT_DESTINATION_SELECTOR_README (superseded by the 2026-06-25 rewrite), NETWORK_MISMATCH_UX_CHANGES, BEFORE_AFTER_COMPARISON. **→ `Archive/Fixes/`:** Fee-Calculation-Analysis, FIX_DATABASE_ERROR_AFTER_DELETION.
+- **`Initialization/`:** the four Dec 2024 wallet-creation issue docs → `Archive/Fixes/Wallet creation/` (Issue 1 fix present: `registerDeviceIfNeeded` in both MainViews; Issue 2's code path rewritten — `getCurrentReceiveAddress` returns a persisted address first). INITIALIZATION_FLOWS (its linking flow was removed June 2026) + REVIEW → `Archive/Implementations/Initialization/`. Folder is now `Launch_Sequence_Contract`, `Wallet_First_Initialization`, `STARTUP_WALLET_DETECTION_PLAN` (active, accurate; rename pending).
+- **`Movements/`:** MOVEMENT_SYSTEM_COMPLETE + TRANSFER_TYPE_IMPLEMENTATION → `Archive/Implementations/Movements/`; FEE_DISPLAY_FIX → `Fixes/` (`onchainFeeSat` in 23 files). Folder is now the two references.
+- **`Security device separation/` (6) → `Archive/Implementations/`** as a folder. The SecurityService/registration split still holds in code, but the "device-scoped keychain" premise does not (seed is a synchronizable iCloud Keychain item); `Multi_Device_Design.md` is the living model. Optional: merge a short responsibility-split section into it.
+- **`Send/` (11) → `Archive/Implementations/SendView/`.** `ClipboardAddressBanner` is gone, `PaymentRequestInfoBanner` is defined but unused (dead code candidate), the send views have no `#Preview`s, the ViewModel is 11 files. `SendView_Architecture.md` is the single reference.
+- **`BDK/` (6) → `Archive/Implementations/BDK/`**, folder removed. Nothing described still exists except `OnchainTransactionService`, whose doc covers the superseded BDK-backed version; see `Features/BDK_Transaction_Reader_Removal.md`.
+- **`CloudKit/`:** QuickStart, SetupChecklist, SyncGuidelines → `Archive/Implementations/CloudKit/` (alpha-era setup; the guidelines contradict the shipped design). `CloudKit_Realtime_Sync.md` stays (current).
+- **`Localization/`:** the two March 2026 migration summaries → `Archive/Migrations/Localization/`.
+- **`Address history/`:** GUIDE, QUICK_REFERENCE, STATUS → `Archive/Implementations/Address history/`. ADDRESS_HISTORY_PLAN stays — it is the only design description of a live subsystem (`PersistentAddress`, `AddressGenerationStrategy`, `AddressHistoryView`); rewrite plan → reference as `Features/Address_History.md` in Step 27.
+- **`Features/`:** theme-system-implementation (colour-palette plan; what shipped is `AppTheme.swift`'s 4 image themes — no living theme doc exists, consider writing `Features/Theme_System.md`), send-metadata-enhancement_phase_0_complete → `Archive/Implementations/`.
+- **`Payment destination selection/`:** BUG_FIXES_SUMMARY → `Fixes/`.
+
+**Held for judgment (not moved):** `SWIFT_AUTH_WAKE_SPEC.md` (edited 2026-09-26, 7 inbound links — merge the payload contract into `Features/Background_Execution.md` first), `LIGHTNING_FEE_ESTIMATION_ISSUES.md` (one item still "Partially Fixed" — move open items to `Open_Follow_Ups.md` before archiving), `QUICK_PAYMENT_SOURCE_GUIDE.md` (merge its title table into `SendView_Architecture.md`), `APNS_MAILBOX_SPEC.md` (see Step 25).
+
+- [ ] **Step 27 — rename pass:** the ~30 living off-convention files (`STARTUP_WALLET_DETECTION_PLAN`, `PAYMENT_DESTINATION_SELECTOR`, `ADDRESS_HISTORY_PLAN` → `Features/Address_History`, `send-metadata-enhancement` → `Features/Send_Metadata`, `balance-persistence`, `tag-system`, the `intro.md`/kebab files in Architecture/API/Development/Features, `DataVersionObservation`, `process-state-service-implementation`, `BitcoinFormatter-Locale-Guide`, `PREVIEWABLE_MODELS_EXTRACTION_PLAN`, `Device_Registry_Reference` is fine). Plain `git mv` now — no Xcode pass needed. Update inbound links (link checker: `/tmp/fixlinks.py`-style resolver — re-create as `Scripts/doc_link_check.py` if kept), the Swift comments naming `STARTUP_WALLET_DETECTION_PLAN`/`SWIFT_AUTH_WAKE_SPEC`, and the assistant memory notes.
 
 **Projected impact:** Root 53 → ~12 files; total active (non-Archive) docs ~166 → ~110.
 
@@ -235,7 +255,7 @@ follow it.
 
 ---
 
-### Send/ (12 files) ✅ CONSOLIDATED 2026-07-09
+### Send/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — only `SendView_Architecture.md` remains; the 11 guides/implementation notes below are in `Archive/Implementations/SendView/`
 
 **Status: GOOD** — down from 23 in May; bug-fix docs archived 2026-07-08 (Step 10), architecture docs merged 2026-07-09 (Step 24).
 
@@ -250,7 +270,7 @@ follow it.
 
 ---
 
-### Initialization/ (8 files) ✅ CLEANED UP 2026-07-08
+### Initialization/ (3 files) ✅ ARCHIVE PASS 2026-09-27 — `Launch_Sequence_Contract`, `Wallet_First_Initialization`, `STARTUP_WALLET_DETECTION_PLAN` remain; the rest below is archived
 
 - ✅ `INITIALIZATION_FLOWS.md` (1,444 lines) — comprehensive flow doc
 - ✅ `STARTUP_WALLET_DETECTION_PLAN.md` (Jul 7) — **ACTIVE**: launch-to-onboarding bug hardening, Phases 1–4 done, review follow-ups remain
@@ -263,7 +283,7 @@ The 9 completed fix/tracing docs moved to `Archive/Fixes/` (Step 8).
 
 ---
 
-### Address history/ (4 files) ✅ CLEANED UP 2026-07-08
+### Address history/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — only `ADDRESS_HISTORY_PLAN.md` remains (rewrite → `Features/Address_History.md` pending)
 
 - ✅ `ADDRESS_HISTORY_PLAN.md`, `ADDRESS_IMPLEMENTATION_GUIDE.md`, `ADDRESS_QUICK_REFERENCE.md`, `ADDRESS_IMPLEMENTATION_STATUS.md`
 
@@ -271,7 +291,7 @@ Phase docs moved to `Archive/Implementations/Address history/`, FIX_REDECLARATIO
 
 ---
 
-### Movements/ (5 files) ✅ CONSOLIDATED 2026-07-09
+### Movements/ (2 files) ✅ ARCHIVE PASS 2026-09-27 — `Bark_Movements`, `Movement_Onchain_Linking` remain
 
 - ✅ `Bark_Movements.md` (bark movement schema reference, moved from root `movements.md` — Step 21), `Movement_Onchain_Linking.md` (moved from root — Step 21)
 - ✅ `MOVEMENT_SYSTEM_COMPLETE.md`, `TRANSFER_TYPE_IMPLEMENTATION.md`, `FEE_DISPLAY_FIX.md`
@@ -280,7 +300,7 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### BDK/ (6 files) ⚠️ VERIFY AGAINST CODE
+### BDK/ — ✅ ARCHIVED WHOLESALE 2026-09-27 to `Archive/Implementations/BDK/` (verified: describes the abandoned custom BDK wallet; folder removed)
 
 - `BDK-Implementation-Complete.md`, `BDK-Integration-Status.md`, `BDK-Next-Steps.md`, `BDK-Improvements-2026-02-26.md`, `CPFP-Implementation-Plan.md` (1,008 lines, status corrected to Superseded — Step 22), `OnchainTransactionService-Implementation.md`
 
@@ -294,7 +314,7 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### CloudKit/ (4 files) ✅ KEEP
+### CloudKit/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — `CloudKit_Realtime_Sync.md` remains; the three alpha setup docs are in `Archive/Implementations/CloudKit/`
 
 - `CloudKitQuickStart.md`, `CloudKitSetupChecklist.md`, `CloudKitSyncGuidelines.md`
 - `CloudKit_Realtime_Sync.md` — moved in from root (was CloudKitSyncImplementation) 2026-07-09, Step 18.
@@ -307,13 +327,13 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### Security device separation/ (6 files) ✅ CURRENT
+### Security device separation/ — ✅ ARCHIVED WHOLESALE 2026-09-27 to `Archive/Implementations/Security device separation/` (model superseded by `Architecture/Multi_Device_Design.md`)
 
 - `IMPLEMENTATION_SUMMARY.md`, `SEPARATION_OF_CONCERNS_IMPLEMENTATION.md`, `ARCHITECTURE_DIAGRAMS.md`, `QUICK_REFERENCE.md`, `TESTING_CHECKLIST_SEPARATION.md`, `COMMIT_MESSAGE.md` (archive candidate)
 
 ---
 
-### Payment destination selection/ (2 files) ✅ CONSOLIDATED
+### Payment destination selection/ (1 file) ✅ ARCHIVE PASS 2026-09-27 — `PAYMENT_DESTINATION_SELECTOR.md` remains (rename pending); BUG_FIXES_SUMMARY archived
 
 - ✅ `PAYMENT_DESTINATION_SELECTOR.md` (Jun 25) — consolidated reference (replaced IMPLEMENTATION_SUMMARY, QUICK_REFERENCE, flow diagram)
 - ⚠️ `BUG_FIXES_SUMMARY.md` — archive candidate
@@ -322,7 +342,7 @@ Phase docs moved to `Archive/Implementations/Movements/` (Step 6); the topic is 
 
 ---
 
-### Localization/ (2 files) ✅ KEEP
+### Localization/ (4 files) ✅ ARCHIVE PASS 2026-09-27 — `Localization_Guidelines`, `Default_Value_Migration_Plan`, `Translation_Rollout_Plan`, `Translation_Glossary` (the two March 2026 migration summaries are in `Archive/Migrations/Localization/`)
 
 - `LOCALIZATION_MIGRATION_SUMMARY.md`, `LOCALIZATION_UPDATE_SUMMARY.md`
 
@@ -334,7 +354,7 @@ All 6 historical phase docs moved to `Archive/Implementations/FFI initial integr
 
 ---
 
-### Archive/ (71 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08
+### Archive/ (123 files) ✅ PROPER USE, RESTRUCTURED 2026-07-08, +52 on 2026-09-27
 
 Now organized into category folders (plus `readme.md` index at Archive root):
 - `Migrations/` (7) — completed model/architecture migrations
@@ -425,6 +445,7 @@ Only delete when it's an exact duplicate, content has been merged elsewhere, or 
 
 | Date | Author | Changes |
 |------|--------|---------|
+| 2026-09-27 | Claude Code | Archive pass: Steps 25 (partial) + 26 done and the verify-then-archive backlog cleared — 47 docs moved to Archive after code verification (root 19 → 12; Send 12 → 1; BDK, Security device separation folders archived wholesale; Initialization 8 → 3; Address history 4 → 1; Movements 5 → 2; CloudKit 4 → 1; Localization summaries → Archive/Migrations/Localization). Living 152 → 105, Archive 71 → 123. 24 links auto-repointed, plain-text mentions by hand, 2 Swift comments updated. README rewritten. Same day: `Docs/` moved from `Shared/Docs` to the repo root, outside all Xcode targets — unique-basename rule retired. Step 27 (rename pass) opened |
 | 2026-07-09 | Claude Code | Step 24 completed: merged the 3 overlapping Send/ architecture docs into `Send/SendView_Architecture.md` (Send 14 → 12, total 187 → 185). Rewrote against the code — since the Dec 2025 docs, SendViewModel was decomposed into 11 per-concern files, flow views moved to `Flows/`, `AmountInputSection` moved to the ArkéUI package, iOS clipboard reading became explicit-paste-only (availability check drives button visibility), and SendView_iOS gained a QR camera scanning mode. Fixed 2 inbound references |
 | 2026-07-09 | Claude Code | Step 23 completed: resolved the tags doc split — rewrote `Features/tag-system.md` against the code and merged in the view-layer content from root `tags-view-architecture.md`, which was archived to Archive/Implementations/ (root 20 → 19, Archive 70 → 71). The feature doc had drifted badly: claimed soft delete (delete is permanent, cascade), 8 default tags (now 9 incl. the Balance system tag auto-applied to internal transfers), CloudKit sync as future (implemented, with debounced remote-change reload), and `@Environment(TagService.self)` injection (views go through WalletManager only). Critical Issue 5 fully resolved |
 | 2026-07-09 | Claude Code | Step 22 completed: verified CPFP in code — the custom `BDKCpfpHelper`/`BDKOnchainWallet` path was implemented but abandoned (dead code; Bark's built-in onchain wallet handles CPFP internally since the 0.11 bindings update). Archived both root package-relay docs to Archive/Fixes/ (root 22 → 20, Archive 68 → 70); corrected BDK/CPFP-Implementation-Plan status to Superseded; flagged the rest of BDK/ for the same verify-then-archive treatment. Critical Issue 5's CPFP item resolved |

@@ -4,7 +4,7 @@ Ordering invariants around app startup, wallet open/create/import, first
 sync, exit progression, and multi-device detection. Each rule was learned
 from an incident — the "or else" column is not hypothetical. This is a
 contract, not a narrative: for flow walkthroughs see
-`INITIALIZATION_FLOWS.md`.
+`Wallet_First_Initialization.md` (this folder); the older three-flow walkthrough is archived at `../Archive/Implementations/Initialization/INITIALIZATION_FLOWS.md`.
 
 **Maintenance:** when a startup-shaped bug is fixed, add its rule here (same
 reflex as updating `Open_Follow_Ups.md`). Any PR that touches launch

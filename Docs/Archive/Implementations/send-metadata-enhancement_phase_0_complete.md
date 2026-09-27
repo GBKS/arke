@@ -280,6 +280,6 @@ Add metadata UI to SendModalView (separate from Phase 0).
 
 ## References
 
-- [Send Metadata Enhancement Plan](./send-metadata-enhancement.md)
+- [Send Metadata Enhancement Plan](../../Features/send-metadata-enhancement.md)
 - Main planning document with full architecture
 - See "Phase 0" section for detailed requirements

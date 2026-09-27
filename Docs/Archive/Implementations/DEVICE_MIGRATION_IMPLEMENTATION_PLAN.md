@@ -1,6 +1,6 @@
 # Device Migration Implementation Plan
 
-> ⚠️ **SUPERSEDED** (archived 2026-07-08): Replaced by [DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md](../DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md). Kept for historical context.
+> ⚠️ **SUPERSEDED** (archived 2026-07-08): Replaced by [DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md](DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md). Kept for historical context.
 
 **Created:** 2026-05-08  
 **Status:** Planning  

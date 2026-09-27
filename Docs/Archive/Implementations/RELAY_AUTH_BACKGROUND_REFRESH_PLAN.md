@@ -1,7 +1,7 @@
 # Relay Authorization Background Refresh Plan
 
 > **Amended 2026-07-27** to match the superseding decisions in
-> [Background_Execution.md](Features/Background_Execution.md) (this plan is
+> [Background_Execution.md](../../Features/Background_Execution.md) (this plan is
 > its Phase 1): the BGTask identifier is the shared `cash.arke.refresh`
 > (not a relay-auth-only `cash.arke.relayAuthRefresh`), and the
 > scheduling/registration plumbing lives in a standalone

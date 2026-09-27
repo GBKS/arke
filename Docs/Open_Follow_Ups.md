@@ -791,7 +791,7 @@ green):
 ## Startup & Initialization
 
 - [ ] **Startup wallet detection review follow-ups**: 8 items listed in
-  `Initialization/REVIEW.md` / `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`
+  `Archive/Implementations/Initialization/REVIEW.md` / `Initialization/STARTUP_WALLET_DETECTION_PLAN.md`
   (phases 1–4 done); optional Phase 5 refactor.
 - [x] **Seed-recovery scan never runs on import** — fixed and field-verified:
   single `Wallet.open(createWithoutServer:)` shipped
@@ -1272,24 +1272,32 @@ statics (file emptied — needs an Xcode pass to delete). Pinned by
 
 ## UI / Refactors
 
-- [ ] **Standardize `Docs/` filenames** (assessed 2026-09-27,
-  Christoph: "makes sense"; unblocked 2026-09-27 — Docs now live at the repo
-  root outside every target, so renames need no Xcode pass). State: 157 living docs — 35 already `Title_Case_With_Underscores`,
-  58 SCREAMING_SNAKE, 19 kebab-case, 19 mixed, 26 numbered Migrations files
-  (+ READMEs). Not a blanket rename: (1) finish `Documentation_Inventory.md`
-  Steps 25–26, then triage every SCREAMING/kebab file whose status is
-  complete/superseded into `Archive/` (Archive keeps original names) —
-  Send/ (11), Security device separation/ (6), Initialization issue
-  write-ups (7), BDK/ (6), Address history/ (4) are the bulk, ~50–60 files;
-  (2) rename the ~30–40 survivors folder by folder via Xcode (XcodeMV) or
-  `git mv` (case-only renames need `git mv`), fixing inbound links (mostly
-  0–4 per file; `API/model-definitions.md` has 9), the three Swift comments
-  that name off-convention docs (`SWIFT_AUTH_WAKE_SPEC`,
-  `RELAY_AUTH_BACKGROUND_REFRESH_PLAN`, `STARTUP_WALLET_DETECTION_PLAN`),
-  and the assistant memory notes (32 doc names referenced); (3) write the
-  declared exceptions into the inventory's naming section: Migrations
-  folders keep `README.md` + `01-/02-/04-` numbering, root `README.md`
-  stays, Archive keeps names.
+- [ ] **Standardize `Docs/` filenames** (assessed 2026-09-27, Christoph:
+  "makes sense"). **Batch 1 DONE 2026-09-27:** inventory Steps 25–26 closed
+  and 47 finished/superseded docs moved to `Archive/` after code
+  verification (living 152 → 105; details + per-file evidence in
+  `Documentation_Inventory.md` → "2026-09-27 archive pass"). 24 links
+  auto-repointed, plain-text mentions and 2 Swift comments by hand; README
+  rewritten. **Held for Christoph:** `SWIFT_AUTH_WAKE_SPEC.md` (edited
+  2026-09-26, 7 inbound links — merge the payload contract into
+  `Features/Background_Execution.md` before archiving?),
+  `LIGHTNING_FEE_ESTIMATION_ISSUES.md` (one item still "Partially Fixed"),
+  `QUICK_PAYMENT_SOURCE_GUIDE.md` (merge its title table into
+  `SendView_Architecture.md`?), `APNS_MAILBOX_SPEC.md` (keep as
+  `API/Relay_Registration_API.md` or fold into Background_Execution?).
+  **Next — Batch 2 = inventory Step 27, rename pass:** ~30 living
+  off-convention files → `Title_Case_With_Underscores` via plain `git mv`
+  (case-only renames need `git mv`); rewrite `ADDRESS_HISTORY_PLAN` into
+  `Features/Address_History.md` (plan → reference), `send-metadata-enhancement`
+  → `Features/Send_Metadata.md` (trim phases), `process-state-service-implementation`
+  → `Architecture/Process_State_Service.md` (drop gone `OngoingUnilateralExit`),
+  `DataVersionObservation` → `Architecture/`, `BitcoinFormatter-Locale-Guide`
+  → `Localization/`; update inbound links (resolver script pattern in the
+  inventory), the Swift comments naming `STARTUP_WALLET_DETECTION_PLAN` /
+  `SWIFT_AUTH_WAKE_SPEC`, and the assistant memory notes. Exceptions to record
+  in the inventory's naming section: Migrations folders keep `README.md` +
+  `01-/02-/04-` numbering, root `README.md` stays, Archive keeps names.
+  Consider writing `Features/Theme_System.md` (no living theme doc exists).
 - [ ] **Previewable models extraction, Phase 3b** (paused; opportunistic,
   per feature area). See `PREVIEWABLE_MODELS_EXTRACTION_PLAN.md`.
 - [ ] **Live Activity across device migration**: `closeWallet()` /
@@ -1354,7 +1362,7 @@ settings row; both themes still point at the original assets). Remaining:
   shared `ThemeSettingView`; unblocked by moving the theme art into
   `Shared/Media.xcassets` (see below). Pending: visual pass on macOS.
 - [ ] **Reconcile the April theme plan doc**
-  (`Features/theme-system-implementation.md`, commit 95c7828): sketches a
+  (`Archive/Implementations/theme-system-implementation.md`, commit 95c7828): sketches a
   color-first system (ThemeManager, per-theme color asset variants) that
   differs from the shipped image-only `AppTheme`; fold its palette ideas
   into the color-palette item below or archive it.

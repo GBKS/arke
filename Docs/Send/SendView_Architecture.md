@@ -131,9 +131,7 @@ Since then the ViewModel has been decomposed into per-concern extension files, i
 
 ## Related Docs
 
-- `SENDVIEW_USAGE_GUIDE.md`, `SENDVIEW_USAGE_EXAMPLES.md` — integration and usage
-- `SENDVIEW_PREVIEW_STATES.md`, `SENDVIEW_BANNER_COMPARISON.md`, `SENDVIEW_MIGRATION_CHECKLIST.md`
-- `PAYMENT_SOURCE_FLOW_REFERENCE.md`, `QR_CODE_SOURCE_IMPLEMENTATION.md`
+- `../Archive/Implementations/SendView/` — the 11 historical send-flow docs (usage guide/examples, preview states, banner comparison, iOS-port migration checklist, payment-source flow, QR source, payment-request info banner ×3, clipboard banner enhancement), archived 2026-09-27; they describe superseded components (`ClipboardAddressBanner` is gone, `PaymentRequestInfoBanner` is unused, the send views have no `#Preview`s) — this file is the reference
 - `../Payment destination selection/PAYMENT_DESTINATION_SELECTOR.md` — destination ranking
 - `../Features/send-metadata-enhancement.md` — active metadata feature plan
 - `../Features/LNURL_Pay.md` — LNURL-pay behavior

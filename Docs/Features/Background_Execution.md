@@ -12,7 +12,7 @@ often enough — see Open questions) and the relay-initiated
 `mailbox_auth_refresh` wake push is implemented client-side (Decision 2
 amendment; on-device verify pending, see Open_Follow_Ups.md). Phases 2–5
 remain planning; Phase 6 is narrowed to app-computable deadlines.
-Companion doc: [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md)
+Companion doc: [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../Archive/Implementations/RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md)
 (the relay auth token refresh is Phase 1 of this plan and has its own
 detailed work items there).
 
@@ -327,7 +327,7 @@ often iOS's scheduler grants them. (Note: today's check-in reminders are
 
 If the mailbox token lapses, the push channel dies, and push is the wake
 source everything else leans on. The full design is in
-[RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md).
+[RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../Archive/Implementations/RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md).
 One amendment from this plan: build its scheduling/registration plumbing
 as the shared coordinator below, not as a relay-auth-only one-off.
 
@@ -655,7 +655,7 @@ the last line, no in-app "background updates are off" plumbing for now).
 
 ## References
 
-- [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) — Phase 1 detail
+- [RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md](../Archive/Implementations/RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) — Phase 1 detail
 - [Background_Activity_Journal.md](Background_Activity_Journal.md) —
   planned on-device event journal + X-Ray screen making this plan's wake
   layers user-visible (OSLogStore can't read past sessions in-app)

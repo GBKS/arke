@@ -138,7 +138,7 @@ struct Arke_mobile: App {
             if newPhase == .background {
                 // Safety-net BGTask submit: guarantees a pending refresh
                 // request exists even if no foreground path scheduled one
-                // (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4).
+                // (Docs/Archive/Implementations/RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md, design item 4).
                 // Uses the shared renewal date when a registration is active
                 // (a fixed date, so repeated backgrounding re-submits the same
                 // request instead of pushing it later each time).

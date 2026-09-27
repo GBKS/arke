@@ -182,7 +182,7 @@ let strategy: DeletionStrategy = hasOthers ? .localOnly : .promptForCloudData
 
 ## 💡 Lessons Applied
 
-From [REVIEW.md](./REVIEW.md) recommendations:
+From [REVIEW.md](../Initialization/REVIEW.md) recommendations:
 
 ✅ **Applied:**
 - Phase 1: Minimal fix (move device registration out of SecurityService)

@@ -15,7 +15,7 @@ This document is the single source of truth for localization in the Arké projec
 
 ## Key Naming Convention
 
-All keys are **semantic snake_case identifiers**, not English sentences. The codebase was migrated to this scheme in March 2026 (see `LOCALIZATION_MIGRATION_SUMMARY.md` and `LOCALIZATION_UPDATE_SUMMARY.md` in this folder). Plain-English keys are a leftover anti-pattern and should be migrated to semantic keys when touched.
+All keys are **semantic snake_case identifiers**, not English sentences. The codebase was migrated to this scheme in March 2026 (see `../Archive/Migrations/Localization/LOCALIZATION_MIGRATION_SUMMARY.md` and `../Archive/Migrations/Localization/LOCALIZATION_UPDATE_SUMMARY.md` in this folder). Plain-English keys are a leftover anti-pattern and should be migrated to semantic keys when touched.
 
 **Pattern:** `{prefix}_{descriptor}` — e.g. `button_cancel`, `balance_move_to_savings`.
 
@@ -279,7 +279,7 @@ key (state `needs_review` until natively reviewed). Rules:
 
 ## History
 
-- **March 2026:** Migration from English-text keys to semantic snake_case keys (516 keys, 146 files). See `LOCALIZATION_MIGRATION_SUMMARY.md` and `LOCALIZATION_UPDATE_SUMMARY.md`.
+- **March 2026:** Migration from English-text keys to semantic snake_case keys (516 keys, 146 files). See `../Archive/Migrations/Localization/LOCALIZATION_MIGRATION_SUMMARY.md` and `../Archive/Migrations/Localization/LOCALIZATION_UPDATE_SUMMARY.md`.
 - **August 2026:** defaultValue migration — English copy moved into code at 1,252
   call sites (93%; the rest are plural-variation and sanctioned plain-English keys),
   per-module `L10n` accessors added, 51 dead keys purged, guard test added. See

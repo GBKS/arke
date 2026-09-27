@@ -16,7 +16,7 @@ import OSLog
 /// (Background_Execution.md, Architecture).
 ///
 /// Phase 1 scope: the `cash.arke.refresh` BGAppRefreshTask runs the relay
-/// auth refresh (RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) and always
+/// auth refresh (Docs/Archive/Implementations/RELAY_AUTH_BACKGROUND_REFRESH_PLAN.md) and always
 /// reschedules itself — the wake/timing lines double as field data for how
 /// often iOS grants us background time. `cash.arke.maintenance`
 /// (BGProcessingTask) is declared in Info.plist but gets no handler until

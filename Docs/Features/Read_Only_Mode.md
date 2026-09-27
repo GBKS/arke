@@ -55,11 +55,11 @@ Manual two-step migration via Settings → Linked Devices (`LinkedDevicesView_iO
 ## Known Limitations
 
 - Balance/data on secondary devices is a snapshot from the primary's last sync; no manual force-refresh exists.
-- Emergency takeover (primary device lost) is not implemented — see `DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md`.
+- Emergency takeover (primary device lost) is not implemented — see `../Archive/Implementations/DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` (archived; superseded by `../Architecture/Multi_Device_Design.md`).
 - Mock wallet can't exercise backup/restore (methods aren't on `BarkWalletProtocol`), so migration flows lack automated tests.
 
 ## Related Documentation
 
-- `DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` — emergency takeover and hardening (planned)
+- `../Archive/Implementations/DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` (archived; superseded by `../Architecture/Multi_Device_Design.md`) — emergency takeover and hardening (planned)
 - `Device_Registry_Reference.md` — device registration API
-- `LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` — original multi-device analysis
+- `../Archive/Implementations/LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` (archived) — original multi-device analysis

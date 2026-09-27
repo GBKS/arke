@@ -350,9 +350,9 @@ let strategy: DeletionStrategy = hasOthers ? .localOnly : .promptForCloudData
 
 ## 📚 Related Documentation
 
-- [INITIALIZATION_FLOWS.md](./INITIALIZATION_FLOWS.md) - Detailed flow analysis
-- [REVIEW.md](./REVIEW.md) - Architectural assessment and recommendations
-- [DEVICE_REGISTRY_COMPLETE.md](../Archive/Implementations/DEVICE_REGISTRY_COMPLETE.md) - Device registry system
+- [INITIALIZATION_FLOWS.md](../Initialization/INITIALIZATION_FLOWS.md) - Detailed flow analysis
+- [REVIEW.md](../Initialization/REVIEW.md) - Architectural assessment and recommendations
+- [DEVICE_REGISTRY_COMPLETE.md](../DEVICE_REGISTRY_COMPLETE.md) - Device registry system
 
 ---
 
