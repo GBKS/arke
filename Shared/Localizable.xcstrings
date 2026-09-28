@@ -11276,6 +11276,138 @@
         }
       }
     },
+    "data_fiat_rates" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exchange Rates"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_currencies" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Currencies"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_file_time" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File time"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_last_checked" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last checked"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_last_result" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last result"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_decode_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "File did not decode"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_http" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "HTTP %lld"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_network" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network error: %@"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_not_modified" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Not modified"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_rejected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rejected: %@"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_outcome_updated" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Updated (%lld currencies)"
+          }
+        }
+      }
+    },
+    "data_fiat_rates_usd" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 BTC in USD"
+          }
+        }
+      }
+    },
     "data_htlc_claim_delta_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -11731,6 +11863,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "沒有手續費率資料"
+          }
+        }
+      }
+    },
+    "data_no_fiat_rates" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No exchange rates cached yet"
           }
         }
       }

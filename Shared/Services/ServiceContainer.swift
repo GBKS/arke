@@ -41,6 +41,9 @@ class ServiceContainer {
     
     /// Service for requesting signet bitcoin from faucet
     let signetFaucetService: SignetFaucetService
+
+    /// Service for the public exchange-rate file (fiat display only)
+    let ratesService: RatesService
     
     // MARK: - CloudKit Sync
     
@@ -68,6 +71,7 @@ class ServiceContainer {
         self.deviceRegistrationService = DeviceRegistrationService(taskManager: taskManager)
         self.walletDataCleanupService = WalletDataCleanupService(taskManager: taskManager)
         self.signetFaucetService = SignetFaucetService(taskManager: taskManager)
+        self.ratesService = RatesService(taskManager: taskManager)
         
         print("🔧 ServiceContainer initialized at \(Date())")
     }
@@ -214,7 +218,18 @@ private struct SignetFaucetServiceKey: EnvironmentKey {
     static let defaultValue: SignetFaucetService = ServiceContainer.shared.signetFaucetService
 }
 
+/// Environment key for the exchange-rate service
+private struct RatesServiceKey: EnvironmentKey {
+    static let defaultValue: RatesService = ServiceContainer.shared.ratesService
+}
+
 extension EnvironmentValues {
+    /// Convenience accessor for the exchange-rate service
+    var ratesService: RatesService {
+        get { self[RatesServiceKey.self] }
+        set { self[RatesServiceKey.self] = newValue }
+    }
+
     /// Convenience accessor for the security service
     var securityService: SecurityService {
         get { self[SecurityServiceKey.self] }

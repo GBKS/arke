@@ -1,0 +1,191 @@
+# Fiat Rates
+
+Fiat values next to sats, from one public static file that holds every
+currency. Sats are the real amount; fiat is display only.
+
+**Status: Phase 1 DONE 2026-09-28** — client, cache, triggers and X-Ray
+section shipped; 19/19 unit tests green on iOS; live server check passed
+(200 → 30 currencies + ETag, then 304). Phases 2 and 3 open — see §7.
+Nothing user-facing shows fiat yet, by design.
+
+## 1. Source
+
+Rates are published by `arke-rates`, a scheduled job separate from the APNs
+relay. It is not an API; it is one static file, refreshed about every 5
+minutes:
+
+    GET https://rates.arke.cash/v1/rates.json
+
+The server sends `Cache-Control: public, max-age=60`, an `ETag`, and
+answers `If-None-Match` with `304`. Observed 2026-09-28: 30 ISO 4217
+codes, `sources: mempool, kraken, coinbase, bitstamp`.
+
+**Privacy property: every client makes the identical request.** No auth,
+no query parameters, no cookies, no custom headers except `If-None-Match`,
+no per-currency requests. The currency choice never leaves the device. Do
+not add anything that makes requests distinguishable. (URLSession's own
+default headers, including a User-Agent naming the app and OS version,
+identify the app, not the user.)
+
+Credit required by the upstream data provider's free tier (Phase 2 item):
+"Rates By Exchange Rate API" → https://www.exchangerate-api.com
+
+## 2. File contract (v1)
+
+```json
+{
+  "version": 1,
+  "updated_at": 1790006660,
+  "base": "BTC",
+  "rates": { "USD": 85841.88, "EUR": 74863.91, "JPY": 13480254.5 },
+  "sources": ["mempool", "kraken", "coinbase", "bitstamp"]
+}
+```
+
+- `rates[code]` is fiat units per 1 BTC.
+- `updated_at` is Unix seconds when the server produced the file. **Every
+  staleness decision is based on this, never on download time.**
+- A currency can be absent from a file when its sources disagreed. Not an
+  error — the cache keeps the previous value (§4).
+- Unknown top-level fields (a future `signature`) and unknown currency codes
+  are ignored. A breaking change gets a new URL (`/v2/`); this client only
+  accepts `version == 1`.
+
+### Validation — reject the whole file on failure, keep the cache
+
+1. HTTP 200 and the body decodes.
+2. `version == 1` and `base == "BTC"`.
+3. `updated_at` at most 10 minutes in the future (clock skew).
+4. `updated_at ≥` the newest cached timestamp. Never go backwards; equal is
+   fine (the same file seen again).
+5. Per entry: finite, `> 0`, and a code the system knows
+   (`Locale.Currency.isoCurrencies`). Bad entries are dropped individually,
+   the rest kept.
+
+## 3. Code map
+
+All in `Shared/`, so it compiles into both apps (desktop has no UI yet).
+
+| File | Role |
+|------|------|
+| `Services/Rates/RatesFileV1.swift` | Decodable model. Tolerant: unknown fields ignored, non-numeric rate entries dropped. Rates decode Double → shortest string → `Decimal`, so `85841.88` stays exactly that. |
+| `Services/Rates/RatesCache.swift` | `RateSnapshot { value: Decimal, updatedAt }`, `RateFreshness` (fresh / stale / unavailable), `RatesCache` (etag, lastChecked, per-currency rates), `RatesFileRejection`, and `RatesFileProcessor.validate/merge` — pure, `nonisolated`, unit-tested. |
+| `Services/Rates/RatesService.swift` | `@MainActor @Observable`, modelled on `FeeRateService`. `refresh()` never throws; `refreshIfDue()` gates to one attempt per 60 s; `startPeriodicRefresh()/stopPeriodicRefresh()` run the 5-minute loop. Injected `RatesFetcher` closure and clock for tests. Persists to `Application Support/Rates/rates-cache.json`. |
+| `Helpers/FiatConversion.swift` | Decimal-only arithmetic and `Decimal.FormatStyle.Currency` formatting. `fiatAmount(sats:rate:)`, `sats(fiatAmount:rate:)` (rounded to the nearest sat), `formatted(_:currency:locale:)`. |
+| `Helpers/FiatRatesRefreshTriggers.swift` | View modifier: gated refresh on appear and on every `.active`, periodic loop while active, cancelled on `.background`. Attached to `WalletView_iOS`. |
+| `Views/Data/FiatRatesSectionView.swift` | X-Ray section ("Exchange Rates"): currency count, 1 BTC in USD, file time (coloured by freshness), last checked, last result, ETag. The toolbar reload forces a fetch past the 60 s gate. |
+| `ServiceContainer.ratesService` + `\.ratesService` environment key | Wallet-independent, so it lives in the container, not `WalletManager`. |
+| `Tests/Shared/RatesServiceTests.swift` | The spec's cases 1–11 plus boundaries (equal timestamp, future skew, bad entries, 60 s gate after failure, non-2xx). |
+
+## 4. Behaviour
+
+**Networking.** A dedicated `URLSession(configuration: .ephemeral)` with
+`httpCookieStorage = nil`, `httpShouldSetCookies = false`, `urlCache = nil`,
+15 s timeout. Requests use `.reloadIgnoringLocalCacheData`; revalidation is
+done by hand with the stored ETag so the ETag is only ever written together
+with a file that passed validation. On `304` only `lastChecked` moves.
+
+**Triggers.** All foreground, all gated on a wallet existing (the modifier
+sits on the wallet root, so onboarding makes no request and the launch
+contract is untouched):
+
+- appearance of the wallet UI and every return to `.active`, if the last
+  attempt was more than 60 s ago;
+- a repeating task every 5 minutes while active, cancelled on `.background`;
+- pull-to-refresh on the Activity screen (which hosts the total
+  `BalanceCard`) and the Balance screen, fire-and-forget so the spinner
+  tracks the wallet refresh alone, gated to 60 s, and **also in read-only
+  mode** (rates need no Ark server).
+- **No** background fetch, no push-triggered fetch, no per-currency requests.
+  On a network error nothing is visible; wait for the next trigger.
+
+The 60 s gate counts *attempts*, including failures, so an outage cannot be
+hammered by repeated pulls. The persisted `lastChecked` only records
+completed checks (200 or 304) — a failed attempt is not a check.
+
+**Persistence.** One JSON file in Application Support (not the Keychain;
+this data is not secret and not wallet data). Merged per currency: a new
+file overwrites the codes it contains; codes it lacks keep their previous
+value **and timestamp**, so a currency that fell out of a file goes stale
+on its own clock. An unreadable file (torn write, future schema) starts an
+empty cache, never fatal.
+
+**Staleness**, per selected currency, `age = now − snapshot.updatedAt`:
+
+| Age | Freshness | Display (Phase 3) |
+|-----|-----------|-------------------|
+| `< 15 min` | fresh | fiat shown normally |
+| `15 min ≤ age < 24 h` | stale | fiat shown with a subtle indicator ("as of 14:05" or dimmed). No alert, no banner. |
+| `≥ 24 h`, or no snapshot | unavailable | fiat hidden, sats only; a short "Price unavailable" where fiat would appear is fine |
+
+**Conversion.** `Decimal` only, never `Double`, for money:
+
+- `fiat = Decimal(sats) × rate ÷ 100_000_000`
+- Formatting through `Decimal.FormatStyle.Currency(code:)` so each currency
+  gets its own fraction digits (JPY 0, most others 2).
+- Typed fiat: `sats = fiat × 100_000_000 ÷ rate`, rounded to the nearest
+  whole sat. **From then on the sats value is the source of truth**; never
+  recompute it from fiat after a rates refresh.
+
+**Money safety** (binding on Phase 3):
+
+- Send, receive and invoice amounts are always sats. A confirmation screen
+  shows sats first and fiat as a secondary "≈".
+- A rates refresh while a send is being confirmed must not change the
+  amount being sent.
+- Never block a payment because rates are missing or stale.
+
+**Currency selection** (Phase 2): default `Locale.current.currency?.identifier`
+if present in `availableCurrencies`, else `USD`. Persisted on device. A
+chosen code missing from the cache is treated as "no snapshot" → fiat hidden.
+
+## 5. Decisions and proposals
+
+Decided with the Phase 1 approval (2026-09-28):
+
+- Three deliberate phases: load properly → settings → see how it fits the UI.
+- Rates start only once a wallet exists (modifier on the wallet root).
+- Pull-to-refresh hooks into both the Activity and Balance screens and runs
+  in read-only mode too.
+- Fiat conversion is a separate `Decimal` helper, not bolted onto
+  `BitcoinFormatter` (which works in `Double` and formats bitcoin units).
+- Fiat *entry* (typing a fiat amount) is deferred past Phase 3 and decided
+  after display-only fiat has been seen in the UI.
+
+Proposals still awaiting a call (not decisions):
+
+- **Credits placement**: a new "About" row in Settings → Help & Learning,
+  with version and credits. No About/credits screen exists today, and the
+  credit line is required before any fiat value is user-visible.
+- **Wallet deletion**: clear the currency preference with other preferences;
+  leave the rates cache (not wallet data, not secret).
+- **`BalanceDetailCard` bypasses `BitcoinFormatter`** (hardcodes
+  `formatted() ₿`). Out of scope here; the moment fiat is added to those
+  cards is the moment to fix it.
+
+## 6. Verification record
+
+- 2026-09-28: `RatesServiceTests` + `FiatRatesLogicTests` 19/19 on iPhone 17
+  Pro simulator (xcodebuild). Full mobile suite: see Open_Follow_Ups for the
+  run result.
+- 2026-09-28: live check — the real `RatesService` compiled into a macOS
+  command-line binary against `rates.arke.cash`: first `refresh()` →
+  `.updated(currencies: 30)`, ETag stored, USD `83384.43` exact in Decimal,
+  100 000 sats → `$83.38`; second `refresh()` → `.notModified`, `lastChecked`
+  advanced. Cache file written as pretty-printed JSON with ISO-8601 dates.
+- Owed: on-device look at the X-Ray "Exchange Rates" section on a wallet
+  install (the simulator has no wallet, so the trigger never fires there).
+
+## 7. Phases
+
+1. **Loads properly — DONE.** Everything in §3. Visible only in X-Ray.
+2. **Settings.** Currency picker view in `Shared/Views/Settings` modelled on
+   `ThemeSettingView`; `UserDefaults` key in `UserSettings.swift`; a
+   "Currency" row in the General section showing "Currently: USD"; default
+   from the device locale. Plus the About screen with the credit line.
+3. **UI fit, exploratory.** `BalanceCard` secondary line first, then the
+   detail cards, transaction rows, send confirmation "≈". Staleness shown as
+   "as of 14:05" or a dimmed value. Fix `BalanceDetailCard`'s formatter
+   bypass while there.
+4. **Later, separately decided:** fiat entry in the send flow; desktop UI
+   (the service already compiles there — see `Desktop_Parity.md`).

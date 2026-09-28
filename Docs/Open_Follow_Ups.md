@@ -1176,6 +1176,31 @@ bindings.
   becomes an orphan the next catalog re-extraction prunes. Git history:
   `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
 
+## Fiat Rates (guiding doc: `Features/Fiat_Rates.md`)
+
+Phase 1 (client + cache + triggers + X-Ray section) shipped 2026-09-28,
+19/19 unit tests, live-server check passed. Nothing user-facing shows fiat
+yet, by design.
+
+- [ ] **On-device look at the X-Ray "Exchange Rates" section** on a wallet
+  install: currency count, file time, last checked, last result. The
+  simulator has no wallet, so the wallet-root trigger never fires there.
+- [ ] **Phase 2 — currency setting**: picker view (model on
+  `ThemeSettingView`), `UserDefaults` key in `UserSettings.swift`, General
+  section row "Currency — Currently: USD", locale default with USD fallback.
+- [ ] **Phase 2 — About screen with the required credit** ("Rates By Exchange
+  Rate API" → exchangerate-api.com). PROPOSAL: new row in Settings → Help &
+  Learning with version + credits; no About/credits surface exists today.
+  Must land before any fiat value is user-visible.
+- [ ] **Phase 3 — UI fit** (exploratory): `BalanceCard` secondary line,
+  detail cards, transaction rows, send confirmation "≈", stale indicator.
+  Fix `BalanceDetailCard`'s `BitcoinFormatter` bypass while there.
+- [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the
+  currency preference with other preferences, leave the cache.
+- [ ] **Deferred: fiat entry in the send flow** — decide after Phase 3.
+- [ ] **New X-Ray string keys** (`data_fiat_rates*`) need de/ja/zh-Hant
+  passes like other recent strings.
+
 ## Code Findings From the 2026-09-27 Doc Rewrites
 
 Surfaced while rewriting four plan docs into references against the code

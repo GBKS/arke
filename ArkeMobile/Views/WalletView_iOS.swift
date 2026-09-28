@@ -409,6 +409,9 @@ struct WalletView_iOS: View {
             .tag(WalletTab.receive)
         }
         .tint(Color.Arke.gold)
+        // Exchange-rate refreshes live on the wallet root so they only run
+        // once a wallet exists (Fiat_Rates.md) — not during onboarding
+        .fiatRatesRefreshTriggers()
         .sheet(item: $editingContact) { contact in
             NavigationStack {
                 ContactEditor_iOS(

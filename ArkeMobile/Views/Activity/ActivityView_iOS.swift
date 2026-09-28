@@ -12,6 +12,7 @@ import ArkeUI
 struct ActivityView_iOS: View {
     @Environment(WalletManager.self) private var manager
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.ratesService) private var ratesService
     @Binding var selectedTransaction: TransactionModel?
     let filterTag: PersistentTag?
     let filterContact: PersistentContact?

@@ -10,6 +10,7 @@ import ArkeUI
 
 struct BalanceView_iOS: View {
     @Environment(WalletManager.self) private var manager
+    @Environment(\.ratesService) private var ratesService
     @State private var showingBoardingModal = false
     @State private var showingOffboardingModal = false
     @State private var showingRefreshModal = false
@@ -149,6 +150,11 @@ struct BalanceView_iOS: View {
                 .ignoresSafeArea()
         )
         .refreshable {
+            // Exchange rates need no Ark server, so they refresh in every
+            // mode; gated to one request per 60s and not awaited, so the
+            // spinner tracks the wallet refresh alone
+            Task { await ratesService.refreshIfDue() }
+
             // Only allow refresh in primary mode
             if !manager.isReadOnlyMode {
                 await manager.refresh()

@@ -26,6 +26,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 - **[Send_Metadata.md](Send_Metadata.md)** — assigning contact, tags, and notes during send (`PendingPaymentMetadata`)
 - **[LNURL_Pay.md](LNURL_Pay.md)** — LNURL-pay send support
 - **[Signet_Faucet.md](Signet_Faucet.md)** — the signet faucet contact
+- **[Fiat_Rates.md](Fiat_Rates.md)** — fiat values next to sats from one public rates file: contract, cache, staleness, money-safety rules, phases
 
 ## Data
 
