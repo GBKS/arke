@@ -35,6 +35,11 @@ extension UserDefaults {
     /// Key for storing the selected app theme (AppTheme raw value)
     static let appThemeKey = "appTheme"
 
+    /// Key for the display currency (ISO 4217 code) fiat values are shown
+    /// in. Empty means "not chosen" — see FiatCurrencyPreference.resolve.
+    /// Never leaves the device; the rates file holds every currency.
+    static let fiatCurrencyKey = "fiatCurrency"
+
     /// Key recording that this install has completed at least one wallet sync
     /// that reached the server. Once set, an empty local transaction cache at
     /// launch is trustworthy, so the transaction list can skip its skeleton.

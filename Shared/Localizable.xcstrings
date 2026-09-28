@@ -20195,6 +20195,72 @@
         }
       }
     },
+    "settings_currency" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Currency"
+          }
+        }
+      }
+    },
+    "settings_currency_credit" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rates by Exchange Rate API"
+          }
+        }
+      }
+    },
+    "settings_currency_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose the currency for showing the value of your bitcoin. Amounts are always in bitcoin; the conversion is for reference only."
+          }
+        }
+      }
+    },
+    "settings_currency_rates_as_of" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Rates as of %@"
+          }
+        }
+      }
+    },
+    "settings_currency_rates_pending" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exchange rates haven't loaded yet. More currencies appear once they do."
+          }
+        }
+      }
+    },
+    "settings_currency_sample" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 BTC ≈ %@"
+          }
+        }
+      }
+    },
     "settings_danger_zone" : {
       "localizations" : {
         "de" : {

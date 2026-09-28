@@ -28,6 +28,10 @@ struct SettingsView_iOS: View {
     @AppStorage(UserDefaults.appThemeKey)
     private var appTheme: String = AppTheme.defaultTheme.rawValue
 
+    @AppStorage(UserDefaults.fiatCurrencyKey)
+    private var fiatCurrency: String = ""
+    @Environment(\.ratesService) private var ratesService
+
     @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 24
     @ScaledMetric(relativeTo: .body) private var avatarSize: CGFloat = 40
 
@@ -46,6 +50,10 @@ struct SettingsView_iOS: View {
 
     private var selectedTheme: AppTheme {
         AppTheme(rawValue: appTheme) ?? .defaultTheme
+    }
+
+    private var selectedCurrency: String {
+        FiatCurrencyPreference.resolve(stored: fiatCurrency, available: ratesService.availableCurrencies)
     }
     
     var body: some View {
@@ -112,6 +120,25 @@ struct SettingsView_iOS: View {
                             Text(String(localized: "settings_unit_format", defaultValue: "Unit Format"))
                                 .font(.body)
                             Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedFormat.displayName)"))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+
+                // Currency (fiat display; rates need no Ark server, so shown in every mode)
+                NavigationLink(destination: CurrencySettingView()) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "dollarsign.circle.fill")
+                            .foregroundColor(.Arke.gold)
+                            .accessibilityHidden(true)
+                            .frame(width: iconSize, height: iconSize)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(String(localized: "settings_currency", defaultValue: "Currency"))
+                                .font(.body)
+                            Text(String(localized: "format_currently", defaultValue: "Currently: \(selectedCurrency)"))
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                         }

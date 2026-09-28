@@ -3,10 +3,13 @@
 Fiat values next to sats, from one public static file that holds every
 currency. Sats are the real amount; fiat is display only.
 
-**Status: Phase 1 DONE 2026-09-28** — client, cache, triggers and X-Ray
+**Status: Phase 1 DONE 2026-09-28 (committed f2f002e); Phase 2 currency
+picker BUILT 2026-09-28, uncommitted** — client, cache, triggers and X-Ray
 section shipped; 19/19 unit tests green on iOS; live server check passed
-(200 → 30 currencies + ETag, then 304). Phases 2 and 3 open — see §7.
-Nothing user-facing shows fiat yet, by design.
+(200 → 30 currencies + ETag, then 304). The Settings → Currency picker
+carries the required credit in its footer, so no About screen is needed
+(Christoph's call 2026-09-28). 24/24 tests with the preference suite.
+Phase 3 open — see §7. Nothing outside the picker shows fiat yet, by design.
 
 ## 1. Source
 
@@ -76,6 +79,8 @@ All in `Shared/`, so it compiles into both apps (desktop has no UI yet).
 | `Views/Data/FiatRatesSectionView.swift` | X-Ray section ("Exchange Rates"): currency count, 1 BTC in USD, file time (coloured by freshness), last checked, last result, ETag. The toolbar reload forces a fetch past the 60 s gate. |
 | `ServiceContainer.ratesService` + `\.ratesService` environment key | Wallet-independent, so it lives in the container, not `WalletManager`. |
 | `Tests/Shared/RatesServiceTests.swift` | The spec's cases 1–11 plus boundaries (equal timestamp, future skew, bad entries, 60 s gate after failure, non-2xx). |
+| `Helpers/FiatCurrencyPreference.swift` | Phase 2. `UserDefaults.fiatCurrencyKey` resolution (stored → locale currency if cached → USD), localized names, picker ordering. Pure, tested in `FiatCurrencyPreferenceTests`. |
+| `Views/Settings/CurrencySettingView.swift` | Phase 2. Settings sub-page modelled on `ThemeSettingView`: one row per cached code with localized name and "1 BTC ≈ …" in that currency's own formatting; locale currency pinned first; "rates not loaded yet" note on an empty cache; footer with the file time and the required "Rates by Exchange Rate API" link. Reached from a "Currency — Currently: USD" row in `SettingsView_iOS`'s General section, visible in read-only mode too. |
 
 ## 4. Behaviour
 
@@ -152,13 +157,16 @@ Decided with the Phase 1 approval (2026-09-28):
 - Fiat *entry* (typing a fiat amount) is deferred past Phase 3 and decided
   after display-only fiat has been seen in the UI.
 
+- Credits live in the currency picker's footer, not on a separate About
+  screen (decided 2026-09-28 when Phase 2 was narrowed to the picker).
+
 Proposals still awaiting a call (not decisions):
 
-- **Credits placement**: a new "About" row in Settings → Help & Learning,
-  with version and credits. No About/credits screen exists today, and the
-  credit line is required before any fiat value is user-visible.
-- **Wallet deletion**: clear the currency preference with other preferences;
-  leave the rates cache (not wallet data, not secret).
+- **Wallet deletion**: `WalletDataCleanupService` removes balance privacy,
+  notifications, address icons and proximity keys but leaves theme and unit
+  format alone. Proposal: treat `fiatCurrencyKey` like theme and unit format
+  — leave it, and leave the rates cache (not wallet data, not secret). Built
+  that way for now.
 - **`BalanceDetailCard` bypasses `BitcoinFormatter`** (hardcodes
   `formatted() ₿`). Out of scope here; the moment fiat is added to those
   cards is the moment to fix it.
@@ -179,10 +187,10 @@ Proposals still awaiting a call (not decisions):
 ## 7. Phases
 
 1. **Loads properly — DONE.** Everything in §3. Visible only in X-Ray.
-2. **Settings.** Currency picker view in `Shared/Views/Settings` modelled on
-   `ThemeSettingView`; `UserDefaults` key in `UserSettings.swift`; a
-   "Currency" row in the General section showing "Currently: USD"; default
-   from the device locale. Plus the About screen with the credit line.
+2. **Settings — BUILT 2026-09-28.** `CurrencySettingView` +
+   `FiatCurrencyPreference` + the General-section row; credit in the
+   picker footer. Owed: on-device look, translations of the six new
+   `settings_currency*` keys.
 3. **UI fit, exploratory.** `BalanceCard` secondary line first, then the
    detail cards, transaction rows, send confirmation "≈". Staleness shown as
    "as of 14:05" or a dimmed value. Fix `BalanceDetailCard`'s formatter

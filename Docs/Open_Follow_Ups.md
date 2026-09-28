@@ -1185,21 +1185,23 @@ yet, by design.
 - [ ] **On-device look at the X-Ray "Exchange Rates" section** on a wallet
   install: currency count, file time, last checked, last result. The
   simulator has no wallet, so the wallet-root trigger never fires there.
-- [ ] **Phase 2 — currency setting**: picker view (model on
-  `ThemeSettingView`), `UserDefaults` key in `UserSettings.swift`, General
-  section row "Currency — Currently: USD", locale default with USD fallback.
-- [ ] **Phase 2 — About screen with the required credit** ("Rates By Exchange
-  Rate API" → exchangerate-api.com). PROPOSAL: new row in Settings → Help &
-  Learning with version + credits; no About/credits surface exists today.
-  Must land before any fiat value is user-visible.
+- [x] **Phase 2 — currency setting — built 2026-09-28**: `CurrencySettingView`
+  (Shared, modelled on `ThemeSettingView`), `FiatCurrencyPreference`
+  (stored → locale currency if cached → USD; 5 tests), `fiatCurrencyKey`,
+  General-section row "Currency — Currently: USD". Owed: on-device look.
+- [x] **Credit placement — decided 2026-09-28**: the "Rates by Exchange Rate
+  API" link lives in the picker's footer; no About screen.
 - [ ] **Phase 3 — UI fit** (exploratory): `BalanceCard` secondary line,
   detail cards, transaction rows, send confirmation "≈", stale indicator.
   Fix `BalanceDetailCard`'s `BitcoinFormatter` bypass while there.
 - [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the
   currency preference with other preferences, leave the cache.
 - [ ] **Deferred: fiat entry in the send flow** — decide after Phase 3.
-- [ ] **New X-Ray string keys** (`data_fiat_rates*`) need de/ja/zh-Hant
-  passes like other recent strings.
+- [ ] **New string keys** (`data_fiat_rates*`, `settings_currency*`) need
+  de/ja/zh-Hant passes like other recent strings.
+- [ ] **Desktop: embed `CurrencySettingView`** in the desktop settings next
+  to `ThemeSettingView` (one line; the view is Shared and already compiles
+  there). Part of `Desktop_Parity.md`.
 
 ## Code Findings From the 2026-09-27 Doc Rewrites
 
