@@ -27,6 +27,13 @@ struct BalanceDetailCard: View {
         return 80
         #endif
     }
+
+    /// Amounts go through the shared formatter so the card honours the
+    /// unit-format setting like the rest of the app (it used to hardcode
+    /// "N ₿")
+    private func formatted(_ sats: Int) -> String {
+        BitcoinFormatter.shared.formatAmount(sats)
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: 20) {
@@ -57,7 +64,7 @@ struct BalanceDetailCard: View {
                                 .foregroundColor(.white.opacity(0.75))
                             Spacer()
                             if let spendable = spendable {
-                                Text("\(spendable.formatted()) ₿")
+                                Text(formatted(spendable))
                                     .font(.body)
                                     .fontWeight(.medium)
                                     .foregroundColor(.white)
@@ -76,7 +83,7 @@ struct BalanceDetailCard: View {
                                             .font(.body)
                                             .foregroundColor(.white.opacity(0.75))
                                         Spacer()
-                                        Text("\(item.amount.formatted()) ₿")
+                                        Text(formatted(item.amount))
                                             .font(.body)
                                             .fontWeight(.medium)
                                             .foregroundColor(.white)
@@ -95,7 +102,7 @@ struct BalanceDetailCard: View {
                                         .foregroundColor(.white.opacity(0.75))
                                     Spacer()
                                     if let pending = pending {
-                                        Text("\(pending.formatted()) ₿")
+                                        Text(formatted(pending))
                                             .font(.body)
                                             .fontWeight(.medium)
                                             .foregroundColor(.white)
@@ -119,7 +126,7 @@ struct BalanceDetailCard: View {
                                     .foregroundColor(.white.opacity(0.75))
                                 Spacer()
                                 if let pending = pending {
-                                    Text("\(pending.formatted()) ₿")
+                                    Text(formatted(pending))
                                         .font(.body)
                                         .fontWeight(.medium)
                                         .foregroundColor(.white)
@@ -136,15 +143,23 @@ struct BalanceDetailCard: View {
                         .overlay(.white.opacity(0.3))
                         .padding(.vertical, 5)
                     
-                    HStack {
+                    HStack(alignment: .firstTextBaseline) {
                         Text(String(localized: "label_total", defaultValue: "Total"))
                             .font(.title2)
                             .foregroundColor(.white.opacity(0.75))
                         Spacer()
                         if let total = total {
-                            Text("\(total.formatted()) ₿")
-                                .font(.title2)
-                                .foregroundColor(.white)
+                            // Total with its fiat value beneath, right-aligned
+                            // (Fiat_Rates.md, Phase 3 step 4)
+                            VStack(alignment: .trailing, spacing: 0) {
+                                Text(formatted(total))
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+
+                                FiatAmountText(sats: total, hidesZero: true)
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.75))
+                            }
                         } else {
                             Text(L10n.symbolEmDash)
                                 .font(.title2)

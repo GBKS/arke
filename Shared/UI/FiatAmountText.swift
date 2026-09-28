@@ -21,6 +21,10 @@ struct FiatAmountText: View {
     /// Append the file age when the rate is stale (15 min – 24 h old)
     var showsStaleAge: Bool = true
 
+    /// Render nothing for a zero amount — for static balances, where
+    /// "≈ $0.00" adds noise without information
+    var hidesZero: Bool = false
+
     @Environment(\.ratesService) private var ratesService
     @AppStorage(UserDefaults.fiatCurrencyKey) private var storedCurrency: String = ""
 
@@ -37,11 +41,14 @@ struct FiatAmountText: View {
     }
 
     private func display(now: Date) -> (text: String, isStale: Bool)? {
+        if hidesZero && sats == 0 { return nil }
         let currency = FiatCurrencyPreference.resolve(
             stored: storedCurrency,
             available: ratesService.availableCurrencies
         )
-        guard let snapshot = ratesService.rate(for: currency) else { return nil }
+        // "None" in settings hides fiat everywhere
+        guard !FiatCurrencyPreference.isNone(currency),
+              let snapshot = ratesService.rate(for: currency) else { return nil }
 
         let amount = FiatConversion.formattedFiat(sats: sats, rate: snapshot.value, currency: currency)
 

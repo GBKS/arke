@@ -81,7 +81,7 @@ All in `Shared/`, so it compiles into both apps (desktop has no UI yet).
 | `ServiceContainer.ratesService` + `\.ratesService` environment key | Wallet-independent, so it lives in the container, not `WalletManager`. |
 | `Tests/Shared/RatesServiceTests.swift` | The spec's cases 1–11 plus boundaries (equal timestamp, future skew, bad entries, 60 s gate after failure, non-2xx). |
 | `Helpers/FiatCurrencyPreference.swift` | Phase 2. `UserDefaults.fiatCurrencyKey` resolution (stored → locale currency if cached → USD), localized names, picker ordering. Pure, tested in `FiatCurrencyPreferenceTests`. |
-| `Views/Settings/CurrencySettingView.swift` | Phase 2. Settings sub-page modelled on `ThemeSettingView`: one row per cached code with localized name and "1 BTC ≈ …" in that currency's own formatting; locale currency pinned first; "rates not loaded yet" note on an empty cache; footer with the file time and the required "Rates by Exchange Rate API" link. Reached from a "Currency — Currently: USD" row in `SettingsView_iOS`'s General section, visible in read-only mode too. |
+| `Views/Settings/CurrencySettingView.swift` | Phase 2. Settings sub-page modelled on `ThemeSettingView`: a single right-aligned "1 BTC ≈" caption heading the whole list, then a "None — Show bitcoin amounts only" row, then one row per cached code with localized name and the value of 1 BTC in that currency's own formatting (the caption replaced a per-row "1 BTC ≈" prefix Christoph found repetitive, 2026-09-28); locale currency pinned first; "rates not loaded yet" note on an empty cache; footer with the file time and the required "Rates by Exchange Rate API" link. Reached from a "Currency — Currently: USD" (or "None") row in `SettingsView_iOS`'s General section, visible in read-only mode too. |
 
 ## 4. Behaviour
 
@@ -144,6 +144,9 @@ empty cache, never fatal.
 **Currency selection** (Phase 2): default `Locale.current.currency?.identifier`
 if present in `availableCurrencies`, else `USD`. Persisted on device. A
 chosen code missing from the cache is treated as "no snapshot" → fiat hidden.
+**"None"** (stored sentinel `FiatCurrencyPreference.none`, added
+2026-09-28 at Christoph's request) is a first-class choice that hides fiat
+on every surface; `FiatAmountText` checks it before looking up a rate.
 
 ## 5. Decisions and proposals
 
@@ -155,6 +158,11 @@ Decided with the Phase 1 approval (2026-09-28):
   in read-only mode too.
 - Fiat conversion is a separate `Decimal` helper, not bolted onto
   `BitcoinFormatter` (which works in `Double` and formats bitcoin units).
+- Currency symbols stay locale-aware (standard presentation): US devices
+  show "$", the UK/Canada/Australia show "US$"/"USD" for USD because a
+  bare "$" is ambiguous there. Decided 2026-09-28 against forcing the
+  narrow symbol everywhere; `.presentation(.narrow)` is the one-line
+  switch if that ever changes.
 - Fiat *entry* (typing a fiat amount) is deferred past Phase 3 and decided
   after display-only fiat has been seen in the UI.
 
@@ -226,10 +234,19 @@ Proposals still awaiting a call (not decisions):
      same parser the view model uses, because the receive field follows
      the unit format (it can hold decimal BTC). The address list
      (`AddressDisplayView`) only encodes the amount, never shows it.
-   - Next candidates: `BalanceDetailCard` rows (fix its `BitcoinFormatter`
-     bypass while there), transaction detail (needs the "today's rate"
-     wording decision), transaction rows, the balance card's accessibility
-     value.
+   - Step 4 — DONE, approved on device 2026-09-28: the Balance
+     screen's Payments and Savings cards (`BalanceDetailCard`). The fiat
+     line sits under the Total amount, right-aligned, body size, white at
+     75 % like the row labels (Christoph: secondary, not full white), and
+     hidden for a zero total via `FiatAmountText(hidesZero:)` — a static
+     "≈ $0.00" adds noise without information;
+     Available and Pending rows stay sats-only to keep the card quiet. All
+     five amounts in the card now go through `BitcoinFormatter` instead of
+     the hardcoded "N ₿" — a visible change on its own: the default format
+     puts the symbol in front ("₿ 1,000"), and the Satoshis format now
+     reads "1,000 sats" here too.
+   - Next candidates: transaction detail (needs the "today's rate" wording
+     decision), transaction rows, the balance card's accessibility value.
 4. **Later, separately decided:** fiat entry in the send flow; desktop UI
    (the service already compiles there — see `Desktop_Parity.md`).
    Christoph's direction 2026-09-28: finish fiat *display* in all the right
