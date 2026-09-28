@@ -492,7 +492,9 @@ struct QuickPaymentView: View {
                             minimumSendAmount: minimumSendAmount,
                             onCalculateMaxSendable: onCalculateMaxSendable,
                             isAmountFieldFocused: $isAmountFieldFocused
-                        )
+                        ) {
+                            SendAmountFiatLine(amount: amount)
+                        }
                         .disabled(isSending)
                     }
                     

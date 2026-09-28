@@ -422,7 +422,9 @@ struct ContactPaymentView: View {
                 minimumSendAmount: minimumSendAmount,
                 onCalculateMaxSendable: onCalculateMaxSendable,
                 isAmountFieldFocused: $isAmountFieldFocused
-            )
+            ) {
+                SendAmountFiatLine(amount: amount)
+            }
             
             FeeDisplayView(
                 fee: feeAmount,

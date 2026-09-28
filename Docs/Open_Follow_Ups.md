@@ -1193,14 +1193,20 @@ yet, by design.
   API" link lives in the picker's footer; no About screen.
 - [ ] **Phase 3 — UI fit** (exploratory, one surface at a time): step 1
   `BalanceCard` secondary line via `FiatAmountText` — approved on device
-  2026-09-28. Remaining candidates: detail cards (fix `BalanceDetailCard`'s
-  `BitcoinFormatter` bypass while there), transaction rows, transaction
-  detail, send confirmation "≈", balance-card accessibility value.
+  2026-09-28. Step 2 send amount field "≈" line (`SendAmountFiatLine` via
+  the new `AmountInputSection` accessory slot) built 2026-09-28, awaiting
+  on-device look. Remaining candidates: detail cards (fix
+  `BalanceDetailCard`'s `BitcoinFormatter` bypass while there), transaction
+  detail (decide "today's rate" wording first), transaction rows,
+  receive/invoice amounts, balance-card accessibility value.
 - [x] **On-device look at X-Ray section and currency picker — done by
   Christoph 2026-09-28**, looked good.
 - [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the
   currency preference with other preferences, leave the cache.
-- [ ] **Deferred: fiat entry in the send flow** — decide after Phase 3.
+- [ ] **Deferred: fiat entry in the send flow** — after fiat *display* is in
+  all the right places (Christoph, 2026-09-28). Design sketch (tap fiat
+  text to swap roles, sats string stays truth) recorded in
+  `Features/Fiat_Rates.md` §7 item 4.
 - [ ] **New string keys** (`data_fiat_rates*`, `settings_currency*`) need
   de/ja/zh-Hant passes like other recent strings.
 - [ ] **Desktop: embed `CurrencySettingView`** in the desktop settings next

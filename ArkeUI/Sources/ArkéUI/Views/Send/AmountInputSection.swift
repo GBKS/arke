@@ -7,7 +7,11 @@
 
 import SwiftUI
 
-public struct AmountInputSection: View {
+/// The sats entry card of the send flow. `Accessory` is an optional slot
+/// rendered directly under the amount field — the app uses it for the
+/// fiat "≈" line, which this package cannot build itself (it has no
+/// access to the rates service). Defaults to nothing.
+public struct AmountInputSection<Accessory: View>: View {
     @Binding var amount: String
     let maxSpendableAmount: Int
     let availableBalanceText: String
@@ -18,6 +22,10 @@ public struct AmountInputSection: View {
     let lockedAmountReason: String?
     let minimumSendAmount: Int
     let onCalculateMaxSendable: (() async -> Int?)?
+    let amountAccessory: () -> Accessory
+
+    /// Longest sats entry accepted (9,999,999,999 sats ≈ 99.99 BTC)
+    public static var maxAmountDigits: Int { 10 }
     
     @FocusState.Binding var isAmountFieldFocused: Bool
 
@@ -32,7 +40,8 @@ public struct AmountInputSection: View {
         lockedAmountReason: String?,
         minimumSendAmount: Int,
         onCalculateMaxSendable: (() async -> Int?)?,
-        isAmountFieldFocused: FocusState<Bool>.Binding
+        isAmountFieldFocused: FocusState<Bool>.Binding,
+        @ViewBuilder amountAccessory: @escaping () -> Accessory
     ) {
         self._amount = amount
         self.maxSpendableAmount = maxSpendableAmount
@@ -45,6 +54,7 @@ public struct AmountInputSection: View {
         self.minimumSendAmount = minimumSendAmount
         self.onCalculateMaxSendable = onCalculateMaxSendable
         self._isAmountFieldFocused = isAmountFieldFocused
+        self.amountAccessory = amountAccessory
     }
 
     private var exceedsBalance: Bool {
@@ -92,28 +102,40 @@ public struct AmountInputSection: View {
                 }
             }
             
-            TextField(L10n.formatZero, text: $amount)
-                .textFieldStyle(.plain)
-                .font(.title)
-                .foregroundColor(exceedsBalance ? .orange : .primary)
-                #if os(iOS)
-                .keyboardType(.numberPad)
-                //.padding(.horizontal, 16)
-                //.padding(.vertical, 12)
-                #endif
-                .focused($isAmountFieldFocused)
-                //.background(Color.gray.opacity(isAmountLocked ? 0.05 : 0.1))
-                //.cornerRadius(16)
-                .disabled(isAmountLocked)
-                .onChange(of: amount) { oldValue, newValue in
-                    if newValue.count > 20 {
-                        amount = String(newValue.prefix(20))
+            // Field on the left taking the flexible width, accessory (the
+            // fiat "≈" line) on the right, sharing the field's baseline
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                TextField(L10n.formatZero, text: $amount)
+                    .textFieldStyle(.plain)
+                    .font(.title)
+                    .foregroundColor(exceedsBalance ? .orange : .primary)
+                    #if os(iOS)
+                    .keyboardType(.numberPad)
+                    //.padding(.horizontal, 16)
+                    //.padding(.vertical, 12)
+                    #endif
+                    .focused($isAmountFieldFocused)
+                    //.background(Color.gray.opacity(isAmountLocked ? 0.05 : 0.1))
+                    //.cornerRadius(16)
+                    .disabled(isAmountLocked)
+                    .onChange(of: amount) { oldValue, newValue in
+                        // 10 digits = just under 100 BTC, far beyond what
+                        // this wallet is for; keeps the row from overflowing
+                        if newValue.count > Self.maxAmountDigits {
+                            amount = String(newValue.prefix(Self.maxAmountDigits))
+                        }
                     }
-                }
-                .accessibilityLabel(Text(String(localized: "accessibility_amount_field", defaultValue: "Send amount", bundle: .module)))
-                .accessibilityValue(exceedsBalance
-                    ? Text(String(localized: "accessibility_value_exceeds_balance", defaultValue: "Exceeds available balance", bundle: .module))
-                    : Text(verbatim: ""))
+                    .accessibilityLabel(Text(String(localized: "accessibility_amount_field", defaultValue: "Send amount", bundle: .module)))
+                    .accessibilityValue(exceedsBalance
+                        ? Text(String(localized: "accessibility_value_exceeds_balance", defaultValue: "Exceeds available balance", bundle: .module))
+                        : Text(verbatim: ""))
+
+                // Fiat "≈" line or nothing — supplied by the app. One line,
+                // shrinking before it wraps or crowds the field.
+                amountAccessory()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
             
             Divider()
             
@@ -181,6 +203,40 @@ public struct AmountInputSection: View {
     }
 }
 
+// MARK: - No accessory
+
+extension AmountInputSection where Accessory == EmptyView {
+    /// The original initializer: no accessory under the field
+    public init(
+        amount: Binding<String>,
+        maxSpendableAmount: Int,
+        availableBalanceText: String,
+        availableBalanceName: String,
+        availableBalanceAmount: String,
+        feeText: String,
+        isAmountLocked: Bool,
+        lockedAmountReason: String?,
+        minimumSendAmount: Int,
+        onCalculateMaxSendable: (() async -> Int?)?,
+        isAmountFieldFocused: FocusState<Bool>.Binding
+    ) {
+        self.init(
+            amount: amount,
+            maxSpendableAmount: maxSpendableAmount,
+            availableBalanceText: availableBalanceText,
+            availableBalanceName: availableBalanceName,
+            availableBalanceAmount: availableBalanceAmount,
+            feeText: feeText,
+            isAmountLocked: isAmountLocked,
+            lockedAmountReason: lockedAmountReason,
+            minimumSendAmount: minimumSendAmount,
+            onCalculateMaxSendable: onCalculateMaxSendable,
+            isAmountFieldFocused: isAmountFieldFocused,
+            amountAccessory: { EmptyView() }
+        )
+    }
+}
+
 #Preview {
     @Previewable @FocusState var isFocused: Bool
     
@@ -200,7 +256,7 @@ public struct AmountInputSection: View {
             isAmountFieldFocused: $isFocused
         )
         
-        // Locked amount (Lightning invoice)
+        // Locked amount (Lightning invoice) with an accessory line
         AmountInputSection(
             amount: .constant("50000"),
             maxSpendableAmount: 100000,
@@ -213,7 +269,11 @@ public struct AmountInputSection: View {
             minimumSendAmount: 330,
             onCalculateMaxSendable: nil,
             isAmountFieldFocused: $isFocused
-        )
+        ) {
+            Text(verbatim: "≈ $41.79")
+                .font(.body)
+                .foregroundColor(.secondary)
+        }
     }
     .padding()
     .frame(width: 600)

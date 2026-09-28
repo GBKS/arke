@@ -201,8 +201,34 @@ Proposals still awaiting a call (not decisions):
    - Step 1 — DONE, approved on device 2026-09-28: secondary line directly
      under the big amount on `BalanceCard` (inner stack, zero spacing),
      17 pt rounded, plain white with the amount's shadow; stale dims to 60 %.
+   - Step 2 (built 2026-09-28, awaiting Christoph's look): the send amount
+     field. `AmountInputSection` (ArkéUI) gained an optional `Accessory`
+     slot under the field — the package cannot see the rates service, so
+     the app fills it; sats entry capped at 10 digits (was 20).
+     `SendAmountFiatLine` (Shared/Views/Send) renders
+     `FiatAmountText` in body size on the field's baseline, right-aligned
+     in an HStack beside the field, wired into all three flows (manual,
+     contact, quick). Present from the start whenever a rate exists: an
+     empty/zero field shows "≈ $0.00" in tertiary (placeholder) style so
+     nothing pops in on the first keystroke (Christoph's review
+     2026-09-28). There is no separate confirmation screen — Send fires from
+     this view — so this line *is* the pre-send "≈". Display only; the
+     amount string stays the source of truth, so a rates refresh cannot
+     change what is sent.
    - Next candidates: `BalanceDetailCard` rows (fix its `BitcoinFormatter`
-     bypass while there), transaction rows and detail, send confirmation
-     "≈", the balance card's accessibility value.
+     bypass while there), transaction detail (needs the "today's rate"
+     wording decision), transaction rows, receive/invoice amounts, the
+     balance card's accessibility value.
 4. **Later, separately decided:** fiat entry in the send flow; desktop UI
    (the service already compiles there — see `Desktop_Parity.md`).
+   Christoph's direction 2026-09-28: finish fiat *display* in all the right
+   places first, then look at fiat *input*. Sketch for input, from the
+   review of step 2: tapping the fiat text swaps roles (fiat becomes the
+   field, sats the right-hand line); sats string stays the source of
+   truth, recomputed once per fiat keystroke at that moment's rate and
+   never on a rates refresh; Max/locked amounts back-fill fiat from sats;
+   decimal pad with the currency's fraction digits; fall back to sats mode
+   if the rate becomes unavailable; sats line primary/medium in fiat mode
+   so the true amount stays prominent. Structurally: pass rate + currency
+   into `AmountInputSection` as plain values, move `FiatConversion` into
+   ArkéUI, drop the accessory slot.
