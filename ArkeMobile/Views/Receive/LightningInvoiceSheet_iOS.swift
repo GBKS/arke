@@ -52,6 +52,13 @@ struct LightningInvoiceSheet_iOS: View {
         guard let sats = Int(amount) else { return amount }
         return BitcoinFormatter.shared.formatAmount(sats)
     }
+
+    /// The requested amount as whole sats. The form's field follows the
+    /// unit format, so this goes through the same parser the view model
+    /// uses, with the plain-integer read as a fallback.
+    private var amountSats: Int {
+        BitcoinFormatter.shared.parseUserInput(amount) ?? Int(amount) ?? 0
+    }
     
     var body: some View {
         ZStack {
@@ -203,11 +210,17 @@ struct LightningInvoiceSheet_iOS: View {
             
             if !amount.isEmpty || (note != nil && !note!.isEmpty) {
                 VStack(spacing: 10) {
-                    // Amount
+                    // Amount, with its fiat value directly beneath
                     if !amount.isEmpty {
-                        Text(formattedAmount)
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                        VStack(spacing: 2) {
+                            Text(formattedAmount)
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white)
+
+                            FiatAmountText(sats: amountSats)
+                                .font(.system(size: 17, weight: .medium, design: .rounded))
+                                .foregroundStyle(.white)
+                        }
                     }
                     
                     // Note
@@ -384,11 +397,17 @@ struct LightningInvoiceSheet_iOS: View {
                 
                 if !amount.isEmpty || (note != nil && !note!.isEmpty) {
                     VStack(spacing: 8) {
-                        // Amount
+                        // Amount, with its fiat value directly beneath
                         if !amount.isEmpty {
-                            Text(formattedAmount)
-                                .font(.system(size: 27, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
+                            VStack(spacing: 2) {
+                                Text(formattedAmount)
+                                    .font(.system(size: 27, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.white)
+
+                                FiatAmountText(sats: amountSats)
+                                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white)
+                            }
                         }
                         
                         // Note

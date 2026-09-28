@@ -32,6 +32,12 @@ struct LightningInvoiceFormView_iOS: View {
         return BitcoinFormatter.shared.formatAmount(sats)
     }
     
+    /// The typed amount as whole sats (the field follows the unit format,
+    /// so this goes through the same parser the view model uses)
+    private var enteredSats: Int {
+        BitcoinFormatter.shared.parseUserInput(amount) ?? 0
+    }
+
     /// Dynamic font size that shrinks as text gets longer
     private var dynamicFontSize: CGFloat {
         let baseSize: CGFloat = 56
@@ -51,13 +57,24 @@ struct LightningInvoiceFormView_iOS: View {
         VStack(spacing: 0) {
             // Amount display area - fills available space
             VStack(spacing: 16) {
-                Text(formattedAmount)
-                    .font(.system(size: dynamicFontSize, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color.Arke.gold.opacity(amount.isEmpty ? 0.5 : 1.0))
-                    .frame(height: 56) // Fixed height to prevent layout shifts
-                    .lineLimit(1)
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.3), value: formattedAmount)
+                VStack(spacing: 4) {
+                    Text(formattedAmount)
+                        .font(.system(size: dynamicFontSize, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.Arke.gold.opacity(amount.isEmpty ? 0.5 : 1.0))
+                        .frame(height: 56) // Fixed height to prevent layout shifts
+                        .lineLimit(1)
+                        .contentTransition(.numericText())
+                        .animation(.easeInOut(duration: 0.3), value: formattedAmount)
+
+                    // Fiat "≈" for the requested amount — present from the
+                    // start whenever a rate exists, dimmed like the amount
+                    // while nothing is typed (Fiat_Rates.md, Phase 3 step 3)
+                    FiatAmountText(sats: enteredSats)
+                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .opacity(amount.isEmpty ? 0.5 : 1.0)
+                        .animation(.easeInOut(duration: 0.3), value: enteredSats)
+                }
                 
                 // Optional note toggle/field
                 if showNoteField {

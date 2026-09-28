@@ -1194,11 +1194,19 @@ yet, by design.
 - [ ] **Phase 3 — UI fit** (exploratory, one surface at a time): step 1
   `BalanceCard` secondary line via `FiatAmountText` — approved on device
   2026-09-28. Step 2 send amount field "≈" line (`SendAmountFiatLine` via
-  the new `AmountInputSection` accessory slot) built 2026-09-28, awaiting
-  on-device look. Remaining candidates: detail cards (fix
-  `BalanceDetailCard`'s `BitcoinFormatter` bypass while there), transaction
-  detail (decide "today's rate" wording first), transaction rows,
-  receive/invoice amounts, balance-card accessibility value.
+  the new `AmountInputSection` accessory slot) approved 2026-09-28
+  (2a34ef5). Step 3 receive (invoice form + QR sheet owner/recipient views)
+  approved 2026-09-28. Remaining candidates: detail
+  cards (fix `BalanceDetailCard`'s `BitcoinFormatter` bypass while there),
+  transaction detail (decide "today's rate" wording first), transaction
+  rows, balance-card accessibility value.
+- [ ] **Pre-existing: `LightningInvoiceSheet_iOS` reads the amount with
+  `Int(amount)`** for both its display and the BIP-21 `amountSats`, while
+  the receive field follows the unit format and the view model parses it
+  with `BitcoinFormatter.parseUserInput`. With a decimal unit format
+  ("0.001" BTC) the sheet shows the raw string and encodes a wrong BIP-21
+  amount. Found 2026-09-28 while adding the fiat line (which uses the
+  parser); not fixed, out of scope for the fiat work.
 - [x] **On-device look at X-Ray section and currency picker — done by
   Christoph 2026-09-28**, looked good.
 - [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the

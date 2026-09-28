@@ -3,13 +3,14 @@
 Fiat values next to sats, from one public static file that holds every
 currency. Sats are the real amount; fiat is display only.
 
-**Status: Phase 1 DONE 2026-09-28 (committed f2f002e); Phase 2 currency
-picker BUILT 2026-09-28, uncommitted** — client, cache, triggers and X-Ray
-section shipped; 19/19 unit tests green on iOS; live server check passed
-(200 → 30 currencies + ETag, then 304). The Settings → Currency picker
-carries the required credit in its footer, so no About screen is needed
-(Christoph's call 2026-09-28). 24/24 tests with the preference suite.
-Phase 3 open — see §7. Nothing outside the picker shows fiat yet, by design.
+**Status: Phases 1 and 2 DONE 2026-09-28 (f2f002e, 881efc5); Phase 3 UI
+fit IN PROGRESS — steps 1 (balance card, cfacba4) and 2 (send amount field,
+2a34ef5) approved on device.** Client, cache, triggers and X-Ray section
+shipped; 24/24 unit tests green on iOS; live server check passed (200 → 30
+currencies + ETag, then 304). The Settings → Currency picker carries the
+required credit in its footer, so no About screen is needed (Christoph's
+call 2026-09-28). Remaining Phase 3 surfaces in §7; fiat *input* comes
+only after display is complete.
 
 ## 1. Source
 
@@ -215,10 +216,20 @@ Proposals still awaiting a call (not decisions):
      this view — so this line *is* the pre-send "≈". Display only; the
      amount string stays the source of truth, so a rates refresh cannot
      change what is sent.
+   - Step 3 — DONE, approved on device 2026-09-28: receive.
+     `LightningInvoiceFormView_iOS` shows the fiat line 20 pt rounded,
+     secondary, directly under the big gold amount, dimmed to 50 % like
+     the amount while nothing is typed (present from the start).
+     `LightningInvoiceSheet_iOS` shows it 17 pt rounded white under the
+     amount in both the owner view and the flipped recipient view. Both
+     parse the typed amount with `BitcoinFormatter.parseUserInput`, the
+     same parser the view model uses, because the receive field follows
+     the unit format (it can hold decimal BTC). The address list
+     (`AddressDisplayView`) only encodes the amount, never shows it.
    - Next candidates: `BalanceDetailCard` rows (fix its `BitcoinFormatter`
      bypass while there), transaction detail (needs the "today's rate"
-     wording decision), transaction rows, receive/invoice amounts, the
-     balance card's accessibility value.
+     wording decision), transaction rows, the balance card's accessibility
+     value.
 4. **Later, separately decided:** fiat entry in the send flow; desktop UI
    (the service already compiles there — see `Desktop_Parity.md`).
    Christoph's direction 2026-09-28: finish fiat *display* in all the right
