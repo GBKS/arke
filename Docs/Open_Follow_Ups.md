@@ -1191,9 +1191,13 @@ yet, by design.
   General-section row "Currency — Currently: USD". Owed: on-device look.
 - [x] **Credit placement — decided 2026-09-28**: the "Rates by Exchange Rate
   API" link lives in the picker's footer; no About screen.
-- [ ] **Phase 3 — UI fit** (exploratory): `BalanceCard` secondary line,
-  detail cards, transaction rows, send confirmation "≈", stale indicator.
-  Fix `BalanceDetailCard`'s `BitcoinFormatter` bypass while there.
+- [ ] **Phase 3 — UI fit** (exploratory, one surface at a time): step 1
+  `BalanceCard` secondary line via `FiatAmountText` — approved on device
+  2026-09-28. Remaining candidates: detail cards (fix `BalanceDetailCard`'s
+  `BitcoinFormatter` bypass while there), transaction rows, transaction
+  detail, send confirmation "≈", balance-card accessibility value.
+- [x] **On-device look at X-Ray section and currency picker — done by
+  Christoph 2026-09-28**, looked good.
 - [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the
   currency preference with other preferences, leave the cache.
 - [ ] **Deferred: fiat entry in the send flow** — decide after Phase 3.

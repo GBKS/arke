@@ -14537,6 +14537,28 @@
         }
       }
     },
+    "fiat_approx" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "≈ %@"
+          }
+        }
+      }
+    },
+    "fiat_approx_stale" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "≈ %1$@ · %2$@"
+          }
+        }
+      }
+    },
     "firstuse_welcome_to" : {
       "localizations" : {
         "de" : {

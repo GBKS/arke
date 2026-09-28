@@ -88,18 +88,34 @@ struct BalanceCard: View {
                     if let totalBalance = totalBalance {
                         BalanceRefreshTag()
                         
-                        Text(BitcoinFormatter.shared.formatAmount(totalBalance.grandTotalSat))
-                            #if os(iOS)
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
-                            #else
-                            .font(.system(size: 27, weight: .bold, design: .rounded))
-                            #endif
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
-                            .contentTransition(.numericText())
-                            .animation(.smooth, value: totalBalance.grandTotalSat)
+                        // Amount and its fiat line sit tight together; the
+                        // outer stack's spacing applies to the tag above
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(BitcoinFormatter.shared.formatAmount(totalBalance.grandTotalSat))
+                                #if os(iOS)
+                                .font(.system(size: 40, weight: .bold, design: .rounded))
+                                #else
+                                .font(.system(size: 27, weight: .bold, design: .rounded))
+                                #endif
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+                                .contentTransition(.numericText())
+                                .animation(.smooth, value: totalBalance.grandTotalSat)
+
+                            // Fiat is display only — hidden entirely when the
+                            // rate is missing or a day old (Fiat_Rates.md §4)
+                            FiatAmountText(sats: totalBalance.grandTotalSat)
+                                #if os(iOS)
+                                .font(.system(size: 17, weight: .medium, design: .rounded))
+                                #else
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                #endif
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 1)
+                                .animation(.smooth, value: totalBalance.grandTotalSat)
+                        }
                     } else {
                         // Empty space to maintain card height
                         Spacer()

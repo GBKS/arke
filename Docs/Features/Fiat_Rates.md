@@ -191,9 +191,18 @@ Proposals still awaiting a call (not decisions):
    `FiatCurrencyPreference` + the General-section row; credit in the
    picker footer. Owed: on-device look, translations of the six new
    `settings_currency*` keys.
-3. **UI fit, exploratory.** `BalanceCard` secondary line first, then the
-   detail cards, transaction rows, send confirmation "≈". Staleness shown as
-   "as of 14:05" or a dimmed value. Fix `BalanceDetailCard`'s formatter
-   bypass while there.
+3. **UI fit, exploratory — IN PROGRESS.** One surface at a time, each
+   judged on device before the next.
+   - `Shared/UI/FiatAmountText.swift` (built 2026-09-28) is the single
+     component for fiat next to sats: resolves the currency, renders
+     "≈ $83.38" when fresh, a dimmed "≈ $83.38 · 2 hr. ago" when stale,
+     nothing when unavailable. A 60 s `TimelineView` re-evaluates freshness
+     so a rate can go stale while the screen sits open. Callers style it.
+   - Step 1 — DONE, approved on device 2026-09-28: secondary line directly
+     under the big amount on `BalanceCard` (inner stack, zero spacing),
+     17 pt rounded, plain white with the amount's shadow; stale dims to 60 %.
+   - Next candidates: `BalanceDetailCard` rows (fix its `BitcoinFormatter`
+     bypass while there), transaction rows and detail, send confirmation
+     "≈", the balance card's accessibility value.
 4. **Later, separately decided:** fiat entry in the send flow; desktop UI
    (the service already compiles there — see `Desktop_Parity.md`).
