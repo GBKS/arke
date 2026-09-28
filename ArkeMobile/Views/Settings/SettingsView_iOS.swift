@@ -52,8 +52,13 @@ struct SettingsView_iOS: View {
         AppTheme(rawValue: appTheme) ?? .defaultTheme
     }
 
+    /// Display name for the settings row: the code, or "None"
     private var selectedCurrency: String {
-        FiatCurrencyPreference.resolve(stored: fiatCurrency, available: ratesService.availableCurrencies)
+        let resolved = FiatCurrencyPreference.resolve(stored: fiatCurrency, available: ratesService.availableCurrencies)
+        if FiatCurrencyPreference.isNone(resolved) {
+            return String(localized: "settings_currency_none", defaultValue: "None")
+        }
+        return resolved
     }
     
     var body: some View {

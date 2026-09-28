@@ -67,6 +67,9 @@ struct BitcoinFormatSettingView_iOS: View {
         .padding(.horizontal, 12)
         .background(backgroundForOption(format))
         .overlay(borderForOption(format))
+        // Spacer gaps and a clear fill are not hit-testable in a plain
+        // button; make the whole padded row the tap target
+        .contentShape(RoundedRectangle(cornerRadius: 8))
     }
     
     private func selectionIndicator(for format: BitcoinAmountFormat) -> some View {

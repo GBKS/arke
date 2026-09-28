@@ -39,6 +39,15 @@ struct FiatCurrencyPreferenceTests {
         #expect(FiatCurrencyPreference.resolve(stored: "", available: available, locale: Locale(identifier: "en")) == "USD")
     }
 
+    @Test("\"None\" is a stored choice like any other, and is never prepended to the picker")
+    func noneChoice() {
+        let resolved = FiatCurrencyPreference.resolve(stored: FiatCurrencyPreference.none, available: available, locale: Locale(identifier: "de_DE"))
+        #expect(resolved == "none")
+        #expect(FiatCurrencyPreference.isNone(resolved))
+        #expect(!FiatCurrencyPreference.isNone("USD"))
+        #expect(FiatCurrencyPreference.pickerOrder(available: available, selected: FiatCurrencyPreference.none, locale: Locale(identifier: "en_US")) == ["USD", "EUR", "GBP", "JPY"])
+    }
+
     @Test("Picker order: locale currency first, then by code; a missing selection is prepended")
     func pickerOrder() {
         #expect(FiatCurrencyPreference.pickerOrder(available: available, selected: "USD", locale: Locale(identifier: "de_DE")) == ["EUR", "GBP", "JPY", "USD"])

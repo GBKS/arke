@@ -20228,6 +20228,17 @@
         }
       }
     },
+    "settings_currency_column_header" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "1 BTC ≈"
+          }
+        }
+      }
+    },
     "settings_currency_credit" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -20250,6 +20261,28 @@
         }
       }
     },
+    "settings_currency_none" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "None"
+          }
+        }
+      }
+    },
+    "settings_currency_none_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Show bitcoin amounts only"
+          }
+        }
+      }
+    },
     "settings_currency_rates_as_of" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -20268,17 +20301,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Exchange rates haven't loaded yet. More currencies appear once they do."
-          }
-        }
-      }
-    },
-    "settings_currency_sample" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "1 BTC ≈ %@"
           }
         }
       }

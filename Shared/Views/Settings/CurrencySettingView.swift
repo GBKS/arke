@@ -3,10 +3,11 @@
 //  Arké
 //
 //  Settings sub-page for the display currency (Docs/Features/Fiat_Rates.md,
-//  Phase 2). Lists the codes present in the rates cache with each one's
-//  "1 BTC ≈ …" so the currency's own formatting is visible while choosing.
-//  The choice is stored on the device only. The upstream data provider's
-//  required credit lives in the footer.
+//  Phase 2). A "None" row hides fiat everywhere; below it, one row per
+//  code in the rates cache with the value of 1 BTC in that currency, so
+//  its formatting is visible while choosing. The choice is stored on the
+//  device only. The upstream data provider's required credit lives in
+//  the footer.
 //
 
 import SwiftUI
@@ -40,6 +41,17 @@ struct CurrencySettingView: View {
                     .foregroundColor(.secondary)
 
                 VStack(alignment: .leading, spacing: 12) {
+                    // One caption for the whole value column instead of
+                    // "1 BTC ≈" repeated in every row; it heads the list
+                    // as a whole, "None" included
+                    Text(String(localized: "settings_currency_column_header", defaultValue: "1 BTC ≈"))
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.horizontal, 12)
+
+                    noneRow
+
                     ForEach(orderedCodes, id: \.self) { code in
                         currencyRow(code)
                     }
@@ -68,32 +80,61 @@ struct CurrencySettingView: View {
 
     // MARK: - Rows
 
+    /// "None": bitcoin amounts only, no fiat anywhere
+    private var noneRow: some View {
+        let isSelected = FiatCurrencyPreference.isNone(selected)
+        return optionRow(isSelected: isSelected) {
+            storedCurrency = FiatCurrencyPreference.none
+        } content: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(String(localized: "settings_currency_none", defaultValue: "None"))
+                    .font(.body)
+                    .foregroundColor(.primary)
+                Text(String(localized: "settings_currency_none_help", defaultValue: "Show bitcoin amounts only"))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+    }
+
     private func currencyRow(_ code: String) -> some View {
         let isSelected = code == selected
-        return Button {
+        return optionRow(isSelected: isSelected) {
             storedCurrency = code
-        } label: {
+        } content: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(code)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                Text(FiatCurrencyPreference.localizedName(for: code))
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text(valueText(for: code))
+                .font(.body)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
+    /// Shared row chrome: selection indicator, content, tinted background
+    private func optionRow<Content: View>(
+        isSelected: Bool,
+        onSelect: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        Button(action: onSelect) {
             HStack(spacing: 15) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(isSelected ? .accentColor : .secondary)
                     .font(.title3)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(code)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                    Text(FiatCurrencyPreference.localizedName(for: code))
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-
-                Text(sampleText(for: code))
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                content()
             }
             .padding(.vertical, 15)
             .padding(.horizontal, 12)
@@ -105,18 +146,21 @@ struct CurrencySettingView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.3), lineWidth: 1)
             )
+            // Spacer gaps and a clear fill are not hit-testable in a plain
+            // button; make the whole padded row the tap target
+            .contentShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
-    /// "1 BTC ≈ $83,384.43", or an em dash when the cache has no rate for the code
-    private func sampleText(for code: String) -> String {
+    /// The value of 1 BTC in `code`, or an em dash when the cache has no rate for it
+    private func valueText(for code: String) -> String {
         guard let snapshot = ratesService.rate(for: code) else {
             return L10n.symbolEmDash
         }
-        return String(localized: "settings_currency_sample", defaultValue: "1 BTC ≈ \(FiatConversion.formatted(snapshot.value, currency: code))")
+        return FiatConversion.formatted(snapshot.value, currency: code)
     }
 
     // MARK: - Footer
