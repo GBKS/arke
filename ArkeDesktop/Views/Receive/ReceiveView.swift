@@ -124,7 +124,7 @@ struct ReceiveView: View {
         if vm.selectedBalance != .lightning {
             AddressDisplayView(
                 selectedBalance: vm.selectedBalance,
-                amount: vm.amount,
+                amountSats: vm.amountSats,
                 note: vm.note
             )
         } else {

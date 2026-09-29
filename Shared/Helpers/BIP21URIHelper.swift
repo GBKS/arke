@@ -9,22 +9,25 @@ import Foundation
 import ArkeUI
 
 struct BIP21URIHelper {
-    /// Converts satoshis string to BTC string formatted for BIP-21
-    /// - Parameter satoshisString: Amount in satoshis as a string
-    /// - Returns: Amount in BTC with 8 decimal places, or nil if invalid
-    private static func satoshisToBTC(_ satoshisString: String) -> String? {
-        guard let sats = Int(satoshisString), sats > 0 else { return nil }
+    /// Converts satoshis to the BTC decimal string BIP-21 expects
+    /// - Parameter sats: Amount in satoshis
+    /// - Returns: Amount in BTC with 8 decimal places, or nil when not positive
+    private static func satoshisToBTC(_ sats: Int) -> String? {
+        guard sats > 0 else { return nil }
         let btc = Double(sats) / 100_000_000
         return String(format: "%.8f", btc)
     }
     
-    /// Create BIP 21 URI with optional alternative payment destinations
+    /// Create BIP 21 URI with optional alternative payment destinations.
+    /// `amountSats` is whole sats — callers must parse user input first
+    /// (a unit-format string like "0.001" used to be passed here and was
+    /// silently dropped; Fiat_Rates.md Phase 4 groundwork).
     static func createBIP21URI(
         arkAddress: String? = nil,
         onchainAddress: String? = nil,
         lightningInvoice: String? = nil,
         silentPaymentsAddress: String? = nil,
-        amountSats: String? = nil,
+        amountSats: Int? = nil,
         label: String? = nil,
         message: String? = nil
     ) -> String {
@@ -82,20 +85,12 @@ struct BIP21URIHelper {
         let lightningInvoice = paymentRequest.firstDestination(for: .lightningInvoice)?.address
         let silentPaymentsAddress = paymentRequest.firstDestination(for: .silentPayments)?.address
         
-        // Convert amount from Int to String if present
-        let amountSatsString: String? = {
-            if let sats = paymentRequest.amount {
-                return String(sats)
-            }
-            return nil
-        }()
-        
         return createBIP21URI(
             arkAddress: arkAddress,
             onchainAddress: primaryDestination.address,
             lightningInvoice: lightningInvoice,
             silentPaymentsAddress: silentPaymentsAddress,
-            amountSats: amountSatsString,
+            amountSats: paymentRequest.amount,
             label: paymentRequest.label,
             message: paymentRequest.message
         )

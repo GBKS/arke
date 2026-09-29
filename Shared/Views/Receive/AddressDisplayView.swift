@@ -11,7 +11,8 @@ import ArkeUI
 struct AddressDisplayView: View {
     @Environment(WalletManager.self) private var manager
     let selectedBalance: ReceiveBalanceType
-    let amount: String
+    /// Requested amount in whole sats, nil for none (Fiat_Rates.md Phase 4 groundwork)
+    let amountSats: Int?
     let note: String
     @AppStorage(UserDefaults.showAddressIconsKey) private var showAddressIcons = true
     @State private var selectedAddressInfo: AddressInfo?
@@ -66,7 +67,7 @@ struct AddressDisplayView: View {
                     address: manager.arkAddress,
                     shareContent: BIP21URIHelper.createBIP21URI(
                         arkAddress: manager.arkAddress,
-                        amountSats: amount.isEmpty ? nil : amount,
+                        amountSats: amountSats,
                         label: nil,
                         message: note.isEmpty ? nil : note
                     ),
@@ -96,7 +97,7 @@ struct AddressDisplayView: View {
                     address: manager.onchainAddress,
                     shareContent: BIP21URIHelper.createBIP21URI(
                         onchainAddress: manager.onchainAddress,
-                        amountSats: amount.isEmpty ? nil : amount,
+                        amountSats: amountSats,
                         label: nil,
                         message: note.isEmpty ? nil : note
                     ),
@@ -137,7 +138,7 @@ struct AddressDisplayView: View {
                         address: manager.arkAddress,
                         shareContent: BIP21URIHelper.createBIP21URI(
                             arkAddress: manager.arkAddress,
-                            amountSats: amount.isEmpty ? nil : amount,
+                            amountSats: amountSats,
                             label: nil,
                             message: note.isEmpty ? nil : note
                         ),
@@ -173,7 +174,7 @@ struct AddressDisplayView: View {
                         address: manager.onchainAddress,
                         shareContent: BIP21URIHelper.createBIP21URI(
                             onchainAddress: manager.onchainAddress,
-                            amountSats: amount.isEmpty ? nil : amount,
+                            amountSats: amountSats,
                             label: nil,
                             message: note.isEmpty ? nil : note
                         ),

@@ -1202,21 +1202,27 @@ yet, by design.
   fiat input comes next).
   Remaining candidates: transaction detail (decide "today's rate" wording
   first), transaction rows.
-- [ ] **Pre-existing: `LightningInvoiceSheet_iOS` reads the amount with
-  `Int(amount)`** for both its display and the BIP-21 `amountSats`, while
-  the receive field follows the unit format and the view model parses it
-  with `BitcoinFormatter.parseUserInput`. With a decimal unit format
-  ("0.001" BTC) the sheet shows the raw string and encodes a wrong BIP-21
-  amount. Found 2026-09-28 while adding the fiat line (which uses the
-  parser); not fixed, out of scope for the fiat work.
+- [x] **`LightningInvoiceSheet_iOS` / BIP-21 read the unit-format amount as
+  a sats string — FIXED 2026-09-29** in the fiat-input groundwork: the
+  whole receive chain now passes `amountSats: Int?` from
+  `ReceiveViewModel`. Under a decimal unit format the amount used to be
+  dropped from every payment link and shown raw on the sheet.
 - [x] **On-device look at X-Ray section and currency picker — done by
   Christoph 2026-09-28**, looked good.
 - [ ] **Decide: wallet deletion and the rates cache** — PROPOSAL: clear the
   currency preference with other preferences, leave the cache.
-- [ ] **Deferred: fiat entry in the send flow** — after fiat *display* is in
-  all the right places (Christoph, 2026-09-28). Design sketch (tap fiat
-  text to swap roles, sats string stays truth) recorded in
-  `Features/Fiat_Rates.md` §7 item 4.
+- [ ] **Fiat entry — IN PROGRESS 2026-09-29, receive first**: groundwork
+  step done (sats as source of truth in `ReceiveViewModel`, BIP-21 takes
+  Int sats, keypad takes `decimalPlaces` + localized separator glyph,
+  `FiatConversion` entry helpers, 6 tests). Next: fiat mode on the receive
+  form (tap fiat line to swap), then the send field. Design in
+  `Features/Fiat_Rates.md` §7 item 4. Owed from groundwork: on-device look
+  at the German separator on the keypad key and in the partial display.
+- [ ] **Pre-existing: Lightning invoice limit mismatch** — the receive
+  form's keypad validator allows up to 100,000,000 sats while
+  `ReceiveViewModel.generateLightningInvoice` rejects above 10,000,000.
+  Found 2026-09-29; left alone, will surface as a late error for amounts
+  between the two.
 - [ ] **New string keys** (`data_fiat_rates*`, `settings_currency*`) need
   de/ja/zh-Hant passes like other recent strings.
 - [ ] **Desktop: embed `CurrencySettingView`** in the desktop settings next

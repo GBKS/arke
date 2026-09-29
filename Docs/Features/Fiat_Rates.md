@@ -254,16 +254,47 @@ Proposals still awaiting a call (not decisions):
      $85.84" (sats only when no fiat shows, "Hidden" in privacy mode).
    - Next candidates: transaction detail (needs the "today's rate" wording
      decision), transaction rows.
-4. **Later, separately decided:** fiat entry in the send flow; desktop UI
-   (the service already compiles there — see `Desktop_Parity.md`).
-   Christoph's direction 2026-09-28: finish fiat *display* in all the right
-   places first, then look at fiat *input*. Sketch for input, from the
-   review of step 2: tapping the fiat text swaps roles (fiat becomes the
-   field, sats the right-hand line); sats string stays the source of
-   truth, recomputed once per fiat keystroke at that moment's rate and
-   never on a rates refresh; Max/locked amounts back-fill fiat from sats;
-   decimal pad with the currency's fraction digits; fall back to sats mode
-   if the rate becomes unavailable; sats line primary/medium in fiat mode
-   so the true amount stays prominent. Structurally: pass rate + currency
-   into `AmountInputSection` as plain values, move `FiatConversion` into
-   ArkéUI, drop the accessory slot.
+4. **Fiat input — IN PROGRESS (started 2026-09-29, receive first).**
+   Transaction detail/rows parked (the "today's rate" question). Decisions
+   taken with Christoph 2026-09-29: fiat big and gold in fiat mode with
+   bitcoin as the secondary line beneath (receive spends nothing); input
+   mode is per-session, not remembered; the German bitcoin partial-display
+   glitch gets fixed in passing.
+
+   **Step 1 — groundwork, DONE 2026-09-29 (no visible change except two
+   fixes):**
+   - `ReceiveViewModel.amountSats: Int?` is the single source of truth for
+     the invoice, the QR sheet and every payment link; `amount` (bitcoin
+     unit-format string) is now only an editing buffer.
+   - `BIP21URIHelper.createBIP21URI(amountSats: Int?)` (was `String?`),
+     `ReceiveQRContentHelper`, `AddressDisplayView`, and
+     `LightningInvoiceSheet_iOS` all take sats. **Fixes the pre-existing
+     bug** where the unit-format string ("0.001") was passed as a sats
+     string, failed `Int(...)`, and the amount was silently dropped from
+     every BIP-21 link (and shown raw on the sheet) under a decimal unit
+     format. Desktop `ReceiveView` updated to match.
+   - `CustomNumericKeypad_iOS` (ArkéUI) takes `decimalPlaces: Int?` (8 for
+     bitcoin, a currency's minor units for fiat, nil/0 hides the key) and
+     shows the **device locale's decimal separator** on the key (","
+     in Germany) while still writing "." into the bound string, so one
+     parser serves everything. The `showPeriod` inits remain and map to 8.
+   - `BitcoinFormatter.formatPartialDecimalInput` (ArkéUI) now groups the
+     integer part and uses the locale's separator — a German device sees
+     "₿ 0,5" while typing, not "₿ 0.5" (**second fix**).
+   - `FiatConversion` gains the entry helpers: `fractionDigits(for:)`
+     (USD 2, JPY 0, KWD 3 via the system currency formatter),
+     `parseInput` (machine form → Decimal), `formatPartialInput` (typed
+     digits only, locale separator/placement, trailing separator kept:
+     "12." → "$12.", de_DE "12.5" → "12,5 $"), `inputString(for:currency:)`
+     (back-fill a buffer, trimmed to minor units). `FiatInputTests` 6/6.
+
+   **Step 2 — fiat mode on the receive form (next):** tap the fiat line
+   under the big amount to swap roles; buffers back-filled from sats on
+   every swap; sats recomputed once per fiat keystroke at that moment's
+   rate, never on a rates refresh; separator key per the currency's minor
+   units; fall back to bitcoin mode when the rate is unavailable or the
+   currency is "None"; Lightning limit checked on the resulting sats.
+
+   **Step 3 — port to the send field** (system text field with a decimal
+   pad rather than the keypad, so separator handling differs). Desktop
+   receive/send stay bitcoin-only until then.

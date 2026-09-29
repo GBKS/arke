@@ -10,13 +10,12 @@ import Foundation
 struct ReceiveQRContentHelper {
     static func getCurrentQRContent(
         selectedBalance: ReceiveBalanceType,
-        amount: String,
+        amountSats: Int?,
         note: String,
         arkAddress: String,
         onchainAddress: String,
         label: String? = nil
     ) -> (content: String, title: String)? {
-        let amountValue = amount.isEmpty ? nil : amount
         let noteValue = note.isEmpty ? nil : note
         
         switch selectedBalance {
@@ -25,7 +24,7 @@ struct ReceiveQRContentHelper {
             return (
                 content: BIP21URIHelper.createBIP21URI(
                     arkAddress: arkAddress,
-                    amountSats: amountValue,
+                    amountSats: amountSats,
                     label: label,
                     message: noteValue ?? nil
                 ),
@@ -37,7 +36,7 @@ struct ReceiveQRContentHelper {
             return (
                 content: BIP21URIHelper.createBIP21URI(
                     onchainAddress: onchainAddress,
-                    amountSats: amountValue,
+                    amountSats: amountSats,
                     label: label,
                     message: noteValue ?? nil
                 ),
@@ -64,7 +63,7 @@ struct ReceiveQRContentHelper {
     
     static func getShareContent(
         selectedBalance: ReceiveBalanceType,
-        amount: String,
+        amountSats: Int?,
         note: String,
         arkAddress: String,
         onchainAddress: String,
@@ -75,7 +74,7 @@ struct ReceiveQRContentHelper {
             guard !arkAddress.isEmpty else { return nil }
             return BIP21URIHelper.createBIP21URI(
                 arkAddress: arkAddress,
-                amountSats: amount.isEmpty ? nil : amount,
+                amountSats: amountSats,
                 label: label,
                 message: note.isEmpty ? nil : note
             )
@@ -84,7 +83,7 @@ struct ReceiveQRContentHelper {
             guard !onchainAddress.isEmpty else { return nil }
             return BIP21URIHelper.createBIP21URI(
                 onchainAddress: onchainAddress,
-                amountSats: amount.isEmpty ? nil : amount,
+                amountSats: amountSats,
                 label: label,
                 message: note.isEmpty ? nil : note
             )

@@ -24,6 +24,10 @@ final class ReceiveViewModel {
     var selectedBalance: ReceiveBalanceType = .lightning
     var showingQRCode = false
     var showingAmountAndNote = false
+
+    /// The amount as typed, in the user's bitcoin unit format ("0.5" under a
+    /// decimal format, "50000" under sats). An editing buffer only — read
+    /// `amountSats` for the value.
     var amount = ""
     var note = ""
     
@@ -42,6 +46,14 @@ final class ReceiveViewModel {
     }
     
     // MARK: - Computed Properties
+
+    /// The requested amount as whole sats — the single source of truth for
+    /// the invoice, the QR sheet and every payment link. Nil when nothing
+    /// valid and positive is typed. (Fiat_Rates.md, Phase 4 groundwork.)
+    var amountSats: Int? {
+        guard let sats = BitcoinFormatter.shared.parseUserInput(amount), sats > 0 else { return nil }
+        return sats
+    }
     
     var balanceTypeLabel: String {
         switch selectedBalance {
@@ -91,7 +103,7 @@ final class ReceiveViewModel {
     /// Proceeds with or without generating a Lightning invoice based on amount
     func proceedWithOrWithoutInvoice() async {
         // If amount is valid and > 0, generate invoice
-        if let amountSats = BitcoinFormatter.shared.parseUserInput(amount), amountSats > 0 {
+        if amountSats != nil {
             await generateLightningInvoice()
         } else {
             // No amount or invalid - show addresses only
@@ -103,8 +115,7 @@ final class ReceiveViewModel {
     
     /// Generates a Lightning invoice for the current amount
     func generateLightningInvoice() async {
-        // Parse user input to satoshis using the formatter
-        guard let amountSats = BitcoinFormatter.shared.parseUserInput(amount), amountSats > 0 else {
+        guard let amountSats else {
             invoiceError = "Please enter a valid amount greater than 0"
             return
         }
@@ -209,7 +220,7 @@ final class ReceiveViewModel {
         
         return ReceiveQRContentHelper.getCurrentQRContent(
             selectedBalance: selectedBalance,
-            amount: amount,
+            amountSats: amountSats,
             note: note,
             arkAddress: walletManager.arkAddress,
             onchainAddress: walletManager.onchainAddress,
@@ -227,7 +238,7 @@ final class ReceiveViewModel {
         
         return ReceiveQRContentHelper.getShareContent(
             selectedBalance: selectedBalance,
-            amount: amount,
+            amountSats: amountSats,
             note: note,
             arkAddress: walletManager.arkAddress,
             onchainAddress: walletManager.onchainAddress,

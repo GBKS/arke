@@ -73,7 +73,7 @@ struct ReceiveView_iOS: View {
         .fullScreenCover(isPresented: $showingInvoiceSheet) {
             LightningInvoiceSheet_iOS(
                 invoice: viewModel.lightningInvoice,
-                amount: viewModel.amount,
+                amountSats: viewModel.amountSats,
                 note: viewModel.note,
                 arkAddress: walletManager.arkAddress,
                 onchainAddress: walletManager.onchainAddress,
@@ -143,7 +143,7 @@ struct ReceiveView_iOS: View {
                     VStack(spacing: 0) {
                         AddressDisplayView(
                             selectedBalance: viewModel.selectedBalance,
-                            amount: viewModel.amount,
+                            amountSats: viewModel.amountSats,
                             note: viewModel.note
                         )
                     }

@@ -16,7 +16,8 @@ struct LightningInvoiceSheet_iOS: View {
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "LightningInvoiceSheet")
     
     let invoice: String?
-    let amount: String
+    /// Requested amount in whole sats, nil when none was entered
+    let amountSats: Int?
     let note: String?
     let arkAddress: String
     let onchainAddress: String
@@ -49,15 +50,8 @@ struct LightningInvoiceSheet_iOS: View {
     }
     
     private var formattedAmount: String {
-        guard let sats = Int(amount) else { return amount }
-        return BitcoinFormatter.shared.formatAmount(sats)
-    }
-
-    /// The requested amount as whole sats. The form's field follows the
-    /// unit format, so this goes through the same parser the view model
-    /// uses, with the plain-integer read as a fallback.
-    private var amountSats: Int {
-        BitcoinFormatter.shared.parseUserInput(amount) ?? Int(amount) ?? 0
+        guard let amountSats else { return "" }
+        return BitcoinFormatter.shared.formatAmount(amountSats)
     }
     
     var body: some View {
@@ -208,10 +202,10 @@ struct LightningInvoiceSheet_iOS: View {
             }
             .frame(width: qrCodeSize(for: screenWidth), height: qrCodeSize(for: screenWidth))
             
-            if !amount.isEmpty || (note != nil && !note!.isEmpty) {
+            if amountSats != nil || (note != nil && !note!.isEmpty) {
                 VStack(spacing: 10) {
                     // Amount, with its fiat value directly beneath
-                    if !amount.isEmpty {
+                    if let amountSats {
                         VStack(spacing: 2) {
                             Text(formattedAmount)
                                 .font(.system(size: 32, weight: .bold, design: .rounded))
@@ -395,10 +389,10 @@ struct LightningInvoiceSheet_iOS: View {
                 }
                 .frame(width: qrCodeSize(for: screenWidth), height: qrCodeSize(for: screenWidth))
                 
-                if !amount.isEmpty || (note != nil && !note!.isEmpty) {
+                if amountSats != nil || (note != nil && !note!.isEmpty) {
                     VStack(spacing: 8) {
                         // Amount, with its fiat value directly beneath
-                        if !amount.isEmpty {
+                        if let amountSats {
                             VStack(spacing: 2) {
                                 Text(formattedAmount)
                                     .font(.system(size: 27, weight: .bold, design: .rounded))
@@ -493,14 +487,13 @@ struct LightningInvoiceSheet_iOS: View {
     
     private func createBIP21URI() -> String {
         let invoiceString = invoice != nil ? extractInvoiceString() : nil
-        let amountValue = amount.isEmpty ? nil : amount
         let noteValue = note?.isEmpty == false ? note : nil
         
         return BIP21URIHelper.createBIP21URI(
             arkAddress: arkAddress,
             onchainAddress: onchainAddress,
             lightningInvoice: invoiceString,
-            amountSats: amountValue,
+            amountSats: amountSats,
             message: noteValue
         )
     }

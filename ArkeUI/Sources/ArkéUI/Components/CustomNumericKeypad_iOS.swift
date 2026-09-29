@@ -25,14 +25,44 @@ public enum NumericKeypadTheme {
 }
 
 /// Custom numeric keypad for quick amount input in TiltShareOverlay
+///
+/// The bound `amount` is always the machine form — digits with "." as the
+/// decimal separator — so callers parse it with one code path. The key
+/// itself shows the device locale's separator ("," on a German device).
+/// `decimalPlaces` is how many fraction digits may follow the separator:
+/// 8 for bitcoin, a currency's minor units for fiat (2 for USD, 0 for
+/// JPY, which hides the key), nil for whole numbers only.
 public struct CustomNumericKeypad_iOS: View {
     @Binding var amount: String
     let onConfirm: () -> Void
     var theme: NumericKeypadTheme = .dark
-    var showPeriod: Bool = false
+    var decimalPlaces: Int?
     var validateInput: ((String) -> Bool)?
     var allowEmptyConfirm: Bool = false
 
+    /// Longest entry accepted, not counting the separator
+    public static let maxDigits = 10
+
+    /// Primary initializer
+    /// - Parameter decimalPlaces: Fraction digits allowed after the separator;
+    ///   nil or 0 hides the separator key
+    public init(
+        amount: Binding<String>,
+        onConfirm: @escaping () -> Void,
+        theme: NumericKeypadTheme = .dark,
+        decimalPlaces: Int?,
+        validateInput: ((String) -> Bool)? = nil,
+        allowEmptyConfirm: Bool = false
+    ) {
+        self._amount = amount
+        self.onConfirm = onConfirm
+        self.theme = theme
+        self.decimalPlaces = decimalPlaces
+        self.validateInput = validateInput
+        self.allowEmptyConfirm = allowEmptyConfirm
+    }
+
+    /// Bitcoin-oriented initializer: `showPeriod` allows 8 decimal places
     public init(
         amount: Binding<String>,
         onConfirm: @escaping () -> Void,
@@ -41,12 +71,14 @@ public struct CustomNumericKeypad_iOS: View {
         validateInput: ((String) -> Bool)? = nil,
         allowEmptyConfirm: Bool = false
     ) {
-        self._amount = amount
-        self.onConfirm = onConfirm
-        self.theme = theme
-        self.showPeriod = showPeriod
-        self.validateInput = validateInput
-        self.allowEmptyConfirm = allowEmptyConfirm
+        self.init(
+            amount: amount,
+            onConfirm: onConfirm,
+            theme: theme,
+            decimalPlaces: showPeriod ? 8 : nil,
+            validateInput: validateInput,
+            allowEmptyConfirm: allowEmptyConfirm
+        )
     }
 
     // Legacy init for backwards compatibility
@@ -58,12 +90,25 @@ public struct CustomNumericKeypad_iOS: View {
         validateInput: ((String) -> Bool)? = nil,
         allowEmptyConfirm: Bool = false
     ) {
-        self._amount = amount
-        self.onConfirm = onConfirm
-        self.theme = textColor == .white ? .dark : .light
-        self.showPeriod = showPeriod
-        self.validateInput = validateInput
-        self.allowEmptyConfirm = allowEmptyConfirm
+        self.init(
+            amount: amount,
+            onConfirm: onConfirm,
+            theme: textColor == .white ? .dark : .light,
+            decimalPlaces: showPeriod ? 8 : nil,
+            validateInput: validateInput,
+            allowEmptyConfirm: allowEmptyConfirm
+        )
+    }
+
+    /// Whether the separator key is shown at all
+    private var showPeriod: Bool {
+        (decimalPlaces ?? 0) > 0
+    }
+
+    /// What the separator key displays — the locale's glyph, never the
+    /// machine-form "." unless that is the locale's glyph
+    private var separatorGlyph: String {
+        Locale.autoupdatingCurrent.decimalSeparator ?? "."
     }
 
     private let columns = [
@@ -89,7 +134,7 @@ public struct CustomNumericKeypad_iOS: View {
             keypadButton("8")
             keypadButton("9")
 
-            // Row 4: period (optional) + backspace, 0, confirm
+            // Row 4: separator (optional) + backspace, 0, confirm
             if showPeriod {
                 HStack(spacing: 12) {
                     backspaceButton()
@@ -131,7 +176,7 @@ public struct CustomNumericKeypad_iOS: View {
         Button {
             appendPeriod()
         } label: {
-            Text(verbatim: ".")
+            Text(verbatim: separatorGlyph)
                 .font(.system(size: 28, weight: .medium, design: .rounded))
                 .foregroundStyle(theme.textColor)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -147,6 +192,7 @@ public struct CustomNumericKeypad_iOS: View {
         }
         .disabled(amount.contains("."))
         .opacity(amount.contains(".") ? 0.5 : 1.0)
+        .accessibilityLabel(Text(String(localized: "accessibility_decimal_separator", defaultValue: "Decimal separator", bundle: .module)))
     }
 
     private func backspaceButton() -> some View {
@@ -199,16 +245,16 @@ public struct CustomNumericKeypad_iOS: View {
     // MARK: - Actions
     
     private func appendDigit(_ digit: String) {
-        // Limit to 10 digits (not counting the period)
+        // Cap the digit count (not counting the separator)
         let digitCount = amount.replacingOccurrences(of: ".", with: "").count
-        if digitCount >= 10 {
+        if digitCount >= Self.maxDigits {
             return
         }
 
-        // For decimal input, limit to 8 decimal places (Bitcoin precision)
-        if showPeriod && amount.contains(".") {
-            let parts = amount.split(separator: ".")
-            if parts.count > 1 && parts[1].count >= 8 {
+        // Cap the fraction digits at what the unit allows
+        if let decimalPlaces, amount.contains(".") {
+            let parts = amount.split(separator: ".", omittingEmptySubsequences: false)
+            if parts.count > 1 && parts[1].count >= decimalPlaces {
                 return
             }
         }
@@ -239,8 +285,8 @@ public struct CustomNumericKeypad_iOS: View {
     }
     
     private func appendPeriod() {
-        // Don't allow period if one already exists
-        if amount.contains(".") {
+        // Don't allow a separator if one already exists, or none is allowed
+        guard showPeriod, !amount.contains(".") else {
             return
         }
         
@@ -358,6 +404,28 @@ private extension View {
             CustomNumericKeypad_iOS(amount: $amount, onConfirm: {
                 print("Confirmed amount: \(amount)")
             }, showPeriod: true)
+            .frame(height: 300)
+        }
+    }
+}
+#Preview("Two Decimal Places") {
+    @Previewable @State var amount = "12.5"
+
+    ZStack {
+        Color.black.opacity(0.3)
+            .ignoresSafeArea()
+
+        VStack {
+            Text(amount.isEmpty ? "Enter amount" : "$\(amount)")
+                .font(.system(size: 36, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
+                .padding()
+
+            Spacer()
+
+            CustomNumericKeypad_iOS(amount: $amount, onConfirm: {
+                print("Confirmed amount: \(amount)")
+            }, decimalPlaces: 2)
             .frame(height: 300)
         }
     }

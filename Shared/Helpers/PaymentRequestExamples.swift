@@ -145,7 +145,7 @@ enum PaymentRequestExamples {
             arkAddress: "ark1qwertyuiop",
             onchainAddress: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
             lightningInvoice: "lnbc100n1...",
-            amountSats: "100000",
+            amountSats: 100_000,
             label: "Coffee Payment",
             message: "Thanks!"
         )
