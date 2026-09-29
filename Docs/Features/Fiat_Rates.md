@@ -245,8 +245,15 @@ Proposals still awaiting a call (not decisions):
      the hardcoded "N ₿" — a visible change on its own: the default format
      puts the symbol in front ("₿ 1,000"), and the Satoshis format now
      reads "1,000 sats" here too.
+   - Step 5 — DONE, approved on device 2026-09-29: VoiceOver.
+     `FiatAmountText.display(...)` is now the single decision function
+     (view + plain string) and every fiat line carries a spoken
+     accessibility label — "approximately $85.84", stale: "…, as of 2 hours
+     ago" — instead of VoiceOver reading "≈" as a symbol. The Activity
+     screen's balance card container value reads "₿ 1,000, approximately
+     $85.84" (sats only when no fiat shows, "Hidden" in privacy mode).
    - Next candidates: transaction detail (needs the "today's rate" wording
-     decision), transaction rows, the balance card's accessibility value.
+     decision), transaction rows.
 4. **Later, separately decided:** fiat entry in the send flow; desktop UI
    (the service already compiles there — see `Desktop_Parity.md`).
    Christoph's direction 2026-09-28: finish fiat *display* in all the right

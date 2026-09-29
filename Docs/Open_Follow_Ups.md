@@ -1197,9 +1197,11 @@ yet, by design.
   the new `AmountInputSection` accessory slot) approved 2026-09-28
   (2a34ef5). Step 3 receive (invoice form + QR sheet owner/recipient views)
   approved 2026-09-28. Step 4 Balance-screen detail cards approved
-  2026-09-28. Remaining candidates: transaction detail (decide
-  "today's rate" wording first), transaction rows, balance-card
-  accessibility value.
+  2026-09-28. Step 5 VoiceOver approved 2026-09-29. Transaction detail/rows
+  SKIPPED for now (Christoph 2026-09-29: "today's rate" question parked;
+  fiat input comes next).
+  Remaining candidates: transaction detail (decide "today's rate" wording
+  first), transaction rows.
 - [ ] **Pre-existing: `LightningInvoiceSheet_iOS` reads the amount with
   `Int(amount)`** for both its display and the BIP-21 `amountSats`, while
   the receive field follows the unit format and the view model parses it

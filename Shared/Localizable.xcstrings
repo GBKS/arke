@@ -928,6 +928,17 @@
         }
       }
     },
+    "accessibility_balance_with_fiat" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "accessibility_connection_issue" : {
       "localizations" : {
         "de" : {
@@ -14548,6 +14559,17 @@
         }
       }
     },
+    "fiat_approx_spoken" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "approximately %@"
+          }
+        }
+      }
+    },
     "fiat_approx_stale" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -14555,6 +14577,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "≈ %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "fiat_approx_stale_spoken" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "approximately %1$@, as of %2$@"
           }
         }
       }

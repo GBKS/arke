@@ -35,6 +35,29 @@ struct ActivityView_iOS: View {
     
     // State for balance privacy mode (persistent across app launches)
     @AppStorage(UserDefaults.balancePrivacyKey) private var isBalanceHidden = false
+
+    // Display currency, for the balance card's spoken value
+    @AppStorage(UserDefaults.fiatCurrencyKey) private var fiatCurrency: String = ""
+
+    /// What VoiceOver reads for the balance card: the bitcoin amount, then
+    /// the fiat value in words when one is shown ("₿ 1,000, approximately $85.84")
+    private var balanceAccessibilityValue: String {
+        if isBalanceHidden {
+            return String(localized: "accessibility_balance_hidden", defaultValue: "Hidden")
+        }
+        guard let total = manager.totalBalance else {
+            return String(localized: "accessibility_balance_loading", defaultValue: "Loading")
+        }
+        let bitcoin = BitcoinFormatter.shared.formatAmount(total.grandTotalSat)
+        guard let fiat = FiatAmountText.spoken(
+            sats: total.grandTotalSat,
+            ratesService: ratesService,
+            storedCurrency: fiatCurrency
+        ) else {
+            return bitcoin
+        }
+        return String(localized: "accessibility_balance_with_fiat", defaultValue: "\(bitcoin), \(fiat)")
+    }
     
     // Grace period to avoid showing connection status during initial app startup
     @State private var hasPassedStartupGracePeriod = false
@@ -142,7 +165,7 @@ struct ActivityView_iOS: View {
                     .padding(.horizontal, 20)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel(String(localized: "accessibility_balance_label", defaultValue: "Balance"))
-                    .accessibilityValue(isBalanceHidden ? String(localized: "accessibility_balance_hidden", defaultValue: "Hidden") : (manager.totalBalance.map { BitcoinFormatter.shared.formatAmount($0.grandTotalSat) } ?? String(localized: "accessibility_balance_loading", defaultValue: "Loading")))
+                    .accessibilityValue(balanceAccessibilityValue)
                     .accessibilityHint(String(localized: "accessibility_balance_hint", defaultValue: "Tap to view balance details. Long press to toggle balance visibility."))
                     .accessibilityAddTraits(.isButton)
                 
