@@ -74,6 +74,7 @@ struct ReceiveView_iOS: View {
             LightningInvoiceSheet_iOS(
                 invoice: viewModel.lightningInvoice,
                 amountSats: viewModel.amountSats,
+                enteredInFiat: viewModel.entry.mode == .fiat,
                 note: viewModel.note,
                 arkAddress: walletManager.arkAddress,
                 onchainAddress: walletManager.onchainAddress,
@@ -207,14 +208,7 @@ struct ReceiveView_iOS: View {
                 .multilineTextAlignment(.center)
             
             LightningInvoiceFormView_iOS(
-                amount: Binding(
-                    get: { viewModel.amount },
-                    set: { viewModel.amount = $0 }
-                ),
-                note: Binding(
-                    get: { viewModel.note },
-                    set: { viewModel.note = $0 }
-                ),
+                viewModel: viewModel,
                 onGenerateInvoice: {
                     Task {
                         await viewModel.proceedWithOrWithoutInvoice()

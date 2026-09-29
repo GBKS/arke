@@ -18,6 +18,9 @@ struct LightningInvoiceSheet_iOS: View {
     let invoice: String?
     /// Requested amount in whole sats, nil when none was entered
     let amountSats: Int?
+    /// The requester typed the amount in fiat, so the sheet leads with fiat
+    /// and shows the bitcoin amount beneath (the invoice itself is sats)
+    var enteredInFiat: Bool = false
     let note: String?
     let arkAddress: String
     let onchainAddress: String
@@ -52,6 +55,41 @@ struct LightningInvoiceSheet_iOS: View {
     private var formattedAmount: String {
         guard let amountSats else { return "" }
         return BitcoinFormatter.shared.formatAmount(amountSats)
+    }
+
+    @Environment(\.ratesService) private var ratesService
+    @AppStorage(UserDefaults.fiatCurrencyKey) private var storedCurrency: String = ""
+
+    /// Lead with fiat only when it was typed in fiat *and* a fiat value can
+    /// actually be shown right now; otherwise bitcoin leads as usual
+    private var leadsWithFiat: Bool {
+        guard enteredInFiat, let amountSats else { return false }
+        return FiatAmountText.display(sats: amountSats, ratesService: ratesService, storedCurrency: storedCurrency) != nil
+    }
+
+    /// The amount block under the QR code: big number plus the other unit
+    /// beneath, in whichever order the requester typed it
+    @ViewBuilder
+    private func amountBlock(sats: Int, bigSize: CGFloat) -> some View {
+        VStack(spacing: 2) {
+            if leadsWithFiat {
+                FiatAmountText(sats: sats)
+                    .font(.system(size: bigSize, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                Text(formattedAmount)
+                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white)
+            } else {
+                Text(formattedAmount)
+                    .font(.system(size: bigSize, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+
+                FiatAmountText(sats: sats)
+                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+        }
     }
     
     var body: some View {
@@ -206,15 +244,7 @@ struct LightningInvoiceSheet_iOS: View {
                 VStack(spacing: 10) {
                     // Amount, with its fiat value directly beneath
                     if let amountSats {
-                        VStack(spacing: 2) {
-                            Text(formattedAmount)
-                                .font(.system(size: 32, weight: .bold, design: .rounded))
-                                .foregroundStyle(.white)
-
-                            FiatAmountText(sats: amountSats)
-                                .font(.system(size: 17, weight: .medium, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
+                        amountBlock(sats: amountSats, bigSize: 32)
                     }
                     
                     // Note
@@ -393,15 +423,7 @@ struct LightningInvoiceSheet_iOS: View {
                     VStack(spacing: 8) {
                         // Amount, with its fiat value directly beneath
                         if let amountSats {
-                            VStack(spacing: 2) {
-                                Text(formattedAmount)
-                                    .font(.system(size: 27, weight: .bold, design: .rounded))
-                                    .foregroundStyle(.white)
-
-                                FiatAmountText(sats: amountSats)
-                                    .font(.system(size: 17, weight: .medium, design: .rounded))
-                                    .foregroundStyle(.white)
-                            }
+                            amountBlock(sats: amountSats, bigSize: 27)
                         }
                         
                         // Note

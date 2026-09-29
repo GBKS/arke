@@ -288,12 +288,54 @@ Proposals still awaiting a call (not decisions):
      "12." → "$12.", de_DE "12.5" → "12,5 $"), `inputString(for:currency:)`
      (back-fill a buffer, trimmed to minor units). `FiatInputTests` 6/6.
 
-   **Step 2 — fiat mode on the receive form (next):** tap the fiat line
-   under the big amount to swap roles; buffers back-filled from sats on
-   every swap; sats recomputed once per fiat keystroke at that moment's
-   rate, never on a rates refresh; separator key per the currency's minor
-   units; fall back to bitcoin mode when the rate is unavailable or the
-   currency is "None"; Lightning limit checked on the resulting sats.
+   **Step 2 — fiat mode on the receive form, DONE, approved on device
+   2026-09-29:**
+   - `AmountEntryState` (Shared/Helpers, pure, 8 tests): mode, the two
+     machine-form buffers, and `fiatSats` captured at the last fiat
+     keystroke. `setFiatInput` recomputes sats once at the given rate;
+     `switchToFiat` / `switchToBitcoin` carry the exact sats over and
+     back-fill the incoming buffer (fiat trimmed to minor units via
+     `FiatConversion.inputString`, bitcoin via the new
+     `BitcoinFormatter.inputString(forSatoshis:)`); `reset()` returns to
+     bitcoin mode. A rates refresh never touches `fiatSats`.
+   - `ReceiveViewModel.entry` holds it; `amount` became a computed
+     property over the bitcoin buffer so the bitcoin-only desktop views
+     bind unchanged; `amountSats` reads the entry state.
+   - `LightningInvoiceFormView_iOS` takes the view model. The secondary
+     line under the big gold number is a button: in bitcoin mode it is the
+     fiat "≈" line (only when a rate exists) and tapping it makes fiat the
+     field; in fiat mode it is the bitcoin amount and tapping swaps back.
+     The keypad binds to the active buffer, allows the currency's minor
+     units in fiat mode (JPY hides the separator key), caps at 1 BTC on
+     the resulting sats in both modes, and the form falls back to bitcoin
+     mode when the rate becomes unavailable or the currency is set to
+     "None". Fiat entry uses the same availability decision as every fiat
+     line (`FiatAmountText.display`), so entry and display agree.
+   - Review round 2026-09-29 (Christoph): both numbers tap to swap, not
+     just the small one; the QR sheet leads with fiat (bitcoin beneath)
+     when the amount was typed in fiat and a fiat value can be shown —
+     the invoice itself is unchanged sats; the small line rolls its digits
+     in step with the big one.
+   - Correction: the groundwork commit (c6896d0) *claimed* the German
+     partial-display fix in `BitcoinFormatter`, but that edit had not
+     persisted to disk; it lands with step 2.
+   - **Invoice ceiling (Christoph's question 2026-09-29, "why can I only
+     type 5–6 euro digits?")**: it was the keypad's hard-coded 1 BTC cap
+     (≈ 73,500 € at the time), and the view model had a second, unrelated
+     0.1 BTC cap. Neither was technical: `git log -S` traces them to the
+     2025-12-03 receive port ("reasonable limits") and the 2026-05-29
+     decimal-input change. The real ceiling is the Ark server's
+     `max_vtxo_amount` — `server/src/ln/mod.rs` refuses larger Lightning
+     receives with "Requested amount exceeds limit", the same setting
+     bounds boards and refreshes, it is optional per server (the default
+     config ships it commented out at 0.01 BTC as an example), and the
+     server advertises it in `ArkInfo` (X-Ray shows it as "Max VTXO
+     Amount"). **Decided:** both caps now derive from
+     `ReceiveViewModel.maxInvoiceSats = arkInfo?.maxVtxoAmount`; nil means
+     only the keypad's 10-digit cap applies and the server judges. The
+     view model's late error names the server's limit. The keypad fires a
+     warning haptic whenever a key is refused (digit cap, fraction cap, or
+     the ceiling) instead of dropping it silently.
 
    **Step 3 — port to the send field** (system text field with a decimal
    pad rather than the keypad, so separator handling differs). Desktop

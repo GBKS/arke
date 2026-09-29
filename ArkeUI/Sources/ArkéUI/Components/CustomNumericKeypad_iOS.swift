@@ -248,6 +248,7 @@ public struct CustomNumericKeypad_iOS: View {
         // Cap the digit count (not counting the separator)
         let digitCount = amount.replacingOccurrences(of: ".", with: "").count
         if digitCount >= Self.maxDigits {
+            rejectKeystroke()
             return
         }
 
@@ -255,6 +256,7 @@ public struct CustomNumericKeypad_iOS: View {
         if let decimalPlaces, amount.contains(".") {
             let parts = amount.split(separator: ".", omittingEmptySubsequences: false)
             if parts.count > 1 && parts[1].count >= decimalPlaces {
+                rejectKeystroke()
                 return
             }
         }
@@ -272,8 +274,10 @@ public struct CustomNumericKeypad_iOS: View {
             newAmount = amount + digit
         }
 
-        // Validate the new amount if validator is provided
+        // Validate the new amount if validator is provided (e.g. the
+        // server's invoice ceiling); a refused key is felt, not silent
         if let validateInput = validateInput, !validateInput(newAmount) {
+            rejectKeystroke()
             return
         }
 
@@ -284,6 +288,13 @@ public struct CustomNumericKeypad_iOS: View {
         impact.impactOccurred()
     }
     
+    /// A key that cannot be accepted (digit cap, fraction cap, or the
+    /// caller's validation) gets a warning haptic instead of silence
+    private func rejectKeystroke() {
+        let notification = UINotificationFeedbackGenerator()
+        notification.notificationOccurred(.warning)
+    }
+
     private func appendPeriod() {
         // Don't allow a separator if one already exists, or none is allowed
         guard showPeriod, !amount.contains(".") else {

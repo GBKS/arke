@@ -270,18 +270,49 @@ public final class BitcoinFormatter: @unchecked Sendable {
         }
     }
 
-    /// Formats a partial decimal input (e.g., "0.", "0.00") for display while user is typing
+    /// The machine-form entry string for a sats amount in the current unit
+    /// format — the inverse of `parseUserInput`. "11649" under a sats format,
+    /// "0.00011649" under a decimal one (no grouping, "." separator, trailing
+    /// zeros trimmed). Used to back-fill the amount field when switching
+    /// from fiat to bitcoin entry.
+    public func inputString(forSatoshis sats: Int) -> String {
+        guard usesDecimalBitcoin else { return String(sats) }
+        let btc = Decimal(sats) / Decimal(100_000_000)
+        return btc.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .grouping(.never)
+                .precision(.fractionLength(0...8))
+        )
+    }
+
+    /// Formats a partial decimal input (e.g., "0.", "0.00") for display while user is typing.
+    /// The input is the keypad's machine form (always "." as separator); the
+    /// output groups the integer part and uses the locale's decimal separator,
+    /// so a German device sees "₿ 0,5" while typing, not "₿ 0.5".
     /// - Parameter input: The partial input string
-    /// - Returns: Formatted string with symbol (e.g., "₿ 0.00")
+    /// - Returns: Formatted string with symbol (e.g., "₿ 0,00")
     public func formatPartialDecimalInput(_ input: String) -> String {
+        let parts = input.split(separator: ".", maxSplits: 1, omittingEmptySubsequences: false)
+        let integerDigits = parts.first.map(String.init) ?? ""
+        let fractionDigits = parts.count > 1 ? String(parts[1]) : nil
+
+        let formatter = makeFormatter()
+        formatter.maximumFractionDigits = 0
+        let integerValue = Int(integerDigits) ?? 0
+        var number = formatter.string(from: NSNumber(value: integerValue)) ?? String(integerValue)
+        if let fractionDigits {
+            number += (formatter.locale.decimalSeparator ?? ".") + fractionDigits
+        }
+
         let symbol = formatSymbol
         let placement = symbolPlacement()
 
         switch placement {
         case .prefix:
-            return "\(symbol) \(input)"
+            return "\(symbol) \(number)"
         case .suffix:
-            return "\(input) \(symbol)"
+            return "\(number) \(symbol)"
         }
     }
 

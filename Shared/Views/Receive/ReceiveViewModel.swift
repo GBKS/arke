@@ -25,10 +25,18 @@ final class ReceiveViewModel {
     var showingQRCode = false
     var showingAmountAndNote = false
 
-    /// The amount as typed, in the user's bitcoin unit format ("0.5" under a
+    /// Amount entry: mode, the two buffers, and the sats captured in fiat
+    /// mode (Fiat_Rates.md §7, Phase 4)
+    var entry = AmountEntryState()
+
+    /// The bitcoin amount as typed, in the user's unit format ("0.5" under a
     /// decimal format, "50000" under sats). An editing buffer only — read
-    /// `amountSats` for the value.
-    var amount = ""
+    /// `amountSats` for the value. Kept as a property so the desktop views,
+    /// which are bitcoin-only, bind to it unchanged.
+    var amount: String {
+        get { entry.bitcoinInput }
+        set { entry.bitcoinInput = newValue }
+    }
     var note = ""
     
     // Lightning-specific state
@@ -49,10 +57,40 @@ final class ReceiveViewModel {
 
     /// The requested amount as whole sats — the single source of truth for
     /// the invoice, the QR sheet and every payment link. Nil when nothing
-    /// valid and positive is typed. (Fiat_Rates.md, Phase 4 groundwork.)
+    /// valid and positive is entered. In fiat mode these are the sats
+    /// captured at the last keystroke; a rates refresh never moves them.
     var amountSats: Int? {
-        guard let sats = BitcoinFormatter.shared.parseUserInput(amount), sats > 0 else { return nil }
-        return sats
+        entry.amountSats(parseBitcoin: BitcoinFormatter.shared.parseUserInput)
+    }
+
+    /// The largest amount a Lightning invoice may request: the Ark server's
+    /// advertised maximum VTXO amount (it refuses larger invoices with
+    /// "Requested amount exceeds limit"). Nil when the server sets none —
+    /// then only the keypad's digit cap applies and the server is the judge.
+    /// Replaces two unrelated hard-coded caps (0.1 BTC here, 1 BTC at the
+    /// keypad) that had no technical basis.
+    var maxInvoiceSats: Int? {
+        walletManager.arkInfo?.maxVtxoAmount
+    }
+
+    // MARK: - Amount Entry (fiat mode)
+
+    /// A fiat keystroke: store the text and recompute sats once, at `rate`
+    func setFiatInput(_ raw: String, rate: Decimal) {
+        entry.setFiatInput(raw, rate: rate)
+    }
+
+    /// Make fiat the field, carrying the current sats over
+    func switchToFiat(rate: Decimal, currency: String) {
+        entry.switchToFiat(rate: rate, currency: currency, parseBitcoin: BitcoinFormatter.shared.parseUserInput)
+    }
+
+    /// Make bitcoin the field, carrying the current sats over
+    func switchToBitcoin() {
+        entry.switchToBitcoin(
+            formatBitcoinInput: BitcoinFormatter.shared.inputString(forSatoshis:),
+            parseBitcoin: BitcoinFormatter.shared.parseUserInput
+        )
     }
     
     var balanceTypeLabel: String {
@@ -94,7 +132,7 @@ final class ReceiveViewModel {
         // Clear amount and note when switching to/from Lightning
         // since Lightning has different requirements
         if (oldType == .lightning) != (newType == .lightning) {
-            amount = ""
+            entry.reset()
             note = ""
             showingAmountAndNote = false
         }
@@ -126,9 +164,13 @@ final class ReceiveViewModel {
             return
         }
 
-        // Add reasonable limits for Lightning invoices
-        guard amountInt <= 10_000_000 else { // 0.1 BTC limit
-            invoiceError = "Amount too large. Maximum is 10,000,000 sats"
+        // The server's advertised ceiling (it would refuse anyway; fail early
+        // with a readable message). No ceiling advertised → let the server judge.
+        if let maxInvoiceSats, amountSats > maxInvoiceSats {
+            invoiceError = String(
+                localized: "receive_invoice_amount_too_large",
+                defaultValue: "Amount too large. This server allows up to \(BitcoinFormatter.shared.formatAmount(maxInvoiceSats)) per invoice."
+            )
             return
         }
         
@@ -161,7 +203,7 @@ final class ReceiveViewModel {
         invoiceError = nil
         showCopySuccess = false
         showAddressesOnly = false
-        amount = ""
+        entry.reset()
         note = ""
     }
     

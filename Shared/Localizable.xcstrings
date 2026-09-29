@@ -19002,6 +19002,17 @@
         }
       }
     },
+    "receive_amount_entered" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Amount: %@"
+          }
+        }
+      }
+    },
     "receive_balance_payments" : {
       "localizations" : {
         "de" : {
@@ -19082,6 +19093,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "輸入金額以產生閃電網路付款請求"
+          }
+        }
+      }
+    },
+    "receive_invoice_amount_too_large" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Amount too large. This server allows up to %@ per invoice."
           }
         }
       }
@@ -19366,6 +19388,17 @@
         }
       }
     },
+    "receive_swap_unit_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Double-tap to enter the amount in the other currency"
+          }
+        }
+      }
+    },
     "receive_switch_balance_type" : {
       "localizations" : {
         "de" : {
@@ -19390,6 +19423,28 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "切換餘額類型"
+          }
+        }
+      }
+    },
+    "receive_switch_to_bitcoin_entry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the amount in bitcoin instead"
+          }
+        }
+      }
+    },
+    "receive_switch_to_fiat_entry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the amount in %@ instead"
           }
         }
       }

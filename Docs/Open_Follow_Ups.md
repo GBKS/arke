@@ -1214,15 +1214,17 @@ yet, by design.
 - [ ] **Fiat entry — IN PROGRESS 2026-09-29, receive first**: groundwork
   step done (sats as source of truth in `ReceiveViewModel`, BIP-21 takes
   Int sats, keypad takes `decimalPlaces` + localized separator glyph,
-  `FiatConversion` entry helpers, 6 tests). Next: fiat mode on the receive
-  form (tap fiat line to swap), then the send field. Design in
-  `Features/Fiat_Rates.md` §7 item 4. Owed from groundwork: on-device look
-  at the German separator on the keypad key and in the partial display.
-- [ ] **Pre-existing: Lightning invoice limit mismatch** — the receive
-  form's keypad validator allows up to 100,000,000 sats while
-  `ReceiveViewModel.generateLightningInvoice` rejects above 10,000,000.
-  Found 2026-09-29; left alone, will surface as a late error for amounts
-  between the two.
+  `FiatConversion` entry helpers, 6 tests). Fiat mode on the receive form
+  (tap either amount to swap; `AmountEntryState`, 8 tests) approved on
+  device 2026-09-29. Next: the send field. Design in
+  `Features/Fiat_Rates.md` §7 item 4. Owed: on-device look at the German
+  separator on the keypad key and in the partial display (the display fix
+  lands with step 2, not the groundwork commit as its message claims).
+- [x] **Lightning invoice limit mismatch — FIXED 2026-09-29**: both the
+  keypad cap (was 1 BTC) and the view model cap (was 0.1 BTC) now derive
+  from the server's advertised `maxVtxoAmount`; neither number had a
+  technical basis (see `Features/Fiat_Rates.md` §7 step 2). Refused keys
+  now give a warning haptic.
 - [ ] **New string keys** (`data_fiat_rates*`, `settings_currency*`) need
   de/ja/zh-Hant passes like other recent strings.
 - [ ] **Desktop: embed `CurrencySettingView`** in the desktop settings next
