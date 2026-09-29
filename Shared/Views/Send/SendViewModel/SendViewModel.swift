@@ -69,7 +69,19 @@ final class SendViewModel {
     
     // MARK: - State
     var manualInput: String = ""
+    /// The amount to send, in whole sats, as a string — the single source of
+    /// truth for fees, validation and execution. In fiat entry mode this is
+    /// written once per fiat keystroke (see SendViewModel+FiatEntry).
     var amount: String = ""
+
+    // MARK: - Fiat Entry (Fiat_Rates.md §7, Phase 4)
+    /// Entry mode and the sats captured at the last fiat keystroke
+    var amountEntry = AmountEntryState()
+    /// The fiat field's text as typed on the decimal pad (locale separator)
+    var fiatAmountText: String = ""
+    /// The bitcoin field's text as typed, in the user's unit format ("0.5"
+    /// under a decimal format, "50000" under sats) — parsed into `amount`
+    var bitcoinAmountText: String = ""
     var selectedDestination: PaymentDestination?
     var rankedDestinations: [PaymentDestinationSelector.RankedDestination] = []
     var currentPaymentRequest: PaymentRequest?

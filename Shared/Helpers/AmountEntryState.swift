@@ -64,15 +64,25 @@ nonisolated struct AmountEntryState: Equatable, Sendable {
 
     // MARK: - Swapping
 
-    /// Make fiat the field. The current sats carry over unchanged; the
-    /// fiat buffer is back-filled from them, trimmed to the currency's
-    /// minor units.
-    mutating func switchToFiat(rate: Decimal, currency: String, parseBitcoin: (String) -> Int?) {
-        let sats = amountSats(parseBitcoin: parseBitcoin)
-        fiatSats = sats
-        fiatInput = sats.map {
+    /// Adopt sats decided elsewhere (Max, a request's fixed amount, a
+    /// clear) as the fiat side's truth, whatever the current mode: capture
+    /// them and back-fill the fiat buffer from them, trimmed to the
+    /// currency's minor units.
+    mutating func adoptSatsIntoFiat(_ sats: Int?, rate: Decimal, currency: String) {
+        fiatSats = sats.flatMap { $0 > 0 ? $0 : nil }
+        fiatInput = fiatSats.map {
             FiatConversion.inputString(for: FiatConversion.fiatAmount(sats: $0, rate: rate), currency: currency)
         } ?? ""
+    }
+
+    /// Make fiat the field. A switch *from bitcoin*: the bitcoin buffer's
+    /// sats carry over unchanged and the fiat buffer is back-filled from
+    /// them. (Reading `amountSats` here would be wrong once already in fiat
+    /// mode — it would return the stale captured sats; that is how Max in
+    /// fiat mode once left "5 €" beside 52,480 sats.)
+    mutating func switchToFiat(rate: Decimal, currency: String, parseBitcoin: (String) -> Int?) {
+        let sats = parseBitcoin(bitcoinInput).flatMap { $0 > 0 ? $0 : nil }
+        adoptSatsIntoFiat(sats, rate: rate, currency: currency)
         mode = .fiat
     }
 

@@ -114,7 +114,7 @@ struct SettingsView_iOS: View {
 
             // General Section
             Section {
-                NavigationLink(destination: DisplaySettingsView()) {
+                NavigationLink(destination: BitcoinFormatSettingView_iOS()) {
                     HStack(spacing: 12) {
                         Image(systemName: "numbers")
                             .foregroundColor(.Arke.indigo)
@@ -500,12 +500,6 @@ struct DeleteWalletView: View {
     }
 }
 
-struct DisplaySettingsView: View {
-    var body: some View {
-        BitcoinFormatSettingView_iOS()
-            .padding()
-    }
-}
 struct IntroVideoSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(WalletManager.self) private var manager

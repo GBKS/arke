@@ -3,14 +3,14 @@
 Fiat values next to sats, from one public static file that holds every
 currency. Sats are the real amount; fiat is display only.
 
-**Status: Phases 1 and 2 DONE 2026-09-28 (f2f002e, 881efc5); Phase 3 UI
-fit IN PROGRESS — steps 1 (balance card, cfacba4) and 2 (send amount field,
-2a34ef5) approved on device.** Client, cache, triggers and X-Ray section
-shipped; 24/24 unit tests green on iOS; live server check passed (200 → 30
-currencies + ETag, then 304). The Settings → Currency picker carries the
-required credit in its footer, so no About screen is needed (Christoph's
-call 2026-09-28). Remaining Phase 3 surfaces in §7; fiat *input* comes
-only after display is complete.
+**Status: Phases 1–3 DONE (display on balance card, send field, receive,
+Balance-screen cards, VoiceOver; transaction detail/rows parked); Phase 4
+fiat *input* IN PROGRESS — receive DONE 2026-09-29 (c6896d0 groundwork,
+f9e7b65 fiat mode), send field next.** Client, cache, triggers and X-Ray
+section shipped; fiat test suites 38 green on iOS; live server check passed
+(200 → 30 currencies + ETag, then 304). The Settings → Currency picker
+carries the required credit in its footer, so no About screen is needed
+(Christoph's call 2026-09-28). Details and decisions in §7.
 
 ## 1. Source
 
@@ -337,6 +337,98 @@ Proposals still awaiting a call (not decisions):
      warning haptic whenever a key is refused (digit cap, fraction cap, or
      the ceiling) instead of dropping it silently.
 
-   **Step 3 — port to the send field** (system text field with a decimal
-   pad rather than the keypad, so separator handling differs). Desktop
-   receive/send stay bitcoin-only until then.
+   **Step 3 — fiat entry on the send field, DONE, approved on device
+   2026-09-29 after six review rounds (below):**
+   - `SendViewModel.amount` (whole sats as a string) stays the single
+     source of truth that fees, validation and execution already read.
+     `SendViewModel+FiatEntry` adds `amountEntry: AmountEntryState` +
+     `fiatAmountText`; `setFiatText` normalizes the decimal-pad text to
+     machine form (`FiatConversion.machineForm(fromTyped:)`), recomputes
+     sats once at that moment's rate, and writes `amount`; the two switch
+     methods carry sats over and back-fill; `syncFiatEntryIfNeeded` re-fills
+     the fiat text when `amount` changes from outside (Max, a request's
+     fixed amount, clear) without a feedback loop.
+   - `SendAmountInput` (Shared/Views/Send) replaces `SendAmountFiatLine`
+     and wraps ArkéUI's `AmountInputSection` in all three flows, which take
+     an optional `sendViewModel` (nil → bitcoin-only, which is what the
+     desktop passes). `AmountInputSection` gained `allowsDecimals`
+     (decimal pad), `maxFractionDigits`, `prefixText` (currency symbol via
+     `FiatConversion.symbol(for:)`) and an `exceedsBalance` override, and
+     sanitizes input to digits + one separator (locale's or "."), integer
+     part ≤ 10 digits, fraction ≤ the currency's minor units.
+   - The line beside the field is the tap target both ways. In fiat mode it
+     shows the **sats in primary colour, medium weight** so the true
+     amount stays readable while fiat is typed — money leaving the wallet.
+     Falls back to sats entry when the rate becomes unavailable or the
+     currency is "None".
+   - Review round 2026-09-29 (Christoph): the field is recreated on a mode
+     swap and focus handed back, so the decimal pad appears/disappears in
+     place (iOS does not reload a focused field's keyboard); the sats field
+     carries its unit like the fiat field carries its symbol
+     (`BitcoinFormatter.satsEntryUnit`: "₿" prefix under the ₿-only format,
+     "sats" suffix otherwise, since the field is always whole sats); entry
+     is refused with a warning haptic once it exceeds the spendable balance
+     (`validateInput`, both modes, only when a balance is known); and the
+     Max button writes sats through `onSetAmountSats` instead of into the
+     field text — in fiat mode it used to paste the sats number in as euros.
+   - Review round 2 (2026-09-29): the send field's *bitcoin* side now
+     follows the unit format like receive does. `SendViewModel.
+     bitcoinAmountText` is a typed-text buffer parsed with
+     `BitcoinFormatter.parseUserInput` into `amount` on each keystroke
+     (`setBitcoinText`); the decimal pad and 8 fraction digits appear under
+     a decimal format; external changes and a unit-format change re-fill
+     the text via `inputString(forSatoshis:)` (`syncBitcoinTextIfNeeded`);
+     the unit label is the format's own symbol (`BitcoinFormatter.
+     entryUnit`: leading except "sats", which trails). Pre-existing: the
+     send field had always taken raw sats regardless of the format; the
+     "sats" label from round 1 made that visible. Without a view model
+     (desktop) the field stays raw sats.
+   - Review round 3 (2026-09-29): **over budget is shown, not blocked.**
+     The balance cap from round 1 judged partial entries as final — under a
+     decimal format with a sub-coin balance the first digit "1" was already
+     refused, so the keyboard felt broken. Now: type freely up to the
+     10-digit cap; the field turns orange (Christoph dropped the "More than
+     you can send" caption — colour alone), a warning haptic fires once
+     when the value crosses the balance, and Send stays disabled as before.
+     The 10-digit cap now counts digits on *both* sides of the separator,
+     so every unit tops out just under 100 BTC ("99.99999999" under a
+     decimal format, 9,999,999,999 sats) rather than ten whole coins'
+     worth of digits — Christoph's earlier "no one sends millions" call
+     applied consistently. (The server ceiling on
+     *receive* is unchanged — our keypad, a hard limit, no partial reads.)
+     Also fixed: Max in fiat mode left the euro text stale because the
+     typed-text buffers were read only inside the binding getter, outside
+     SwiftUI's observation; `SendAmountInput` now reads them in `body` and
+     back-fills synchronously in the Max handler.
+   - Review round 4 (2026-09-29): **swapping units corrupted the amount**
+     (500 sats → tap the fiat line → "500 €" / 680,492 sats). Cause: when
+     a focused text field ends editing, iOS writes its current text back
+     through the binding; the swap recreated the field (`.id` on the
+     keyboard type) so the old field's "500" landed in the *fiat* setter.
+     Fix in `SendAmountInput.swapUnits`: unfocus first while the binding
+     still routes to the old unit (a same-value write), then swap and
+     back-fill, then refocus — which also brings up the new keyboard, so
+     the `.id` recreation and focus toggle in `AmountInputSection` are
+     gone. The setter drops any write while `isSwapping`. Receive is
+     unaffected (our keypad, no text field).
+   - Review round 5 (2026-09-29): **Max in fiat mode left "5 €" beside
+     52,480 sats, and swapping back wrote the stale 6,818 sats.** The sync
+     path re-used `switchToFiat`, which read `amountSats` — in fiat mode
+     that is the *captured* sats, so the new value never landed.
+     `AmountEntryState.adoptSatsIntoFiat(_:rate:currency:)` now adopts
+     externally decided sats whatever the mode; `switchToFiat` reads the
+     bitcoin buffer explicitly (it is a switch *from* bitcoin);
+     `SendViewModel.syncFiatEntryIfNeeded` uses the adopt call. Two tests
+     pin the exact sequence.
+   - Review round 6 (2026-09-29): the over-budget orange was inconsistent
+     because a SwiftUI `TextField`'s text colour lags a keystroke while
+     editing. Christoph's call: colour only the **unit label** beside the
+     field (a plain view, redraws in the same pass) — the currency symbol
+     or "₿" in front, the "sats" suffix under that format — and leave the
+     typed number in its normal colour.
+   - Also 2026-09-29: `BitcoinFormatSettingView_iOS` stopped redrawing its
+     selection highlight after the first tap (write succeeded, other
+     screens fine). Cause not pinned; the screen is restructured to match
+     the working `CurrencySettingView` exactly — scroll view, direct
+     `@AppStorage` assignment, no `DisplaySettingsView` wrapper (deleted) —
+     awaiting Christoph's retest.

@@ -19965,6 +19965,28 @@
         }
       }
     },
+    "send_switch_to_bitcoin_entry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the amount in bitcoin instead"
+          }
+        }
+      }
+    },
+    "send_switch_to_fiat_entry" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the amount in %@ instead"
+          }
+        }
+      }
+    },
     "settings_address_patterns" : {
       "localizations" : {
         "de" : {

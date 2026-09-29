@@ -68,6 +68,9 @@ struct QuickPaymentView: View {
     let onEstimateFee: (() async -> Void)?
     let onEstimateLightningFee: (() async -> Void)?
     let onEstimateArkFee: (() async -> Void)?
+
+    /// Enables fiat entry on the amount field; nil keeps it bitcoin-only (desktop)
+    let sendViewModel: SendViewModel?
     
     @Binding var showFeeSelectionSheet: Bool
     @Binding var selectedFeePriority: FeePriority
@@ -104,7 +107,8 @@ struct QuickPaymentView: View {
         onCalculateMaxSendable: (() async -> Int?)? = nil,
         onEstimateFee: (() async -> Void)? = nil,
         onEstimateLightningFee: (() async -> Void)? = nil,
-        onEstimateArkFee: (() async -> Void)? = nil
+        onEstimateArkFee: (() async -> Void)? = nil,
+        sendViewModel: SendViewModel? = nil
     ) {
         self.paymentRequest = paymentRequest
         self.onDismiss = onDismiss
@@ -129,6 +133,7 @@ struct QuickPaymentView: View {
         self.onEstimateFee = onEstimateFee
         self.onEstimateLightningFee = onEstimateLightningFee
         self.onEstimateArkFee = onEstimateArkFee
+        self.sendViewModel = sendViewModel
     }
     
     // MARK: - Computed Properties
@@ -480,7 +485,8 @@ struct QuickPaymentView: View {
                     
                     // Show amount input section
                     if needsAmountInput {
-                        AmountInputSection(
+                        SendAmountInput(
+                            viewModel: sendViewModel,
                             amount: $amount,
                             maxSpendableAmount: maxSpendableAmount,
                             availableBalanceText: availableBalanceText,
@@ -492,9 +498,7 @@ struct QuickPaymentView: View {
                             minimumSendAmount: minimumSendAmount,
                             onCalculateMaxSendable: onCalculateMaxSendable,
                             isAmountFieldFocused: $isAmountFieldFocused
-                        ) {
-                            SendAmountFiatLine(amount: amount)
-                        }
+                        )
                         .disabled(isSending)
                     }
                     

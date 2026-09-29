@@ -36,6 +36,9 @@ struct ContactPaymentView: View {
     let paymentContext: PaymentDestinationSelector.PaymentContext?
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
+
+    /// Enables fiat entry on the amount field; nil keeps it bitcoin-only (desktop)
+    var sendViewModel: SendViewModel? = nil
     
     // State for destination card
     @State private var showFullAddress: Bool = false
@@ -410,7 +413,8 @@ struct ContactPaymentView: View {
                 )
             }
             
-            AmountInputSection(
+            SendAmountInput(
+                viewModel: sendViewModel,
                 amount: $amount,
                 maxSpendableAmount: maxSpendableAmount,
                 availableBalanceText: availableBalanceText,
@@ -422,9 +426,7 @@ struct ContactPaymentView: View {
                 minimumSendAmount: minimumSendAmount,
                 onCalculateMaxSendable: onCalculateMaxSendable,
                 isAmountFieldFocused: $isAmountFieldFocused
-            ) {
-                SendAmountFiatLine(amount: amount)
-            }
+            )
             
             FeeDisplayView(
                 fee: feeAmount,

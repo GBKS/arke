@@ -110,6 +110,41 @@ nonisolated enum FiatConversion {
         return formatter.string(from: value as NSDecimalNumber) ?? raw
     }
 
+    /// The currency symbol as the locale shows it ("€", "US$", "¥"), for a
+    /// prefix beside a text field
+    nonisolated static func symbol(for code: String, locale: Locale = .autoupdatingCurrent) -> String {
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .currency
+        formatter.currencyCode = code
+        return formatter.currencySymbol ?? code
+    }
+
+    /// Machine form of text typed on a system decimal pad, whose separator
+    /// follows the locale ("12,50" on a German keyboard → "12.50"). Keeps
+    /// digits only; accepts the locale's separator or "." as the one
+    /// decimal separator; anything else (grouping, letters) is dropped.
+    nonisolated static func machineForm(fromTyped text: String, locale: Locale = .autoupdatingCurrent) -> String {
+        let separator = locale.decimalSeparator ?? "."
+        var result = ""
+        var sawSeparator = false
+        for character in text.replacingOccurrences(of: separator, with: ".") {
+            if character.isASCII, character.isNumber {
+                result.append(character)
+            } else if character == ".", !sawSeparator {
+                result.append(".")
+                sawSeparator = true
+            }
+        }
+        return result
+    }
+
+    /// The reverse: a machine-form string as the locale's keyboard would
+    /// have typed it ("12.50" → "12,50" in Germany), for back-filling a field
+    nonisolated static func typedForm(fromMachine raw: String, locale: Locale = .autoupdatingCurrent) -> String {
+        raw.replacingOccurrences(of: ".", with: locale.decimalSeparator ?? ".")
+    }
+
     /// The machine-form string for a fiat amount, trimmed to the currency's
     /// minor units — used to back-fill the fiat buffer when switching input
     /// modes. 85.84188 USD → "85.84"; 13480.25 JPY → "13480".

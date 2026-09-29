@@ -83,6 +83,43 @@ struct AmountEntryStateTests {
         #expect(state.amountSats(parseBitcoin: parseSats) == 11_649)
     }
 
+    @Test("Sats decided elsewhere (Max) are adopted in fiat mode, and the swap back carries them")
+    func adoptSatsWhileInFiatMode() {
+        // Type 5 € → 6,818 sats at 73,337.88 €/BTC
+        let eurRate = Decimal(string: "73337.88")!
+        var state = AmountEntryState()
+        state.mode = .fiat
+        state.setFiatInput("5", rate: eurRate)
+        #expect(state.amountSats(parseBitcoin: parseSats) == 6_818)
+
+        // Max writes 52,480 sats from outside the field
+        state.adoptSatsIntoFiat(52_480, rate: eurRate, currency: "EUR")
+        #expect(state.amountSats(parseBitcoin: parseSats) == 52_480)
+        #expect(state.fiatInput == "38.49")
+
+        // Swapping back to bitcoin carries the adopted sats, not the stale 6,818
+        state.switchToBitcoin(formatBitcoinInput: formatSats, parseBitcoin: parseSats)
+        #expect(state.bitcoinInput == "52480")
+
+        // Clearing from outside empties the fiat side too
+        state.mode = .fiat
+        state.adoptSatsIntoFiat(nil, rate: eurRate, currency: "EUR")
+        #expect(state.fiatInput == "")
+        #expect(state.amountSats(parseBitcoin: parseSats) == nil)
+    }
+
+    @Test("Switching to fiat reads the bitcoin buffer, even if fiat state is stale")
+    func switchToFiatReadsBitcoinBuffer() {
+        var state = AmountEntryState()
+        state.mode = .fiat
+        state.setFiatInput("5", rate: rate)          // stale fiat side
+        state.mode = .bitcoin
+        state.bitcoinInput = "20000"
+        state.switchToFiat(rate: rate, currency: "USD", parseBitcoin: parseSats)
+        #expect(state.amountSats(parseBitcoin: parseSats) == 20_000)
+        #expect(state.fiatInput == "17.17")
+    }
+
     @Test("Swapping with nothing entered leaves both buffers empty")
     func swapEmpty() {
         var state = AmountEntryState()

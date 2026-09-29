@@ -1216,8 +1216,11 @@ yet, by design.
   Int sats, keypad takes `decimalPlaces` + localized separator glyph,
   `FiatConversion` entry helpers, 6 tests). Fiat mode on the receive form
   (tap either amount to swap; `AmountEntryState`, 8 tests) approved on
-  device 2026-09-29. Next: the send field. Design in
-  `Features/Fiat_Rates.md` §7 item 4. Owed: on-device look at the German
+  device 2026-09-29. Send field (`SendAmountInput`: both units typed in their own format,
+  tap either line to swap, Max/requests/clears back-fill, over budget shown
+  by the orange unit label) approved on device 2026-09-29. Owed: retest of
+  the rebuilt unit-format settings screen (highlight after 2nd tap).
+  Design in `Features/Fiat_Rates.md` §7 item 4. Owed: on-device look at the German
   separator on the keypad key and in the partial display (the display fix
   lands with step 2, not the groundwork commit as its message claims).
 - [x] **Lightning invoice limit mismatch — FIXED 2026-09-29**: both the

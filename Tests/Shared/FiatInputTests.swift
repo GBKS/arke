@@ -62,6 +62,27 @@ struct FiatInputTests {
         #expect(plain(FiatConversion.formatPartialInput("1234567", currency: "EUR", locale: deDE)) == "1.234.567 €")
     }
 
+    @Test("Decimal-pad text converts to machine form and back per locale")
+    func typedAndMachineForms() {
+        #expect(FiatConversion.machineForm(fromTyped: "12,50", locale: deDE) == "12.50")
+        #expect(FiatConversion.machineForm(fromTyped: "12.50", locale: enUS) == "12.50")
+        // Either separator is accepted, only the first one counts, junk is dropped
+        #expect(FiatConversion.machineForm(fromTyped: "12.50", locale: deDE) == "12.50")
+        #expect(FiatConversion.machineForm(fromTyped: "1.234,5", locale: deDE) == "1.2345")
+        #expect(FiatConversion.machineForm(fromTyped: "1 2a", locale: enUS) == "12")
+        #expect(FiatConversion.typedForm(fromMachine: "12.50", locale: deDE) == "12,50")
+        #expect(FiatConversion.typedForm(fromMachine: "12.50", locale: enUS) == "12.50")
+        #expect(FiatConversion.typedForm(fromMachine: "", locale: deDE) == "")
+    }
+
+    @Test("Currency symbols follow the locale")
+    func symbols() {
+        #expect(FiatConversion.symbol(for: "USD", locale: enUS) == "$")
+        #expect(FiatConversion.symbol(for: "EUR", locale: deDE) == "€")
+        #expect(FiatConversion.symbol(for: "USD", locale: Locale(identifier: "en_GB")) == "US$")
+        #expect(FiatConversion.symbol(for: "JPY", locale: enUS) == "¥")
+    }
+
     @Test("Back-filling the fiat buffer trims to the currency's minor units")
     func inputStringBackfill() {
         #expect(FiatConversion.inputString(for: Decimal(string: "85.84188")!, currency: "USD") == "85.84")

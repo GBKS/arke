@@ -270,6 +270,13 @@ public final class BitcoinFormatter: @unchecked Sendable {
         }
     }
 
+    /// The unit label for an amount field typed in the current format, and
+    /// where it sits: the format's symbol leading ("₿ 0.5", "₿ 12,345",
+    /// "🌽 0.5"), except sats, which trail ("12,345 sats").
+    public var entryUnit: (text: String, isPrefix: Bool) {
+        (formatSymbol, selectedFormat != .satoshis)
+    }
+
     /// The machine-form entry string for a sats amount in the current unit
     /// format — the inverse of `parseUserInput`. "11649" under a sats format,
     /// "0.00011649" under a decimal one (no grouping, "." separator, trailing

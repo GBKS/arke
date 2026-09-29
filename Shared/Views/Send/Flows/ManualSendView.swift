@@ -40,6 +40,9 @@ struct ManualSendView: View {
     let onEstimateFee: (() async -> Void)?
     let onEstimateLightningFee: (() async -> Void)?
     let onEstimateArkFee: (() async -> Void)?
+
+    /// Enables fiat entry on the amount field; nil keeps it bitcoin-only (desktop)
+    var sendViewModel: SendViewModel? = nil
     
     // MARK: - State
     @FocusState private var isRecipientFieldFocused: Bool
@@ -163,8 +166,9 @@ struct ManualSendView: View {
                 )
             }
                 
-            // Amount section (shown in confirmed mode)
-            AmountInputSection(
+            // Amount section (shown in confirmed mode); bitcoin or fiat entry
+            SendAmountInput(
+                viewModel: sendViewModel,
                 amount: $amount,
                 maxSpendableAmount: maxSpendableAmount,
                 availableBalanceText: availableBalanceText,
@@ -176,9 +180,7 @@ struct ManualSendView: View {
                 minimumSendAmount: minimumSendAmount,
                 onCalculateMaxSendable: onCalculateMaxSendable,
                 isAmountFieldFocused: $isAmountFieldFocused
-            ) {
-                SendAmountFiatLine(amount: amount)
-            }
+            )
             
             FeeDisplayView(
                 fee: feeAmount,
