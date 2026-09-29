@@ -3,12 +3,12 @@
 Fiat values next to sats, from one public static file that holds every
 currency. Sats are the real amount; fiat is display only.
 
-**Status: Phases 1–3 DONE (display on balance card, send field, receive,
-Balance-screen cards, VoiceOver; transaction detail/rows parked); Phase 4
-fiat *input* IN PROGRESS — receive DONE 2026-09-29 (c6896d0 groundwork,
-f9e7b65 fiat mode), send field next.** Client, cache, triggers and X-Ray
-section shipped; fiat test suites 38 green on iOS; live server check passed
-(200 → 30 currencies + ETag, then 304). The Settings → Currency picker
+**Status: Phases 1–4 DONE on iOS (display on balance card, send field,
+receive, Balance-screen cards, VoiceOver; fiat *input* on receive — c6896d0,
+f9e7b65 — and send — d182926, 2026-09-29). Parked: transaction detail/rows
+("today's rate" wording), desktop UI.** Client, cache, triggers and X-Ray section
+shipped; fiat test suites 40 green on iOS; live server check passed (200 →
+30 currencies + ETag, then 304). The Settings → Currency picker
 carries the required credit in its footer, so no About screen is needed
 (Christoph's call 2026-09-28). Details and decisions in §7.
 
@@ -430,5 +430,5 @@ Proposals still awaiting a call (not decisions):
      selection highlight after the first tap (write succeeded, other
      screens fine). Cause not pinned; the screen is restructured to match
      the working `CurrencySettingView` exactly — scroll view, direct
-     `@AppStorage` assignment, no `DisplaySettingsView` wrapper (deleted) —
-     awaiting Christoph's retest.
+     `@AppStorage` assignment, no `DisplaySettingsView` wrapper (deleted).
+     Retested by Christoph 2026-09-29: the highlight now follows every tap.

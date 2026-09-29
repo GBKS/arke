@@ -1218,8 +1218,8 @@ yet, by design.
   (tap either amount to swap; `AmountEntryState`, 8 tests) approved on
   device 2026-09-29. Send field (`SendAmountInput`: both units typed in their own format,
   tap either line to swap, Max/requests/clears back-fill, over budget shown
-  by the orange unit label) approved on device 2026-09-29. Owed: retest of
-  the rebuilt unit-format settings screen (highlight after 2nd tap).
+  by the orange unit label) approved on device 2026-09-29. The rebuilt
+  unit-format settings screen retested OK 2026-09-29.
   Design in `Features/Fiat_Rates.md` §7 item 4. Owed: on-device look at the German
   separator on the keypad key and in the partial display (the display fix
   lands with step 2, not the groundwork commit as its message claims).
