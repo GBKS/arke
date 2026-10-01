@@ -182,13 +182,6 @@ struct ActivityView_iOS: View {
                 
                 // Transaction List
                 if let transactionService = manager.transactionServiceInstance {
-                    // Error Display - Transaction-specific errors
-                    if let error = transactionService.error {
-                        ErrorBox(errorMessage: error)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 8)
-                    }
-                    
                     TransactionList_iOS(
                         selectedTransaction: $selectedTransaction,
                         filterTag: filterTag,

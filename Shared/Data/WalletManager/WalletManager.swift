@@ -913,6 +913,16 @@ class WalletManager {
             return
         }
 
+        // The wallet object exists long before bark's database is open (launch
+        // opens it in initializePrimaryMode). A refresh in that window — e.g. a
+        // mailbox push during startup — would fail every FFI read with
+        // walletNotInitialized. Skip quietly: the launch path runs its own
+        // refresh() right after the open (contract rule 7b).
+        if let ffiWallet = wallet as? BarkWalletFFI, !ffiWallet.isWalletOpen {
+            Self.logger.notice("⏭️ [Refresh] Skipped — wallet database not open yet")
+            return
+        }
+
         // Track if any server communication succeeded
         var anyServerCallSucceeded = false
         
