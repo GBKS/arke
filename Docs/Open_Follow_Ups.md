@@ -919,6 +919,36 @@ green):
   was successful"). Harmless but it buries real errors, and that launch took
   13.8s just to register the device. Create the directory before building the
   container.
+- [ ] **Pre-open refresh → sticky `walletNotInitialized` banner** (2026-10-01):
+  `performRefresh()` now skips until bark's handle is open (contract rule 7b)
+  and the iOS activity-list `TransactionService.error` banner is removed.
+  `BalanceRefreshStatusViewModel` had the same pre-open window (completed
+  with empty data, stayed empty until a VTXO change) — now waits for
+  `isInitialized`; both containers and `BalanceRefreshTag` (home card)
+  reload when it flips. Second post-fix launch (06:56:25Z) confirmed the
+  pre-open error is gone, and showed the tag never reloading — hook added
+  after that log. Third launch (06:59:14Z) verified the tag: `Wallet
+  initialized, loading data` right after the open, then
+  `hasCompletedInitialLoad=true`, no `walletNotInitialized` anywhere. The
+  balance-screen containers use the same hook but weren't exercised in that
+  log. Fourth launch (07:01:34Z, navigated to Balance) is clean too, but the
+  capture ends at the navigation (`.onDisappear` of the home tag is the last
+  app line), and the containers only log on failure — so the screen itself
+  is the evidence: it showed "Refresh in 5d 18h" (matches the earliest VTXO
+  at 970234 vs height ~969408). Remaining verification is soak testing
+  through normal use — grep exported logs for `⏭️ [Refresh] Skipped` (first
+  real exercise of the skip; the lines just before it name the trigger) and
+  for any `walletNotInitialized`. Their `isInitialized` hook only fires if the balance
+  screen is on screen before the open; navigating after it takes the plain
+  `.task` path.
+  Owed: (a) on-device verify — first post-fix launch (06:51:37Z) was clean
+  but had no pre-open refresh, so the skip path is still unexercised; the
+  trigger that caused the original banner is unconfirmed (mailbox push
+  suspected). Next launch: no `BalanceRefreshStatusViewModel:
+  walletNotInitialized` line, and the balance screen's refresh status shows
+  without needing a VTXO change; (b) desktop `ActivityView.swift` still shows the same never-cleared
+  banner (desktop parked); (c) `TransactionService.error` is still never cleared
+  on success — harmless now nothing on iOS reads it, but drop or clear it.
 
 ## Background Execution
 

@@ -75,6 +75,28 @@ The same dependency is why `refreshAfterVTXOChange()` must call
 Enforced: `WalletManager.performInitialization()` (`await refresh()` precedes
 the `start()` block). Test: none — ordering is positional.
 
+**7b. No `refresh()` work before bark's database is open.**
+The `BarkWalletFFI` object exists from `WalletManager` init, but its handle
+is only set once `openWalletIfNeeded()` returns in `initializePrimaryMode()`.
+Refresh triggers aren't gated on launch progress — the mailbox push observer
+is installed at init, pull-to-refresh only checks read-only mode — so a
+refresh in that window ran every FFI read against a nil handle and
+`TransactionService` showed a `walletNotInitialized` banner for the whole
+session (2026-10-01). `performRefresh()` now skips when
+`BarkWalletFFI.isWalletOpen` is false; nothing is lost, because launch calls
+`refresh()` itself right after the open. Check the handle, not
+`wallet != nil` — the object is never nil on a primary device.
+Views that load wallet data on `.task` have the same window and must wait for
+`isInitialized` (set after the open, before the launch refresh) and reload
+when it flips — `BalanceRefreshStatusViewModel` used to complete with empty
+data pre-open and stayed empty until the next VTXO change, since its only
+other reload trigger, `transactionVersion`, isn't bumped by the launch refresh.
+Enforced: `WalletManager.performRefresh()` (open-handle guard);
+`BalanceRefreshStatusViewModel.loadData()` + every view that owns one —
+both status containers and `BalanceRefreshTag` (`onChange(of: isInitialized)`).
+A new owner of that view model needs the same reload hook, or it sits in the
+loading state for the session. Test: none.
+
 ## Exit progression and Live Activities (iOS)
 
 **8. Launch order: reattach → first `checkAndProgressExits` → `recreateMissingActivities` → reminder re-arm.**
