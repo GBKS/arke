@@ -1176,6 +1176,25 @@ bindings.
   becomes an orphan the next catalog re-extraction prunes. Git history:
   `Shared/Views/Send/PaymentRequestInfoBanner.swift`.
 
+## Payments / Receive
+
+- [ ] **Invoice creation feedback on slow networks — IMPLEMENTED 2026-09-30,
+  on-device verify pending**: on a bad connection the iOS receive form gave
+  no response to the checkmark for several seconds. `isGeneratingInvoice`
+  and `invoiceError` were never read on iOS, so failures were silent too.
+  Now the QR sheet opens right when the checkmark is tapped and shows "Creating
+  Invoice..." in the QR's place. On failure it offers Try Again or Share
+  Addresses Instead. Share stays disabled until the invoice exists. Repeat
+  taps are ignored, and a late answer to a closed request is discarded
+  (`invoiceRequestID`). The post-invoice `sync()` (added 976e488 with
+  `LightningClaimService`) now runs in the background and can no longer throw
+  away a valid invoice. Verify with Network Link Conditioner ("Very Bad
+  Network" / 100% loss): progress state, failure + retry, fallback to
+  addresses, closing mid-request.
+- [ ] **Invoice creation polish (deferred)**: a "Slow connection, still
+  trying…" line after ~5 s; say "offline" right away when the wallet
+  already knows it is; a VoiceOver announcement for "Creating invoice".
+
 ## Fiat Rates (guiding doc: `Features/Fiat_Rates.md`)
 
 Phase 1 (client + cache + triggers + X-Ray section) shipped 2026-09-28,

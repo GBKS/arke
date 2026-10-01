@@ -58,12 +58,6 @@ struct ReceiveView_iOS: View {
         .onChange(of: doubleTapTrigger) { _, _ in
             handleDoubleTap()
         }
-        .onChange(of: viewModel.lightningInvoice) { oldValue, newValue in
-            // Show invoice sheet when invoice is generated
-            if viewModel.selectedBalance == .lightning && newValue != nil && oldValue == nil {
-                showingInvoiceSheet = true
-            }
-        }
         .onChange(of: viewModel.showAddressesOnly) { oldValue, newValue in
             // Show sheet when user wants to share addresses without invoice
             if viewModel.selectedBalance == .lightning && newValue && !oldValue {
@@ -73,6 +67,8 @@ struct ReceiveView_iOS: View {
         .fullScreenCover(isPresented: $showingInvoiceSheet) {
             LightningInvoiceSheet_iOS(
                 invoice: viewModel.lightningInvoice,
+                isCreatingInvoice: viewModel.isGeneratingInvoice,
+                invoiceError: viewModel.invoiceError,
                 amountSats: viewModel.amountSats,
                 enteredInFiat: viewModel.entry.mode == .fiat,
                 note: viewModel.note,
@@ -82,6 +78,14 @@ struct ReceiveView_iOS: View {
                 onClose: {
                     showingInvoiceSheet = false
                     viewModel.resetLightningForm()
+                },
+                onRetry: {
+                    Task {
+                        await viewModel.generateLightningInvoice()
+                    }
+                },
+                onShareAddressesInstead: {
+                    viewModel.shareAddressesInstead()
                 },
                 walletManager: walletManager
             )
@@ -210,6 +214,14 @@ struct ReceiveView_iOS: View {
             LightningInvoiceFormView_iOS(
                 viewModel: viewModel,
                 onGenerateInvoice: {
+                    // Respond to the tap right away: with an amount, the sheet
+                    // opens now and shows progress until the invoice arrives
+                    // (a slow connection can take many seconds)
+                    guard !viewModel.isGeneratingInvoice else { return }
+                    if viewModel.amountSats != nil {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        showingInvoiceSheet = true
+                    }
                     Task {
                         await viewModel.proceedWithOrWithoutInvoice()
                     }

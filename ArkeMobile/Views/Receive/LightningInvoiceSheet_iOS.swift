@@ -16,6 +16,12 @@ struct LightningInvoiceSheet_iOS: View {
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "LightningInvoiceSheet")
     
     let invoice: String?
+    /// The sheet opens as soon as the request is confirmed; while the invoice
+    /// is still being created it shows progress in place of the QR code
+    var isCreatingInvoice: Bool = false
+    /// Why creating the invoice failed; the sheet then offers a retry or
+    /// sharing the addresses without an invoice
+    var invoiceError: String? = nil
     /// Requested amount in whole sats, nil when none was entered
     let amountSats: Int?
     /// The requester typed the amount in fiat, so the sheet leads with fiat
@@ -26,6 +32,8 @@ struct LightningInvoiceSheet_iOS: View {
     let onchainAddress: String
     let isDeviceUpsideDown: Bool
     let onClose: () -> Void
+    var onRetry: () -> Void = {}
+    var onShareAddressesInstead: () -> Void = {}
     let walletManager: WalletManager
     
     @Query private var profiles: [UserProfile]
@@ -50,6 +58,18 @@ struct LightningInvoiceSheet_iOS: View {
     
     private var userProfile: UserProfile? {
         profiles.first
+    }
+
+    /// No QR code can be shown yet: the invoice is on its way, or failed
+    private var isAwaitingInvoice: Bool {
+        isCreatingInvoice || invoiceError != nil
+    }
+
+    /// What the QR codes encode, nil while awaiting the invoice. Keys the
+    /// task that draws them, so they appear once the invoice arrives (or the
+    /// requester falls back to sharing the addresses).
+    private var qrContent: String? {
+        isAwaitingInvoice ? nil : createBIP21URI()
     }
     
     private var formattedAmount: String {
@@ -134,10 +154,18 @@ struct LightningInvoiceSheet_iOS: View {
                     }
             }
         }
-        .task {
+        .task(id: qrContent) {
+            cleanupSubscription()
+            guard qrContent != nil else {
+                qrImage = nil
+                qrImageSimple = nil
+                return
+            }
             generateQRCode()
             generateSimpleQRCode()
             setupPaymentListener()
+        }
+        .task {
             await checkAndPromptForNotifications()
         }
         .onDisappear {
@@ -177,11 +205,7 @@ struct LightningInvoiceSheet_iOS: View {
                             .frame(width: qrCodeSize(for: screenWidth),
                                    height: qrCodeSize(for: screenWidth))
                         } else {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                                .tint(.white)
-                                .frame(width: qrCodeSize(for: screenWidth),
-                                       height: qrCodeSize(for: screenWidth))
+                            qrPlaceholder(size: qrCodeSize(for: screenWidth))
                         }
                     } else {
                         if let qrImageSimple = qrImageSimple {
@@ -200,11 +224,7 @@ struct LightningInvoiceSheet_iOS: View {
                             .frame(width: qrCodeSize(for: screenWidth),
                                    height: qrCodeSize(for: screenWidth))
                         } else {
-                            ProgressView()
-                                .scaleEffect(1.5)
-                                .tint(.white)
-                                .frame(width: qrCodeSize(for: screenWidth),
-                                       height: qrCodeSize(for: screenWidth))
+                            qrPlaceholder(size: qrCodeSize(for: screenWidth))
                         }
                     }
                 }
@@ -213,6 +233,9 @@ struct LightningInvoiceSheet_iOS: View {
                 .shadow(radius: 10, x: 0, y: 5)
                 .transition(.scale.combined(with: .opacity))
                 .onTapGesture {
+                    // Nothing to toggle until there is a QR code
+                    guard !isAwaitingInvoice else { return }
+
                     let impact = UIImpactFeedbackGenerator(style: .light)
                     impact.impactOccurred()
 
@@ -221,11 +244,9 @@ struct LightningInvoiceSheet_iOS: View {
                     }
                 }
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(invoice != nil ?
-                    String(localized: "accessibility_lightning_invoice_qr", defaultValue: "Lightning invoice QR code") :
-                    L10n.accessibilityPaymentQr)
-                .accessibilityHint(String(localized: "accessibility_hint_toggle_qr_style", defaultValue: "Switches between styled and plain QR code"))
-                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(qrAccessibilityLabel)
+                .accessibilityHint(isAwaitingInvoice ? "" : String(localized: "accessibility_hint_toggle_qr_style", defaultValue: "Switches between styled and plain QR code"))
+                .accessibilityAddTraits(isAwaitingInvoice ? [] : .isButton)
                 
                 // Video overlay (only shown when payment received)
                 if paymentReceived {
@@ -262,48 +283,53 @@ struct LightningInvoiceSheet_iOS: View {
             
             // Actions
             VStack(spacing: 20) {
-                // Share button
-                HStack(spacing: 12) {
-                    ShareLink(item: createBIP21URI()) {
-                        Text(L10n.buttonShare)
-                            .font(.system(size: 21, weight: .semibold))
-                            .foregroundStyle(Color.Arke.gold4)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 20)
-                    }
-                    .buttonStyle(.glassProminent)
-                    .tint(.Arke.gold)
-                    .controlSize(.large)
-                    .accessibilityLabel(String(localized: "accessibility_share_payment_request", defaultValue: "Share payment request"))
-                    .accessibilityHint(String(localized: "accessibility_share_payment_hint", defaultValue: "Opens share sheet to send address to others"))
-
-                    // Enable notifications (only in primary mode - requires ASP connection)
-                    if (!notificationsEnabled || notificationsJustEnabled) && !walletManager.isReadOnlyMode {
-                        Button {
-                            Task {
-                                await enableNotifications()
-                            }
-                        } label: {
-                            Image(systemName: notificationsJustEnabled ? "checkmark" : "bell.fill")
+                if invoiceError != nil {
+                    invoiceFailedActions
+                } else {
+                    // Share button — waits for the invoice, so the link carries it
+                    HStack(spacing: 12) {
+                        ShareLink(item: createBIP21URI()) {
+                            Text(L10n.buttonShare)
                                 .font(.system(size: 21, weight: .semibold))
-                                //.foregroundStyle(.white)
-                                .contentTransition(.symbolEffect(.replace))
-                                .frame(width: 28, height: 28)
+                                .foregroundStyle(Color.Arke.gold4)
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 20)
                         }
-                        .buttonStyle(.glass)
+                        .buttonStyle(.glassProminent)
+                        .tint(.Arke.gold)
                         .controlSize(.large)
-                        .tint(Color.Arke.gold)
-                        .environment(\.colorScheme, .dark)
-                        .disabled(notificationsJustEnabled)
-                        .accessibilityLabel(notificationsJustEnabled ?
-                            String(localized: "status_notifications_enabled", defaultValue: "Notifications enabled") :
-                            String(localized: "action_enable_notifications", defaultValue: "Enable notifications"))
-                        .accessibilityHint(String(localized: "accessibility_hint_enable_notifications", defaultValue: "Asks for permission to notify you when funds arrive"))
+                        .disabled(isCreatingInvoice)
+                        .accessibilityLabel(String(localized: "accessibility_share_payment_request", defaultValue: "Share payment request"))
+                        .accessibilityHint(String(localized: "accessibility_share_payment_hint", defaultValue: "Opens share sheet to send address to others"))
+
+                        // Enable notifications (only in primary mode - requires ASP connection)
+                        if (!notificationsEnabled || notificationsJustEnabled) && !walletManager.isReadOnlyMode {
+                            Button {
+                                Task {
+                                    await enableNotifications()
+                                }
+                            } label: {
+                                Image(systemName: notificationsJustEnabled ? "checkmark" : "bell.fill")
+                                    .font(.system(size: 21, weight: .semibold))
+                                    //.foregroundStyle(.white)
+                                    .contentTransition(.symbolEffect(.replace))
+                                    .frame(width: 28, height: 28)
+                            }
+                            .buttonStyle(.glass)
+                            .controlSize(.large)
+                            .tint(Color.Arke.gold)
+                            .environment(\.colorScheme, .dark)
+                            .disabled(notificationsJustEnabled)
+                            .accessibilityLabel(notificationsJustEnabled ?
+                                String(localized: "status_notifications_enabled", defaultValue: "Notifications enabled") :
+                                String(localized: "action_enable_notifications", defaultValue: "Enable notifications"))
+                            .accessibilityHint(String(localized: "accessibility_hint_enable_notifications", defaultValue: "Asks for permission to notify you when funds arrive"))
+                        }
                     }
+                    .disabled(paymentReceived)
+                    .opacity(paymentReceived ? 0 : 1)
                 }
-                .disabled(paymentReceived)
-                .opacity(paymentReceived ? 0 : 1)
-                
+
                 Button {
                     onClose()
                 } label: {
@@ -356,11 +382,7 @@ struct LightningInvoiceSheet_iOS: View {
                                 .frame(width: qrCodeSize(for: screenWidth),
                                        height: qrCodeSize(for: screenWidth))
                             } else {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                    .tint(.white)
-                                    .frame(width: qrCodeSize(for: screenWidth),
-                                           height: qrCodeSize(for: screenWidth))
+                                qrPlaceholder(size: qrCodeSize(for: screenWidth))
                             }
                         } else {
                             if let qrImageSimple = qrImageSimple {
@@ -379,11 +401,7 @@ struct LightningInvoiceSheet_iOS: View {
                                 .frame(width: qrCodeSize(for: screenWidth),
                                        height: qrCodeSize(for: screenWidth))
                             } else {
-                                ProgressView()
-                                    .scaleEffect(1.5)
-                                    .tint(.white)
-                                    .frame(width: qrCodeSize(for: screenWidth),
-                                           height: qrCodeSize(for: screenWidth))
+                                qrPlaceholder(size: qrCodeSize(for: screenWidth))
                             }
                         }
                     }
@@ -392,6 +410,9 @@ struct LightningInvoiceSheet_iOS: View {
                     .shadow(radius: 10, x: 0, y: 5)
                     .transition(.scale.combined(with: .opacity))
                     .onTapGesture {
+                        // Nothing to toggle until there is a QR code
+                        guard !isAwaitingInvoice else { return }
+
                         let impact = UIImpactFeedbackGenerator(style: .light)
                         impact.impactOccurred()
 
@@ -400,11 +421,9 @@ struct LightningInvoiceSheet_iOS: View {
                         }
                     }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(invoice != nil ?
-                        String(localized: "accessibility_lightning_invoice_qr", defaultValue: "Lightning invoice QR code") :
-                        L10n.accessibilityPaymentQr)
-                    .accessibilityHint(String(localized: "accessibility_hint_toggle_qr_style", defaultValue: "Switches between styled and plain QR code"))
-                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel(qrAccessibilityLabel)
+                    .accessibilityHint(isAwaitingInvoice ? "" : String(localized: "accessibility_hint_toggle_qr_style", defaultValue: "Switches between styled and plain QR code"))
+                    .accessibilityAddTraits(isAwaitingInvoice ? [] : .isButton)
                     
                     // Video overlay (only shown when payment received)
                     if paymentReceived {
@@ -463,8 +482,81 @@ struct LightningInvoiceSheet_iOS: View {
         .padding(24)
     }
     
+    // MARK: - Awaiting the Invoice
+
+    /// Fills the QR code's place while there is none: progress while the
+    /// invoice is being created, the reason when that failed. Sits on the
+    /// QR code's white card, hence the dark content.
+    private func qrPlaceholder(size: CGFloat) -> some View {
+        VStack(spacing: 16) {
+            if let invoiceError {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 36))
+                    .foregroundStyle(.orange)
+                    .accessibilityHidden(true)
+
+                Text(invoiceError)
+            } else {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(.gray)
+
+                if isCreatingInvoice {
+                    Text(String(localized: "status_creating_invoice", defaultValue: "Creating Invoice..."))
+                }
+            }
+        }
+        .font(.system(size: 17, weight: .medium))
+        .foregroundStyle(.black.opacity(0.7))
+        .multilineTextAlignment(.center)
+        .padding(28)
+        .frame(width: size, height: size)
+    }
+
+    private var qrAccessibilityLabel: String {
+        if let invoiceError {
+            return invoiceError
+        }
+        if isCreatingInvoice {
+            return String(localized: "status_creating_invoice", defaultValue: "Creating Invoice...")
+        }
+        return invoice != nil ?
+            String(localized: "accessibility_lightning_invoice_qr", defaultValue: "Lightning invoice QR code") :
+            L10n.accessibilityPaymentQr
+    }
+
+    /// Replaces the share row when the invoice couldn't be created: try
+    /// again, or share the addresses, which work without the server
+    private var invoiceFailedActions: some View {
+        VStack(spacing: 12) {
+            Button {
+                onRetry()
+            } label: {
+                Text(L10n.buttonTryAgain)
+                    .font(.system(size: 21, weight: .semibold))
+                    .foregroundStyle(Color.Arke.gold4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
+            }
+            .buttonStyle(.glassProminent)
+            .tint(.Arke.gold)
+            .controlSize(.large)
+
+            Button {
+                onShareAddressesInstead()
+            } label: {
+                Text(String(localized: "receive_share_addresses_instead", defaultValue: "Share Addresses Instead"))
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .padding(.vertical, 6)
+            .accessibilityHint(String(localized: "accessibility_hint_share_addresses_instead", defaultValue: "Shows a request without a Lightning invoice"))
+        }
+    }
+
     // MARK: - Helper Methods
-    
+
     private func qrCodeSize(for screenWidth: CGFloat) -> CGFloat {
         let width = screenWidth > 0 ? screenWidth : 320  // fallback for first frame
         return min(width * 0.8, 400)  // Cap at 400pt for larger screens

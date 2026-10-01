@@ -1416,6 +1416,17 @@
         }
       }
     },
+    "accessibility_hint_share_addresses_instead" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Shows a request without a Lightning invoice"
+          }
+        }
+      }
+    },
     "accessibility_hint_toggle_balance_type" : {
       "localizations" : {
         "de" : {
@@ -19108,6 +19119,17 @@
         }
       }
     },
+    "receive_invoice_creation_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Couldn't create the invoice. Check your connection and try again."
+          }
+        }
+      }
+    },
     "receive_lightning_invoice" : {
       "localizations" : {
         "de" : {
@@ -19244,6 +19266,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "掃描付款"
+          }
+        }
+      }
+    },
+    "receive_share_addresses_instead" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share Addresses Instead"
           }
         }
       }

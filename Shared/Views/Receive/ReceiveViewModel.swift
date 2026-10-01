@@ -8,12 +8,14 @@
 import SwiftUI
 import SwiftData
 import ArkeUI
+import OSLog
 
 /// Shared view model for receive functionality across macOS and iOS
 @Observable
 @MainActor
 final class ReceiveViewModel {
-    
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "ReceiveViewModel")
+
     // MARK: - Dependencies
     
     private let walletManager: WalletManager
@@ -45,7 +47,12 @@ final class ReceiveViewModel {
     var invoiceError: String?
     var showCopySuccess = false
     var showAddressesOnly = false
-    
+
+    /// Identifies the invoice request in flight. Closing the form or clearing
+    /// the invoice drops it, so a slow answer to an abandoned request is
+    /// discarded instead of landing in the next one.
+    private var invoiceRequestID: UUID?
+
     // MARK: - Initialization
     
     init(walletManager: WalletManager, modelContext: ModelContext? = nil) {
@@ -153,6 +160,10 @@ final class ReceiveViewModel {
     
     /// Generates a Lightning invoice for the current amount
     func generateLightningInvoice() async {
+        // One request at a time: repeat taps while waiting must not ask the
+        // server for more invoices
+        guard !isGeneratingInvoice else { return }
+
         guard let amountSats else {
             invoiceError = "Please enter a valid amount greater than 0"
             return
@@ -174,31 +185,67 @@ final class ReceiveViewModel {
             return
         }
         
+        let requestID = UUID()
+        invoiceRequestID = requestID
         isGeneratingInvoice = true
         invoiceError = nil
-        
+
         do {
             let invoice = try await walletManager.getLightningInvoice(amountSats: amountInt, description: nil)
-            try await walletManager.sync()
+            guard invoiceRequestID == requestID else { return }
+            invoiceRequestID = nil
             withAnimation(.easeInOut(duration: 0.3)) {
                 self.lightningInvoice = invoice
+                self.isGeneratingInvoice = false
             }
-            self.isGeneratingInvoice = false
+
+            // Sync afterwards, off the waiting path: the invoice is valid
+            // without it, and a failed sync must not throw the invoice away
+            Task { [walletManager] in
+                do {
+                    try await walletManager.sync()
+                } catch {
+                    Self.logger.error("Sync after invoice creation failed: \(error.localizedDescription)")
+                }
+            }
         } catch {
-            self.invoiceError = "Failed to generate invoice: \(error.localizedDescription)"
-            self.isGeneratingInvoice = false
+            guard invoiceRequestID == requestID else { return }
+            invoiceRequestID = nil
+            Self.logger.error("Invoice creation failed: \(error.localizedDescription)")
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.invoiceError = String(
+                    localized: "receive_invoice_creation_failed",
+                    defaultValue: "Couldn't create the invoice. Check your connection and try again."
+                )
+                self.isGeneratingInvoice = false
+            }
         }
     }
-    
+
+    /// Gives up on the invoice after a failure and shares the Ark and
+    /// on-chain addresses instead, which need no server round-trip
+    func shareAddressesInstead() {
+        invoiceRequestID = nil
+        isGeneratingInvoice = false
+        withAnimation(.easeInOut(duration: 0.3)) {
+            invoiceError = nil
+            showAddressesOnly = true
+        }
+    }
+
     /// Clears the Lightning invoice and related state
     func clearLightningInvoice() {
+        invoiceRequestID = nil
+        isGeneratingInvoice = false
         lightningInvoice = nil
         invoiceError = nil
         showCopySuccess = false
     }
-    
+
     /// Resets the entire Lightning form (invoice + amount + note)
     func resetLightningForm() {
+        invoiceRequestID = nil
+        isGeneratingInvoice = false
         lightningInvoice = nil
         invoiceError = nil
         showCopySuccess = false
