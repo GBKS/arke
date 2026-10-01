@@ -1178,8 +1178,10 @@ bindings.
 
 ## Payments / Receive
 
-- [ ] **Invoice creation feedback on slow networks — IMPLEMENTED 2026-09-30,
-  on-device verify pending**: on a bad connection the iOS receive form gave
+- [x] **Invoice creation feedback on slow networks — COMMITTED 81900a9,
+  device-verified 2026-10-01** with Network Link Conditioner (the slow path).
+  The failure path was not reached because the test didn't wait for bark's
+  timeout; see the timeout item below. On a bad connection the iOS receive form gave
   no response to the checkmark for several seconds. `isGeneratingInvoice`
   and `invoiceError` were never read on iOS, so failures were silent too.
   Now the QR sheet opens right when the checkmark is tapped and shows "Creating
@@ -1188,9 +1190,15 @@ bindings.
   taps are ignored, and a late answer to a closed request is discarded
   (`invoiceRequestID`). The post-invoice `sync()` (added 976e488 with
   `LightningClaimService`) now runs in the background and can no longer throw
-  away a valid invoice. Verify with Network Link Conditioner ("Very Bad
-  Network" / 100% loss): progress state, failure + retry, fallback to
-  addresses, closing mid-request.
+  away a valid invoice.
+- [ ] **Invoice request timeout (separate step)**: it's unknown how long
+  `getLightningInvoice` takes to fail with no connectivity. That depends on
+  bark's timeout for the call, which hasn't been measured. If it takes
+  minutes, users give up before the error and its Try Again / Share
+  Addresses Instead buttons appear, so the app may need its own timeout.
+  Steps: measure the time to the error under 100% Loss, decide on an app
+  timeout, then device-verify the failure path (error, Try Again after
+  restoring the network, Share Addresses Instead).
 - [ ] **Invoice creation polish (deferred)**: a "Slow connection, still
   trying…" line after ~5 s; say "offline" right away when the wallet
   already knows it is; a VoiceOver announcement for "Creating invoice".
