@@ -89,6 +89,12 @@ class BalanceRefreshStatusViewModel {
     // MARK: - Data Loading
     
     func loadData() async {
+        // Before launch has opened the wallet every read below throws
+        // walletNotInitialized. Stay in the loading state instead of
+        // completing with empty data; the containers reload when
+        // isInitialized flips (launch contract rule 7b).
+        guard walletManager.isInitialized else { return }
+
         do {
             vtxos = try await walletManager.getVTXOs()
             latestBlockHeight = await walletManager.getEstimatedBlockHeight()

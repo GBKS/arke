@@ -38,6 +38,12 @@ struct BalanceRefreshStatusContainerCompact: View {
                     await viewModel?.loadData()
                 }
             }
+            .onChange(of: walletManager.isInitialized) { _, isInitialized in
+                guard isInitialized else { return }
+                Task {
+                    await viewModel?.loadData()
+                }
+            }
             .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { _ in
                 currentTime = Date()
             }

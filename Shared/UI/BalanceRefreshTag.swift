@@ -57,6 +57,13 @@ struct BalanceRefreshTag: View {
                     await viewModel?.loadData()
                 }
             }
+            .onChange(of: walletManager.isInitialized) { _, isInitialized in
+                guard isInitialized else { return }
+                Self.logger.debug("Wallet initialized, loading data")
+                Task {
+                    await viewModel?.loadData()
+                }
+            }
             .onChange(of: walletManager.arkInfo) { _, newArkInfo in
                 Self.logger.debug("arkInfo changed, newArkInfo exists: \(newArkInfo != nil)")
                 

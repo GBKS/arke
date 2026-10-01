@@ -36,6 +36,12 @@ struct BalanceRefreshStatusContainer: View {
                     await viewModel?.loadData()
                 }
             }
+            .onChange(of: walletManager.isInitialized) { _, isInitialized in
+                guard isInitialized else { return }
+                Task {
+                    await viewModel?.loadData()
+                }
+            }
     }
     
     private func makeData() -> BalanceRefreshData {
