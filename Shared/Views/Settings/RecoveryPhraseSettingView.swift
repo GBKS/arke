@@ -75,7 +75,7 @@ struct RecoveryPhraseSettingView: View {
                             #endif
                             
                             Button(action: {
-                                copyToClipboard(mnemonic)
+                                copySecretToClipboard(mnemonic)
                                 showCopiedFeedback = true
                                 
                                 // Hide feedback after 2 seconds
