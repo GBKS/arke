@@ -214,6 +214,20 @@ class RelayRegistrationService {
         currentMailboxId.caseInsensitiveCompare(payloadMailboxId) == .orderedSame
     }
 
+    /// Longest the one in-process rate-limit retry will wait
+    nonisolated static let maxRetryDelaySeconds = 60
+
+    /// Pure retry-delay decision, extracted for unit tests. `retryAfter` is
+    /// the relay's word (429 body or Retry-After header), so it never
+    /// reaches the nanosecond conversion unchecked — a negative or huge
+    /// value traps there. Negative means "now"; anything longer than
+    /// `maxRetryDelaySeconds` returns nil: don't retry in-process, surface
+    /// the rate limit and let the next registration attempt be the retry.
+    nonisolated static func retryDelaySeconds(retryAfter: Int) -> Int? {
+        guard retryAfter <= maxRetryDelaySeconds else { return nil }
+        return max(retryAfter, 0)
+    }
+
     /// Called when the in-process timer reaches `renewalDate` so the caller
     /// can mint a fresh authorization (via the wallet) and re-register.
     /// Without this, a registered mailbox goes silently stale once its token
@@ -513,9 +527,9 @@ class RelayRegistrationService {
         
         // Handle retryable errors
         if case .rateLimited(let retryAfter) = error {
-            if retryCount < 1 {
-                Self.logger.warning("⏳ Rate limited, retrying after \(retryAfter)s")
-                try await Task.sleep(nanoseconds: UInt64(retryAfter * 1_000_000_000))
+            if retryCount < 1, let delay = Self.retryDelaySeconds(retryAfter: retryAfter) {
+                Self.logger.warning("⏳ Rate limited, retrying after \(delay)s")
+                try await Task.sleep(nanoseconds: UInt64(delay) * 1_000_000_000)
                 return try await performRequestWithRetry(request: request, retryCount: retryCount + 1)
             }
         }
