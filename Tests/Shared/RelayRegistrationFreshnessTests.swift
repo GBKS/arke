@@ -244,3 +244,34 @@ struct StaleWakeDecisionTests {
         ))
     }
 }
+
+// The 429 retry delay is the relay's number (JSON body or Retry-After header).
+// It used to go straight into UInt64(retryAfter * 1_000_000_000), which traps
+// on a negative value and on anything past ~9.2e9.
+@Suite("Relay Rate-Limit Retry Tests")
+struct RelayRateLimitRetryTests {
+
+    @Test("A delay within the limit is used as is")
+    func delayWithinLimit() {
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: 0) == 0)
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: 30) == 30)
+        #expect(RelayRegistrationService.retryDelaySeconds(
+            retryAfter: RelayRegistrationService.maxRetryDelaySeconds
+        ) == RelayRegistrationService.maxRetryDelaySeconds)
+    }
+
+    @Test("A negative delay means retry now")
+    func negativeDelayIsZero() {
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: -1) == 0)
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: .min) == 0)
+    }
+
+    @Test("A delay past the limit means no in-process retry")
+    func delayPastLimitIsNoRetry() {
+        #expect(RelayRegistrationService.retryDelaySeconds(
+            retryAfter: RelayRegistrationService.maxRetryDelaySeconds + 1
+        ) == nil)
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: 9_223_372_037) == nil)
+        #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: .max) == nil)
+    }
+}
