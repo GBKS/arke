@@ -152,4 +152,18 @@ struct FeeRateServiceTests {
         #expect(rates?.medium == 25)
         #expect(rates?.slow == 25)
     }
+
+    @Test("A rate too large to represent is ignored, capped or not")
+    func testUnrepresentableRateIgnored() {
+        // Used to trap converting to UInt64, before the cap was applied
+        #expect(FeeRateService.parse(esploraEstimates: ["1": 1e30]) == nil)
+        #expect(FeeRateService.parse(esploraEstimates: ["1": 1e30], maxRate: 50) == nil)
+        #expect(FeeRateService.parse(esploraEstimates: ["1": .infinity]) == nil)
+
+        let rates = FeeRateService.parse(esploraEstimates: ["1": 1e30, "3": 12.0])
+
+        #expect(rates?.fast == 12)
+        #expect(rates?.medium == 12)
+        #expect(rates?.slow == 12)
+    }
 }

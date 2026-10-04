@@ -152,7 +152,10 @@ class FeeRateService {
     nonisolated static func parse(esploraEstimates: [String: Double], maxRate: UInt64? = nil) -> OnchainFeeRates? {
         let entries = esploraEstimates
             .compactMap { key, value -> (target: Int, rate: Double)? in
-                guard let target = Int(key), target > 0, value > 0, value.isFinite else { return nil }
+                // UInt64(exactly:) drops a rate too large to represent, which
+                // would trap the conversion in rate(forTarget:)
+                guard let target = Int(key), target > 0, value > 0, value.isFinite,
+                      UInt64(exactly: value.rounded(.up)) != nil else { return nil }
                 return (target, value)
             }
             .sorted { $0.target < $1.target }

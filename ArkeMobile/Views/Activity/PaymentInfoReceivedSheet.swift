@@ -397,9 +397,7 @@ extension BIP21URIHelper {
                     label = value
                 case "amount":
                     // BIP-21 amount is in BTC, convert to sats
-                    if let btcAmount = Double(value) {
-                        amount = Int(btcAmount * 100_000_000)
-                    }
+                    amount = satoshis(fromBTCAmount: value)
                 case "message":
                     message = value
                 default:

@@ -39,4 +39,31 @@ struct LightningInvoiceParserTests {
         print("  Payment Hash: \(parsed.paymentHash ?? "none")")
         print("  Network: \(parsed.network.rawValue)")
     }
+
+    // MARK: - Amount
+
+    // Synthetic strings: a prefix plus seven data characters (the 35-bit
+    // timestamp). The parser reads the amount before any checksum or signature.
+
+    @Test("Amount multipliers convert to sats", arguments: [
+        ("lnbc2500u1qqqqqqq", UInt64(250_000)),
+        ("lnbc20m1qqqqqqq", UInt64(2_000_000)),
+        ("lnbc10n1qqqqqqq", UInt64(1)),
+        ("lnbc21000000" + "1qqqqqqq", UInt64(2_100_000_000_000_000))
+    ])
+    func testAmountMultipliers(invoice: String, expectedSats: UInt64) async throws {
+        #expect(try LightningInvoiceParser.parse(invoice).amountSatoshis == expectedSats)
+    }
+
+    @Test("An amount that is not digits, or exceeds 21M BTC, is rejected", arguments: [
+        "lnbc99999999999999999999991qqqqqqq",   // used to trap converting to UInt64
+        "lnbc1e5001qqqqqqq",                    // exponent form, parsed as infinity
+        "lnbc92233720369" + "1qqqqqqq",         // fits UInt64 but not Int
+        "lnbc21000001" + "1qqqqqqq"
+    ])
+    func testImpossibleAmountIsRejected(invoice: String) async throws {
+        #expect(throws: LightningInvoiceParseError.self) {
+            try LightningInvoiceParser.parse(invoice)
+        }
+    }
 }
