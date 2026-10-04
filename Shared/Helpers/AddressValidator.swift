@@ -477,9 +477,8 @@ class AddressValidator {
             let parameters = parseQueryParameters(queryString)
             
             // Parse amount (BTC to satoshis conversion)
-            if let amountString = parameters["amount"],
-               let amountDouble = Double(amountString) {
-                amount = Int(amountDouble * 100_000_000) // Convert BTC to satoshis
+            if let amountString = parameters["amount"] {
+                amount = BIP21URIHelper.satoshis(fromBTCAmount: amountString)
             }
             
             label = parameters["label"]?.removingPercentEncoding

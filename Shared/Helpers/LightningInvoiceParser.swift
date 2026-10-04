@@ -173,6 +173,9 @@ private extension LightningInvoiceParser {
 
     // MARK: - Amount Parsing
     
+    /// 21 million BTC in satoshis
+    static let maxAmountSatoshis: Double = 2_100_000_000_000_000
+
     /// Parse amount from HRP, returns amount in satoshis
     /// Supports units: (no suffix) = BTC, m = milli, u = micro, n = nano, p = pico
     static func parseAmount(from hrp: String) throws -> UInt64? {
@@ -196,7 +199,11 @@ private extension LightningInvoiceParser {
             numericPart = String(numericAndUnit.dropLast())
         }
         
-        guard let value = Double(numericPart) else {
+        // Digits only: Double also accepts "1e500", "inf" and hex floats,
+        // none of which BOLT-11 allows
+        guard !numericPart.isEmpty,
+              numericPart.allSatisfy({ $0.isASCII && $0.isNumber }),
+              let value = Double(numericPart) else {
             throw LightningInvoiceParseError.invalidNumericAmount
         }
         
@@ -219,8 +226,14 @@ private extension LightningInvoiceParser {
             throw LightningInvoiceParseError.unknownAmountUnit(unit!)
         }
         
-        // Round to nearest sat
-        return UInt64(sats.rounded(.toNearestOrEven))
+        // Round to nearest sat. More than the 21M BTC supply is not an
+        // amount, and past the integer range the conversion would trap — the
+        // HRP is read before any checksum or signature is checked.
+        let rounded = sats.rounded(.toNearestOrEven)
+        guard rounded <= maxAmountSatoshis else {
+            throw LightningInvoiceParseError.invalidNumericAmount
+        }
+        return UInt64(rounded)
     }
     
     // MARK: - Payload Parsing

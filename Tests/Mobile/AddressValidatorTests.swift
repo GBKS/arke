@@ -146,4 +146,50 @@ struct AddressValidatorTests {
         #expect(AddressValidator.detectSilentPaymentsNetwork(upper) == .mainnet, "Uppercase sp address should be mainnet")
         #expect(AddressValidator.extractSilentPaymentsKeys(upper) != nil, "Should extract keys from uppercase sp address")
     }
+
+    // MARK: - BIP-21 amount
+
+    // The amount string arrives from QR codes, NFC tags, DNS and nearby devices.
+    // Each of these used to reach Int(Double * 100_000_000), which traps on
+    // NaN, infinity and out-of-range values and took the app down with it.
+    @Test("BIP-21 amounts that are not plain decimals are ignored", arguments: [
+        "nan", "inf", "-inf", "infinity", "1e11", "1e-3", "0x1p-3",
+        "92233720369", "21000000.00000001", "-0.001", "0", "0.000000001", "1,5", ""
+    ])
+    func testBIP21MalformedAmountIsIgnored(amount: String) async throws {
+        let bip21 = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=\(amount)"
+
+        let paymentRequest = AddressValidator.parsePaymentRequest(bip21)
+
+        #expect(paymentRequest != nil, "The address is still usable; only the amount is dropped")
+        #expect(paymentRequest?.amount == nil, "Amount '\(amount)' should not be accepted")
+    }
+
+    @Test("BIP-21 amount converts to sats exactly", arguments: [
+        ("0.57", 57_000_000),          // binary floating point gave 56_999_999
+        ("1.13", 113_000_000),         // ... and 112_999_999
+        ("0.00000029", 29),            // ... and 28
+        ("0.00000001", 1),
+        ("1", 100_000_000),
+        ("1.", 100_000_000),
+        (".5", 50_000_000),
+        ("21000000", 2_100_000_000_000_000)
+    ])
+    func testBIP21AmountIsExact(amount: String, expectedSats: Int) async throws {
+        let bip21 = "bitcoin:bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq?amount=\(amount)"
+
+        #expect(AddressValidator.parsePaymentRequest(bip21)?.amount == expectedSats)
+    }
+
+    @Test("A BOLT-11 amount that cannot be an amount does not take the request down")
+    func testInvoiceWithImpossibleAmountFallsBackToNoAmount() async throws {
+        // Not valid invoices - nothing checks the checksum or signature
+        // before the amount in the prefix is read
+        for invoice in ["lnbc99999999999999999999991qqqqqq", "lightning:lnbc1e5001qqqqqq"] {
+            let paymentRequest = AddressValidator.parsePaymentRequest(invoice)
+
+            #expect(paymentRequest?.primaryDestination?.format == .lightningInvoice)
+            #expect(paymentRequest?.amount == nil)
+        }
+    }
 }

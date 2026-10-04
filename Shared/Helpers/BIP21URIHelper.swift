@@ -18,6 +18,27 @@ struct BIP21URIHelper {
         return String(format: "%.8f", btc)
     }
     
+    /// Converts the BTC decimal string of a BIP-21 `amount` to satoshis
+    /// - Parameter amount: Amount in BTC, e.g. "0.00005000"
+    /// - Returns: Amount in satoshis, or nil unless the string is a plain
+    ///   positive decimal with at most 8 fraction digits and no more than
+    ///   21 million BTC
+    ///
+    /// The string comes from QR codes, NFC tags, DNS and nearby devices.
+    /// It is matched first because `Decimal(string:)` parses a valid prefix
+    /// ("12abc" → 12), and converted through Decimal because `Double` also
+    /// accepts "nan", "inf", exponents and hex floats, which trap on
+    /// conversion to Int, and loses a sat on values like 0.57.
+    static func satoshis(fromBTCAmount amount: String) -> Int? {
+        guard amount.range(of: "^[0-9]{0,8}(\\.[0-9]{0,8})?$", options: .regularExpression) != nil,
+              let btc = Decimal(string: amount, locale: Locale(identifier: "en_US_POSIX")) else {
+            return nil
+        }
+        let sats = btc * 100_000_000
+        guard sats > 0, sats <= 2_100_000_000_000_000 else { return nil }
+        return NSDecimalNumber(decimal: sats).intValue
+    }
+
     /// Create BIP 21 URI with optional alternative payment destinations.
     /// `amountSats` is whole sats — callers must parse user input first
     /// (a unit-format string like "0.001" used to be passed here and was
