@@ -177,11 +177,15 @@ class BIP353Resolver {
         
         print("   → Found \(txtRecords.count) TXT record(s)")
         
-        // Validate DNSSEC (async, don't block on failure)
+        // BIP-353 requires DNSSEC: without it, whoever answers the DNS query
+        // chooses the payee, so an unvalidated record must not be used.
+        // Callers fall back to the Lightning Address lookup, which is
+        // authenticated by TLS.
         let dnssecValid = await validateDNSSEC(dnsName)
         
-        if !dnssecValid {
+        guard dnssecValid else {
             print("   ⚠️ DNSSEC validation failed!")
+            throw BIP353Error.dnssecValidationFailed
         }
         
         // Find Bitcoin payment record (BIP-21 URI)
