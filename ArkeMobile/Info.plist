@@ -7,11 +7,6 @@
 		<string>cash.arke.refresh</string>
 		<string>cash.arke.maintenance</string>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_arkepayment._tcp</string>
