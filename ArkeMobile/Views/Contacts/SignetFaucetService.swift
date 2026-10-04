@@ -58,7 +58,7 @@ class SignetFaucetService {
     // MARK: - Configuration
     
     /// Ark faucet endpoint
-    private let faucetURL = "http://arke.cash/api/faucet"
+    private let faucetURL = "https://arke.cash/api/faucet"
     
     // MARK: - Dependencies
     
