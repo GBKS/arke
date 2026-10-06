@@ -27,6 +27,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 - **[LNURL_Pay.md](LNURL_Pay.md)** — LNURL-pay send support
 - **[Signet_Faucet.md](Signet_Faucet.md)** — the signet faucet contact
 - **[Fiat_Rates.md](Fiat_Rates.md)** — fiat values next to sats from one public rates file: contract, cache, staleness, money-safety rules, phases
+- **[Agent_Payments.md](Agent_Payments.md)** — PARKED on branch `hackathon/agent-payments` (BTC++ hackathon, 2nd prize): an agent asks the desktop to pay, the phone approves over a seed-keyed local link, the preimage goes back as proof
 
 ## Data
 

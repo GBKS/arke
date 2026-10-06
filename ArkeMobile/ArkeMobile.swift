@@ -98,6 +98,7 @@ struct Arke_mobile: App {
     var body: some Scene {
         WindowGroup {
             MainView_iOS()
+                .agentPaymentsPhoneHost()
                 .environment(walletManager)
                 .environment(\.initialWalletDetected, initialWalletDetected)
                 .withServiceContainer(serviceContainer)

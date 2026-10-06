@@ -44,9 +44,6 @@
         }
       }
     },
-    "%@ ₿" : {
-      "shouldTranslate" : false
-    },
     "%@ ago" : {
       "localizations" : {
         "zh-Hant" : {
@@ -4636,6 +4633,292 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "地址：%@"
+          }
+        }
+      }
+    },
+    "agent_payments_agent_says" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The agent says (unverified)"
+          }
+        }
+      }
+    },
+    "agent_payments_approve" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Approve and pay"
+          }
+        }
+      }
+    },
+    "agent_payments_auth_reason" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Approve the agent's payment"
+          }
+        }
+      }
+    },
+    "agent_payments_card_close" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "agent_payments_card_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment request from %@"
+          }
+        }
+      }
+    },
+    "agent_payments_decline" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Decline"
+          }
+        }
+      }
+    },
+    "agent_payments_declined" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Declined on the phone"
+          }
+        }
+      }
+    },
+    "agent_payments_done" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "agent_payments_expired" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Request expired"
+          }
+        }
+      }
+    },
+    "agent_payments_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment failed"
+          }
+        }
+      }
+    },
+    "agent_payments_paid" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Paid"
+          }
+        }
+      }
+    },
+    "agent_payments_paying" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Paying…"
+          }
+        }
+      }
+    },
+    "agent_payments_proof" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Proof: %@…"
+          }
+        }
+      }
+    },
+    "agent_payments_setting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Agent payments"
+          }
+        }
+      }
+    },
+    "agent_payments_setting_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Let AI agents request payments you approve on your phone"
+          }
+        }
+      }
+    },
+    "agent_payments_setting_hint_phone" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Approve payments that AI agents request on your Mac"
+          }
+        }
+      }
+    },
+    "agent_payments_sheet_invoice_says" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Invoice description"
+          }
+        }
+      }
+    },
+    "agent_payments_sheet_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ wants to pay"
+          }
+        }
+      }
+    },
+    "agent_payments_sheet_via" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Requested on %@"
+          }
+        }
+      }
+    },
+    "agent_payments_status_connected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connected: %@"
+          }
+        }
+      }
+    },
+    "agent_payments_status_no_seed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This Mac doesn't have the recovery phrase yet"
+          }
+        }
+      }
+    },
+    "agent_payments_status_no_seed_phone" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device doesn't have the recovery phrase"
+          }
+        }
+      }
+    },
+    "agent_payments_status_searching" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Looking for your Mac — keep Arké open"
+          }
+        }
+      }
+    },
+    "agent_payments_status_starting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starting…"
+          }
+        }
+      }
+    },
+    "agent_payments_status_waiting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for your phone — open Arké there"
+          }
+        }
+      }
+    },
+    "agent_payments_waiting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for approval on %@"
           }
         }
       }
