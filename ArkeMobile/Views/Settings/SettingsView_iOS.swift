@@ -406,6 +406,9 @@ struct SettingsView_iOS: View {
                 }
                 .padding(.vertical, 2)
 
+                // Agent payments (Docs/Features/Agent_Payments.md)
+                AgentPaymentsSettingsToggle_iOS()
+
                 // Address Icons
                 NavigationLink(destination: AddressPatternsSettingView()) {
                     HStack(spacing: 12) {

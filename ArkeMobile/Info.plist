@@ -16,7 +16,10 @@
 	<array>
 		<string>_arkepayment._tcp</string>
 		<string>_arkepayment._udp</string>
+		<string>_arkeagent._tcp</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Arké uses Face ID to confirm payments you approve.</string>
 	<key>RelayAPIToken</key>
 	<string>c2776c8d7b973823206261209dbf87064106bc4d0da4a285dc4fd343fa22c41e</string>
 	<key>UIBackgroundModes</key>

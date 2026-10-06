@@ -160,6 +160,8 @@ struct SettingsView: View {
                     subtitle: Text(String(localized: "settings_address_patterns_hint", defaultValue: "Show unique visual patterns to help identify addresses"))
                 )
                 .tag(SettingsDetailItem.addressPatterns)
+
+                AgentPaymentsSettingsToggle()
             } header: {
                 Text(String(localized: "settings_experimental", defaultValue: "Experimental"))
             }
