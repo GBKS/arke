@@ -77,6 +77,19 @@ asserting something is correct without having checked.
 
 > What did you not verify?
 
+### Two more cheap ones (added 2026-10-07)
+
+Same cost, different target: the judgment calls a diff hides. Ask before
+approving any generated change of substance.
+
+> What was the hardest decision you made here, and why did you decide it
+> that way?
+
+> What alternatives did you reject, and why?
+
+The first surfaces where the builder had to guess; the second catches a bad
+choice made confidently. Neither replaces "what did you not verify?".
+
 ### Before the work, not after
 
 Front-loads the check that failed above.
@@ -159,6 +172,17 @@ classes above, and this instruction:
 It replaces the "refute your own fix" prompt for Tier 0/1 work and runs on
 day 7 of the release train (`Release_Train.md`). For Tier 3/4 the self-review
 prompts above remain enough.
+
+The prompt is packaged as a repo agent definition,
+`.claude/agents/fault-class-reviewer.md` (added 2026-10-07). It is read-only,
+fetches the diff and the contracts itself, and reports in the format above.
+Invoke it as "run the fault-class-reviewer agent on `<range>`". Agent
+definitions are loaded when a session starts, so a session that was already
+open when the file was added will not see it (verified 2026-10-07 inside the
+Xcode integration). Fallback that works anywhere: spawn a general-purpose
+subagent told to read `.claude/agents/fault-class-reviewer.md` and follow it
+on the range. Either way the reviewer gets a fresh context, which is the
+point.
 
 ### Claim labels in plans
 
