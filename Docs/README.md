@@ -8,7 +8,8 @@ Welcome to the project documentation. It is organized to help you understand the
 
 ## Start here
 
-- [Open Follow-Ups](Open_Follow_Ups.md) — the canonical list of open items, deferred work, and decisions still owed
+- [Open Follow-Ups](Open_Follow_Ups.md) — the canonical list of open items, deferred work, and decisions still owed, ordered by priority tier
+- [Open Follow-Ups — Done Log](Open_Follow_Ups_Done.md) — closed items with their root-cause and verification write-ups, kept for debugging reference
 - [Documentation Inventory](Documentation_Inventory.md) — what every doc is, its status, and the cleanup backlog
 - [Launch Sequence Contract](Initialization/Launch_Sequence_Contract.md) — startup ordering invariants; check before touching launch code
 - [Multi-Device Design](Architecture/Multi_Device_Design.md) — the guiding doc for anything touching devices, iCloud, or the seed
@@ -56,6 +57,7 @@ Welcome to the project documentation. It is organized to help you understand the
 
 - [Setup Guide](Development/Setup.md), [Testing Patterns](Development/Testing_Patterns.md), [Common Tasks](Development/Common_Tasks.md)
 - [Change Review Playbook](Development/Change_Review_Playbook.md) — how review passes are run and recorded
+- [Release Train](Development/Release_Train.md) — the two-week decide → build → device day → TestFlight → soak cycle
 
 ## Data samples
 
