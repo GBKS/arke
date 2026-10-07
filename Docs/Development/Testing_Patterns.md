@@ -1,471 +1,123 @@
-# Testing Patterns and Strategies
+# Testing Patterns
 
-This document outlines the testing approaches, patterns, and examples used throughout the Arké Wallet prototype project.
+How the test suite is organised and the patterns it actually uses, read from
+`Tests/` on 2026-10-07. What to test for a given change is decided by the
+tier rules in `Release_Train.md`; how to review it is in
+`Change_Review_Playbook.md`. The earlier template-style guide is in
+`../Archive/Development/Testing_Patterns.md`.
 
-## Testing Philosophy
+## Shape of the suite
 
-### Core Principles
-- **Protocol-Based Testing**: Use abstract interfaces to enable comprehensive mocking
-- **Service Isolation**: Test services independently with mocked dependencies
-- **Realistic Test Data**: Use data that mirrors real-world scenarios
-- **Error Scenario Coverage**: Test failure modes as thoroughly as success paths
+| | |
+|---|---|
+| Framework | Swift Testing only (`@Suite`, `@Test`, `#expect`, `#require`); no XCTest |
+| Size | 35 files, 67 suites, about 450 tests |
+| Targets | `ArkeMobileTests` (run by the `Arke mobile` test plan) and `ArkeDesktopTests`; both see the whole `Tests/` folder |
+| Layout | `Tests/Shared/` holds nearly everything; `Tests/Mobile/` and `Tests/Desktop/` hold the two placeholder files and the iOS-only `AddressValidatorTests` |
+| UI tests | none |
+| Runner | `xcodebuild` against a simulator, see `Setup.md`; the MCP runners are sandboxed and use the active destination |
 
-### Testing Pyramid
-```
-UI Tests (SwiftUI Integration)
-    ↑
-Integration Tests (Service Coordination)
-    ↑
-Unit Tests (Individual Services & Models)
-```
+Tests import the app module, not a shared framework. Files that must compile
+in both test targets use:
 
-## Swift Testing Framework
-
-This project uses Swift's modern testing framework with macros for clean, expressive tests.
-
-### Basic Test Structure
 ```swift
-import Testing
-@testable import Ark_wallet_prototype
-
-@Suite("Balance Service Tests")
-struct BalanceServiceTests {
-    
-    @Test("Loading cached balance on startup")
-    func loadCachedBalance() async throws {
-        let mockWallet = MockBarkWallet()
-        let service = BalanceService(wallet: mockWallet, ...)
-        
-        // Test implementation
-        #expect(service.arkBalance != nil)
-    }
-}
+#if os(iOS)
+@testable import ArkeMobile
+#else
+@testable import ArkeDesktop
+#endif
 ```
 
-### Testing Patterns
+Shared tests are green on iOS; the macOS run fails about 68 of them flakily
+on a clean tree, so a red desktop suite is not evidence about a change.
 
-#### Async Operation Testing
-```swift
-@Test("Refresh balance updates properties")
-func refreshBalanceUpdatesProperties() async throws {
-    let mockWallet = MockBarkWallet()
-    let service = BalanceService(wallet: mockWallet, ...)
-    
-    await service.refreshArkBalance()
-    
-    #expect(service.arkBalance?.spendableSat == 100000)
-    #expect(service.error == nil)
-}
+## What gets a test
+
+The suite is dominated by **decision tests**: pure functions or small
+structs extracted from a service so the policy can be pinned without a
+wallet. Examples: `DefaultDataSeedingDecisionTests`,
+`NetworkConfigReconciliationTests`, `PrimaryDeviceReconciliationTests`,
+`ImportRecoveryLogicTests`, `RefreshExclusionTests`, `AmountEntryStateTests`.
+When a fix changes *when* something is true, extract the decision and pin
+it; do not test it through the service that owns a bark handle.
+
+**Parsers and mappers** get fixture-driven tests with real captured data:
+`ExitStatusParserTests` and `ExitProgressTests` use real bark state strings,
+`OnchainTransactionMapperTests` real signet transactions,
+`LightningInvoiceParserTests` and `LNURLResolverTests` real payloads. Raw
+dumps used as fixtures live in `../Data samples/`.
+
+**Coverage tests** enumerate a surface so that adding to it without a
+decision fails a test. `WalletWipeCoverageTests` asserts that the three
+lists in `WalletWipeCoverage` (directly wiped, cascade wiped, exempt)
+exactly cover the SwiftData schema; `TransactionDeletionBlastRadiusTests`
+pins what a transaction delete may and may not touch. This is the preferred
+form for an invariant: a typed list plus a test, not a comment.
+
+**Guard tests** read the repository itself. `LocalizationCatalogTests`
+parses both string catalogs via `#filePath` and fails on empty translations
+or format-specifier mismatches; `Scripts/translation_lint.py` prints the
+same offenders by key.
+
+## Patterns
+
+**In-memory SwiftData.** Persistence tests build a `ModelContainer` with
+the full schema and `isStoredInMemoryOnly: true` (ten suites do this; see
+`TransactionBridgingEquivalenceTests.makeContainer()`). Use the full schema,
+not a subset; relationship resolution depends on it. Two-context tests
+(`TransactionMetadataWritePathTests`) delete through a second context to
+reproduce what a CloudKit import does to cached relationship arrays.
+
+**Injected fetchers and clocks.** Network-facing services take a fetcher
+closure and a clock; tests pass canned responses and a `TestClock`
+(`RatesServiceTests`, `FeeRateServiceTests`). No test hits the network.
+
+**`MockBarkWallet` is a DEBUG stub**, used by four transaction suites that
+need a `BarkWalletProtocol` to construct a service. Do not add realistic
+behaviour to it; put the logic under test behind a decision type instead.
+
+**Scratch `UserDefaults`.** State-touching tests use
+`UserDefaults(suiteName:)` with a per-test name
+(`RelayRegistrationFreshnessTests`). Nothing in `Tests/` writes to
+`UserDefaults.standard`. Keep it that way; a crashed test host once left a
+tombstone in a real phone's app defaults.
+
+**Process-wide state is serialised.** `WalletDeletionRejoinTests` marks its
+tombstone suite `.serialized` because it touches the keychain and iCloud
+KVS. Suites that mutate keychain, KVS or defaults need `.serialized` or a
+scratch scope; the flaky macOS run is most likely this class of leak
+across parallel test hosts.
+
+**Main actor.** Seventeen files annotate suites or tests `@MainActor`
+because the services and SwiftData contexts under test are main-actor
+isolated. Model types in `Shared/` that cross actors carry explicit
+`nonisolated`.
+
+## Conventions
+
+- Suite names are plain phrases (`"Default Data Seeding Decision"`); test
+  names are sentences describing the behaviour.
+- One file per subject, named `<Subject>Tests.swift`, in `Tests/Shared/`
+  unless it imports a platform-only API.
+- A fix that produced a contract rule (`../Initialization/Launch_Sequence_Contract.md`,
+  the area contracts in the playbook) names its pinning test in the rule's
+  Test column. A rule with "Test: none" is a gap, not a style choice.
+- New Shared source files compile into both app targets automatically; new
+  test files need nothing.
+
+## Running
+
+```bash
+# one suite
+xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:ArkeMobileTests/DefaultDataSeedingDecisionTests
+
+# everything, before a commit plan
+xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
-#### Error Scenario Testing
-```swift
-@Test("Service handles wallet errors gracefully")
-func serviceHandlesWalletErrors() async throws {
-    let mockWallet = MockBarkWallet()
-    mockWallet.shouldFailGetBalance = true
-    
-    let service = BalanceService(wallet: mockWallet, ...)
-    await service.refreshArkBalance()
-    
-    #expect(service.error != nil)
-    #expect(service.arkBalance == nil)
-}
-```
-
-#### Optional Unwrapping in Tests
-```swift
-@Test("Balance calculation with valid data")
-func balanceCalculationWithValidData() async throws {
-    let service = createBalanceService()
-    await service.refreshAllBalances()
-    
-    let arkBalance = try #require(service.arkBalance)
-    let totalBalance = try #require(service.totalBalance)
-    
-    #expect(arkBalance.totalBalanceSat > 0)
-    #expect(totalBalance.totalSpendableSat > 0)
-}
-```
-
-## Service Testing Patterns
-
-### BalanceService Testing
-```swift
-@Suite("Balance Service")
-struct BalanceServiceTests {
-    
-    func createBalanceService(
-        mockWallet: MockBarkWallet = MockBarkWallet(),
-        cacheManager: WalletCacheManager = WalletCacheManager()
-    ) -> BalanceService {
-        return BalanceService(
-            wallet: mockWallet,
-            taskManager: TaskDeduplicationManager(),
-            cacheManager: cacheManager
-        )
-    }
-    
-    @Test("Cached data loads immediately")
-    func cachedDataLoadsImmediately() async throws {
-        let service = createBalanceService()
-        
-        // Set up cached data
-        service.setModelContext(mockModelContext)
-        
-        #expect(service.arkBalance != nil)
-    }
-    
-    @Test("Fresh data updates cached values")
-    func freshDataUpdatesCachedValues() async throws {
-        let mockWallet = MockBarkWallet()
-        let service = createBalanceService(mockWallet: mockWallet)
-        
-        await service.refreshArkBalance()
-        
-        #expect(mockWallet.getArkBalanceCallCount == 1)
-        #expect(service.arkBalance?.spendableSat == mockWallet.mockArkBalance.spendableSat)
-    }
-}
-```
-
-### TransactionService Testing
-```swift
-@Suite("Transaction Service")
-struct TransactionServiceTests {
-    
-    @Test("Transaction parsing handles complex movements")
-    func transactionParsingHandlesComplexMovements() async throws {
-        let mockWallet = MockBarkWallet()
-        mockWallet.mockMovements = createComplexMovementData()
-        
-        let service = TransactionService(wallet: mockWallet, ...)
-        await service.refreshTransactions()
-        
-        #expect(service.transactions.count > 0)
-        #expect(service.transactions.contains { $0.type == .ark })
-        #expect(service.transactions.contains { $0.direction == .incoming })
-    }
-}
-```
-
-## Mock Implementation Patterns
-
-### MockBarkWallet Structure
-```swift
-class MockBarkWallet: BarkWalletProtocol {
-    // Control flags for testing different scenarios
-    var shouldFailGetBalance = false
-    var shouldFailGetMovements = false
-    
-    // Call tracking
-    var getArkBalanceCallCount = 0
-    var getMovementsCallCount = 0
-    
-    // Mock data
-    var mockArkBalance = ArkBalanceModel(...)
-    var mockMovements: [MovementData] = []
-    
-    func getArkBalance() async throws -> ArkBalanceModel {
-        getArkBalanceCallCount += 1
-        
-        if shouldFailGetBalance {
-            throw WalletError.networkError("Mock network failure")
-        }
-        
-        return mockArkBalance
-    }
-}
-```
-
-### Mock Data Creation
-```swift
-extension MockBarkWallet {
-    static func createRealisticBalance() -> ArkBalanceModel {
-        return ArkBalanceModel(
-            spendableSat: 100_000,
-            pendingLightningSendSat: 5_000,
-            pendingInRoundSat: 0,
-            pendingExitSat: 0,
-            pendingBoardSat: 10_000
-        )
-    }
-    
-    static func createMovementHistory() -> [MovementData] {
-        return [
-            MovementData(
-                txid: "abc123",
-                amount: 50_000,
-                direction: "incoming",
-                timestamp: "2024-10-24T10:00:00Z",
-                kind: "ark"
-            ),
-            // ... more realistic test data
-        ]
-    }
-}
-```
-
-## SwiftData Testing
-
-### Persistence Testing Patterns
-```swift
-@Suite("SwiftData Persistence")
-struct PersistenceTests {
-    
-    func createTestModelContext() -> ModelContext {
-        let schema = Schema([PersistedArkBalance.self, PersistedOnchainBalance.self])
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: schema, configurations: [configuration])
-        return container.mainContext
-    }
-    
-    @Test("Balance persistence round trip")
-    func balancePersistenceRoundTrip() throws {
-        let context = createTestModelContext()
-        let originalBalance = ArkBalanceModel.createSample()
-        
-        // Save to persistence
-        let persisted = PersistedArkBalance(from: originalBalance)
-        context.insert(persisted)
-        try context.save()
-        
-        // Load from persistence
-        let loaded = try context.fetch(FetchDescriptor<PersistedArkBalance>()).first
-        let roundTripBalance = try #require(loaded).toArkBalanceModel()
-        
-        #expect(roundTripBalance.spendableSat == originalBalance.spendableSat)
-        #expect(roundTripBalance.totalBalanceSat == originalBalance.totalBalanceSat)
-    }
-}
-```
-
-## Integration Testing
-
-### Service Coordination Tests
-```swift
-@Suite("Service Integration")
-struct ServiceIntegrationTests {
-    
-    @Test("WalletManager coordinates service updates")
-    func walletManagerCoordinatesServiceUpdates() async throws {
-        let mockWallet = MockBarkWallet()
-        let manager = WalletManager(wallet: mockWallet)
-        
-        await manager.refreshAllData()
-        
-        #expect(manager.balanceService.arkBalance != nil)
-        #expect(manager.transactionService.transactions.count > 0)
-        #expect(manager.addressService.arkAddress != "")
-    }
-    
-    @Test("Error in one service doesn't break others")
-    func errorInOneServiceDoesntBreakOthers() async throws {
-        let mockWallet = MockBarkWallet()
-        mockWallet.shouldFailGetBalance = true  // Balance will fail
-        
-        let manager = WalletManager(wallet: mockWallet)
-        await manager.refreshAllData()
-        
-        // Balance service should have error
-        #expect(manager.balanceService.error != nil)
-        
-        // Other services should still work
-        #expect(manager.transactionService.error == nil)
-        #expect(manager.addressService.error == nil)
-    }
-}
-```
-
-## UI Testing with SwiftUI
-
-### Preview Testing
-```swift
-#Preview("Balance View with Data") {
-    let manager = WalletManager.preview
-    manager.balanceService.arkBalance = ArkBalanceModel.createSample()
-    
-    return BalanceView()
-        .environment(manager)
-}
-
-#Preview("Balance View Loading State") {
-    let manager = WalletManager.preview
-    manager.balanceService.arkBalance = nil
-    
-    return BalanceView()
-        .environment(manager)
-}
-```
-
-### UI Testing Patterns
-```swift
-@Suite("UI Integration")
-struct UIIntegrationTests {
-    
-    @Test("Balance view updates when service data changes")
-    @MainActor
-    func balanceViewUpdatesWhenServiceDataChanges() async throws {
-        let manager = WalletManager.preview
-        
-        // Simulate data loading
-        manager.balanceService.arkBalance = ArkBalanceModel.createSample()
-        
-        // UI should reflect the change (implementation depends on specific UI testing needs)
-        // This would typically involve UITest framework for full UI testing
-    }
-}
-```
-
-## Test Data Management
-
-### Realistic Test Data
-```swift
-extension ArkBalanceModel {
-    static func createSample() -> ArkBalanceModel {
-        return ArkBalanceModel(
-            spendableSat: 150_000,      // 0.0015 BTC
-            pendingLightningSendSat: 10_000,
-            pendingInRoundSat: 5_000,
-            pendingExitSat: 0,
-            pendingBoardSat: 25_000
-        )
-    }
-    
-    static func createZeroBalance() -> ArkBalanceModel {
-        return ArkBalanceModel(
-            spendableSat: 0,
-            pendingLightningSendSat: 0,
-            pendingInRoundSat: 0,
-            pendingExitSat: 0,
-            pendingBoardSat: 0
-        )
-    }
-}
-```
-
-### Edge Case Data
-```swift
-extension TransactionModel {
-    static func createLargeTransaction() -> TransactionModel {
-        return TransactionModel(
-            id: "large-tx-001",
-            type: .ark,
-            amount: 100_000_000,  // 1 BTC
-            direction: .outgoing,
-            timestamp: Date(),
-            status: .confirmed
-        )
-    }
-    
-    static func createFailedTransaction() -> TransactionModel {
-        return TransactionModel(
-            id: "failed-tx-001",
-            type: .onchain,
-            amount: 50_000,
-            direction: .outgoing,
-            timestamp: Date(),
-            status: .failed
-        )
-    }
-}
-```
-
-## Performance Testing
-
-### Load Testing Patterns
-```swift
-@Suite("Performance Tests")
-struct PerformanceTests {
-    
-    @Test("Service handles large transaction history")
-    func serviceHandlesLargeTransactionHistory() async throws {
-        let mockWallet = MockBarkWallet()
-        mockWallet.mockMovements = Array(repeating: MovementData.createSample(), count: 1000)
-        
-        let service = TransactionService(wallet: mockWallet, ...)
-        
-        let startTime = Date()
-        await service.refreshTransactions()
-        let duration = Date().timeIntervalSince(startTime)
-        
-        #expect(service.transactions.count == 1000)
-        #expect(duration < 1.0)  // Should parse 1000 transactions in under 1 second
-    }
-}
-```
-
-## Error Testing Strategies
-
-### Network Error Simulation
-```swift
-@Test("Services handle network failures gracefully")
-func servicesHandleNetworkFailuresGracefully() async throws {
-    let mockWallet = MockBarkWallet()
-    mockWallet.simulateNetworkError = true
-    
-    let service = BalanceService(wallet: mockWallet, ...)
-    await service.refreshArkBalance()
-    
-    #expect(service.error != nil)
-    #expect(service.error?.contains("network") == true)
-}
-```
-
-### Data Corruption Testing
-```swift
-@Test("Service handles malformed data")
-func serviceHandlesMalformedData() async throws {
-    let mockWallet = MockBarkWallet()
-    mockWallet.returnMalformedData = true
-    
-    let service = TransactionService(wallet: mockWallet, ...)
-    await service.refreshTransactions()
-    
-    // Service should handle gracefully, not crash
-    #expect(service.error != nil)
-    #expect(service.transactions.isEmpty)
-}
-```
-
-## Test Organization
-
-### File Structure
-```
-Tests/
-├── ServiceTests/
-│   ├── BalanceServiceTests.swift
-│   ├── TransactionServiceTests.swift
-│   └── AddressServiceTests.swift
-├── ModelTests/
-│   ├── ArkBalanceModelTests.swift
-│   └── PersistenceModelTests.swift
-├── IntegrationTests/
-│   └── WalletManagerTests.swift
-└── UITests/
-    └── ContentViewTests.swift
-```
-
-### Test Naming Conventions
-- Test suites: `[ComponentName]Tests`
-- Test methods: Descriptive sentences explaining behavior
-- Mock classes: `Mock[ProtocolName]`
-- Test data: `create[Scenario][DataType]()`
-
-## Continuous Integration
-
-### Test Running Strategy
-- Unit tests run on every commit
-- Integration tests run on pull requests
-- UI tests run on release branches
-- Performance tests run nightly
-
-### Coverage Goals
-- Service logic: 90%+ coverage
-- Model transformations: 95%+ coverage
-- Error handling: 80%+ coverage
-- UI components: Focus on critical user paths
-
----
-
-*Note: This testing guide should evolve as new patterns emerge and testing strategies are refined.*
+Scope runs while working and batch the full suite once at the end. Pure
+logic suites also run fine through the MCP runner; anything touching the
+filesystem, SwiftData or the catalogs fails bogusly there.

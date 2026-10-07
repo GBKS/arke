@@ -8,6 +8,7 @@ Welcome to the project documentation. It is organized to help you understand the
 
 ## Start here
 
+- [CLAUDE.md](../CLAUDE.md) (repo root) — the operating rules every AI session follows: how Christoph works, the plan → build → review → compound loop, tooling and project-layout rules that are not derivable from the code
 - [Open Follow-Ups](Open_Follow_Ups.md) — the canonical list of open items, deferred work, and decisions still owed, ordered by priority tier
 - [Open Follow-Ups — Done Log](Open_Follow_Ups_Done.md) — closed items with their root-cause and verification write-ups, kept for debugging reference
 - [Documentation Inventory](Documentation_Inventory.md) — what every doc is, its status, and the cleanup backlog
@@ -55,7 +56,7 @@ Welcome to the project documentation. It is organized to help you understand the
 
 ## Development
 
-- [Setup Guide](Development/Setup.md), [Testing Patterns](Development/Testing_Patterns.md), [Common Tasks](Development/Common_Tasks.md)
+- [Setup Guide](Development/Setup.md), [Testing Patterns](Development/Testing_Patterns.md) — both rewritten 2026-10-07 from the project as it is
 - [Change Review Playbook](Development/Change_Review_Playbook.md) — how review passes are run and recorded
 - [Release Train](Development/Release_Train.md) — the two-week decide → build → device day → TestFlight → soak cycle
 
@@ -74,4 +75,4 @@ Historical implementation, migration, and fix documentation, kept under original
 - New files use `Title_Case_With_Underscores.md`. Migrations folders keep their numbered names; `README.md` and `Archive/` are exempt.
 
 ---
-*Last updated: September 27, 2026*
+*Last updated: October 7, 2026*

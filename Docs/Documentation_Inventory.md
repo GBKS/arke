@@ -244,14 +244,20 @@ All other root files have a disposition in the Small-Steps Refinement Backlog ab
 
 ---
 
-### Development/ (5 files) ✅ GOOD STRUCTURE
+### Development/ (6 files) ✅ REWRITTEN 2026-10-07
 
-- `intro.md`, `Setup.md`, `Testing_Patterns.md`, `Common_Tasks.md`,
-  `Change_Review_Playbook.md` (added 2026-09-21)
+- `README.md`, `Setup.md` (rewritten 2026-10-07), `Testing_Patterns.md`
+  (rewritten 2026-10-07), `Change_Review_Playbook.md` (2026-09-21),
+  `Release_Train.md` and `Rework_Ledger.md` (2026-10-07)
 
-**Assessment:** Valuable, current. Keep as-is. Note the four original files
-predate the `Title_Case_With_Underscores` convention; new additions here
-follow it.
+**Assessment:** The earlier entry here said "Valuable, current. Keep
+as-is." That was false: `Setup.md`, `Common_Tasks.md` and
+`Testing_Patterns.md` still described a macOS app driving the bark CLI,
+with the old project name, a test module that does not exist and a template
+test layout. They were archived to `Archive/Development/` on 2026-10-07;
+`Setup.md` and `Testing_Patterns.md` were rewritten from the project as it
+is, `Common_Tasks.md` got no successor. Logged as a class 5 (trusted
+claim) entry in `Development/Rework_Ledger.md`.
 
 ---
 
