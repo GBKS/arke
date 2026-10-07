@@ -7,18 +7,29 @@ train live at the top of `Open_Follow_Ups.md` so they sit next to the backlog.
 
 ## Why a train
 
-Coding is not the constraint. An AI-assisted session produces a fix with
-tests in hours. What slowed the project down for two months was everything
-around it: fixes waiting weeks for a device check, proposals sitting
-undecided, builds with no identifiable number. The train makes verification
-and release scheduled events instead of leftovers.
+Coding is fast; correct coding is not. An AI-assisted session produces a
+first draft with tests in hours, but roughly a third of past sessions went
+into revisiting generated code for faults no single file reveals:
+device-scoped actions on account-scoped state, read paths fixed without
+their write paths, task ownership, wrong assumptions about what bark does,
+and claims in docs taken on trust (the five fault classes in
+`Change_Review_Playbook.md`, with the incidents behind each in
+`Rework_Ledger.md`). The other half of the slowdown was everything around
+the code: fixes waiting weeks for a device check, proposals sitting
+undecided, builds with no identifiable number.
+
+The train budgets for both. Every cluster ends with a fresh-context review
+against the five classes before it reaches the device day, effort estimates
+carry a 30% rework allowance, and verification and release are scheduled
+events instead of leftovers.
 
 ## The two-week cycle
 
 | Day | What happens | Who |
 |---|---|---|
 | 1 | **Decide.** Walk the "Decisions needed" section of the backlog; rule or explicitly defer each. Pick the train's items (see "Picking"). | Christoph rules, assistant records |
-| 2–7 | **Build.** One cluster per session. Plan first, definition of done stated up front, tests with the change, scoped suite green, backlog updated in the same change, commit plan proposed. | assistant builds, Christoph steers and commits |
+| 2–6 | **Build.** One cluster per session. Plan first with every claim labelled verified / derived / assumed, the sweep of sibling sites listed, definition of done stated up front, tests with the change, scoped suite green, backlog updated in the same change, commit plan proposed. | assistant builds, Christoph steers and commits |
+| 7 | **Review.** A fresh-context adversarial pass per cluster (new session or subagent handed only the diff, the relevant contracts and the five fault classes, told to break the change). Findings fixed or filed before the device-day checklist is written; each confirmed finding gets a `Rework_Ledger.md` line. | assistant runs, Christoph reads the verdicts |
 | 8 | **Device day.** Run the checklist the assistant prepared the day before: one block per Tier 2 item with the exact steps and the log lines to grep. Two-device scenarios need both phones. | Christoph |
 | 9 | **Release candidate.** Bump the build number. Assistant runs a code-review pass over the train's diff. Mobile suite green via `xcodebuild`. Upload to TestFlight. | both |
 | 10–14 | **Soak.** Passive Tier 2 items (background kills, relay renewal, auth wakes) are only observable here. Check Organizer crash data once. Normal use with log export at the end. | Christoph |
@@ -96,6 +107,10 @@ data and simulator logs do not.
 
 ## Review cadence of this document
 
-Revisit after the third train. Questions to answer then: is Tier 0 empty at
-each release, did any train skip its device day, how many Tier 2 items were
-closed per device day, and did the 60/20/20 split hold.
+Revisit after the third train, together with `Rework_Ledger.md`. Questions
+to answer then: is Tier 0 empty at each release, did any train skip its
+device day or its review day, how many Tier 2 items were closed per device
+day, did the 60/20/20 split hold, how many ledger lines did the review day
+produce versus the device day versus the field (the review day should be
+catching most of them), and which fault class dominates — that class gets
+the next contract rule or test.

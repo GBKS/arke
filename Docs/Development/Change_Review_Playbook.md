@@ -123,3 +123,130 @@ This shape would have compressed the refresh work's four passes into about
 two. It would not have made the first pass complete — reviewing one's own fix
 reliably finds something, which is why the adversarial pass stays in the
 default rather than being an escalation.
+
+## The five fault classes (added 2026-10-07)
+
+A look back over the Done log in `../Open_Follow_Ups_Done.md` found that
+about a third of sessions since August went into revisiting generated code,
+and that the faults cluster into five classes. None of them is visible from
+inside the file being changed; all of them are "the thing that was never
+loaded". The adversarial pass checks each one explicitly. Incidents per
+class are logged in `Rework_Ledger.md`.
+
+| # | Class | The question to ask | Incidents (Done log) |
+|---|-------|---------------------|----------------------|
+| 1 | **Scope** — a device-scoped action touching account-scoped state, or the reverse | For every write and delete: which store, and is that store per device or per account? Who else reads it? | FFI `deleteWallet` deleting the synchronizable seed (08-19); local-only delete clearing KVS network config (08-20); local-only delete cascading CloudKit-mirrored assignments (09-23) — three instances of one class |
+| 2 | **Path asymmetry** — the read path fixed without its write path; the live store without its cached twin; one of several entry points | Trace writer → store → reader with file:line. Is each store live or cached, and who invalidates it? Enumerate every path that reaches this, not just the diffed one. | `refreshAfterVTXOChange` refetching the Ark-only service while readers used the stored merge (09-21); invalidation fix covering reads but not writes, then the write fix causing a fetch storm (09-25); mirror cleanup inside an `if let` with no else, leaving permanent ghosts (09-24) |
+| 3 | **Ownership** — who owns a task, a key, a cancellation, a notification; what runs before the wallet is open | For each shared resource the change touches: who creates it, who removes it, what happens when two callers overlap or the second arrives early? | `execute` removing `executeFresh`'s key (09-24); `cancel`/`cancelAll` never working (invariant generics, found 09-21); remote-change notifications dropped in the 1.5–2.0 s band (09-24); pre-open refresh banner (10-01) |
+| 4 | **Boundary assumptions** — what bark, CloudKit or iOS actually does versus what the API name suggests | Which external behaviours does this rely on? For each: verified at the bindings tag / in the FFI source / by log, or assumed? | `initWallet` + `open` disabling the recovery scan (08-10); bark replaying finished exits on a fresh DB (08-13); bark purging claimed exits from `getExitVtxos` (08-13); 150 s/block assumed for signet (09-27) |
+| 5 | **Trusted claims** — a doc, comment, log line or tool result taken as true | List every claim relied on but not executed or traced. Verify each. | 33% of a guiding doc's claims wrong (09-21 claims audit); `matchedTxid` "for debugging" but load-bearing (09-27); seeding guard built on the wrong hazard model (role, not import state; 09-25); keyword sweep with `\|` returning false zeros (10-07) |
+
+### Fresh-context adversarial pass
+
+The builder's blind spots persist within a session: the assumptions that
+shaped the fix are still loaded and still feel true. So the adversarial pass
+runs in a **new context** — a fresh session, or a subagent — that receives
+only: the diff (or commit range), the contract(s) for the area, the five
+classes above, and this instruction:
+
+> You did not write this change and must assume it is wrong somewhere. For
+> each of the five fault classes, state what would have to be true for the
+> change to be safe, then go check in the source whether it is. Enumerate
+> sibling sites of every pattern the change touches. Report findings as
+> CONFIRMED (you read the code that breaks) or PLAUSIBLE (you could not
+> rule it out), never as "looks fine". End with: what did you not verify?
+
+It replaces the "refute your own fix" prompt for Tier 0/1 work and runs on
+day 7 of the release train (`Release_Train.md`). For Tier 3/4 the self-review
+prompts above remain enough.
+
+### Claim labels in plans
+
+Every plan or proposal marks each factual statement it builds on as one of:
+
+- **verified** — executed, traced to file:line, or read at the bindings tag;
+- **derived** — follows from verified facts by reasoning the reader can check;
+- **assumed** — neither; must be verified before anything is built on it.
+
+An "assumed" claim about bark, CloudKit, or the keychain blocks the build
+step until it moves to "verified". This is the plan-stage form of the claims
+audit (`Claims-audit review method` in the assistant's memory): checking the
+doc against the code before the code exists, instead of after.
+
+### The sweep
+
+Before a change is called done, grep for every sibling of the pattern being
+changed — every other call site of the method, every other store written by
+the same policy, every other path that reaches the guard — and list them in
+the plan with a one-word verdict each (covered / exempt-because / missed).
+Three of the worst incidents in the ledger were a second site nobody looked
+for. The sweep is a checklist item, not a habit.
+
+### Area contracts (stubs — grow from the ledger)
+
+`../Initialization/Launch_Sequence_Contract.md` is the model: short numbered
+rules, each with the incident that produced it and an Enforced / Test
+column. It already covers startup, exits, multi-device detection and
+deletion (rules 19–26 are the scope rules). The four areas below have no
+contract yet; each stub holds the rules the ledger already supports. When a
+stub passes about eight rules, move it to its own file next to the launch
+contract and link it here.
+
+**Data scope (class 1).**
+- S1. Every delete names its scope — `.localOnly` or `.everywhere` — and
+  only `WalletDataCleanupService` deletes CloudKit-mirrored rows or
+  synchronizable keychain items (launch contract rules 19, 21, 23).
+  Enforced: `WalletDataCleanupService`. Test: `WalletWipeCoverage`,
+  `TransactionDeletionBlastRadiusTests`.
+- S2. The network config is the only account-authoritative state class;
+  payment data is the inverse (device-authoritative, mirrored up). A change
+  that syncs in the other direction needs a written reason.
+  Enforced: `NetworkConfigPersistence`, `reconcileNetworkConfigBeforeWalletOpen`.
+  Test: `NetworkConfigReconciliationTests`.
+- S3. Seeding default data is gated on import state, never on device role
+  (rule 26). Enforced: `CloudKitFirstImportGate`.
+  Test: `DefaultDataSeedingDecisionTests`.
+- S4. A CloudKit-mirrored row is never deleted outside the cleanup service,
+  even to dedupe — see the duplicate-defaults DECIDE item.
+
+**Data paths (class 2).**
+- P1. Readers of merged or derived data go through the stored merge
+  (`unifiedTransactionService.allTransactions`); a writer that refetches
+  must call `mergeTransactions()`. Enforced: `refreshAfterVTXOChange`.
+  Test: none.
+- P2. A post-write refetch must not join an in-flight fetch that predates
+  the write (`executeFresh`, `refreshTransactionsAfterWrite`).
+  Test: `executeJoinsFreshTaskAfterDrain`.
+- P3. Never read element properties off a cached to-many relationship
+  array; fetch and read in one main-actor pass (`live*` accessors). Applies
+  to writes as well as reads. Test: `TransactionMetadataResolutionTests`,
+  `TransactionMetadataWritePathTests`.
+- P4. Cleanup that must always happen does not live inside an optional
+  binding — `defer` or an unconditional path (mirror clear, 09-24).
+  Test: none (Tier 0 item open).
+
+**Task ownership (class 3).**
+- O1. A dedup key is removed only by the task that holds it (Task identity
+  `==`). Test: `executeJoinsFreshTaskAfterDrain`.
+- O2. A throttle defers, it never drops: anything arriving inside the
+  minimum interval is folded into a pending run. Test: `RemoteChangeThrottleTests`.
+- O3. Nothing that needs bark runs before the handle is open; it skips with
+  a log line (rule 7b). Enforced: `performRefresh`, `BalanceRefreshStatusViewModel`.
+- O4. `cancel`/`cancelAll` on the dedup manager are known no-ops; do not
+  rely on them until the Tier 4 item lands.
+
+**Bark facts (class 4).** Verified at the bindings tag named; re-verify on
+every bump (the migration guides in `../Migrations/` are where that happens).
+- B1. The seed-recovery scan runs only on the creating `open`
+  (`created_now`); `initWallet` first disables it forever (bark 0.7.x).
+- B2. Claimed exits are purged from `getExitVtxos()`; snapshot at drain
+  time (`PersistentExitCache`). Cancelled exits: unknown — open question
+  under the `cancelExit` item.
+- B3. On a fresh DB bark replays finished exits through the state machine
+  for ~2 s; they read as in-flight.
+- B4. Signet runs ~10 min/block like mainnet; `BlockTimeFormatter.secondsPerBlock`
+  is the single source (600).
+- B5. `nil` fee rate means internal estimation on mainnet only; off mainnet
+  pass the capped app-side rate.
+- B6. The daemon auto-starts on `Wallet.open()` since bark 0.7.0; our
+  explicit `runDaemon()` may restart it (unconfirmed — Tier 4 item).
