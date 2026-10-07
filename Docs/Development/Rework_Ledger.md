@@ -54,3 +54,5 @@ or Done-log entry if the write-up is long.
 
 | Date | Change revisited | Class | Found by | Produced |
 |------|------------------|-------|----------|----------|
+| 2026-10-07 | `0de06d4` hardened the recovery-phrase Copy button (`.localOnly` + expiry) but the QR sheet next to it still exposes the phrase as selectable text → plain pasteboard copy | 2 | review (first `fault-class-reviewer` run) | backlog item under the clipboard entry; Train 1 Tier 0 pick |
+| 2026-10-07 | `Documentation_Inventory.md` rated `Setup.md`, `Common_Tasks.md`, `Testing_Patterns.md` "valuable, current, keep as-is"; all three still described the bark-CLI macOS app with a non-existent test module — the September doc cleanup trusted the rating | 5 | review (self, while writing CLAUDE.md) | archived to `Archive/Development/`; Setup + Testing_Patterns rewritten from source |

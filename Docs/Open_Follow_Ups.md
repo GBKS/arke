@@ -39,7 +39,8 @@ on day 1):
   first position on explicit device linking and full S7.
 - Build — Tier 0, everything unblocked: BIP39 checksum; mainnet fee ceiling;
   BIP-353 DNS query skip + softer error; paste fallback; clipboard expiry
-  2–3 min + macOS pasteboard; `RelayAPIToken` out of the repo; screen-capture
+  2–3 min + macOS pasteboard + QR-sheet selectable-text bypass;
+  `RelayAPIToken` out of the repo; screen-capture
   protection; delete-flow partial failure; ghost mirror clear (1); audit the
   unprotected background store writes. Then the three send proposals
   (address header, fee three-state, onchain from Payments) as one cluster.
@@ -382,7 +383,25 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **Recovery phrase clipboard**: expiry of 60 s (`copySecretToClipboard`
   default, `Shared/Helpers/Clipboard.swift`) is too short to reach a password
   manager — raise to 2–3 min. macOS still uses the plain general pasteboard
-  with no expiry — `org.nspasteboard.ConcealedType` + delayed clear.
+  with no expiry — `org.nspasteboard.ConcealedType` + delayed clear
+  (**assumed**: a third-party clipboard-manager convention, not an Apple
+  API; whether Universal Clipboard honours it is unverified — label stays
+  until checked on a Mac + iPhone).
+  - [ ] **QR sheet bypasses the hardened Copy button** (fault-class review of
+    `0de06d4`, 2026-10-07, CONFIRMED, class 2): `RecoveryPhraseSettingView`
+    hands the mnemonic to `ArkeQRCodeView`, which renders it as
+    `Text(content).textSelection(.enabled)`; long-press → Copy writes the
+    phrase to the plain general pasteboard with no `.localOnly` and no
+    expiry, one button to the right of the fixed one. Fix: a parameter on
+    `ArkeQRCodeView` to disable selection (it is shared with address and
+    invoice QR codes, where selection is wanted), or a secret-aware
+    variant. Same review also noted the desktop Send view reads the
+    pasteboard on every `didBecomeKey` and logs the content at debug
+    (`SendViewModel+Clipboard.swift`, comment there claims tap-only — false
+    on macOS); redacted on device, plaintext in the console. Desktop is
+    parked, so note only. Device check owed for the iOS fix itself:
+    two-device Handoff paste within 60 s (expect nothing) and local paste at
+    ~70 s (expect nothing).
 - [ ] **BIP-353 DNSSEC validation** (full implementation): DNSSEC-validating
   library, RRSIG check, or a validating DoH resolver. Unblocks the four
   BIP-353 items in Tier 3 (BIP-353 vs Lightning address logic, resolved
