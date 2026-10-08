@@ -94,7 +94,14 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   Payments are viable (proposal: Savings, faster and keeps Payments liquid).
   See the Payments-balance onchain proposal in Tier 1.
 - [ ] **DECIDE — nearby-exchange payloads accepted from any peer** (PR #8
-  description): accepted whatever the distance check says, parsed on arrival.
+  description): accepted whatever the distance check says, parsed on arrival,
+  from any connected peer, any number of times; the session is encrypted but
+  unauthenticated and every invitation is accepted. The sheet shows a saved
+  contact's card when only the URI's primary onchain address matches, while
+  an `ark=` destination outranks it at send time — show a contact only when
+  every destination in the URI belongs to it. Christoph's view 2026-10-08:
+  less critical than the rest of Tier 0, since the feature is opt-in under
+  Experimental, needs a tilt from the Activity tab and a confirmed Pay.
 - [ ] **DECIDE — duplicate default tags/contacts already in the account**
   (second iPhone's extra 9 tags + 2 contacts are in CloudKit): hand-delete on
   a device, or a one-shot dedup by name that re-points assignments before
@@ -152,7 +159,32 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   above ~6.6e16 sat/vB passes and crashes at
   `PaymentDestinationSelector.swift:482` (`Int(feeRate * estimatedVBytes)`)
   whenever an onchain destination is ranked. Sanity ceiling on mainnet (e.g.
-  10,000 sat/vB) or checked arithmetic, plus a test.
+  10,000 sat/vB) or checked arithmetic, plus a test. Executed 2026-10-08
+  (external parser harness against the working tree): `{"1": 250000.0}`
+  yields 250,000 sat/vB for all three tiers. Also check what the
+  confirmation screen shows for the fee at such a rate — not traced.
+- [ ] **"Delete everything" re-creates the iCloud backup it just deleted**
+  (traced 2026-10-08, not executed): `DeleteWalletSettingView.deleteWallet`
+  runs `cleanupService.deleteWalletData` (which calls
+  `WalletBackupService.deleteAllBackups()`), then `walletManager.deleteWallet()`
+  → `BarkWalletFFI.deleteWallet()` → `shutdownWallet()` → `backupWallet()`,
+  whose only guard is `wallet != nil` — true, the handle is still open. A
+  fresh copy of the deleted `db.sqlite` lands in iCloud Drive before the
+  directory is removed, and the cleanup service's own comment says such a
+  leftover is restored over the next wallet created. Fix: skip the backup on
+  the delete path (a flag on shutdown, or delete backups after shutdown).
+  Done means: delete-everywhere then create on one device, backup slot
+  stays empty, plus a test on the shutdown/backup ordering. Local-only
+  deletion keeps the backup on purpose (rejoin) — do not touch that branch.
+- [ ] **Backup restore is newest-wins with no wallet binding**: one
+  `Backups/db.sqlite` slot per iCloud account, written by plain file copy;
+  on launch `WalletManager.swift:1340-1362` replaces the local database
+  when the backup's modification date is later. Nothing ties a backup to a
+  wallet hash or a sequence number, so a device can start from an older or
+  foreign VTXO database (local-only state is what unilateral exit depends
+  on). Fix: bind each backup to the wallet hash and a monotonic counter and
+  refuse mismatches. Unverified either way: whether SQLite `-wal`/`-shm`
+  files are handled on backup and restore (depends on bark's journal mode).
 - [ ] **Claimed exit funds invisible after seed import** (network-verified
   2026-08-13: 8,839 sats confirmed-unspent at the claim address, absent from
   balance — 143,041 shown vs 151,880 actual). `ExitClaimSequence.run` reveals
@@ -183,12 +215,21 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   i.e. full spend rights — contradicts Principle 2 / contract rule 15.
   Reachable via self-unlink (`LinkedDevicesView_iOS.swift:46`). UNVERIFIED —
   needs a self-unlink → relaunch run before deciding the fix. Fix this before
-  collapsing `shouldBlockWalletAccess`'s layers (Tier 4).
+  collapsing `shouldBlockWalletAccess`'s layers (Tier 4). Sibling site
+  (read 2026-10-08): `shouldBlockWalletAccess()` itself returns `false` when
+  the device ID cannot be read (`WalletManager.swift:1247-1250`); the ID is
+  stored `WhenUnlockedThisDeviceOnly` (`DeviceRegistrationService.swift:170`)
+  while the seed is `AfterFirstUnlock`, so on a locked background wake the
+  seed is readable and the gate is not — inferred timing, same fix shape:
+  treat "unknown" as read-only until the registry answers.
 - [ ] **Security checks first**: switch `authenticateUser` to
   `.deviceOwnerAuthentication` (passcode fallback; biometrics-only hard-fails
   on Macs without Touch ID) and wire the gated-actions table (recovery phrase,
   deletions, promote/demote/unlink; send as opt-in). Its only call site is
   commented out — nothing is gated today. PR #8 review flagged the same.
+  Christoph's view 2026-10-08: showing the phrase already sits behind a
+  tap or the scratch-off surface, so a show-phrase gate is not a gap on
+  its own; the item stays for the full gated-actions table.
 - [ ] **Delete flow has no partial-failure handling**
   (`DeleteWalletSettingView.swift:205-236`): `deleteWalletData()` runs first,
   then `walletManager.deleteWallet()`; if the second throws, shared state is
@@ -226,8 +267,14 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   **audit the other unprotected store writes on background-reachable paths**
   (`unregisterCurrentDevice`, the upsert in `refreshTransactionsAfterWrite`,
   the balance persist). Only the two crash-proven sites were wrapped.
-- [ ] **Get Patrick's private write-up**: includes "a few multi-device and
-  backup paths fail open". Check each claim against the source before acting.
+- [x] **Get Patrick's private write-up** (2026-10-08): received with a
+  parser repro harness; every claim spot-checked against `main` held. The
+  new findings are filed in their tiers (two backup items above, the
+  `shouldBlockWalletAccess` sibling, metadata import and store deletion in
+  Tier 1, resolver and prefix notes, branch pins, `SECURITY.md`). Relay
+  server-side observations are handled with the relay, outside this doc.
+  The harness runs on a Mac with a `swiftc` wrapper that adds `-sdk`; the
+  eight parser traps it documented are confirmed fixed by execution.
 - [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** (surfaced
   by the 2026-10-05 Second server incident: an attacker registered boards
   with only his own signatures via `BoardBuilder::new_from_vtxo`, a lib
@@ -313,6 +360,25 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   refresh (Reminders, two reports).
 - [ ] **Send all from savings to spending did not work, needs a better
   message** (Reminders).
+
+### Data safety
+
+- [ ] **Metadata import attaches addresses to existing contacts by name**
+  (`MetadataImportService.swift:53-60`): an imported contact merges by UUID,
+  then by any shared address, then by normalized name alone; its addresses
+  are inserted without going through `AddressValidator` (`mergeAddresses`),
+  and an imported primary flag applies when the local contact has none, so
+  a foreign file can set the default payee of a trusted contact. The
+  preview shows counts only (`MetadataBackupSectionView.swift:208-220`).
+  Fix: validate imported addresses, drop or disclose name-only merges, list
+  added addresses per contact in the preview.
+- [ ] **`SwiftDataHelper` deletes the store on any load error**
+  (`SwiftDataHelper.swift:161-181`): any `SwiftDataError` or Cocoa codes
+  134110/134100/134060 delete every store file and rebuild. Payment
+  metadata is device-local by design, so a transient load failure wipes
+  notes and assignments that CloudKit cannot bring back. Narrow the
+  condition to confirmed migration failures, or back up the store files
+  before deleting them.
 
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
 
@@ -459,7 +525,32 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **BIP-353 DNSSEC validation** (full implementation): DNSSEC-validating
   library, RRSIG check, or a validating DoH resolver. Unblocks the four
   BIP-353 items in Tier 3 (BIP-353 vs Lightning address logic, resolved
-  address display, contact address differentiation).
+  address display, contact address differentiation). Two resolver defects
+  to fix with it (read 2026-10-08, moot while the query is skipped): only
+  the first character-string of the TXT RDATA is read
+  (`BIP353Resolver.swift:310-319`), so records over 255 bytes truncate;
+  and the lookup does one `select` + one `DNSServiceProcessResult`, so a
+  reply with `kDNSServiceFlagsMoreComing` set never resumes the
+  continuation and the caller hangs. Keep the rule that an unverified
+  BIP-353 answer never pre-empts the TLS-authenticated Lightning-address
+  path.
+- [ ] **`SECURITY.md` and GitHub private vulnerability reporting**: the repo
+  has mainnet users and no stated channel for a security report; the next
+  reviewer should not need a DM. Enabling private reporting is a repo
+  setting (Christoph). Pair with a disclosure rule: unfixed items that are
+  exploitable against running infrastructure stay out of this doc until
+  fixed.
+- [ ] **Pin `bark-ffi-bindings` and BIP39 to tags, not branches**:
+  `project.pbxproj` has `bark-ffi-bindings` on `master` and `anquii/BIP39`
+  on `main`; `Package.resolved` holds revisions, so builds are stable only
+  until "Update to Latest Package Versions" pulls whatever is on the branch
+  into the component that holds keys. Xcode UI change (Package
+  Dependencies → exact version / revision); review the diff on each bump.
+- [ ] **`BIP21URIHelper.satoshis(fromBTCAmount:)` has no unit test**: the
+  helper now carries the amount parsing for all three parsers (fix
+  `7338733`), and its only verification so far is the external harness.
+  Cases: `nan`, `inf`, `1e11`, negative, `0x1p-3`, `0.57` → 57,000,000,
+  nine fraction digits, 21M + 1 sat.
 - [ ] **OS `bitcoin:` URI scheme registration**: no `CFBundleURLSchemes` in
   either Info.plist. Also test the macOS Shortcuts integration (only the
   widget has App Intents).
@@ -601,6 +692,13 @@ Reminders merge; wording kept so the two can be matched.
 - [ ] **How to detect if an address is from a different Ark server?**
 - [ ] **Parse Cashu NUT-18 `creq` parameter** (idea).
 - [ ] **Input field type detection – test thoroughly**.
+- [ ] **BOLT-11 network prefix table is wrong**
+  (`LightningInvoiceParser.parseNetwork`): `lnbcrt` (regtest) matches the
+  `lnbc` check first and reads as mainnet; the parser tests `lnrt` for
+  regtest, which no invoice uses; signet's `lntbs` matches `lntb` and reads
+  as testnet; unknown prefixes default to mainnet. Check against wherever
+  Lightning network compatibility is enforced before changing — signet is
+  the daily network.
 - [ ] **Send-metadata tidy-ups**: `SendNoteEditorSheet.maxCharacters = 500`
   declared but never enforced while `PersistentTransaction.notes` says 1000 —
   pick one and enforce it; dead `SendMetadataSection.iconView(systemName:isFilled:)`,
@@ -918,6 +1016,11 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   Xcode pass); `arke-qr-background` in `Media.xcassets` is referenced nowhere.
 - [ ] **Revise use of Int / UInt32 etc. through the app, starting with the
   Bark bindings** (0.23 widened a few to UInt16).
+- [ ] **`PaymentInfoReceivedSheet` keeps its own BIP-21 parser**
+  (`BIP21URIHelper.parseBIP21URI` extension in the sheet file): strips
+  every `bitcoin:` occurrence and splits on the last `?`, while
+  `AddressValidator` uses the first. The amount trap is gone (shared
+  helper); replace the rest with `AddressValidator.parsePaymentRequest`.
 - [ ] **Memory profiler pass** to see if memory piles up over time.
 - [ ] **Move relay to DigitalOcean**; **Arke.me domain?** (external).
 - [ ] **`Data samples/` → `Data_Samples/`** (folder names were out of scope
