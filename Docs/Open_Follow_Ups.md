@@ -117,6 +117,18 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   today the strategy only distinguishes last-device vs other-devices.)
 - [ ] **Mark the four network-name log interpolations `privacy: .public`?**
   Undecided; simulator logs don't redact, device logs do.
+- [ ] **DECIDE — exits depend on the same operator as the server** (from the
+  2026-10-05 Second server incident, see Tier 0 "Failed boards"): the
+  protection that kept user funds safe is the pre-signed exit path, which is
+  only real if a user can exit while Second is down. `NetworkConfig.mainnet`
+  uses `mempool.second.tech` as chain source and `ark.second.tech` as server;
+  signet uses `esplora.signet.2nd.dev` + `ark.signet.2nd.dev`. A custom
+  config can point elsewhere, but nothing tells a user to. Options: (a) a
+  fallback Esplora per network that the exit path tries when the primary
+  fails; (b) an "exit while the server is down" recipe in the offline /
+  server-down feature (Tier 1); (c) accept the dependency and record it in
+  `Initialization/Launch_Sequence_Contract.md`. Verified 2026-10-08: both
+  servers and both chain sources answered.
 
 ## Tier 0 — Funds or security at risk
 
@@ -206,6 +218,25 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   the balance persist). Only the two crash-proven sites were wrapped.
 - [ ] **Get Patrick's private write-up**: includes "a few multi-device and
   backup paths fail open". Check each claim against the source before acting.
+- [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** (surfaced
+  by the 2026-10-05 Second server incident: an attacker registered boards
+  with only his own signatures via `BoardBuilder::new_from_vtxo`, a lib
+  function only the server's register-board handler calls, so our client
+  never ran the vulnerable code and user VTXOs stayed on pre-signed exit
+  paths; Second lost ~0.75 BTC of its own funds). The client-side fallout is
+  upstream `f85ca92ac` (2026-10-07, after our bark 0.7.1): the board flow
+  stored the signed funding tx in the onchain wallet *before* the server
+  cosigned, so a board refused after signing (cosign refused, below the
+  minimum, network error) leaves no movement or checkpoint, the coins read
+  as spent, and every sync rebroadcasts a funding tx no VTXO tracks — a
+  2-of-2 output with no cosigned exit. **Derived** from the commit message,
+  not reproduced. The server now also rejects register-board above
+  `max_vtxo_amount` (`8fab49706`), and `BoardingModalView.swift:32` caps the
+  form only by `minBoardAmount` although `ArkInfo.maxVtxoAmount` is parsed
+  (`BarkWalletFFI+Configuration.swift:192`), so a user can trigger exactly
+  that refusal. Now: pass the maximum into the boarding form and refuse
+  client-side; disable boarding while the server is unreachable. Real fix:
+  the bindings bump that carries `f85ca92ac` (Tier 4 "Bindings adoption").
 
 ## Tier 1 — What users hit every day
 
@@ -340,6 +371,19 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **Invoice creation polish**: "Slow connection, still trying…" after
   ~5 s; say "offline" right away when the wallet knows; VoiceOver
   announcement for "Creating invoice".
+- [ ] **A stuck Lightning receive is invisible, and cannot be cancelled or
+  exited**: Second's 2026-10-06 disclosure says the follow-on denial of
+  service "could degrade Lightning receives on Bark-based wallets" (server
+  fixes `9111622f9`, `6fd9834ff`). `LightningClaimService` is the only
+  caller of the receive bindings; it polls every 30 s in the foreground,
+  claims only `state == "htlcs-ready"`, and swallows every error into a log
+  line. A receive held below ready shows nothing in the UI, and
+  `cancelLightningReceive`, `attemptLightningReceiveExit`,
+  `lightningReceiveState` and `tryClaimLightningReceive` exist on
+  `BarkWalletFFI+Lightning.swift` with zero app callers. Surface pending
+  receives with their state on the invoice sheet and in Activity, show the
+  last claim error when it repeats, and offer cancel / exit for a receive
+  that never settles. Pair with "Invoice request timeout" above.
 
 ### Release readiness
 
@@ -801,6 +845,14 @@ Reminders merge; wording kept so the two can be matched.
 v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 
 - [ ] **Keep the unadopted-API record current on every bindings bump**.
+- [ ] **Next bump: take the post-incident bark client fixes** (upstream
+  master as of 2026-10-08, no tag past `bark-0.7.1` / `server-0.7.1` yet):
+  `f85ca92ac` failed boards kept out of the onchain wallet (Tier 0 item),
+  `48b005f10` lib board funding-output check (server-only path, harmless
+  for us), `e9e78ad33` recovery reads mailboxes to the end (the old 10-page
+  cap could truncate recovery), `244e3981f` `GetVtxosByIds` rpc. Watch for
+  a `bindings` release that pins a bark with these; re-run the migration
+  checklist and update `Bark_Bindings_Unadopted_API.md`.
 - [ ] **`initialScanOnchain(birthdayHeight:)` on import** — recovers onchain
   history from a previous incarnation of the seed; `sync()` never finds it.
   Needs a "scanning" import UI state + on-device verify. (Relates to the
