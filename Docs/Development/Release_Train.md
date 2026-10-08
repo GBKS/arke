@@ -105,6 +105,17 @@ data and simulator logs do not.
   work rejoins the train. Desktop is parked until then.
 - The build-number habit above.
 
+## Season trains (PROPOSED)
+
+A season is a named run of trains with the pick weighting changed on
+purpose and a consolidation train budgeted at the end. The first one
+proposed is the exploration season in `Exploration_Season.md` (2026-10-07):
+features and scope docs over stability, the app labelled experimental,
+flagged features with kill-or-ship dates, and a floor of Tier 0, seed,
+schema, network-config and money-path work that keeps the full process
+throughout. Not a decision until Christoph rules on the calls at the end of
+that document.
+
 ## Review cadence of this document
 
 Revisit after the third train, together with `Rework_Ledger.md`. Questions

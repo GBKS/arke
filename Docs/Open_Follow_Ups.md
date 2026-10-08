@@ -66,6 +66,16 @@ on day 1):
 Scattered DECIDE and PROPOSAL items pulled together because they block
 Tier 0/1 work. Guiding docs hold the full arguments.
 
+- [ ] **DECIDE — exploration season** (`Development/Exploration_Season.md`,
+  PROPOSED 2026-10-07): a four-phase season favouring the ten roadmap
+  features over stability. Phase 1 is scope docs only (one per feature plus
+  the three abstraction designs, iterated until ruled); then foundations
+  under the floor, then flagged features, then consolidation. App labelled
+  experimental, flags carry kill-or-ship entries, Tier 0 / seed / schema /
+  network-config / money-path work keeps the full process throughout. Eight
+  calls at the end of the doc (season, floor, gate G1/G2, Phase 4 in scope,
+  abstractions as Phase 1 work, accounting, agents hub, usernames without
+  BOLT-12). Ruled on the next train's day 1.
 - [ ] **DECIDE — explicit device linking** (proposal in
   `Architecture/Multi_Device_Design.md`, cross-cutting section after S13):
   should an install ever adopt the account's wallet silently, or disclose
