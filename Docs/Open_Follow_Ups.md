@@ -134,6 +134,30 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   today the strategy only distinguishes last-device vs other-devices.)
 - [ ] **Mark the four network-name log interpolations `privacy: .public`?**
   Undecided; simulator logs don't redact, device logs do.
+- [ ] **DECIDE — VTXO expiry safety net** (from the 2026-10-04 field incident,
+  see Tier 0 "Expired VTXOs are offered a refresh the server refuses"): today
+  the only thing standing between a closed app and expiry is one local
+  notification when the free-refresh zone opens; the hourly
+  `VTXORefreshService` check runs in the foreground only and refreshes only
+  what is already free. A user who does not open the app during that last
+  stretch loses the VTXO to the server's expiry sweep — exactly what happened
+  to the mainnet user (3 VTXOs, 19,995 sats, all expired together). Options,
+  not exclusive: (a) **pre-commit with the server** —
+  `refreshVtxosScheduled(vtxoIds:scheduledHeight:)` is in the bindings and
+  unadopted (`Bark_Bindings_Unadopted_API.md`, "Maintenance & scheduling");
+  whenever the app is open, register a delegated refresh for a height inside
+  the free zone and let the server run it later, no app wake needed, and the
+  binding's own doc says scheduling further out never costs more than
+  refreshing now; the server rejects a scheduled height at or past expiry
+  (`server/src/round/mod.rs`, delegated path), so the height maths must be
+  right. (b) refresh earlier and pay ppm while in the foreground when expiry
+  is within N days. (c) escalating reminders (zone opens / 3 days / 1 day)
+  that name the amount at stake. (d) Background Execution Phase 2 (push wake
+  → refresh), already planned but slow and uncertain after Phase 1's grant
+  numbers. PROPOSED 2026-10-09: (a) as the primary mechanism plus (c) as the
+  backstop for wallets never reopened after the VTXO was created. Changes
+  the refresh model from "wait for free, in the foreground" to "pre-commit",
+  touches funds — plan after the ruling, full process.
 - [ ] **DECIDE — exits depend on the same operator as the server** (from the
   2026-10-05 Second server incident, see Tier 0 "Failed boards"): the
   protection that kept user funds safe is the pre-signed exit path, which is
@@ -200,6 +224,35 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   `AddressService`; (c) import scan stop gap ≥ unused cap + margin (~50);
   (d) upstream — no rescan API (feedback §2.6). Also blocks the exit movement
   from linking its claim tx (`onchain_… not found` on every relink pass).
+- [ ] **Expired VTXOs are offered a refresh the server refuses** (field
+  incident, mainnet, build 24, logs read 2026-10-07 and 2026-10-09; Second is
+  looking at the server side, VTXO ids and wallet id in the support thread).
+  Three VTXOs past `expiry_height` (bark: `is expired, must be refreshed`);
+  every launch the auto-check and every "Refresh now" tap write a Pending
+  refresh movement, the server rejects it as `unusable_inputs` (server-0.7.1
+  `check_spendable`: exited onchain / state not spendable / banned — the
+  watchman sweeps at `tip ≥ expiry`), and the movement flips to Failed. The
+  user saw a growing list of "Failed refresh" rows and a "Refresh now" badge
+  that never cleared. Three app defects, one cluster:
+  - **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
+    issued into a round"** (`VTXORefreshService.swift:45`), so the auto path
+    logged "treating as in-flight, not a failure" with 0 pending rounds. Only
+    classify as in-flight when the ids are actually in `vtxoIdsBeingRefreshed()`
+    / a pending round; otherwise it is a real failure and must back off (no
+    retry on the next launch for the same ids).
+  - **"Refresh now" / "Refresh all (Free)" shown for VTXOs the app itself
+    labels Expired** (`BalanceRefreshStatusViewModel`, X-Ray VTXO list), and
+    the balance still counts them as spendable because bark's balance does.
+    Expired needs its own state: no refresh CTA, an explicit "expired —
+    contact support" message, and the amount shown apart from spendable.
+    Absorbs the Tier 3 "show a message the first time the user has expired
+    VTXOs?" question.
+  - **The FFI log line loses the server message**:
+    `BarkWalletFFI+VTXO.swift:111` prints `\(error)` → `Error Domain=Bark.Error
+    Code=0`; the rejection reason had to be inferred from the classifier's
+    behaviour. Log `localizedDescription` (interim step of the Tier 4 typed-
+    errors item).
+  Root cause upstream of all three is the expiry safety net — DECIDE above.
 - [ ] **Warn on wallet deletion about forfeitable offchain balance** (field
   incident 2026-08-13: 10,000-sat VTXO swept at expiry 6h after deletion, app
   showed 0 with no explanation). Minimum expiry height across spendable VTXOs
@@ -718,6 +771,14 @@ Reminders merge; wording kept so the two can be matched.
 ### Activity, transaction details, tags
 
 - [ ] **Does a Lightning-address send movement include the address?**
+- [ ] **38× `Transaction <id> no longer exists on server but has 1 tag(s)` at
+  ERROR on every movement notification** (field log 2026-10-09, mainnet,
+  42 movements on the server, "38 tag assignments on orphaned
+  transactions"). Find out why that many `PersistentTransaction` rows have
+  no matching bark movement (movement ids renumbered by a bark migration?
+  rows from a previous wallet incarnation?), decide whether the orphans
+  should be pruned or kept for their tags, and in any case log once per
+  refresh at warning level, not once per orphan per notification.
 - [ ] **Hide failed and completed refreshes that were free?**
 - [ ] **Balance tag shows "-0 B fees paid"; needs a no-fee state**.
 - [ ] **Tag amounts — do they include fees, should they? Balance tag must
@@ -755,7 +816,9 @@ Reminders merge; wording kept so the two can be matched.
   the scheduler's inputs (current height, target height, blocks remaining,
   seconds/block). A full history needs a `localNotificationScheduled`
   journal kind plus journaling in the `willPresent`/`didReceive` hooks.
-- [ ] **Show a message the first time the user has expired VTXOs?**
+- [ ] **Show a message the first time the user has expired VTXOs?** — folded
+  into the Tier 0 "Expired VTXOs are offered a refresh the server refuses"
+  cluster 2026-10-09; the field incident made it more than a polish item.
 - [ ] **Make the overlay better reflect the current state**.
 - [ ] **Warn when total VTXOs are under 330 sats, and don't show "Refresh
   now" below that minimum** (`VTXORefreshService` already uses 330 as the
@@ -868,7 +931,11 @@ Reminders merge; wording kept so the two can be matched.
 - [ ] **Surface typed errors across the bark FFI boundary**: every
   `Bark.Error` collapses into `BarkWalletFFIError.configurationError(_:)`, so
   callers string-match (`isAlreadyIssuedRejection`). One case per recoverable
-  variant, starting with `unusable_inputs`.
+  variant, starting with `unusable_inputs`. The 2026-10-09 field log showed
+  the cost: the match fired on an expired-VTXO rejection and the message
+  itself never reached the log (Tier 0 cluster). Note the server's
+  `unusable_inputs` carries ids only, not reasons — the typed case still
+  needs app-side context (pending rounds, expiry) to classify.
 - [ ] **Thread the live refresh-expiry threshold into `RefreshExclusion`**:
   the valve hardcodes 144 to mirror bark's `vtxo_refresh_expiry_threshold`
   (FFI config passes `nil`); needs a cached `arkConfig` on `WalletManager`.
@@ -980,8 +1047,18 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   (feedback §1.3 addendum); no app workaround planned.
 - [ ] **BDK fee estimator removal, Phase 3** — blocked until bark exposes
   onchain estimate/drain fee APIs; then drop `bdk-swift`.
+- [ ] **`refreshVtxosScheduled(vtxoIds:scheduledHeight:)`** — candidate
+  primary mechanism for the "VTXO expiry safety net" decision; adopt only
+  after that ruling. `RoundState.scheduledHeight` is already in the binding.
 
 ### Startup and background structure
+
+- [ ] **Field cold launches run 10–20s, one at 74s** (background event
+  journal of the mainnet user, 2026-10-04..09; the 2026-10-07 export caught
+  the launch refresh still inside Step 3 at 11s, no "Step 3.1" yet). Which
+  Step 3 task is the long pole — `refreshAllBalances`, the onchain sync, or
+  the block-height fetch? Add per-task timings to the Step 3 task group
+  before guessing.
 
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
