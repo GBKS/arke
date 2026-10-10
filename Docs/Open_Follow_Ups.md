@@ -24,40 +24,100 @@ Counts at consolidation: 211 open + 1 partial items from the old layout,
 consolidated into 191 entries here (duplicates and same-screen items merged,
 nothing dropped); 73 closed items moved to the Done log.
 
+Hygiene pass 2026-10-09: every Decisions, Tier 0 and Tier 1 entry was checked
+against the code and the deployed bindings (read, not executed, except the
+BIP39 import test); the whole file was swept for duplicates. About two thirds
+held apart from line drift. Entries corrected in place carry no marker; the
+notable ones are the BIP39 item (bark rejects a bad checksum itself, moved to
+Tier 3), the Lightning claim service (disabled since April, not polling), the
+expiry reminder (gated by system permission, not the in-app toggle), and the
+balance card (no expired state at all). Five items closed, three moved up to
+Tier 0, six moved out of Tier 1, twelve merges. 2026-10-10: Second's answer
+on the mainnet case reframed the Tier 0 "expired VTXOs" cluster as wallet
+state divergence (funds safe server-side) and took the field evidence off
+the expiry safety-net decision.
+
 ## Current train
 
-Process: `Development/Release_Train.md` (two-week cycle: decide → build →
-device day → TestFlight → soak). This block names the picks; it is rewritten
-at the start of every train and the previous one is summarised in one line
-under "Past trains".
+Process: `Development/Release_Train.md` — a train is one release that moves
+through six stages in order (Decide → Build → Review → Device → Release →
+Soak), each closed by a condition, not a date; Build has a soft budget of
+about two weeks of working time (DECIDED 2026-10-10, replacing the fixed
+two-week calendar). This block names the stage, the picks and the
+deferrals; it is rewritten when a train closes and the previous one is
+summarised in one line under "Past trains".
 
-**Train 1 — 2026-10-08 to 2026-10-21** (PROPOSED picks, Christoph to confirm
-on day 1):
+**Train 1** — opened 2026-10-08.
 
-- Day 1 — rule on the "Decisions needed" list, at minimum: onchain default
-  source, nearby payloads, dead images, rates cache (the cheap ones), and a
-  first position on explicit device linking and full S7.
-- Build — Tier 0, everything unblocked: BIP39 checksum; mainnet fee ceiling;
-  BIP-353 DNS query skip + softer error; paste fallback; clipboard expiry
-  2–3 min + macOS pasteboard + QR-sheet selectable-text bypass;
-  `RelayAPIToken` out of the repo; screen-capture
-  protection; delete-flow partial failure; ghost mirror clear (1); audit the
-  unprotected background store writes. Then the three send proposals
-  (address header, fee three-state, onchain from Payments) as one cluster.
-- Review (2026-10-14) — fresh-context adversarial pass over each cluster
-  against the five fault classes (`Development/Change_Review_Playbook.md`);
-  findings fixed or filed, ledger lines written, then the device-day
-  checklist (`Development/Device_Day_2026-10-15.md`).
-- Device day (2026-10-15) — the two-device set: deletion + rejoin, deletion
-  strategy, second-iPhone read-only data, seeding scenarios, SwiftData
-  import crash repro, self-unlink → relaunch; plus exit blocked state and
-  exit completion with the stuck-signet wallet.
-- Release (2026-10-16) — bump build number, code-review pass, TestFlight.
+| Stage | Status |
+|---|---|
+| Decide | open — rulings owed below; picks PROPOSED 2026-10-09, Christoph to confirm |
+| Build | started 2026-10-09 with the hygiene pass; soft target ≈ 2026-10-23 |
+| Review | not started |
+| Device | not started — next time both phones are at hand after Review closes |
+| Release | not started |
+| Soak | not started |
+
+The exploration-season ruling is parked until the most important items are
+worked off (Christoph, 2026-10-09).
+
+Tier 0 ranked on three axes — field evidence (observed loss / latent trap /
+hardening), size of loss, cost of the fix including its device step. Twenty
+items will not empty in one train; the ranking says which go now and why
+the rest wait.
+
+- Decide — rule on: onchain default source, nearby payloads, dead images,
+  rates cache, network-name log privacy (the cheap ones); a first position
+  on explicit device linking and full S7; and exits-depend-on-the-same-
+  operator. The VTXO expiry safety net lost its field evidence on
+  2026-10-10 and can wait. Deferring explicitly is a valid ruling.
+- Build, Tier 0, in rank order, one cluster per session:
+  1. **Divergence (field; funds safe server-side, user stuck):** the
+     wallet-state-diverged cluster (classifier back-off, own state + honest
+     copy on the balance card + no CTA below the 330 floor, FFI log line,
+     orphaned failed-refresh rows); forfeit warning on deletion (the
+     2026-08-13 case); permission-denied banner for expiry reminders.
+  2. **Deletion (traced traps, same function):** skip the backup on the
+     delete path; partial-failure handling + `isDeleting`; ghost-hardening
+     residual (clear-first + surfaced unregister error, same in
+     `unlinkDevice`); wrap the four unprotected store writes.
+  3. **Phrase exposure (hardening, cheap):** clipboard 2–3 min + QR-sheet
+     selection off; screen-capture / `privacySensitive` on the four phrase
+     surfaces. Device check: Handoff paste at 60 s and local paste at 70 s.
+  4. **Send inputs (hardening, cheap, one detector):** mainnet fee ceiling +
+     test; BIP-353 query skip + softer error; paste fallback + the shared
+     `detectFormatOrNil` fix (also header proposal (d)).
+  5. **Boards (incident-derived, small):** `maxVtxoAmount` into the boarding
+     form, refuse client-side, disable while the server is unreachable.
+  6. **Ops, Christoph's hands:** rotate `RELAY_API_TOKEN` on the relay and
+     move the token out of the tree; pin `bark-ffi-bindings` and BIP39 to
+     revisions in Xcode's Package Dependencies.
+  Then the Tier 1 cluster: the three send proposals (address header, fee
+  three-state incl. the static-20 fallback, onchain from Payments) — the
+  last one needs the onchain-default ruling.
+- Deferred to Train 2, each with its reason: claimed-exit funds (design pass
+  on the claim address + test rewrite); backup binding to wallet hash
+  (format change on seed-adjacent state, design first — moves into this
+  train if the mainnet user confirms a restore); `checkReadOnlyMode` (fix
+  after the Tier 2 self-unlink run in the Device stage settles the shape);
+  metadata-import name merge (medium, no field evidence; pull forward if
+  cluster 4 finishes early); security gating (device-linking DECIDE); the
+  offline feature; CI; the bindings bump with bark's recovery fixes (waits
+  on a bindings release from Second).
+- Review — fresh-context adversarial pass per cluster against the five
+  fault classes (`Development/Change_Review_Playbook.md`); findings fixed or
+  filed, ledger lines written, then the device checklist
+  (`Development/Device_Day_<date>.md`, dated the day Review closes).
+- Device — the two-device set: deletion + rejoin, deletion strategy,
+  second-iPhone read-only data, seeding scenarios (incl. the Faucetto
+  duplicate), SwiftData import crash repro, self-unlink → relaunch; plus
+  exit blocked state and exit completion with the stuck-signet wallet; plus
+  the phrase-exposure paste checks from cluster 3.
+- Release — bump build number, code-review pass, mobile suite via
+  `xcodebuild`, TestFlight.
 - Soak — 0xdead10cc signatures in Organizer, bark 0.25 day-15 renewal
-  (~2026-10-11 falls inside this train), auth-wake journal rows.
-- Deferred to Train 2 on purpose: claimed-exit-funds fix (needs a design
-  pass on the claim address), security gating (depends on the device-linking
-  decision), the offline feature, CI.
+  (~2026-10-11, observable on the current build already), auth-wake journal
+  rows.
 
 **Past trains:** none yet.
 
@@ -75,18 +135,30 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   network-config / money-path work keeps the full process throughout. Eight
   calls at the end of the doc (season, floor, gate G1/G2, Phase 4 in scope,
   abstractions as Phase 1 work, accounting, agents hub, usernames without
-  BOLT-12). Ruled on the next train's day 1.
+  BOLT-12). Ruled in a later train's Decide stage.
 - [ ] **DECIDE — explicit device linking** (proposal in
   `Architecture/Multi_Device_Design.md`, cross-cutting section after S13):
   should an install ever adopt the account's wallet silently, or disclose
   what it found and ask for one acknowledgement? Four open questions in the
-  proposal. Absorbs "reinstall after a local delete silently rejoins" and
-  "fresh secondary shows an empty wallet" (both below) and would retire the
-  pre-open network reconcile patch rather than inherit it.
+  proposal. Absorbs "reinstall after a local delete silently rejoins" (nested
+  below) and "fresh secondary: balance card still reads 0" (Tier 1) and
+  would retire the pre-open network reconcile patch
+  (`WalletManager.swift:586-617`) rather than inherit it. Gates the Tier 0
+  "Security checks first" gated-actions table.
+  - [ ] **DECIDE — reinstall after a local wallet deletion silently
+    rejoins**: tombstone is `UserDefaults` (wiped with the app) while the
+    synchronizable seed + KVS hash survive, so detection routes into the
+    wallet instead of `RejoinWalletView` (observed 2026-09-23). Defensible
+    as designed; the keychain device-ID slot (`WhenUnlockedThisDeviceOnly`)
+    has the right lifetime if it should change. Closes as superseded if
+    explicit linking is accepted (`Multi_Device_Design.md` says so).
 - [ ] **DECIDE — full S7 build vs. the reduced version shipped 2026-09-24**
   (blocker disclosure + informed override). Full S7 adds unlink-first paths,
-  per-device confirmed "forget this device" for mirror-only ghosts, and the
-  "wallet deleted elsewhere" cleanup state. See Multi-Device in Tier 1.
+  per-device confirmed "forget this device" for mirror-only ghosts, forced
+  promotion / device deletion and renaming (the Reminders question in Tier 1
+  Multi-device), and the "wallet deleted elsewhere" cleanup state. Gates
+  Tier 1 "Unlink-first for mirror-only ghosts"; Tier 0 "Ghost-device
+  hardening (1)" does not wait on it.
 - [ ] **DECIDE — S5 migration assistant**: orchestration + copy over S2 join →
   promote → S6 retire, entry points on both devices. Deletes
   `migrateToThisDevice()` (writes `isPrimaryDevice` without `becamePrimaryAt`).
@@ -102,113 +174,148 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   every destination in the URI belongs to it. Christoph's view 2026-10-08:
   less critical than the rest of Tier 0, since the feature is opt-in under
   Experimental, needs a tilt from the Activity tab and a confirmed Pay.
+  Premises re-read 2026-10-09 (`ProximityExchangeManager.swift:429-448`,
+  `:567-573`, `:633-644`; the NI distance check gates sending only,
+  `:777-796`); the "`ark=` outranks at send time" half was not traced.
 - [ ] **DECIDE — duplicate default tags/contacts already in the account**
   (second iPhone's extra 9 tags + 2 contacts are in CloudKit): hand-delete on
   a device, or a one-shot dedup by name that re-points assignments before
-  deleting the loser (`PersistentTag` has no unique constraint). Automatic
-  post-import merge deferred 2026-09-25: it deletes CloudKit-mirrored rows
-  outside `WalletDataCleanupService` (contract rule 23 fault class); if ever
-  built it keeps the copy with assignments, runs under cleanup-service
-  ownership, behind explicit user action.
-- [ ] **DECIDE — wallet deletion and the rates cache** — PROPOSAL: clear the
+  deleting the loser (`PersistentTag` has no unique constraint). Hand-delete
+  needs no new code: `TagService.deleteTag` / `ContactService` already delete
+  single mirrored rows on user action. Automatic post-import merge deferred
+  2026-09-25: it is a service-level delete, which contract rule 23 reserves
+  for `WalletDataCleanupService`; if ever built it keeps the copy with
+  assignments, runs under cleanup-service ownership, behind explicit user
+  action. Prevention on reinstall / rejoin shipped 2026-09-25 and is
+  verified by Tier 2 "Seeding scenarios" (1).
+- [ ] **DECIDE — wallet deletion and the rates cache** — today neither the
+  rates cache (`Application Support/Rates/rates-cache.json`) nor the fiat
+  currency preference (`UserDefaults.fiatCurrencyKey`) is cleared on
+  deletion or inventoried in `SharedStateWipeCoverage`. PROPOSAL: clear the
   currency preference with other preferences, leave the cache.
-- [ ] **DECIDE — dead Shared images in the Mobile bundle**:
-  `Images/avatar-{female,male}-{1..4}.jpg` (8) and `Images/cover-animation.mp4`
-  ship in iOS since Mobile attached to Shared; referenced by no code. Delete,
-  or exclude in the File Inspector.
-- [ ] **DECIDE — reinstall after a local wallet deletion silently rejoins**:
-  tombstone is `UserDefaults` (wiped with the app) while seed + KVS hash
-  survive, so detection routes into the wallet instead of `RejoinWalletView`
-  (observed 2026-09-23). Defensible as designed; the keychain device-ID slot
-  (`WhenUnlockedThisDeviceOnly`) has the right lifetime if it should change.
-  Likely superseded by explicit device linking.
-- [ ] **DECIDE — Live Activity across device migration**: `closeWallet()` /
-  demotion keeps an in-flight exit's Live Activity alive (only deletion ends
-  it). Should demotion end it too, since the demoted device stops progressing?
+- [ ] **DECIDE — dead Shared images in both app bundles**:
+  `Shared/Images/avatar-{female,male}-{1..4}.jpg` (8) and
+  `Shared/Images/cover-animation.mp4` ship in iOS and macOS since Shared
+  attached to both targets; referenced by no code (the avatar names in
+  `ContactAvatarEditor` resolve to the ArkéUI package's own imagesets).
+  Delete, or exclude in the File Inspector.
+- [ ] **DECIDE — Live Activity across device migration**: demotion runs
+  `closeWalletForMigration()` → `resetManagerStateForMigration()`, which stops
+  services and cancels the refresh notification but never touches an
+  in-flight exit's Live Activity; only `deleteWallet()` or exit completion
+  ends it. (`closeWallet()` itself has zero callers.) Should demotion end it
+  too, since the demoted device stops progressing?
 - [ ] **PROPOSED — "new device joined your wallet" notification** (failure
   modes §C): visibility mitigation for iCloud-account compromise; honest-flow
   feedback for S2/S5.
 - [ ] **PROPOSED — phrase-confirmation on full wipe** (failure modes §A):
   final "Delete everything" asks for two recovery-phrase words.
 - [ ] **PROPOSED — delete only when the user has no VTXOs?** (from Reminders;
-  today the strategy only distinguishes last-device vs other-devices.)
-- [ ] **Mark the four network-name log interpolations `privacy: .public`?**
-  Undecided; simulator logs don't redact, device logs do.
-- [ ] **DECIDE — VTXO expiry safety net** (from the 2026-10-04 field incident,
-  see Tier 0 "Expired VTXOs are offered a refresh the server refuses"): today
-  the only thing standing between a closed app and expiry is one local
-  notification when the free-refresh zone opens; the hourly
+  today `DeletionStrategy` only distinguishes last-device vs other-devices.)
+  The strong form of Tier 0 "Warn on wallet deletion about forfeitable
+  offchain balance", which does not wait on it.
+- [ ] **Mark network-name log interpolations `privacy: .public`?** The
+  "four" from the reconcile write-up are the reconcile block
+  (`WalletManager.swift:586-617`, six interpolations of `networkConfig.name`);
+  about 25 more network-name interpolations elsewhere also lack `privacy:`.
+  Scope it to the block or widen it. Undecided; simulator logs don't redact,
+  device logs do.
+- [ ] **DECIDE — VTXO expiry safety net** (design gap; no field loss behind
+  it since 2026-10-10 — the mainnet case that first motivated it turned out
+  to be a missed mailbox message with the funds safe server-side, see Tier 0
+  "Wallet state diverged from the server"; the 2026-08-13 case was a deleted
+  wallet and backs the forfeit warning instead. Rule when convenient, not on
+  the Decide stage): today the only thing standing between a closed app and expiry is
+  one local notification when the free-refresh zone opens; the hourly
   `VTXORefreshService` check runs in the foreground only and refreshes only
   what is already free. A user who does not open the app during that last
-  stretch loses the VTXO to the server's expiry sweep — exactly what happened
-  to the mainnet user (3 VTXOs, 19,995 sats, all expired together). Options,
-  not exclusive: (a) **pre-commit with the server** —
+  stretch loses the VTXO to the server's expiry sweep. Options, not
+  exclusive: (a) **pre-commit with the server** —
   `refreshVtxosScheduled(vtxoIds:scheduledHeight:)` is in the bindings and
   unadopted (`Bark_Bindings_Unadopted_API.md`, "Maintenance & scheduling");
   whenever the app is open, register a delegated refresh for a height inside
   the free zone and let the server run it later, no app wake needed, and the
   binding's own doc says scheduling further out never costs more than
   refreshing now; the server rejects a scheduled height at or past expiry
-  (`server/src/round/mod.rs`, delegated path), so the height maths must be
-  right. (b) refresh earlier and pay ppm while in the foreground when expiry
-  is within N days. (c) escalating reminders (zone opens / 3 days / 1 day)
-  that name the amount at stake. (d) Background Execution Phase 2 (push wake
-  → refresh), already planned but slow and uncertain after Phase 1's grant
-  numbers. PROPOSED 2026-10-09: (a) as the primary mechanism plus (c) as the
-  backstop for wallets never reopened after the VTXO was created. Changes
-  the refresh model from "wait for free, in the foreground" to "pre-commit",
-  touches funds — plan after the ruling, full process.
+  (`server/src/round/mod.rs:1930-1940`, read at master `8adc8e7`, not
+  confirmed at the deployed 0.7.1 tag), so the height maths must be right.
+  (b) refresh earlier and pay ppm while in the foreground when expiry is
+  within N days. (c) escalating reminders (zone opens / 3 days / 1 day) that
+  name the amount at stake; its precondition is the Tier 0 "Expiry-critical
+  reminders" item, since a reminder a denied permission swallows is no
+  backstop. (d) Background Execution Phase 2 (push wake → refresh), already
+  planned but slow and uncertain after Phase 1's grant numbers. PROPOSED
+  2026-10-09: (a) as the primary mechanism plus (c) as the backstop for
+  wallets never reopened after the VTXO was created. Changes the refresh
+  model from "wait for free, in the foreground" to "pre-commit", touches
+  funds — plan after the ruling, full process. The four app defects in the
+  Tier 0 divergence cluster do not wait on this.
 - [ ] **DECIDE — exits depend on the same operator as the server** (from the
   2026-10-05 Second server incident, see Tier 0 "Failed boards"): the
   protection that kept user funds safe is the pre-signed exit path, which is
   only real if a user can exit while Second is down. `NetworkConfig.mainnet`
   uses `mempool.second.tech` as chain source and `ark.second.tech` as server;
   signet uses `esplora.signet.2nd.dev` + `ark.signet.2nd.dev`. A custom
-  config can point elsewhere, but nothing tells a user to. Options: (a) a
-  fallback Esplora per network that the exit path tries when the primary
-  fails; (b) an "exit while the server is down" recipe in the offline /
-  server-down feature (Tier 1); (c) accept the dependency and record it in
-  `Initialization/Launch_Sequence_Contract.md`. Verified 2026-10-08: both
-  servers and both chain sources answered.
+  config can point elsewhere, but nothing tells a user to (Esplora is only
+  configurable via `NetworkConfig`; there is no Settings entry and no second
+  chain source anywhere in the app). Options: (a) a fallback Esplora per
+  network that the exit path tries when the primary fails, with or without
+  an Esplora setting in Settings (the former Tier 3 "Alternative Esplora
+  server" line, merged here 2026-10-09); (b) an "exit while the server is
+  down" recipe in the offline / server-down feature (Tier 1); (c) accept the
+  dependency and record it in `Initialization/Launch_Sequence_Contract.md`.
+  Verified 2026-10-08: both servers and both chain sources answered.
 
 ## Tier 0 — Funds or security at risk
 
-- [ ] **BIP39 checksum is not validated on import**: `validateMnemonic` in
-  `BarkWalletFFI+Mnemonic.swift` still carries `// TODO: Add checksum
-  validation`, so a 12-word phrase with one wrong wordlist word is accepted
-  and opens a different, empty wallet. Validate before creating the wallet;
-  show a "phrase has a typo" error.
 - [ ] **Mainnet fee rate can still crash the app**: mainnet rates are
   uncapped and `FeeRateService.parse` only drops values past `UInt64`. A rate
   above ~6.6e16 sat/vB passes and crashes at
-  `PaymentDestinationSelector.swift:482` (`Int(feeRate * estimatedVBytes)`)
-  whenever an onchain destination is ranked. Sanity ceiling on mainnet (e.g.
-  10,000 sat/vB) or checked arithmetic, plus a test. Executed 2026-10-08
-  (external parser harness against the working tree): `{"1": 250000.0}`
-  yields 250,000 sat/vB for all three tiers. Also check what the
-  confirmation screen shows for the fee at such a rate — not traced.
+  `PaymentDestinationSelector.swift:482` (`Int(feeRate * estimatedVBytes)`,
+  the only such arithmetic site) whenever an onchain destination is ranked.
+  Sanity ceiling on mainnet (e.g. 10,000 sat/vB) or checked arithmetic, plus
+  a test; note `FeeRateServiceTests.testNilCapPassesHighRatesThrough` pins
+  the current uncapped behaviour and changes with the fix. Executed
+  2026-10-08 (external parser harness against the working tree):
+  `{"1": 250000.0}` yields 250,000 sat/vB for all three tiers. Also check
+  what the confirmation screen shows for the fee at such a rate — not traced.
 - [ ] **"Delete everything" re-creates the iCloud backup it just deleted**
   (traced 2026-10-08, not executed): `DeleteWalletSettingView.deleteWallet`
   runs `cleanupService.deleteWalletData` (which calls
   `WalletBackupService.deleteAllBackups()`), then `walletManager.deleteWallet()`
   → `BarkWalletFFI.deleteWallet()` → `shutdownWallet()` → `backupWallet()`,
-  whose only guard is `wallet != nil` — true, the handle is still open. A
-  fresh copy of the deleted `db.sqlite` lands in iCloud Drive before the
-  directory is removed, and the cleanup service's own comment says such a
-  leftover is restored over the next wallet created. Fix: skip the backup on
-  the delete path (a flag on shutdown, or delete backups after shutdown).
+  whose only guard is `wallet != nil` — true, the handle is still open
+  (nothing in `WalletManager.deleteWallet` steps 1–4 touches the FFI handle).
+  A fresh `Backups/db.sqlite` plus a timestamped copy land in iCloud Drive
+  before the directory is removed, after a final `wallet.sync()` the
+  delete-path shutdown also runs, and the cleanup service's own comment says
+  such a leftover is restored over the next wallet created. Fix: skip the
+  backup on the delete path (a flag on shutdown, or delete backups after
+  shutdown). Same function as "Delete flow has no partial-failure handling"
+  below: one build cluster.
   Done means: delete-everywhere then create on one device, backup slot
   stays empty, plus a test on the shutdown/backup ordering. Local-only
   deletion keeps the backup on purpose (rejoin) — do not touch that branch.
 - [ ] **Backup restore is newest-wins with no wallet binding**: one
   `Backups/db.sqlite` slot per iCloud account, written by plain file copy;
-  on launch `WalletManager.swift:1340-1362` replaces the local database
-  when the backup's modification date is later. Nothing ties a backup to a
-  wallet hash or a sequence number, so a device can start from an older or
-  foreign VTXO database (local-only state is what unilateral exit depends
-  on). Fix: bind each backup to the wallet hash and a monotonic counter and
-  refuse mismatches. Unverified either way: whether SQLite `-wal`/`-shm`
-  files are handled on backup and restore (depends on bark's journal mode).
+  on launch `restoreWalletIfNeeded` (`WalletManager.swift:1339-1360`, primary
+  only) replaces the local database when the backup's modification date is
+  later. Nothing ties a backup to a wallet hash or a sequence number, so a
+  device can start from an older or foreign VTXO database (local-only state
+  is what unilateral exit depends on). Fix: bind each backup to the wallet
+  hash and a monotonic counter and refuse mismatches; binding also
+  neutralises the leftover-backup restore above. Possible field case
+  (2026-10-10): Second's hypothesis for the mainnet divergence incident
+  below is a restore from backup or a reinstall + iCloud restore, which a
+  newest-wins restore of an older `db.sqlite` would produce (the wallet
+  forgets a round it already took part in). Unconfirmed — our two log
+  exports show "Local wallet file is up to date" and earlier sessions are
+  unseen; the user has been asked. If confirmed, this becomes the
+  field-evidenced root cause and moves into Train 1. Journal question closed
+  2026-10-09: bark 0.7.1 sets no `PRAGMA journal_mode` in
+  `SqliteClient::open`, so SQLite's default rollback journal applies and
+  there are no `-wal`/`-shm` side files; the remaining copy risk is a backup
+  taken mid-transaction, which stopping the daemon first mitigates.
 - [ ] **Claimed exit funds invisible after seed import** (network-verified
   2026-08-13: 8,839 sats confirmed-unspent at the claim address, absent from
   balance — 143,041 shown vs 151,880 actual). `ExitClaimSequence.run` reveals
@@ -220,114 +327,246 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   revealed-index state and both BDK gap-10 scans stop short. The receive
   screen's 20-unused cap also independently exceeds gap-10. Mitigations:
   (a) reveal the claim address only after a successful `drainExits` build, or
-  persist one claim address per exit; (b) route claim addresses through
-  `AddressService`; (c) import scan stop gap ≥ unused cap + margin (~50);
-  (d) upstream — no rescan API (feedback §2.6). Also blocks the exit movement
-  from linking its claim tx (`onchain_… not found` on every relink pass).
-- [ ] **Expired VTXOs are offered a refresh the server refuses** (field
-  incident, mainnet, build 24, logs read 2026-10-07 and 2026-10-09; Second is
-  looking at the server side, VTXO ids and wallet id in the support thread).
-  Three VTXOs past `expiry_height` (bark: `is expired, must be refreshed`);
-  every launch the auto-check and every "Refresh now" tap write a Pending
-  refresh movement, the server rejects it as `unusable_inputs` (server-0.7.1
-  `check_spendable`: exited onchain / state not spendable / banned — the
-  watchman sweeps at `tip ≥ expiry`), and the movement flips to Failed. The
-  user saw a growing list of "Failed refresh" rows and a "Refresh now" badge
-  that never cleared. Three app defects, one cluster:
+  persist one claim address per exit — `ExitProgressTests.testSequenceOrder`
+  currently pins address-first and must change with it; (b) route claim
+  addresses through `AddressService`; (c) import scan stop gap ≥ unused cap
+  + margin (~50); (d) upstream — no rescan API (feedback §2.6). Also blocks
+  the exit movement from linking its claim tx (`onchain_… not found` on
+  every relink pass). Related adoption: Tier 4
+  `initialScanOnchain(birthdayHeight:)`.
+- [ ] **Wallet state diverged from the server, and the app can neither see
+  it nor say so** (field incident, mainnet, build 24, logs read 2026-10-07
+  and 2026-10-09; wallet id and VTXO ids in the support thread; reframed
+  2026-10-10 after Second's answer). Second found a *successful* refresh of
+  the user's three VTXOs server-side — no funds lost — but the wallet missed
+  the mailbox message that settles the forfeit, so it still holds the
+  pre-refresh VTXOs (now spent in that round) and cannot auto-resolve. From
+  the app's side: bark's selection logs them `is expired, must be
+  refreshed`, every launch's auto-check and every "Refresh now" tap write a
+  Pending refresh movement, the server rejects it as `unusable_inputs`, the
+  movement flips to Failed, and the balance keeps showing 19,995 sats the
+  user cannot spend. Root-cause candidates, both open: Second asks whether
+  the user restored from a backup or reinstalled and restored from iCloud
+  (see "Backup restore is newest-wins" above — our two log exports show
+  "Local wallet file is up to date", earlier sessions unseen); and upstream
+  server commit `dfd425d4a` (2026-09-18, after `server-0.7.1`) fixes mailbox
+  checkpoint paging where a page boundary inside a batch "skipped the
+  remaining rows for good", in both mailboxes — a lost message with no user
+  action. Remedy per Second: recovery from seed, once bark's recovery-path
+  fixes ship; for Arké that is the bindings bump (Tier 4 "Next bump"),
+  since our 0.7.1 bindings predate every one of those fixes, so the user
+  should hold the recovery until then. Four app defects, one cluster:
   - **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
     issued into a round"** (`VTXORefreshService.swift:45`), so the auto path
     logged "treating as in-flight, not a failure" with 0 pending rounds. Only
     classify as in-flight when the ids are actually in `vtxoIdsBeingRefreshed()`
     / a pending round; otherwise it is a real failure and must back off (no
     retry on the next launch for the same ids).
-  - **"Refresh now" / "Refresh all (Free)" shown for VTXOs the app itself
-    labels Expired** (`BalanceRefreshStatusViewModel`, X-Ray VTXO list), and
-    the balance still counts them as spendable because bark's balance does.
-    Expired needs its own state: no refresh CTA, an explicit "expired —
-    contact support" message, and the amount shown apart from spendable.
-    Absorbs the Tier 3 "show a message the first time the user has expired
-    VTXOs?" question.
+  - **The balance card has no expired state at all.** The only place the app
+    labels a VTXO Expired is the X-Ray row (`VTXORowView.swift:22-48`), and
+    even there `VTXOListView_iOS` offers "Refresh all (Free)" with no expiry
+    exclusion. Both refresh-status containers hardcode `isExpired: false`
+    (`BalanceRefreshStatusContainer.swift:63`, `…Compact.swift:68`), the view
+    model has no expiry notion and says "Refresh now" whenever
+    `hasVtxosToRefresh`, and the ArkéUI `expiredContent` branch is dead
+    outside previews. The balance counts expired VTXOs as spendable because
+    bark 0.7.1's `Balance` has only `spendable`/`pendingExit`; upstream master
+    adds `Balance.needs_refresh`, which keeps them out of spendable, so the
+    next bindings bump may deliver the balance half. These VTXOs need their
+    own state, and the copy must not claim "expired, funds lost" — the app
+    cannot tell a sweep from a divergence. Honest version: no refresh CTA,
+    "these coins can't be refreshed from this device; recovering the wallet
+    from your recovery phrase may restore them — contact support first", the
+    amount shown apart from spendable. Same gate, same fix: **don't show
+    "Refresh now" below the 330-sat floor** `VTXORefreshService` already
+    applies (merged from Tier 3 Refresh 2026-10-09) — the CTA should be
+    driven by what the service would actually refresh.
   - **The FFI log line loses the server message**:
-    `BarkWalletFFI+VTXO.swift:111` prints `\(error)` → `Error Domain=Bark.Error
+    `BarkWalletFFI+VTXO.swift:113` prints `\(error)` → `Error Domain=Bark.Error
     Code=0`; the rejection reason had to be inferred from the classifier's
-    behaviour. Log `localizedDescription` (interim step of the Tier 4 typed-
-    errors item).
-  Root cause upstream of all three is the expiry safety net — DECIDE above.
+    behaviour (the thrown `configurationError` does carry
+    `localizedDescription`, which is why the classifier works). Log it
+    (interim step of the Tier 4 typed-errors item).
+  - **Every failed refresh attempt leaves an orphaned local row, and the
+    orphans are the user's "growing list of Failed refresh rows"** (promoted
+    from Tier 3 2026-10-10). In the 2026-10-09 log each attempt adds one bark
+    movement (41 → 42 → 43) *and* one more "tag assignment on orphaned
+    transactions" (38 → 39): a `PersistentTransaction` whose `movement_<id>`
+    txid matches no movement in the next list, kept because auto-tagging
+    gave it a tag (`TransactionService+Upsert.swift:357-369`, "let them
+    remain to preserve user tags"). 38 orphans ≈ 38 attempts. Find the id
+    mismatch first (the row created from the daemon notification in
+    `processSingleMovement` vs. the row from the list — same movement,
+    different txid?), then decide pruning (orphans with only auto-tags are
+    safe to drop), and log once per refresh at warning level instead of
+    231 ERROR lines per session.
+  Owed to the user (Christoph, support thread): the two restore questions,
+  "funds confirmed safe on the server", "hold the recovery until the next
+  Arké build". Owed to Second: was `dfd425d4a` deployed before this user's
+  refresh round, and was the successful refresh a delegated one? None of the
+  four fixes waits on the expiry safety-net DECIDE, which this incident no
+  longer evidences. Related Tier 3 lines, different trigger: "Hide failed
+  and completed refreshes that were free?" and "Surface expiry sweeps"
+  (upstream-blocked).
 - [ ] **Warn on wallet deletion about forfeitable offchain balance** (field
   incident 2026-08-13: 10,000-sat VTXO swept at expiry 6h after deletion, app
   showed 0 with no explanation). Minimum expiry height across spendable VTXOs
-  is known at deletion time — say "your offchain balance of X is forfeited
-  around <time> unless this wallet is re-imported and refreshed before then."
-  Deleting the last device deletes the only agent that can refresh.
-- [ ] **Expiry-critical reminders vs. the notifications toggle**: the
-  scheduled free-refresh reminder is silently dropped when notifications are
-  disabled in app settings (as in the field logs). Exempt expiry-deadline
-  reminders from the toggle, or warn that disabling risks missed deadlines.
-- [ ] **`checkReadOnlyMode()` infers primary** (`WalletManager.swift:503-514`):
+  is known at deletion time (`BalanceRefreshStatusViewModel.swift:55` already
+  computes it) — say "your offchain balance of X is forfeited around <time>
+  unless this wallet is re-imported and refreshed before then." Deleting the
+  last device deletes the only agent that can refresh. The existing
+  `settings_delete_balance_warning` string (`DeleteWalletSettingView.swift:57`)
+  is what this replaces; the Reminders report "delete wallet amount-warning
+  copy is not right" (merged here 2026-10-09) is the same string. The
+  stronger alternative is the PROPOSED "delete only when the user has no
+  VTXOs?" above.
+- [ ] **Expiry-critical reminders are swallowed by a denied system
+  permission**: `scheduleNextRefreshNotification`
+  (`VTXORefreshService.swift:640-649`) skips the free-refresh reminder when
+  iOS notification authorization is missing and only logs it. Corrected
+  2026-10-09: the in-app toggle does **not** gate this reminder — toggle off
+  unregisters push and cancels exit check-ins (`NotificationsSettingView_iOS`,
+  `ExitProgressionNotifications`), and the "Notifications disabled in
+  settings" log line belongs to relay registration. Re-read the field log to
+  see which gate the user hit. Fix shape: an in-app banner when the system
+  permission is denied while VTXOs approach expiry, naming the amount; a
+  toggle exemption cannot help. Precondition for safety-net option (c).
+- [ ] **`checkReadOnlyMode()` infers primary** (`WalletManager.swift:530-557`):
   a missing or unreadable device registration sets `isReadOnlyMode = false`,
   i.e. full spend rights — contradicts Principle 2 / contract rule 15.
-  Reachable via self-unlink (`LinkedDevicesView_iOS.swift:46`). UNVERIFIED —
-  needs a self-unlink → relaunch run before deciding the fix. Fix this before
+  Reachable via self-unlink (`LinkedDevicesView_iOS.swift:50`, handler
+  `:225-230` → `unlinkDevice` deletes the row and the mirror entries, so
+  relaunch sees nil + `.noOpinion`). UNVERIFIED on device — needs the Tier 2
+  self-unlink → relaunch run before deciding the fix. Fix this before
   collapsing `shouldBlockWalletAccess`'s layers (Tier 4). Sibling site
   (read 2026-10-08): `shouldBlockWalletAccess()` itself returns `false` when
   the device ID cannot be read (`WalletManager.swift:1247-1250`); the ID is
   stored `WhenUnlockedThisDeviceOnly` (`DeviceRegistrationService.swift:170`)
-  while the seed is `AfterFirstUnlock`, so on a locked background wake the
-  seed is readable and the gate is not — inferred timing, same fix shape:
-  treat "unknown" as read-only until the registry answers.
-- [ ] **Security checks first**: switch `authenticateUser` to
-  `.deviceOwnerAuthentication` (passcode fallback; biometrics-only hard-fails
-  on Macs without Touch ID) and wire the gated-actions table (recovery phrase,
-  deletions, promote/demote/unlink; send as opt-in). Its only call site is
-  commented out — nothing is gated today. PR #8 review flagged the same.
-  Christoph's view 2026-10-08: showing the phrase already sits behind a
-  tap or the scratch-off surface, so a show-phrase gate is not a gap on
-  its own; the item stays for the full gated-actions table.
+  while the seed is `AfterFirstUnlock`, and the headless wake path calls
+  exactly that gate (`WalletManager+Notifications.swift:127`), so on a locked
+  background wake the seed is readable and the gate is not — inferred timing,
+  same fix shape: treat "unknown" as read-only until the registry answers.
+  No test covers the nil-registration or unreadable-ID branches.
+- [ ] **Security checks first**: switch `authenticateUser`
+  (`SecurityService.swift:879-895`) to `.deviceOwnerAuthentication` (passcode
+  fallback; biometrics-only hard-fails on Macs without Touch ID) and wire the
+  gated-actions table (recovery phrase, deletions, promote/demote/unlink;
+  send as opt-in). Its only call site (`WalletManager+Wallet.swift:22-28`)
+  is commented out — nothing is gated today. Christoph's view 2026-10-08:
+  showing the phrase already sits behind a tap or the scratch-off surface,
+  so a show-phrase gate is not a gap on its own; the item stays for the full
+  gated-actions table, which waits on the explicit-device-linking DECIDE.
 - [ ] **Delete flow has no partial-failure handling**
-  (`DeleteWalletSettingView.swift:205-236`): `deleteWalletData()` runs first,
+  (`DeleteWalletSettingView.swift:276-328`): `deleteWalletData()` runs first,
   then `walletManager.deleteWallet()`; if the second throws, shared state is
-  already destroyed and the user stays in-app with no navigation.
-  `isDeleting` is never reset on success either.
-- [ ] **Ghost-device hardening (1): make the mirror clear unconditional and
-  first** (or in a `defer`) in `unregisterCurrentDevice`, and surface a
-  failed unregister in the deletion summary — typed error + test. From the
+  already destroyed and the user stays in-app with no navigation
+  (`onWalletDeleted` is wired, the generic catch never calls it). The view's
+  `isDeleting` is never reset on success either (the service resets its own
+  in a `defer`). User-visible face: Tier 2 "Startup routing retests".
+- [ ] **Ghost-device hardening (1), residual**: the mirror clear in
+  `unregisterCurrentDevice` is already unconditional and across hashes
+  (`DeviceRegistrationService.swift:475-486`, commit 3dc292c) but still
+  skipped when `modelContext` is nil, `getOrCreateDeviceId` throws or
+  `save()` throws (`:458`, `:462`, `:472`), and `WalletDataCleanupService`
+  swallows the unregister error as non-fatal (`:293-304`) so
+  `summary.deviceUnregistered` stays false with no typed error. Same
+  ordering fault in `unlinkDevice` (`:942-943` throws `deviceNotFound`
+  before the mirror clear at `:955`). Fix: clear first or in a `defer`,
+  surface the failure in the deletion summary — typed error + test. From the
   2026-09-26 incident (full write-up in the Done log): an uncleared mirror
   entry blocks every remaining device's full wipe for 48h with no override.
   Items (2)–(4) of that incident are in Tier 4.
 - [ ] **Paste button accepts unverified Lightning Addresses**: in
-  `SendViewModel+Clipboard`, `tryParallelResolution` and
-  `tryLightningAddressFallback` fall back to
-  `AddressValidator.parsePaymentRequest` when both lookups fail, accepting any
-  `user@domain`. Typing the same address rejects it. Seen with `chri@sto.ph`.
-  Remove the fallback or show a "couldn't verify" state so both paths match.
+  `SendViewModel+Clipboard`, `tryParallelResolution` (`:154`, fallback
+  `:216-219`) and `tryLightningAddressFallback` (`:239`, fallback `:251-253`)
+  fall back to `AddressValidator.parsePaymentRequest` when both lookups fail,
+  and its `user@domain.tld` regex (`AddressValidator.swift:350-352`) accepts
+  anything. Typing the same address rejects it (`ManualSendView.swift:337`,
+  `:386`). Seen with `chri@sto.ph`. Remove the fallback or show a "couldn't
+  verify" state so both paths match. Shares a root with the Tier 1
+  address-header proposal (d): `BIP353Resolver.detectFormatOrNil` accepts
+  plain `user@domain` — fix the detector once for both.
 - [ ] **BIP-353: stop sending the DNS query while DNSSEC is unimplemented**
-  — `BIP353Resolver.validateDNSSEC` always returns `false`, so every lookup
-  is refused, but the query is still sent and its answer thrown away, telling
-  the network's DNS who the user is about to pay. Skip the query now; soften
-  the error text ("address may be compromised" + both raw errors) in
-  `ManualSendView`/`ContactPaymentView`. Full DNSSEC implementation is Tier 1.
-- [ ] **`RelayAPIToken` is checked into the repo**: read via
-  `Bundle.main.object(forInfoDictionaryKey:)` in `WalletManager.swift`, so it
-  ships in the Info.plist in git. Untracked xcconfig, build-phase injection,
-  or drop it for per-device relay auth.
-- [ ] **No screen-capture protection on the recovery phrase**: nothing
-  observes `UIScreen.isCaptured` or uses `privacySensitive()` on the
-  manual-backup / scratch-card views. Hide while recorded or mirrored; exclude
-  from the app-switcher snapshot.
+  — `performDNSLookup` (`BIP353Resolver.swift:176`) runs before
+  `validateDNSSEC` (`:184`), which always returns `false` (`:395-407`), so
+  every lookup is refused but the query is still sent and its answer thrown
+  away, telling the network's DNS who the user is about to pay. Five callers
+  all send it: `SendViewModel+Clipboard.swift:128,160`,
+  `SendViewModel+Initialization.swift:36`, `ManualSendView.swift:337`,
+  `ContactPaymentView.swift:170`. Skip the query now; soften the error text
+  ("address may be compromised" + both raw errors), which lives in
+  `BIP353Error.errorDescription` (`:139-140`), not in the views. Full DNSSEC
+  implementation is Tier 1.
+- [ ] **`RelayAPIToken` is checked into the repo**: the 64-hex value sits in
+  `ArkeMobile/Info.plist:15-16` (tracked, in history since 9c4a5a2) and is
+  read at `WalletManager.swift:430`; no xcconfig exists, tracked or not. The
+  relay reads `RELAY_API_TOKEN` from its environment and its guard comment
+  acknowledges the token ships in the app. Whatever the injection mechanism
+  (untracked xcconfig, build-phase injection, per-device relay auth), the
+  token has to be **rotated** on the relay as well, since history keeps it.
+- [ ] **No screen-capture protection on the recovery phrase**: nothing in
+  the repo observes `UIScreen.isCaptured` or uses `privacySensitive()`.
+  Phrase surfaces: `ManualBackupView_iOS`, `ScratchableMnemonicGrid_iOS`,
+  `RecoveryPhraseSettingView` (Shared), desktop `ManualBackupView`. Hide
+  while recorded or mirrored; exclude from the app-switcher snapshot. One
+  "phrase exposure" cluster with the clipboard item below.
+- [ ] **Recovery phrase clipboard** (moved up from Tier 1 2026-10-09; the
+  train and the ledger already treated it as Tier 0): expiry of 60 s
+  (`copySecretToClipboard` default, `Shared/Helpers/Clipboard.swift:27`, sole
+  caller `RecoveryPhraseSettingView.swift:78`) is too short to reach a
+  password manager — raise to 2–3 min. macOS still uses the plain general
+  pasteboard with no expiry (`Clipboard.swift:17-18`) —
+  `org.nspasteboard.ConcealedType` + delayed clear (**assumed**: a
+  third-party clipboard-manager convention, not an Apple API; whether
+  Universal Clipboard honours it is unverified — label stays until checked
+  on a Mac + iPhone).
+  - [ ] **QR sheet bypasses the hardened Copy button** (fault-class review of
+    `0de06d4`, 2026-10-07, CONFIRMED, class 2): `RecoveryPhraseSettingView`
+    (`:208-209`) hands the mnemonic to `ArkeQRCodeView`, which renders it as
+    `Text(content).textSelection(.enabled)` (`ArkeQRCodeView.swift:73-76`,
+    no selection parameter on the init); long-press → Copy writes the phrase
+    to the plain general pasteboard with no `.localOnly` and no expiry, one
+    button to the right of the fixed one. Fix: a parameter on `ArkeQRCodeView`
+    to disable selection, or a secret-aware variant. Its only other caller is
+    the desktop Receive QR (`ArkeDesktop/Views/Receive/ReceiveView.swift:215`);
+    the mobile receive QR does not use this view. Same review also noted the
+    desktop Send view calls `checkClipboardForAddress()` on every
+    `didBecomeKey` (`ArkeDesktop/Views/Send/SendView.swift:93-97`) and the
+    shared method (`Shared/Views/Send/SendViewModel/SendViewModel+Clipboard.swift`,
+    comment at `:31` claims tap-only — false on macOS) logs the content at
+    debug (`:48`); redacted on device, plaintext in the console. Desktop is
+    parked, so note only. Device check owed for the iOS fix itself:
+    two-device Handoff paste within 60 s (expect nothing) and local paste at
+    ~70 s (expect nothing).
+- [ ] **Metadata import attaches addresses to existing contacts by name**
+  (moved up from Tier 1 2026-10-09: a foreign file can set the default payee
+  of a trusted contact, which misdirects funds). `MetadataImportService.swift`
+  `matchContact` (`:55-63`): an imported contact merges by UUID, then by any
+  shared address, then by normalized name alone; `mergeAddresses`
+  (`:356-382`) inserts addresses without `AddressValidator` (no reference in
+  the file), maps an unknown `format` string silently to `.bitcoin`, and
+  applies an imported primary flag when the local contact has none (`:372`).
+  The preview shows counts only (`MetadataBackupSectionView.swift:200-225`).
+  Fix: validate imported addresses, drop or disclose name-only merges, list
+  added addresses per contact in the preview.
+- [ ] **Pin `bark-ffi-bindings` and BIP39 to tags, not branches** (moved up
+  from Tier 1 2026-10-09: supply chain into the component that holds keys):
+  `project.pbxproj:1164-1170` has `bark-ffi-bindings` on `master` and
+  `:1180-1186` `anquii/BIP39` on `main`; `Package.resolved` holds revisions,
+  so builds are stable only until "Update to Latest Package Versions" pulls
+  whatever is on the branch. Xcode UI change (Package Dependencies → exact
+  version / revision); review the diff on each bump.
 - [ ] **Background runs killed for holding a store lock (0xdead10cc)** —
   mitigations shipped 2026-09-24 (probe write removed, task assertions around
-  `registerCurrentDevice` and the headless open; see Done log). Still open:
-  **audit the other unprotected store writes on background-reachable paths**
-  (`unregisterCurrentDevice`, the upsert in `refreshTransactionsAfterWrite`,
-  the balance persist). Only the two crash-proven sites were wrapped.
-- [x] **Get Patrick's private write-up** (2026-10-08): received with a
-  parser repro harness; every claim spot-checked against `main` held. The
-  new findings are filed in their tiers (two backup items above, the
-  `shouldBlockWalletAccess` sibling, metadata import and store deletion in
-  Tier 1, resolver and prefix notes, branch pins, `SECURITY.md`). Relay
-  server-side observations are handled with the relay, outside this doc.
-  The harness runs on a Mac with a `swiftc` wrapper that adds `-sdk`; the
-  eight parser traps it documented are confirmed fixed by execution.
+  `registerCurrentDevice` and the headless open, the only two wrappers that
+  exist; see Done log). Still open: **audit the other unprotected store
+  writes on background-reachable paths**: `unregisterCurrentDevice`
+  (`DeviceRegistrationService.swift:457-491`), the upsert in
+  `refreshTransactionsAfterWrite` (`TransactionService.swift:161-181`), the
+  balance persist (`BalanceService.swift:318-347`), and — added 2026-10-09 —
+  `TransactionService.processSingleMovement` (`:185-200`), which the daemon
+  stream drives from `WalletNotificationService.swift:268,285`. Only the two
+  crash-proven sites were wrapped.
 - [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** (surfaced
   by the 2026-10-05 Second server incident: an attacker registered boards
   with only his own signatures via `BoardBuilder::new_from_vtxo`, a lib
@@ -343,37 +582,46 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   not reproduced. The server now also rejects register-board above
   `max_vtxo_amount` (`8fab49706`), and `BoardingModalView.swift:32` caps the
   form only by `minBoardAmount` although `ArkInfo.maxVtxoAmount` is parsed
-  (`BarkWalletFFI+Configuration.swift:192`), so a user can trigger exactly
-  that refusal. Now: pass the maximum into the boarding form and refuse
-  client-side; disable boarding while the server is unreachable. Real fix:
-  the bindings bump that carries `f85ca92ac` (Tier 4 "Bindings adoption").
+  (`BarkWalletFFI+Configuration.swift:192`; `BoardingModalFormView` has no
+  maximum parameter while `OffboardingModalFormView` does), so a user can
+  trigger exactly that refusal. Now: pass the maximum into the boarding form
+  and refuse client-side; disable boarding while the server is unreachable
+  (also on the Tier 1 offline feature's disable list). Real fix: the
+  bindings bump that carries `f85ca92ac` (Tier 4 "Bindings adoption"). Both
+  upstream commits are only on `origin/master`; the local `~/workspace/bark`
+  checkout is at `8adc8e7` (2026-09-30), so `git fetch` before quoting more.
 
 ## Tier 1 — What users hit every day
 
 ### Send and fees
 
-- [ ] **Lightning fee estimation falls back silently**: when
-  `PaymentDestinationSelector.estimateFee()` fails for a Lightning destination
-  it logs and uses a static 20 sats, so the fee shown can differ from the fee
-  paid and a too-low estimate can fail the payment. Surface "estimate
-  unavailable" or block the send until the estimate succeeds. (Carried from
-  `Archive/Fixes/LIGHTNING_FEE_ESTIMATION_ISSUES.md` item 3.)
 - [ ] **PROPOSAL (2026-10-07) — Fee row three-state + stale-cache guard**:
   the fee row shows "—" for Lightning addresses and keeps the old value when
-  onchain priority changes. (1) `feeAmount` for Lightning returns only
-  `cachedLightningFee`; when `estimateLightningSendFee` throws,
+  onchain priority changes. (0) **The ranking path falls back silently**:
+  when `PaymentDestinationSelector.estimateFee()` (`:388-435`) fails for a
+  Lightning destination it logs "Falling back to static estimate of 20 sats"
+  and `estimateFeeFallback` returns 20 (`:443`), so the fee shown can differ
+  from the fee paid and a too-low estimate can fail the payment (merged from
+  its own entry 2026-10-09; carried from
+  `Archive/Fixes/LIGHTNING_FEE_ESTIMATION_ISSUES.md` item 3). (1) `feeAmount`
+  for Lightning (`SendViewModel+ComputedProperties.swift:181-187`) returns
+  only `cachedLightningFee`; when `estimateLightningSendFee` throws,
   `calculateLightningFee` nils the cache → dash, while the ranking path hides
   the same failure behind the static 20 (the "20 ₿" on the 750-sat invoice
-  screenshot is that constant). In quick mode with no viable ranked
+  screenshot is that constant). `feeText` (ranked, `:146-155`) and
+  `feeAmount` (cached) are two accessors shown in two places
+  (`QuickPaymentView.swift:495,506`), which is how one screenshot shows "20"
+  in one row and "—" in another. In quick mode with no viable ranked
   destination (`selectedDestination == nil`, balance label falls back to
   "Total balance") no fee path runs although Send is enabled.
-  (2) `estimateOnchainFee` keeps the previous cache on any BDK/sync error and
-  `feeAmount` returns `cachedOnchainFee` without checking
-  `cachedOnchainFeePriority`/`cachedOnchainFeeAmount` match. Proposal:
-  value / estimating / unavailable states (never a bare dash); `feeAmount`
-  requires a cache match; log the bark error once and confirm on device
-  whether the Lightning estimate really fails; when quick mode has no viable
-  destination, say why.
+  (2) `estimateOnchainFee` keeps the previous cache on any BDK/sync error
+  (`SendViewModel+FeeEstimation.swift:73-76`) and `feeAmount` returns
+  `cachedOnchainFee` without checking `cachedOnchainFeePriority` /
+  `cachedOnchainFeeAmount` match (`+ComputedProperties.swift:164-168`).
+  Proposal: value / estimating / unavailable states (never a bare dash, never
+  a silent constant); `feeAmount` requires a cache match; log the bark error
+  once and confirm on device whether the Lightning estimate really fails;
+  when quick mode has no viable destination, say why.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -385,13 +633,17 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   address, paid from Payments balance" and drop the row; (b) keep the row only
   when there is a choice; (c) manual flow shows a one-line caption since
   "Send to" already shows the address; (d) restrict the override to
-  ₿-prefixed or actually-resolved BIP-353 input.
+  ₿-prefixed or actually-resolved BIP-353 input — same permissive
+  `BIP353Resolver.detectFormatOrNil` (`:214-244`) as the Tier 0 paste
+  fallback, one detector fix serves both.
 - [ ] **PROPOSAL (2026-10-07) — Send onchain from the Payments balance**
   (asked by Neil, Second): bitcoin addresses can only be paid from Savings.
   The round-based path exists — `sendToOnchain` / `estimateSendToOnchainFee`
   on `BarkWalletProtocol` (bark `Wallet.sendOnchain(address:amountSats:)`) —
-  used only by the offboarding modal. `balanceSource(for:)` maps `.bitcoin`
-  to `.bitcoin` only; `SendViewModel+PaymentExecution` always calls the
+  the send is used only by the offboarding modal, the fee estimate also by
+  `SendViewModel+MaxSendable`. `balanceSource(for:)` maps `.bitcoin` to
+  `.bitcoin` only (`PaymentDestinationSelector.swift:357-358`);
+  `SendViewModel+PaymentExecution` (`:170-174`) always calls the
   onchain-wallet `sendOnchain`. Also explains "scanned Noah QR, onchain failed
   with error building tx" (empty Savings). Design: ranking emits two entries
   for bitcoin addresses, selection keyed on (destination, source); the round
@@ -403,35 +655,37 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   Reminders reports: batch assignment uses the receive-to address; assigning
   a payment adds the Lightning invoice as a contact address; assigning an Ark
   transaction proposes the user's own Ark address; assigning a contact to a
-  Noah Lightning-address send did not add the address). Likely one root cause
-  in the assignment proposal logic — see the address-history findings in
-  Tier 4.
+  Noah Lightning-address send did not add the address — which raises the
+  question whether a Lightning-address send movement carries the address at
+  all, merged from Tier 3 2026-10-09). Likely one root cause in the
+  assignment proposal logic — see the address-history findings in Tier 4.
+  First step: one assignment on a current build to retire the pre-rework
+  Reminders report "transaction address parsing (Strings → Objects) when
+  assigning to contacts" (merged from Tier 2 2026-10-09, probably obsolete).
 - [ ] **Failed payment errors are ugly** (Reminders). Pair with the
   three-state fee row since both touch the send summary.
 - [ ] **Balance shows 0 while refreshing / "Payments balance: 0" while the
   card shows a balance** — label "Available payments balance" or hide during
-  refresh (Reminders, two reports).
+  refresh (Reminders, two reports). Ask which device: on a secondary,
+  `ReadOnlyBalanceService` substitutes zero models (`:52`, `:164`) and this
+  is the Multi-device "fresh secondary" item instead.
 - [ ] **Send all from savings to spending did not work, needs a better
   message** (Reminders).
 
 ### Data safety
 
-- [ ] **Metadata import attaches addresses to existing contacts by name**
-  (`MetadataImportService.swift:53-60`): an imported contact merges by UUID,
-  then by any shared address, then by normalized name alone; its addresses
-  are inserted without going through `AddressValidator` (`mergeAddresses`),
-  and an imported primary flag applies when the local contact has none, so
-  a foreign file can set the default payee of a trusted contact. The
-  preview shows counts only (`MetadataBackupSectionView.swift:208-220`).
-  Fix: validate imported addresses, drop or disclose name-only merges, list
-  added addresses per contact in the preview.
+(The metadata-import name-merge item moved to Tier 0 on 2026-10-09.)
+
 - [ ] **`SwiftDataHelper` deletes the store on any load error**
-  (`SwiftDataHelper.swift:161-181`): any `SwiftDataError` or Cocoa codes
-  134110/134100/134060 delete every store file and rebuild. Payment
-  metadata is device-local by design, so a transient load failure wipes
-  notes and assignments that CloudKit cannot bring back. Narrow the
-  condition to confirmed migration failures, or back up the store files
-  before deleting them.
+  (`SwiftDataHelper.swift:158-194`): any `SwiftDataError` (`:163-166`) or
+  Cocoa codes 134110/134100/134060 (`:168-173`) delete every `*.store`,
+  `-shm`, `-wal` in Application Support (`:199-235`) and rebuild. Nuance
+  2026-10-09: the store is built with `cloudKitDatabase:` when enabled
+  (`:120-133`), so tags, contacts and assignments come back from CloudKit;
+  what cannot come back is whatever was written but not yet exported, and
+  anything in a local-only container. Still a wipe on a transient error.
+  Narrow the condition to confirmed migration failures, or back up the store
+  files before deleting them.
 
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
 
@@ -446,11 +700,15 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   needed: primary's `💾 Updated persisted Ark balance` paired with the
   secondary's `📱 Loaded Ark balance from CloudKit (spendable: N)`.
 - [ ] **Active "no primary device" banner** on secondaries' main view
-  (deferred 2026-08-12): run `checkForNoPrimaryDevice()` on launch/foreground,
-  callout deep-linking to `PromoteDeviceSheet`. Also the recovery path for
-  **an account with no primary can never get default tags/contacts**
-  (2026-09-25; deliberately not patched by showing the button when no primary
-  is visible — a not-yet-imported registry reads as "no primary").
+  (deferred 2026-08-12): `checkForNoPrimaryDevice()`
+  (`DeviceRegistrationService.swift:1123`) runs only from
+  `LinkedDevicesView_iOS.reload()`; run it on launch/foreground, callout
+  deep-linking to `PromoteDeviceSheet`. The dead `showNoPrimaryDeviceBanner`
+  NotificationCenter post (Tier 4) is the hook this would use — decide
+  together. Also the recovery path for **an account with no primary can
+  never get default tags/contacts** (2026-09-25; deliberately not patched by
+  showing the button when no primary is visible — a not-yet-imported
+  registry reads as "no primary").
 - [ ] **S10 build**: read-only reasons for signed-out / account-changed +
   safe-exit copy (sign back in, or local-only delete). Never auto-wipe, never
   pair local files with a foreign account.
@@ -460,27 +718,31 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   gets the same treatment. Also: the gate is balance-based (a balance batch
   landing first drops the syncing state early; a primary that never persisted
   balance rows leaves it up with no timeout) — honest upgrade is
-  `NSPersistentCloudKitContainer` import events. Desktop `TransactionList`
-  not wired (no read-only mode there).
+  `NSPersistentCloudKitContainer` import events. The explicit-device-linking
+  DECIDE would absorb the first-launch half; the syncing-state UI is needed
+  under either ruling. (Desktop `TransactionList` half is in Parked.)
 - [ ] **Unlink-first for mirror-only ghosts** (deliberately not built
   2026-09-24; now the only remedy for a healthy-but-unwanted blocker since
   the override is no longer offered there): `unlinkDevice` throws
-  `deviceNotFound` with no registry row, so needs `forgetUnsyncedDevice(_:)`.
-  Build with the full S7 blockers UX, per-device and confirmed; fail closed
-  when the registry can't be read. The "KVS-only ghost is invisible" item
-  folds in here (delete screen already names mirror-only blockers; aged ones
-  unlock the override).
-- [ ] **Blocked-strategy copy**: `.localOnly` fallback shows "Other devices
-  have this wallet", a guess in the error case. Needs a third state
-  ("couldn't check — try again") = new strings. S7 blockers list supersedes.
+  `deviceNotFound` with no registry row (`DeviceRegistrationService.swift:
+  933-944`), so needs `forgetUnsyncedDevice(_:)` (does not exist). Build
+  with the full S7 blockers UX (DECIDE above), per-device and confirmed; fail
+  closed when the registry can't be read. The "KVS-only ghost is invisible"
+  item folds in here (delete screen already names mirror-only blockers; aged
+  ones unlock the override).
+- [x] **Blocked-strategy copy** — already built (2026-10-09 hygiene pass):
+  `DeleteWalletSettingView.swift:238-243` shows
+  `settings_delete_warning_check_failed` when the blocker report is nil
+  (landed in ed9d8fe). The old `DeletionStrategy.title/message` strings have
+  no UI caller — Tier 4 dead-code line.
 - [ ] **Deletion-flow copywriting** (2026-09-26 session, cosmetic): strategy
   intro, blockers copy, override acknowledgement, scope-changed banner
-  (`error_delete_scope_changed`) — then de/ja/zh-Hant.
-- [ ] **Delete wallet amount-warning copy is not right** (Reminders) — same
-  pass as the above.
-- [ ] **Desktop parity for promote/demote UI** (S3; unlink exists on both).
+  (`error_delete_scope_changed`) — then de/ja/zh-Hant. The amount-warning
+  copy merged into the Tier 0 forfeit-warning item.
 - [ ] **Devices: plan forced promotion; allow deletion / renaming of
-  devices?** (Reminders) → extend the scenario catalog first.
+  devices?** (Reminders) → part of what the full-S7 DECIDE enumerates;
+  extend the scenario catalog first. (Desktop promote/demote parity is in
+  Parked.)
 
 ### Connectivity and offline
 
@@ -488,11 +750,17 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   Reminders items: "stunningly designed no-connection state", server-down
   and no-internet messages with disabled functionality, server-offline tip to
   withdraw funds, disable send when offline, animate the connection icon
-  while connecting, track and surface the disconnect reason —
-  `connectionError` is captured in `WalletManager` but never shown — and a
-  Settings disconnect button?). Design the states (offline vs server down vs
-  connecting), decide what each disables, surface the stored reason, build.
-  Related dead code: connection quality is binary in practice (Tier 4).
+  while connecting, track and surface the disconnect reason, and a Settings
+  disconnect button?). Corrected 2026-10-09: the last service error *is*
+  shown, as a red row in the Connection Info sheet while disconnected
+  (`ConnectionInfoSheet.swift:178-182`, fed via
+  `refreshProcessStates(isConnected:)` → `markDisconnected(error:)`), but
+  nowhere inline, not in read-only mode, and it is the generic last
+  refresh-service error, not a classified reason (offline vs server down).
+  Design the states (offline vs server down vs connecting), decide what each
+  disables (boarding while the server is unreachable belongs on the list —
+  Tier 0 "Failed boards"), classify the reason, build. Related dead code:
+  connection quality is binary in practice (Tier 4).
 - [ ] **Invoice request timeout**: unknown how long `getLightningInvoice`
   takes to fail with no connectivity (bark's timeout, unmeasured). If minutes,
   users give up before Try Again / Share Addresses Instead appear. Measure
@@ -503,109 +771,64 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **A stuck Lightning receive is invisible, and cannot be cancelled or
   exited**: Second's 2026-10-06 disclosure says the follow-on denial of
   service "could degrade Lightning receives on Bark-based wallets" (server
-  fixes `9111622f9`, `6fd9834ff`). `LightningClaimService` is the only
-  caller of the receive bindings; it polls every 30 s in the foreground,
-  claims only `state == "htlcs-ready"`, and swallows every error into a log
-  line. A receive held below ready shows nothing in the UI, and
+  fixes `9111622f9`, `6fd9834ff`). Corrected 2026-10-09: **the app has no
+  claim loop at all.** `LightningClaimService` has been disabled since
+  commit a894888 (2026-04-10, constructor commented out at
+  `WalletManager.swift:390-391`; every `lightningClaimService?.start()` is a
+  no-op on nil), so its 30 s poll / `htlcs-ready` / swallowed-error code is
+  dead. Receives are claimed inside bark's own `sync()`
+  (`try_claim_all_lightning_receives` at tag bark-0.7.1, `lib.rs:1980,2012`),
+  which only `warn!`-logs failures — the app sees neither state nor error.
   `cancelLightningReceive`, `attemptLightningReceiveExit`,
-  `lightningReceiveState` and `tryClaimLightningReceive` exist on
-  `BarkWalletFFI+Lightning.swift` with zero app callers. Surface pending
-  receives with their state on the invoice sheet and in Activity, show the
-  last claim error when it repeats, and offer cancel / exit for a receive
-  that never settles. Pair with "Invoice request timeout" above.
+  `lightningReceiveState`, `tryClaimLightningReceive`,
+  `pendingLightningReceives` exist on `BarkWalletFFI+Lightning.swift` with
+  zero live callers. Decide whether to delete the service or revive it as
+  the state source for the UI; then surface pending receives with their
+  state on the invoice sheet and in Activity, show the last claim error when
+  it repeats, and offer cancel / exit for a receive that never settles. Pair
+  with "Invoice request timeout" above.
 
 ### Release readiness
 
+(2026-10-09: the clipboard pair and the package pins moved to Tier 0; CI,
+the macOS suite, the helper test and `SECURITY.md` moved to Tier 4
+"Tooling, CI and process"; translation debt moved to Tier 3 Localization.)
+
 - [ ] **Distribution compliance** (Reminders): Terms of Service; Privacy
-  Policy with data collection and storage; remove all "prototype" references;
-  age-rating compliance. Website: revise privacy statements (via Max).
-- [ ] **Translation debt — 80 user-facing keys have no de/ja value** (zh-Hant
-  89): deletion strings (`settings_delete_warning_local_only_named %@` and
-  13 more, listed in the Done log under Wallet Deletion), `metadata_*`
-  export/import set, ~28 X-Ray `data_bg_*` keys, 5 `ManualRefreshOutcome`
-  keys (`status_refresh_not_needed`, `balance_refresh_not_needed`,
-  `status_refresh_already_underway`, `balance_refresh_already_underway`,
-  `balance_refresh_already_scheduled` — absent from the catalog until an IDE
-  build extracts them; don't hand-add, re-extraction empties them), `rejoin_*`
-  (`rejoin_title`, `rejoin_message %@`, `rejoin_button`,
-  `error_wallet_already_on_account`), `data_bg_next_renewal_label`,
-  `transaction_list_syncing_*`, `data_fiat_rates*`, `settings_currency*`.
-  All render English `defaultValue` (no raw keys) — cosmetic for TestFlight,
-  the whole Phase 3 debt in one number. `apply_translations.py` +
-  `translation_lint.py` once extracted.
-- [ ] **Native-speaker review of the de/ja first pass** (1,090 × 2 values
-  `needs_review`, 2026-08-18): glossary ⚠️ terms first (Übertrag, Rechnung,
+  Policy with data collection and storage; remove all "prototype" references
+  — no user-facing string has one; what remains is file-header comments, the
+  test bundle ids `GBKS.Ark-wallet-prototypeTests` and the App Group
+  `group.GBKS.Ark-wallet-prototype` (`ArkeMobile.entitlements:22`,
+  `ArkeWidgets.entitlements:7`), and renaming the App Group moves the shared
+  container, so that one is a migration, not a find/replace; age-rating
+  compliance. Website: revise privacy statements (via Max).
+- [ ] **Native-speaker review of the de/ja first pass** (counted 2026-10-09:
+  de 854 + 202 ArkéUI, ja 884 + 205 values `needs_review`; first pass
+  2026-08-18): glossary ⚠️ terms first (Übertrag, Rechnung,
   Hauptgerät/Zweitgerät). Required before shipping the languages.
   `Localization/Translation_Rollout_Plan.md`.
-- [ ] **Native-speaker review of the zh-Hant first pass** (1,088 values,
-  2026-08-23): 聰 vs "sats", 復原片語 vs 助記詞, 付款請求, 轉入/轉出, the
-  拷貝/剪貼板 vs 複製/剪貼簿 pair.
+- [ ] **Native-speaker review of the zh-Hant first pass** (900 + 205 values,
+  counted 2026-10-09; first pass 2026-08-23): 聰 vs "sats", 復原片語 vs
+  助記詞, 付款請求, 轉入/轉出, the 拷貝/剪貼板 vs 複製/剪貼簿 pair.
 - [ ] **Phase D per-language QA**: App Language de (+30% expansion layout
   pass — badges, fixed-width buttons, alerts), ja (typography), zh-Hant
   (CJK/Latin spacing, line breaking), plus guard test + full suite.
-- [ ] **Set up CI via GitHub**: no `.github/` exists. Pair with the nightly
-  AI security review via scheduled Claude tasks, which needs CI first.
-- [ ] **macOS test suite fails ~68 of 272, flaky, for an unknown length of
-  time** (measured 2026-09-22 on a clean tree): failures span nearly every
-  suite while iOS runs the same Shared tests green, pointing at shared
-  mutable state across parallel macOS test hosts (keychain, UserDefaults,
-  KVS — `TombstonePersistenceTests`, `KeychainAccessibilityMigrationTests`
-  mutate process-wide state). Consequence: desktop regressions are
-  undetectable. `.serialized` suites or scratch-scoped keychain/defaults.
-  Fix before desktop parity work.
-- [ ] **Recovery phrase clipboard**: expiry of 60 s (`copySecretToClipboard`
-  default, `Shared/Helpers/Clipboard.swift`) is too short to reach a password
-  manager — raise to 2–3 min. macOS still uses the plain general pasteboard
-  with no expiry — `org.nspasteboard.ConcealedType` + delayed clear
-  (**assumed**: a third-party clipboard-manager convention, not an Apple
-  API; whether Universal Clipboard honours it is unverified — label stays
-  until checked on a Mac + iPhone).
-  - [ ] **QR sheet bypasses the hardened Copy button** (fault-class review of
-    `0de06d4`, 2026-10-07, CONFIRMED, class 2): `RecoveryPhraseSettingView`
-    hands the mnemonic to `ArkeQRCodeView`, which renders it as
-    `Text(content).textSelection(.enabled)`; long-press → Copy writes the
-    phrase to the plain general pasteboard with no `.localOnly` and no
-    expiry, one button to the right of the fixed one. Fix: a parameter on
-    `ArkeQRCodeView` to disable selection (it is shared with address and
-    invoice QR codes, where selection is wanted), or a secret-aware
-    variant. Same review also noted the desktop Send view reads the
-    pasteboard on every `didBecomeKey` and logs the content at debug
-    (`SendViewModel+Clipboard.swift`, comment there claims tap-only — false
-    on macOS); redacted on device, plaintext in the console. Desktop is
-    parked, so note only. Device check owed for the iOS fix itself:
-    two-device Handoff paste within 60 s (expect nothing) and local paste at
-    ~70 s (expect nothing).
 - [ ] **BIP-353 DNSSEC validation** (full implementation): DNSSEC-validating
-  library, RRSIG check, or a validating DoH resolver. Unblocks the four
-  BIP-353 items in Tier 3 (BIP-353 vs Lightning address logic, resolved
-  address display, contact address differentiation). Two resolver defects
-  to fix with it (read 2026-10-08, moot while the query is skipped): only
-  the first character-string of the TXT RDATA is read
-  (`BIP353Resolver.swift:310-319`), so records over 255 bytes truncate;
-  and the lookup does one `select` + one `DNSServiceProcessResult`, so a
-  reply with `kDNSServiceFlagsMoreComing` set never resumes the
-  continuation and the caller hangs. Keep the rule that an unverified
-  BIP-353 answer never pre-empts the TLS-authenticated Lightning-address
-  path.
-- [ ] **`SECURITY.md` and GitHub private vulnerability reporting**: the repo
-  has mainnet users and no stated channel for a security report; the next
-  reviewer should not need a DM. Enabling private reporting is a repo
-  setting (Christoph). Pair with a disclosure rule: unfixed items that are
-  exploitable against running infrastructure stay out of this doc until
-  fixed.
-- [ ] **Pin `bark-ffi-bindings` and BIP39 to tags, not branches**:
-  `project.pbxproj` has `bark-ffi-bindings` on `master` and `anquii/BIP39`
-  on `main`; `Package.resolved` holds revisions, so builds are stable only
-  until "Update to Latest Package Versions" pulls whatever is on the branch
-  into the component that holds keys. Xcode UI change (Package
-  Dependencies → exact version / revision); review the diff on each bump.
-- [ ] **`BIP21URIHelper.satoshis(fromBTCAmount:)` has no unit test**: the
-  helper now carries the amount parsing for all three parsers (fix
-  `7338733`), and its only verification so far is the external harness.
-  Cases: `nan`, `inf`, `1e11`, negative, `0x1p-3`, `0.57` → 57,000,000,
-  nine fraction digits, 21M + 1 sat.
+  library, RRSIG check, or a validating DoH resolver. Unblocks the BIP-353
+  items in Tier 3 (BIP-353 vs Lightning-address logic + resolved-address
+  display under Send, and the address-header proposal's override (d)). Two
+  resolver defects to fix with it (read 2026-10-08, moot while the query is
+  skipped): only the first character-string of the TXT RDATA is read
+  (`BIP353Resolver.swift:310-315`), so records over 255 bytes truncate; and
+  the lookup does one `select` + one `DNSServiceProcessResult` (`:376-388`)
+  with the timeout source cancelled before processing, so a reply with
+  `kDNSServiceFlagsMoreComing` set never resumes the continuation and the
+  caller hangs. Keep the rule that an unverified BIP-353 answer never
+  pre-empts the TLS-authenticated Lightning-address path.
 - [ ] **OS `bitcoin:` URI scheme registration**: no `CFBundleURLSchemes` in
-  either Info.plist. Also test the macOS Shortcuts integration (only the
+  the mobile Info.plist or the generated desktop plist, and no `onOpenURL` /
+  `openURLContexts` handler anywhere, so the work is registration plus
+  routing into Send. Also test the macOS Shortcuts integration (only the
   widget has App Intents).
 
 ## Tier 2 — Verification debt (shipped, never confirmed)
@@ -633,7 +856,10 @@ names the fix it verifies; the write-ups are in the Done log.
   follows a `[CloudKit] Remote change detected` round.
 - [ ] **Seeding scenarios** (import-gated seeding, contract rule 26):
   (1) reinstalled primary → exactly 9 tags + 1 faucet + customs, gate-wait
-  log line; (2) fresh account → seeds immediately, no 90 s wait;
+  log line — this is also the check for the Reminders report "two Faucetto
+  Signetto contacts" (merged from Tier 3 2026-10-09; insert-time store dedup
+  is the gate's timeout backstop, confirm it covers rejoin too);
+  (2) fresh account → seeds immediately, no 90 s wait;
   (3) reinstalled secondary → never seeds; (4) iCloud signed out + import →
   seeds after ~90 s timeout (`log show --info --debug`).
 - [ ] **SwiftData invalidation on the second iPhone** (fix 2026-09-23/25):
@@ -667,10 +893,9 @@ names the fix it verifies; the write-ups are in the Done log.
 - [ ] **Pre-open refresh skip path** (2026-10-01): soak through normal use —
   grep exported logs for `⏭️ [Refresh] Skipped` (first real exercise; lines
   before it name the trigger, mailbox push suspected) and any
-  `walletNotInitialized`. Owed too: desktop `ActivityView.swift` still shows
-  the never-cleared banner (parked with desktop); `TransactionService.error`
-  is never cleared on success — drop or clear it.
-- [ ] **Bark 0.16 v1-snapshot wallet** upgrade path, never verified on device.
+  `walletNotInitialized`. Owed too: `TransactionService.error` is never
+  cleared on success (`clearError()` at `:206` has zero callers) — drop or
+  clear it. (The desktop banner half is in Parked.)
 
 ### Background and relay
 
@@ -713,9 +938,6 @@ names the fix it verifies; the write-ups are in the Done log.
   services; confirm the receive-without-invoice path asks too.
 - [ ] **Exit local notifications still working?** → needs the X-Ray local
   notification listing (Tier 3, Refresh).
-- [ ] **Transaction address parsing (Strings → Objects) when assigning to
-  contacts** (Reminders): predates the address-history rework; verify with
-  one assignment, probably obsolete.
 
 ## Tier 3 — Polish by area
 
@@ -731,17 +953,18 @@ Reminders merge; wording kept so the two can be matched.
   on the toolbar alone — denser layouts, apply with a closer look.
 - [ ] **Fees not correctly calculated in the Zinqq multi-address selector
   sheet**; add a large-address review in the multi-address picker.
-- [ ] **Review logic for telling BIP-353 and Lightning addresses apart**;
-  a contact with a resolved BIP-353 shows only the resolved address in the
-  send view — both DNSSEC-blocked (Tier 1).
+- [ ] **Review logic for telling BIP-353 and Lightning addresses apart**,
+  in Send and when adding a contact address (merged with the Contacts
+  fragment 2026-10-09); a contact with a resolved BIP-353 shows only the
+  resolved address in the send view; actually resolve and test — all
+  DNSSEC-blocked (Tier 1).
 - [ ] **LNURL comment input and metadata** (short/long text, image) —
   `Features/LNURL_Pay.md` "not implemented"; `commentAllowed` is parsed and
   ignored (`comment: nil` passed to `payLnurl`).
 - [ ] **Switch send button to a slider for larger amounts**.
 - [ ] **Toggle icons blink again; no-contacts icon should be white and more
-  distinct; animated highlight when parsing the clipboard; some character
-  videos are awkwardly cropped in the send modal** (video sizing finding in
-  Parked → Themes).
+  distinct; animated highlight when parsing the clipboard** (the cropped
+  character videos moved to Parked → Themes video sizing 2026-10-09).
 - [ ] **How to detect if an address is from a different Ark server?**
 - [ ] **Parse Cashu NUT-18 `creq` parameter** (idea).
 - [ ] **Input field type detection – test thoroughly**.
@@ -770,16 +993,9 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Activity, transaction details, tags
 
-- [ ] **Does a Lightning-address send movement include the address?**
-- [ ] **38× `Transaction <id> no longer exists on server but has 1 tag(s)` at
-  ERROR on every movement notification** (field log 2026-10-09, mainnet,
-  42 movements on the server, "38 tag assignments on orphaned
-  transactions"). Find out why that many `PersistentTransaction` rows have
-  no matching bark movement (movement ids renumbered by a bark migration?
-  rows from a previous wallet incarnation?), decide whether the orphans
-  should be pruned or kept for their tags, and in any case log once per
-  refresh at warning level, not once per orphan per notification.
-- [ ] **Hide failed and completed refreshes that were free?**
+- [ ] **Hide failed and completed refreshes that were free?** (The growing
+  "Failed refresh" list in the Tier 0 divergence cluster is the extreme
+  case; this line is the general one.)
 - [ ] **Balance tag shows "-0 B fees paid"; needs a no-fee state**.
 - [ ] **Tag amounts — do they include fees, should they? Balance tag must
   include onchain child-tx fees**.
@@ -816,19 +1032,17 @@ Reminders merge; wording kept so the two can be matched.
   the scheduler's inputs (current height, target height, blocks remaining,
   seconds/block). A full history needs a `localNotificationScheduled`
   journal kind plus journaling in the `willPresent`/`didReceive` hooks.
-- [ ] **Show a message the first time the user has expired VTXOs?** — folded
-  into the Tier 0 "Expired VTXOs are offered a refresh the server refuses"
-  cluster 2026-10-09; the field incident made it more than a polish item.
 - [ ] **Make the overlay better reflect the current state**.
-- [ ] **Warn when total VTXOs are under 330 sats, and don't show "Refresh
-  now" below that minimum** (`VTXORefreshService` already uses 330 as the
-  floor; the UI does not).
+- [ ] **Warn when total VTXOs are under 330 sats** (the "don't show Refresh
+  now below the floor" half merged into the Tier 0 divergence cluster
+  2026-10-09; the warning copy stays here).
 - [ ] **`RefreshModalFormView` — description text is cut off even when the
   modal is fully expanded**.
 - [ ] **Surface expiry sweeps instead of silently showing less money** — on
   import VTXOs come back as bare `Spent` with no reason. Blocked on upstream
   spent-reason (`sweptAtExpiry`, feedback §1.9 / ask 17); once available,
-  write an explicit "expired" history entry.
+  write an explicit "expired" history entry. The pre-sweep half is the
+  Tier 0 divergence cluster.
 
 ### Exits
 
@@ -848,30 +1062,28 @@ Reminders merge; wording kept so the two can be matched.
   progress state in label; remove UI of the manual claim step; review the
   experience from first interaction; more testing.
 - [ ] **Disable the Settings exit entry while an exit is active?**
-- [ ] **Alternative Esplora server / Esplora setting in Settings** (Esplora is
-  only configurable via `NetworkConfig` today).
 - [ ] **When the daemon auto-exits VTXOs, how to detect and tell the user?**
 - [ ] **Is there exit grouping, or is each VTXO its own movement entry?**
 - [ ] **Options to handle failed Lightning payments (exit?)**.
 - [ ] **Drain wallet option** (Settings).
 - [ ] **Report upstream to bark devs** (network-verified on the stuck signet
   wallet): exit package txs don't exist on the network despite bark reporting
-  broadcast; round-replacement VTXO fails signature validation.
+  broadcast; round-replacement VTXO fails signature validation. Both are
+  written up in `Bark_Bindings_Feedback.md` §1.6 — tick once Christoph
+  confirms that doc reached Second.
 
 ### Settings, devices, deletion
 
 - [ ] **Backup — how to explain that not all wallets are compatible?**
-- [ ] **Importing a signet wallet in the mainnet flow shows an ugly overlay**.
-- [ ] **Two "Faucetto Signetto" contacts** — default-contact creation lacks a
-  dedupe check on reinstall / rejoin (insert-time store dedup exists as the
-  gate's timeout backstop; check it covers this path).
 - [ ] **Rejoin wallet screen is unstyled**.
 - [ ] **Savings deposits don't show up automatically** — note in the
-  notifications explainer until Background Execution Phase 2 lands.
-- [ ] **Optional self-heal on network mismatch**: bark's db knows its own
-  network — on a mismatch open failure, derive the config from the db instead
-  of the stored setting (needs a bindings check for reading the db network
-  without a chain source).
+  notifications explainer until Background Execution Phase 2 (Tier 4) lands.
+- [ ] **Network mismatch on import**: importing a signet wallet in the
+  mainnet flow shows an ugly overlay. Optional self-heal: bark's db knows
+  its own network — on a mismatch open failure, derive the config from the
+  db instead of the stored setting (needs a bindings check for reading the
+  db network without a chain source); the overlay copy is the fallback when
+  self-heal is not possible (two lines merged 2026-10-09).
 
 ### Contacts
 
@@ -884,17 +1096,18 @@ Reminders merge; wording kept so the two can be matched.
   fixes in various places; don't always pop the clipboard modal on first
   view**.
 - [ ] **Distinguish testnet and signet addresses; more subtle network display
-  when adding an address; differentiate BIP-353 and Lightning address,
-  actually resolve and test** (DNSSEC-blocked).
-- [ ] **After adding a contact it doesn't instantly show in the transaction
-  list; refresh-from-native updates the header in the sidebar**.
+  when adding an address** (see also the BOLT-11 prefix table under Send;
+  the BIP-353 / Lightning-address half merged into the Send line 2026-10-09).
+- [ ] **Contact edits don't show up right away**: adding an address doesn't
+  update the persistent model (tapping send on it says it cannot be found on
+  the contact); after adding a contact it doesn't instantly show in the
+  transaction list; refresh-from-native updates the header in the sidebar
+  (two lines merged 2026-10-09 — likely the cached-relationship rule: read
+  with a fetch in the same main-actor pass).
 - [ ] **Assign-contact modal design improvements; "x" should close, not
   unset**.
 - [ ] **Move the deletion-logic note into the address-deletion confirmation
   modal**.
-- [ ] **Adding an address doesn't update the persistent model right away;
-  tapping send on it says it cannot be found on the contact** (likely the
-  cached-relationship rule — read with a fetch in the same main-actor pass).
 - [ ] **Restyle the contact view; invite-friends feature (no fees between
   Arké users)**.
 
@@ -906,6 +1119,23 @@ Reminders merge; wording kept so the two can be matched.
   once there are funds** (no such flag exists; `BackupStatus.reminderMessage`
   and `shouldShowBackupReminder` exist unwired, see Tier 4 process state).
 - [ ] **Import — autocomplete for seed words** (`EnglishWordListProvider`).
+- [ ] **Import — validate the phrase before handing it to bark** (moved
+  down from Tier 0 2026-10-09 after execution: `MnemonicChecksumTests`
+  shows bark's `OnchainWallet.default` throws `invalid mnemonic: the
+  mnemonic has an invalid checksum` / `mnemonic contains an unknown word`
+  before any network I/O, so a typo never opens a different wallet). The
+  live pre-check `SecurityService.isValidBIP39` (`:864-873`) tests word count
+  only; the two validators with the checksum TODO
+  (`BarkWalletFFI+Mnemonic.swift:47-70`, `BIP39Usage.swift:52-73`) have no
+  callers. Fix: call the binding's `validateMnemonic(mnemonic:)` (returns
+  `false` for both cases, verified) in the pre-check and show "phrase has a
+  typo" before the import UI starts; delete the two dead validators. Note
+  `importWalletWithBackup` writes the seed to the keychain before bark sees
+  it (`WalletManager+Wallet.swift:102-104`, rollback follows) — the
+  pre-check also closes that window. Note (2026-10-10): the import path
+  does run bark's recovery scan (single `Wallet.open` with `skipRecovery:
+  false`, `openImportedWallet`), but with the 0.7.1 reader — recovery of a
+  diverged wallet depends on the Tier 4 bindings bump.
 - [ ] **Image in move-to-payments has a slight white line on the left**.
 
 ### X-Ray and Tilt
@@ -914,6 +1144,27 @@ Reminders merge; wording kept so the two can be matched.
   VTXO is selected** — key the view on the VTXO id.
 - [ ] **Tilt share — pay is not working; explore Mesh user detection instead
   of NearbyDevices** (and the any-peer payload DECIDE above).
+
+### Localization
+
+- [ ] **Translation debt — 128 user-facing keys have no de or ja value,
+  112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
+  `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`
+  excluded; plus one ArkéUI key, `accessibility_decimal_separator`, per
+  language). Groups: deletion strings (`settings_delete_warning_*`,
+  `settings_delete_override*`, `button_delete_*_anyway`,
+  `error_delete_scope_changed`), `metadata_*` export/import, ~28 X-Ray
+  `data_bg_*` plus `data_background_*` / `action_*_background_events`, the 5
+  `ManualRefreshOutcome` keys (now extracted, `en` only), `rejoin_*` and
+  `error_wallet_already_on_account`, `linked_devices_unsynced_*` +
+  `settings_unsynced_devices`, `transaction_list_syncing_*`,
+  `data_fiat_rates*`, `settings_currency*`, `fiat_approx*`, the fiat-entry
+  `receive_*` / `send_switch_to_*` strings, and ~13 format-only keys
+  (`%@ UTC`, `%llu sat/vB`, `Block %u`, `Round %u`, `Invoice #%lld`, …). All
+  render English `defaultValue` (no raw keys) — cosmetic, the whole Phase 3
+  debt in one number. `apply_translations.py` then `translation_lint.py`
+  (the lint checks empty values and format specifiers, not missing
+  languages, so it is not the counter).
 
 ## Tier 4 — Tech debt and deferred by design
 
@@ -936,20 +1187,17 @@ Reminders merge; wording kept so the two can be matched.
   itself never reached the log (Tier 0 cluster). Note the server's
   `unusable_inputs` carries ids only, not reasons — the typed case still
   needs app-side context (pending rounds, expiry) to classify.
-- [ ] **Thread the live refresh-expiry threshold into `RefreshExclusion`**:
-  the valve hardcodes 144 to mirror bark's `vtxo_refresh_expiry_threshold`
-  (FFI config passes `nil`); needs a cached `arkConfig` on `WalletManager`.
 - [ ] **`refreshTransactionsAfterWrite()` costs an extra `getMovements()`
   under contention** (drains the in-flight fetch and runs its own). Accepted;
   cheaper design: write sequence + join when the in-flight fetch observed it.
 - [ ] **Refresh dedup deferred notes** (doc §3/§5): near-expiry valve is
-  auto-path-only; `findVTXOsForAutoRefresh` embedded and untested;
-  `vtxoIdsBeingRefreshed()` has no test seam; modal list/amount can diverge
-  from what the service refreshes (valve + mid-flight changes) — revisit after
-  the device run.
-- [ ] **18s gap between `initialize()` called and executed** (device log
-  2026-09-08) — relative anomaly within one run; suspect the
-  dedup/queueing layer. Check it reproduces before digging.
+  auto-path-only and hardcodes 144 to mirror bark's
+  `vtxo_refresh_expiry_threshold` (FFI config passes `nil`) — threading the
+  live value into `RefreshExclusion` needs a cached `arkConfig` on
+  `WalletManager` (merged 2026-10-09); `findVTXOsForAutoRefresh` embedded and
+  untested; `vtxoIdsBeingRefreshed()` has no test seam; modal list/amount can
+  diverge from what the service refreshes (valve + mid-flight changes) —
+  revisit after the device run.
 - [ ] **Daemon auto-start on `Wallet.open()` (bark 0.7.0)**: our explicit
   `runDaemon()` logs `Called Wallet::start_daemon while daemon was already
   running` — may restart a just-started daemon every launch. Drop the call or
@@ -969,10 +1217,16 @@ Reminders merge; wording kept so the two can be matched.
   secondary spend rights — fix the Tier 0 `checkReadOnlyMode` item first.
 - [ ] **Dead device-registry code**: `cleanupStaleDevices()` and
   `migrateToThisDevice()` have zero call sites; `DeleteLocallyConfirmationView`
-  is never instantiated. Delete `migrateToThisDevice()` with S5.
-- [ ] **Remove the dead `showNoPrimaryDeviceBanner` NotificationCenter post**
-  (`DeviceRegistrationService.demoteThisDevice`) — nothing observes it.
-- [ ] **Devices-list display scoping** to the current wallet's registrations.
+  is never instantiated; `DeletionStrategy.title/message` strings have no UI
+  caller since the blocker report replaced them (`WalletDataCleanupService.swift:
+  1062`). Delete `migrateToThisDevice()` with S5.
+- [ ] **The `showNoPrimaryDeviceBanner` NotificationCenter post has no
+  observer** (`DeviceRegistrationService.swift:1069`, from `demoteThisDevice`).
+  It is the hook the Tier 1 "no primary device" banner would use — wire it
+  there or remove it, decided together.
+- [x] **Devices-list display scoping** — already done 2026-09-24 (Done log,
+  Linked Devices wallet-hash scoping; both list views filter on
+  `device.walletHash == accountWalletHash`). Closed 2026-10-09.
 - [ ] **Server-side arbitration for primary claims** — reconciliation is
   client-side only.
 - [ ] **Multi_Device_Design S7 note**: a deleted wallet's 30-day mailbox
@@ -1020,14 +1274,22 @@ Reminders merge; wording kept so the two can be matched.
 v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 
 - [ ] **Keep the unadopted-API record current on every bindings bump**.
-- [ ] **Next bump: take the post-incident bark client fixes** (upstream
-  master as of 2026-10-08, no tag past `bark-0.7.1` / `server-0.7.1` yet):
-  `f85ca92ac` failed boards kept out of the onchain wallet (Tier 0 item),
-  `48b005f10` lib board funding-output check (server-only path, harmless
-  for us), `e9e78ad33` recovery reads mailboxes to the end (the old 10-page
-  cap could truncate recovery), `244e3981f` `GetVtxosByIds` rpc. Watch for
-  a `bindings` release that pins a bark with these; re-run the migration
-  checklist and update `Bark_Bindings_Unadopted_API.md`.
+- [ ] **Next bump: take the post-incident bark client fixes — now a funds
+  path, front of Train 2** (upstream master as of 2026-10-08, no tag past
+  `bark-0.7.1` / `server-0.7.1` yet; depends on Second cutting a bindings
+  release). A mainnet user is waiting on it: Second's remedy for the Tier 0
+  divergence incident is recovery from seed, and every client-side recovery
+  fix is newer than the bark 0.7.1 our bindings carry — `f83de1901`
+  (2026-09-14, recovery reader stopped paging on pages without vtxo ids),
+  `d9e305d0e` (09-17, recover from both mailboxes and ask the server per
+  vtxo), the `fix-recovery-bug` merge `1ea9116ae` (09-21), `e9e78ad33`
+  (10-08, read the mailboxes to the end). Also: `f85ca92ac` failed boards
+  kept out of the onchain wallet (Tier 0 item), `48b005f10` lib board
+  funding-output check (server-only path, harmless for us), `244e3981f`
+  `GetVtxosByIds` rpc, and upstream master's `Balance.needs_refresh` split.
+  Watch for a `bindings` release that pins a bark with these; re-run the
+  migration checklist, update `Bark_Bindings_Unadopted_API.md`, then tell
+  the user to recover.
 - [ ] **`initialScanOnchain(birthdayHeight:)` on import** — recovers onchain
   history from a previous incarnation of the seed; `sync()` never finds it.
   Needs a "scanning" import UI state + on-device verify. (Relates to the
@@ -1058,8 +1320,10 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   the launch refresh still inside Step 3 at 11s, no "Step 3.1" yet). Which
   Step 3 task is the long pole — `refreshAllBalances`, the onchain sync, or
   the block-height fetch? Add per-task timings to the Step 3 task group
-  before guessing.
-
+  before guessing. Same timings answer the older **18s gap between
+  `initialize()` called and executed** (device log 2026-09-08, suspect the
+  dedup/queueing layer; merged 2026-10-09). Related: the CoreData error
+  flood and the whole-app background launch below.
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
   refactor. **Next pure-logic extraction**: wallet-detection decisions
@@ -1089,8 +1353,9 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   WalletImportedView.
 - [ ] **Previewable models extraction, Phase 3b** (paused; opportunistic).
   `Previewable_Models_Extraction_Plan.md`.
-- [ ] **Delete the emptied `TransactionModel+OnchainAdapter` file** (needs an
-  Xcode pass); `arke-qr-background` in `Media.xcassets` is referenced nowhere.
+- [ ] **`arke-qr-background` in `Shared/Media.xcassets` is referenced
+  nowhere** — delete the imageset. (The emptied `TransactionModel+OnchainAdapter`
+  file was deleted in 34b938a; that half closed 2026-10-09.)
 - [ ] **Revise use of Int / UInt32 etc. through the app, starting with the
   Bark bindings** (0.23 widened a few to UInt16).
 - [ ] **`PaymentInfoReceivedSheet` keeps its own BIP-21 parser**
@@ -1102,6 +1367,38 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 - [ ] **Move relay to DigitalOcean**; **Arke.me domain?** (external).
 - [ ] **`Data samples/` → `Data_Samples/`** (folder names were out of scope
   for the 2026-09-27 filename standardization).
+
+### Tooling, CI and process
+
+Moved out of Tier 1 "Release readiness" 2026-10-09: no user hits these;
+they are the infrastructure `Development/Release_Train.md` assumes.
+
+- [ ] **Set up CI via GitHub**: no `.github/` exists. Pair with the nightly
+  AI security review via scheduled Claude tasks, which needs CI first. Until
+  then the release-candidate step runs the mobile suite by hand.
+- [ ] **macOS test suite fails ~68 of 272, flaky, for an unknown length of
+  time** (measured 2026-09-22 on a clean tree; the suite has grown since):
+  failures span nearly every suite while iOS runs the same Shared tests
+  green, pointing at shared mutable state across parallel macOS test hosts
+  (keychain, UserDefaults, KVS). `TombstonePersistenceTests` is already
+  `.serialized`, `KeychainAccessibilityMigrationTests` is not, so
+  `.serialized` alone is not the fix — scratch-scoped keychain/defaults.
+  Consequence: desktop regressions are undetectable. Fix before desktop
+  parity work.
+- [ ] **`BIP21URIHelper.satoshis(fromBTCAmount:)` has no direct unit test**:
+  the helper carries the amount parsing for the BIP-21 parsers (fix
+  `7338733`). Indirect coverage exists — `AddressValidatorTests.swift:155-181`
+  runs `nan`, `inf`, `1e11`, `0x1p-3`, negative, nine fraction digits,
+  21M + 1 sat and `0.57` → 57,000,000 through `parsePaymentRequest`. The
+  nearby-payment sheet's own BIP-21 parser also calls the shared helper
+  (verified 2026-10-09, it is an `extension BIP21URIHelper`), so there is no
+  second trap site. Add the direct test when the helper is next touched.
+- [ ] **`SECURITY.md` and GitHub private vulnerability reporting**: the repo
+  has mainnet users and no stated channel for a security report
+  (`README.md:199-201` lists sync facts only); the next reviewer should not
+  need a DM. Enabling private reporting is a repo setting (Christoph). Pair
+  with a disclosure rule: unfixed items that are exploitable against running
+  infrastructure stay out of this doc until fixed.
 
 ## Parked (deliberate)
 
@@ -1121,7 +1418,9 @@ day-to-day workflow until the macOS test suite is trustworthy (Tier 1).
   reverted. Keep: the reaction videos display LANDSCAPE ~3:2 (encoded portrait
   with a 90° rotation; `mdls`/`naturalSize` lie, only `presentationSize` or a
   thumbnail shows the truth). A full-width 3:2 window showed the whole video
-  in the medium detent but wasn't accepted visually.
+  in the medium detent but wasn't accepted visually. The Reminders report
+  "some character videos are awkwardly cropped in the send modal" is this
+  item (moved here from Tier 3 Send 2026-10-09).
 - [ ] **Per-theme color palettes** (deferred by design).
 
 ### Website and marketing

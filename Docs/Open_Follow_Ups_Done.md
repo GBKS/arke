@@ -740,7 +740,7 @@ deletes, `ContactAddressService`'s primary-flag loops, `WalletManager+Contacts`
 address learning, `PaymentInfoReceivedSheet`, and import/export. Remaining
 cached-array reads are count/isEmpty-only and annotated in place. Dead code
 removed: `cacheExistingTagAssignments`, the `TransactionModel+OnchainAdapter`
-statics (file emptied — needs an Xcode pass to delete). Pinned by
+statics (file emptied; deleted in 34b938a). Pinned by
 `TransactionMetadataWritePathTests` (8 tests, second-context deletes).
 
 - [x] **`MetadataExportService` walks cached assignment arrays — FIXED
@@ -889,3 +889,47 @@ Duplicates of items already in the index: `EmergencyExitFeeEstimate` and
 `RoundFlowKind` (Bindings doc); "delete wallet – block if devices still
 syncing, with override" (Multi-Device S7); payment-notification navigate,
 onchain-deposit notifications (Background Execution Phase 2).
+
+
+## Backlog Hygiene Pass (2026-10-09)
+
+Every Decisions, Tier 0 and Tier 1 entry checked against the code and the
+deployed bindings (v0.25.0+bark-0.7.1) by six parallel read-only agents, plus
+a whole-file duplicate sweep; one claim settled by execution. About two
+thirds of the entries held apart from line drift; corrections were applied
+in place in the open file. Closed here:
+
+- [x] **Get Patrick's private write-up** (2026-10-08): received with a
+  parser repro harness; every claim spot-checked against `main` held. The
+  new findings were filed in their tiers (the two backup items, the
+  `shouldBlockWalletAccess` sibling, metadata import and store deletion,
+  resolver and prefix notes, branch pins, `SECURITY.md`). Relay server-side
+  observations are handled with the relay, outside the backlog. The harness
+  runs on a Mac with a `swiftc` wrapper that adds `-sdk`; the eight parser
+  traps it documented are confirmed fixed by execution.
+- [x] **Blocked-strategy copy** — the third state ("couldn't check") already
+  existed: `DeleteWalletSettingView.swift:238-243` shows
+  `settings_delete_warning_check_failed` when the blocker report is nil,
+  landed in ed9d8fe with the reduced S7. The item had outlived its fix; the
+  old `DeletionStrategy.title/message` strings are now a Tier 4 dead-code
+  line.
+- [x] **Devices-list display scoping** — done 2026-09-24 with the Linked
+  Devices wallet-hash scoping (both list views filter on
+  `device.walletHash == accountWalletHash`); the Tier 4 line was a leftover.
+- [x] **Delete the emptied `TransactionModel+OnchainAdapter` file** — deleted
+  in 34b938a (2026-09-26). The `arke-qr-background` half stays open.
+- [x] **Bark 0.16 v1-snapshot wallet upgrade path** — retired unverified:
+  three bindings bumps later no field device can still hold a v1 snapshot.
+- [x] **BIP39 checksum is not validated on import — demoted from Tier 0**:
+  `MnemonicChecksumTests` (new, 6 tests, green on the iPhone 17 Pro
+  simulator) shows `OnchainWallet.default` throws `invalid mnemonic: the
+  mnemonic has an invalid checksum` / `mnemonic contains an unknown word`
+  before any network I/O, and the binding's `validateMnemonic(mnemonic:)`
+  returns `false` for both. A typo never opens a different wallet; the
+  remaining gap is UX (the live pre-check tests word count only) and lives
+  in Tier 3 First use.
+
+Also recorded for the method: the entries that were wrong in kind, not just
+in line numbers, were all "mechanism" claims — which gate drops a reminder,
+which service polls, which view shows an error — rather than "what" claims.
+Grep confirms a symbol exists; only a trace confirms it runs.
