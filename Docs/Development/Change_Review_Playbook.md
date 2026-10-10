@@ -170,7 +170,7 @@ classes above, and this instruction:
 > rule it out), never as "looks fine". End with: what did you not verify?
 
 It replaces the "refute your own fix" prompt for Tier 0/1 work and runs on
-day 7 of the release train (`Release_Train.md`). For Tier 3/4 the self-review
+the Review stage of the release train (`Release_Train.md`). For Tier 3/4 the self-review
 prompts above remain enough.
 
 The prompt is packaged as a repo agent definition,

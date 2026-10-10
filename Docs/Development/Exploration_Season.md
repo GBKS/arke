@@ -269,7 +269,7 @@ graduation item in the backlog, and Tier 0 is empty.
 ## Risks named up front
 
 - **Flags that never ship or die.** Mitigated by the kill-or-ship column and
-  Phase 4; the registry is reviewed on day 1 of every train.
+  Phase 4; the registry is reviewed in the Decide stage of every train.
 - **The floor erodes** because a feature "only needs a small model tweak".
   Mitigated by the area-and-file boundary and by routing every schema change
   through a normal Tier 1 item first.

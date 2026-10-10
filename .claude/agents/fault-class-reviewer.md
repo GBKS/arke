@@ -1,6 +1,6 @@
 ---
 name: fault-class-reviewer
-description: Fresh-context adversarial review of a commit range or diff against the five fault classes in Docs/Development/Change_Review_Playbook.md. Use for Tier 0 and Tier 1 changes, on day 7 of the release train, or whenever a change touches seeds, deletion, exits, funds, startup ordering, derived signals, guards, caches or the bark FFI boundary. Hand it only the commit range (or a diff) and the area name; it reads the contracts itself. Read-only; it reports findings, it does not fix them.
+description: Fresh-context adversarial review of a commit range or diff against the five fault classes in Docs/Development/Change_Review_Playbook.md. Use for Tier 0 and Tier 1 changes, in the Review stage of the release train, or whenever a change touches seeds, deletion, exits, funds, startup ordering, derived signals, guards, caches or the bark FFI boundary. Hand it only the commit range (or a diff) and the area name; it reads the contracts itself. Read-only; it reports findings, it does not fix them.
 tools: Read, Grep, Glob, Bash
 ---
 
