@@ -166,7 +166,7 @@ this path is passive (user must find Linked Devices) — the deferred active
 "no primary device" banner is exactly this scenario's entry point; there is
 no guided "I lost a device" flow tying promote + unlink together.
 
-### S5 — One-device migration (old device → new device) ◻ (sketch PROPOSED 2026-08-19)
+### S5 — One-device migration (old device → new device) ◻ (sketch PROPOSED 2026-08-19; DECIDED 2026-10-10: designed after explicit device linking, as an offer on the link screen; `migrateToThisDevice()` deleted independently)
 User has one device and replaces it. Every primitive exists (S2 join, S3
 promote, S6 local delete, S11 unlink); the migration assistant is
 **orchestration and copy only — no new protocol**.
@@ -230,7 +230,7 @@ goes straight into the wallet rather than the rejoin screen (observed
 2026-09-23). The explicit device linking proposal after S13 would cover that
 case without needing a tombstone that survives app deletion.
 
-### S7 — Delete the wallet everywhere ◻ (PROPOSED 2026-08-19 — awaiting decision)
+### S7 — Delete the wallet everywhere ◻ (reduced version shipped 2026-09-24; DECIDED 2026-10-10: only the mirror-only-ghost "forget this device" remedy is built next, the remaining pieces wait for explicit device linking)
 User wants the wallet gone from all devices and iCloud.
 
 **The stale-ghost question (Christoph): "you lost or sold your old phone and
@@ -440,10 +440,16 @@ Walkthrough:
 - **Behind the scenes:** registration removed; spending was never possible from the lost device (it wasn't primary).
 - **Security note:** same as S4 — if the lost device may be unlocked in someone else's hands, the recovery phrase on it is the real exposure; consider moving funds.
 
-## Cross-cutting PROPOSAL — explicit device linking ◻ (PROPOSED 2026-09-23 — awaiting decision)
+## Cross-cutting — explicit device linking ◻ (direction DECIDED 2026-10-10; build pending a scope pass)
 
-Touches S2, S6 and S9. Their walkthroughs describe today's behaviour and are
-unchanged until this is decided.
+Christoph accepted the direction on 2026-10-10: no install adopts the
+account's wallet silently. The four open questions below are answered in a
+scope pass before the build (Train 2 or later); until the build lands the
+S2, S6 and S9 walkthroughs still describe today's silent behaviour. The
+tombstone follow-up ("reinstall after a local delete silently rejoins") is
+closed as superseded.
+
+Touches S2, S6 and S9.
 
 **The question (Christoph): "I am wondering if any install should ever just
 join a wallet. Maybe it's nicer for the user to see a message about how they
@@ -601,9 +607,9 @@ what happens → impact → mitigation → status.
 - **Full wipe without a written phrase.** The last-device full wipe destroys
   the only seed copies (iCloud Keychain + devices); if the user never wrote
   the phrase down, funds are unrecoverable the moment they confirm. →
-  Permanent fund loss. → PROPOSED: the final confirmation asks for two words
+  Permanent fund loss. → DECIDED 2026-10-10: the final confirmation asks for two words
   of the recovery phrase (e.g. words 4 and 9) — consent check and
-  backup-existence proof in one. Status: proposed (see Derived work).
+  backup-existence proof in one. Status: decided, build pending (see Derived work).
 - **"Deleting the app deletes the wallet"** — false in both directions:
   reinstall silently resurrects (S9), and app deletion never unregisters. →
   Surprise resurrection, ghost registrations. → S9/S11 walkthrough copy;

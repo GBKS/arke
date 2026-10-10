@@ -143,6 +143,20 @@ first pass arms them for replayed already-finished exits.
 Enforced: `ExitProgressionService+LiveActivity.swift`
 (`rescheduleCheckInRemindersIfNeeded`), `ArkeMobile.swift` (scene phase). Test: none.
 
+**13a. The exit path depends on the same operator as the Ark server (known limit, DECIDED 2026-10-10).**
+Exit progression reads the chain through the configured Esplora, and on
+both networks that is Second's (`mempool.second.tech`, `esplora.signet.2nd.dev`)
+alongside Second's Ark server. There is no second chain source and no
+Settings entry, so a Second-wide outage takes the exit path down with the
+server; the pre-signed exit protection holds only while the chain source
+answers. Accepted for now rather than patched: the fallback chain source
+(automatic or a recipe, which third party to trust) is designed as part of
+the offline / server-down feature (Tier 1), which must exercise an exit
+against an unreachable server before it ships. Until then, anyone reasoning
+about "funds are safe because of unilateral exit" must add "while Second's
+chain source is up".
+Enforced: nothing — this rule records a limit, not a guard. Test: none.
+
 ## Multi-device
 
 **14. Check demotion before opening the wallet.**

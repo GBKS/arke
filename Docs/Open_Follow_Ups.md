@@ -51,7 +51,7 @@ summarised in one line under "Past trains".
 
 | Stage | Status |
 |---|---|
-| Decide | open — rulings owed below; picks PROPOSED 2026-10-09, Christoph to confirm |
+| Decide | rulings done 2026-10-10 (15 of 16; exploration season explicitly deferred); picks below PROPOSED, Christoph to confirm |
 | Build | started 2026-10-09 with the hygiene pass; soft target ≈ 2026-10-23 |
 | Review | not started |
 | Device | not started — next time both phones are at hand after Review closes |
@@ -66,11 +66,14 @@ hardening), size of loss, cost of the fix including its device step. Twenty
 items will not empty in one train; the ranking says which go now and why
 the rest wait.
 
-- Decide — rule on: onchain default source, nearby payloads, dead images,
-  rates cache, network-name log privacy (the cheap ones); a first position
-  on explicit device linking and full S7; and exits-depend-on-the-same-
-  operator. The VTXO expiry safety net lost its field evidence on
-  2026-10-10 and can wait. Deferring explicitly is a valid ruling.
+- Decide — done 2026-10-10, one decision per message in chat. Rulings that
+  add Train 1 work: Savings default + no auto-switch (send cluster); nearby
+  contact card (send-inputs cluster); Live Activity ends on demotion
+  (deletion cluster); dead images deleted (build to confirm). Rulings that
+  shape later trains: explicit linking accepted (scope pass first), S7
+  ghost remedy only, S5 and the join notification after linking, expiry
+  safety net (a)+(c) planned later, operator dependence recorded as contract
+  rule 13a. Exploration season explicitly deferred.
 - Build, Tier 0, in rank order, one cluster per session:
   1. **Divergence (field; funds safe server-side, user stuck):** the
      wallet-state-diverged cluster (classifier back-off, own state + honest
@@ -80,13 +83,17 @@ the rest wait.
   2. **Deletion (traced traps, same function):** skip the backup on the
      delete path; partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
-     `unlinkDevice`); wrap the four unprotected store writes.
+     `unlinkDevice`); wrap the four unprotected store writes; end the exit
+     Live Activity on demotion + drop dead `closeWallet()` (DECIDED
+     2026-10-10, same file).
   3. **Phrase exposure (hardening, cheap):** clipboard 2–3 min + QR-sheet
      selection off; screen-capture / `privacySensitive` on the four phrase
      surfaces. Device check: Handoff paste at 60 s and local paste at 70 s.
   4. **Send inputs (hardening, cheap, one detector):** mainnet fee ceiling +
      test; BIP-353 query skip + softer error; paste fallback + the shared
-     `detectFormatOrNil` fix (also header proposal (d)).
+     `detectFormatOrNil` fix (also header proposal (d)); nearby received
+     sheet shows a contact only when every URI destination is theirs
+     (DECIDED 2026-10-10).
   5. **Boards (incident-derived, small):** `maxVtxoAmount` into the boarding
      form, refuse client-side, disable while the server is unreachable.
   6. **Ops, Christoph's hands:** rotate `RELAY_API_TOKEN` on the relay and
@@ -101,7 +108,8 @@ the rest wait.
   train if the mainnet user confirms a restore); `checkReadOnlyMode` (fix
   after the Tier 2 self-unlink run in the Device stage settles the shape);
   metadata-import name merge (medium, no field evidence; pull forward if
-  cluster 4 finishes early); security gating (device-linking DECIDE); the
+  cluster 4 finishes early); security gating (design unblocked 2026-10-10,
+  explicit linking accepted; build with or after the linking scope pass); the
   offline feature; CI; the bindings bump with bark's recovery fixes (waits
   on a bindings release from Second).
 - Review — fresh-context adversarial pass per cluster against the five
@@ -135,97 +143,172 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   network-config / money-path work keeps the full process throughout. Eight
   calls at the end of the doc (season, floor, gate G1/G2, Phase 4 in scope,
   abstractions as Phase 1 work, accounting, agents hub, usernames without
-  BOLT-12). Ruled in a later train's Decide stage.
-- [ ] **DECIDE — explicit device linking** (proposal in
-  `Architecture/Multi_Device_Design.md`, cross-cutting section after S13):
-  should an install ever adopt the account's wallet silently, or disclose
-  what it found and ask for one acknowledgement? Four open questions in the
-  proposal. Absorbs "reinstall after a local delete silently rejoins" (nested
-  below) and "fresh secondary: balance card still reads 0" (Tier 1) and
-  would retire the pre-open network reconcile patch
-  (`WalletManager.swift:586-617`) rather than inherit it. Gates the Tier 0
-  "Security checks first" gated-actions table.
-  - [ ] **DECIDE — reinstall after a local wallet deletion silently
-    rejoins**: tombstone is `UserDefaults` (wiped with the app) while the
-    synchronizable seed + KVS hash survive, so detection routes into the
-    wallet instead of `RejoinWalletView` (observed 2026-09-23). Defensible
-    as designed; the keychain device-ID slot (`WhenUnlockedThisDeviceOnly`)
-    has the right lifetime if it should change. Closes as superseded if
-    explicit linking is accepted (`Multi_Device_Design.md` says so).
-- [ ] **DECIDE — full S7 build vs. the reduced version shipped 2026-09-24**
-  (blocker disclosure + informed override). Full S7 adds unlink-first paths,
-  per-device confirmed "forget this device" for mirror-only ghosts, forced
-  promotion / device deletion and renaming (the Reminders question in Tier 1
-  Multi-device), and the "wallet deleted elsewhere" cleanup state. Gates
-  Tier 1 "Unlink-first for mirror-only ghosts"; Tier 0 "Ghost-device
-  hardening (1)" does not wait on it.
-- [ ] **DECIDE — S5 migration assistant**: orchestration + copy over S2 join →
-  promote → S6 retire, entry points on both devices. Deletes
-  `migrateToThisDevice()` (writes `isPrimaryDevice` without `becamePrimaryAt`).
-- [ ] **DECIDE — default source for onchain sends** when both Savings and
-  Payments are viable (proposal: Savings, faster and keeps Payments liquid).
-  See the Payments-balance onchain proposal in Tier 1.
-- [ ] **DECIDE — nearby-exchange payloads accepted from any peer** (PR #8
-  description): accepted whatever the distance check says, parsed on arrival,
-  from any connected peer, any number of times; the session is encrypted but
-  unauthenticated and every invitation is accepted. The sheet shows a saved
-  contact's card when only the URI's primary onchain address matches, while
-  an `ark=` destination outranks it at send time — show a contact only when
-  every destination in the URI belongs to it. Christoph's view 2026-10-08:
-  less critical than the rest of Tier 0, since the feature is opt-in under
-  Experimental, needs a tilt from the Activity tab and a confirmed Pay.
-  Premises re-read 2026-10-09 (`ProximityExchangeManager.swift:429-448`,
-  `:567-573`, `:633-644`; the NI distance check gates sending only,
-  `:777-796`); the "`ark=` outranks at send time" half was not traced.
-- [ ] **DECIDE — duplicate default tags/contacts already in the account**
-  (second iPhone's extra 9 tags + 2 contacts are in CloudKit): hand-delete on
-  a device, or a one-shot dedup by name that re-points assignments before
-  deleting the loser (`PersistentTag` has no unique constraint). Hand-delete
-  needs no new code: `TagService.deleteTag` / `ContactService` already delete
-  single mirrored rows on user action. Automatic post-import merge deferred
-  2026-09-25: it is a service-level delete, which contract rule 23 reserves
-  for `WalletDataCleanupService`; if ever built it keeps the copy with
-  assignments, runs under cleanup-service ownership, behind explicit user
-  action. Prevention on reinstall / rejoin shipped 2026-09-25 and is
-  verified by Tier 2 "Seeding scenarios" (1).
-- [ ] **DECIDE — wallet deletion and the rates cache** — today neither the
-  rates cache (`Application Support/Rates/rates-cache.json`) nor the fiat
-  currency preference (`UserDefaults.fiatCurrencyKey`) is cleared on
-  deletion or inventoried in `SharedStateWipeCoverage`. PROPOSAL: clear the
-  currency preference with other preferences, leave the cache.
-- [ ] **DECIDE — dead Shared images in both app bundles**:
+  BOLT-12). **Explicitly deferred 2026-10-09 by Christoph** until the most
+  important items are worked off; stays on this list as a reminder, not a
+  blocker. Re-raise in a Decide stage once Tier 0 has been emptied once.
+- [x] **DECIDED 2026-10-10 — explicit device linking: direction accepted,
+  build later.** No install adopts the account's wallet silently; it
+  discloses what it found and asks for one acknowledgement (Christoph:
+  "let's make it explicit"). Proposal: `Architecture/Multi_Device_Design.md`,
+  cross-cutting section after S13. Sequencing: a **scope pass** answers the
+  four open questions there (primary reinstall sees the same screen; no
+  decline button; a late seed is not a second acknowledgement; background
+  and push wakes on an unlinked install) before any build; the build is
+  Train 2 or later and brings a new detection route
+  (`accountWalletAwaitingLink`), one screen plus strings and translations, a
+  Launch_Sequence_Contract rule ("never adopt an account wallet without a
+  recorded local link"), rewrites of S2/S6/S9, and retires the pre-open
+  network reconcile patch (`WalletManager.swift:586-617`) rather than
+  inheriting it. Unblocks the design of the Tier 0 "Security checks first"
+  gated-actions table (joining is explicit, so gating is about actions after
+  the link). Shapes the Tier 1 "fresh secondary reads 0" item's first-launch
+  half.
+  - [x] **Reinstall after a local wallet deletion silently rejoins — closed
+    as superseded 2026-10-10.** The `UserDefaults` tombstone dies with the
+    app while the synchronizable seed + KVS hash survive, so a reinstall
+    routed straight into the wallet (observed 2026-09-23). Under explicit
+    linking the reinstall lands on the link screen instead; no tombstone
+    lifetime change needed.
+- [x] **DECIDED 2026-10-10 — S7: build only the ghost remedy now; the rest
+  of full S7 stays a scoped proposal until explicit linking lands.** The
+  reduced S7 shipped 2026-09-24 (blocker disclosure + informed override
+  after the settle window). Of the four full-S7 pieces — unlink-first
+  paths, per-device confirmed "forget this device" for mirror-only ghosts,
+  forced promotion / device deletion and renaming, the "wallet deleted
+  elsewhere" cleanup state — only the ghost remedy has an incident behind it
+  (2026-09-26 blocked wipe), so it becomes its own Tier 1 item. The other
+  three are designed after explicit device linking, which changes who can
+  become a ghost; designing them first means designing twice. Tier 0
+  "Ghost-device hardening (1)" never waited on this.
+- [x] **DECIDED 2026-10-10 — S5 migration assistant: delete the dead
+  function now, design the assistant after explicit linking.** The guided
+  flow over S2 join → promote → S6 retire is deferred: the link screen is
+  where a new phone first learns the account has a wallet, so "this is my
+  new phone, move everything here" belongs on it, and designing the
+  assistant before that screen exists means designing it twice. Until then
+  the three steps stay manual with Linked Devices as the guide.
+  `migrateToThisDevice()` (zero callers; writes `isPrimaryDevice` without
+  `becamePrimaryAt`, which reconciliation relies on) is deleted now via the
+  Tier 4 dead-code line, not held for S5.
+- [x] **DECIDED 2026-10-10 — default source for onchain sends: Savings.**
+  Rules: (1) Savings is the default for a bitcoin address when both sources
+  are viable; the picker offers Payments with its fee and "settles at the
+  next round". (2) The smart pick happens once, on load, with whatever the
+  request carries (amount, balances, fees). (3) Viability is re-evaluated
+  as the user types (ranking redone with the typed amount, debounced like
+  fee estimation) so the exceeds-balance state and the picker rows are
+  current, but **the selected source never switches automatically during
+  amount input** — Christoph: auto-switching under the user's thumb leads
+  to unexpected results. (4) If neither source covers amount + fee, the
+  exceeds-balance state names both balances. (5) No fee-based auto-pick;
+  both fees are shown, the choice is speed/liquidity vs. keeping onchain
+  coins untouched. Build item: the Payments-balance onchain proposal in
+  Tier 1.
+- [x] **DECIDED 2026-10-10 — nearby-exchange payloads: fix the contact
+  card now, defer the peer gating to the tilt-share pass.** Background (PR
+  #8 description): payloads are accepted whatever the distance check says,
+  parsed on arrival, from any connected peer, any number of times; the
+  session is encrypted but unauthenticated and every invitation is accepted
+  (`ProximityExchangeManager.swift:429-448`, `:567-573`, `:633-644`; the NI
+  distance check gates sending only, `:777-796`). The received sheet shows
+  a saved contact's card when only the URI's primary onchain address
+  matches (`PaymentInfoReceivedSheet.swift:34-40`), while an `ark=`
+  destination may outrank it at send time (not traced) — a confirmed Pay
+  could go to a payee the card did not name. Ruling: (1) **now, small**:
+  show a contact on the received sheet only when every destination in the
+  URI belongs to that contact; rides with the Tier 0 send-inputs cluster.
+  (2) **deferred** to the Tier 3 "Tilt share" item as its definition of
+  done: gate receiving on the same distance check as sending, accept one
+  payload per exchange, ignore invitations outside an active exchange.
+  Reason: opt-in under Experimental, needs a tilt from the Activity tab and
+  a confirmed Pay, no field evidence.
+- [x] **DECIDED 2026-10-10 — duplicate default tags/contacts: hand-delete,
+  no tool.** The second iPhone's extra 9 tags + 2 contacts in CloudKit are
+  removed by Christoph through the normal Tags and Contacts delete paths
+  (`TagService.deleteTag` / `ContactService`, user-initiated single-row
+  deletes, allowed for mirrored rows). Check before deleting a tag that its
+  assignments, if any, sit on the survivor. No dedup tool: one account,
+  eleven rows, and prevention (import-gated seeding, 2026-09-25) is on the
+  Device checklist as "Seeding scenarios" (1). Revisit a cleanup-service-
+  owned merge only if a second account shows the same. Closes when the rows
+  are gone — Christoph ticks it.
+- [x] **DECIDED 2026-10-10 — wallet deletion and the rates cache: clear the
+  currency preference with the other preferences, leave the cache.** The
+  rates file (`Application Support/Rates/rates-cache.json`) is public market
+  data, not wallet data; the fiat currency preference
+  (`UserDefaults.fiatCurrencyKey`) is a user choice like unit format and
+  resets with deletion. Both keys get an entry in `SharedStateWipeCoverage`
+  with their scope recorded (preference: wiped; cache: kept) so the test
+  documents the choice. Build line in Tier 4 "Device registry cleanup".
+- [x] **DECIDED 2026-10-10 — dead Shared images: deleted.**
   `Shared/Images/avatar-{female,male}-{1..4}.jpg` (8) and
-  `Shared/Images/cover-animation.mp4` ship in iOS and macOS since Shared
-  attached to both targets; referenced by no code (the avatar names in
-  `ContactAvatarEditor` resolve to the ArkéUI package's own imagesets).
-  Delete, or exclude in the File Inspector.
-- [ ] **DECIDE — Live Activity across device migration**: demotion runs
-  `closeWalletForMigration()` → `resetManagerStateForMigration()`, which stops
-  services and cancels the refresh notification but never touches an
-  in-flight exit's Live Activity; only `deleteWallet()` or exit completion
-  ends it. (`closeWallet()` itself has zero callers.) Should demotion end it
-  too, since the demoted device stops progressing?
-- [ ] **PROPOSED — "new device joined your wallet" notification** (failure
-  modes §C): visibility mitigation for iCloud-account compromise; honest-flow
-  feedback for S2/S5.
-- [ ] **PROPOSED — phrase-confirmation on full wipe** (failure modes §A):
-  final "Delete everything" asks for two recovery-phrase words.
-- [ ] **PROPOSED — delete only when the user has no VTXOs?** (from Reminders;
-  today `DeletionStrategy` only distinguishes last-device vs other-devices.)
-  The strong form of Tier 0 "Warn on wallet deletion about forfeitable
-  offchain balance", which does not wait on it.
-- [ ] **Mark network-name log interpolations `privacy: .public`?** The
-  "four" from the reconcile write-up are the reconcile block
-  (`WalletManager.swift:586-617`, six interpolations of `networkConfig.name`);
-  about 25 more network-name interpolations elsewhere also lack `privacy:`.
-  Scope it to the block or widen it. Undecided; simulator logs don't redact,
-  device logs do.
-- [ ] **DECIDE — VTXO expiry safety net** (design gap; no field loss behind
-  it since 2026-10-10 — the mainnet case that first motivated it turned out
-  to be a missed mailbox message with the funds safe server-side, see Tier 0
-  "Wallet state diverged from the server"; the 2026-08-13 case was a deleted
-  wallet and backs the forfeit warning instead. Rule when convenient, not on
-  the Decide stage): today the only thing standing between a closed app and expiry is
+  `Shared/Images/cover-animation.mp4` shipped in both app bundles since
+  Shared attached to both targets; referenced by no code (the avatar names
+  in `ContactAvatarEditor` load from the ArkéUI package bundle, `Image(_:
+  bundle: .module)` and `UIImage(named:in: .module)`, whose asset catalog
+  holds its own imagesets). Removed from the tree 2026-10-10; the
+  File-Inspector exclusion route was rejected because Xcode rewrites
+  per-file exception sets wholesale. Build to confirm rides with the next
+  Build-stage session.
+- [x] **DECIDED 2026-10-10 — demotion ends the exit Live Activity.**
+  Demotion runs `closeWalletForMigration()` → `resetManagerStateForMigration()`
+  (`WalletManager+Wallet.swift:654-668`), which stops services and cancels
+  the refresh notification but leaves an in-flight exit's Live Activity up,
+  frozen on a state this device no longer advances; only `deleteWallet()`
+  or exit completion ends it. Ruling: call the existing
+  `endLiveActivityImmediately()` from the migration reset, next to the
+  notification cancel, plus a test on the reset path. A "continued on
+  another device" terminal state is not built; it would come with the exit
+  terminal cases in the Tier 3 `cancelExit` item if ever. Also delete the
+  caller-less `closeWallet()`. Rides with the Tier 0 deletion cluster, same
+  file.
+- [x] **DECIDED 2026-10-10 — "new device joined your wallet" notification:
+  accepted, built with explicit device linking** (failure modes §C in
+  `Multi_Device_Design.md`): the only visibility a user gets of an
+  iCloud-account compromise, and the confirmation for honest S2/S5 joins.
+  It is the receiving end of the link event, so it lands in the same
+  cluster as the link screen with matching copy; the registry observer that
+  detects a new registration row already exists, delivery is a local
+  notification (permission handling shared with the expiry-reminder item).
+  Part of the linking scope pass.
+- [x] **DECIDED 2026-10-10 — phrase confirmation on full wipe: accepted,
+  unconditional on the last-device full-wipe path** (failure modes §A in
+  `Multi_Device_Design.md`): the final "Delete everything" asks for two
+  recovery-phrase words (e.g. 4 and 9), a consent check and backup-existence
+  proof in one. Not gated on balance — the spendable number can be wrong
+  (divergence incident) and an empty seed can receive later. Local-only
+  deletion keeps the seed on the account and is untouched. Word entry can
+  borrow the import screen's field; new strings + de/ja/zh-Hant. Rides with
+  whichever Tier 0 item touches `DeleteWalletSettingView` first (deletion
+  cluster or forfeit warning); two-device verify with the deletion set.
+- [x] **DECIDED 2026-10-10 — deletion is never blocked on remaining VTXOs;
+  warn, don't block.** (From Reminders; `DeletionStrategy` keeps
+  distinguishing only last-device vs other-devices.) Christoph: warnings
+  exist, the wallet is recoverable from the phrase and its history from the
+  backup file, so a hard block has no justification; and two real cases in
+  this backlog (dust under the fee floor, the divergence incident) have
+  VTXOs that cannot be moved, where a block would strand the user. The
+  informed path is the Tier 0 forfeit warning (amount + deadline) plus the
+  two-word phrase confirmation decided above.
+- [x] **DECIDED 2026-10-10 — network names in log lines are public.** The
+  network name is not sensitive (the debug export header already prints
+  it), so every network-name interpolation gets `privacy: .public`: the six
+  in the pre-open reconcile block (`WalletManager.swift:586-617`) and the
+  ~25 elsewhere (FFI wrapper, `NetworkConfigPersistence`, wallet manager,
+  refresh service, create-wallet view). Only the name becomes public,
+  nothing else on those lines. Build line in Tier 4 "UI components,
+  refactors, tooling".
+- [x] **DECIDED 2026-10-10 — VTXO expiry safety net: direction (a)
+  pre-commit + (c) escalating reminders; plan deferred to a later train.**
+  Design gap, no field loss behind it — the mainnet case that first
+  motivated it turned out to be a missed mailbox message with the funds
+  safe server-side (Tier 0 "Wallet state diverged from the server"); the
+  2026-08-13 case was a deleted wallet and backs the forfeit warning. The
+  plan, when written, must include how the app learns a server-run
+  scheduled round completed (the divergence incident is exactly a round the
+  wallet never heard about) and the height maths against the server's
+  at-or-past-expiry rejection; full process, funds path. Background: today
+  the only thing standing between a closed app and expiry is
   one local notification when the free-refresh zone opens; the hourly
   `VTXORefreshService` check runs in the foreground only and refreshes only
   what is already free. A user who does not open the app during that last
@@ -248,23 +331,26 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   2026-10-09: (a) as the primary mechanism plus (c) as the backstop for
   wallets never reopened after the VTXO was created. Changes the refresh
   model from "wait for free, in the foreground" to "pre-commit", touches
-  funds — plan after the ruling, full process. The four app defects in the
+  funds — plan in a later train, full process. The four app defects in the
   Tier 0 divergence cluster do not wait on this.
-- [ ] **DECIDE — exits depend on the same operator as the server** (from the
-  2026-10-05 Second server incident, see Tier 0 "Failed boards"): the
-  protection that kept user funds safe is the pre-signed exit path, which is
-  only real if a user can exit while Second is down. `NetworkConfig.mainnet`
-  uses `mempool.second.tech` as chain source and `ark.second.tech` as server;
-  signet uses `esplora.signet.2nd.dev` + `ark.signet.2nd.dev`. A custom
-  config can point elsewhere, but nothing tells a user to (Esplora is only
-  configurable via `NetworkConfig`; there is no Settings entry and no second
-  chain source anywhere in the app). Options: (a) a fallback Esplora per
-  network that the exit path tries when the primary fails, with or without
-  an Esplora setting in Settings (the former Tier 3 "Alternative Esplora
-  server" line, merged here 2026-10-09); (b) an "exit while the server is
-  down" recipe in the offline / server-down feature (Tier 1); (c) accept the
-  dependency and record it in `Initialization/Launch_Sequence_Contract.md`.
-  Verified 2026-10-08: both servers and both chain sources answered.
+- [x] **DECIDED 2026-10-10 — exits depend on the same operator as the
+  server: accepted and recorded; the fallback is designed inside the
+  offline feature.** The pre-signed exit path is only real if a user can
+  exit while Second is down, and today both the chain source and the Ark
+  server are Second's on both networks (`NetworkConfig.swift:43-59`), with
+  no second chain source, no Settings entry, and nothing telling a user a
+  custom config could point elsewhere. Ruling: (c) now — the dependency is
+  recorded as rule 13a in `Initialization/Launch_Sequence_Contract.md` so
+  nobody mistakes the exit path for operator-independent; (a) and (b) are
+  folded into the Tier 1 offline / server-down feature's scope: when that
+  feature designs the server-down state it also decides the fallback chain
+  source per network (a trust decision about a third party such as
+  `mempool.space`), whether it is automatic or a recipe, and whether an
+  Esplora setting appears in Settings (the former Tier 3 line). Reason: the
+  exit path has never been exercised against a server outage, so a
+  standalone fallback patch would be untested policy; the outage feature is
+  where the whole path gets designed. Verified 2026-10-08: both servers and
+  both chain sources answered.
 
 ## Tier 0 — Funds or security at risk
 
@@ -455,7 +541,10 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   is commented out — nothing is gated today. Christoph's view 2026-10-08:
   showing the phrase already sits behind a tap or the scratch-off surface,
   so a show-phrase gate is not a gap on its own; the item stays for the full
-  gated-actions table, which waits on the explicit-device-linking DECIDE.
+  gated-actions table. Design unblocked 2026-10-10: explicit device linking
+  is accepted, so the table gates actions *after* a recorded link (phrase,
+  deletions, promote/demote/unlink, send as opt-in) and the link screen
+  itself is not a gated action. Build with or after the linking scope pass.
 - [ ] **Delete flow has no partial-failure handling**
   (`DeleteWalletSettingView.swift:276-328`): `deleteWalletData()` runs first,
   then `walletManager.deleteWallet()`; if the second throws, shared state is
@@ -650,7 +739,11 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   path has a server fee, no priority picker, settles at the next round — say
   so in the option row; tell third-party round sends apart from offboards
   via `AddressService` history so Activity doesn't label them "Moved".
-  Default source is a DECIDE above.
+  Default source DECIDED 2026-10-10 (Savings; five rules in the Decisions
+  section): ranking must be redone with the typed amount so viability stays
+  current (today it runs once at parse time and the quick flow's amount
+  handler only re-selects within the stale list), the picker rows show
+  source + fee + settlement, and nothing auto-switches during input.
 - [ ] **Contact assignment mixes up send and receive addresses** (four
   Reminders reports: batch assignment uses the receive-to address; assigning
   a payment adds the Lightning invoice as a contact address; assigning an Ark
@@ -721,15 +814,20 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   `NSPersistentCloudKitContainer` import events. The explicit-device-linking
   DECIDE would absorb the first-launch half; the syncing-state UI is needed
   under either ruling. (Desktop `TransactionList` half is in Parked.)
-- [ ] **Unlink-first for mirror-only ghosts** (deliberately not built
+- [ ] **"Forget this device" for mirror-only ghosts** (the one piece of
+  full S7 approved to build, DECIDED 2026-10-10; deliberately not built
   2026-09-24; now the only remedy for a healthy-but-unwanted blocker since
   the override is no longer offered there): `unlinkDevice` throws
   `deviceNotFound` with no registry row (`DeviceRegistrationService.swift:
-  933-944`), so needs `forgetUnsyncedDevice(_:)` (does not exist). Build
-  with the full S7 blockers UX (DECIDE above), per-device and confirmed; fail
-  closed when the registry can't be read. The "KVS-only ghost is invisible"
-  item folds in here (delete screen already names mirror-only blockers; aged
-  ones unlock the override).
+  933-944`), so needs `forgetUnsyncedDevice(_:)` (does not exist) that
+  clears the mirror entry for one named device, per-device and confirmed,
+  owned by the cleanup service's rules for shared state; fail closed when
+  the registry can't be read. Surface it from the delete screen's blocker
+  list (which already names mirror-only blockers; aged ones unlock the
+  override) and from Linked Devices. The "KVS-only ghost is invisible" item
+  folds in here. Two-device verify: create a ghost (install, link, wipe the
+  device without unregistering), forget it from the other phone, confirm
+  the full wipe is no longer blocked.
 - [x] **Blocked-strategy copy** — already built (2026-10-09 hygiene pass):
   `DeleteWalletSettingView.swift:238-243` shows
   `settings_delete_warning_check_failed` when the blocker report is nil
@@ -740,9 +838,9 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   (`error_delete_scope_changed`) — then de/ja/zh-Hant. The amount-warning
   copy merged into the Tier 0 forfeit-warning item.
 - [ ] **Devices: plan forced promotion; allow deletion / renaming of
-  devices?** (Reminders) → part of what the full-S7 DECIDE enumerates;
-  extend the scenario catalog first. (Desktop promote/demote parity is in
-  Parked.)
+  devices?** (Reminders) → part of the rest of full S7, designed after
+  explicit device linking lands (DECIDED 2026-10-10); extend the scenario
+  catalog first. (Desktop promote/demote parity is in Parked.)
 
 ### Connectivity and offline
 
@@ -759,8 +857,14 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   refresh-service error, not a classified reason (offline vs server down).
   Design the states (offline vs server down vs connecting), decide what each
   disables (boarding while the server is unreachable belongs on the list —
-  Tier 0 "Failed boards"), classify the reason, build. Related dead code:
-  connection quality is binary in practice (Tier 4).
+  Tier 0 "Failed boards"), classify the reason, build. **In scope since the
+  2026-10-10 ruling on operator dependence:** the server-down state must
+  leave unilateral exit reachable while Second's chain source is down too —
+  pick a fallback Esplora per network (a third-party trust call), decide
+  automatic fallback vs. a recipe, and whether an Esplora setting appears in
+  Settings; exercise the exit path once against an unreachable server
+  before shipping. Related dead code: connection quality is binary in
+  practice (Tier 4).
 - [ ] **Invoice request timeout**: unknown how long `getLightningInvoice`
   takes to fail with no connectivity (bark's timeout, unmeasured). If minutes,
   users give up before Try Again / Share Addresses Instead appear. Measure
@@ -1143,7 +1247,10 @@ Reminders merge; wording kept so the two can be matched.
 - [ ] **Options view / `VTXODeveloperActionsView` don't refresh when another
   VTXO is selected** — key the view on the VTXO id.
 - [ ] **Tilt share — pay is not working; explore Mesh user detection instead
-  of NearbyDevices** (and the any-peer payload DECIDE above).
+  of NearbyDevices.** Definition of done now includes the deferred half of
+  the nearby-payload ruling (DECIDED 2026-10-10): gate receiving on the
+  same distance check as sending, accept one payload per exchange, ignore
+  invitations outside an active exchange.
 
 ### Localization
 
@@ -1205,6 +1312,12 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Device registry cleanup
 
+- [ ] **Deletion clears the fiat currency preference, keeps the rates
+  cache** (DECIDED 2026-10-10): add `UserDefaults.fiatCurrencyKey` to the
+  preference wipe in `WalletDataCleanupService` and both keys to
+  `SharedStateWipeCoverage` with their scope (preference wiped, cache kept);
+  the coverage test pins it.
+
 - [ ] **Ghost-device hardening (2)–(4)**: re-run the device assessment and
   refresh Linked Devices on `NSUbiquitousKeyValueStore.didChangeExternallyNotification`
   (today the primary needs a relaunch to see a cleared ghost); log each
@@ -1219,7 +1332,9 @@ Reminders merge; wording kept so the two can be matched.
   `migrateToThisDevice()` have zero call sites; `DeleteLocallyConfirmationView`
   is never instantiated; `DeletionStrategy.title/message` strings have no UI
   caller since the blocker report replaced them (`WalletDataCleanupService.swift:
-  1062`). Delete `migrateToThisDevice()` with S5.
+  1062`). `migrateToThisDevice()` goes now (DECIDED 2026-10-10, no longer
+  held for S5); rides with the next device-registry change, e.g. the
+  deletion cluster's ghost-hardening residual.
 - [ ] **The `showNoPrimaryDeviceBanner` NotificationCenter post has no
   observer** (`DeviceRegistrationService.swift:1069`, from `demoteThisDevice`).
   It is the hook the Tier 1 "no primary device" banner would use — wire it
@@ -1309,9 +1424,10 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   (feedback §1.3 addendum); no app workaround planned.
 - [ ] **BDK fee estimator removal, Phase 3** — blocked until bark exposes
   onchain estimate/drain fee APIs; then drop `bdk-swift`.
-- [ ] **`refreshVtxosScheduled(vtxoIds:scheduledHeight:)`** — candidate
-  primary mechanism for the "VTXO expiry safety net" decision; adopt only
-  after that ruling. `RoundState.scheduledHeight` is already in the binding.
+- [ ] **`refreshVtxosScheduled(vtxoIds:scheduledHeight:)`** — DECIDED
+  2026-10-10 as the primary mechanism of the VTXO expiry safety net; adopt
+  when that plan is written (later train, full process).
+  `RoundState.scheduledHeight` is already in the binding.
 
 ### Startup and background structure
 
@@ -1343,6 +1459,12 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   onchain deposits" from Reminders.
 
 ### UI components, refactors, tooling
+
+- [ ] **Mark every network-name log interpolation `privacy: .public`**
+  (DECIDED 2026-10-10): ~30 sites, found with `rg` for `networkConfig.name`
+  / `network.name` / `networkName` inside `logger.` calls; mechanical, no
+  other interpolation on those lines changes. Verify on a device export that
+  "Network config loaded" reads the name instead of `<private>`.
 
 - [ ] **ArkeGlassButton adoption sweep** (~45 `.glassProminent` + ~29
   `.glass` hand-styled sites across ~39 files; adopted in
