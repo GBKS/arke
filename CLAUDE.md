@@ -83,8 +83,12 @@ is history and loses to a living doc.
   `BuildProject` per work step. IDE builds also re-extract string catalogs;
   `xcodebuild` builds extract for the built target only and never for
   ArkeDesktop.
-- **Tests:** scoped suites while working, the full mobile suite once at task
-  end or before a commit plan. The only authoritative runner is:
+- **Tests:** scoped suites while working, the full mobile suite **once** at
+  task end or before a commit plan — and on Tier 0/1 work only after the
+  adversarial pass has returned, since its findings usually change code
+  (DECIDED 2026-10-11; a pre-review full run was pure waste). Tests that
+  restate the implementation are not kept; test decisions and failure modes.
+  The only authoritative runner is:
 
   ```bash
   xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \

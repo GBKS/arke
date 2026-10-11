@@ -76,10 +76,11 @@ the rest wait.
   rule 13a. Exploration season explicitly deferred.
 - Build, Tier 0, in rank order, one cluster per session:
   1. **Divergence (field; funds safe server-side, user stuck):** the
-     wallet-state-diverged cluster (classifier back-off, own state + honest
-     copy on the balance card + no CTA below the 330 floor, FFI log line,
-     orphaned failed-refresh rows); forfeit warning on deletion (the
-     2026-08-13 case); permission-denied banner for expiry reminders.
+     wallet-state-diverged cluster (classifier back-off ✓ 2026-10-11, FFI
+     log line ✓ 2026-10-11 — uncommitted, reviewed; remaining: own state +
+     honest copy on the balance card + no CTA below the 330 floor, orphaned
+     failed-refresh rows); forfeit warning on deletion (the 2026-08-13
+     case); permission-denied banner for expiry reminders.
   2. **Deletion (traced traps, same function):** skip the backup on the
      delete path; partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
@@ -442,12 +443,37 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   fixes ship; for Arké that is the bindings bump (Tier 4 "Next bump"),
   since our 0.7.1 bindings predate every one of those fixes, so the user
   should hold the recovery until then. Four app defects, one cluster:
-  - **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
-    issued into a round"** (`VTXORefreshService.swift:45`), so the auto path
-    logged "treating as in-flight, not a failure" with 0 pending rounds. Only
-    classify as in-flight when the ids are actually in `vtxoIdsBeingRefreshed()`
-    / a pending round; otherwise it is a real failure and must back off (no
-    retry on the next launch for the same ids).
+  - [x] **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
+    issued into a round"** — done 2026-10-11 (`Features/Refresh_Deduplication.md`
+    §9): verified at `server-0.7.1` that the tag fires for any unspendable
+    input (spent, exited, banned; no expiry check) and the message names the
+    ids. Now `isUnusableInputsRejection` + `RefreshRejection.classify`
+    (in flight only when the ids are in `vtxoIdsBeingRefreshed()` after the
+    refetch) + `RefreshRejectionBackoff` (24 h per id, device-local
+    `com.arke.refresh.rejectedInputs`, pruned to the spendable set, batch
+    entries yield inside the 144-block valve). Manual path returns
+    `.rejectedByServer`; the modal says "Can't refresh from this device" with
+    the recovery-phrase + contact-support hint, never "funds lost". 16 unit
+    tests (four implementation-restating ones dropped on review, 2026-10-11);
+    wipe key added. Adversarial pass 2026-10-11 fixed two CONFIRMED
+    findings in-session (a stale Pending movement on an expired VTXO passed
+    Guard C's valve and would have read as "in flight" — in-flight now means
+    *newly* locked since the pre-call read; the card's list now mirrors the
+    back-off so a partial batch cannot report success). Left open from that
+    pass, no app fix: **bark's daemon joins every round's first attempt for
+    maintenance refresh** (`join_round_for_maintenance_refresh`, bark-0.7.1
+    `daemon/mod.rs:155-160`) with the same dead VTXOs, so one Failed refresh
+    row per *round* keeps arriving regardless of the app-side back-off —
+    confirm in the next field log (bark lines "Joining round … for maintenance
+    refresh" / "Maintenance refresh rejected"); it is the bindings bump's to
+    fix, and defect 4 (orphan rows) is where the rows are pruned. Also: a
+    `NotFound` ("input vtxo does not exist") rejection is deliberately not
+    matched and would still retry as an ordinary error — fold into the Tier 4
+    typed-errors item. **Device check owed**: no reliable repro from the app
+    (needs the server to refuse); watch the next debug export from the mainnet
+    user for the new FFI line carrying the server text with ids (confirms the
+    `{:#}` chain reaches the app — plan claim C4, derived), the warning
+    "holding them back for 24h", and one app-side Failed row per day.
   - **The balance card has no expired state at all.** The only place the app
     labels a VTXO Expired is the X-Ray row (`VTXORowView.swift:22-48`), and
     even there `VTXOListView_iOS` offers "Refresh all (Free)" with no expiry
@@ -455,7 +481,13 @@ Tier 0/1 work. Guiding docs hold the full arguments.
     (`BalanceRefreshStatusContainer.swift:63`, `…Compact.swift:68`), the view
     model has no expiry notion and says "Refresh now" whenever
     `hasVtxosToRefresh`, and the ArkéUI `expiredContent` branch is dead
-    outside previews. The balance counts expired VTXOs as spendable because
+    outside previews. Hook added 2026-10-11:
+    `VTXORefreshService.recentlyRejectedVtxoIds` is the set the service will
+    not re-submit, and `BalanceRefreshStatusViewModel` already excludes it
+    from `vtxosNeedingRefresh` — so today a rejected VTXO draws **no CTA and
+    no explanation** on the card while still counting as spendable; the honest
+    copy exists only in the refresh modal's `.refused` state (reachable now
+    only via the race). This item supplies the card's own state for that set. The balance counts expired VTXOs as spendable because
     bark 0.7.1's `Balance` has only `spendable`/`pendingExit`; upstream master
     adds `Balance.needs_refresh`, which keeps them out of spendable, so the
     next bindings bump may deliver the balance half. These VTXOs need their
@@ -467,12 +499,11 @@ Tier 0/1 work. Guiding docs hold the full arguments.
     "Refresh now" below the 330-sat floor** `VTXORefreshService` already
     applies (merged from Tier 3 Refresh 2026-10-09) — the CTA should be
     driven by what the service would actually refresh.
-  - **The FFI log line loses the server message**:
-    `BarkWalletFFI+VTXO.swift:113` prints `\(error)` → `Error Domain=Bark.Error
-    Code=0`; the rejection reason had to be inferred from the classifier's
-    behaviour (the thrown `configurationError` does carry
-    `localizedDescription`, which is why the classifier works). Log it
-    (interim step of the Tier 4 typed-errors item).
+  - [x] **The FFI log line loses the server message** — done 2026-10-11:
+    `BarkWalletFFI+VTXO.swift` now logs `localizedDescription` with
+    `privacy: .public` for the delegated-refresh call only (the server text
+    carries VTXO ids, which bark's own selection logger already prints). The
+    other ~160 `\(error)` FFI log lines stay for the Tier 4 typed-errors item.
   - **Every failed refresh attempt leaves an orphaned local row, and the
     orphans are the user's "growing list of Failed refresh rows"** (promoted
     from Tier 3 2026-10-10). In the 2026-10-09 log each attempt adds one bark
@@ -1288,7 +1319,7 @@ Reminders merge; wording kept so the two can be matched.
   cleared (bounded, harmless).
 - [ ] **Surface typed errors across the bark FFI boundary**: every
   `Bark.Error` collapses into `BarkWalletFFIError.configurationError(_:)`, so
-  callers string-match (`isAlreadyIssuedRejection`). One case per recoverable
+  callers string-match (`isUnusableInputsRejection`). One case per recoverable
   variant, starting with `unusable_inputs`. The 2026-10-09 field log showed
   the cost: the match fired on an expired-VTXO rejection and the message
   itself never reached the log (Tier 0 cluster). Note the server's

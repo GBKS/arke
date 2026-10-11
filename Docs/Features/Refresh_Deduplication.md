@@ -126,7 +126,8 @@ double-accepting), but concretely harmful:
   in fact running. **Fixed 2026-09-21:** `ManualRefreshOutcome
   .alreadyIssuedByServer` maps this to "Already refreshing", and the auto
   path stops recording it in `lastError`. Detection is by message text
-  (`isAlreadyIssuedRejection`) because the FFI collapses every `Bark.Error`
+  (`isAlreadyIssuedRejection`; **superseded 2026-10-11 by §9** — the tag
+  also fires for spent, exited or banned inputs) because the FFI collapses every `Bark.Error`
   into `BarkWalletFFIError.configurationError(_:)` and discards the variant
   — deliberately narrow, anything unrecognised stays an error. Surfacing
   typed FFI errors is an Open_Follow_Ups item.
@@ -515,3 +516,84 @@ the service is stopped.
 3. **No re-delegation at bark-0.7.1** (F9): stale pending states from
    replaced duplicates don't self-heal — strengthens the amplifier analysis
    of the 2026-07-11 incident.
+
+## 9. `unusable_inputs` is not "already issued" — classifier + back-off (2026-10-11)
+
+**Status: PLAN written 2026-10-11, built the same session; Train 1 Tier 0
+divergence cluster, defects 1 and 3.** Adversarial pass and device check
+recorded in `Open_Follow_Ups.md`.
+
+### What was wrong
+
+The 2026-09-21 fix above mapped every `unusable_inputs` rejection to
+"already issued into a round" (`isAlreadyIssuedRejection`). The 2026-10-09
+mainnet field log (Tier 0 "Wallet state diverged from the server") shows the
+label firing with 0 pending rounds and 0 pending round inputs read one
+second earlier: the wallet's three VTXOs had been spent into a round the
+wallet never heard about, and the app retried them on every launch,
+foreground return, hourly tick and tap, each attempt adding one Failed
+refresh movement and one orphaned local row.
+
+### Claims this plan rests on
+
+| # | Claim | Label | Where |
+|---|-------|-------|-------|
+| C1 | At `server-0.7.1` the delegated-refresh handler tags `unusable_inputs` whenever `check_spendable(chain_tip)` fails for any input; that check rejects **exited**, **non-spendable state** (spent, including spent into an issued round) and **banned** VTXOs. It does not check expiry. The text is identical for every cause. | verified (read) | `server/src/round/mod.rs:1962-1972`, `server/src/database/model.rs:179-242` |
+| C2 | The `UnusableInputs` `Display` prints `unusable inputs: [txid:vout,…]`, and the gRPC status message is the `{:#}` chain, so the offending ids are inside the message text as well as in the `identifiers` metadata. | verified (read) | `server/src/error.rs:103-114`, `server/src/rpcserver/mod.rs:87-103` |
+| C3 | The bindings expose `Bark.Error` as a single `.Inner(message:)` whose `errorDescription` is `String(reflecting:)`; no typed variant, no metadata. | verified (read at `v0.25.0+bark-0.7.1`) | `Bark.swift:7675-7691` |
+| C4 | The message the app receives contains the inner chain, not just the outer context — the classifier matched "unusable inputs" in the field. Whether the ids survive into it follows from C2 + this. | derived (field log + C2); confirm with the FFI log line this change adds | field log 2026-10-09 line 301 vs 309 |
+| C5 | Guard C removes known in-flight ids before the call, so a true "already issued" rejection can only come from the race where the server issued the round between our read and the call. **Corrected in review:** false for expired VTXOs, which the valve submits anyway — hence the before/after rule in design item 2. | derived, corrected | §3, `RefreshExclusion.swift:60-63` |
+| C6 | Both app paths already refetch (`refreshAfterVTXOChange`) before classifying, so a post-error `vtxoIdsBeingRefreshed()` read sees the issued round's locked inputs (F3). | verified (read) | `VTXORefreshService.swift:306,537`; F3 |
+
+### Design
+
+1. **Rename, same match.** `isUnusableInputsRejection` says only what the
+   server said: one or more inputs are unusable. The reason is classified
+   app-side.
+2. **Classify after the refetch** (`RefreshRejection.classify`): requested
+   ids that are in `vtxoIdsBeingRefreshed()` *after* the refetch but were
+   **not** in it before the call → in flight, record nothing (Guard C drops
+   those ids on the next check and the rest retry naturally). Ids that
+   were already in the set before the call do not count — Guard C's valve
+   submits expired VTXOs despite a Pending entry, and a rejection then
+   means the entry is stale (F9), not that a refresh runs; counting it
+   would restart the per-launch loop (adversarial pass finding F1,
+   2026-10-11). Otherwise → rejected. If the server message names ids (C2),
+   back off exactly those (`precise`); if none parse, back off the whole
+   batch (`fromBatch`).
+3. **Back-off** (`RefreshRejectionBackoff`): per-id entries with a 24 h
+   TTL, persisted device-locally in `UserDefaults`
+   (`com.arke.refresh.rejectedInputs`), pruned on every auto check to the
+   current spendable set. Both service paths skip backed-off ids. A
+   `fromBatch` entry is ignored for a VTXO inside the Guard C expiry valve
+   (0 < blocks-to-expiry ≤ 144): the server may have named a sibling, and
+   a near-expiry renewal must not wait a day on a guess. A `precise` entry
+   has no valve — the server named this id. The TTL exists so a wrong
+   verdict (e.g. `pendingRoundInputVtxos()` threw and the fail-open empty
+   set hid a genuine in-flight round whose round later failed) costs one
+   Failed row per day, not a stuck VTXO.
+4. **Manual path** returns `.rejectedByServer` both on a fresh rejection
+   and when every candidate is already backed off; the modal shows an
+   honest failure ("Can't refresh from this device", recovery-phrase hint,
+   contact support first, no retry for 24 h) instead of "Already
+   refreshing". It never claims funds are lost — the app cannot tell a
+   sweep from a divergence.
+5. **Logging**: one warning per rejected attempt with the server message
+   (public), one info per skipped batch; the FFI line prints
+   `localizedDescription` (public) instead of `Error Domain=Bark.Error Code=0`.
+6. **Wipe**: the key is cleared in `clearUserDefaults()` and listed in
+   `SharedStateWipeCoverage` as `.deviceLocal`.
+7. Not in scope, filed: the balance card still says "Refresh now" for
+   backed-off VTXOs (cluster defect 2 consumes
+   `VTXORefreshService.recentlyRejectedVtxoIds`); orphan-row pruning
+   (defect 4); the 162 sibling FFI log lines (Tier 4 typed errors).
+
+### Sweep of sibling sites
+
+| Site | Status |
+|---|---|
+| `VTXORefreshService.checkAndRefreshVTXOs` (launch, hourly, foreground, debug trigger) | covered |
+| `VTXORefreshService.refreshManually` (balance card modal) | covered |
+| `VTXOListView` ×2, `VTXODeveloperActionsView`, `DataView_iOS.maintenanceDelegated()` | exempt — debug power tools, outside Guard C by design (§3.2); they remain the manual escape hatch inside the 24 h |
+| `BalanceRefreshStatusViewModel.loadData` (card list + CTA) | covered after review (finding F2: a partial batch would have reported success) — excludes `recentlyRejectedVtxoIds`; the card's own honest state is still defect 2 |
+| `BarkWalletFFI+VTXO.swift` other `\(error)` log lines (and ~150 in sibling FFI files) | exempt — Tier 4 typed-errors item |
