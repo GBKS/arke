@@ -32,7 +32,18 @@ struct RefreshModalView: View {
     @State private var isLoading = false
     @State private var shouldDismiss = false
     @State private var viewModel: BalanceRefreshStatusViewModel?
-    
+
+    /// Shared with the balance card's refused state (same title). Never
+    /// claims the funds are lost — the app cannot tell an expiry sweep from
+    /// a missed round (Refresh_Deduplication.md §9).
+    static var refusedTitle: String {
+        String(localized: "status_refresh_refused", defaultValue: "Can't refresh from this device")
+    }
+
+    static var refusedMessage: String {
+        String(localized: "balance_refresh_refused", defaultValue: "The server refused these coins: it considers them unusable, usually because they were already used in a round this wallet didn't see, or they are temporarily blocked. Recovering the wallet from your recovery phrase may restore them — contact support before you do. The app won't retry for 24 hours.")
+    }
+
     var body: some View {
         ZStack {
             switch state {
@@ -41,6 +52,7 @@ struct RefreshModalView: View {
                     isLoading: isLoading,
                     amountToRefresh: viewModel?.totalAmountToRefresh,
                     vtxoIdsToRefresh: viewModel?.vtxosNeedingRefresh.map { $0.id } ?? [],
+                    minimumAmountSats: viewModel?.minimumRefreshAmountSats,
                     onConfirm: {
                         Task {
                             await performRefresh()
@@ -117,6 +129,15 @@ struct RefreshModalView: View {
                 viewModel = BalanceRefreshStatusViewModel(walletManager: manager)
             }
             await viewModel?.loadData()
+            // Opened from the card's refused state: nothing can be scheduled
+            // and the server holds the rest back, so start on the honest
+            // screen instead of a form whose Start would do nothing
+            // (Refresh_Deduplication.md §10, design 6). Decided by the same
+            // resolver as the card so the two cannot contradict each other —
+            // a refresh in flight outranks the refusal here as well.
+            if state == .form, let viewModel, case .refused = viewModel.cardState {
+                state = .refused(title: Self.refusedTitle, message: Self.refusedMessage)
+            }
         }
     }
     
@@ -168,9 +189,15 @@ struct RefreshModalView: View {
                 // and nothing is in flight: this wallet's view is out of
                 // date. Never claim the funds are lost — the app cannot tell
                 // an expiry sweep from a missed round (Refresh_Deduplication.md §9).
-                state = .refused(
-                    title: String(localized: "status_refresh_refused", defaultValue: "Can't refresh from this device"),
-                    message: String(localized: "balance_refresh_refused", defaultValue: "The server refused these coins: it considers them unusable, usually because they were already used in a round this wallet didn't see, or they are temporarily blocked. Recovering the wallet from your recovery phrase may restore them — contact support before you do. The app won't retry for 24 hours.")
+                state = .refused(title: Self.refusedTitle, message: Self.refusedMessage)
+            case .belowMinimum(let totalSats):
+                // bark would refuse to build this refresh before writing
+                // anything (§10, D1). Nothing scheduled, nothing failed.
+                let total = BitcoinFormatter.shared.formatAmount(Int(totalSats))
+                let minimum = BitcoinFormatter.shared.formatAmount(manager.minimumRefreshAmountSats)
+                state = .noChange(
+                    title: String(localized: "status_refresh_too_small", defaultValue: "Too small to refresh"),
+                    message: String(localized: "balance_refresh_too_small %@ %@", defaultValue: "These coins total \(total), below the \(minimum) a refresh needs. Nothing was scheduled.")
                 )
             }
         } catch {

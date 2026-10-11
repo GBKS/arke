@@ -40,6 +40,11 @@ enum ManualRefreshOutcome {
     /// 24 h back-off. Honest failure, not "already refreshing"
     /// (Refresh_Deduplication.md §9).
     case rejectedByServer
+    /// The submittable candidates total less than bark's dust floor
+    /// (`RefreshExclusion.minimumRefreshAmountSats`); bark would refuse to
+    /// build the refresh before writing anything, so the app says so
+    /// instead of showing that error as "Refresh Failed" (§10).
+    case belowMinimum(totalSats: UInt64)
 }
 
 /// Service responsible for automatically refreshing VTXOs when refreshes are free
@@ -110,11 +115,20 @@ class VTXORefreshService {
     /// Persisted device-locally; pruned to the spendable set on every check.
     private var rejectionBackoff: RefreshRejectionBackoff
 
-    /// VTXO ids currently held back by the rejection back-off. For the
-    /// balance card, which should not offer "Refresh now" for them
-    /// (Open_Follow_Ups, divergence cluster defect 2).
-    var recentlyRejectedVtxoIds: Set<String> {
-        rejectionBackoff.activeIds(now: now())
+    /// Among `vtxos`, the ids the back-off would hold back from a refresh
+    /// call right now — the same per-id rule (`shouldSkip`, valve included)
+    /// the two service paths apply, so the balance card's refused state
+    /// and the service's behaviour cannot disagree (§10, D4).
+    func heldBackVtxoIds(among vtxos: [VTXOModel], currentBlockHeight: Int?) -> Set<String> {
+        let at = now()
+        return Set(vtxos.filter {
+            rejectionBackoff.shouldSkip(
+                id: $0.id,
+                expiryHeight: $0.expiryHeight,
+                currentBlockHeight: currentBlockHeight,
+                now: at
+            )
+        }.map(\.id))
     }
 
     // MARK: - Dependencies
@@ -152,6 +166,14 @@ class VTXORefreshService {
         rejectionBackoff.save(to: defaults, key: UserDefaults.refreshRejectedInputsKey)
     }
 
+    /// Tell the balance card the held-back set changed. Called after a
+    /// verdict is recorded or pruned — *after*, because the post-error
+    /// refetch has already bumped `transactionVersion` by then and the card
+    /// reloaded against the old set (§10, D5).
+    private func notifyRefreshStatusChanged() {
+        walletManager?.refreshStatusVersion += 1
+    }
+
     /// Resolve a `unusable_inputs` rejection after the post-error refetch,
     /// record a real rejection in the back-off, and say which it was.
     /// Shared by the auto and manual paths so they cannot drift.
@@ -174,6 +196,7 @@ class VTXORefreshService {
         case .rejected(let ids, let precise):
             rejectionBackoff.record(ids: ids, precise: precise, at: now())
             persistRejectionBackoff()
+            notifyRefreshStatusChanged()
             // One warning per attempt, server text public: VTXO ids are
             // pseudonymous and bark's own selection logger already prints
             // them; the reason is what support needs from a debug export.
@@ -309,8 +332,12 @@ class VTXORefreshService {
 
             // Server rejections (§9): prune verdicts whose VTXO left the
             // spendable set or aged out, then hold back the rest.
+            let beforePrune = rejectionBackoff
             rejectionBackoff.prune(keeping: Set(allSpendable.map(\.id)), now: now())
-            persistRejectionBackoff()
+            if rejectionBackoff != beforePrune {
+                persistRejectionBackoff()
+                notifyRefreshStatusChanged()
+            }
             let (vtxos, heldBack) = rejectionBackoff.filter(
                 guarded,
                 currentBlockHeight: currentBlockHeight,
@@ -351,7 +378,7 @@ class VTXORefreshService {
             
             // Step 3.5: Validate total amount meets minimum threshold
             let totalAmount = eligibleVTXOs.reduce(0) { $0 + $1.amountSats }
-            let minimumAmount: UInt64 = 330
+            let minimumAmount = RefreshExclusion.minimumRefreshAmountSats
             if totalAmount < minimumAmount {
                 Self.logger.debug("Total VTXO amount (\(totalAmount) sats) is below minimum (\(minimumAmount) sats) - skipping refresh")
                 lastCheckTime = Date()
@@ -618,6 +645,15 @@ class VTXORefreshService {
             }
             Self.logger.debug("No VTXOs need refreshing")
             return .nothingToDo
+        }
+
+        // Same floor as the auto path (§10, D1–D3): bark refuses to build a
+        // refresh under its dust floor before writing anything, so say so
+        // rather than surfacing that as "Refresh Failed".
+        let totalAmount = vtxos.reduce(UInt64(0)) { $0 + $1.amountSats }
+        if totalAmount < RefreshExclusion.minimumRefreshAmountSats {
+            Self.logger.info("Manual refresh: candidate total \(totalAmount) sats is below the \(RefreshExclusion.minimumRefreshAmountSats)-sat floor — not submitting")
+            return .belowMinimum(totalSats: totalAmount)
         }
 
         let vtxoIds = vtxos.map { $0.id }

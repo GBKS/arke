@@ -14,9 +14,21 @@ struct RefreshModalFormView: View {
     var isLoading: Bool = false
     var amountToRefresh: Int?
     var vtxoIdsToRefresh: [String] = []
+    /// bark's dust floor; when the candidate total is under it, Start is
+    /// disabled and the form says why (Refresh_Deduplication.md §10).
+    var minimumAmountSats: Int?
     let onConfirm: () -> Void
     let onCancel: () -> Void
-    
+
+    private var isBelowMinimum: Bool {
+        guard !vtxoIdsToRefresh.isEmpty,
+              let amount = amountToRefresh,
+              let minimum = minimumAmountSats else {
+            return false
+        }
+        return amount < minimum
+    }
+
     var body: some View {
         VStack(spacing: 25) {
             #if os(iOS)
@@ -99,14 +111,22 @@ struct RefreshModalFormView: View {
                                 .foregroundColor(.primary)
                             
                             VStack(spacing: 8) {
-                                Text(String(localized: "balance_amount_locked", defaultValue: "This amount will be temporarily locked."))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
-                                
+                                if isBelowMinimum, let minimum = minimumAmountSats {
+                                    Text(String(localized: "balance_refresh_too_small_detail %@", defaultValue: "A refresh needs at least \(BitcoinFormatter.shared.formatAmount(minimum)) in total."))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal)
+                                } else {
+                                    Text(String(localized: "balance_amount_locked", defaultValue: "This amount will be temporarily locked."))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .padding(.horizontal)
+                                }
+
                                 // Fee estimate
-                                if !vtxoIdsToRefresh.isEmpty {
+                                if !vtxoIdsToRefresh.isEmpty && !isBelowMinimum {
                                     FeeEstimateView(input: vtxoIdsToRefresh) { vtxoIds in
                                         let estimate = try await walletManager.estimateRefreshFee(vtxoIds: vtxoIds)
                                         return estimate.feeSats
@@ -146,7 +166,7 @@ struct RefreshModalFormView: View {
             .buttonStyle(.glassProminent)
             .controlSize(.large)
             .tint(Color.Arke.gold)
-            .disabled(isLoading || vtxoIdsToRefresh.isEmpty)
+            .disabled(isLoading || vtxoIdsToRefresh.isEmpty || isBelowMinimum)
         }
         .padding()
     }

@@ -33,6 +33,16 @@ enum RefreshExclusion {
     /// is listed in Open_Follow_Ups.
     static let hardExpiryThresholdBlocks = 144
 
+    /// Smallest input total bark will build a refresh for: its `VTXO_DUST`
+    /// (= `P2TR_DUST`, 330 sats), checked in `inner_build_refresh_participation`
+    /// before any movement is written (read at `bark-0.7.1`), and enforced
+    /// again by the server on the round output. Shared by the auto check,
+    /// the manual path and the balance card so the CTA is driven by what the
+    /// service would actually submit (Refresh_Deduplication.md §10). bark
+    /// additionally requires total − fee ≥ dust, which is not pre-checked
+    /// here; such a miss still fails cleanly before any write.
+    static let minimumRefreshAmountSats: UInt64 = 330
+
     /// Filter VTXOs that may be handed to a refresh call.
     ///
     /// - Parameters:
@@ -51,18 +61,39 @@ enum RefreshExclusion {
         currentBlockHeight: Int?
     ) -> [Vtxo] {
         vtxos.filter { vtxo in
-            if exitingIds.contains(vtxo.id) {
-                return false
-            }
-            guard beingRefreshedIds.contains(vtxo.id) else {
-                return true
-            }
-            // Safety valve: inside the hard expiry threshold, refresh even
-            // if an in-flight entry claims this VTXO.
-            guard let height = currentBlockHeight else {
-                return false
-            }
-            return Int(vtxo.expiryHeight) - height <= hardExpiryThresholdBlocks
+            !isExcluded(
+                id: vtxo.id,
+                expiryHeight: Int(vtxo.expiryHeight),
+                exitingIds: exitingIds,
+                beingRefreshedIds: beingRefreshedIds,
+                currentBlockHeight: currentBlockHeight
+            )
         }
+    }
+
+    /// The same decision keyed on id and expiry height, so the balance card
+    /// (which holds `VTXOModel`s) excludes exactly what the service excludes.
+    /// Before this the card dropped every in-flight id unconditionally and a
+    /// VTXO with a stale Pending entry vanished from the card instead of
+    /// going through the valve (Refresh_Deduplication.md §10, D8).
+    static func isExcluded(
+        id: String,
+        expiryHeight: Int,
+        exitingIds: Set<String>,
+        beingRefreshedIds: Set<String>,
+        currentBlockHeight: Int?
+    ) -> Bool {
+        if exitingIds.contains(id) {
+            return true
+        }
+        guard beingRefreshedIds.contains(id) else {
+            return false
+        }
+        // Safety valve: inside the hard expiry threshold, refresh even
+        // if an in-flight entry claims this VTXO.
+        guard let height = currentBlockHeight else {
+            return true
+        }
+        return expiryHeight - height > hardExpiryThresholdBlocks
     }
 }

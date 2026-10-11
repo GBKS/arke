@@ -55,6 +55,36 @@ struct RefreshRejectionTests {
         var errorDescription: String? { text }
     }
 
+    // MARK: - Card / service parity (§10, D4)
+
+    @Test("The id-based hold-back decision the balance card uses matches the service's across the valve")
+    func idBasedDecisionMatchesVtxoDecision() {
+        var backoff = RefreshRejectionBackoff()
+        backoff.record(ids: [Self.idA], precise: false, at: Self.now)   // whole batch: yields inside the valve
+        backoff.record(ids: [Self.idB], precise: true, at: Self.now)    // server named it: always holds
+
+        // Inside the valve, past expiry, and far from expiry.
+        for blocks in [100, -10, 5_000] {
+            for id in [Self.idA, Self.idB, Self.idC] {
+                let vtxo = Self.vtxo(id, blocksUntilExpiry: blocks)
+                let byVtxo = backoff.shouldSkip(vtxo, currentBlockHeight: Self.currentHeight, now: Self.now)
+                let byId = backoff.shouldSkip(
+                    id: id,
+                    expiryHeight: Int(vtxo.expiryHeight),
+                    currentBlockHeight: Self.currentHeight,
+                    now: Self.now
+                )
+                #expect(byVtxo == byId, "id \(id.prefix(4)) at \(blocks) blocks")
+            }
+        }
+
+        // And the decisions themselves are the §9 ones: the batch entry
+        // yields inside the valve only, the precise entry never does.
+        #expect(!backoff.shouldSkip(id: Self.idA, expiryHeight: Self.currentHeight + 100, currentBlockHeight: Self.currentHeight, now: Self.now))
+        #expect(backoff.shouldSkip(id: Self.idA, expiryHeight: Self.currentHeight - 10, currentBlockHeight: Self.currentHeight, now: Self.now))
+        #expect(backoff.shouldSkip(id: Self.idB, expiryHeight: Self.currentHeight + 100, currentBlockHeight: Self.currentHeight, now: Self.now))
+    }
+
     // MARK: - Text match
 
     @Test("Both spellings of the server tag are recognised, nothing else is")
@@ -150,11 +180,9 @@ struct RefreshRejectionTests {
         let vtxo = Self.vtxo(Self.idA, blocksUntilExpiry: 1_000)
 
         #expect(backoff.shouldSkip(vtxo, currentBlockHeight: Self.currentHeight, now: Self.now))
-        #expect(backoff.activeIds(now: Self.now) == [Self.idA])
 
         let later = Self.now.addingTimeInterval(RefreshRejectionBackoff.ttl)
         #expect(!backoff.shouldSkip(vtxo, currentBlockHeight: Self.currentHeight, now: later))
-        #expect(backoff.activeIds(now: later).isEmpty)
     }
 
     @Test("Re-recording an id refreshes its timestamp")

@@ -14,10 +14,10 @@ struct BalanceRefreshStatusContainerCompact: View {
     @State private var viewModel: BalanceRefreshStatusViewModel?
     @State private var updateTimer: Timer?
     @State private var currentTime = Date()
-    
+
     var onRefresh: (() async -> Void)?
     var reloadTrigger: Int = 0
-    
+
     var body: some View {
         BalanceRefreshStatusCompact(data: makeData(), currentTime: currentTime)
             .task {
@@ -38,6 +38,13 @@ struct BalanceRefreshStatusContainerCompact: View {
                     await viewModel?.loadData()
                 }
             }
+            // The service records a server verdict *after* the refetch that
+            // bumps transactionVersion (Refresh_Deduplication.md §10, D5).
+            .onChange(of: walletManager.refreshStatusVersion) { _, _ in
+                Task {
+                    await viewModel?.loadData()
+                }
+            }
             .onChange(of: walletManager.isInitialized) { _, isInitialized in
                 guard isInitialized else { return }
                 Task {
@@ -48,15 +55,17 @@ struct BalanceRefreshStatusContainerCompact: View {
                 currentTime = Date()
             }
     }
-    
+
     private func makeData() -> BalanceRefreshData {
         guard let viewModel = viewModel, viewModel.hasCompletedInitialLoad else {
             return BalanceRefreshData(isLoading: true)
         }
-        
-        // Simple color scheme based on state
-        let (foreground, background, icon) = colorScheme(viewModel: viewModel)
-        
+
+        let state = viewModel.cardState
+        let (foreground, background, icon) = colorScheme(state: state)
+        var isRefused = false
+        if case .refused = state { isRefused = true }
+
         return BalanceRefreshData(
             isLoading: false,
             hasActiveRefresh: viewModel.hasActiveRefresh,
@@ -67,26 +76,34 @@ struct BalanceRefreshStatusContainerCompact: View {
             timeUntilExpiry: nil,
             isExpired: false,
             expiredAgoString: nil,
-            showActionButton: viewModel.hasVtxosToRefresh,
+            showActionButton: state.showsAction,
             nextRoundStartTime: viewModel.nextRoundStartTime,
             totalAmountToRefresh: viewModel.totalAmountToRefresh > 0 ? viewModel.totalAmountToRefresh : nil,
+            heldBackAmount: viewModel.heldBackVtxos.isEmpty ? nil : viewModel.totalHeldBackAmount,
+            isRefused: isRefused,
+            detailMessage: viewModel.detailMessage,
+            systemImage: BalanceRefreshStatusContainer.systemImage(for: state),
             onRefresh: onRefresh
         )
     }
-    
-    private func colorScheme(viewModel: BalanceRefreshStatusViewModel) -> (Color, Color, Color) {
-        if viewModel.hasActiveRefresh {
+
+    private func colorScheme(state: BalanceRefreshCardState) -> (Color, Color, Color) {
+        switch state {
+        case .refreshing:
             // Blue for refreshing
             return (.white, .blue, .blue)
-        } else if viewModel.hasVtxosToRefresh {
+        case .refreshNow:
             // Orange for "Refresh now"
-            return (.white, .orange, .orange)
-        } else {
+            return (.white, .Arke.orange, .Arke.orange)
+        case .refused, .tooSmall:
+            // Countdown grey with a warning icon: attention, not alarm.
+            return (.white, .black.opacity(0.15), .Arke.orange)
+        case .countdown, .idle:
             // Gray for countdown
             return (.white, .black.opacity(0.15), .black)
         }
     }
-    
+
     private func startBlockHeightUpdater() {
         updateTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
             Task { @MainActor in
@@ -94,7 +111,7 @@ struct BalanceRefreshStatusContainerCompact: View {
             }
         }
     }
-    
+
     private func stopBlockHeightUpdater() {
         updateTimer?.invalidate()
         updateTimer = nil

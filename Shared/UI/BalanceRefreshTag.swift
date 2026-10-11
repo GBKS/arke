@@ -57,6 +57,14 @@ struct BalanceRefreshTag: View {
                     await viewModel?.loadData()
                 }
             }
+            // A server verdict is recorded after the refetch that bumps
+            // transactionVersion (Refresh_Deduplication.md §10, D5); without
+            // this the pill would keep saying "Refresh now" for refused VTXOs.
+            .onChange(of: walletManager.refreshStatusVersion) { _, _ in
+                Task {
+                    await viewModel?.loadData()
+                }
+            }
             .onChange(of: walletManager.isInitialized) { _, isInitialized in
                 guard isInitialized else { return }
                 Self.logger.debug("Wallet initialized, loading data")
@@ -87,7 +95,7 @@ struct BalanceRefreshTag: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
-        .background(.orange)
+        .background(Color.Arke.orange)
         .cornerRadius(5)
     }
     
@@ -122,7 +130,7 @@ private struct BalanceRefreshTagPreview: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
-        .background(.orange)
+        .background(Color.Arke.orange)
         .cornerRadius(5)
         .padding()
         .frame(width: 200)

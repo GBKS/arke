@@ -20,6 +20,16 @@ public struct BalanceRefreshData {
     public var showActionButton: Bool
     public var nextRoundStartTime: UInt64?
     public var totalAmountToRefresh: Int?
+    /// Amount the server refused and the app holds back from refreshing.
+    /// Shown as its own row whenever non-nil; drives the refused state when
+    /// `isRefused` is set.
+    public var heldBackAmount: Int?
+    /// Every candidate is held back: no CTA, the status names the refusal.
+    public var isRefused: Bool
+    /// One explanatory line under the status rows (refused, too small).
+    public var detailMessage: String?
+    /// SF Symbol for the leading icon.
+    public var systemImage: String
     public var onRefresh: (() async -> Void)?
 
     public init(
@@ -35,6 +45,10 @@ public struct BalanceRefreshData {
         showActionButton: Bool = false,
         nextRoundStartTime: UInt64? = nil,
         totalAmountToRefresh: Int? = nil,
+        heldBackAmount: Int? = nil,
+        isRefused: Bool = false,
+        detailMessage: String? = nil,
+        systemImage: String = "arrow.clockwise",
         onRefresh: (() async -> Void)? = nil
     ) {
         self.isLoading = isLoading
@@ -49,6 +63,10 @@ public struct BalanceRefreshData {
         self.showActionButton = showActionButton
         self.nextRoundStartTime = nextRoundStartTime
         self.totalAmountToRefresh = totalAmountToRefresh
+        self.heldBackAmount = heldBackAmount
+        self.isRefused = isRefused
+        self.detailMessage = detailMessage
+        self.systemImage = systemImage
         self.onRefresh = onRefresh
     }
 }
@@ -144,9 +162,9 @@ public struct BalanceRefreshStatus: View {
     private var contentView: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Image(systemName: "arrow.clockwise")
+                Image(systemName: data.systemImage)
                     .font(.title3)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(data.urgencyIconColor)
                     .frame(width: 32, height: 32)
                     .background(data.urgencyForegroundColor)
                     .cornerRadius(8)
@@ -215,12 +233,21 @@ public struct BalanceRefreshStatus: View {
     @ViewBuilder
     private var timeDisplayContent: some View {
         VStack(spacing: 15) {
-            if data.isExpired {
+            if data.isRefused {
+                refusedContent
+            } else if data.isExpired {
                 expiredContent
             } else {
                 timesContent
             }
-            
+
+            if let detail = data.detailMessage {
+                Text(detail)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             if data.showActionButton {
                 Button {
                     Task { await data.onRefresh?() }
@@ -241,6 +268,37 @@ public struct BalanceRefreshStatus: View {
         .padding(.bottom, 15)
     }
     
+    /// Every candidate is held back after a server refusal: status plus the
+    /// held-back amount, no countdown, no CTA. The copy never says expired or
+    /// lost — the app cannot tell a sweep from a divergence.
+    @ViewBuilder
+    private var refusedContent: some View {
+        VStack(spacing: 10) {
+            HStack(alignment: .center, spacing: 4) {
+                Text(L10n.labelStatus).font(.body).foregroundStyle(.secondary)
+                Spacer()
+                Text(data.statusMessage).font(.body).fontWeight(.medium)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+
+            if let amount = data.heldBackAmount {
+                heldBackRow(amount)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func heldBackRow(_ amount: Int) -> some View {
+        HStack(alignment: .center, spacing: 4) {
+            Text(String(localized: "label_held_back", defaultValue: "Held back", bundle: .module)).font(.body).foregroundStyle(.secondary)
+            Spacer()
+            Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
     @ViewBuilder
     private var expiredContent: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -304,6 +362,13 @@ public struct BalanceRefreshStatus: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .combine)
+            }
+
+            // Mixed case: something is refreshable and something else is
+            // held back after a server refusal. Shown so the held-back part
+            // is never silently absent.
+            if let heldBack = data.heldBackAmount {
+                heldBackRow(heldBack)
             }
 
             if let expiry = data.timeUntilExpiry {
@@ -385,6 +450,19 @@ public struct BalanceRefreshStatus: View {
         expiredAgoString: "2h 15m",
         showActionButton: true,
         nextRoundStartTime: UInt64(Date().timeIntervalSince1970) + 300 // 5 minutes from now
+    ))
+    .padding()
+}
+
+#Preview("Refused") {
+    BalanceRefreshStatus(data: BalanceRefreshData(
+        urgencyForegroundColor: .black.opacity(0.15),
+        urgencyIconColor: .Arke.orange,
+        statusMessage: "Can't refresh from this device",
+        heldBackAmount: 19_995,
+        isRefused: true,
+        detailMessage: "The server refused these coins, so they can't be refreshed from this device. Recovering the wallet from your recovery phrase may restore them — contact support first.",
+        systemImage: "exclamationmark.triangle.fill"
     ))
     .padding()
 }

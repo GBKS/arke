@@ -376,12 +376,17 @@ extension WalletManager {
         vtxoRefreshService?.autoRefreshCount ?? 0
     }
 
-    /// VTXO ids the refresh service will not re-submit because the server
-    /// rejected them as unusable within the last 24 h
-    /// (Refresh_Deduplication.md §9). The balance card mirrors this so its
-    /// list and amount match what a tap would actually schedule.
-    var recentlyRejectedVtxoIds: Set<String> {
-        vtxoRefreshService?.recentlyRejectedVtxoIds ?? []
+    /// Among `vtxos`, the ids the refresh service would hold back because the
+    /// server rejected them as unusable within the last 24 h
+    /// (Refresh_Deduplication.md §9, §10). Height-aware, so the balance card
+    /// applies exactly the rule the service applies, valve included.
+    func heldBackVtxoIds(among vtxos: [VTXOModel], currentBlockHeight: Int?) -> Set<String> {
+        vtxoRefreshService?.heldBackVtxoIds(among: vtxos, currentBlockHeight: currentBlockHeight) ?? []
+    }
+
+    /// Smallest input total a refresh can be built for (bark's dust floor).
+    var minimumRefreshAmountSats: Int {
+        Int(RefreshExclusion.minimumRefreshAmountSats)
     }
     
     /// Manually refresh VTXOs (for UI triggers)

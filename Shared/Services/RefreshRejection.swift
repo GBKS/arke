@@ -138,11 +138,6 @@ struct RefreshRejectionBackoff: Codable, Equatable {
 
     // MARK: - Queries
 
-    /// Ids currently backed off (not expired), regardless of the valve.
-    func activeIds(now: Date) -> Set<String> {
-        Set(entries.filter { !isExpired($0, now: now) }.map(\.id))
-    }
-
     /// Whether a candidate must be held back from a refresh call.
     ///
     /// - A precise entry (the server named this id) always holds.
@@ -152,14 +147,28 @@ struct RefreshRejectionBackoff: Codable, Equatable {
     ///   not wait a day on a guess. Past expiry the valve does not apply —
     ///   retrying a VTXO the server already refuses gains nothing.
     func shouldSkip(_ vtxo: Vtxo, currentBlockHeight: Int?, now: Date) -> Bool {
-        guard let entry = entries.first(where: { $0.id == vtxo.id }),
+        shouldSkip(
+            id: vtxo.id,
+            expiryHeight: Int(vtxo.expiryHeight),
+            currentBlockHeight: currentBlockHeight,
+            now: now
+        )
+    }
+
+    /// Same decision keyed on the id and expiry height alone, so the balance
+    /// card (which holds `VTXOModel`s, not bark `Vtxo`s) applies exactly the
+    /// rule the service applies. The former valve-blind `activeIds(now:)`
+    /// over-reported held-back VTXOs and was removed
+    /// (Refresh_Deduplication.md §10, D4).
+    func shouldSkip(id: String, expiryHeight: Int, currentBlockHeight: Int?, now: Date) -> Bool {
+        guard let entry = entries.first(where: { $0.id == id }),
               !isExpired(entry, now: now) else {
             return false
         }
         guard entry.fromBatch, let height = currentBlockHeight else {
             return true
         }
-        let blocksUntilExpiry = Int(vtxo.expiryHeight) - height
+        let blocksUntilExpiry = expiryHeight - height
         let insideValve = blocksUntilExpiry > 0
             && blocksUntilExpiry <= RefreshExclusion.hardExpiryThresholdBlocks
         return !insideValve

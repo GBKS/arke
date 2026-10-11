@@ -142,7 +142,14 @@ class WalletManager {
     /// Increments whenever transactions are updated
     /// Views can observe this to react to transaction list changes (e.g., refresh status indicators)
     var transactionVersion: Int = 0
-    
+
+    /// Increments when the refresh service records or prunes a server
+    /// verdict (Refresh_Deduplication.md §10, D5). The balance card reloads
+    /// on it: the service's post-error refetch bumps `transactionVersion`
+    /// *before* the verdict is recorded, so without this signal the card
+    /// reloads once too early and keeps offering "Refresh now".
+    var refreshStatusVersion: Int = 0
+
     // MARK: - Services
     // WARNING: These properties are internal (not private) only to allow access from extension files.
     // DO NOT access these directly from outside WalletManager and its extensions.

@@ -4315,6 +4315,17 @@
         }
       }
     },
+    "label_held_back" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Held back"
+          }
+        }
+      }
+    },
     "label_known_address" : {
       "localizations" : {
         "de" : {

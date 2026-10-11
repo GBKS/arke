@@ -88,7 +88,7 @@ struct BalanceRefreshStatusCompact: View {
     private var contentView: some View {
         HStack(spacing: 12) {
             // Icon
-            Image(systemName: "arrow.clockwise")
+            Image(systemName: data.systemImage)
                 .font(.body)
                 .foregroundStyle(data.urgencyIconColor)
                 .frame(width: 28, height: 28)
@@ -108,8 +108,9 @@ struct BalanceRefreshStatusCompact: View {
                 Text(data.statusMessage)
                     .font(.body)
                     .foregroundStyle(data.urgencyForegroundColor)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            
+
             Spacer()
             
             // Time on the right
@@ -125,7 +126,23 @@ struct BalanceRefreshStatusCompact: View {
                     }
                 }
             } else if !data.statusMessage.isEmpty {
-                if data.isExpired, let ago = data.expiredAgoString {
+                // Refused: label + amount, the same pair shape as "Next round"
+                // above, so the number cannot be read as a fee or a balance
+                // (Refresh_Deduplication.md §10). The status text on the left
+                // may wrap; this pair keeps its width.
+                if data.isRefused, let heldBack = data.heldBackAmount {
+                    HStack(spacing: 4) {
+                        Text(String(localized: "label_held_back", defaultValue: "Held back"))
+                            .font(.body)
+                            .foregroundStyle(data.urgencyForegroundColor)
+                        Text(BitcoinFormatter.shared.formatAmount(heldBack))
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundStyle(data.urgencyForegroundColor)
+                    }
+                    .layoutPriority(1)
+                    .accessibilityElement(children: .combine)
+                } else if data.isExpired, let ago = data.expiredAgoString {
                     Text("\(ago) ago")
                         .font(.body)
                         .fontWeight(.medium)
@@ -146,4 +163,35 @@ struct BalanceRefreshStatusCompact: View {
         .background(Color(white: 0.949))
         #endif
     }
+}
+
+// MARK: - Previews
+
+#Preview("Compact — refused") {
+    VStack(spacing: 0) {
+        BalanceRefreshStatusCompact(
+            data: BalanceRefreshData(
+                urgencyForegroundColor: .white,
+                urgencyBackgroundColor: .black.opacity(0.15),
+                urgencyIconColor: .Arke.orange,
+                statusMessage: "Can't refresh from this device",
+                heldBackAmount: 19_995,
+                isRefused: true,
+                systemImage: "exclamationmark.triangle.fill"
+            ),
+            currentTime: Date()
+        )
+        BalanceRefreshStatusCompact(
+            data: BalanceRefreshData(
+                urgencyForegroundColor: .white,
+                urgencyBackgroundColor: .Arke.orange,
+                urgencyIconColor: .Arke.orange,
+                statusMessage: "Refresh now",
+                showActionButton: true,
+                totalAmountToRefresh: 5_000
+            ),
+            currentTime: Date()
+        )
+    }
+    .background(Color.black)
 }

@@ -6319,6 +6319,39 @@
         }
       }
     },
+    "balance_refresh_refused_card" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server refused these coins, so they can't be refreshed from this device. Recovering the wallet from your recovery phrase may restore them — contact support first."
+          }
+        }
+      }
+    },
+    "balance_refresh_too_small %@ %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "These coins total %1$@, below the %2$@ a refresh needs. Nothing was scheduled."
+          }
+        }
+      }
+    },
+    "balance_refresh_too_small_detail %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A refresh needs at least %@ in total."
+          }
+        }
+      }
+    },
     "balance_refreshing" : {
       "localizations" : {
         "de" : {
@@ -15326,6 +15359,17 @@
         }
       }
     },
+    "label_held_back" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Held back"
+          }
+        }
+      }
+    },
     "label_input" : {
       "localizations" : {
         "de" : {
@@ -23404,6 +23448,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "更新成功"
+          }
+        }
+      }
+    },
+    "status_refresh_too_small" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Too small to refresh"
           }
         }
       }

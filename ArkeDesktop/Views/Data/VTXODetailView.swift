@@ -16,8 +16,8 @@ struct VTXODetailView: View {
     @State private var currentBlockHeight: Int?
     @State private var reloadTrigger = 0
     
-    // Minimum amount of sats required for a refresh operation
-    private let minimumRefreshAmountSats: UInt64 = 330
+    // Minimum amount of sats required for a refresh operation (bark's dust floor)
+    private let minimumRefreshAmountSats: UInt64 = RefreshExclusion.minimumRefreshAmountSats
     
     init(vtxo: VTXOModel) {
         self.vtxo = vtxo

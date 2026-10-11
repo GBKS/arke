@@ -14,7 +14,7 @@ struct VTXOListView_iOS: View {
     var reloadTrigger: Int = 0
     var onSelectItem: ((VTXOModel) -> Void)? = nil
     var onRefreshComplete: (() async -> Void)? = nil
-    var minimumRefreshAmountSats: UInt64 = 330
+    var minimumRefreshAmountSats: UInt64 = RefreshExclusion.minimumRefreshAmountSats
     @Environment(WalletManager.self) private var walletManager
     @State private var vtxos: [VTXOModel] = []
     @State private var isLoadingVTXOs = false
