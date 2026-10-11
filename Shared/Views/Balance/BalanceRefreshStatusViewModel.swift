@@ -118,8 +118,16 @@ class BalanceRefreshStatusViewModel {
             // actually schedule — without this the confirmation can overstate
             // the refresh, and "Refresh now" appears for an all-mid-exit set.
             let exitingIds = await walletManager.exitingVtxoIds()
+            // And VTXOs the server rejected as unusable within the last 24 h
+            // (Refresh_Deduplication.md §9): the service skips them, so
+            // listing them here would report a partial batch as a full
+            // success. Until the card gets its own honest state (divergence
+            // cluster defect 2) these VTXOs simply draw no "Refresh now".
+            let recentlyRejected = walletManager.recentlyRejectedVtxoIds
             vtxosNeedingRefresh = vtxosFromSDK.filter {
-                !beingRefreshed.contains($0.id) && !exitingIds.contains($0.id)
+                !beingRefreshed.contains($0.id)
+                    && !exitingIds.contains($0.id)
+                    && !recentlyRejected.contains($0.id)
             }
         } catch {
             print("BalanceRefreshStatusViewModel: \(error)")

@@ -375,6 +375,14 @@ extension WalletManager {
     var vtxoAutoRefreshCount: Int {
         vtxoRefreshService?.autoRefreshCount ?? 0
     }
+
+    /// VTXO ids the refresh service will not re-submit because the server
+    /// rejected them as unusable within the last 24 h
+    /// (Refresh_Deduplication.md §9). The balance card mirrors this so its
+    /// list and amount match what a tap would actually schedule.
+    var recentlyRejectedVtxoIds: Set<String> {
+        vtxoRefreshService?.recentlyRejectedVtxoIds ?? []
+    }
     
     /// Manually refresh VTXOs (for UI triggers)
     ///

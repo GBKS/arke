@@ -17,6 +17,10 @@ private enum RefreshModalState: Hashable {
     /// check already holding the gate — and neither may claim a refresh this
     /// tap didn't start (Refresh_Deduplication.md).
     case noChange(title: String, message: String)
+    /// The server refused the inputs and nothing is in flight: an honest
+    /// failure with its own title, dismissing the sheet rather than
+    /// returning to the form (retrying is pointless for 24 h).
+    case refused(title: String, message: String)
     case error(String)
 }
 
@@ -64,6 +68,22 @@ struct RefreshModalView: View {
                     onRefreshComplete?()
                     shouldDismiss = true
                 }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing),
+                    removal: .move(edge: .leading)
+                ))
+            case .refused(let title, let message):
+                LargeErrorView(
+                    title: title,
+                    errorMessage: message,
+                    image: nil,
+                    systemImage: "exclamationmark.triangle.fill",
+                    systemImageColor: .orange,
+                    onDismiss: {
+                        onRefreshComplete?()
+                        shouldDismiss = true
+                    }
+                )
                 .transition(.asymmetric(
                     insertion: .move(edge: .trailing),
                     removal: .move(edge: .leading)
@@ -142,6 +162,15 @@ struct RefreshModalView: View {
                 state = .noChange(
                     title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
                     message: String(localized: "balance_refresh_already_scheduled", defaultValue: "These VTXOs are already part of a refresh the server has scheduled. It will complete on its own.")
+                )
+            case .rejectedByServer:
+                // The server considers these inputs spent, exited or banned
+                // and nothing is in flight: this wallet's view is out of
+                // date. Never claim the funds are lost — the app cannot tell
+                // an expiry sweep from a missed round (Refresh_Deduplication.md §9).
+                state = .refused(
+                    title: String(localized: "status_refresh_refused", defaultValue: "Can't refresh from this device"),
+                    message: String(localized: "balance_refresh_refused", defaultValue: "The server refused these coins: it considers them unusable, usually because they were already used in a round this wallet didn't see, or they are temporarily blocked. Recovering the wallet from your recovery phrase may restore them — contact support before you do. The app won't retry for 24 hours.")
                 )
             }
         } catch {

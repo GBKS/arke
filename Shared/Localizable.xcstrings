@@ -44,9 +44,6 @@
         }
       }
     },
-    "%@ ₿" : {
-      "shouldTranslate" : false
-    },
     "%@ ago" : {
       "localizations" : {
         "zh-Hant" : {
@@ -6307,6 +6304,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "立即更新"
+          }
+        }
+      }
+    },
+    "balance_refresh_refused" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server refused these coins: it considers them unusable, usually because they were already used in a round this wallet didn't see, or they are temporarily blocked. Recovering the wallet from your recovery phrase may restore them — contact support before you do. The app won't retry for 24 hours."
           }
         }
       }
@@ -23329,6 +23337,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Nothing to refresh"
+          }
+        }
+      }
+    },
+    "status_refresh_refused" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't refresh from this device"
           }
         }
       }
