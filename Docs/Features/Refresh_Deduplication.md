@@ -597,3 +597,142 @@ refresh movement and one orphaned local row.
 | `VTXOListView` ×2, `VTXODeveloperActionsView`, `DataView_iOS.maintenanceDelegated()` | exempt — debug power tools, outside Guard C by design (§3.2); they remain the manual escape hatch inside the 24 h |
 | `BalanceRefreshStatusViewModel.loadData` (card list + CTA) | covered after review (finding F2: a partial batch would have reported success) — excludes `recentlyRejectedVtxoIds`; the card's own honest state is still defect 2 |
 | `BarkWalletFFI+VTXO.swift` other `\(error)` log lines (and ~150 in sibling FFI files) | exempt — Tier 4 typed-errors item |
+
+## 10. The balance card's own state for refused VTXOs (2026-10-11)
+
+**Status: PLAN written 2026-10-11, built the same session; Train 1 Tier 0
+divergence cluster, defect 2.** Adversarial pass recorded in
+`Open_Follow_Ups.md`.
+
+### What was wrong
+
+After §9 the card excluded backed-off VTXOs from its candidates and drew no
+CTA for them, but it had nothing to say instead. A refused VTXO is still in
+`activeVTXOs`, its ppm-free height is in the past, so `statusMessage` fell
+through to the empty string and the compact card read **"No refresh
+needed"** under a balance the user cannot spend. The only honest copy was
+the modal's `.refused` screen, reachable only on the one tap per day that
+hit the server.
+
+### Claims this plan rests on
+
+| # | Claim | Label | Where |
+|---|-------|-------|-------|
+| D1 | bark refuses to build a refresh whose input total is under `VTXO_DUST` (= `P2TR_DUST` = 330 sats) **before** `join_delegated_round`, so no Pending movement is written; the fee-adjusted output must also clear dust. | verified (read at `bark-0.7.1`) | `bark/src/lib.rs` `inner_build_refresh_participation` (`ensure!(total_amount >= VTXO_DUST …)`, `validate_and_subtract_fee_min_dust`); `lib/src/vtxo/mod.rs:106-108`; `bitcoin-ext/src/lib.rs:34-37` |
+| D2 | The server independently rejects any round output under `P2TR_DUST` ("vtxo amount must be at least …"). | verified (read at `server-0.7.1`) | `server/src/round/mod.rs:204-205` |
+| D3 | The app's existing 330 floor is applied on the auto path only (`checkAndRefreshVTXOs`); `refreshManually` has no floor and would hand a sub-dust set to bark, which fails with the D1 error text as "Refresh Failed". | verified (read) | `VTXORefreshService.swift:354`, `:579-662` |
+| D4 | `RefreshRejectionBackoff.activeIds(now:)` ignores the near-expiry valve, `filter`/`shouldSkip` honour it: the card's exclusion set was a superset of what the service skips (a `fromBatch` entry inside the 144-block valve). | verified (read) | `RefreshRejection.swift:142-166` |
+| D5 | Both service paths call `refreshAfterVTXOChange()` (which bumps `transactionVersion`, the card's reload signal) **before** `handleUnusableInputs` records the rejection, so the card reloads once too early and still shows "Refresh now" until the next unrelated reload. | verified (read) | `VTXORefreshService.swift:377-396`, `:634-647`; `WalletManager+Refresh.swift:99-121` |
+| D6 | Only the compact card is live on iOS; the full `BalanceRefreshStatusContainer` is commented out there and used by the parked desktop view. The compact row is tap-anywhere into the modal with no state gating. | verified (read) | `BalanceView_iOS.swift:56-62`, `:132-140`; `BalanceRefreshStatusCompact.swift:48-55`; `ArkeDesktop/Views/Balance/BalanceView.swift:89` |
+| D7 | bark 0.7.1's `Balance` has no needs-refresh bucket, so refused VTXOs count as spendable in the headline number. | carried from Open_Follow_Ups (read there, not re-verified here) | Tier 0 divergence entry |
+| D8 | (found while building) The view model dropped every id in `vtxoIdsBeingRefreshed()` unconditionally, while the service's `RefreshExclusion.filter` lets near-expiry and expired VTXOs through its valve. A VTXO with a stale Pending entry past expiry — the §9 F1 scenario — was a candidate for the service but absent from the card: not listed, not held back, so the card read "No refresh needed". | verified (read) | old `BalanceRefreshStatusViewModel.swift:127-131` vs `RefreshExclusion.swift` |
+
+### Design
+
+1. **One decision, pure and tested.** `BalanceRefreshCardState.resolve(…)`
+   (Shared, `nonisolated`) turns the view model's inputs into one of
+   `refreshing` / `refreshNow` / `refused` / `tooSmall` / `countdown` /
+   `idle`. Precedence: refreshing first; then a submittable set at or above
+   the floor (`refreshNow`); then held-back VTXOs with nothing submittable
+   (`refused`); then a submittable set under the floor (`tooSmall`); then
+   the countdown; then idle. Only `refreshNow` shows a CTA. The held-back
+   amount travels alongside whatever state wins, so the full card can show
+   a "Held back" row in the mixed case; the compact card shows the primary
+   state only.
+2. **Card and service agree (D4, D8).** `RefreshRejectionBackoff` gains an
+   id-based `shouldSkip`; the `Vtxo` overload delegates to it. The service
+   exposes `heldBackVtxoIds(among:currentBlockHeight:)` (height-aware)
+   instead of `recentlyRejectedVtxoIds`, and the view model uses it.
+   Likewise `RefreshExclusion.isExcluded(id:expiryHeight:…)` is the
+   id-based form of `filter`, and the view model applies it in place of its
+   own unconditional in-flight exclusion, so Guard B, Guard C with its
+   valve, and the back-off run in the same order on both sides. The
+   `BalanceRefreshTag` pill (same view model, `hasVtxosToRefresh`) now hides
+   in the refused and too-small states, since both mean a tap could not
+   schedule anything.
+3. **Floor in one place (D1–D3).** `RefreshExclusion.minimumRefreshAmountSats
+   = 330`, documented as bark's `VTXO_DUST`; the auto path reads it, the
+   manual path checks it after the back-off filter and returns a new
+   `ManualRefreshOutcome.belowMinimum(totalSats:)`, which the modal shows
+   as a no-change screen naming the amount and the floor (the Tier 3 "warn
+   when total under 330" copy). The modal form disables Start when the
+   candidate total is under the floor. The floor is on the input total, as
+   today; bark additionally requires total − fee ≥ dust, which the app does
+   not pre-check (a fee-adjusted miss still fails cleanly before any write,
+   per D1).
+4. **Reload after the verdict (D5).** `WalletManager.refreshStatusVersion`
+   is bumped by the service after a verdict is recorded or pruned; both
+   containers reload on it, alongside `transactionVersion`.
+5. **Copy.** Card status "Can't refresh from this device" (same string as
+   the modal). Full card adds one explanatory line and a "Held back" amount
+   row; it never says expired or lost. The ArkéUI package copies the Shared
+   value verbatim with `bundle: .module`. Compact card: status text plus a
+   labelled "Held back" + amount pair on the right, the same shape as its
+   "Next round" pair, so the number cannot be read as a fee or a balance
+   (Christoph, 2026-10-11; the status text may wrap, the pair keeps its
+   width). Colour scheme: the countdown grey with a warning icon, not red;
+   the whole component — both containers and the `BalanceRefreshTag` pill,
+   including the pre-existing "Refresh now" state — now uses the palette
+   `Arke.orange` instead of the system orange (Christoph, 2026-10-11).
+6. **Tap on the refused row (D6)** opens the modal as before; the modal
+   itself starts on its `.refused` screen when its own load finds no
+   candidates but held-back VTXOs, so no new plumbing through the
+   containers. Below the floor it stays on the form with Start disabled and
+   the too-small note.
+7. **Out of scope.** The headline balance is untouched (D7; DECIDED
+   2026-10-11, row only). The X-Ray "Refresh all" is a developer force
+   path. Desktop gets the data change for free, no desktop build.
+
+### Sweep of sibling sites
+
+| Site | Status |
+|---|---|
+| `BalanceRefreshStatusContainer` (desktop, iOS commented out) | covered — same view model, new state rendering in ArkéUI |
+| `BalanceRefreshStatusContainerCompact` + `BalanceRefreshStatusCompact` (iOS, live) | covered |
+| `RefreshModalView` / `RefreshModalFormView` | covered — refused start state, too-small note, `belowMinimum` outcome |
+| `VTXORefreshService.checkAndRefreshVTXOs` 330 literal | covered — reads the shared constant |
+| `VTXORefreshService.refreshManually` | covered — floor added, version bump after verdict |
+| `VTXOListView` ×2, `VTXODeveloperActionsView`, `DataView_iOS.maintenanceDelegated()` | exempt — debug power tools (§9 sweep) |
+| `WalletManager.recentlyRejectedVtxoIds` | replaced by the height-aware accessor; no other callers |
+
+### Review (adversarial pass, 2026-10-11)
+
+Two CONFIRMED findings, both fixed in-session, both class 2:
+
+1. **A sub-floor sibling masked the refusal.** `resolve` returned
+   `.tooSmall` whenever any candidate existed under the floor, before
+   considering `.refused`. bark lists dust VTXOs alongside must-refresh
+   ones (`ShouldRefreshIfMustRefresh`, `bark/src/lib.rs:2314-2322`; dust is
+   a should-refresh reason, `vtxo/selection/mod.rs:474-477`), so the refused
+   wallet commonly carries a 200-sat sibling, and the row would have read
+   "Too small to refresh" over 19,995 refused sats. Now `.refused` wins
+   whenever nothing can be scheduled and anything is held back; test
+   `dustSiblingDoesNotMaskRefused`.
+2. **Modal and card could contradict each other.** The modal's auto-switch
+   to its refused screen ignored `hasActiveRefresh`; after refreshing the
+   submittable part of a mixed set, a tap on the "Refreshing" row opened
+   "Can't refresh … won't retry for 24 hours". The modal now switches only
+   when the shared resolver says `.refused`.
+
+PLAUSIBLE, handled: the three `330` literals in the debug views
+(`VTXOListView_iOS`, `DataView_iOS`, desktop `VTXODetailView`) now read the
+shared constant; the valve-blind `activeIds(now:)` was dead and is removed
+with its two test expectations.
+
+PLAUSIBLE, accepted with reasons: (a) a verdict's **passive TTL expiry** is
+not signalled — the card re-evaluates on every reload and the hourly /
+foreground check prunes expired entries and bumps the version, and the
+prune sits after the "missing arkInfo / height" early return, so a card
+that is stale in that window says "Can't refresh" while a tap would work;
+the tap opens the modal, whose own load re-evaluates live, so it
+self-heals on the only path that matters. (b) **Mixed case on the compact
+card**: `.refreshNow` wins and the held-back amount is passed but not
+rendered on the one-line row (the full card shows a "Held back" row). The
+refusal becomes visible once the submittable part completes. DECIDED
+2026-10-11 (Christoph): leave it to the full card; no second line on the
+compact row.
+
+Not verified by the pass or here: device rendering of the refused row and
+the modal `.task` timing; whether the mainnet wallet's `getVtxosToRefresh`
+returns a dust sibling; the full mobile suite (run after this review);
+desktop build (parked).

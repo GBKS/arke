@@ -76,11 +76,12 @@ the rest wait.
   rule 13a. Exploration season explicitly deferred.
 - Build, Tier 0, in rank order, one cluster per session:
   1. **Divergence (field; funds safe server-side, user stuck):** the
-     wallet-state-diverged cluster (classifier back-off ✓ 2026-10-11, FFI
-     log line ✓ 2026-10-11 — uncommitted, reviewed; remaining: own state +
-     honest copy on the balance card + no CTA below the 330 floor, orphaned
-     failed-refresh rows); forfeit warning on deletion (the 2026-08-13
-     case); permission-denied banner for expiry reminders.
+     wallet-state-diverged cluster (classifier back-off ✓ 2026-10-11 and
+     FFI log line ✓ 2026-10-11, committed `04e571f..b24fac1`; balance card
+     refused state + floor on the manual path ✓ 2026-10-11, reviewed,
+     uncommitted; remaining: orphaned failed-refresh rows); forfeit warning
+     on deletion (the 2026-08-13 case); permission-denied banner for expiry
+     reminders.
   2. **Deletion (traced traps, same function):** skip the backup on the
      delete path; partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
@@ -474,7 +475,23 @@ Tier 0/1 work. Guiding docs hold the full arguments.
     user for the new FFI line carrying the server text with ids (confirms the
     `{:#}` chain reaches the app — plan claim C4, derived), the warning
     "holding them back for 24h", and one app-side Failed row per day.
-  - **The balance card has no expired state at all.** The only place the app
+  - [x] **The balance card has no expired state at all** — done 2026-10-11
+    (`Features/Refresh_Deduplication.md` §10). The card now resolves one of
+    refreshing / refresh now / refused / too small / countdown / idle via
+    `BalanceRefreshCardState`, with the same Guard B → Guard C (valve) →
+    back-off order as the service; refused shows "Can't refresh from this
+    device" + the held-back amount, no CTA; the 330 floor is one shared
+    constant on the auto path, the manual path (`.belowMinimum`) and the
+    card; a new `refreshStatusVersion` reloads the card *after* a verdict is
+    recorded (the refetch bumped `transactionVersion` too early). Adversarial
+    pass fixed two CONFIRMED findings in-session (a dust sibling masked the
+    refusal; modal/card contradiction), 8 new tests, 34/34 scoped. Mixed case
+    (refreshable + held back) DECIDED 2026-10-11: the compact row shows the
+    primary state only; the "Held back" row lives on the full card. New
+    keys (5) wait for the next translation batch. Device check owed with defect 1's: the mainnet
+    user's next export should show the row, and a tap landing on the refused
+    screen. Headline balance untouched (DECIDED 2026-10-11, row only).
+    Original entry: The only place the app
     labels a VTXO Expired is the X-Ray row (`VTXORowView.swift:22-48`), and
     even there `VTXOListView_iOS` offers "Refresh all (Free)" with no expiry
     exclusion. Both refresh-status containers hardcode `isExpired: false`
@@ -1168,9 +1185,10 @@ Reminders merge; wording kept so the two can be matched.
   seconds/block). A full history needs a `localNotificationScheduled`
   journal kind plus journaling in the `willPresent`/`didReceive` hooks.
 - [ ] **Make the overlay better reflect the current state**.
-- [ ] **Warn when total VTXOs are under 330 sats** (the "don't show Refresh
-  now below the floor" half merged into the Tier 0 divergence cluster
-  2026-10-09; the warning copy stays here).
+- [x] **Warn when total VTXOs are under 330 sats** — done 2026-10-11 with the
+  balance-card state: the row says "Too small to refresh" with the floor,
+  the modal disables Start and names the amounts, the manual path returns
+  `.belowMinimum` (`Features/Refresh_Deduplication.md` §10).
 - [ ] **`RefreshModalFormView` — description text is cut off even when the
   modal is fully expanded**.
 - [ ] **Surface expiry sweeps instead of silently showing less money** — on
@@ -1491,6 +1509,15 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 
 ### UI components, refactors, tooling
 
+- [ ] **SwiftUI previews of Shared files fail on the barkFFI archive**
+  (observed 2026-10-11 via the preview tool, same error Christoph saw in the
+  canvas): the preview JIT reports `CouldNotLoadInputStaticArchiveFile …
+  Debug-iphonesimulator/barkFFI.framework/barkFFI` when the host is the app,
+  so any view in `Shared/` (e.g. `BalanceRefreshStatusCompact`) cannot be
+  previewed; ArkéUI package views preview fine under the `ArkeUI` scheme.
+  Options: make the preview host link the bindings dynamically, mark Bark as
+  excluded from preview builds, or keep moving previewable views into ArkéUI
+  (the paused extraction plan). Until then, verify Shared layouts on device.
 - [ ] **Mark every network-name log interpolation `privacy: .public`**
   (DECIDED 2026-10-10): ~30 sites, found with `rg` for `networkConfig.name`
   / `network.name` / `networkName` inside `logger.` calls; mechanical, no
