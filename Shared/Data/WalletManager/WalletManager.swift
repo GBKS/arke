@@ -93,7 +93,10 @@ class WalletManager {
     /// import (creation refuses when any account wallet signal exists), so a
     /// created wallet seeds immediately while every other launch waits for the
     /// first CloudKit import (see `defaultDataSeedingDecision`).
-    enum FreshWalletOrigin {
+    // `nonisolated`: compared inside the nonisolated `defaultDataSeedingDecision`;
+    // the synthesized Equatable would otherwise inherit main-actor isolation
+    // (a Swift 6 error).
+    nonisolated enum FreshWalletOrigin {
         case created
         case imported
     }
