@@ -27,24 +27,19 @@ enum ManualRefreshOutcome {
     /// A refresh check was already running. Its exclusions cover the same
     /// VTXOs, so this request was intentionally dropped rather than raced.
     case alreadyInProgress
-    /// The server rejected the inputs because an earlier delegated request
-    /// for them was already issued into a round (bark `unusable_inputs`,
-    /// F5). Not a failure: the refresh the user asked for is running — we
-    /// just didn't schedule it. Surfacing this as an error told users
-    /// "Refresh Failed" for a refresh in flight (Refresh_Deduplication.md §2).
+    /// The server rejected the inputs as unusable *and* the post-error
+    /// refetch shows them locked in an issued round (F5 race): the refresh
+    /// the user asked for is running — we just didn't schedule it.
+    /// Surfacing this as an error told users "Refresh Failed" for a refresh
+    /// in flight (Refresh_Deduplication.md §2).
     case alreadyIssuedByServer
-}
-
-/// Whether a scheduling error is bark telling us the inputs are already
-/// committed to a round, rather than a real failure.
-///
-/// Matched on message text because the FFI collapses every `Bark.Error` into
-/// `BarkWalletFFIError.configurationError(_:)`, discarding the variant —
-/// see the Open_Follow_Ups item about surfacing typed FFI errors. Narrow by
-/// design: anything unrecognised stays an error.
-func isAlreadyIssuedRejection(_ error: Swift.Error) -> Bool {
-    let message = error.localizedDescription.lowercased()
-    return message.contains("unusable_inputs") || message.contains("unusable inputs")
+    /// The server rejected the inputs as unusable and none of them is in
+    /// flight: it considers them spent, exited or banned, so this wallet's
+    /// view of them is out of date (the 2026-10-09 divergence incident).
+    /// Also returned when every candidate is already held back by the
+    /// 24 h back-off. Honest failure, not "already refreshing"
+    /// (Refresh_Deduplication.md §9).
+    case rejectedByServer
 }
 
 /// Service responsible for automatically refreshing VTXOs when refreshes are free
@@ -108,20 +103,83 @@ class VTXORefreshService {
     
     /// Notification identifier for VTXO refresh reminders
     private let notificationIdentifier = "com.arke.vtxo.refresh.reminder"
-    
+
+    /// Inputs the server rejected as unusable, held back for 24 h so a
+    /// wallet whose view has diverged from the server stops adding one
+    /// Failed refresh row per launch (Refresh_Deduplication.md §9).
+    /// Persisted device-locally; pruned to the spendable set on every check.
+    private var rejectionBackoff: RefreshRejectionBackoff
+
+    /// VTXO ids currently held back by the rejection back-off. For the
+    /// balance card, which should not offer "Refresh now" for them
+    /// (Open_Follow_Ups, divergence cluster defect 2).
+    var recentlyRejectedVtxoIds: Set<String> {
+        rejectionBackoff.activeIds(now: now())
+    }
+
     // MARK: - Dependencies
-    
+
     private let wallet: BarkWalletProtocol
     private weak var walletManager: WalletManager?
-    
+    private let defaults: UserDefaults
+    private let now: () -> Date
+
     // MARK: - Timer
-    
+
     private var timer: Timer?
-    
+
     // MARK: - Initialization
-    
-    init(wallet: BarkWalletProtocol) {
+
+    init(
+        wallet: BarkWalletProtocol,
+        defaults: UserDefaults = .standard,
+        now: @escaping () -> Date = { Date() }
+    ) {
         self.wallet = wallet
+        self.defaults = defaults
+        self.now = now
+        self.rejectionBackoff = RefreshRejectionBackoff.load(
+            from: defaults,
+            key: UserDefaults.refreshRejectedInputsKey
+        )
+    }
+
+    private func persistRejectionBackoff() {
+        // Deletion runs `stop()` (resetManagerState) before
+        // `clearUserDefaults()` removes the key; a check still mid-await
+        // must not write the old wallet's verdicts back afterwards.
+        guard isRunning else { return }
+        rejectionBackoff.save(to: defaults, key: UserDefaults.refreshRejectedInputsKey)
+    }
+
+    /// Resolve a `unusable_inputs` rejection after the post-error refetch,
+    /// record a real rejection in the back-off, and say which it was.
+    /// Shared by the auto and manual paths so they cannot drift.
+    private func handleUnusableInputs(
+        requested: [String],
+        beingRefreshedBefore: Set<String>,
+        error: Swift.Error
+    ) async -> RefreshRejection.Verdict {
+        let beingRefreshedAfter = await walletManager?.vtxoIdsBeingRefreshed() ?? []
+        let message = error.localizedDescription
+        let verdict = RefreshRejection.classify(
+            requested: requested,
+            beingRefreshedBefore: beingRefreshedBefore,
+            beingRefreshedAfter: beingRefreshedAfter,
+            serverMessage: message
+        )
+        switch verdict {
+        case .inFlight(let ids):
+            Self.logger.info("Server rejected \(requested.count) VTXO(s) as unusable; \(ids.count) entered an issued round since our check — treating as in-flight, not a failure")
+        case .rejected(let ids, let precise):
+            rejectionBackoff.record(ids: ids, precise: precise, at: now())
+            persistRejectionBackoff()
+            // One warning per attempt, server text public: VTXO ids are
+            // pseudonymous and bark's own selection logger already prints
+            // them; the reason is what support needs from a debug export.
+            Self.logger.warning("Server rejected \(ids.count) of \(requested.count) VTXO(s) as unusable and none is in flight — holding them back for 24h (\(precise ? "ids from server" : "whole batch", privacy: .public)). Server said: \(message, privacy: .public)")
+        }
+        return verdict
     }
     
     /// Set the wallet manager reference (needed for data access)
@@ -238,15 +296,28 @@ class VTXORefreshService {
             let exitingIds = await exitingVtxoIds()
             let beingRefreshedIds = await walletManager?.vtxoIdsBeingRefreshed() ?? []
             let allSpendable = try await wallet.spendableVtxos()
-            let vtxos = RefreshExclusion.filter(
+            let guarded = RefreshExclusion.filter(
                 allSpendable,
                 exitingIds: exitingIds,
                 beingRefreshedIds: beingRefreshedIds,
                 currentBlockHeight: currentBlockHeight
             )
 
-            if vtxos.count < allSpendable.count {
-                Self.logger.info("Excluded \(allSpendable.count - vtxos.count) VTXO(s) from auto-refresh (in-progress exit or in-flight refresh)")
+            if guarded.count < allSpendable.count {
+                Self.logger.info("Excluded \(allSpendable.count - guarded.count) VTXO(s) from auto-refresh (in-progress exit or in-flight refresh)")
+            }
+
+            // Server rejections (§9): prune verdicts whose VTXO left the
+            // spendable set or aged out, then hold back the rest.
+            rejectionBackoff.prune(keeping: Set(allSpendable.map(\.id)), now: now())
+            persistRejectionBackoff()
+            let (vtxos, heldBack) = rejectionBackoff.filter(
+                guarded,
+                currentBlockHeight: currentBlockHeight,
+                now: now()
+            )
+            if !heldBack.isEmpty {
+                Self.logger.info("Holding back \(heldBack.count) VTXO(s) the server rejected as unusable within the last 24h")
             }
 
             if vtxos.isEmpty {
@@ -305,12 +376,24 @@ class VTXORefreshService {
                 // a full transaction refetch every hour.
                 await walletManager?.refreshAfterVTXOChange()
 
-                if isAlreadyIssuedRejection(error) {
-                    // Inputs already committed to a round (F5) — the refresh
-                    // is running; this attempt was redundant, not a failure.
-                    Self.logger.info("Auto-refresh inputs already issued into a round — treating as in-flight, not a failure")
-                    lastCheckTime = Date()
-                    lastError = nil
+                if isUnusableInputsRejection(error) {
+                    switch await handleUnusableInputs(
+                        requested: vtxoIds,
+                        beingRefreshedBefore: beingRefreshedIds,
+                        error: error
+                    ) {
+                    case .inFlight:
+                        // Inputs already committed to a round (F5) — the
+                        // refresh is running; this attempt was redundant.
+                        lastCheckTime = Date()
+                        lastError = nil
+                    case .rejected(let ids, _):
+                        // Real rejection, now in the back-off; logged once
+                        // by the handler. Not thrown: the outer catch would
+                        // log it a second time at error level.
+                        lastCheckTime = Date()
+                        lastError = "Server rejected \(ids.count) VTXO(s) as unusable; held back for 24h"
+                    }
                     return
                 }
                 throw error
@@ -511,14 +594,28 @@ class VTXORefreshService {
         // in an in-flight refresh (Guard C, Refresh_Deduplication.md).
         let exitingIds = await exitingVtxoIds()
         let beingRefreshedIds = await walletManager?.vtxoIdsBeingRefreshed() ?? []
-        let vtxos = RefreshExclusion.filter(
+        let currentBlockHeight = walletManager?.estimatedBlockHeight
+        let guarded = RefreshExclusion.filter(
             try await wallet.getVtxosToRefresh(),
             exitingIds: exitingIds,
             beingRefreshedIds: beingRefreshedIds,
-            currentBlockHeight: walletManager?.estimatedBlockHeight
+            currentBlockHeight: currentBlockHeight
+        )
+
+        // Server rejections (§9). No prune here: the candidate list is
+        // "needs refresh", not the spendable set the verdicts are keyed to;
+        // the auto check prunes on every launch.
+        let (vtxos, heldBack) = rejectionBackoff.filter(
+            guarded,
+            currentBlockHeight: currentBlockHeight,
+            now: now()
         )
 
         guard !vtxos.isEmpty else {
+            if !heldBack.isEmpty {
+                Self.logger.info("Manual refresh: all \(heldBack.count) candidate(s) were rejected by the server within the last 24h — not re-submitting")
+                return .rejectedByServer
+            }
             Self.logger.debug("No VTXOs need refreshing")
             return .nothingToDo
         }
@@ -536,9 +633,17 @@ class VTXORefreshService {
             // have a lingering Pending entry (F5/F9 → stranded round state).
             await walletManager?.refreshAfterVTXOChange()
 
-            if isAlreadyIssuedRejection(error) {
-                Self.logger.info("Server rejected \(vtxoIds.count) VTXO(s) as already issued into a round — treating as in-flight, not a failure")
-                return .alreadyIssuedByServer
+            if isUnusableInputsRejection(error) {
+                switch await handleUnusableInputs(
+                    requested: vtxoIds,
+                    beingRefreshedBefore: beingRefreshedIds,
+                    error: error
+                ) {
+                case .inFlight:
+                    return .alreadyIssuedByServer
+                case .rejected:
+                    return .rejectedByServer
+                }
             }
             throw error
         }

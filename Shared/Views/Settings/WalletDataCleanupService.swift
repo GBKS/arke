@@ -471,6 +471,10 @@ class WalletDataCleanupService {
         // Reset initial sync completion marker
         UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
 
+        // Forget server refresh rejections — verdicts about this wallet's
+        // VTXOs, meaningless for the next wallet on this device
+        UserDefaults.standard.removeObject(forKey: UserDefaults.refreshRejectedInputsKey)
+
         // Forget the relay registration bookkeeping — a wallet created or
         // imported after this must mint its own mailbox authorization, not
         // read the old wallet's expiry and decide no renewal is needed
@@ -1033,6 +1037,9 @@ enum SharedStateWipeCoverage {
         // Relay registration bookkeeping (RelayRegistrationService.PersistedRegistration);
         // cleared so a new wallet on this device mints its own authorization
         Entry(key: "com.arke.relay.* (5 keys)",            store: "UserDefaults",    scope: .deviceLocal),
+        // Server refresh-rejection back-off (RefreshRejectionBackoff); a
+        // cache of server verdicts about this wallet's VTXOs
+        Entry(key: "com.arke.refresh.rejectedInputs",      store: "UserDefaults",    scope: .deviceLocal),
         // Deliberately survives deletion: re-registration rewrites it, and
         // clearing it would make the next launch report a routine secondary
         // registration as an unexplained demotion

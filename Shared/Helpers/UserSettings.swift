@@ -45,6 +45,12 @@ extension UserDefaults {
     /// launch is trustworthy, so the transaction list can skip its skeleton.
     static let initialSyncCompletedKey = "com.arke.wallet.initialSyncCompleted"
 
+    /// Refresh inputs the server rejected as unusable, held back for 24 h so
+    /// the app stops re-submitting them every launch
+    /// (`RefreshRejectionBackoff`, Refresh_Deduplication.md §9). A cache of
+    /// server verdicts, device-local; cleared by WalletDataCleanupService.
+    static let refreshRejectedInputsKey = "com.arke.refresh.rejectedInputs"
+
     // MARK: Relay registration (RelayRegistrationService.PersistedRegistration)
     //
     // The mailbox authorization the notification relay holds lives 30 days;

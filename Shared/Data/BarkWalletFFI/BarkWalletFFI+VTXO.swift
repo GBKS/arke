@@ -112,7 +112,11 @@ extension BarkWalletFFI {
             
             return roundState
         } catch let error as Bark.Error {
-            Self.logger.error("FFI Error scheduling delegated VTXO refresh: \(error)")
+            // `\(error)` prints only `Error Domain=Bark.Error Code=0`; the
+            // server's reason (and, for `unusable_inputs`, the VTXO ids) is
+            // in the description. Public so a debug export can show it —
+            // the 2026-10-09 field log had to infer it from the classifier.
+            Self.logger.error("FFI Error scheduling delegated VTXO refresh: \(error.localizedDescription, privacy: .public)")
             throw BarkWalletFFIError.configurationError("Failed to schedule delegated VTXO refresh: \(error.localizedDescription)")
         } catch {
             Self.logger.error("Error scheduling delegated VTXO refresh: \(error)")
