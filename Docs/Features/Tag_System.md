@@ -173,7 +173,7 @@ System tag behavior:
 Server refreshes must not destroy user categorization:
 
 - **Upsert strategy** (`TransactionService+Upsert`): existing `PersistentTransaction` rows are updated in place, so SwiftData keeps their `tagAssignments` relationships automatically; assignment counts are logged for verification.
-- **Orphaned transactions** (present locally, missing from server) are preserved by default when tagged; `cleanupOrphanedTaggedTransactions()` exists for manual cleanup.
+- **Orphaned transactions** (present locally, missing from bark's complete movement list) are never deleted by the upsert; the full-list refresh logs one summary warning, the single-movement notification path skips the check (one movement is not the complete list — 2026-10-12). `cleanupOrphanedTaggedTransactions()` has no caller and only logs; deletion of mirrored rows belongs to `WalletDataCleanupService` alone.
 - **New transactions** start untagged, then pass through auto-tagging (Balance system tag, contact auto-assignment) and pending-metadata matching.
 
 ## WalletManager Integration

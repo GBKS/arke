@@ -532,7 +532,9 @@ label firing with 0 pending rounds and 0 pending round inputs read one
 second earlier: the wallet's three VTXOs had been spent into a round the
 wallet never heard about, and the app retried them on every launch,
 foreground return, hourly tick and tap, each attempt adding one Failed
-refresh movement and one orphaned local row.
+refresh movement. (The log's "orphaned local row" per attempt was an
+artefact: the notification path ran the orphan check against a one-element
+list — fixed 2026-10-12, no orphan rows existed.)
 
 ### Claims this plan rests on
 
@@ -586,7 +588,8 @@ refresh movement and one orphaned local row.
 7. Not in scope, filed: the balance card still says "Refresh now" for
    backed-off VTXOs (cluster defect 2 consumes
    `VTXORefreshService.recentlyRejectedVtxoIds`); orphan-row pruning
-   (defect 4); the 162 sibling FFI log lines (Tier 4 typed errors).
+   (defect 4 — closed 2026-10-12 as a log artefact, nothing to prune); the
+   162 sibling FFI log lines (Tier 4 typed errors).
 
 ### Sweep of sibling sites
 

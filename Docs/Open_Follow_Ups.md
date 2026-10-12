@@ -78,8 +78,9 @@ the rest wait.
   1. **Divergence (field; funds safe server-side, user stuck):** the
      wallet-state-diverged cluster (classifier back-off ✓ 2026-10-11 and
      FFI log line ✓ 2026-10-11, committed `04e571f..b24fac1`; balance card
-     refused state + floor on the manual path ✓ 2026-10-11, reviewed,
-     uncommitted; remaining: orphaned failed-refresh rows); forfeit warning
+     refused state + floor on the manual path ✓ 2026-10-11, committed
+     `31e0ad1..5a007ed`; orphan rows ✓ 2026-10-12 — a log artefact of the
+     notification path, no rows existed, uncommitted); forfeit warning
      on deletion (the 2026-08-13 case); permission-denied banner for expiry
      reminders.
   2. **Deletion (traced traps, same function):** skip the backup on the
@@ -467,7 +468,8 @@ Tier 0/1 work. Guiding docs hold the full arguments.
     row per *round* keeps arriving regardless of the app-side back-off —
     confirm in the next field log (bark lines "Joining round … for maintenance
     refresh" / "Maintenance refresh rejected"); it is the bindings bump's to
-    fix, and defect 4 (orphan rows) is where the rows are pruned. Also: a
+    fix; defect 4 turned out to be a log artefact, no app-side rows to prune
+    (2026-10-12), so the Failed rows that remain are bark's own. Also: a
     `NotFound` ("input vtxo does not exist") rejection is deliberately not
     matched and would still retry as an ordinary error — fold into the Tier 4
     typed-errors item. **Device check owed**: no reliable repro from the app
@@ -521,9 +523,28 @@ Tier 0/1 work. Guiding docs hold the full arguments.
     `privacy: .public` for the delegated-refresh call only (the server text
     carries VTXO ids, which bark's own selection logger already prints). The
     other ~160 `\(error)` FFI log lines stay for the Tier 4 typed-errors item.
-  - **Every failed refresh attempt leaves an orphaned local row, and the
-    orphans are the user's "growing list of Failed refresh rows"** (promoted
-    from Tier 3 2026-10-10). In the 2026-10-09 log each attempt adds one bark
+  - [x] **Every failed refresh attempt leaves an orphaned local row, and the
+    orphans are the user's "growing list of Failed refresh rows"** — closed
+    2026-10-12, premise wrong: there are no orphan rows. In the 2026-10-09 log
+    every full-list pass (41, 42, 43 movements) matched all local rows and
+    reported no orphans; all 231 "no longer exists on server" lines came from
+    `processSingleMovement`, which wraps one notification movement in an
+    array and reused the full upsert, so the orphan check ran against a
+    one-element list and named every other Balance-tagged transfer. The
+    38 → 39 step is the new Failed refresh row receiving the Balance auto-tag
+    (refresh → transfer → `autoTagInternalTransfer`), counted on the next
+    notification pass. The growing "Failed refresh" list is bark's own
+    movement list (one real Pending → Failed movement per attempt), reduced
+    by defect 1's back-off and otherwise the bindings bump's; hiding such
+    rows is the separate Tier 3 line (Christoph, 2026-10-12: own focused
+    item, not this cluster). Fix: `upsertTransactionsFromServerData(_:
+    isCompleteMovementList:)`, the notification path passes `false`; the
+    full-list path logs one summary warning per refresh instead of one line
+    per row, and only for `sourceType == "ark"` rows (Christoph's 2026-10-12
+    device log showed the one remaining "orphan" was his single onchain
+    receive, which shares the table and never matches a movement). No rows
+    are deleted on either path (unchanged). Ledger line 2026-10-12. Original
+    entry: In the 2026-10-09 log each attempt adds one bark
     movement (41 → 42 → 43) *and* one more "tag assignment on orphaned
     transactions" (38 → 39): a `PersistentTransaction` whose `movement_<id>`
     txid matches no movement in the next list, kept because auto-tagging
@@ -817,6 +838,24 @@ Tier 0/1 work. Guiding docs hold the full arguments.
 
 (The metadata-import name-merge item moved to Tier 0 on 2026-10-09.)
 
+- [ ] **The transaction upsert deletes duplicate `PersistentTransaction`
+  rows itself** (`TransactionService+Upsert.swift`,
+  `buildExistingTransactionDictionary`: `modelContext.delete` + save on a
+  repeated txid, on both the full-list and the notification path). The row
+  is CloudKit-mirrored and cascades to tag and contact assignments, so the
+  dedupe silently drops one side's assignments; contract rule 23 reserves
+  mirrored-row deletion for `WalletDataCleanupService`. Where duplicates
+  come from: (a) `processSingleMovement` is not routed through
+  `taskManager`, so a notification upsert can insert `movement_N` inside one
+  of the full-list upsert's suspension points and the full pass, working from
+  its pre-suspension snapshot, inserts `movement_N` again (PLAUSIBLE, not
+  reproduced; the 2026-10-09 log shows "0 new" on every full pass); (b) two
+  devices each creating the same movement row and CloudKit merging both.
+  Fix shape: merge assignments onto the survivor before deleting, or route
+  the notification path through the same task key and keep the first row.
+  Found by the 2026-10-12 adversarial pass on the orphan-log fix; test that
+  would settle (a): interleave a single-movement upsert inside a full-list
+  upsert at its first `await`.
 - [ ] **`SwiftDataHelper` deletes the store on any load error**
   (`SwiftDataHelper.swift:158-194`): any `SwiftDataError` (`:163-166`) or
   Cocoa codes 134110/134100/134060 (`:168-173`) delete every `*.store`,
