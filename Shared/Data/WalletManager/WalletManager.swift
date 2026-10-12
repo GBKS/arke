@@ -938,14 +938,24 @@ class WalletManager {
         
         // Step 1: Ensure server connection is fresh
         Self.logger.info("🔄 [Refresh] Step 1: Refreshing server connection...")
-        await refreshServer()
-        // Note: refreshServer() doesn't throw, it sets self.error on failure
-        if error != nil {
-            Self.logger.warning("⚠️ [Refresh] Server refresh failed, but continuing with data refresh")
-            // We don't return here - we'll try to continue with the refresh
-        } else {
+        if await refreshServer() {
             anyServerCallSucceeded = true
             Self.logger.info("✅ [Refresh] Server connection successful")
+            // Publish "connected" now, not at Step 4: the onchain syncs in
+            // Steps 2–3 take ~25 s on a launch, and until Step 4 wrote the
+            // flag the Activity screen showed "no Ark connection" for that
+            // whole window although the server had answered in ~1 s
+            // (device log 2026-10-12). Only the connected verdict moves
+            // early; the disconnected verdict is left to Step 4 unchanged.
+            // Known gap, filed under Tier 1 Connectivity: Step 2's `sync()`
+            // never throws (bark swallows its errors), so
+            // `anyServerCallSucceeded` is always true once the handle is
+            // open and Step 4 never writes disconnected — the offline
+            // feature owns that fix, not this early write.
+            processStateService?.updateConnectionStatus(connected: true)
+        } else {
+            Self.logger.warning("⚠️ [Refresh] Server refresh failed, but continuing with data refresh")
+            // We don't return here - we'll try to continue with the refresh
         }
         
         // Step 2: Sync wallet state with ASP server

@@ -16,17 +16,23 @@ extension WalletManager {
     // MARK: - Server Connection
     
     /// Refresh connection to the ASP server
-    func refreshServer() async {
+    /// - Returns: whether the server round-trip succeeded. Callers must use
+    ///   this rather than `error == nil`: a failure sets `error`, but success
+    ///   leaves a stale error from an earlier step in place.
+    @discardableResult
+    func refreshServer() async -> Bool {
         guard let wallet = wallet else {
             Self.logger.warning("Cannot refresh server: wallet not initialized")
-            return
+            return false
         }
-        
+
         do {
             try await wallet.refreshServer()
+            return true
         } catch {
             Self.logger.error("Failed to refresh server: \(error)")
             self.error = "Failed to refresh server connection: \(error.localizedDescription)"
+            return false
         }
     }
     
