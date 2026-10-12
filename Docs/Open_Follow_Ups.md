@@ -104,7 +104,12 @@ the rest wait.
      revisions in Xcode's Package Dependencies.
   Then the Tier 1 cluster: the three send proposals (address header, fee
   three-state incl. the static-20 fallback, onchain from Payments) — the
-  last one needs the onchain-default ruling.
+  last one needs the onchain-default ruling. Added 2026-10-12 (DECIDED):
+  the Tier 1 Connectivity icon fix, "no Ark connection" shown for the whole
+  launch refresh — built and reviewed the same day, device check in the
+  Device stage (one launch, icon must not appear); and the Tier 1 launch
+  load indicator (highlight sweep on "Your Balance" + quiet amount state +
+  visible settle, DECIDED 2026-10-12, not yet built).
 - Deferred to Train 2, each with its reason: claimed-exit funds (design pass
   on the claim address + test rewrite); backup binding to wallet hash
   (format change on seed-adjacent state, design first — moves into this
@@ -831,6 +836,43 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   refresh (Reminders, two reports). Ask which device: on a secondary,
   `ReadOnlyBalanceService` substitutes zero models (`:52`, `:164`) and this
   is the Multi-device "fresh secondary" item instead.
+- [ ] **Nothing on screen says the launch load is still running** — DECIDED
+  2026-10-12: into Train 1, design below approved for a first build
+  ("affects every user every time they open the app"); the on-device look
+  across the four themes decides between the full version and the
+  amount-state-only fallback.
+  (Christoph's unattached log 2026-10-12: wallet ready at 27.7 s, the
+  balance card showed a 3 h old persisted balance as current the whole
+  time, no marker; the connection icon fixed the same day was the only
+  accidental hint). Today: the list skeleton needs an empty cache plus a
+  fresh import, "Loading transactions…" needs a missing service,
+  pull-to-refresh spins only when pulled; `WalletManager.isRefreshingWithData`
+  ("refresh running, data already shown") exists for exactly this and has
+  no reader. Earlier attempts (pre-git): a pulsating dot, and an opacity
+  pulse on "Your Balance" — still in `BalanceCard.swift` commented out,
+  0.5↔1.0 autoreversing every 0.8 s on `isRefreshing`: continuous motion
+  with no rest, hence distracting. Proposed design (Christoph's sweep idea
+  + two additions, 2026-10-12):
+  - **Highlight sweep across "Your Balance"**: one pass ≈ 1 s, then ≈ 2 s
+    rest, repeat; the rest period is the difference from the pulse. Band
+    tinted from the theme accent, not pure white — on light art a white
+    band on white text vanishes and a darkening band reads as a glitch.
+  - **Amount in a quiet state**, ≈ 75 % opacity while refreshing with
+    data; no motion on the number.
+  - **Visible ending**: sweep finishes its pass, amount settles to full,
+    the existing number transition shows any change. The settle is what
+    makes the wait feel finite.
+  - Guardrails: start only after a refresh has run ≈ 1 s (a 2 s
+    pull-to-refresh must not flash); stop at the end of a pass, never
+    mid-sweep; trigger on `isRefreshingWithData`; Reduce Motion → static
+    75 % state, no sweep.
+  Caveat: shimmer is read as "placeholder", so on real text it may read as
+  "this label is loading"; the rest period and tint are the bet against
+  that. Fallback if it reads wrong: amount state + settle alone, no sweep —
+  a subset of the full version, worth seeing first. Done means: on-device
+  look on all four themes, cold launch and pull-to-refresh, Reduce Motion
+  on and off. Independent of the Train 2 onchain-sync item above, which
+  shortens the window but does not remove it.
 - [ ] **Send all from savings to spending did not work, needs a better
   message** (Reminders).
 
@@ -931,6 +973,46 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 
 ### Connectivity and offline
 
+- [ ] **The activity screen shows "no Ark connection" for the whole launch
+  refresh although the server answered in 1 s** (Christoph's unattached
+  log 2026-10-12, icon visible ~19–23 s): `connectionStatus.isConnected`
+  is written only in Step 4 of `performRefresh`
+  (`refreshProcessStates(isConnected: anyServerCallSucceeded)`), after the
+  two onchain syncs above; the Activity view's 4 s grace period expires
+  long before that, so the crossed-out antenna is the normal launch state
+  on every device. Fix: mark connected right after Step 1 succeeds, leave
+  Step 4 unchanged. Small, no device step beyond watching the icon on one
+  launch. DECIDED 2026-10-12: pulled into Train 1 (visible on every launch
+  for every user). Built 2026-10-12: `refreshServer()` now returns its
+  outcome (the old `error != nil` check also misread a stale error from an
+  earlier refresh as a Step 1 failure), Step 1 success calls
+  `updateConnectionStatus(connected: true)`. Adversarial pass 2026-10-12:
+  the early write is sound (single dedup'd `performRefresh`, in-memory
+  observable store, all readers live); it refuted the rationale first
+  written here for keeping the disconnected side at Step 4 — see the next
+  item — and noted that a Step 1 slower than the 4 s grace still shows the
+  icon until the server answers, which is the correct reading. No unit
+  test: pinning "flag is true before Step 3 ends" needs a mid-refresh
+  WalletManager harness that does not exist. Device check owed: one
+  launch, icon must not appear.
+- [ ] **The app can never show "disconnected" once the wallet is open**
+  (CONFIRMED by the 2026-10-12 adversarial pass, pre-existing): Step 2's
+  `sync()` returns `()` in bark 0.7.1 (`bark/src/lib.rs:1980`, every
+  sub-sync is `if let Err … warn!`) and the FFI wrapper returns `Ok(())`
+  unconditionally, so the Swift `sync()` can only throw
+  `walletNotInitialized`, which `performRefresh` already guards. Hence
+  `anyServerCallSucceeded` is true for every refresh that reaches Step 2,
+  Step 4 always writes connected / excellent / `lastError = nil`, and with
+  the server down the Activity icon hides, the Connection Info sheet says
+  "Connected", its red error row is unreachable, `isArkServerReachable`
+  stays true so Lightning routing stays enabled, and
+  `hasEverSyncedSuccessfully` flips on the same flag. Fix shape: Step 2
+  must not count as a server success (only Step 1's handshake does), and
+  Step 4 then writes the disconnected verdict with Step 1's error — which
+  makes a transient Step 1 failure visible until the next refresh, so
+  decide the retry cadence with it. Belongs to the offline / server-down
+  feature below; build it first, the rest of that feature assumes the
+  signal works.
 - [ ] **Offline / server-down experience** (one feature, merged from eight
   Reminders items: "stunningly designed no-connection state", server-down
   and no-internet messages with disabled functionality, server-offline tip to
@@ -1528,6 +1610,21 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   `initialize()` called and executed** (device log 2026-09-08, suspect the
   dedup/queueing layer; merged 2026-10-09). Related: the CoreData error
   flood and the whole-app background launch below.
+  Measured 2026-10-12 on Christoph's phone (mainnet, 26 VTXOs, 250
+  movements, 1 onchain tx), two launches of the same build: attached to
+  Xcode, wallet ready at 48 s with a 20 s call→execute gap; unattached,
+  27.7 s with a 61 ms gap — so the call→execute gap is a debugger artefact,
+  not the dedup layer. Unattached breakdown: open 0.3 s, server connect
+  1.0 s, Step 2 11.9 s of which the BDK onchain sync inside `sync()`
+  (`BarkWalletFFI+Server.swift`, runs before the Ark sync) is 11.6 s and
+  the Ark sync 0.1 s; Step 3 13.5 s, movements done after 0.4 s, the rest
+  is the onchain balance read (6.3 s) and "Onchain history stabilized after
+  2 sync round(s)" (6.7 s). About 25 of 27.7 s are esplora/BDK syncs, run
+  twice per launch. Long pole answered; the lever is one onchain sync per
+  refresh instead of two, or the Step 2 onchain sync off the launch path.
+  DECIDED 2026-10-12: Train 2 candidate, not Train 1 — the second sync is
+  the 2026-08-13 balance-overcount guard ("history stabilised"), so the
+  restructuring needs its own design pass.
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
   refactor. **Next pure-logic extraction**: wallet-detection decisions
