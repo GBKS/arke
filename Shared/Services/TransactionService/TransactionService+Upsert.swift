@@ -29,7 +29,21 @@ extension TransactionService {
     */
     
     /// Upsert transactions from server data (insert new, update existing)
-    func upsertTransactionsFromServerData(_ output: String) async {
+    ///
+    /// - Parameters:
+    ///   - output: JSON array of bark movements.
+    ///   - isCompleteMovementList: `true` when `output` is bark's full
+    ///     movement list (`getMovements()`), which is the only input against
+    ///     which "exists locally but not on the server" means anything. The
+    ///     notification path feeds one movement at a time and must pass
+    ///     `false`; running the orphan check against a one-element list
+    ///     reported every other tagged row as orphaned (231 lines in one
+    ///     mainnet session, 2026-10-09) and misled the divergence
+    ///     investigation into hunting rows that did not exist.
+    func upsertTransactionsFromServerData(
+        _ output: String,
+        isCompleteMovementList: Bool = true
+    ) async {
         guard let modelContext = modelContext else {
             Self.logger.error("🚨 No model context available for upserting transactions")
             return
@@ -149,24 +163,25 @@ extension TransactionService {
                 )
             }
             
-            // Handle orphaned transactions (exist locally but not in server data)
-            let orphanedTagCount = await handleOrphanedTransactions(
-                existingTransactions: existingTransactions,
-                movements: movements
-            )
-            
+            // Report orphaned transactions (exist locally but not in server
+            // data). Only meaningful against the complete list; a single
+            // notification movement would make every other row look orphaned.
+            if isCompleteMovementList {
+                await reportOrphanedTransactions(
+                    existingTransactions: existingTransactions,
+                    movements: movements
+                )
+            }
+
             // Save changes
             try modelContext.save()
-            
+
             Self.logger.info("💾 Successfully saved \(upsertedCount) new, \(updatedCount) updated transactions")
             if autoAssignedCount > 0 {
                 Self.logger.info("🔗 Auto-assigned \(autoAssignedCount) transaction(s) to contacts based on address matching")
             }
             Self.logger.info("🏷️ Preserved \(preservedTagCount) tag assignments across updates")
-            if orphanedTagCount > 0 {
-                Self.logger.info("🏷️ Found \(orphanedTagCount) tag assignments on orphaned transactions")
-            }
-            
+
         } catch {
             Self.logger.error("❌ Failed to upsert transactions: \(error)")
             self.error = "Failed to process transactions: \(error)"
@@ -342,32 +357,33 @@ extension TransactionService {
         )
     }
     
-    /// Handle orphaned transactions (exist locally but not in server data)
-    /// - Returns: Number of tag assignments on orphaned transactions
-    private func handleOrphanedTransactions(
+    /// Report orphaned transactions (exist locally but not in the complete
+    /// server list) with one summary line per refresh. Log-only: nothing in
+    /// the app deletes these rows (`PersistentTransaction` is CloudKit-mirrored
+    /// and only `WalletDataCleanupService` may delete it), so they and their
+    /// tags stay until a full wipe.
+    private func reportOrphanedTransactions(
         existingTransactions: [PersistentTransaction],
         movements: [MovementData]
-    ) async -> Int {
+    ) async {
         // Get all transaction IDs from server data
         let serverTxids = Set(await movements.asyncFlatMap { movement in
             await parseMovementToTransactions(movement).map { $0.txid }
         })
-        
-        let orphanedTransactions = existingTransactions.filter { !serverTxids.contains($0.txid) }
-        var orphanedTagCount = 0
-        
-        for orphanedTransaction in orphanedTransactions {
-            // Count-only cached-array read (log stat) — no element properties
-            // touched, so the invalidation hazard doesn't apply
-            let tagAssignments = orphanedTransaction.tagAssignments ?? []
-            if !tagAssignments.isEmpty {
-                orphanedTagCount += tagAssignments.count
-                Self.logger.warning("⚠️ Transaction \(orphanedTransaction.txid) no longer exists on server but has \(tagAssignments.count) tag(s)")
-            }
-            // Note: We could choose to preserve orphaned tagged transactions or delete them
-            // For now, we'll let them remain to preserve user tags until explicit cleanup
+
+        // Only rows that came from bark movements can be orphaned by bark's
+        // list. `sourceType == "onchain"` rows (BDK history from
+        // `UnifiedTransactionService`, exit-claim records from
+        // `recordClaimFee`) live in the same table under `onchain_<txid>` and
+        // never appear in the movement list by design.
+        let orphanedTransactions = existingTransactions.filter {
+            $0.sourceType == "ark" && !serverTxids.contains($0.txid)
         }
-        
-        return orphanedTagCount
+        guard !orphanedTransactions.isEmpty else { return }
+
+        // Count-only cached-array read (log stat) — no element properties
+        // touched, so the invalidation hazard doesn't apply
+        let orphanedTagCount = orphanedTransactions.reduce(0) { $0 + ($1.tagAssignments ?? []).count }
+        Self.logger.warning("⚠️ \(orphanedTransactions.count) local transaction(s) have no matching bark movement (\(orphanedTagCount) tag assignment(s) on them); kept, nothing deletes them")
     }
 }

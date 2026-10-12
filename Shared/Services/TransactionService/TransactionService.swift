@@ -193,8 +193,10 @@ class TransactionService {
         
         Self.logger.info("Processing single movement from notification")
         
-        // Reuse existing upsert pipeline
-        await upsertTransactionsFromServerData(wrappedJson)
+        // Reuse existing upsert pipeline. One movement is not the complete
+        // list, so orphan detection must not run here (every other row would
+        // count as orphaned).
+        await upsertTransactionsFromServerData(wrappedJson, isCompleteMovementList: false)
         
         Self.logger.info("Processed single movement from notification")
     }
