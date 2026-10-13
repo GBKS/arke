@@ -289,8 +289,17 @@ class WalletManager {
         }
     }
     
+    /// A refresh is running while the card shows an amount. Drives the
+    /// balance card's "still loading" indicator. The card renders an amount
+    /// whenever `totalBalance` is non-nil, which `setModelContext` makes true
+    /// from the first render on (persisted rows or synthesised zero models),
+    /// so in practice this is `isRefreshing` from that point; the guard only
+    /// matters before the balance service exists. The earlier
+    /// `isRefreshing && hasLoadedOnce` was false for the whole launch
+    /// refresh, since `hasLoadedOnce` flips when the first `performRefresh`
+    /// returns — 27 s later on a mainnet wallet (device log 2026-10-12).
     var isRefreshingWithData: Bool {
-        isRefreshing && hasLoadedOnce
+        isRefreshing && totalBalance != nil
     }
     
     var arkInfo: ArkInfoModel? {
