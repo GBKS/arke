@@ -108,8 +108,8 @@ the rest wait.
   the Tier 1 Connectivity icon fix, "no Ark connection" shown for the whole
   launch refresh — built and reviewed the same day, device check in the
   Device stage (one launch, icon must not appear); and the Tier 1 launch
-  load indicator (highlight sweep on "Your Balance" + quiet amount state +
-  visible settle, DECIDED 2026-10-12, not yet built).
+  load indicator (built, reviewed and device-checked 2026-10-13 as a glyph
+  wave on the amount; DONE, Device stage has nothing left on it).
 - Deferred to Train 2, each with its reason: claimed-exit funds (design pass
   on the claim address + test rewrite); backup binding to wallet hash
   (format change on seed-adjacent state, design first — moves into this
@@ -836,7 +836,18 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   refresh (Reminders, two reports). Ask which device: on a secondary,
   `ReadOnlyBalanceService` substitutes zero models (`:52`, `:164`) and this
   is the Multi-device "fresh secondary" item instead.
-- [ ] **Nothing on screen says the launch load is still running** — DECIDED
+- [x] **Nothing on screen says the launch load is still running** — DONE
+  2026-10-13: device look passed on the themes, pull-to-refresh and Reduce
+  Motion on and off (Christoph: "looks great"); shipped shape is the glyph
+  wave on the amount, 3 s continuous passes, ten glyph-widths at 60 %,
+  label plain white, static 75 % amount only under Reduce Motion. Follow-ups
+  filed on their own: VoiceOver value (Tier 3 Balance), secondary-device
+  CloudKit import window (Multi-device fresh secondary), "Ark-fresh ends
+  the wave" revisit (Tier 4 launch timing item, after Train 2), canvas
+  preview host (Tier 4 tooling). Not observed on device: the numeric
+  content transition at settle with the renderer installed — needs a
+  balance that changes during a refresh. Move to the Done log with the
+  write-up below. DECIDED
   2026-10-12: into Train 1, design below approved for a first build
   ("affects every user every time they open the app"); the on-device look
   across the four themes decides between the full version and the
@@ -873,6 +884,76 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   look on all four themes, cold launch and pull-to-refresh, Reduce Motion
   on and off. Independent of the Train 2 onchain-sync item above, which
   shortens the window but does not remove it.
+  **BUILT 2026-10-13, awaiting the device look.** Full version as designed:
+  `BalanceLoadIndicatorModel` (Shared/UI, pure state machine holding the
+  four guardrails, 9 tests in `BalanceLoadIndicatorModelTests`),
+  `GlyphWaveTextRenderer` (see below), `BalanceCard` drives
+  the clocks (1 s arm, 1 s pass, 2 s rest, amount at 75 %, settle over
+  0.3 s) and the old commented-out pulse is gone.
+  First device look 2026-10-13 (Christoph): the tinted band, a gradient
+  overlay masked to the text, was only visible when staring — a few glyphs
+  got a white glow for a split second. Cause: white glyphs have no
+  brighter to go, and the tint (`AppTheme.textColor`) is near-white on
+  three themes. DECIDED 2026-10-13 (Christoph's idea): per-glyph opacity
+  instead — `GlyphWaveTextRenderer`, a `TextRenderer` that dips each glyph
+  to 35 % as a trough travels across the label,
+  no tint, no motion, one `Text` so kerning, localisation and VoiceOver are
+  untouched; `#Preview` in the file loops the cadence on dark, light and
+  gradient swatches. Second device look 2026-10-13: better, not smooth —
+  DECIDED (Christoph): trough six glyph-widths instead of three, pass
+  0.5 s instead of 1 s, rest unchanged at 2 s. Third look: still stepped —
+  DECIDED (Christoph): ten glyph-widths and a shallower dip, set to 60 %
+  trough opacity. Fourth look: the label is the wrong carrier and short
+  passes feel hectic — DECIDED 2026-10-13 (Christoph): the wave moves to
+  the amount (the stale thing), label back to plain white, 3 s pass, no
+  rest, ten glyph-widths at 60 %; the flat 75 % baseline dim on the amount
+  is dropped outside Reduce Motion (two dimming signals on one number
+  muddled both; under Reduce Motion the static 75 % stays as the only
+  signal). Open risk for the device look: whether a custom `TextRenderer`
+  keeps the numeric content transition that shows the changed value at
+  settle. If the wave still reads as stepped, the next lever is per-pixel
+  dimming (a moving opacity gradient as a soft clip layer in the renderer)
+  instead of per-glyph opacity — PROPOSED, not built.
+  Fifth look: Christoph likes it. One defect fixed: a quick wave running
+  backwards at settle — the loop's reset of the progress from 1 to 0 landed
+  in the same update as the settle, and the amount's
+  `.animation(value: isQuiet)` interpolated it; the reset now runs in a
+  transaction with `disablesAnimations`. Open question raised at this
+  look: the wave runs for the whole launch refresh, ~25 of 27.7 s of which
+  are the two esplora/BDK onchain syncs. Ending it when the Ark data is
+  fresh would only halve the window today, because Step 2 runs its onchain
+  sync *before* the Ark sync; the real lever is the Train 2 onchain-sync
+  item. PROPOSED: keep the indicator honest to the full refresh now, and
+  revisit "Ark-fresh ends the wave" once Train 2 has moved the Step 2
+  onchain sync off the launch path. Seen before shipping this time: `GlyphWaveRenderTests`
+  rasterises the label on the simulator and checks rest = untouched,
+  mid-pass = a visible share of glyph pixels dimmed but legible (canvas
+  previews could not be used, see the Tier 4 preview-host item). The band
+  tint paragraph below is history. Planning finding
+  (trusted claim, caught before code): `isRefreshingWithData` was
+  `isRefreshing && hasLoadedOnce`, and `hasLoadedOnce` flips only when the
+  first `performRefresh` returns, so it was false for the entire 27 s
+  launch window this entry is about; redefined as
+  `isRefreshing && totalBalance != nil` (no other reader; the review
+  showed `totalBalance` is non-nil from `setModelContext` on because zero
+  models are synthesised, so this is `isRefreshing` in practice, and a
+  freshly created wallet's first refresh shows a quiet 0 — accepted).
+  Adversarial pass 2026-10-13: two fixes landed (band start frame never
+  rendered, so nothing would have swept; the flag's rationale was wrong —
+  both in the Rework Ledger). Accepted as low: a Reduce-Motion
+  double-toggle mid-pass can leave "quiet, no sweep" until the refresh
+  ends; the cancelled loop's `defer` writes `@State` after a wallet
+  delete unmounts the card (no-op in practice, unverified). Gap, not this
+  item's: on a secondary device the launch load is the CloudKit import,
+  which has no `isRefreshing` signal, so the indicator never shows there —
+  belongs to the Multi-device "fresh secondary" item.
+  Band tint: there is no per-theme accent property, so the band
+  uses `AppTheme.textColor` (gold on Classic, the wordmark tints on the
+  others) — swap for a dedicated colour if the device look says so. Hidden
+  (privacy) card shows no indicator by design: no label, no amount.
+  Not done: VoiceOver still hears nothing about the running load (the
+  activity screen's balance element has no "updating" value) — a one-string
+  follow-up if wanted.
 - [ ] **Send all from savings to spending did not work, needs a better
   message** (Reminders).
 
@@ -937,7 +1018,10 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **Fresh secondary: balance card still reads 0 during the initial
   CloudKit import** (activity list got the `.syncingFromCloud` state
   2026-09-24; the card renders a substituted zero model). Decide whether it
-  gets the same treatment. Also: the gate is balance-based (a balance batch
+  gets the same treatment. Note 2026-10-13: the card's load wave triggers
+  on `isRefreshing`, and a secondary's launch load is the CloudKit import,
+  which never sets it, so the wave does not show here either; if the card
+  gets the syncing treatment, drive the wave from the same gate. Also: the gate is balance-based (a balance batch
   landing first drops the syncing state early; a primary that never persisted
   balance rows leaves it up with no timeout) — honest upgrade is
   `NSPersistentCloudKitContainer` import events. The explicit-device-linking
@@ -1287,6 +1371,13 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Balance, board / offboard
 
+- [ ] **VoiceOver hears nothing about the running launch load** (filed
+  2026-10-13 from the load-wave item): the activity screen's balance
+  element has a label and value but no "updating" state while
+  `isRefreshingWithData` is true. One string appended to
+  `balanceAccessibilityValue` in `ActivityView_iOS.swift`; read the flag
+  directly, the 1 s arming guard is a flash guard and does not apply to a
+  value read on focus.
 - [ ] **Onboard modal**: minimum value only shows after X-Ray was visited;
   add fee info; success message with duration; test the error state.
   **Offboard modal**: add fee info; add data to success (claim required?);
@@ -1624,7 +1715,11 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   refresh instead of two, or the Step 2 onchain sync off the launch path.
   DECIDED 2026-10-12: Train 2 candidate, not Train 1 — the second sync is
   the 2026-08-13 balance-overcount guard ("history stabilised"), so the
-  restructuring needs its own design pass.
+  restructuring needs its own design pass. DECIDED 2026-10-13: once this
+  has landed, revisit whether the balance card's load wave should end when
+  the Ark data is fresh instead of at the end of the full refresh (today
+  that would only halve the window, because Step 2's onchain sync precedes
+  the Ark sync); until then the wave stays honest to the full refresh.
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
   refactor. **Next pure-logic extraction**: wallet-detection decisions
@@ -1689,6 +1784,14 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 Moved out of Tier 1 "Release readiness" 2026-10-09: no user hits these;
 they are the infrastructure `Development/Release_Train.md` assumes.
 
+- [ ] **Canvas previews for app-target files cannot launch** (2026-10-13,
+  `RenderPreview` on `GlyphWaveTextRenderer.swift`): the preview host
+  fails with `CouldNotLoadInputStaticArchiveFile … Debug-iphonesimulator/
+  barkFFI.framework/barkFFI`; the folder exists but the binary inside is
+  `BarkFFI` (capital B), so the JIT path is looking for a differently
+  cased product name. ArkéUI package previews are unaffected. Until
+  fixed, visual checks on Shared views go through the device or a render
+  test on the simulator (`GlyphWaveRenderTests` is the pattern).
 - [ ] **Set up CI via GitHub**: no `.github/` exists. Pair with the nightly
   AI security review via scheduled Claude tasks, which needs CI first. Until
   then the release-candidate step runs the mobile suite by hand.
