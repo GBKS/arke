@@ -109,7 +109,12 @@ the rest wait.
   launch refresh — built and reviewed the same day, device check in the
   Device stage (one launch, icon must not appear); and the Tier 1 launch
   load indicator (built, reviewed and device-checked 2026-10-13 as a glyph
-  wave on the amount; DONE, Device stage has nothing left on it).
+  wave on the amount; DONE, Device stage has nothing left on it). Added
+  2026-10-14 (DECIDED): the Tier 1 Connectivity item "Ark data waits for the
+  onchain sync on every refresh" — Step 2 split into Ark sync → early Ark
+  publish → onchain sync, plus the balance service publishing the Ark
+  balance on arrival; plan in `Features/Launch_Ark_First_Refresh.md`, device
+  check one unattached cold launch with a mailbox payment waiting.
 - Deferred to Train 2, each with its reason: claimed-exit funds (design pass
   on the claim address + test rewrite); backup binding to wallet hash
   (format change on seed-adjacent state, design first — moves into this
@@ -1107,6 +1112,67 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   test: pinning "flag is true before Step 3 ends" needs a mid-refresh
   WalletManager harness that does not exist. Device check owed: one
   launch, icon must not appear.
+- [ ] **Ark data waits for the onchain sync on every refresh** (Christoph's
+  unattached export 2026-10-14 13:01, anchor-relative: Step 2 onchain BDK
+  sync 2.9→5.4 s, Ark sync 5.4→5.6 s, movements saved and the new row shown
+  at 6.0 s, Ark balance read at 5.8 s but published at 10.2 s when the
+  onchain balance returned; wallet ready 13.3 s. On the 2026-10-12 wallet
+  the same onchain sync was 11.6 s.) Two causes, both app-side: (1) the FFI
+  `sync()` wrapper runs `onchainWallet.sync()` before `wallet.sync()`, and
+  Step 3's movement and balance reads come after both; (2)
+  `BalanceService.refreshAllBalances` awaits the Ark and onchain reads as
+  one tuple, and the onchain balance call sits behind the BDK lock of the
+  Step 3 history sync (4.4 s today, 6.3 s on 10-12). The Activity list is a
+  SwiftData query and shows rows at the upsert save, so no list re-publish
+  is needed. Verified at source: bark 0.7.1 `Wallet::sync` (local checkout
+  `8adc8e7`, `bark/src/lib.rs:1951`) "will not refresh VTXOs or sync the
+  onchain wallet" — mailbox, pending rounds/boards/offboards/sends, lightning
+  claims, fee rates; the bark-ffi wrapper (`v0.25.0` tag,
+  `src/core/wallet.rs:234`) only calls it and logs. So the Ark sync has no
+  dependency on our onchain sync and can go first. Fix: split the wrapper
+  into Ark and onchain sync methods (two FFI calls, mirrored as two protocol
+  methods; the composed `sync()` stays for its four UI callers), Step 2
+  becomes Ark sync → early movements + Ark balance read → onchain sync,
+  Step 3 unchanged; the balance service publishes the Ark balance when it
+  arrives and the onchain figure when that arrives, with separate error
+  handling. Expected: row and Ark balance at ≈3.5 s on today's launch.
+  Pull-to-refresh gains the same. Plan with labelled claims and the sibling
+  sweep: `Features/Launch_Ark_First_Refresh.md`. DECIDED 2026-10-14: Tier 1,
+  Train 1; the five UI `sync()` callers stay as they are; the second
+  onchain sync round and the Train 2 launch-timing item are untouched.
+  Built 2026-10-14 (uncommitted): `syncArk()` / `syncOnchain()` on the FFI,
+  protocol, mock and manager; `performRefresh` Steps 2a/2b/2c; balance
+  service publishes each side on arrival; `⏱️ Newest inserted row is X s
+  old at save` log line; contract rule 7c. Adversarial pass the same day:
+  no confirmed defect on the money or startup paths; two plausible items
+  fixed (Step 2b uses the read-your-own-writes movements read and
+  republishes the unified merge), two accepted with device looks owed
+  (Ark-only interim total when the in-memory onchain figure is nil; the
+  Ark balance row saved twice per refresh), citation and plan-text errors
+  corrected — record in the plan's §9, ledger line written. Device check
+  owed: one unattached cold launch with a mailbox payment waiting, export
+  after a minute; expect `Step 2b … after launch anchor` within ~0.5 s of
+  Step 2a and the row age under 1 s. First field result, export 2026-10-14
+  17:53 (pull-to-refresh, 305 movements, no new payment): refresh start
+  46.816, Ark sync done 46.931, Step 2b done 47.180 (movements + Ark
+  balance published 0.36 s in), onchain sync 1.9 s, Step 3 done 49.47 —
+  the Ark data is on screen before the onchain sync starts, as designed;
+  Christoph: "pretty quick". The cold launch in the same export is not
+  readable: the device store had evicted every info line before 42 s after
+  the anchor (see the Tier 2 export item), so the launch-with-waiting-payment
+  check is still owed and needs the export fix or Console.app first.
+- [ ] **Open-time server connection fails on a cold start** (same export,
+  1.4 s after the anchor): bark-ffi's `open` probes `ark_info()` once and
+  logs `[OPEN] Server connection FAILED - Lightning and Ark operations will
+  not work!` at warn level when it returns nothing (`src/core/wallet.rs:205`,
+  `v0.25.0`); Step 1 connected 1.5 s later and everything worked. Likely the
+  radio or DNS not being ready that early. Consequence: the daemon's
+  open-time mailbox drain presumably fails on such launches, so launch-time
+  payments arrive only through our Step 2 sync — one more reason the item
+  above does its own early read rather than relying on the daemon. Nothing
+  to fix in the app beyond not trusting that line; note it for the
+  offline/server-down feature's "is the server reachable" signal, and
+  consider telling Second the message overstates a transient failure.
 - [ ] **The app can never show "disconnected" once the wallet is open**
   (CONFIRMED by the 2026-10-12 adversarial pass, pre-existing): Step 2's
   `sync()` returns `()` in bark 0.7.1 (`bark/src/lib.rs:1980`, every
@@ -1306,6 +1372,62 @@ names the fix it verifies; the write-ups are in the Done log.
 - [ ] **Verify the rest without the ATS exception** (PR #8): force a relay
   register call (not a still-valid registration) and the signet faucet over
   HTTPS.
+
+### Diagnostics and notification path
+
+- [ ] **Debug export can come back empty or miss the first seconds**
+  (2026-10-14, iPhone 17 on iOS 27.0.1, build 24): an export taken 18 s
+  after a cold launch had `Entries: 0`; one taken 51 s after the next launch
+  had 199 entries, but its first info-level lines start 5.4 s after the
+  anchor while error-level lines are present from 1.4 s, so the Step 1 and
+  Step 2 markers and `refresh() CALLED` are missing. The exporter itself is
+  sound: a Swift Testing probe on the iPhone 17 Pro (26.5) and iPhone 17
+  (27.0) simulators saw its own info/notice/error lines (debug is never
+  persisted). Third export 17:53 the same day refutes the lag reading: it
+  was taken 63 s after the anchor, contains info lines from 42 s after the
+  anchor onwards (the pull-to-refresh, 17 s before the export) and none
+  from the launch itself, while error and notice lines from 1.4 s on are
+  present. PLAUSIBLE, revised: on device, info-level entries live in a
+  bounded per-process memory buffer and the oldest are evicted as the
+  buffer fills; the launch is the noisiest window (the debug-level dump of
+  every movement, one "Establishing links" line per movement, the VTXO
+  list), so the launch is exactly what gets evicted. The 12:16 export with
+  zero entries fits a buffer that had just turned over. Until fixed:
+  launch-step timings cannot be read from exports at all; use Console.app
+  with the phone on a cable. Fix shape: mirror the app's own `Logger` lines
+  into an in-process ring buffer the export reads first, with OSLogStore
+  for bark's bridged lines; and cut the launch log volume (the full
+  movements JSON at debug level, per-movement linking lines). The export is
+  the support-case path (2026-10-11), so this gates every unattached
+  measurement. CONFIRMED by the `OSLogType` docs (read 2026-10-14): "the
+  system stores info-level messages in memory buffers and, without a
+  configuration change, purges the oldest messages as those buffers fill
+  up", while default/notice and above are written to the data store. Fix
+  built 2026-10-14 (DECIDED, uncommitted), the documented route rather
+  than a mirror: the launch skeleton now logs at notice — `Launch
+  verdict`, `Existing wallet opened`, `Wallet opened`, `refresh() CALLED`,
+  every `[Refresh] Step` marker incl. `Step 2b … after launch anchor`,
+  `Wallet synced`, `Onchain wallet synced`, `Retrieved N movements`,
+  `Successfully saved`, `Newest inserted row`, `Balance retrieved`,
+  `Onchain balance retrieved`, `Onchain history stabilized`, `DataVersion
+  incremented` (20 lines, no private interpolations). The export header
+  now lists entries per level and states that info is best-effort. Detail
+  lines stay at info and may still be missing from the start of a session;
+  the ring-buffer mirror stays here as the follow-up if that proves
+  limiting. Device check owed: one export after a cold launch must show the
+  `Step 1`…`Step 4` markers.
+- [ ] **Notification listener starts after the launch refresh, so
+  launch-time movements never arrive through it** (attached run 2026-10-14:
+  `Starting notification listener` 9.8 s after `refresh()` was called, after
+  Step 4 and the service starts in `initializePrimaryMode`). Movements that
+  bark writes during the open-time daemon sync or during Step 2 are only
+  ever picked up by Step 3's full read. Starting the listener right after
+  the open would need bark's `NotificationHolder` to replay movements
+  created before the subscriber attached — not documented in the bindings,
+  and the daemon's drain finishes 0.2 s after the open, so even an early
+  start races it. Verify replay semantics at the bindings tag before
+  building anything; the Tier 1 Ark-first item above makes this
+  non-urgent.
 
 ### Other on-device looks
 
@@ -1760,6 +1882,36 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   the Ark data is fresh instead of at the end of the full refresh (today
   that would only halve the window, because Step 2's onchain sync precedes
   the Ark sync); until then the wave stays honest to the full refresh.
+  Data points 2026-10-14 evening (journal, unattached, same build as the
+  Ark-first change): cold launches of 26.5 s and 32.6 s four seconds apart,
+  no step breakdown because the export had evicted the launch's info lines;
+  the pull-to-refresh a minute later took 2.65 s with a 1.9 s onchain sync,
+  so esplora was not slow at that moment. Christoph saw the balance and
+  list refresh quickly and the load wave run about 12 s — if the wave
+  ended at 12 s, `refresh()` returned then and the remaining ~20 s to
+  "Wallet ready" sat in the post-refresh part of `initializePrimaryMode`
+  (exit cache, default-data seeding, arkInfo, service starts), which took
+  80 ms in the 13:01 export. Unexplained; needs a Console.app launch.
+  DECIDED 2026-10-14 (evening): the wave stays honest to the full refresh
+  for now, even though the Ark-first change made "end it at Step 2b"
+  possible; Christoph wants to watch the new launch behaviour for a few
+  days first. Revisit after that.
+  2026-10-14: the Step 2 reorder (Ark sync first, early Ark publish) was
+  split out as the Tier 1 Connectivity item "Ark data waits for the onchain
+  sync on every refresh" (DECIDED, Train 1); what stays here is the
+  one-onchain-sync-per-refresh restructuring and the "Ark-fresh ends the
+  wave" revisit.
+- [ ] **Explicit daemon start is redundant and logs a bark error**: bark
+  0.7.1's `Wallet::open` starts the daemon itself (`Starting daemon for
+  wallet …` is logged before `Existing wallet opened successfully` on every
+  launch, 2026-10-14), so `initializePrimaryMode`'s `runDaemon()` call
+  produces `Called Wallet::start_daemon while daemon was already running` at
+  error level on every launch, and the FFI wrapper still logs "Wallet daemon
+  started successfully". Check the bindings for whether `runDaemon` is
+  still needed on any path (create/import, after `stopDaemonWait`), then
+  drop or guard the launch call and fix the misleading success line. Also
+  counts toward the "four BDK syncs per launch" observation: the daemon's
+  own esplora sync at open, Step 2's, and the two Step 3 history rounds.
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
   refactor. **Next pure-logic extraction**: wallet-detection decisions
@@ -1795,6 +1947,12 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   other interpolation on those lines changes. Verify on a device export that
   "Network config loaded" reads the name instead of `<private>`.
 
+- [ ] **`TransactionListModel` has no callers** (`Shared/Views/Activity/
+  TransactionListModel.swift`, 2026-10-14 grep: no `TransactionListModel(`
+  anywhere in Shared, ArkeMobile or ArkeDesktop). It is the old
+  unified-service-backed list model; the iOS list is a SwiftData `@Query`
+  and the desktop list has its own path. Delete it, or if the desktop list
+  turns out to want it, say so in the file header.
 - [ ] **ArkeGlassButton adoption sweep** (~45 `.glassProminent` + ~29
   `.glass` hand-styled sites across ~39 files; adopted in
   DeviceAssignmentSheets_iOS only; expect slight normalization to

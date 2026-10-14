@@ -35,7 +35,7 @@ Welcome to the project documentation. It is organized to help you understand the
 ## Features
 
 - Exits: [Exit Architecture](Features/Exit_Architecture.md), [Exit Blocked State](Features/Exit_Blocked_State.md), [Exit Completion Issues](Features/Exit_Completion_Issues.md), [Exit Refresh Coordination](Features/Exit_Refresh_Coordination.md)
-- Refresh: [Refresh Deduplication](Features/Refresh_Deduplication.md)
+- Refresh: [Refresh Deduplication](Features/Refresh_Deduplication.md), [Launch: Ark Data Before the Onchain Sync](Features/Launch_Ark_First_Refresh.md)
 - Background: [Background Execution](Features/Background_Execution.md), [Background Activity Journal](Features/Background_Activity_Journal.md), [Relay Registration API](API/Relay_Registration_API.md)
 - Devices and wallet lifecycle: [Read-Only Mode](Features/Read_Only_Mode.md), [Wallet Deletion and Rejoin](Features/Wallet_Deletion_And_Rejoin.md), [Device Registry Reference](Device_Registry_Reference.md), [Wallet First Initialization](Initialization/Wallet_First_Initialization.md), [Startup Wallet Detection Plan](Initialization/Startup_Wallet_Detection_Plan.md)
 - Payments: [SendView Architecture](Send/SendView_Architecture.md), [Payment Destination Selector](Send/Payment_Destination_Selector.md), [Send Metadata](Features/Send_Metadata.md), [LNURL Pay](Features/LNURL_Pay.md)

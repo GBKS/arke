@@ -9,6 +9,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 - **[Exit_Completion_Issues.md](Exit_Completion_Issues.md)** — fee double-count, cancelled-exit date bump, live activity respawn
 - **[Exit_Refresh_Coordination.md](Exit_Refresh_Coordination.md)** — keeping exits and refreshes from fighting over the same VTXOs
 - **[Refresh_Deduplication.md](Refresh_Deduplication.md)** — the guiding doc for VTXO refresh scheduling and deduplication
+- **[Launch_Ark_First_Refresh.md](Launch_Ark_First_Refresh.md)** — plan (DECIDED 2026-10-14): Ark sync and Ark reads before the onchain sync in every full refresh, balance published on arrival
 
 ## Background execution
 
