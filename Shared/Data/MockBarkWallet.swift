@@ -295,6 +295,16 @@ class MockBarkWallet: BarkWalletProtocol {
         try await Task.sleep(nanoseconds: 500_000_000)
         print("🔄 Mock: Wallet synced with ASP server")
     }
+
+    func syncArk() async throws {
+        try await Task.sleep(nanoseconds: 100_000_000)
+        print("🔄 Mock: Ark wallet state synced")
+    }
+
+    func syncOnchain() async throws {
+        try await Task.sleep(nanoseconds: 400_000_000)
+        print("🔄 Mock: Onchain wallet synced")
+    }
     
     func getLatestBlockHeight() async throws -> Int {
         try await Task.sleep(nanoseconds: 500_000_000)

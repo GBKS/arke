@@ -44,7 +44,7 @@ extension BarkWalletFFI {
             knownOnchainTxids = result.txids
             let walletTransactions = result.transactions
             if result.rounds > 1 {
-                Self.logger.info("Onchain history stabilized after \(result.rounds) sync round(s)")
+                Self.logger.notice("Onchain history stabilized after \(result.rounds) sync round(s)")
             }
             if result.rounds == OnchainHistorySyncer.maxRounds {
                 Self.logger.warning("Onchain history still changing after \(result.rounds) sync rounds - discovery may complete on the next refresh")
@@ -116,7 +116,7 @@ extension BarkWalletFFI {
             // Call FFI movements method
             let movements = try await wallet.history()
             
-            Self.logger.info("Retrieved \(movements.count) movements")
+            Self.logger.notice("Retrieved \(movements.count) movements")
             // Self.logger.debug("Movements: \(movements)")
             
             // Log movements with exited VTXOs for debugging

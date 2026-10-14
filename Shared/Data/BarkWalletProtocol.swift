@@ -115,6 +115,11 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     // MARK: - Sync & Maintenance
     
     func sync() async throws
+    /// Ark-side sync alone (bark `Wallet::sync`, one FFI call). `sync()` runs
+    /// both halves, onchain then Ark.
+    func syncArk() async throws
+    /// Onchain BDK sync alone (one FFI call on the onchain wallet).
+    func syncOnchain() async throws
     func maintenanceRefresh() async throws -> String?
 
     // MARK: - Delegated / Non-interactive Operations

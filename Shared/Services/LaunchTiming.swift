@@ -29,10 +29,18 @@ enum LaunchTiming {
 
     private static var walletReadyLogged = false
 
+
     /// Call as early as possible in the app's init so `processStart` anchors
     /// near the actual launch rather than at first use.
     static func anchor() {
         _ = processStart
+    }
+
+    /// Seconds since the launch anchor, formatted for log lines that place a
+    /// launch step on the same clock as `logWalletReady`. On a refresh long
+    /// after launch this is dwell time, which the line's wording allows for.
+    static var secondsSinceAnchor: String {
+        String(format: "%.2f", Date().timeIntervalSince(processStart))
     }
 
     /// Logs the launch → wallet-ready duration. The first call per process is
@@ -40,6 +48,7 @@ enum LaunchTiming {
     /// up in sysdiagnose/TestFlight logs); later re-initializations log at
     /// debug level.
     static func logWalletReady(initialized: Bool) {
+        
         let elapsed = String(format: "%.2f", Date().timeIntervalSince(processStart))
         if walletReadyLogged {
             logger.debug("⏱️ Wallet re-initialized (success: \(initialized)) \(elapsed, privacy: .public)s after launch anchor")

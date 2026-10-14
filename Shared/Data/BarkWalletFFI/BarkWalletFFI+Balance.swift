@@ -42,7 +42,7 @@ extension BarkWalletFFI {
             // Call FFI balance method
             let ffiBalance = try await wallet.balance()
             
-            Self.logger.info("Balance retrieved - Spendable: \(ffiBalance.spendableSats) sats")
+            Self.logger.notice("Balance retrieved - Spendable: \(ffiBalance.spendableSats) sats")
             Self.logger.debug("Pending Lightning Send: \(ffiBalance.pendingLightningSendSats) sats")
             Self.logger.debug("Pending in round: \(ffiBalance.pendingInRoundSats) sats")
             Self.logger.debug("Pending exit: \(ffiBalance.pendingExitSats) sats")
@@ -182,7 +182,7 @@ extension BarkWalletFFI {
             // Call built-in wallet's balance method
             let ffiBalance = try await onchainWallet.balance()
             
-            Self.logger.info("Onchain balance retrieved - Total: \(ffiBalance.totalSats) sats")
+            Self.logger.notice("Onchain balance retrieved - Total: \(ffiBalance.totalSats) sats")
             Self.logger.debug("Confirmed: \(ffiBalance.confirmedSats) sats, Pending: \(ffiBalance.pendingSats) sats")
             
             // Convert FFI OnchainBalance to OnchainBalanceResponse (direct 1:1 mapping)

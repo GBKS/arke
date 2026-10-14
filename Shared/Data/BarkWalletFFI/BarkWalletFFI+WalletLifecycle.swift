@@ -270,7 +270,7 @@ extension BarkWalletFFI {
             secureWalletFilePermissions()
 
             // let afterOpen = Date()
-            Self.logger.info("Existing wallet opened successfully")
+            Self.logger.notice("Existing wallet opened successfully")
             // Self.logger.debug("[DIAGNOSTIC] Wallet.open() took \(afterOpen.timeIntervalSince(beforeOpen)) seconds")
             // Self.logger.debug("[DIAGNOSTIC] Total time: \(afterOpen.timeIntervalSince(startTime)) seconds")
             

@@ -74,6 +74,11 @@ extension TransactionService {
             var updatedCount = 0
             var preservedTagCount = 0
             var autoAssignedCount = 0
+            // Newest date among the rows inserted in this pass. The row date is
+            // bark's `completed_at ?? created_at`, stamped with the local clock
+            // when bark wrote it, so the age at save is the bark-to-screen lag
+            // in one number (Launch_Ark_First_Refresh.md §4.2)
+            var newestInsertedDate: Date?
             
             for movement in movements {
                 let movementTransactions = await parseMovementToTransactions(movement)
@@ -122,8 +127,11 @@ extension TransactionService {
                         
                         // Add to dictionary to prevent duplicates within this batch
                         existingTransactionDict[transactionData.txid] = newTransaction
-                        
+
                         upsertedCount += 1
+                        if newestInsertedDate.map({ transactionData.date > $0 }) ?? true {
+                            newestInsertedDate = transactionData.date
+                        }
                         
                         // Auto-assign contact if transaction has an address
                         // For Lightning payments, prioritize lightningOffer (BOLT12 offer)
@@ -176,7 +184,11 @@ extension TransactionService {
             // Save changes
             try modelContext.save()
 
-            Self.logger.info("💾 Successfully saved \(upsertedCount) new, \(updatedCount) updated transactions")
+            Self.logger.notice("💾 Successfully saved \(upsertedCount) new, \(updatedCount) updated transactions")
+            if let newestInsertedDate {
+                let ageSeconds = String(format: "%.1f", Date().timeIntervalSince(newestInsertedDate))
+                Self.logger.notice("⏱️ Newest inserted row is \(ageSeconds, privacy: .public)s old at save")
+            }
             if autoAssignedCount > 0 {
                 Self.logger.info("🔗 Auto-assigned \(autoAssignedCount) transaction(s) to contacts based on address matching")
             }

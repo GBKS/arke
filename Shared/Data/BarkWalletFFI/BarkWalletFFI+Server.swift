@@ -116,39 +116,25 @@ extension BarkWalletFFI {
         }
     }
     
-    func sync() async throws {
-        // Synchronize wallet state with the ASP server
-        
+    /// Ark-side sync alone: bark's `Wallet::sync` — mailbox, pending rounds,
+    /// boards, offboards, sends, Lightning claims, fee rates. It does not
+    /// touch the onchain BDK wallet (tag `bark-0.7.1`, `bark/src/lib.rs:1980`,
+    /// verified 2026-10-14), so it can run before `syncOnchain()`.
+    func syncArk() async throws {
         if isPreview {
-            Self.logger.info("Mock: Synced wallet (preview mode)")
+            Self.logger.info("Mock: Ark sync (preview mode)")
             return
         }
-        
-        // Ensure wallet is initialized
+
         guard let wallet = wallet else {
             throw BarkWalletFFIError.walletNotInitialized
         }
-        
-        Self.logger.debug("Syncing wallet with ASP server...")
-        
+
+        Self.logger.debug("Syncing Ark wallet state with server...")
+
         do {
-            // Sync the onchain wallet if available (non-fatal if it fails)
-            if let onchainWallet = onchainWallet {
-                do {
-                    _ = try await onchainWallet.sync()
-                    Self.logger.info("Onchain wallet synced successfully")
-                } catch {
-                    // Don't crash the app if onchain sync fails
-                    // This can happen if Esplora is unreachable or returns unexpected data
-                    Self.logger.warning("Onchain wallet sync failed (non-fatal): \(error), Continuing with Ark wallet sync...")
-                }
-            }
-            
-            // Call FFI sync method
             _ = try await wallet.sync()
-            
-            Self.logger.info("Wallet synced successfully")
-            
+            Self.logger.notice("Wallet synced successfully")
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error syncing wallet: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to sync wallet: \(error.localizedDescription)")
@@ -156,6 +142,41 @@ extension BarkWalletFFI {
             Self.logger.error("Error syncing wallet: \(error)")
             throw error
         }
+    }
+
+    /// Onchain-side sync alone: the BDK wallet against esplora. Non-fatal as
+    /// it always was — an unreachable esplora must not fail a refresh.
+    func syncOnchain() async throws {
+        if isPreview {
+            Self.logger.info("Mock: Onchain sync (preview mode)")
+            return
+        }
+
+        guard wallet != nil else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        guard let onchainWallet = onchainWallet else {
+            Self.logger.debug("No onchain wallet - skipping onchain sync")
+            return
+        }
+
+        do {
+            _ = try await onchainWallet.sync()
+            Self.logger.notice("Onchain wallet synced successfully")
+        } catch {
+            // Esplora unreachable or returning unexpected data — keep going
+            Self.logger.warning("Onchain wallet sync failed (non-fatal): \(error)")
+        }
+    }
+
+    /// Both syncs in the historical order, onchain then Ark. Kept for the
+    /// callers that want one call (the UI sync buttons, the Lightning claim
+    /// check); `performRefresh` orders the two itself so the Ark data can
+    /// publish first (Features/Launch_Ark_First_Refresh.md).
+    func sync() async throws {
+        try await syncOnchain()
+        try await syncArk()
     }
     
     // MARK: - Server Connection (New in FFI)

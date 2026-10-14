@@ -58,6 +58,23 @@ extension WalletManager {
         }
         try await wallet.sync()
     }
+
+    /// Ark-side sync alone; `performRefresh` runs it before the onchain sync
+    /// so new movements and the Ark balance publish first.
+    func syncArk() async throws {
+        guard let wallet = wallet else {
+            throw BarkErrorArke.commandFailed("Wallet not initialized")
+        }
+        try await wallet.syncArk()
+    }
+
+    /// Onchain BDK sync alone (non-fatal inside the FFI).
+    func syncOnchain() async throws {
+        guard let wallet = wallet else {
+            throw BarkErrorArke.commandFailed("Wallet not initialized")
+        }
+        try await wallet.syncOnchain()
+    }
     
     // MARK: - Exit Operations
     

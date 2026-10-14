@@ -705,7 +705,7 @@ class WalletManager {
                 isInitialized = false
                 return
             }
-            Self.logger.info("✅ Wallet opened successfully")
+            Self.logger.notice("✅ Wallet opened successfully")
             
             // Start the daemon for background operations (syncs, exit progression, etc.)
             do {
@@ -868,7 +868,7 @@ class WalletManager {
     /// Centralized refresh - orchestrates all services
     func refresh(caller: String = #function, file: String = #file, line: Int = #line) async {
         let fileName = (file as NSString).lastPathComponent
-        Self.logger.info("🔄 [WalletManager] 📞 refresh() CALLED")
+        Self.logger.notice("🔄 [WalletManager] 📞 refresh() CALLED")
         Self.logger.info("   ├─ From: \(fileName):\(line)")
         Self.logger.info("   └─ Function: \(caller)")
         
@@ -944,9 +944,16 @@ class WalletManager {
 
         // Track if any server communication succeeded
         var anyServerCallSucceeded = false
-        
+
+        // The step markers below log at notice level, not info: on device,
+        // info-level entries live in memory buffers whose oldest entries are
+        // purged as they fill, and the launch is the noisiest window, so the
+        // debug export lost every launch marker three times on 2026-10-14.
+        // Notice-level entries go to the data store (OSLogType docs). Keep
+        // the markers free of private interpolations.
+
         // Step 1: Ensure server connection is fresh
-        Self.logger.info("🔄 [Refresh] Step 1: Refreshing server connection...")
+        Self.logger.notice("🔄 [Refresh] Step 1: Refreshing server connection...")
         if await refreshServer() {
             anyServerCallSucceeded = true
             Self.logger.info("✅ [Refresh] Server connection successful")
@@ -967,20 +974,62 @@ class WalletManager {
             // We don't return here - we'll try to continue with the refresh
         }
         
-        // Step 2: Sync wallet state with ASP server
-        Self.logger.info("🔄 [Refresh] Step 2: Syncing wallet state with server...")
+        // Step 2a: Ark sync — mailbox, pending rounds/boards/sends, Lightning
+        // claims, fee rates. bark's `Wallet::sync` does not touch the onchain
+        // wallet (tag `bark-0.7.1`, `bark/src/lib.rs:1980`, verified
+        // 2026-10-14), so it runs first: new movements are written here,
+        // seconds before the onchain BDK sync would have let Step 3 read them
+        // (Features/Launch_Ark_First_Refresh.md).
+        Self.logger.notice("🔄 [Refresh] Step 2a: Syncing Ark wallet state with server...")
         do {
-            try await sync()
+            try await syncArk()
             anyServerCallSucceeded = true
-            Self.logger.info("✅ [Refresh] Wallet state synced successfully")
+            Self.logger.info("✅ [Refresh] Ark wallet state synced successfully")
         } catch {
-            Self.logger.warning("⚠️ [Refresh] Wallet sync failed: \(error)")
-            // We'll continue with the refresh even if sync fails
-            // The user's local cache might still be usable
+            Self.logger.warning("⚠️ [Refresh] Ark sync failed: \(error)")
+            // Continue: the reads below show the last-known local state
         }
-        
+
+        // Step 2b: early Ark publish. Both are local reads of bark's database.
+        // The movements upsert saves into SwiftData, which is what the iOS
+        // Activity list renders; the Ark balance publishes through the balance
+        // service beside the persisted onchain figure. Step 3 repeats both
+        // reads a second time (idempotent upsert, second balance read). Runs
+        // even when Step 2a failed, as Step 3 always did on that path.
+        //
+        // The movements read is the read-your-own-writes variant: Step 2a
+        // just wrote, and the joining `refreshTransactions()` could attach to
+        // a notification-path read that started before the sync and publish
+        // the pre-sync list as the early publish (adversarial pass
+        // 2026-10-14). The Ark balance read has only the joining form, so on a
+        // non-launch refresh it may publish a pre-sync figure that Step 3
+        // corrects; accepted, see the plan's review record.
+        Self.logger.notice("🔄 [Refresh] Step 2b: Early Ark publish (movements + Ark balance)...")
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                await self.transactionService?.refreshTransactionsAfterWrite()
+            }
+            group.addTask {
+                await self.balanceService?.refreshArkBalance()
+            }
+        }
+        // Republish the unified stored merge too, so `WalletManager.transactions`
+        // readers (Guard C, `hasActiveRefresh`, the desktop list) do not lag
+        // the SwiftData rows by the whole onchain sync. Local merge, no FFI.
+        await unifiedTransactionService?.mergeTransactions()
+        Self.logger.notice("✅ [Refresh] Step 2b: Early Ark publish done \(LaunchTiming.secondsSinceAnchor, privacy: .public)s after launch anchor")
+
+        // Step 2c: onchain BDK sync against esplora. Non-fatal inside the FFI;
+        // the only throw is a nil handle, which the guard above excludes.
+        Self.logger.notice("🔄 [Refresh] Step 2c: Syncing onchain wallet...")
+        do {
+            try await syncOnchain()
+        } catch {
+            Self.logger.warning("⚠️ [Refresh] Onchain sync failed: \(error)")
+        }
+
         // Step 3: Coordinate service refreshes in parallel where possible
-        Self.logger.info("🔄 [Refresh] Step 3: Refreshing wallet data (balances, addresses, transactions, block height)...")
+        Self.logger.notice("🔄 [Refresh] Step 3: Refreshing wallet data (balances, addresses, transactions, block height)...")
 
         // Addresses first, before the parallel group: on a fresh import,
         // loading addresses reveals the wallet's first onchain address, and
@@ -1030,7 +1079,7 @@ class WalletManager {
         }
         
         // Merge transactions from both sources after refresh
-        Self.logger.info("🔄 [Refresh] Step 3.1: Merging ark + onchain transactions...")
+        Self.logger.notice("🔄 [Refresh] Step 3.1: Merging ark + onchain transactions...")
         await unifiedTransactionService?.mergeTransactions()
         
         // Check for errors from services and log them for debugging
@@ -1054,7 +1103,7 @@ class WalletManager {
         }
         
         // Step 4: After successful refresh, update process state service and exit cache
-        Self.logger.info("🔄 [Refresh] Step 4: Updating process states and exit cache...")
+        Self.logger.notice("🔄 [Refresh] Step 4: Updating process states and exit cache...")
         await refreshProcessStates(isConnected: anyServerCallSucceeded)
         await refreshExitCache()
         
@@ -1073,7 +1122,7 @@ class WalletManager {
         // CRITICAL: Always increment dataVersion to trigger UI updates, even if there were errors
         // This ensures the UI shows whatever data we did manage to fetch
         dataVersion += 1
-        Self.logger.info("📊 DataVersion incremented to \(self.dataVersion) after refresh (triggers UI update)")
+        Self.logger.notice("📊 DataVersion incremented to \(self.dataVersion) after refresh (triggers UI update)")
     }
     
     /// Refresh process states after wallet data is loaded

@@ -604,7 +604,7 @@ struct MainView_iOS: View {
         } else {
             route = "onboarding"
         }
-        Self.logger.info("🔍 Launch verdict: earlyDetected=\(initialWalletDetected), state=\(String(describing: walletState), privacy: .public), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route, privacy: .public), took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime), privacy: .public)s")
+        Self.logger.notice("🔍 Launch verdict: earlyDetected=\(initialWalletDetected), state=\(String(describing: walletState), privacy: .public), definitive=\(securityService.lastDetectionWasDefinitive), route=\(route, privacy: .public), took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - checkStartTime), privacy: .public)s")
     }
 }
 

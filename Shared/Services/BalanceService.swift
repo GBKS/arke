@@ -88,30 +88,43 @@ class BalanceService {
     
     // MARK: - Balance Refresh Methods
     
-    /// Refresh all balances in parallel
+    /// Refresh both balances. The reads start together, but each publishes as
+    /// soon as it returns: the Ark read is a local database lookup, while the
+    /// onchain read waits behind the BDK sync lock (4–6 s on a launch, field
+    /// exports 2026-10-12/14), and holding the Ark figure for it kept the
+    /// balance card stale for exactly that long
+    /// (Features/Launch_Ark_First_Refresh.md §4.3). `updateTotalBalance`
+    /// pairs the fresh side with the persisted other side, so nothing flashes
+    /// to zero on a wallet that has launched before.
     func refreshAllBalances() async {
+        async let arkBalanceResult = getArkBalanceWithDeduplication()
+        async let onchainBalanceResult = getOnchainBalanceWithDeduplication()
+
+        var arkError: String?
+        var onchainError: String?
+
         do {
-            // Fetch balances in parallel (with deduplication)
-            async let arkBalanceResult = getArkBalanceWithDeduplication()
-            async let onchainBalanceResult = getOnchainBalanceWithDeduplication()
-            
-            // Wait for both balances to complete
-            let (arkResponse, onchainResponse) = try await (arkBalanceResult, onchainBalanceResult)
-            
-            // Update Ark balance (both UI state and persistence)
+            let arkResponse = try await arkBalanceResult
             await updateArkBalanceFromResponse(arkResponse)
-            
-            // Update onchain balance (both UI state and persistence)
-            await updateOnchainBalanceFromResponse(onchainResponse)
-            
             updateTotalBalance()
-            
-            error = nil
-            print("✅ All balances refreshed successfully \(Date())")
-            
         } catch {
-            self.error = "Failed to refresh balances: \(error)"
-            print("❌ Failed to refresh balances: \(error)")
+            arkError = "Failed to refresh Ark balance: \(error)"
+            print("❌ Failed to refresh Ark balance: \(error)")
+        }
+
+        do {
+            let onchainResponse = try await onchainBalanceResult
+            await updateOnchainBalanceFromResponse(onchainResponse)
+            updateTotalBalance()
+        } catch {
+            onchainError = "Failed to refresh onchain balance: \(error)"
+            print("❌ Failed to refresh onchain balance: \(error)")
+        }
+
+        // One failure must not hide the other side's successful publish
+        error = arkError ?? onchainError
+        if error == nil {
+            print("✅ All balances refreshed successfully \(Date())")
         }
     }
     

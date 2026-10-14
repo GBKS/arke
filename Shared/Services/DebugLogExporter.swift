@@ -55,7 +55,7 @@ nonisolated enum DebugLogExporter {
         // Reading the unified log can be slow; keep it off the main thread.
         return try await Task.detached(priority: .userInitiated) {
             let body = try collectLogBody(hours: hours)
-            let header = makeHeader(contextLines: contextLines, entryCount: body.entryCount)
+            let header = makeHeader(contextLines: contextLines, entryCount: body.entryCount, levelCounts: body.levelCounts)
             let contents = header + "\n" + body.text + "\n" + makeJournalSection(events: journalEvents)
 
             let url = FileManager.default.temporaryDirectory
@@ -70,6 +70,11 @@ nonisolated enum DebugLogExporter {
     private struct LogBody {
         let text: String
         let entryCount: Int
+        /// Entry count per level label, for the header: on device, info-level
+        /// entries are memory-only and the oldest are purged as the buffer
+        /// fills, so a reader needs to know how much of the session survived
+        /// at each level before trusting a gap (exports of 2026-10-14).
+        let levelCounts: [String: Int]
     }
 
     private static func collectLogBody(hours: Int) throws -> LogBody {
@@ -88,18 +93,20 @@ nonisolated enum DebugLogExporter {
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
 
         var lines: [String] = []
+        var levelCounts: [String: Int] = [:]
         for entry in entries {
             guard let log = entry as? OSLogEntryLog else { continue }
             let timestamp = formatter.string(from: log.date)
             let level = levelLabel(log.level)
+            levelCounts[level, default: 0] += 1
             let category = log.category.isEmpty ? "-" : log.category
             lines.append("\(timestamp)  [\(level)]  [\(category)]  \(log.composedMessage)")
         }
 
         if lines.isEmpty {
-            return LogBody(text: "(no log entries found for this session)\n", entryCount: 0)
+            return LogBody(text: "(no log entries found for this session)\n", entryCount: 0, levelCounts: [:])
         }
-        return LogBody(text: lines.joined(separator: "\n") + "\n", entryCount: lines.count)
+        return LogBody(text: lines.joined(separator: "\n") + "\n", entryCount: lines.count, levelCounts: levelCounts)
     }
 
     private static func levelLabel(_ level: OSLogEntryLog.Level) -> String {
@@ -143,18 +150,27 @@ nonisolated enum DebugLogExporter {
 
     // MARK: - Header
 
-    private static func makeHeader(contextLines: [String], entryCount: Int) -> String {
+    private static func makeHeader(contextLines: [String], entryCount: Int, levelCounts: [String: Int]) -> String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
 
         let os = ProcessInfo.processInfo.operatingSystemVersion
 
+        let levelSummary = levelCounts
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key.lowercased()) \($0.value)" }
+            .joined(separator: ", ")
+
         var lines: [String] = [
             "===== Arké debug log =====",
             "Generated: \(ISO8601DateFormatter().string(from: Date()))",
             // OSLogStore current-process scope only exposes this app session.
-            "Scope: current session  •  Entries: \(entryCount)",
+            "Scope: current session  •  Entries: \(entryCount)" + (levelSummary.isEmpty ? "" : " (\(levelSummary))"),
+            // Info entries are memory-only on device and the oldest are purged
+            // as the buffer fills; notice and above reach the data store. The
+            // launch markers log at notice for that reason.
+            "Levels: notice+ persisted; info is best-effort and may be missing from the start of the session",
             "App version: \(version) (\(build))",
             "OS: \(os.majorVersion).\(os.minorVersion).\(os.patchVersion)",
         ]
