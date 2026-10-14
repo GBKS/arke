@@ -97,6 +97,25 @@ both status containers and `BalanceRefreshTag` (`onChange(of: isInitialized)`).
 A new owner of that view model needs the same reload hook, or it sits in the
 loading state for the session. Test: none.
 
+**7c. Ark sync and the Ark reads come before the onchain BDK sync in every
+full refresh.** bark's `Wallet::sync` does not touch the onchain wallet
+(tag `bark-0.7.1`, `bark/src/lib.rs:1980`; also true at `bark-0.6.2`,
+`lib.rs:1857`; verified 2026-10-14), while the onchain
+sync is the long pole of a refresh (2.5–11.6 s in field exports). Ordering
+it first held every new movement and the Ark balance behind it: field
+export 2026-10-14, row shown at 6.0 s and Ark balance at 10.2 s after the
+anchor, both readable by 3.5 s. `performRefresh()` therefore runs Step 2a
+`syncArk()`, Step 2b an early movements + Ark balance read, Step 2c
+`syncOnchain()`, then Step 3 as before; and `BalanceService.refreshAllBalances`
+publishes each side as it returns instead of awaiting both. The composed
+`sync()` keeps onchain-then-Ark for its UI callers (ruling 2026-10-14).
+Anything new that reads Ark state in a refresh goes into Step 2b or after
+it, never between Step 2c and Step 3. Enforced: `WalletManager.performRefresh()`
+(positional), `BalanceService.refreshAllBalances()`. Test: none — pinning
+the order needs the mid-refresh harness rule 7b also lacks; the device
+check is the `Step 2b … after launch anchor` line against `Wallet ready`.
+Plan: `Features/Launch_Ark_First_Refresh.md`.
+
 ## Exit progression and Live Activities (iOS)
 
 **8. Launch order: reattach → first `checkAndProgressExits` → `recreateMissingActivities` → reminder re-arm.**
