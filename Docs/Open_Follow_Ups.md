@@ -84,7 +84,12 @@ the rest wait.
      on deletion ✓ 2026-10-13 (amount + time to expiry, strategy-aware copy,
      uncommitted); permission-denied banner for expiry reminders.
   2. **Deletion (traced traps, same function):** skip the backup on the
-     delete path; partial-failure handling + `isDeleting`; ghost-hardening
+     delete path ✓ 2026-10-14 (built, reviewed, device-checked the same
+     evening, uncommitted; plan `Features/Wallet_Deletion_Backup_Skip.md`;
+     the check surfaced the Tier 1 "deleted wallet's onchain row reappears"
+     regression from 31e2f10, filed under Data safety); the two-word
+     phrase confirmation next (DECIDED 2026-10-10, did not ride along);
+     partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
      `unlinkDevice`); wrap the four unprotected store writes; end the exit
      Live Activity on demotion + drop dead `closeWallet()` (DECIDED
@@ -378,8 +383,10 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   2026-10-08 (external parser harness against the working tree):
   `{"1": 250000.0}` yields 250,000 sat/vB for all three tiers. Also check
   what the confirmation screen shows for the fee at such a rate — not traced.
-- [ ] **"Delete everything" re-creates the iCloud backup it just deleted**
-  (traced 2026-10-08, not executed): `DeleteWalletSettingView.deleteWallet`
+- [x] **"Delete everything" re-creates the iCloud backup it just deleted**
+  — done 2026-10-14, device check passed the same evening (two full wipes
+  logged the skip, the import between them found no backup; plan §8.1).
+  Original entry: (traced 2026-10-08, not executed): `DeleteWalletSettingView.deleteWallet`
   runs `cleanupService.deleteWalletData` (which calls
   `WalletBackupService.deleteAllBackups()`), then `walletManager.deleteWallet()`
   → `BarkWalletFFI.deleteWallet()` → `shutdownWallet()` → `backupWallet()`,
@@ -391,9 +398,28 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   such a leftover is restored over the next wallet created. Fix: skip the
   backup on the delete path (a flag on shutdown, or delete backups after
   shutdown). Same function as "Delete flow has no partial-failure handling"
-  below: one build cluster.
+  below: one build cluster. **BUILT, REVIEWED and DEVICE-CHECKED 2026-10-14**
+  (uncommitted; 504/504 mobile; app-switch variant passed in the 21:50
+  export, nothing left on device), plan in
+  `Features/Wallet_Deletion_Backup_Skip.md`: `WalletManager.deleteWallet(scope:)`
+  reads `DeletionSummary.scope` and on `.everywhere` runs the FFI shutdown
+  with `backingUp: false` before the file delete; the backup slot joins
+  `SharedStateWipeCoverage` as full-wipe-only. Consequence corrected there:
+  the leftover is restored only on the no-local-file launch branch, not
+  over a freshly created wallet (newest-wins keeps the newer local file).
+  Test choice DECIDED 2026-10-14: no backup-directory injection, the device
+  check is the proof. Adversarial pass 2026-10-14 (plan §10): one CONFIRMED
+  finding fixed in-session — the app's background backup hook could refill
+  the slot during the 5–15 s wipe window, so opportunistic backups are now
+  suspended for the whole deletion; the local-only final backup still
+  runs. Side findings filed in the plan's §9 for other items:
+  `deleteAllBackups` skips hidden `.icloud` placeholders of a never-
+  downloaded backup (goes with the newest-wins item below), and
+  `restoreWalletFromBackup` would overwrite the slot with the local file if
+  ever called with an open handle (Tier 4, guarded by the caller today).
   Done means: delete-everywhere then create on one device, backup slot
-  stays empty, plus a test on the shutdown/backup ordering. Local-only
+  stays empty (relaunch log says no backup available; the ordering test was
+  dropped 2026-10-14, see the plan). Local-only
   deletion keeps the backup on purpose (rejoin) — do not touch that branch.
 - [ ] **Backup restore is newest-wins with no wallet binding**: one
   `Backups/db.sqlite` slot per iCloud account, written by plain file copy;
@@ -653,7 +679,14 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   deletions, promote/demote/unlink, send as opt-in) and the link screen
   itself is not a gated action. Build with or after the linking scope pass.
 - [ ] **Delete flow has no partial-failure handling**
-  (`DeleteWalletSettingView.swift:276-328`): `deleteWalletData()` runs first,
+  (`DeleteWalletSettingView.swift:276-328`). Added 2026-10-14 from the
+  deletion device log: the flow also does not wait for or cancel an
+  in-flight refresh — wipe 1 ran while the launch refresh was in Step 3, the
+  cleanup deleted the rows at 19:22:11.5 and Step 3.1 merged at 19:22:12.4,
+  re-creating the deleted wallet's onchain row into the no-wallet state
+  (rule 17 orders services, not the refresh task). Await or cancel the
+  refresh before the cleanup's first destructive step. Original entry:
+  `deleteWalletData()` runs first,
   then `walletManager.deleteWallet()`; if the second throws, shared state is
   already destroyed and the user stays in-app with no navigation
   (`onWalletDeleted` is wired, the generic catch never calls it). The view's
@@ -993,6 +1026,48 @@ Tier 0/1 work. Guiding docs hold the full arguments.
 ### Data safety
 
 (The metadata-import name-merge item moved to Tier 0 on 2026-10-09.)
+
+- [x] **A deleted wallet's onchain row reappears in the next wallet created
+  in the same process** — trigger (1) fixed 2026-10-14 (uncommitted):
+  `resetManagerState()` now calls `OnchainTransactionService.resetTransactions()`
+  (list + 30 s cache, dead entity-clear dropped) and the new
+  `UnifiedTransactionService.resetMergedTransactions()`. Device check passed
+  the same evening (21:50 export: delete → create in one session, Step 2b
+  saved 0 rows, Activity empty). Trigger
+  (2), deletion racing an in-flight refresh, stays open with the Tier 0
+  partial-failure item. Original entry: (field, Christoph 2026-10-14 21:24
+  export + four
+  screenshots: new mainnet wallet, balance 0, one "Received +20,000 sats, 2
+  wk. ago" row, category `onchain_transaction`, 2125 confirmations — the
+  previous wallet's onchain receive; bark reported `Retrieved 0 onchain
+  transactions` for the new wallet). Traced: nothing resets
+  `OnchainTransactionService` on deletion — `resetTransactions()` has zero
+  callers and `resetManagerState()` (`WalletManager+Wallet.swift`) skips the
+  service — so its in-memory `onchainTransactions` still holds the deleted
+  wallet's list. Every `UnifiedTransactionService.mergeTransactions()` turns
+  that array into `PersistentTransaction` rows via
+  `findOrCreatePersistentOnchainTransaction` (`:292-359`, insert + save,
+  never a delete), and the list shows them through the ark service's
+  all-rows fetch (`TransactionService.swift:100`). Two triggers in the log:
+  (1) **regression from `31e2f10` (2026-10-13)** — Step 2b now merges at
+  19:24:13.7, six seconds *before* Step 3's fresh onchain fetch replaced
+  the array at 19:24:19.67, so the first refresh of every freshly created
+  wallet re-creates the old rows; before Step 2b the only merge ran after
+  the fetch and the fault was latent. (2) **deletion does not wait for the
+  in-flight refresh**: wipe 1 ran while the launch refresh was still in
+  Step 3; the cleanup deleted the rows at ~19:22:11.5 and Step 3.1 merged
+  at 19:22:12.4, re-creating the row into the no-wallet state (contract
+  rule 17 orders services, not the refresh task). Fix: reset the onchain
+  service (array + 30 s cache) in `resetManagerState()`; note
+  `resetTransactions()` also tries to clear `OnchainTransactionEntity`, a
+  model that is **not in the schema** (`SwiftDataHelper.swift:49` lists
+  `PersistentTransaction` only), so that persistence branch is dead and
+  should go. For (2), the refresh should be awaited or cancelled before the
+  cleanup's first destructive step — same family as the Tier 0
+  partial-failure item. Ark rows are unaffected (their upsert diffs against
+  bark's list, which is empty for a new wallet). Display only, no funds;
+  Tier 1 because every delete → create in one session now shows a foreign
+  transaction in a brand-new wallet.
 
 - [ ] **The transaction upsert deletes duplicate `PersistentTransaction`
   rows itself** (`TransactionService+Upsert.swift`,
@@ -1589,6 +1664,17 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Settings, devices, deletion
 
+- [ ] **An iOS build run on the Mac registers as "iPad8,6"** (Christoph's
+  Devices list, 2026-10-14): Xcode's "My Mac (Designed for iPad)" run of
+  2026-10-01 22:07 (the `.XCInstall/ArkeMobile.app/WrappedBundle` wrapper in
+  DerivedData) shares the account's iCloud Keychain, found the seed and
+  registered through the detection path (`MainView_iOS.swift:62`) as a
+  secondary. iOS apps on Apple silicon report `utsname.machine` as
+  `iPad8,6`, and `getDeviceModelName`'s map has no entry for it, so the row
+  shows the raw identifier with the phone icon. Label it honestly
+  (`ProcessInfo.processInfo.isiOSAppOnMac` → "Mac (iPhone app)", Mac icon)
+  and add the identifier to the map. Such a row counts as a live device for
+  the deletion strategy and the forfeit-warning copy until it is unlinked.
 - [ ] **Delete wallet with an exit in flight shows no funds warning** (from
   the 2026-10-13 forfeit-warning review, PLAUSIBLE; Tier 3 confirmed by
   Christoph 2026-10-14, no field case): the old generic box
@@ -1853,6 +1939,15 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   `RoundState.scheduledHeight` is already in the binding.
 
 ### Startup and background structure
+
+- [ ] **`OnchainTransactionEntity` persistence is dead code**: the model
+  (`Shared/Models/OnchainTransactionEntity.swift`) is not in the schema
+  (`SwiftDataHelper.swift:49` lists `PersistentTransaction` only), so
+  `OnchainTransactionService.persistTransactions` / `loadPersistedTransactions`
+  / `clearPersistedTransactions` throw into a `print` on every refresh and
+  launch. Found 2026-10-14 while fixing the onchain reset (the reset no longer
+  calls the clear). Delete the three methods and the model, or register the
+  model if the cache across launches is wanted.
 
 - [ ] **Field cold launches run 10–20s, one at 74s** (background event
   journal of the mainnet user, 2026-10-04..09; the 2026-10-07 export caught

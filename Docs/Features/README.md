@@ -20,6 +20,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 
 - **[Read_Only_Mode.md](Read_Only_Mode.md)** — secondary-device read-only mode and primary switching
 - **[Wallet_Deletion_And_Rejoin.md](Wallet_Deletion_And_Rejoin.md)** — deletion strategies, the tombstone, rejoin
+- **[Wallet_Deletion_Backup_Skip.md](Wallet_Deletion_Backup_Skip.md)** — plan (DECIDED 2026-10-14): the full wipe no longer re-creates the iCloud backup it just deleted
 - **[BIP39.md](BIP39.md)** — mnemonic generation, validation, and Keychain storage
 
 ## Payments

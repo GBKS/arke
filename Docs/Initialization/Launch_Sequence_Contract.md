@@ -206,13 +206,34 @@ Enforced: `DeviceRegistrationService.swift` (`getOrCreateDeviceId`). Test: none.
 
 ## Deletion
 
-**17. Deletion order: reset manager state → end Live Activities immediately (sweep all, not just the tracked one) → clear notifications → unregister push → settle → delete files → clear local evidence.**
+**17. Deletion order: reset manager state → end Live Activities immediately (sweep all, not just the tracked one) → clear notifications → unregister push → settle → delete files → clear local evidence. On a full wipe the FFI shutdown before the file delete writes no backup.**
 State reset first prevents operations mid-deletion; the *immediate* activity
 end matters because the standard end shows an hour-long summary advertising
 an exit of a wallet that no longer exists, and the sweep catches orphans
-from failed reattaches.
-Enforced: `WalletManager+Wallet.swift` (`deleteWallet`),
-`ExitProgressionService+LiveActivity.swift` (`endLiveActivityImmediately`). Test: none.
+from failed reattaches. The backup clause: the cleanup service empties the
+iCloud Drive backup slot earlier in the same deletion, and the FFI's
+`shutdownWallet()` used to back up unconditionally after its final sync, so
+"Delete everything" put the deleted wallet's database straight back into the
+account (traced 2026-10-08, fixed 2026-10-14,
+`Features/Wallet_Deletion_Backup_Skip.md`). The scope comes from
+`DeletionSummary.scope`, i.e. from the deletion that ran; local-only
+deletion keeps its final backup, which is what a promoted secondary with no
+local file restores.
+Enforced: `WalletManager+Wallet.swift` (`deleteWallet(scope:)`),
+`BarkWalletFFI+WalletLifecycle.swift` (`shutdownWallet(backingUp:)`),
+`ExitProgressionService+LiveActivity.swift` (`endLiveActivityImmediately`).
+Test: `WalletDeletionRejoinTests` pins the inventory entry and that merging
+sub-summaries cannot narrow the scope; the writer → reader link
+(`performDeleteWalletData` → the delete view → `deleteWallet(scope:)`) and
+the ordering itself are traced by hand and proven on device, not by a test.
+The opportunistic backups (app background hook, manual button) are suspended
+for the whole deletion, since the wipe window between emptying the slot and
+clearing the handle spans two network calls. "Reset manager state" includes
+every service's in-memory list and cache that a later merge could
+re-persist: the onchain transaction list survived deletion and Step 2b's
+merge wrote the deleted wallet's onchain row into the next wallet created
+in the same process (2026-10-14). Known gap: the reset does not wait for an
+in-flight refresh (Tier 0 partial-failure item).
 
 **18. `includeCloudData` is strategy-derived; the seed is deleted only on a last-device full wipe.**
 A fixed value either orphaned secondaries or destroyed the only seed copy
