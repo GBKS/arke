@@ -591,8 +591,10 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   `expiry_height <= scheduled_height`, fine at days, loose at hours. Four new
   keys wait for the next translation batch; the old
   `settings_delete_balance_warning` sits stale in the catalog with its
-  de/ja/zh-Hant values. Device check: open Delete wallet with VTXOs on the
-  primary and read the amount + time; the two-word phrase confirmation
+  de/ja/zh-Hant values. Device check done 2026-10-14 (Christoph: Delete
+  wallet on the primary with VTXOs, amount + time read fine; the
+  other-devices copy still unseen, needs a second registered device). The
+  two-word phrase confirmation
   (DECIDED 2026-10-10) did not ride along, next deletion-cluster item takes
   it. Original entry: (field
   incident 2026-08-13: 10,000-sat VTXO swept at expiry 6h after deletion, app
@@ -1466,7 +1468,8 @@ Reminders merge; wording kept so the two can be matched.
 ### Settings, devices, deletion
 
 - [ ] **Delete wallet with an exit in flight shows no funds warning** (from
-  the 2026-10-13 forfeit-warning review, PLAUSIBLE): the old generic box
+  the 2026-10-13 forfeit-warning review, PLAUSIBLE; Tier 3 confirmed by
+  Christoph 2026-10-14, no field case): the old generic box
   fired on the grand total, which included `pendingExitSat`; the forfeit box
   reads bark's unspent list (Spendable + Locked) and exits are not in it.
   Whether a started, unclaimed exit is recoverable after deletion is
