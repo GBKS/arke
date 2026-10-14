@@ -121,7 +121,14 @@ class BarkWalletFFI: BarkWalletProtocol {
     
     /// Cached mnemonic (stored securely in production)
     var cachedMnemonic: String?
-    
+
+    /// Set by `WalletManager.setWalletDeletionInProgress(_:)` for the duration
+    /// of a wallet deletion: `backupWallet()` (app background hook, manual
+    /// button) refuses while this is true, so nothing refills the iCloud
+    /// Drive backup slot the cleanup service has just emptied. The shutdown's
+    /// own final backup bypasses it via `runBackupNow()`.
+    var opportunisticBackupsSuspended = false
+
     /// Whether this is a preview/mock instance
     let isPreview: Bool
     

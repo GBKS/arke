@@ -161,17 +161,21 @@ class OnchainTransactionService {
         }
     }
     
-    /// Reset all transaction state
+    /// Reset all in-memory transaction state. Called from
+    /// `WalletManager.resetManagerState()` on deletion and close: the list
+    /// and the 30 s cache otherwise outlive the wallet, and the next
+    /// `UnifiedTransactionService.mergeTransactions()` (Step 2b runs before
+    /// Step 3 has fetched the new wallet's list) re-persists the deleted
+    /// wallet's onchain rows into the new one (2026-10-14 field case).
+    /// Nothing persisted is touched here: `OnchainTransactionEntity` is not
+    /// in the schema (`SwiftDataHelper`), and the `PersistentTransaction`
+    /// rows are the cleanup service's to delete.
     func resetTransactions() {
         onchainTransactions = []
         error = nil
         hasLoadedTransactions = false
+        isLoading = false
         cacheManager.clear()
-        
-        // Clear persisted transactions
-        Task {
-            await clearPersistedTransactions()
-        }
     }
     
     /// Force cache invalidation and refresh

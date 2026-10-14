@@ -403,7 +403,14 @@ extension BarkWalletFFI {
     
     /// Explicitly shutdown and cleanup wallet resources
     /// Call this BEFORE deleting wallet files to ensure proper cleanup
-    func shutdownWallet() async {
+    /// - Parameter backingUp: whether the final iCloud backup runs after the
+    ///   last sync. `WalletManager.deleteWallet(scope: .everywhere)` passes
+    ///   `false`: the cleanup service has already emptied the backup slot and
+    ///   the final backup would refill it with the database being deleted
+    ///   (Launch_Sequence_Contract rule 17). Every other caller keeps the
+    ///   default — on a local-only deletion the backup is the newest copy a
+    ///   promoted secondary restores from.
+    func shutdownWallet(backingUp: Bool = true) async {
         guard let wallet = wallet else { return }
         
         Self.logger.debug("[BarkWalletFFI] Shutting down wallet...")
@@ -434,8 +441,12 @@ extension BarkWalletFFI {
         try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
         
         // Perform backup before clearing wallet references
-        await backupWallet()
-        
+        if backingUp {
+            await runBackupNow()
+        } else {
+            Self.logger.notice("Skipping final backup (full wipe) — the backup slot stays empty")
+        }
+
         // Clear references (this should trigger Rust cleanup)
         self.wallet = nil
         self.onchainWallet = nil

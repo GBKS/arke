@@ -191,6 +191,24 @@ struct WalletWipeCoverageTests {
         #expect(fullWipeKeys.contains("com.arke.wallet.mnemonicHash"))
         #expect(fullWipeKeys.contains("com.arke.wallet.networkConfigId"))
         #expect(fullWipeKeys.contains("com.arke.device.registered.<hash>.<id>"))
+        // The iCloud Drive backup slot: a local-only deletion keeps it (the
+        // promoted secondary restores from it), the full wipe empties it and
+        // nothing after may refill it (2026-10-14).
+        #expect(fullWipeKeys.contains("Backups/db.sqlite (+ timestamped copies)"))
+    }
+
+    @Test("Merging the CloudKit sub-summary never narrows the deletion scope")
+    func summaryScopeSurvivesMerge() {
+        // WalletManager.deleteWallet(scope:) reads DeletionSummary.scope to
+        // decide whether the FFI shutdown may write a backup. The outer
+        // summary is stamped .everywhere, then merged with the CloudKit
+        // sub-summary, which carries the default — the merge must not pull
+        // the scope back to .localOnly, or the full wipe would back up again.
+        #expect(DeletionSummary(timestamp: Date()).scope == .localOnly, "default must be the narrow scope")
+        var outer = DeletionSummary(timestamp: Date())
+        outer.scope = .everywhere
+        outer.merge(DeletionSummary(timestamp: Date()))
+        #expect(outer.scope == .everywhere)
     }
 }
 

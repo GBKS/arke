@@ -15,19 +15,36 @@ extension BarkWalletFFI {
     
     // MARK: - Backup Operations
     
-    /// Performs an immediate backup of the wallet database to iCloud
+    /// Performs an immediate backup of the wallet database to iCloud. This is
+    /// the opportunistic entry point (app background hook, manual button); it
+    /// is refused while a wallet deletion runs, because the full wipe empties
+    /// the backup slot several seconds before the handle is cleared and a
+    /// backup in that window would refill it with the database being deleted
+    /// (Launch_Sequence_Contract rule 17).
     /// - Returns: BackupResult indicating success, already up-to-date, or failure
     @discardableResult
     func backupWallet() async -> BackupResult {
+        guard !opportunisticBackupsSuspended else {
+            Self.logger.notice("Backup skipped - wallet deletion in progress")
+            return .failed
+        }
+        return await runBackupNow()
+    }
+
+    /// The backup itself, without the deletion suspension. Used by
+    /// `shutdownWallet(backingUp: true)` so a local-only deletion still writes
+    /// its final backup (the copy a promoted secondary restores from).
+    @discardableResult
+    func runBackupNow() async -> BackupResult {
         guard !isPreview else {
             return .failed
         }
-        
+
         guard wallet != nil else {
             Self.logger.debug("Backup skipped - wallet not initialized")
             return .failed
         }
-        
+
         let backupService = WalletBackupService(walletDirectory: walletDir)
         return await backupService.performBackup()
     }

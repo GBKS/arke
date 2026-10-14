@@ -283,7 +283,8 @@ class WalletDataCleanupService {
         }
         
         var summary = DeletionSummary(timestamp: Date())
-        
+        summary.scope = includeCloudData ? .everywhere : .localOnly
+
         #if DEBUG
         print("🗑️ [WalletDataCleanupService] Starting wallet data deletion (includeCloudData: \(includeCloudData))")
         #endif
@@ -861,8 +862,19 @@ enum DeletionStep: Int, CaseIterable {
     }
 }
 
+/// The scope a deletion actually ran with. Named on every delete (contract
+/// rules 19 and 21) so the policy layer after the cleanup service can act on
+/// what happened rather than recompute it: `WalletManager.deleteWallet(scope:)`
+/// skips the FFI's final backup only on `.everywhere`.
+nonisolated enum DeletionScope: String, Codable, Equatable {
+    case localOnly    // this device's copy only; account state stays for the other devices
+    case everywhere   // last-device full wipe: account state, seed and the backup slot go too
+}
+
 /// Summary of what was deleted during wallet cleanup
 struct DeletionSummary: Codable {
+    /// Set by `performDeleteWalletData` from the `includeCloudData` it ran with
+    var scope: DeletionScope = .localOnly
     var keychainDeleted: Bool = false
     var deviceUnregistered: Bool = false
     var ubiquitousHashDeleted: Bool = false
@@ -1031,6 +1043,12 @@ enum SharedStateWipeCoverage {
         // included — leaving one behind blocks every remaining device's full wipe
         // forever (2026-09-23).
         Entry(key: "com.arke.device.registered.<hash>.<id>", store: "iCloud KVS",    scope: .fullWipeOnly),
+        // The wallet database backup (current slot + timestamped copies).
+        // Emptied by deleteAllBackups on the full wipe, and the FFI shutdown
+        // that follows must not refill it (WalletManager.deleteWallet(scope:),
+        // 2026-10-14). On a local-only deletion the final backup is kept on
+        // purpose: it is the newest copy a promoted secondary restores from.
+        Entry(key: "Backups/db.sqlite (+ timestamped copies)", store: "iCloud Drive", scope: .fullWipeOnly),
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
         Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),

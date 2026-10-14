@@ -200,6 +200,13 @@ class UnifiedTransactionService {
     func invalidateAndReMerge() async {
         await mergeTransactions()
     }
+
+    /// Drop the merged list. Called from `WalletManager.resetManagerState()`
+    /// together with the onchain service's reset, so no reader sees the
+    /// deleted wallet's rows between the deletion and the next merge.
+    func resetMergedTransactions() {
+        allTransactions = []
+    }
     
     // MARK: - Statistics
     

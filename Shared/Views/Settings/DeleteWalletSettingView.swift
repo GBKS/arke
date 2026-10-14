@@ -362,6 +362,11 @@ struct DeleteWalletSettingView: View {
         deleteError = nil
         deletionSummary = nil
 
+        // No opportunistic backup may run while the deletion is in flight
+        // (contract rule 17); released on every exit of this function
+        walletManager.setWalletDeletionInProgress(true)
+        defer { walletManager.setWalletDeletionInProgress(false) }
+
         do {
             // Delete all wallet data using the cleanup service (which
             // re-derives the scope from fresh evidence before the first
@@ -371,8 +376,10 @@ struct DeleteWalletSettingView: View {
                 overrideConfirmed: overrideConfirmed
             )
 
-            // Delete from WalletManager (this clears local wallet state from bark)
-            _ = try await walletManager.deleteWallet()
+            // Delete from WalletManager (this clears local wallet state from
+            // bark). The scope comes from the deletion that ran, so a full
+            // wipe does not re-create the backup the service just removed.
+            _ = try await walletManager.deleteWallet(scope: summary.scope)
 
             // Store summary
             deletionSummary = summary

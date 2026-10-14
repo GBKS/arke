@@ -505,11 +505,28 @@ extension WalletManager {
     }
     
     // MARK: - Wallet Deletion
-    
+
+    /// Suspends or resumes the opportunistic backups (app background hook,
+    /// manual button) for the duration of a deletion. The delete view sets it
+    /// before the cleanup service starts and clears it when the flow ends,
+    /// whatever the outcome: the full wipe empties the backup slot long before
+    /// the FFI handle is cleared (two network calls sit in between), and an
+    /// app switch in that window would otherwise back the deleted wallet up
+    /// again. Clearing it on success matters too — the FFI object outlives the
+    /// handle and serves the next wallet created in this process.
+    func setWalletDeletionInProgress(_ inProgress: Bool) {
+        (wallet as? BarkWalletFFI)?.opportunisticBackupsSuspended = inProgress
+    }
+
     /// Delete the current wallet and reset all manager state
     /// Note: Mnemonic deletion is handled separately by the caller (DeleteWalletSettingView)
     /// to allow for intelligent deletion strategies based on device registry
-    func deleteWallet() async throws -> String {
+    /// - Parameter scope: the scope the cleanup service actually ran with
+    ///   (`DeletionSummary.scope`). On `.everywhere` the FFI shutdown skips its
+    ///   final backup: the cleanup service emptied the iCloud Drive backup slot
+    ///   one step earlier, and the backup would put the deleted wallet's
+    ///   database straight back (contract rule 17).
+    func deleteWallet(scope: DeletionScope) async throws -> String {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
@@ -536,6 +553,16 @@ extension WalletManager {
             // ✅ NEW: Give services time to release any resources
             Self.logger.debug("   Step 4: Waiting for services to settle...")
             try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+
+            // Full wipe: shut the FFI down here, without the final backup. The
+            // FFI's own deleteWallet() then finds the handle already nil and its
+            // shutdown returns at the first guard, so daemon stop and final sync
+            // run once. Local-only deletion keeps the default shutdown inside
+            // deleteWallet(), backup included.
+            if scope == .everywhere, let ffiWallet = wallet as? BarkWalletFFI {
+                Self.logger.info("   Step 5a: Shutting down wallet FFI without a final backup (full wipe)...")
+                await ffiWallet.shutdownWallet(backingUp: false)
+            }
 
             // Now delete the wallet (this handles FFI cleanup internally)
             Self.logger.debug("   Step 5: Deleting wallet files...")
@@ -639,6 +666,14 @@ extension WalletManager {
         addressService?.arkAddress = ""
         addressService?.onchainAddress = ""
         addressService?.error = nil
+
+        // Reset the onchain transaction list and its cache, and the merged
+        // list built from it. Both are in-memory and were the one piece of
+        // wallet state that survived deletion: the next merge re-persisted
+        // the deleted wallet's onchain rows into the newly created wallet
+        // (contract rule 17; 2026-10-14 field case)
+        onchainTransactionService?.resetTransactions()
+        unifiedTransactionService?.resetMergedTransactions()
 
         // Clear in-memory exit state (persistent exit history is cleared by
         // WalletDataCleanupService during wallet deletion)
