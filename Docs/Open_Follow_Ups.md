@@ -81,8 +81,8 @@ the rest wait.
      refused state + floor on the manual path ✓ 2026-10-11, committed
      `31e0ad1..5a007ed`; orphan rows ✓ 2026-10-12 — a log artefact of the
      notification path, no rows existed, uncommitted); forfeit warning
-     on deletion (the 2026-08-13 case); permission-denied banner for expiry
-     reminders.
+     on deletion ✓ 2026-10-13 (amount + time to expiry, strategy-aware copy,
+     uncommitted); permission-denied banner for expiry reminders.
   2. **Deletion (traced traps, same function):** skip the backup on the
      delete path; partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
@@ -568,7 +568,33 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   longer evidences. Related Tier 3 lines, different trigger: "Hide failed
   and completed refreshes that were free?" and "Surface expiry sweeps"
   (upstream-blocked).
-- [ ] **Warn on wallet deletion about forfeitable offchain balance** (field
+- [x] **Warn on wallet deletion about forfeitable offchain balance** — done
+  2026-10-13 (uncommitted). The orange box on the Delete wallet screen now
+  shows only for a Payments balance bark can still forfeit (its unspent
+  list, Spendable + Locked) and names the amount in the user's unit plus
+  the time to the earliest expiry ("in about 26d 5h", shared
+  `BlockTimeFormatter`); last-device copy says forfeited unless recovered
+  from the phrase and refreshed, other-devices copy says open another device
+  so it refreshes in time; no time clause when the height is unknown or the
+  expiry is already past (the app cannot tell whether the sweep ran).
+  Onchain-only wallets get no box (DECIDED 2026-10-13: they come back with
+  the phrase). Decision in `DeletionForfeitWarning` (pure, 10 tests);
+  read-only secondaries fall back to the synced `totalSat - pendingExitSat`
+  with no deadline. Sweep timing verified at bark `watchman/policy.rs`
+  (`chain_tip >= expiry_height`, same at `bark-0.7.1` and HEAD). Adversarial
+  pass fixed two CONFIRMED findings in-session (override and
+  unreadable-registry cases now get the last-device copy; the amount no
+  longer waits on the network block-height fetch, ledger line). Not carried
+  over from the old generic box: a wallet whose only Ark funds are an exit in
+  flight shows nothing now — filed in Tier 3 deletion. "About" still
+  overstates by up to one round: the server refuses inputs with
+  `expiry_height <= scheduled_height`, fine at days, loose at hours. Four new
+  keys wait for the next translation batch; the old
+  `settings_delete_balance_warning` sits stale in the catalog with its
+  de/ja/zh-Hant values. Device check: open Delete wallet with VTXOs on the
+  primary and read the amount + time; the two-word phrase confirmation
+  (DECIDED 2026-10-10) did not ride along, next deletion-cluster item takes
+  it. Original entry: (field
   incident 2026-08-13: 10,000-sat VTXO swept at expiry 6h after deletion, app
   showed 0 with no explanation). Minimum expiry height across spendable VTXOs
   is known at deletion time (`BalanceRefreshStatusViewModel.swift:55` already
@@ -1439,6 +1465,17 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Settings, devices, deletion
 
+- [ ] **Delete wallet with an exit in flight shows no funds warning** (from
+  the 2026-10-13 forfeit-warning review, PLAUSIBLE): the old generic box
+  fired on the grand total, which included `pendingExitSat`; the forfeit box
+  reads bark's unspent list (Spendable + Locked) and exits are not in it.
+  Whether a started, unclaimed exit is recoverable after deletion is
+  unverified — exit progression and the claim need the bark db, and
+  `recovery.rs:285` stores recovered VTXOs as `Exited` without the exit
+  state. Settle that first (bark `exit/` claim prerequisites), then either a
+  third copy ("an exit is in progress; deleting stops it on this device") or
+  nothing. The manual-backup reminder on the same screen already names the
+  wallet state file.
 - [ ] **Backup — how to explain that not all wallets are compatible?**
 - [ ] **Rejoin wallet screen is unstyled**.
 - [ ] **Savings deposits don't show up automatically** — note in the
