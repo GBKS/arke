@@ -23,7 +23,11 @@ struct DeleteWalletSettingView: View {
     @State private var overrideRequested = false
     @State private var isCheckingDevices = true
     @State private var deletionSummary: DeletionSummary?
-    
+    /// Inputs to the forfeit warning, loaded once with the device check. Nil
+    /// until loaded, so the box cannot flash the wrong amount.
+    @State private var forfeitSummary: DeletionForfeitWarning.Summary?
+    @State private var currentBlockHeight: Int?
+
     let onWalletDeleted: (() -> Void)?
     
     var body: some View {
@@ -50,11 +54,13 @@ struct DeleteWalletSettingView: View {
                             .padding(.top, 8)
                     }
                     
-                    // Balance warning if user has funds
-                    if let balance = walletManager.totalBalance, balance.grandTotalSat > 0 {
+                    // Forfeit warning: a Payments balance expiry will sweep once
+                    // nothing refreshes it. Onchain coins come back with the
+                    // phrase and get no box (DECIDED 2026-10-13).
+                    if let warning = forfeitWarning {
                         VStack(alignment: .leading, spacing: 10) {
                             Label {
-                                Text(String(localized: "settings_delete_balance_warning", defaultValue: "You still have funds in your wallet. Make sure to transfer them out before deleting, or accept that small amounts below minimum fees may not be recoverable."))
+                                Text(forfeitWarningText(warning))
                                     .font(.callout)
                                     .foregroundColor(.primary)
                             } icon: {
@@ -188,6 +194,11 @@ struct DeleteWalletSettingView: View {
         .task {
             await checkDevices()
         }
+        .task {
+            // Runs alongside the device check so the box is normally ready
+            // when the delete button appears
+            await loadForfeitInputs()
+        }
         .sheet(isPresented: $showingDeletionConfirmation, onDismiss: {
             overrideRequested = false
             // Re-check on every dismissal: the user may have backed out after
@@ -257,6 +268,79 @@ struct DeleteWalletSettingView: View {
         case nil:
             return String(localized: "settings_delete_warning_device", defaultValue: "This will permanently delete your wallet from this device.")
         }
+    }
+
+    /// The funds warning, if any. Needs the strategy (which copy) and the
+    /// loaded VTXO summary (whether there is anything to warn about), so it
+    /// never appears before the delete button. The override condition picks
+    /// the last-device copy, see `DeletionForfeitWarning.resolve`.
+    private var forfeitWarning: DeletionForfeitWarning.State? {
+        guard let deletionStrategy, let forfeitSummary else { return nil }
+
+        return DeletionForfeitWarning.resolve(
+            strategy: deletionStrategy,
+            overrideOffered: showsOverrideOption,
+            summary: forfeitSummary,
+            currentBlockHeight: currentBlockHeight
+        )
+    }
+
+    /// Four variants: last device vs other devices, with or without a
+    /// deadline. "Payments" is the app's name for the Ark balance; the amount
+    /// follows the user's unit setting and the time the shared block-time
+    /// formatter ("26d 5h").
+    private func forfeitWarningText(_ warning: DeletionForfeitWarning.State) -> String {
+        let amount = BitcoinFormatter.shared.formatAmount(warning.amountSat)
+        let time = warning.blocksUntilExpiry.map { BlockTimeFormatter.duration(forBlocks: $0) }
+
+        switch (warning.scope, time) {
+        case (.lastDevice, let time?):
+            return String(localized: "settings_delete_forfeit_last_device %@ %@", defaultValue: "Your Payments balance of \(amount) is forfeited in about \(time) unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can.")
+        case (.lastDevice, nil):
+            return String(localized: "settings_delete_forfeit_last_device_no_time %@", defaultValue: "Your Payments balance of \(amount) is forfeited at expiry unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can.")
+        case (.otherDevices, let time?):
+            return String(localized: "settings_delete_forfeit_other_devices %@ %@", defaultValue: "Your Payments balance of \(amount) needs a refresh within about \(time). After deleting here, open the wallet on another device so it can refresh in time.")
+        case (.otherDevices, nil):
+            return String(localized: "settings_delete_forfeit_other_devices_no_time %@", defaultValue: "Your Payments balance of \(amount) needs a refresh before it expires. After deleting here, open the wallet on another device so it can refresh in time.")
+        }
+    }
+
+    /// Per-VTXO expiries need the bark handle. A read-only secondary has none,
+    /// so it falls back to the synced balance with no deadline rather than
+    /// showing nothing. The box must not wait on the network: the amount is
+    /// published as soon as the local VTXO read returns, with the cached
+    /// height estimate, and the fresh height only refines the deadline.
+    private func loadForfeitInputs() async {
+        guard walletManager.isInitialized, !walletManager.isReadOnlyMode else {
+            forfeitSummary = syncedForfeitSummary
+            return
+        }
+
+        do {
+            let vtxos = try await walletManager.getVTXOs()
+            currentBlockHeight = walletManager.cacheManager.getEstimatedBlockHeight()
+            forfeitSummary = DeletionForfeitWarning.summarize(vtxos)
+        } catch {
+            #if DEBUG
+            print("⚠️ [DeleteWalletSettingView] VTXO read failed, warning falls back to the synced balance: \(error.localizedDescription)")
+            #endif
+            forfeitSummary = syncedForfeitSummary
+            return
+        }
+
+        if let freshHeight = await walletManager.getEstimatedBlockHeight() {
+            currentBlockHeight = freshHeight
+        }
+    }
+
+    /// The same set the VTXO path counts (bark's Spendable + Locked), read
+    /// from the synced balance row: everything in Ark except exits in flight.
+    private var syncedForfeitSummary: DeletionForfeitWarning.Summary {
+        let ark = walletManager.totalBalance?.arkBalance
+        return DeletionForfeitWarning.Summary(
+            amountSat: ark.map { $0.totalSat - $0.pendingExitSat } ?? 0,
+            earliestExpiryHeight: nil
+        )
     }
 
     private func checkDevices() async {

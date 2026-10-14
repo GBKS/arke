@@ -20557,6 +20557,7 @@
       }
     },
     "settings_delete_balance_warning" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20580,6 +20581,50 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "你的錢包中仍有資金。刪除前請務必先將資金轉出，否則低於最低手續費的小額資金可能無法取回。"
+          }
+        }
+      }
+    },
+    "settings_delete_forfeit_last_device %@ %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Payments balance of %1$@ is forfeited in about %2$@ unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+          }
+        }
+      }
+    },
+    "settings_delete_forfeit_last_device_no_time %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Payments balance of %@ is forfeited at expiry unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+          }
+        }
+      }
+    },
+    "settings_delete_forfeit_other_devices %@ %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Payments balance of %1$@ needs a refresh within about %2$@. After deleting here, open the wallet on another device so it can refresh in time."
+          }
+        }
+      }
+    },
+    "settings_delete_forfeit_other_devices_no_time %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your Payments balance of %@ needs a refresh before it expires. After deleting here, open the wallet on another device so it can refresh in time."
           }
         }
       }
