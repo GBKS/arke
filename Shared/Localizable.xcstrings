@@ -7524,6 +7524,17 @@
         }
       }
     },
+    "button_continue" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
     "button_copy_clipboard" : {
       "localizations" : {
         "de" : {
@@ -9079,6 +9090,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "解除連結 %@"
+          }
+        }
+      }
+    },
+    "button_verify" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Verify"
           }
         }
       }
@@ -13458,6 +13480,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "付款失敗"
+          }
+        }
+      }
+    },
+    "error_recovery_phrase_too_short" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The stored recovery phrase is incomplete."
           }
         }
       }
@@ -20529,6 +20562,7 @@
       }
     },
     "settings_delete_backup_reminder" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -20731,6 +20765,83 @@
         }
       }
     },
+    "settings_delete_phrase_body" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Two words of your recovery phrase confirm you have it written down before it is removed."
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_body_positions %lld %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter words %1$lld and %2$lld to confirm you have it written down."
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_mismatch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "That doesn't match your recovery phrase."
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_missing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No recovery phrase is stored on this device, so there is nothing to confirm."
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Confirm your recovery phrase"
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_unreadable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your recovery phrase couldn't be read right now, so the deletion can't continue. Try again in a moment."
+          }
+        }
+      }
+    },
+    "settings_delete_phrase_word_label %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Word %lld"
+          }
+        }
+      }
+    },
     "settings_delete_wallet_title" : {
       "localizations" : {
         "de" : {
@@ -20799,7 +20910,19 @@
         }
       }
     },
+    "settings_delete_warning_everywhere_intro" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nOnly a copy you wrote down can bring it back, and the next step asks for two of its words. To restore your history as well, back up the wallet state file first."
+          }
+        }
+      }
+    },
     "settings_delete_warning_icloud" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22984,6 +23107,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在載入最低金額…"
+          }
+        }
+      }
+    },
+    "status_loading_recovery_phrase" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Loading recovery phrase..."
           }
         }
       }

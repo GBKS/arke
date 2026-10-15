@@ -21,6 +21,10 @@ struct DeleteWalletSettingView: View {
     /// Set when the user takes the informed override. Reset on sheet dismissal so
     /// it can never leak into a subsequent, ordinary deletion.
     @State private var overrideRequested = false
+    /// The two-word phrase check, pushed in front of the slider sheet on a
+    /// full wipe (DECIDED 2026-10-15). The sheet, the deletion call and the
+    /// abort handling stay here; the pushed screen only reports a pass.
+    @State private var showingPhraseConfirmation = false
     @State private var isCheckingDevices = true
     @State private var deletionSummary: DeletionSummary?
     /// Inputs to the forfeit warning, loaded once with the device check. Nil
@@ -48,7 +52,34 @@ struct DeleteWalletSettingView: View {
                         .font(.title3)
                         .lineSpacing(6)
                         .foregroundColor(.secondary)
-                
+
+                    // Manual export, full-wipe path only, right under the
+                    // sentence that asks for it: the wipe empties the iCloud
+                    // backup slot and the mirrored history, so the user's own
+                    // file is the only way to restore history. A local-only
+                    // deletion writes its final state file to the slot itself
+                    // and the other devices keep the mirrored rows (Christoph,
+                    // 2026-10-15), so there is nothing to ask for.
+                    #if os(iOS)
+                    if isFullWipePath {
+                        NavigationLink {
+                            ManualBackupView_iOS()
+                                .navigationTitle(L10n.settingsManualBackup)
+                                .navigationBarTitleDisplayMode(.large)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(String(localized: "button_manual_backup", defaultValue: "Back up Wallet"))
+                                    .font(.callout)
+                                    .fontWeight(.medium)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.Arke.gold2)
+                    }
+                    #endif
+
                     if let deleteError = deleteError {
                         ErrorBox(errorMessage: deleteError)
                             .padding(.top, 8)
@@ -57,68 +88,28 @@ struct DeleteWalletSettingView: View {
                     // Forfeit warning: a Payments balance expiry will sweep once
                     // nothing refreshes it. Onchain coins come back with the
                     // phrase and get no box (DECIDED 2026-10-13).
+                    // Row with a filled icon tile (the transaction icon's
+                    // tile recipe), no box: the box competed with the intro
+                    // and left the glyph looking like a bullet
                     if let warning = forfeitWarning {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Label {
-                                Text(forfeitWarningText(warning))
-                                    .font(.callout)
-                                    .foregroundColor(.primary)
-                            } icon: {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                        .padding()
-                        .background {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.orange.opacity(0.1))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                }
+                        HStack(alignment: .top, spacing: 14) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.orange)
+                                .frame(width: 44, height: 44)
+                                .background(Color.orange.opacity(0.15))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .accessibilityHidden(true)
+
+                            Text(forfeitWarningText(warning))
+                                .font(.callout)
+                                .foregroundColor(.primary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(.top, 8)
                     }
                     
-                    // Manual backup reminder
-                    VStack(alignment: .leading, spacing: 12) {
-                        Label {
-                            Text(String(localized: "settings_delete_backup_reminder", defaultValue: "Have you completed a manual backup? You need both your recovery phrase and wallet state file to fully restore your wallet."))
-                                .font(.callout)
-                                .foregroundColor(.primary)
-                        } icon: {
-                            Image(systemName: "key.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.Arke.gold2)
-                                .frame(width: 20, height: 20)
-                        }
-                        
-                        #if os(iOS)
-                        NavigationLink {
-                            ManualBackupView_iOS()
-                                .navigationTitle(L10n.settingsManualBackup)
-                                .navigationBarTitleDisplayMode(.large)
-                        } label: {
-                            Text(String(localized: "button_manual_backup", defaultValue: "Back up Wallet"))
-                                .font(.callout)
-                                .fontWeight(.medium)
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.Arke.gold2)
-                        .padding(.leading, 30)
-                        #endif
-                    }
-                    .padding()
-                    .background {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.Arke.gold.opacity(0.1))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.Arke.gold.opacity(0.3), lineWidth: 1)
-                            }
-                    }
-                    .padding(.top, 8)
-                    
+
                     // Show deletion progress
                     if let progress = cleanupService.deletionProgress {
                         VStack(alignment: .leading, spacing: 8) {
@@ -143,23 +134,19 @@ struct DeleteWalletSettingView: View {
                         }
                         .padding(.top, 8)
                     } else if deletionStrategy != nil {
-                        // Single delete button
+                        // Not the final confirmation (the slider sheet is), so
+                        // a regular primary button, not a red one
                         Button {
-                            showingDeletionConfirmation = true
+                            startDeletion(override: false)
                         } label: {
-                            HStack {
-                                Text(L10n.buttonDeleteWallet)
-                                    .font(.system(size: 19, weight: .semibold))
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                            }
-                            .padding(.vertical, 4)
-                            .foregroundStyle(Color.white)
-                            .frame(maxWidth: .infinity)
+                            Text(String(localized: "button_continue", defaultValue: "Continue"))
+                                .font(.system(size: 21, weight: .semibold))
+                                .foregroundStyle(Color.Arke.gold4)
+                                .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.glassProminent)
                         .controlSize(.large)
-                        .tint(Color.Arke.red)
+                        .tint(Color.Arke.gold)
                         .disabled(isDeleting)
                         .padding(.top, 15)
 
@@ -172,8 +159,7 @@ struct DeleteWalletSettingView: View {
                         // could safely age it out (2026-09-23).
                         if showsOverrideOption {
                             Button {
-                                overrideRequested = true
-                                showingDeletionConfirmation = true
+                                startDeletion(override: true)
                             } label: {
                                 Text(String(localized: "button_delete_from_account_anyway",
                                             defaultValue: "Delete from the account anyway…"))
@@ -199,8 +185,32 @@ struct DeleteWalletSettingView: View {
             // when the delete button appears
             await loadForfeitInputs()
         }
+        #if os(iOS)
+        .navigationDestination(isPresented: $showingPhraseConfirmation) {
+            phraseConfirmationScreen
+        }
+        #else
+        .sheet(isPresented: $showingPhraseConfirmation) {
+            phraseConfirmationScreen
+                .frame(minWidth: 420, minHeight: 420)
+        }
+        #endif
+        .onChange(of: showingPhraseConfirmation) { _, isShowing in
+            // Leaving the phrase screen without passing drops the override,
+            // so it can never leak into a later, ordinary deletion. A pass
+            // that is handing over to the slider sheet (macOS closes the
+            // phrase sheet first, see `phraseConfirmationScreen`) keeps it.
+            if !isShowing && !showingDeletionConfirmation {
+                overrideRequested = false
+            }
+        }
         .sheet(isPresented: $showingDeletionConfirmation, onDismiss: {
-            overrideRequested = false
+            // The override survives a cancelled sheet only while the phrase
+            // screen is still up: the user can slide again from there, and
+            // the scope they confirmed on it must be the one that runs
+            if !showingPhraseConfirmation {
+                overrideRequested = false
+            }
             // Re-check on every dismissal: the user may have backed out after
             // the evidence changed, and the scope-invalidated abort lands here
             // too — either way the screen should show current blockers.
@@ -224,6 +234,46 @@ struct DeleteWalletSettingView: View {
                 )
             }
         }
+    }
+
+    private var phraseConfirmationScreen: some View {
+        DeletePhraseConfirmationView {
+            showingDeletionConfirmation = true
+            #if os(macOS)
+            // Both are sheets on this view and SwiftUI presents one at a
+            // time: close the phrase sheet so the queued slider can appear.
+            // The flag order keeps the override (see the onChange above).
+            showingPhraseConfirmation = false
+            #endif
+        }
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    /// Both delete buttons land here. A full wipe (last device, or the
+    /// informed override) goes through the two-word phrase check first;
+    /// local-only deletion keeps the seed on the account and opens the
+    /// slider sheet directly. The override flag is set explicitly on every
+    /// tap so no earlier state can carry over.
+    private func startDeletion(override: Bool) {
+        overrideRequested = override
+        deleteError = nil
+
+        guard let deletionStrategy,
+              PhraseConfirmation.isRequired(strategy: deletionStrategy, overrideRequested: override) else {
+            showingDeletionConfirmation = true
+            return
+        }
+
+        showingPhraseConfirmation = true
+    }
+
+    /// Whether a full wipe is reachable from this screen: the last-device
+    /// strategy, or a `.localOnly` verdict while the override is offered
+    /// (same rule as the forfeit warning). Drives the manual-export link.
+    private var isFullWipePath: Bool {
+        deletionStrategy == .promptForCloudData || showsOverrideOption
     }
 
     /// Whether to offer the informed override — see
@@ -264,7 +314,9 @@ struct DeleteWalletSettingView: View {
             // registry rows haven't arrived, or never will
             return String(localized: "settings_delete_warning_local_only_unnamed", defaultValue: "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet.")
         case .promptForCloudData:
-            return String(localized: "settings_delete_warning_icloud", defaultValue: "This will permanently delete your wallet from this device and iCloud. All linked devices will lose access.")
+            // Last device: carries the phrase and backup message too, so the
+            // screen has one paragraph instead of an intro plus a reminder box
+            return String(localized: "settings_delete_warning_everywhere_intro", defaultValue: "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nOnly a copy you wrote down can bring it back, and the next step asks for two of its words. To restore your history as well, back up the wallet state file first.")
         case nil:
             return String(localized: "settings_delete_warning_device", defaultValue: "This will permanently delete your wallet from this device.")
         }
@@ -343,9 +395,13 @@ struct DeleteWalletSettingView: View {
         )
     }
 
+    /// Re-runs on every return to this screen (sheet dismissal, phrase-screen
+    /// pop). It must not clear `deleteError`: the scope-invalidated abort
+    /// sets the error and dismisses in the same transaction, and the
+    /// re-check would erase it before the user could read it (review
+    /// 2026-10-15). The error is cleared when the user starts a new attempt.
     private func checkDevices() async {
         isCheckingDevices = true
-        deleteError = nil
 
         // Strategy and evidence together: the copy above names the blockers
         let assessment = await cleanupService.assessDeletion()
@@ -393,6 +449,7 @@ struct DeleteWalletSettingView: View {
                 onWalletDeleted?()
                 // Dismiss the confirmation sheet so onboarding flow is visible
                 showingDeletionConfirmation = false
+                showingPhraseConfirmation = false
             }
         } catch let WalletCleanupError.fullWipeScopeInvalidated(fresh) {
             // The pre-wipe recheck found a device the screen's assessment
@@ -407,6 +464,9 @@ struct DeleteWalletSettingView: View {
                 blockerReport = fresh.report
                 overrideRequested = false
                 showingDeletionConfirmation = false
+                // Pop the phrase screen too: the error and the new blockers
+                // are shown on this screen
+                showingPhraseConfirmation = false
                 deleteError = WalletCleanupError.fullWipeScopeInvalidated(fresh).localizedDescription
                 isDeleting = false
             }
