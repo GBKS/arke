@@ -88,7 +88,11 @@ the rest wait.
      evening, uncommitted; plan `Features/Wallet_Deletion_Backup_Skip.md`;
      the check surfaced the Tier 1 "deleted wallet's onchain row reappears"
      regression from 31e2f10, filed under Data safety); the two-word
-     phrase confirmation next (DECIDED 2026-10-10, did not ride along);
+     phrase confirmation next (DECIDED 2026-10-10, did not ride along;
+     flow DECIDED 2026-10-15 — own pushed screen between the info screen
+     and the slider sheet; BUILT and REVIEWED 2026-10-15, uncommitted, full
+     mobile suite green, plan `Features/Wallet_Deletion_Phrase_Confirmation.md`
+     §11; device check owed, §9);
      partial-failure handling + `isDeleting`; ghost-hardening
      residual (clear-first + surfaced unregister error, same in
      `unlinkDevice`); wrap the four unprotected store writes; end the exit
@@ -299,6 +303,19 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   borrow the import screen's field; new strings + de/ja/zh-Hant. Rides with
   whichever Tier 0 item touches `DeleteWalletSettingView` first (deletion
   cluster or forfeit warning); two-device verify with the deletion set.
+  **Flow DECIDED 2026-10-15; BUILT and REVIEWED the same day** (plan
+  `Features/Wallet_Deletion_Phrase_Confirmation.md`; uncommitted; device
+  check owed, plan §9; the review's one CONFIRMED finding was a
+  pre-existing erased abort error, fixed, ledger 2026-10-15): (1) the
+  check is its own screen, pushed in the settings stack between the info
+  screen and the unchanged slider sheet, not inside the sheet; (2) the
+  info screen's manual-backup box gets a full-wipe copy naming the phrase
+  deletion and the two-word step, local-only copy unchanged; (3) an
+  unreadable keychain fails closed with retry, a definitive `.notFound`
+  skips the check; (4) the override keeps its consent toggle next to the
+  words; (5) positions are random per presentation. Entry points covered:
+  the last-device "Delete wallet" and the "Delete from the account anyway…"
+  override; local-only never sees the screen.
 - [x] **DECIDED 2026-10-10 — deletion is never blocked on remaining VTXOs;
   warn, don't block.** (From Reminders; `DeletionStrategy` keeps
   distinguishing only last-device vs other-devices.) Christoph: warnings
