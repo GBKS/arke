@@ -1,13 +1,14 @@
 # Delete Everywhere: Two-Word Phrase Confirmation
 
-**Status: BUILT and REVIEWED 2026-10-15 (Tier 0, Train 1, deletion cluster
-item 2; uncommitted). Direction DECIDED 2026-10-10, flow and the five open
-calls DECIDED 2026-10-15 (§3). Adversarial pass in §11: one CONFIRMED
-finding (pre-existing, new trigger) and two PLAUSIBLE ones fixed
+**Status: DONE 2026-10-15 (Tier 0, Train 1, deletion cluster item 2).
+Committed `b42d536` (code) + `daabaf8` (docs); device check passed the
+same evening on Christoph's phone (§9.1). Direction DECIDED 2026-10-10,
+flow and the five open calls DECIDED 2026-10-15 (§3), three tweak rounds
+on copy and layout the same day (§4.4). Adversarial pass in §11: one
+CONFIRMED finding (pre-existing, new trigger) and two PLAUSIBLE ones fixed
 in-session; full mobile suite green on the iPhone 17 Pro simulator after
-the fixes (9 new test cases). Seed-adjacent: NOT DONE until the device step
-in §9 — the iOS push-and-sheet runtime behaviour was not executed by the
-assistant (§11 finding 3).**
+the fixes (9 new test cases). Left for the Device stage: the two-device
+override route (§9, second paragraph).**
 
 Backlog entry: `Open_Follow_Ups.md`, Decisions, "phrase confirmation on
 full wipe", and the Current train block, deletion cluster. Area doc:
@@ -317,6 +318,14 @@ One phone, primary, wallet with a phrase:
 Two-device set (Device stage): the override route from a secondary whose
 blocker is a doubtful mirror entry asks for the words and the toggle;
 local-only on a device with a healthy sibling never shows the screen.
+
+### 9.1 Result (Christoph, 2026-10-15, one phone)
+
+Passed on device after the commits: the push from the Delete wallet
+screen, the mismatch refusal and the slider sheet on a match all behaved
+("works great"). This settles §11 finding 3 (the iOS push-and-sheet
+runtime) and the derived claim in §5. The two-device override route stays
+on the Device-stage checklist.
 
 ## 10. Open
 
