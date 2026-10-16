@@ -89,7 +89,9 @@ extension WalletManager {
         // Get services for rollback
         let walletDirectory = getWalletDirectory()
         let backupService = WalletBackupService(walletDirectory: walletDirectory)
-        
+
+        removeStaleWalletDirectoryIfMarked()
+
         do {
             // Step 2: Restore backup file to wallet directory BEFORE wallet initialization
             // This is critical - the wallet must open with the correct database state
@@ -259,6 +261,8 @@ extension WalletManager {
         // pairs the new network with the old network's esplora endpoint
         wallet.updateNetworkConfig(config)
 
+        removeStaleWalletDirectoryIfMarked()
+
         // Import the wallet. Seed-only import: leftover wallet data from another
         // network is stale (nothing restored it deliberately - common on macOS,
         // where the container survives app reinstalls), and data from another
@@ -401,7 +405,11 @@ extension WalletManager {
             NetworkConfigPersistence.save(config)
             
             Self.logger.info("⏱️ [PROFILE] Config setup took \(String(format: "%.3f", CFAbsoluteTimeGetCurrent() - stepStartTime))s")
-            
+
+            // The FFI create removes an existing directory itself; this only
+            // clears the marker (and removes the directory a step earlier)
+            self.removeStaleWalletDirectoryIfMarked()
+
             // FFI wallet creation (mnemonic generation + Rust wallet setup)
             stepStartTime = CFAbsoluteTimeGetCurrent()
             let mnemonic = try await wallet.createWallet(
@@ -513,8 +521,11 @@ extension WalletManager {
     /// the FFI handle is cleared (two network calls sit in between), and an
     /// app switch in that window would otherwise back the deleted wallet up
     /// again. Clearing it on success matters too — the FFI object outlives the
-    /// handle and serves the next wallet created in this process.
+    /// handle and serves the next wallet created in this process. The same
+    /// call sets `isDeletionInProgress`, which makes `performRefresh` skip and
+    /// the seeding funnels return for the same window.
     func setWalletDeletionInProgress(_ inProgress: Bool) {
+        isDeletionInProgress = inProgress
         (wallet as? BarkWalletFFI)?.opportunisticBackupsSuspended = inProgress
     }
 
@@ -564,9 +575,28 @@ extension WalletManager {
                 await ffiWallet.shutdownWallet(backingUp: false)
             }
 
-            // Now delete the wallet (this handles FFI cleanup internally)
+            // Now delete the wallet (this handles FFI cleanup internally). One
+            // retry after a short pause: the import path sleeps the same
+            // 500 ms before its own directory removal to let Rust release
+            // its SQLite handles, and that is the one plausible cause of a
+            // failure here. By this point the cleanup service has already
+            // committed the account-side deletion, so the caller routes on
+            // regardless; the error is logged for the export and rethrown
+            // so the view can clear the local evidence itself.
             Self.logger.debug("   Step 5: Deleting wallet files...")
-            let result = try await wallet.deleteWallet()
+            let result: String
+            do {
+                result = try await wallet.deleteWallet()
+            } catch {
+                Self.logger.error("⚠️ Wallet file deletion failed once, retrying after 500 ms: \(error.localizedDescription)")
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                do {
+                    result = try await wallet.deleteWallet()
+                } catch {
+                    Self.logger.error("❌ Wallet file deletion failed after the retry — account-side deletion is already complete, routing continues: \(error.localizedDescription)")
+                    throw error
+                }
+            }
 
             // Clear this device's local network-config cache only. The iCloud
             // copy is account-shared state: whether it survives is a strategy
@@ -590,6 +620,31 @@ extension WalletManager {
     }
     
     // MARK: - Private Helpers
+
+    /// A deletion that completed account-side but could not remove the bark
+    /// directory marks it stale (`SecurityService.recordStaleWalletDirectory`).
+    /// Every path that brings a wallet onto this device removes that leftover
+    /// first: bark refuses to open a database whose fingerprint does not match
+    /// the phrase ("incorrect mnemonic"), so an import of a different phrase
+    /// would otherwise fail on every attempt. Never touches an unmarked
+    /// directory — a database with no readable seed can also be a transiently
+    /// unreadable keychain, and that database holds offchain state the seed
+    /// cannot reproduce.
+    private func removeStaleWalletDirectoryIfMarked() {
+        guard SecurityService.hasStaleWalletDirectory(), let wallet else { return }
+
+        do {
+            if FileManager.default.fileExists(atPath: wallet.walletDir.path) {
+                try FileManager.default.removeItem(at: wallet.walletDir)
+            }
+            Self.logger.notice("🧹 Removed the stale wallet directory left by a failed deletion teardown")
+            SecurityService.clearStaleWalletDirectory()
+        } catch {
+            // Keep the marker: the next attempt tries again, and the FFI's own
+            // open will report the mismatch if it is still there
+            Self.logger.error("❌ Stale wallet directory could not be removed: \(error.localizedDescription)")
+        }
+    }
 
     /// Cancel pending local notifications and end any Live Activity so they
     /// don't outlive the wallet: a pending "Time to Refresh" or exit check-in

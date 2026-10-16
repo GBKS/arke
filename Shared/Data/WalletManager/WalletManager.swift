@@ -73,6 +73,25 @@ class WalletManager {
     var error: String?
     var isRefreshing: Bool = false
     var hasLoadedOnce: Bool = false
+    /// True while `initialize()` runs. The launch wraps the refresh in this
+    /// step and keeps writing after it (exit cache, default-data seeding),
+    /// so `isRefreshing` alone understates how long wallet data is loading.
+    /// Stored, not computed from the dedup registry, so observers re-render
+    /// when it flips.
+    var isInitializing: Bool = false
+    /// Set by the delete screen for the whole deletion, whatever the outcome
+    /// (`setWalletDeletionInProgress`). `performRefresh` skips and the
+    /// seeding funnels return while it is set, so nothing re-creates the rows
+    /// the cleanup service is deleting (contract rule 17).
+    var isDeletionInProgress: Bool = false
+    /// Wallet data is being loaded or re-read. Destructive actions wait on
+    /// this *before* they start (DECIDED 2026-10-15,
+    /// `Features/Wallet_Deletion_Partial_Failure.md`): the delete screen
+    /// hides its button while it is true, and the cleanup service re-checks
+    /// it at its first step.
+    var isLoadingWalletData: Bool {
+        isRefreshing || isInitializing
+    }
 
     /// Whether this install has ever completed a refresh that reached the server.
     /// Persisted so app relaunches can trust an empty local cache: if we synced
@@ -530,6 +549,11 @@ class WalletManager {
             Self.logger.info("   ├─ forceReadOnly: \(forced)")
         }
         
+        // Joined callers set and clear the flag together with the task they
+        // join; they all return when the one task finishes
+        isInitializing = true
+        defer { isInitializing = false }
+
         await taskManager.execute(key: "initialize") {
             Self.logger.info("🔧 [WalletManager] initialize execute at \(Date())")
             await self.performInitialization(forceReadOnly: forceReadOnly)
@@ -808,6 +832,13 @@ class WalletManager {
     }
 
     private func runSeedingFunnels() async {
+        // The `.waitForFirstImport` branch reaches here from a free task up to
+        // 90 s after launch; a full wipe inside that window must not get the
+        // defaults re-seeded into the wiped account (contract rule 17)
+        guard !isDeletionInProgress, isInitialized else {
+            Self.logger.notice("🌱 Default-data seeding skipped — wallet deleted or closed while waiting")
+            return
+        }
         await createDefaultTagsIfNeeded()
         if !isMainnet {
             await createDefaultContactsIfNeeded()
@@ -871,7 +902,20 @@ class WalletManager {
         Self.logger.notice("🔄 [WalletManager] 📞 refresh() CALLED")
         Self.logger.info("   ├─ From: \(fileName):\(line)")
         Self.logger.info("   └─ Function: \(caller)")
-        
+
+        // A refresh that starts inside the wipe window (a mailbox push is the
+        // only caller reachable from the delete screen) would re-insert every
+        // row the cleanup service just deleted (contract rule 17). The delete
+        // screen already waits for a running refresh before it offers the
+        // button; this closes the gap for one that starts afterwards. Checked
+        // before the counter, so the skipped call never flips `isRefreshing`
+        // and the cleanup service's own re-check cannot abort on it (review
+        // 2026-10-15).
+        if isDeletionInProgress {
+            Self.logger.notice("⏭️ [Refresh] Skipped — wallet deletion in progress")
+            return
+        }
+
         // Increment counter and set isRefreshing if this is the first active call
         activeRefreshCount += 1
         let refreshNumber = activeRefreshCount

@@ -24,8 +24,10 @@ struct DeletePermanentlyConfirmationView: View {
     var blockers: [OtherWalletDevice] = []
 
     @Environment(\.walletDataCleanupService) private var cleanupService
+    /// Never reset here on purpose: every failure closes this sheet and shows
+    /// its error on the info screen behind it (`DeleteWalletSettingView`), and
+    /// the sheet is rebuilt on the next presentation.
     @State private var isDeleting = false
-    @State private var deleteError: String?
     /// Gate on the override path only. The seed is the one thing a wrong full
     /// wipe destroys irrecoverably, so the user confirms they hold it offline.
     @State private var acknowledgedRecoveryPhrase = false
@@ -151,12 +153,6 @@ struct DeletePermanentlyConfirmationView: View {
                         }
                         .padding(.horizontal, 25)
                          */
-                    }
-                    
-                    // Error display
-                    if let deleteError = deleteError {
-                        ErrorBox(errorMessage: deleteError)
-                            .padding(.horizontal, 25)
                     }
                     
                     // Show deletion progress
@@ -307,7 +303,6 @@ struct DeletePermanentlyConfirmationView: View {
 
     private func performDeletion() async {
         isDeleting = true
-        deleteError = nil
 
         await onConfirm()
     }

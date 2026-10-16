@@ -709,7 +709,8 @@ struct DeletionAssessmentOrchestrationTests {
         service.otherDeviceReportProvider = { _ in Self.report(others: [Self.healthyDevice()]) }
 
         do {
-            _ = try await service.deleteWalletData(strategy: .promptForCloudData, overrideConfirmed: false)
+            _ = try await service.deleteWalletData(strategy: .promptForCloudData, overrideConfirmed: false,
+                                                   isLoadingWalletData: { false })
             Issue.record("Expected fullWipeScopeInvalidated")
         } catch let WalletCleanupError.fullWipeScopeInvalidated(fresh) {
             // The abort carries the fresh assessment for the UI, and it fired
@@ -721,6 +722,130 @@ struct DeletionAssessmentOrchestrationTests {
         } catch {
             Issue.record("Unexpected error: \(error)")
         }
+    }
+
+    // The refresh gate (Wallet_Deletion_Partial_Failure.md §4.1): the delete
+    // screen hides its button while wallet data loads, and the service
+    // re-checks the same signal at its first step for a refresh that started
+    // between the button and the slide. Same proof shape as above — no
+    // noModelContext means performDeleteWalletData was never entered.
+
+    @Test("A refresh running at the first step aborts the wipe with nothing deleted")
+    func refreshGateAbortsBeforeAnythingDestructive() async {
+        let service = Self.makeService()
+        service.otherDeviceReportProvider = { _ in Self.report(others: []) }   // full wipe justified
+
+        do {
+            _ = try await service.deleteWalletData(strategy: .promptForCloudData, overrideConfirmed: false,
+                                                   isLoadingWalletData: { true })
+            Issue.record("Expected refreshInProgress")
+        } catch WalletCleanupError.refreshInProgress {
+            // expected
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("The refresh gate also guards the local-only path")
+    func refreshGateGuardsLocalOnlyDeletion() async {
+        let service = Self.makeService()
+        // No scope recheck on .localOnly, so the gate is the only pre-step
+
+        do {
+            _ = try await service.deleteWalletData(strategy: .localOnly, overrideConfirmed: false,
+                                                   isLoadingWalletData: { true })
+            Issue.record("Expected refreshInProgress")
+        } catch WalletCleanupError.refreshInProgress {
+            // expected
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("When both pre-checks fail, the scope abort wins (it carries the information the screen needs)")
+    func scopeAbortWinsOverRefreshGate() async {
+        let service = Self.makeService()
+        service.otherDeviceReportProvider = { _ in Self.report(others: [Self.healthyDevice()]) }
+
+        do {
+            _ = try await service.deleteWalletData(strategy: .promptForCloudData, overrideConfirmed: false,
+                                                   isLoadingWalletData: { true })
+            Issue.record("Expected fullWipeScopeInvalidated")
+        } catch WalletCleanupError.fullWipeScopeInvalidated {
+            // expected
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+}
+
+// MARK: - Stale wallet directory after a failed teardown
+
+/// Route-anyway (DECIDED 2026-10-15): when the account-side deletion is done
+/// but the bark directory could not be removed, the directory is marked
+/// stale. A marked directory must not count as wallet evidence — the
+/// keychain-unreadable detection branch would otherwise send a wiped install
+/// back into the wallet UI (Wallet_Deletion_Partial_Failure.md §10, 1b).
+@Suite("Stale Wallet Directory", .serialized)
+struct StaleWalletDirectoryTests {
+
+    @Test("A marked directory is not local wallet evidence")
+    func markedDirectoryIsNotEvidence() {
+        SecurityService.clearLocalWalletEvidence()
+        SecurityService.recordStaleWalletDirectory()
+        defer { SecurityService.clearStaleWalletDirectory() }
+
+        #expect(SecurityService.hasStaleWalletDirectory())
+        // Whatever the test host's sandbox holds on disk, the marker wins
+        #expect(!SecurityService.hasLocalWalletEvidence())
+    }
+
+    @Test("The breadcrumb still counts with a marked directory — it is written by create/import, which clear the marker")
+    func breadcrumbStillCounts() {
+        SecurityService.recordStaleWalletDirectory()
+        SecurityService.recordLocalWalletEvidence()
+        defer {
+            SecurityService.clearStaleWalletDirectory()
+            SecurityService.clearLocalWalletEvidence()
+        }
+
+        #expect(SecurityService.hasLocalWalletEvidence())
+    }
+
+    @Test("Clearing the marker roundtrips")
+    func clearRoundtrip() {
+        SecurityService.recordStaleWalletDirectory()
+        SecurityService.clearStaleWalletDirectory()
+
+        #expect(!SecurityService.hasStaleWalletDirectory())
+    }
+}
+
+// MARK: - Retry after a partial full wipe
+
+/// A keychain failure is the one cleanup error that lands after the KVS
+/// wallet hash is gone. The retry then assesses with a nil hash, which the
+/// device report answers from the unscoped registry — whose rows the first
+/// attempt already deleted. This pins that an empty unscoped registry still
+/// reads as "last device", so the retry reaches the full wipe instead of
+/// silently downgrading to local-only with the seed left behind
+/// (Wallet_Deletion_Partial_Failure.md §4.2).
+@Suite("Full Wipe Retry After Hash Loss")
+struct FullWipeRetryAfterHashLossTests {
+
+    @Test("A nil wallet hash with an empty registry still reads as the last device")
+    func nilHashEmptyRegistryIsLastDevice() {
+        let report = DeviceRegistrationService.otherDeviceReport(
+            kvsEntries: [:],   // what the nil-hash fallback passes (`otherDeviceReport(walletHash:)`)
+            walletHash: nil,
+            registryDevices: [],
+            currentDeviceId: "me",
+            registryError: nil,
+            now: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+
+        #expect(!report.hasOthers)
+        #expect(WalletDataCleanupService.deletionStrategy(for: report.hasOthers ? .othersPresent : .noneFound) == .promptForCloudData)
     }
 }
 

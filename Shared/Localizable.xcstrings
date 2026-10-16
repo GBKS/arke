@@ -13117,6 +13117,17 @@
         }
       }
     },
+    "error_delete_refresh_in_progress" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A refresh started while you were confirming. Nothing was deleted — try again in a moment."
+          }
+        }
+      }
+    },
     "error_delete_scope_changed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -22659,6 +22670,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在建立付款請求…"
+          }
+        }
+      }
+    },
+    "status_delete_waiting_for_refresh" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Finishing the current refresh…"
           }
         }
       }

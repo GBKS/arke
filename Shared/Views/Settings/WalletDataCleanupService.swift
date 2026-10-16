@@ -257,8 +257,19 @@ class WalletDataCleanupService {
     /// this throws `fullWipeScopeInvalidated` having deleted nothing — never
     /// a silent downgrade, because the user confirmed a different action than
     /// the one that would run.
+    /// - Parameter isLoadingWalletData: whether a refresh or the launch load
+    ///   is running right now (`WalletManager.isLoadingWalletData`). The
+    ///   delete screen waits on the same signal before it offers the button;
+    ///   this re-check covers a refresh that started between the button and
+    ///   the slide. A refresh that passes the row deletion re-inserts every
+    ///   row (2026-10-14 device log), so the deletion aborts with nothing
+    ///   deleted rather than racing it (DECIDED 2026-10-15).
     /// - Returns: Summary of what was deleted
-    func deleteWalletData(strategy: DeletionStrategy, overrideConfirmed: Bool) async throws -> DeletionSummary {
+    func deleteWalletData(
+        strategy: DeletionStrategy,
+        overrideConfirmed: Bool,
+        isLoadingWalletData: @escaping @MainActor () -> Bool
+    ) async throws -> DeletionSummary {
         return try await taskManager.execute(key: "deleteWalletData") {
             let includeCloudData = Self.includesCloudData(strategy: strategy, overrideConfirmed: overrideConfirmed)
 
@@ -267,6 +278,12 @@ class WalletDataCleanupService {
                 guard Self.fullWipeStillJustified(assessment: fresh, overrideConfirmed: overrideConfirmed, now: Date()) else {
                     throw WalletCleanupError.fullWipeScopeInvalidated(fresh)
                 }
+            }
+
+            // Last pre-destructive check; the scope abort above is more
+            // informative, so it goes first
+            guard !isLoadingWalletData() else {
+                throw WalletCleanupError.refreshInProgress
             }
 
             return try await self.performDeleteWalletData(includeCloudData: includeCloudData)
@@ -285,10 +302,16 @@ class WalletDataCleanupService {
         var summary = DeletionSummary(timestamp: Date())
         summary.scope = includeCloudData ? .everywhere : .localOnly
 
+        // Fail before anything is touched: this guard used to sit after four
+        // account-level writes (hash, mirror, network config, backups)
+        if includeCloudData && modelContext == nil {
+            throw WalletCleanupError.noModelContext
+        }
+
         #if DEBUG
         print("🗑️ [WalletDataCleanupService] Starting wallet data deletion (includeCloudData: \(includeCloudData))")
         #endif
-        
+
         // Step 1: Unregister device
         updateProgress(.unregisteringDevice, message: "Unregistering device...")
         do {
@@ -304,16 +327,52 @@ class WalletDataCleanupService {
             // Non-fatal, continue
         }
         
-        // Step 2: Delete cloud data if requested
+        // Step 2: Delete cloud data if requested. The fallible part (the
+        // CloudKit row deletion, which can throw on fetch or save) runs
+        // FIRST; the KVS and backup writes below it cannot fail. Reordered
+        // 2026-10-15: a CloudKit failure used to land after the hash, the
+        // mirror, the network config and the backups were already gone, and
+        // left partially queued deletes in the context for the next save
+        // anywhere to commit. Now it leaves the account untouched except for
+        // Step 1's unregister, which a retry repeats harmlessly.
         if includeCloudData {
+            guard let modelContext = modelContext else {
+                throw WalletCleanupError.noModelContext
+            }
+
+            // This is the container's shared main context, and rollback()
+            // below discards *every* unsaved change in it, not just ours.
+            // Commit other writers' pending changes first (autosave callers
+            // such as the BackupStatus singleton), so a rollback can only
+            // undo the deletions queued after this point.
+            if modelContext.hasChanges {
+                try? modelContext.save()
+            }
+
+            do {
+                let cloudSummary = try await deleteCloudKitData(modelContext: modelContext)
+                summary.merge(cloudSummary)
+            } catch {
+                // Drop whatever deleteCloudKitData queued before it threw
+                modelContext.rollback()
+                #if DEBUG
+                print("❌ [WalletDataCleanupService] CloudKit deletion failed, context rolled back: \(error)")
+                #endif
+                throw error
+            }
+
+            #if DEBUG
+            print("✅ [WalletDataCleanupService] Cloud data deletion complete")
+            #endif
+
             // Get wallet hash before deleting it (needed for KV store cleanup)
             let walletHash = getHashFromUbiquitousStore()
-            
+
             // Delete hash from ubiquitous store
             updateProgress(.deletingCloudHash, message: "Removing hash from iCloud...")
             deleteHashFromUbiquitousStore()
             summary.ubiquitousHashDeleted = true
-            
+
             // Clear device registrations from KV store
             if let hash = walletHash {
                 updateProgress(.deletingCloudHash, message: "Clearing device registrations...")
@@ -333,22 +392,10 @@ class WalletDataCleanupService {
             // Delete the wallet database backup from iCloud Drive
             // A leftover backup would resurface via the restore-on-launch path
             // after a new wallet is created
-            updateProgress(.deletingBackupStatus, message: "Deleting iCloud backup...")
+            updateProgress(.deletingCloudHash, message: "Deleting iCloud backup...")
             summary.iCloudBackupDeleted = WalletBackupService.deleteAllBackups()
             #if DEBUG
             print("✅ [WalletDataCleanupService] iCloud backup deletion: \(summary.iCloudBackupDeleted ? "complete" : "skipped or failed")")
-            #endif
-            
-            // Delete all CloudKit data
-            guard let modelContext = modelContext else {
-                throw WalletCleanupError.noModelContext
-            }
-            
-            let cloudSummary = try await deleteCloudKitData(modelContext: modelContext)
-            summary.merge(cloudSummary)
-            
-            #if DEBUG
-            print("✅ [WalletDataCleanupService] Cloud data deletion complete")
             #endif
         } else {
             #if DEBUG
@@ -810,20 +857,22 @@ struct DeletionProgress {
 }
 
 /// Individual deletion steps. Raw values follow execution order (they feed
-/// the progress percentage); the keychain-seed step runs LAST among the
+/// the progress percentage): the fallible CloudKit row deletions come
+/// first, the infallible KVS/backup writes after them (`deletingCloudHash`
+/// covers that whole block), and the keychain-seed step runs LAST among the
 /// destructive steps — see performDeleteWalletData.
 enum DeletionStep: Int, CaseIterable {
     case unregisteringDevice = 1
-    case deletingCloudHash = 2
-    case deletingTransactions = 3
-    case deletingTags = 4
-    case deletingContacts = 5
-    case deletingBalanceCache = 6
-    case deletingConfiguration = 7
-    case deletingDeviceRegistry = 8
-    case deletingBackupStatus = 9
-    case deletingAddressHistory = 10
-    case deletingUserProfile = 11
+    case deletingTransactions = 2
+    case deletingTags = 3
+    case deletingContacts = 4
+    case deletingBalanceCache = 5
+    case deletingConfiguration = 6
+    case deletingDeviceRegistry = 7
+    case deletingBackupStatus = 8
+    case deletingAddressHistory = 9
+    case deletingUserProfile = 10
+    case deletingCloudHash = 11
     case deletingKeychain = 12
     case clearingUserDefaults = 13
     case finalizingDeletion = 14
@@ -1052,6 +1101,10 @@ enum SharedStateWipeCoverage {
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
         Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),
+        // Written only by the delete view when the account-side deletion
+        // completed but the bark directory could not be removed; consumed
+        // by the next create or import (SecurityService, 2026-10-15)
+        Entry(key: "com.arke.wallet.staleWalletDirectory", store: "UserDefaults",    scope: .deviceLocal),
         // Relay registration bookkeeping (RelayRegistrationService.PersistedRegistration);
         // cleared so a new wallet on this device mints its own authorization
         Entry(key: "com.arke.relay.* (5 keys)",            store: "UserDefaults",    scope: .deviceLocal),
@@ -1111,6 +1164,10 @@ enum WalletCleanupError: LocalizedError {
     /// deleted; the payload carries the fresh assessment so the screen can
     /// resurface the updated blockers.
     case fullWipeScopeInvalidated(WalletDataCleanupService.DeletionAssessment)
+    /// A refresh or the launch load was running at the moment of the first
+    /// destructive step. Nothing was deleted; the user retries once the
+    /// delete screen offers the button again.
+    case refreshInProgress
 
     var errorDescription: String? {
         switch self {
@@ -1125,6 +1182,9 @@ enum WalletCleanupError: LocalizedError {
         case .fullWipeScopeInvalidated:
             return String(localized: "error_delete_scope_changed",
                           defaultValue: "The device list changed while you were confirming. Nothing was deleted — review the updated list and try again.")
+        case .refreshInProgress:
+            return String(localized: "error_delete_refresh_in_progress",
+                          defaultValue: "A refresh started while you were confirming. Nothing was deleted — try again in a moment.")
         }
     }
 }

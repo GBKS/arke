@@ -110,11 +110,42 @@ class SecurityService {
         logger.info("Cleared local wallet evidence")
     }
 
+    // MARK: - Stale Wallet Directory
+
+    /// UserDefaults key set when a deletion completed account-side but the bark
+    /// directory could not be removed (`DeleteWalletSettingView`, route-anyway,
+    /// DECIDED 2026-10-15). The leftover database belongs to a wallet that no
+    /// longer exists: it is not evidence of a wallet, and the next create or
+    /// import removes it first — bark refuses to open a database for a
+    /// different phrase ("incorrect mnemonic"), so without this an import of
+    /// another phrase would fail on every attempt (review finding 2026-10-15,
+    /// `Wallet_Deletion_Partial_Failure.md` §10).
+    private nonisolated static let staleWalletDirectoryKey = "com.arke.wallet.staleWalletDirectory"
+
+    nonisolated static func recordStaleWalletDirectory() {
+        UserDefaults.standard.set(true, forKey: staleWalletDirectoryKey)
+        logger.error("Wallet directory could not be removed after deletion — marked stale for the next create or import")
+    }
+
+    nonisolated static func hasStaleWalletDirectory() -> Bool {
+        UserDefaults.standard.bool(forKey: staleWalletDirectoryKey)
+    }
+
+    nonisolated static func clearStaleWalletDirectory() {
+        UserDefaults.standard.removeObject(forKey: staleWalletDirectoryKey)
+    }
+
     /// True if this install shows signs of having run a wallet: the UserDefaults
-    /// breadcrumb, or the bark database on disk (covers installs predating the flag).
+    /// breadcrumb, or the bark database on disk (covers installs predating the
+    /// flag). A directory marked stale after a failed deletion teardown does not
+    /// count — the keychain-unreadable detection branch would otherwise route a
+    /// wiped install back into the wallet UI on it.
     nonisolated static func hasLocalWalletEvidence() -> Bool {
         if UserDefaults.standard.bool(forKey: hasRunWalletLocallyKey) {
             return true
+        }
+        if hasStaleWalletDirectory() {
+            return false
         }
         return localWalletDatabaseExists()
     }

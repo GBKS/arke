@@ -133,6 +133,22 @@ struct DeleteWalletSettingView: View {
                                 .foregroundColor(.secondary)
                         }
                         .padding(.top, 8)
+                    } else if walletManager.isLoadingWalletData {
+                        // Deletion waits for the refresh to finish *before* it
+                        // starts (DECIDED 2026-10-15): a refresh that passes
+                        // the row deletion re-inserts every row, and the
+                        // refresh cannot be cancelled. The user sees the wait
+                        // here, with the way back open, instead of a pause
+                        // inside the wipe. The cleanup service re-checks the
+                        // same signal at its first step.
+                        HStack {
+                            ProgressView()
+                                .controlSize(.small)
+                            Text(String(localized: "status_delete_waiting_for_refresh", defaultValue: "Finishing the current refresh…"))
+                                .font(.callout)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 8)
                     } else if deletionStrategy != nil {
                         // Not the final confirmation (the slider sheet is), so
                         // a regular primary button, not a red one
@@ -413,68 +429,100 @@ struct DeleteWalletSettingView: View {
         }
     }
     
+    /// Two phases with two different failure responses
+    /// (`Features/Wallet_Deletion_Partial_Failure.md` §4.2):
+    ///
+    /// 1. The cleanup service. Every throw here leaves the seed intact and a
+    ///    wallet that keeps working (the seed is its last destructive step),
+    ///    so the response is always the same: back to this screen with the
+    ///    error visible, override dropped, Continue retries. The sheet must
+    ///    close — its Cancel is disabled while deleting, and the error used
+    ///    to land behind it.
+    /// 2. The manager's local teardown. Once the cleanup service has
+    ///    returned, the account-side deletion is committed (seed gone on a
+    ///    full wipe, tombstone written on local-only), so a failure to remove
+    ///    the bark directory must not strand the user in the UI of a wallet
+    ///    that no longer exists: log, clear the local evidence, route anyway
+    ///    (DECIDED 2026-10-15).
     private func deleteWallet(strategy: DeletionStrategy, overrideConfirmed: Bool) async {
         isDeleting = true
         deleteError = nil
         deletionSummary = nil
 
-        // No opportunistic backup may run while the deletion is in flight
-        // (contract rule 17); released on every exit of this function
+        // No opportunistic backup and no new refresh may run while the
+        // deletion is in flight (contract rule 17); released on every exit
         walletManager.setWalletDeletionInProgress(true)
-        defer { walletManager.setWalletDeletionInProgress(false) }
+        defer {
+            walletManager.setWalletDeletionInProgress(false)
+            isDeleting = false
+        }
 
+        // Phase 1: the cleanup service re-derives the scope from fresh
+        // evidence and re-checks the refresh gate before its first
+        // destructive step
+        let summary: DeletionSummary
         do {
-            // Delete all wallet data using the cleanup service (which
-            // re-derives the scope from fresh evidence before the first
-            // destructive step)
-            let summary = try await cleanupService.deleteWalletData(
+            summary = try await cleanupService.deleteWalletData(
                 strategy: strategy,
-                overrideConfirmed: overrideConfirmed
+                overrideConfirmed: overrideConfirmed,
+                isLoadingWalletData: { walletManager.isLoadingWalletData }
             )
-
-            // Delete from WalletManager (this clears local wallet state from
-            // bark). The scope comes from the deletion that ran, so a full
-            // wipe does not re-create the backup the service just removed.
-            _ = try await walletManager.deleteWallet(scope: summary.scope)
-
-            // Store summary
-            deletionSummary = summary
-
-            #if DEBUG
-            print("✅ [DeleteWalletSettingView] Deletion complete: \(summary.summaryDescription)")
-            #endif
-
-            // Call the completion handler to navigate back to onboarding
-            await MainActor.run {
-                onWalletDeleted?()
-                // Dismiss the confirmation sheet so onboarding flow is visible
-                showingDeletionConfirmation = false
-                showingPhraseConfirmation = false
-            }
         } catch let WalletCleanupError.fullWipeScopeInvalidated(fresh) {
-            // The pre-wipe recheck found a device the screen's assessment
-            // didn't know about. Nothing was deleted — surface the updated
-            // blockers and drop the override (it was confirmed against
-            // evidence that no longer holds).
+            // A device the screen's assessment didn't know about. Nothing was
+            // deleted — surface the updated blockers; the override was
+            // confirmed against evidence that no longer holds.
             #if DEBUG
             print("🛑 [DeleteWalletSettingView] Full wipe aborted: device evidence changed mid-confirmation")
             #endif
-            await MainActor.run {
-                deletionStrategy = fresh.strategy
-                blockerReport = fresh.report
-                overrideRequested = false
-                showingDeletionConfirmation = false
-                // Pop the phrase screen too: the error and the new blockers
-                // are shown on this screen
-                showingPhraseConfirmation = false
-                deleteError = WalletCleanupError.fullWipeScopeInvalidated(fresh).localizedDescription
-                isDeleting = false
-            }
+            deletionStrategy = fresh.strategy
+            blockerReport = fresh.report
+            returnToInfoScreen(error: WalletCleanupError.fullWipeScopeInvalidated(fresh))
+            return
         } catch {
-            await MainActor.run {
-                deleteError = error.localizedDescription
-                isDeleting = false
-            }
+            #if DEBUG
+            print("🛑 [DeleteWalletSettingView] Deletion aborted before the seed step, wallet intact: \(error.localizedDescription)")
+            #endif
+            returnToInfoScreen(error: error)
+            return
         }
+
+        // Phase 2: local teardown. The scope comes from the deletion that
+        // ran, so a full wipe does not re-create the backup the service just
+        // removed. The manager logs the failure at error level and retries
+        // once itself.
+        do {
+            _ = try await walletManager.deleteWallet(scope: summary.scope)
+        } catch {
+            #if DEBUG
+            print("⚠️ [DeleteWalletSettingView] Local teardown failed after the account-side deletion completed — routing anyway: \(error.localizedDescription)")
+            #endif
+            // The manager clears this only on its success path
+            SecurityService.clearLocalWalletEvidence()
+            // The leftover directory is not wallet evidence, and the next
+            // create or import removes it before bark can refuse to open it
+            // for a different phrase
+            SecurityService.recordStaleWalletDirectory()
+        }
+
+        deletionSummary = summary
+
+        #if DEBUG
+        print("✅ [DeleteWalletSettingView] Deletion complete: \(summary.summaryDescription)")
+        #endif
+
+        // Navigate (re-runs detection: onboarding or rejoin, contract rule 20)
+        // and dismiss the sheet so the destination is visible
+        onWalletDeleted?()
+        showingDeletionConfirmation = false
+        showingPhraseConfirmation = false
+    }
+
+    /// The one response to every pre-seed failure: close the slider sheet,
+    /// pop the phrase screen, drop the override, show the error here.
+    private func returnToInfoScreen(error: Swift.Error) {
+        overrideRequested = false
+        showingDeletionConfirmation = false
+        showingPhraseConfirmation = false
+        deleteError = error.localizedDescription
     }
 }
