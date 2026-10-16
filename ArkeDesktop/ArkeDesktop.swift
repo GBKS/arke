@@ -70,6 +70,7 @@ struct Arke_desktop: App {
     var body: some Scene {
         WindowGroup {
             MainView()
+                .agentPaymentsDesktopHost()
                 .environment(walletManager)
                 .environment(\.initialWalletDetected, initialWalletDetected)
                 .withServiceContainer(serviceContainer)

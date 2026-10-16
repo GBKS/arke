@@ -1,207 +1,219 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "CFBundleDisplayName": {
-      "comment": "Bundle display name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Arké"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arké"
           }
         }
       },
-      "shouldTranslate": false
+      "shouldTranslate" : false
     },
-    "CFBundleName": {
-      "comment": "Bundle name",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "ArkeMobile"
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ArkeMobile"
           }
         }
       },
-      "shouldTranslate": false
+      "shouldTranslate" : false
     },
-    "NFCReaderUsageDescription": {
-      "comment": "Privacy - NFC Scan Usage Description",
-      "extractionState": "extracted_with_value",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké nutzt NFC, um Zahlungsinformationen von kontaktlosen Tags zu scannen."
+    "NFCReaderUsageDescription" : {
+      "comment" : "Privacy - NFC Scan Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké nutzt NFC, um Zahlungsinformationen von kontaktlosen Tags zu scannen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "Arké uses NFC to scan payment information from contactless tags."
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arké uses NFC to scan payment information from contactless tags."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké は NFC を使用してコンタクトレスタグから支払い情報をスキャンします。"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké は NFC を使用してコンタクトレスタグから支払い情報をスキャンします。"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké 會使用 NFC 掃描感應式標籤中的付款資訊。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké 會使用 NFC 掃描感應式標籤中的付款資訊。"
           }
         }
       }
     },
-    "NSCameraUsageDescription": {
-      "comment": "Privacy - Camera Usage Description",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Nutze deine Kamera, um QR-Codes zu scannen."
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nutze deine Kamera, um QR-Codes zu scannen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use your camera to scan QR codes."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use your camera to scan QR codes."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "カメラを使用して QR コードをスキャンします。"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カメラを使用して QR コードをスキャンします。"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "使用相機掃描 QR Code。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "使用相機掃描 QR Code。"
           }
         }
       }
     },
-    "NSContactsUsageDescription": {
-      "comment": "Privacy - Contacts Usage Description",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Verknüpfe mit deinen Kontakten, um Namen und Profilbilder in der App anzuzeigen."
+    "NSContactsUsageDescription" : {
+      "comment" : "Privacy - Contacts Usage Description",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verknüpfe mit deinen Kontakten, um Namen und Profilbilder in der App anzuzeigen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Link to your Contacts to show names and profile images in the app."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link to your Contacts to show names and profile images in the app."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "連絡先と連携して、アプリに名前とプロフィール画像を表示します。"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先と連携して、アプリに名前とプロフィール画像を表示します。"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "連結你的「聯絡人」，以便在 App 中顯示姓名與大頭照。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連結你的「聯絡人」，以便在 App 中顯示姓名與大頭照。"
           }
         }
       }
     },
-    "NSLocalNetworkUsageDescription": {
-      "comment": "Privacy - Local Network Usage Description",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké nutzt das lokale Netzwerk, um Zahlungsinformationen sicher mit Nutzern in deiner Nähe auszutauschen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arké uses local network to securely exchange payment information with nearby users."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké はローカルネットワークを使用して、近くのユーザーと安全に支払い情報を交換します。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké 會使用區域網路，與附近的使用者安全地交換付款資訊。"
+    "NSFaceIDUsageDescription" : {
+      "comment" : "Privacy - Face ID Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arké uses Face ID to confirm payments you approve."
           }
         }
       }
     },
-    "NSNearbyInteractionAllowOnceUsageDescription": {
-      "comment": "Privacy - Nearby Interaction Allow Once Usage Description",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Erlaube Arké, in der Nähe befindliche Nutzer einmalig zu erkennen, um Zahlungsinformationen auszutauschen."
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké nutzt das lokale Netzwerk, um Zahlungsinformationen sicher mit Nutzern in deiner Nähe auszutauschen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allow Arké to detect nearby users once to exchange payment information."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arké uses local network to securely exchange payment information with nearby users."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké が近くのユーザーを一度検出して、支払い情報を交換することを許可します。"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké はローカルネットワークを使用して、近くのユーザーと安全に支払い情報を交換します。"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "允許 Arké 偵測一次附近的使用者，以交換付款資訊。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké 會使用區域網路，與附近的使用者安全地交換付款資訊。"
           }
         }
       }
     },
-    "NSNearbyInteractionUsageDescription": {
-      "comment": "Privacy - Nearby Interaction Usage Description",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké nutzt Nearby Interaction, um zu erkennen, wenn du einem anderen Nutzer nahe bist, für nahtlosen Zahlungsinformationsaustausch."
+    "NSNearbyInteractionAllowOnceUsageDescription" : {
+      "comment" : "Privacy - Nearby Interaction Allow Once Usage Description",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Erlaube Arké, in der Nähe befindliche Nutzer einmalig zu erkennen, um Zahlungsinformationen auszutauschen."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arké uses Nearby Interaction to detect when you're close to another user for seamless payment information exchange."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Arké to detect nearby users once to exchange payment information."
           }
         },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké は Nearby Interaction を使用して、シームレスな支払い情報交換のために、別のユーザーに近いときを検出します。"
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké が近くのユーザーを一度検出して、支払い情報を交換することを許可します。"
           }
         },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Arké 會使用「鄰近互動」偵測你何時靠近其他使用者，以便順暢地交換付款資訊。"
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "允許 Arké 偵測一次附近的使用者，以交換付款資訊。"
+          }
+        }
+      }
+    },
+    "NSNearbyInteractionUsageDescription" : {
+      "comment" : "Privacy - Nearby Interaction Usage Description",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké nutzt Nearby Interaction, um zu erkennen, wenn du einem anderen Nutzer nahe bist, für nahtlosen Zahlungsinformationsaustausch."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arké uses Nearby Interaction to detect when you're close to another user for seamless payment information exchange."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké は Nearby Interaction を使用して、シームレスな支払い情報交換のために、別のユーザーに近いときを検出します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké 會使用「鄰近互動」偵測你何時靠近其他使用者，以便順暢地交換付款資訊。"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
