@@ -232,8 +232,29 @@ clearing the handle spans two network calls. "Reset manager state" includes
 every service's in-memory list and cache that a later merge could
 re-persist: the onchain transaction list survived deletion and Step 2b's
 merge wrote the deleted wallet's onchain row into the next wallet created
-in the same process (2026-10-14). Known gap: the reset does not wait for an
-in-flight refresh (Tier 0 partial-failure item).
+in the same process (2026-10-14). **Deletion does not start while wallet
+data is loading** (`WalletManager.isLoadingWalletData` = refreshing or
+initializing): the delete screen hides its button and says so, the cleanup
+service re-checks the signal at its first step and aborts with
+`refreshInProgress` having deleted nothing, and `refresh()` skips while
+`isDeletionInProgress` is set, as do the seeding funnels. Chosen over
+pausing inside the wipe (DECIDED 2026-10-15,
+`Features/Wallet_Deletion_Partial_Failure.md`): the refresh is an
+unstructured task with no cancellation point, and a visible wait before
+committing is simpler than a pause, a resume and a timeout after. Inside
+the cleanup service the fallible CloudKit row deletion runs before the
+infallible KVS/backup writes, with a context rollback on failure, so every
+failure before the seed step leaves a working wallet; a failure in the
+manager's local teardown after the cleanup returned logs, clears the local
+evidence, marks the leftover directory stale (`SecurityService`; the next
+create or import removes it, since bark refuses to open a database for a
+different phrase and only the FFI create removes a directory on its own)
+and still routes (rule 20). Known residuals: the notification listener and
+the progression timers are stopped only in the reset, after the cleanup, so
+a payment landing inside the 5–15 s wipe window can write one row; and a
+keychain-delete failure (rare, foreground) leaves the account state and the
+local network config gone with the seed present — the retry completes the
+wipe, but without it the next cold launch reconciles to `.noUsableConfig`.
 
 **18. `includeCloudData` is strategy-derived; the seed is deleted only on a last-device full wipe.**
 A fixed value either orphaned secondaries or destroyed the only seed copy

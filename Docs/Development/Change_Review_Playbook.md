@@ -256,6 +256,14 @@ contract and link it here.
   minimum interval is folded into a pending run. Test: `RemoteChangeThrottleTests`.
 - O3. Nothing that needs bark runs before the handle is open; it skips with
   a log line (rule 7b). Enforced: `performRefresh`, `BalanceRefreshStatusViewModel`.
+  Same shape for the other direction: nothing writes wallet rows while a
+  deletion is in progress (`isDeletionInProgress`, rule 17).
+- O5. A destructive action waits for in-flight loading *before* it starts
+  (visible, with a reason, way back open) and re-checks at its first
+  destructive step; it never pauses, cancels or times out mid-flow
+  (DECIDED 2026-10-15, `Features/Wallet_Deletion_Partial_Failure.md`).
+  Enforced: `DeleteWalletSettingView`, `WalletDataCleanupService.deleteWalletData`.
+  Test: `refreshGateAbortsBeforeAnythingDestructive`.
 - O4. `cancel`/`cancelAll` on the dedup manager are known no-ops; do not
   rely on them until the Tier 4 item lands.
 

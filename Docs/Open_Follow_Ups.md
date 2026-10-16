@@ -94,7 +94,10 @@ the rest wait.
      device-checked on one phone the same day, plan
      `Features/Wallet_Deletion_Phrase_Confirmation.md`; two-device
      override route on the Device checklist);
-     partial-failure handling + `isDeleting`; ghost-hardening
+     partial-failure handling + `isDeleting` ✓ 2026-10-16 (gate on the
+     refresh instead of a pause, DECIDED 2026-10-15; built, reviewed,
+     device-checked, uncommitted; plan
+     `Features/Wallet_Deletion_Partial_Failure.md`); ghost-hardening
      residual (clear-first + surfaced unregister error, same in
      `unlinkDevice`); wrap the four unprotected store writes; end the exit
      Live Activity on demotion + drop dead `closeWallet()` (DECIDED
@@ -698,7 +701,10 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   is accepted, so the table gates actions *after* a recorded link (phrase,
   deletions, promote/demote/unlink, send as opt-in) and the link screen
   itself is not a gated action. Build with or after the linking scope pass.
-- [ ] **Delete flow has no partial-failure handling**
+- [x] **Delete flow has no partial-failure handling** — done 2026-10-16:
+  built and reviewed 2026-10-15, device check passed (Christoph, "works
+  great", in aggregate), uncommitted; plan
+  `Features/Wallet_Deletion_Partial_Failure.md`. Original entry:
   (`DeleteWalletSettingView.swift:276-328`). Added 2026-10-14 from the
   deletion device log: the flow also does not wait for or cancel an
   in-flight refresh — wipe 1 ran while the launch refresh was in Step 3, the
@@ -712,6 +718,26 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   (`onWalletDeleted` is wired, the generic catch never calls it). The view's
   `isDeleting` is never reset on success either (the service resets its own
   in a `defer`). User-visible face: Tier 2 "Startup routing retests".
+  **Plan DECIDED 2026-10-15**, `Features/Wallet_Deletion_Partial_Failure.md`:
+  the refresh is owned by an unstructured task in the dedup manager with no
+  cancellation point (cancel is a known no-op, O4), so deletion is **gated**
+  instead — the delete screen waits visibly while wallet data is loading
+  (`isRefreshing` or the `initialize` key), the cleanup service re-checks at
+  its first step and aborts with nothing deleted, and `refresh()` skips
+  during the wipe (Christoph's principle: wait before committing, like
+  explicit device linking; the first draft's pause-inside-the-wipe with
+  resume + timeout was dropped). Fallible CloudKit deletes move ahead of
+  the KVS/backup block with a `rollback()`; every pre-seed failure shows
+  its error on the info screen with the wallet still working. Route-anyway
+  on a late file-removal failure DECIDED 2026-10-15. **BUILT and REVIEWED
+  2026-10-15** (uncommitted): adversarial pass found the route-anyway
+  premise half wrong (import does not replace a leftover directory, bark
+  refuses the fingerprint mismatch) → stale-directory marker consumed by
+  create/import; plus the refresh skip moved ahead of the `isRefreshing`
+  flip and a pre-deletion save so the rollback only undoes the cleanup's
+  own work (plan §10). Device check in plan §9 owed. Sweep found
+  two more late writers: the 90 s seeding waiter (fixed in the plan) and
+  the launch device registration (filed on the ghost item below).
 - [ ] **Ghost-device hardening (1), residual**: the mirror clear in
   `unregisterCurrentDevice` is already unconditional and across hashes
   (`DeviceRegistrationService.swift:475-486`, commit 3dc292c) but still
@@ -724,7 +750,13 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   surface the failure in the deletion summary — typed error + test. From the
   2026-09-26 incident (full write-up in the Done log): an uncleared mirror
   entry blocks every remaining device's full wipe for 48h with no override.
-  Items (2)–(4) of that incident are in Tier 4.
+  Items (2)–(4) of that incident are in Tier 4. Added 2026-10-15 from the
+  partial-failure sweep: `MainView_iOS.registerDeviceIfNeeded` (launch
+  `.task`, CloudKit round trip) and the `onWalletReady` registration run in
+  parallel with the wallet and can land *after* `unregisterCurrentDevice`,
+  re-creating the same ghost mirror entry; `registerCurrentDevice` should
+  refuse while `isDeletionInProgress`, or the cleanup re-clears the mirror
+  after its quiesce (`Features/Wallet_Deletion_Partial_Failure.md` §8).
 - [ ] **Paste button accepts unverified Lightning Addresses**: in
   `SendViewModel+Clipboard`, `tryParallelResolution` (`:154`, fallback
   `:216-219`) and `tryLightningAddressFallback` (`:239`, fallback `:251-253`)
@@ -1054,8 +1086,9 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   `UnifiedTransactionService.resetMergedTransactions()`. Device check passed
   the same evening (21:50 export: delete → create in one session, Step 2b
   saved 0 rows, Activity empty). Trigger
-  (2), deletion racing an in-flight refresh, stays open with the Tier 0
-  partial-failure item. Original entry: (field, Christoph 2026-10-14 21:24
+  (2), deletion racing an in-flight refresh, closed 2026-10-16 with the
+  Tier 0 partial-failure item (deletion gated on the refresh; plan
+  `Features/Wallet_Deletion_Partial_Failure.md`). Original entry: (field, Christoph 2026-10-14 21:24
   export + four
   screenshots: new mainnet wallet, balance 0, one "Received +20,000 sats, 2
   wk. ago" row, category `onchain_transaction`, 2125 confirmations — the
