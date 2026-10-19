@@ -120,14 +120,51 @@ struct FeeRateServiceTests {
         #expect(rates?.slow == 8)
     }
 
-    @Test("Nil cap (mainnet) passes high rates through")
-    func testNilCapPassesHighRatesThrough() {
+    // MARK: - Mainnet Ceiling
+
+    @Test("Mainnet ceiling passes a real fee spike through")
+    func testMainnetCeilingPassesRealSpikesThrough() {
+        // Well above anything seen on mainnet, well below the ceiling:
+        // the ceiling must never hide a genuine spike
         let estimates = ["1": 800.0, "3": 500.0, "6": 300.0]
-        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: nil)
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: FeeRateService.mainnetMaxRateSatPerVb)
 
         #expect(rates?.fast == 800)
         #expect(rates?.medium == 500)
         #expect(rates?.slow == 300)
+    }
+
+    @Test("Mainnet ceiling clamps a poisoned estimator")
+    func testMainnetCeilingClampsPoisonedEstimator() {
+        // The 2026-10-08 harness payload that reached the ranker uncapped
+        let estimates = ["1": 250_000.0, "3": 250_000.0, "6": 250_000.0]
+        let rates = FeeRateService.parse(esploraEstimates: estimates, maxRate: FeeRateService.mainnetMaxRateSatPerVb)
+
+        #expect(rates?.fast == FeeRateService.mainnetMaxRateSatPerVb)
+        #expect(rates?.medium == FeeRateService.mainnetMaxRateSatPerVb)
+        #expect(rates?.slow == FeeRateService.mainnetMaxRateSatPerVb)
+    }
+
+    @Test("There is no uncapped mode: the default cap is the mainnet ceiling")
+    func testDefaultCapIsMainnetCeiling() {
+        // A caller that forgets the cap must not get the pre-fix behaviour
+        // (anything up to UInt64.max passed through)
+        let rates = FeeRateService.parse(esploraEstimates: ["1": 6.7e16])
+
+        #expect(rates?.fast == FeeRateService.mainnetMaxRateSatPerVb)
+    }
+
+    @Test("Ceiling keeps the destination ranker's fee arithmetic in range")
+    @MainActor
+    func testCeilingKeepsRankerArithmeticInRange() {
+        // The one `Int(feeRate * vBytes)` in the app trapped above ~6.6e16
+        // sat/vB; at the ceiling both transaction sizes stay far below Int.max
+        let ceiling = FeeRateService.mainnetMaxRateSatPerVb
+        let bitcoin = PaymentDestination(format: .bitcoin, network: nil, address: "bc1qexample")
+        let silent = PaymentDestination(format: .silentPayments, network: nil, address: "sp1qexample")
+
+        #expect(PaymentDestinationSelector.estimateOnchainFee(for: bitcoin, amount: nil, feeRate: ceiling) == 1_400_000)
+        #expect(PaymentDestinationSelector.estimateOnchainFee(for: silent, amount: nil, feeRate: ceiling) == 1_800_000)
     }
 
     // MARK: - Invalid Input

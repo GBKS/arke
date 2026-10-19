@@ -403,7 +403,9 @@ class WalletManager {
                 self?.networkConfig?.esploraBaseURL
             },
             maxRateSatPerVb: { [weak self] in
-                guard let self, !self.isMainnet else { return nil }
+                // Mainnet keeps the loose sanity ceiling; worthless-coin
+                // networks get the tight spam cap. Never uncapped.
+                guard let self, !self.isMainnet else { return FeeRateService.mainnetMaxRateSatPerVb }
                 return FeeRateService.nonMainnetMaxRateSatPerVb
             }
         )
