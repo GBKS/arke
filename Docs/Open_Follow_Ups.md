@@ -52,11 +52,25 @@ summarised in one line under "Past trains".
 | Stage | Status |
 |---|---|
 | Decide | rulings done 2026-10-10 (15 of 16; exploration season explicitly deferred); picks below PROPOSED, Christoph to confirm |
-| Build | started 2026-10-09 with the hygiene pass; soft target ≈ 2026-10-23 |
-| Review | not started |
-| Device | not started — next time both phones are at hand after Review closes |
-| Release | not started |
-| Soak | not started |
+| Build | started 2026-10-09 with the hygiene pass; **cut DECIDED 2026-10-19** (see below) — closes with the mainnet fee ceiling and a cosmetic pass on 2026-10-20/21 |
+| Review | per cluster as built (deletion cluster: four adversarial passes, all filed); `/code-review` over the range since build 23 on 2026-10-21 |
+| Device | deletion cluster fully device-checked (10-14, 10-15, 10-16, 10-19); the remaining checklist items are Tier 2 debt and do not gate the upload |
+| Release | **target 2026-10-21 evening**: build number bump (Christoph, Xcode), full mobile suite via `xcodebuild`, TestFlight upload, notes from the checked-off entries |
+| Soak | Plan B Forum, Lugano, from 2026-10-22 — a week of conference use on the new build |
+
+**Cut DECIDED 2026-10-19** (Christoph: TestFlight before Lugano). Build
+closes with: the Tier 0 mainnet fee-rate crash (cluster 4's first item,
+pulled forward because mainnet payments at a conference are the field
+condition) and a cosmetic pass from Tier 3 — QR screen brightening,
+"-0 B fees paid" no-fee state, exit-status txid copy, onboard-modal minimum,
+move-to-payments image line, rejoin screen styling, plus the two added the
+same day: activity rows dated by the movement's own time rather than the
+wallet's processing time, and (PROPOSED, not yet picked) the loading wave on
+the payments / savings totals of the balance details view. Moved to Train
+2: the rest of the deletion cluster (four unprotected store writes, exit
+Live Activity on demotion + dead `closeWallet()`, abort-after-unregister),
+clusters 3, 5 and 6, the remainder of cluster 4, and the new Tier 1 gate on
+onchain sends at the fee ceiling (DECIDED 2026-10-19).
 
 The exploration-season ruling is parked until the most important items are
 worked off (Christoph, 2026-10-09).
@@ -172,6 +186,23 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   BOLT-12). **Explicitly deferred 2026-10-09 by Christoph** until the most
   important items are worked off; stays on this list as a reminder, not a
   blocker. Re-raise in a Decide stage once Tier 0 has been emptied once.
+- [x] **DECIDED 2026-10-19 — ceiling alone for Lugano, the gate as a Train 2
+  Tier 1 item; ceiling value 10,000 confirmed** (Christoph: "I'll follow
+  your recommendation"). The gate is filed under Tier 1 "Send and fees".
+  Original question: what an onchain send does when the mainnet fee estimate
+  sits at the ceiling (`Features/Mainnet_Fee_Rate_Ceiling.md` §10,
+  PROPOSED 2026-10-19, from the ceiling's adversarial pass F2). The
+  10,000 sat/vB ceiling removes the crash but turns a poisoned estimate
+  that used to fail the viability check into a 1.4 M-sat fee that passes
+  it for any wallet holding that much onchain; the fee line is the only
+  guard. Options: (a) ship the ceiling alone, the fee line is visible and
+  the hazard class existed below the old refusal point anyway; (b) the
+  explicit-gate pattern (O5): fast tier at the ceiling disables onchain
+  sending with "fee estimate unreliable", Ark and Lightning stay usable.
+  **Recommendation: (a) for the Lugano build, (b) as a Train 2 Tier 1 item**
+  — (b) is small but is new policy on the send path and needs its own
+  device look. Also to confirm: the ceiling value itself (10,000; anything
+  from ~5,000 up keeps the arithmetic safe). Blocks nothing in Train 1.
 - [x] **DECIDED 2026-10-10 — explicit device linking: direction accepted,
   build later.** No install adopts the account's wallet silently; it
   discloses what it found and asks for one acknowledgement (Christoph:
@@ -395,7 +426,33 @@ Tier 0/1 work. Guiding docs hold the full arguments.
 
 ## Tier 0 — Funds or security at risk
 
-- [ ] **Mainnet fee rate can still crash the app**: mainnet rates are
+- [x] **Mainnet fee rate can still crash the app** — **DONE 2026-10-19**:
+  built, reviewed and device-checked the same day (uncommitted; plan
+  `Features/Mainnet_Fee_Rate_Ceiling.md`):
+  10,000 sat/vB sanity ceiling on mainnet, no uncapped mode left (the
+  parser's cap defaults to the ceiling, the closure is non-optional), one
+  warning line when a fetch is clamped, four tests replace
+  `testNilCapPassesHighRatesThrough`. Adversarial pass (plan §8): no code
+  defect, four findings, all acted on the same session. Corrections to the
+  entry below: the ranker is the only `Int(...)` conversion, but the Exit
+  screen's cost estimate (`ExitView_iOS.swift:313-323`) is a second
+  overflow site that traps earlier; BDK and the FFI send fail soft (throw
+  / error, verified at the tags). Confirmation screen at 250,000 sat/vB,
+  traced not executed: a 0.35 BTC fee line, send enabled, the app's own
+  viability check refuses the tap. Trade-off that needs a ruling (Decisions
+  block): at the ceiling the same poisoning now prices a 1.4 M-sat fee that
+  *passes* viability, so a visibly overpriced send becomes possible where
+  it was refused before (ruled the same day: ceiling alone for Lugano, gate
+  in Train 2). Device check PASSED 2026-10-19 (Christoph, mainnet phone,
+  debug build; export `Docs/debug_logs.txt`): `Fee rates updated: fast 2,
+  medium 2, slow 1 sat/vB` from `mempool.second.tech`, no clamp line; exit
+  cost estimate rendered (33 VTXOs at 2 sat/vB → 75,019 sats, "can afford:
+  false" against 20,000 sats onchain); the onchain destination ranked and
+  the fee came from the ceiling-bounded fallback arithmetic (280 sats =
+  2 × 140 vB) because BDK's estimator reported "0 BTC available" — a
+  pre-existing gap filed as its own Tier 1 line under "Send and fees". Full
+  mobile suite 565/565 after the adversarial pass (plan §9).
+  Original entry: mainnet rates are
   uncapped and `FeeRateService.parse` only drops values past `UInt64`. A rate
   above ~6.6e16 sat/vB passes and crashes at
   `PaymentDestinationSelector.swift:482` (`Int(feeRate * estimatedVBytes)`,
@@ -912,6 +969,44 @@ Tier 0/1 work. Guiding docs hold the full arguments.
 
 ### Send and fees
 
+- [ ] **Gate onchain sends while the mainnet fee estimate sits at the
+  ceiling** (DECIDED 2026-10-19 as a Train 2 item; from the mainnet-ceiling
+  adversarial pass F2, `Features/Mainnet_Fee_Rate_Ceiling.md` §2 and §10).
+  With the 10,000 sat/vB ceiling a poisoned estimator prices a 1.4 M-sat fee
+  for a 140 vB send that passes the viability check; the fee line is the
+  only guard. Explicit-gate pattern (O5): when the fast tier equals
+  `FeeRateService.mainnetMaxRateSatPerVb`, disable onchain sending with a
+  reason ("fee estimate unreliable"), Ark and Lightning stay usable; the
+  gate lifts on the next fetch below the ceiling. Signal is already there
+  (the clamp warning fires on the same condition). Needs its own device
+  look because it is new policy on the send path. Definition of done:
+  unit test on the gate decision, on-device look with a forced clamp
+  (custom network pointing at a poisoned Esplora, or a debug override).
+- [ ] **BDK fee estimator is blind to onchain funds that arrived after its
+  one full scan, so the exact fee and max-sendable always fall back**
+  (found 2026-10-19 in the mainnet-ceiling device check export,
+  `Docs/debug_logs.txt`): with 20,000 sats confirmed onchain per bark, the
+  estimator threw `CoinSelection … 0 BTC available` on every attempt
+  (`estimateOnchainFeeWithBDK` and `calculateOnchainMaxSendable`), and the
+  send screen priced the fee from the 140 vB fallback (280 sats) and max
+  from `balance - fallback`. Traced: `ensureFeeEstimator`
+  (`BarkWalletFFI+Fees.swift:46-49`) full-scans only when
+  `createdFreshDatabase` is true; the export has "Creating fee estimator"
+  but no "database is fresh" line, so the db pre-existed and only
+  `startSyncWithRevealedSpks` ran (`BDKFeeEstimator.swift:131`). The
+  estimator is its own BDK wallet on which nothing ever reveals addresses,
+  so a UTXO on an address bark revealed after that first scan is invisible
+  to it forever — the same revealed-SPK mechanism as the §4 notes in
+  `Features/BDK_Transaction_Reader_Removal.md`, now on the estimator. Not
+  a funds problem (bark's own wallet sends fine); the shown fee and the
+  max amount are guesses. Fix options: (a) when the estimate fails with
+  insufficient funds while bark's onchain balance covers the amount, run
+  one full scan and retry once; (b) reveal the estimator's external chain
+  up to bark's address index before each sync; (c) retire the estimator
+  (Tier 4 "BDK fee estimator removal, Phase 3", blocked upstream).
+  Recommend (a): one line of policy, self-healing, no new state. Device
+  evidence named: `Fee estimator database is fresh - running one-time full
+  scan` followed by a `Fee calculated:` line instead of `Failed to estimate fee`.
 - [ ] **PROPOSAL (2026-10-07) — Fee row three-state + stale-cache guard**:
   the fee row shows "—" for Lightning addresses and keeps the old value when
   onchain priority changes. (0) **The ranking path falls back silently**:
@@ -1674,6 +1769,30 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Activity, transaction details, tags
 
+- [ ] **Activity rows are dated by when the wallet processed the movement,
+  not when it happened** (Christoph, 2026-10-19; Train 1 cosmetic pass).
+  Traced: the row date is `parseDate(movement.completedAt ?? movement.createdAt)`
+  (`TransactionService+Parsing.swift:320`), and bark's `MovementTimestamp`
+  (`bark/src/movement/mod.rs:326-334`) has only `created_at`, `updated_at`,
+  `completed_at`, all stamped with the wallet's local clock when *it* acted.
+  For a sent payment that is the real time. For anything discovered at a
+  sync — a received Ark payment claimed from the mailbox, a board or an
+  onchain receive found by the chain scan, a round refresh — it is the
+  sync time, which on a phone that was closed for a day is a day late.
+  Bark offers no counterparty time, so the fix is per source: (a) onchain
+  rows already have the block time (`OnchainTransactionModel.confirmationTime.timestamp`)
+  and the movement ↔ onchain link (`Movement_Onchain_Linking.md`) — show
+  the block time when linked; (b) received Ark payments that arrive by
+  push are processed within seconds (`processSingleMovement`), so they are
+  already right; only the catch-up sync case is late, and for it the
+  honest display is bark's time — or an "around" prefix / "received by"
+  wording, ruling needed; (c) the upsert must not re-date an existing row
+  when a later refresh reports a later `completed_at` for the same
+  movement (`TransactionUpsertDateFreezeTests` pins the cancelled case
+  only; check whether a re-sync bumps dates of settled rows, which would be
+  the "when the app loaded it" effect on *every* refresh). Start with (c):
+  if settled rows are re-dated on refresh, that is the bug; (a) is the
+  improvement; (b) needs a ruling.
 - [ ] **Hide failed and completed refreshes that were free?** (The growing
   "Failed refresh" list in the Tier 0 divergence cluster is the extreme
   case; this line is the general one.)
@@ -1695,6 +1814,15 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Balance, board / offboard
 
+- [ ] **Loading wave on the balance details totals** (Christoph, 2026-10-19,
+  PROPOSED — "not 100% sold"): the balance card's glyph wave
+  (`BalanceLoadIndicatorModel`) could also run on the separate payments and
+  savings totals in the balance details view, each driven by whether *its*
+  data is still loading (the Ark balance arrives before the onchain sync
+  since the Ark-first refresh, so the two would settle at different
+  moments). Purpose: someone wondering what is still loading gets the
+  answer without a spinner or copy. Needs a ruling before it is picked; if
+  yes, it rides in the Train 1 cosmetic pass.
 - [ ] **VoiceOver hears nothing about the running launch load** (filed
   2026-10-13 from the load-wave item): the activity screen's balance
   element has a label and value but no "updating" state while
@@ -1899,6 +2027,27 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Concurrency and the FFI boundary
 
+- [ ] **Export noise from the 2026-10-19 mainnet device check** (not
+  caused by the ceiling; filed so the next reader does not chase them):
+  eleven `client connection error: hyper::Error(IncompleteMessage)` lines
+  from bark's Esplora client reusing an idle keep-alive connection to
+  `mempool.second.tech` after a pause — the sync that followed succeeded,
+  so it is a retry that logs at error level; and one
+  `⚠️ [UnifiedTxService] Duplicate txid found: onchain_0bd6f9d9…` for the
+  working onchain/bark dedupe of the same receive. Candidates: report the
+  hyper line in `Bark_Bindings_Feedback.md` if it recurs in field exports;
+  drop the dedupe warning to debug level.
+- [ ] **Fee-rate cache survives a network-config switch** (filed
+  2026-10-19 from the mainnet-ceiling adversarial pass, F4):
+  `feeRateService` is created once in `WalletManager` and never reset, and
+  `currentRates(maxAge:)` serves the cache for up to 300 s, so after a
+  switch the other network's rates (bounded by *its* cap) can be served
+  for up to five minutes — a signet exit override could briefly see up to
+  10,000 sat/vB, mainnet can only be tightened (≤ 50). Not a crash. Fix:
+  clear `feeRates` / `lastUpdated` in the config-update path (or key the
+  cache by Esplora URL). The within-fetch half (URL read before the
+  request, cap after) was fixed the same day. Not executed: whether any
+  fee fetch can run before the pre-open network reconcile (no caller found).
 - [ ] **`TaskDeduplicationManager.cancel`/`cancelAll` have never worked**:
   both cast to `Task<Any, Error>` / `Task<Any, Never>` and `Task` is
   invariant, so `cancel(key:)` is a no-op and `cancelAll()` clears the
