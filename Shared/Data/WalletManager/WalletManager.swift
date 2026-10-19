@@ -73,6 +73,16 @@ class WalletManager {
     var error: String?
     var isRefreshing: Bool = false
     var hasLoadedOnce: Bool = false
+    /// Per-source halves of a running refresh, for the balance details
+    /// view's two totals (Open_Follow_Ups "Loading wave on the balance
+    /// details totals", DECIDED 2026-10-19). Both rise with `isRefreshing`.
+    /// The Ark half clears once Step 2b has published the Ark balance, the
+    /// onchain half once Step 3 has re-read the onchain balance behind the
+    /// BDK sync, and the end of the refresh clears both, so a skipped or
+    /// failed refresh cannot leave a wave running. Display signals only;
+    /// nothing gates on them.
+    var isArkBalanceRefreshing: Bool = false
+    var isOnchainBalanceRefreshing: Bool = false
     /// True while `initialize()` runs. The launch wraps the refresh in this
     /// step and keeps writing after it (exit cache, default-data seeding),
     /// so `isRefreshing` alone understates how long wallet data is loading.
@@ -934,6 +944,8 @@ class WalletManager {
         if activeRefreshCount == 1 {
             Self.logger.info("🔄 [REFRESH STATE] Setting isRefreshing = true (first active refresh)")
             isRefreshing = true
+            isArkBalanceRefreshing = true
+            isOnchainBalanceRefreshing = true
         } else {
             Self.logger.info("🔄 [REFRESH STATE] Additional concurrent refresh call (not changing isRefreshing)")
         }
@@ -946,6 +958,8 @@ class WalletManager {
             if activeRefreshCount == 0 {
                 Self.logger.info("🔄 [REFRESH STATE] Setting isRefreshing = false (all refreshes complete)")
                 isRefreshing = false
+                isArkBalanceRefreshing = false
+                isOnchainBalanceRefreshing = false
             }
         }
         
@@ -1072,6 +1086,9 @@ class WalletManager {
         // the SwiftData rows by the whole onchain sync. Local merge, no FFI.
         await unifiedTransactionService?.mergeTransactions()
         Self.logger.notice("✅ [Refresh] Step 2b: Early Ark publish done \(LaunchTiming.secondsSinceAnchor, privacy: .public)s after launch anchor")
+        // The Ark total on the balance details view settles here; the
+        // onchain one keeps its wave through the BDK sync below
+        isArkBalanceRefreshing = false
 
         // Step 2c: onchain BDK sync against esplora. Non-fatal inside the FFI;
         // the only throw is a nil handle, which the guard above excludes.
@@ -1131,7 +1148,9 @@ class WalletManager {
                 await self.feeRateService?.refresh()
             }
         }
-        
+        // The onchain balance has had its post-sync re-read; its total settles
+        isOnchainBalanceRefreshing = false
+
         // Merge transactions from both sources after refresh
         Self.logger.notice("🔄 [Refresh] Step 3.1: Merging ark + onchain transactions...")
         await unifiedTransactionService?.mergeTransactions()

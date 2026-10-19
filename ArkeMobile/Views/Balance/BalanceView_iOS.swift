@@ -48,7 +48,8 @@ struct BalanceView_iOS: View {
                                 (label: "Pending board", amount: arkBalance.pendingBoardSat),
                                 (label: "Pending exit", amount: arkBalance.pendingExitSat)
                             ]
-                        }
+                        },
+                        isLoading: manager.isArkBalanceRefreshing
                     )
                     .padding(20)
                     
@@ -111,7 +112,8 @@ struct BalanceView_iOS: View {
                     total: manager.onchainBalance?.totalSat,
                     color: .orange,
                     imageName: "safe",
-                    pendingItems: nil
+                    pendingItems: nil,
+                    isLoading: manager.isOnchainBalanceRefreshing
                 )
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)

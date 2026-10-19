@@ -17,7 +17,12 @@ struct BalanceDetailCard: View {
     let color: Color
     let imageName: String
     let pendingItems: [(label: String, amount: Int)]?
-    
+    /// This source is still loading: the total carries the glyph wave the
+    /// balance card uses, so someone wondering what is still loading sees
+    /// it on the figure itself. The Ark and onchain totals settle at
+    /// different moments of a refresh (Ark first), hence per card.
+    var isLoading: Bool = false
+
     @State private var isPendingExpanded: Bool = false
     
     private var imageSize: CGFloat {
@@ -154,7 +159,10 @@ struct BalanceDetailCard: View {
                             VStack(alignment: .trailing, spacing: 0) {
                                 Text(formatted(total))
                                     .font(.title2)
+                                    .loadingWave(isLoading: isLoading, label: title.replacingOccurrences(of: "\n", with: " "))
                                     .foregroundColor(.white)
+                                    .contentTransition(.numericText())
+                                    .animation(.smooth, value: total)
 
                                 FiatAmountText(sats: total, hidesZero: true)
                                     .font(.body)
