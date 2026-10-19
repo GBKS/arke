@@ -12,11 +12,19 @@ How to use it:
   what users hit every day, Tier 2 is shipped-but-unverified work, Tier 3 is
   polish grouped by screen, Tier 4 is tech debt, Parked is deliberate.
   Within a tier, items are grouped by area; order inside a group is loose.
-- **Closing an item**: check it off with the date, keep it in place for a
-  session or two as a reminder, then move it to the Done log.
-- **New items**: add them to the tier they belong in, with a pointer and
-  one line of context. Christoph's Reminders app is capture-only; sweep it
-  into this file at the end of a session.
+- **Closing an item** (DECIDED 2026-10-19, replacing "keep it in place for
+  a session or two"): check it off with the date and move it to the Done
+  log in the same commit. This file never holds ticked lines; 34 had piled
+  up by the time of the 2026-10-19 sweep.
+- **New items**: add them to the tier they belong in. An entry is a title
+  plus at most about six lines — what, where, why that tier, and a pointer
+  to the plan doc that holds the evidence (DECIDED 2026-10-19). Evidence,
+  traces and history go in a `Features/*.md` plan while open and travel to
+  the Done log when closed. Cite symbols (type, function, property) rather
+  than `file:line`; line numbers rot within days. Christoph's Reminders app
+  is capture-only; sweep it into this file at the end of a session.
+  `python3 Scripts/backlog_stats.py` prints the counts and flags ticked or
+  oversize entries.
 - **DECIDE / PROPOSAL** markers mean Christoph has not ruled; nothing below
   them is a decision until he says so.
 

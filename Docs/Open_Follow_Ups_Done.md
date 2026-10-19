@@ -5,9 +5,10 @@ was restructured into priority tiers. Everything here is verbatim from the
 index as it stood that day, grouped under the original section headers, with
 the section intros kept for context. Nothing in this file is open work; the
 value is the write-ups (root causes, decisions, verification evidence) that
-later debugging keeps reaching for. New closures: check the item off in
-`Open_Follow_Ups.md` with the date, then move it here under a matching header
-once it has stopped being useful as a reminder.
+later debugging keeps reaching for. New closures (DECIDED 2026-10-19): check
+the item off in `Open_Follow_Ups.md` with the date and move it here in the
+same commit, under a matching header or a dated "Moved from the open list"
+section; the open file never holds ticked lines.
 
 ## Localization
 - [x] **zh-Hant in `knownRegions` — done 2026-08-23** (user, in Xcode);

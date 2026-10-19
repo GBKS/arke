@@ -43,8 +43,16 @@ is history and loses to a living doc.
   membership, localization, scheme, build setting) and ask him to make it.
 - **Open work is recorded in the backlog, not in chat or memory.** New
   findings go into `Docs/Open_Follow_Ups.md` in the tier they belong to.
-  Closing an item: tick it with the date, later move it to the Done log. His
-  Reminders app is capture-only; sweep new entries into the backlog.
+  Three rules keep it readable (DECIDED 2026-10-19): an entry is a title
+  plus at most about six lines (what, where, why that tier, pointer), with
+  evidence and history in a `Docs/Features/*.md` plan or the Done log, never
+  inline; closing an item means ticking it with the date **and moving it to
+  `Docs/Open_Follow_Ups_Done.md` in the same commit**, so the open file
+  never holds ticked lines; cite symbols (type, function, property), not
+  `file:line`, because line numbers rot within days. `python3
+  Scripts/backlog_stats.py` prints open counts per section and flags ticked
+  lines and oversize entries. His Reminders app is capture-only; sweep new
+  entries into the backlog.
 - **Every confirmed rework** (generated code that had to be revisited) gets
   one line in `Docs/Development/Rework_Ledger.md` with its fault class.
 
