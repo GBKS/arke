@@ -71,6 +71,11 @@ the payments / savings totals of the balance details view. Moved to Train
 Live Activity on demotion + dead `closeWallet()`, abort-after-unregister),
 clusters 3, 5 and 6, the remainder of cluster 4, and the new Tier 1 gate on
 onchain sends at the fee ceiling (DECIDED 2026-10-19).
+Cosmetic pass built 2026-10-19 (six items ticked in Tier 3; the
+activity-dating item's step (c) came back negative, its (b) still needs a
+ruling; the loading wave stays PROPOSED and was not built). Owed before the
+upload: device look at the boarding modal (minimum + image) and the tags
+no-fee row, which the funds-less simulator wallet cannot show.
 
 The exploration-season ruling is parked until the most important items are
 worked off (Christoph, 2026-10-09).
@@ -1210,6 +1215,23 @@ Tier 0/1 work. Guiding docs hold the full arguments.
 
 (The metadata-import name-merge item moved to Tier 0 on 2026-10-09.)
 
+- [x] **The wallet-created log line carries the mnemonic** — found and
+  fixed 2026-10-19 (seen in the simulator log during the cosmetic-pass
+  screenshots). `CreateWalletView_iOS.swift:247` and the desktop
+  `CreateWalletView.swift:232` logged `createWallet`'s `String` result,
+  which is the phrase, at info level; both now log the network and the
+  word count. Interpolated values are redacted on device by default, so
+  device logs and X-Ray exports never carried it; simulator logs are not
+  redacted, and one `privacy: .public` edit would have exposed it. Sweep:
+  the two import sites log the FFI's status string ("Wallet imported
+  successfully…"), not the phrase — exempt; `BarkWalletFFI+Mnemonic.swift:41`
+  logs entropy and word count only — exempt; `BIP39Usage.runExamples()`
+  prints a demo mnemonic it generates itself and has no callers — dead
+  example code, left as is; the old `[DEBUG] Loaded mnemonic` line in
+  `BarkWalletFFI+WalletLifecycle.swift:73` is commented out. Rule for the
+  playbook: a value that is or contains a seed is never interpolated into
+  a log message, redaction or not.
+
 - [x] **A deleted wallet's onchain row reappears in the next wallet created
   in the same process** — trigger (1) fixed 2026-10-14 (uncommitted):
   `resetManagerState()` now calls `OnchainTransactionService.resetTransactions()`
@@ -1761,8 +1783,30 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Receive
 
-- [ ] **Temporarily brighten the screen when showing a QR**
-  (`UIScreen.main.brightness`, restore on dismiss).
+- [x] **Temporarily brighten the screen when showing a QR** — done
+  2026-10-19: `ScreenBrightnessBooster` + `brightScreenWhileVisible()`
+  (`ArkeMobile/Helpers/ScreenBrightnessBooster.swift`; the window scene's
+  screen, not the deprecated `UIScreen.main`) on the two surfaces that
+  render a QR: the invoice / addresses sheet (`LightningInvoiceSheet_iOS`)
+  and the Tilt share overlay pages. User level saved on first boost,
+  restored on dismiss and on leaving the foreground; iOS resets brightness
+  on lock anyway. Simulator log 2026-10-19 (`category ==
+  "ScreenBrightness"`, iOS 27.0 iPhone 17 sim): boost on sheet open,
+  restore on Done, restore on Home with the sheet up, boost again on
+  foreground, restore on Done, nothing on a tab round-trip — 6 lines, all
+  as predicted. The first cut routed dismissal through an `onChange` on
+  the sheet's own view and never restored (dismissed view tree, no body
+  pass); caught by the same simulator run, fixed before build. Device
+  check still owed: the simulator does not surface the actual brightness
+  value, only the log lines. Finding on the way: the Receive tab's addresses page shows no
+  QR at all — addresses with copy buttons and a share button only — so the
+  QR lives in the sheet; the item's wording assumed otherwise.
+- [ ] **Lightning request page: every control reads as "Lightning invoice
+  form" to VoiceOver** (simulator hierarchy, 2026-10-19): the container
+  `.accessibilityLabel` on `lightningModeView` in `ReceiveView_iOS.swift`
+  replaces the children's labels — amount, "Add note" and the keypad all
+  announce the same string. Drop the container label, or make the container
+  an element with its children still exposed.
 - [ ] **Test scanning from a laptop camera; ensure amount and memo input
   interactions work properly**.
 - [ ] **QR network indicators not showing?**
@@ -1793,17 +1837,62 @@ Reminders merge; wording kept so the two can be matched.
   the "when the app loaded it" effect on *every* refresh). Start with (c):
   if settled rows are re-dated on refresh, that is the bug; (a) is the
   improvement; (b) needs a ruling.
+  **(c) executed 2026-10-19 — no re-dating.** Read at bark tag 0.7.1 (the
+  deployed library): `movement/manager.rs` sets `completed_at` only in
+  `new_finished_movement` / `finish_movement*`; `movement/update.rs:217`
+  (`MovementUpdate::apply_to`) moves `updated_at` only; `exit/mod.rs:788-797`
+  re-finishes an exit movement only on a fresh state change (the §2a bump
+  on every tip advance is gone at this tag, the app-side freeze stays as
+  belt and braces). The upsert rewrites `date` only when bark's value
+  differs, and `updated_at` never feeds it — pinned by
+  `settledDateIgnoresUpdatedAt` in `TransactionUpsertDateFreezeTests` (4/4
+  green). **(a) is largely moot:** onchain rows already take the block time
+  (`UnifiedTransactionService.swift:398-404`), and the movements linked to
+  them — boards, offboards, exits — are this wallet's own actions, stamped
+  when they happened. **(b) — the real time exists, bark drops it**
+  (traced 2026-10-19, Christoph: "is there really no date on when the
+  payment actually happened?"). Incoming payments reach the phone through
+  the server mailbox (`mailbox_server.proto`: Ark payments, incoming
+  Lightning payments, round completions). Every mailbox message carries a
+  `checkpoint`, and the server builds it from its clock at deposit time
+  (`V21__blinded_mailbox.sql`: upper 44 bits = milliseconds since epoch,
+  lower 20 a same-millisecond counter). So the server-side arrival time of
+  each received payment is on the wire. The bark client keeps only the
+  highest checkpoint as its read cursor (`store_mailbox_checkpoint(u64)`)
+  and stamps the movement with the phone's clock when it processes the
+  message — that is the "when the app loaded it" date. Nothing in the
+  bindings exposes the per-message time, so there is no app-side fix.
+  PROPOSED: file an upstream ask in `Bark_Bindings_Feedback.md` — stamp
+  mailbox-delivered movements with the checkpoint's time (or expose it as
+  a `received_at` on the movement); on adoption, the parser uses it as the
+  row date for received rows and keeps `completed_at` for everything the
+  wallet did itself. Until then the row date is honest about one thing
+  only: when this phone learned of the payment. Ruling owed on filing the
+  ask.
 - [ ] **Hide failed and completed refreshes that were free?** (The growing
   "Failed refresh" list in the Tier 0 divergence cluster is the extreme
   case; this line is the general one.)
-- [ ] **Balance tag shows "-0 B fees paid"; needs a no-fee state**.
+- [x] **Balance tag shows "-0 B fees paid"; needs a no-fee state** — done
+  2026-10-19: `TagRow` (`TagsView_iOS.swift`) shows "No fees paid"
+  (`tags_no_fees_paid`) when `totalFees == 0`; the "—" for a tag with no
+  transactions is unchanged. Not screenshotted in that state: it needs a
+  wallet with fee-free internal transfers, which the simulator wallet
+  lacks (list with "—" rows captured); device check with the real wallet.
 - [ ] **Tag amounts — do they include fees, should they? Balance tag must
   include onchain child-tx fees**.
 - [ ] **Transaction details**: show the invoice description when present
   (Opago order numbers); description for refreshes; onchain send-to /
   received-from addresses; onchain txid with explorer link; general
   clean-up; remove blue from the status colours?
-- [ ] **Exit status — long-press copy copies the truncated txid**.
+- [x] **Exit status — long-press copy copies the truncated txid** —
+  2026-10-19: not reproducible in the current code. The only long-press
+  copy in the exit detail, `CopyableTxidRow` (since 152f0e3, 2026-07-15),
+  copies the full id. Three txids in the state history
+  (`ParsedStateDetails`: the processing-state transaction list and the
+  "Claim TX" of claim-in-progress / claimed) were shown truncated with no
+  copy at all; they now go through `CopyableTxidRow` too, so every exit
+  txid on screen copies in full. If the report meant another screen,
+  reopen with its name. Not screenshotted (needs an exit in progress).
 - [ ] **`TransactionCardStackView_iOS` holds `[PersistentTransaction]`** in
   `@State` for the overlay's lifetime; if an import deletes the movement row
   while the overlay is open, reading its own properties still traps. Pass
@@ -1830,7 +1919,15 @@ Reminders merge; wording kept so the two can be matched.
   `balanceAccessibilityValue` in `ActivityView_iOS.swift`; read the flag
   directly, the 1 s arming guard is a flash guard and does not apply to a
   value read on focus.
-- [ ] **Onboard modal**: minimum value only shows after X-Ray was visited;
+- [ ] **Onboard modal**: ~~minimum value only shows after X-Ray was
+  visited~~ (done 2026-10-19 — root cause: `CacheManager.arkInfo` expires
+  after five minutes and is not observable, so the modal read an empty
+  cache and showed "Loading minimum amount…" until a refresh or an X-Ray
+  visit refilled it; `BoardingModalView` now calls
+  `WalletManager.cacheArkInfoIfNeeded()` on open and holds the minimum in
+  view state. Not screenshotted: the modal is gated on a savings balance
+  the simulator wallet lacks — device check owed, together with the image
+  line below);
   add fee info; success message with duration; test the error state.
   **Offboard modal**: add fee info; add data to success (claim required?);
   test the error state. **Boarding**: calculate and display the network fee;
@@ -1929,7 +2026,14 @@ Reminders merge; wording kept so the two can be matched.
   nothing. The manual-backup reminder on the same screen already names the
   wallet state file.
 - [ ] **Backup — how to explain that not all wallets are compatible?**
-- [ ] **Rejoin wallet screen is unstyled**.
+- [x] **Rejoin wallet screen is unstyled** — already done by Christoph
+  before 2026-10-19 (the committed `RejoinWalletView` has the circular icon
+  and glass button); the line was stale from the Reminders merge. A second
+  restyle generated on 2026-10-19 was reverted the same day. Note for
+  Tier 3 evidence: Xcode previews cannot JIT-load the static `BarkFFI`
+  framework in this setup (`CouldNotLoadInputStaticArchiveFile`, same for
+  a view that imports nothing bark-related), so screens without a
+  reachable simulator state need the device.
 - [ ] **Savings deposits don't show up automatically** — note in the
   notifications explainer until Background Execution Phase 2 (Tier 4) lands.
 - [ ] **Network mismatch on import**: importing a signet wallet in the
@@ -1990,7 +2094,13 @@ Reminders merge; wording kept so the two can be matched.
   does run bark's recovery scan (single `Wallet.open` with `skipRecovery:
   false`, `openImportedWallet`), but with the 0.7.1 reader — recovery of a
   diverged wallet depends on the Tier 4 bindings bump.
-- [ ] **Image in move-to-payments has a slight white line on the left**.
+- [x] **Image in move-to-payments has a slight white line on the left** —
+  done 2026-10-19: it was in the asset. `board.jpg` column 0 averaged RGB
+  (255, 253, 240) and column 1 (127, 112, 96) against ≈(90, 62, 33) for the
+  picture; the two leftmost columns are cropped off (1001 → 999 px wide),
+  re-measured clean. `offboard.jpg` has no such edge. The view's
+  `.fill` + `.cornerRadius` + `.clipped()` chain is unchanged. Device check
+  owed with the boarding minimum above (same modal, same gate).
 
 ### X-Ray and Tilt
 
