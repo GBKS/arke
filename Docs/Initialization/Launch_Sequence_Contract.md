@@ -237,7 +237,8 @@ data is loading** (`WalletManager.isLoadingWalletData` = refreshing or
 initializing): the delete screen hides its button and says so, the cleanup
 service re-checks the signal at its first step and aborts with
 `refreshInProgress` having deleted nothing, and `refresh()` skips while
-`isDeletionInProgress` is set, as do the seeding funnels. Chosen over
+`isDeletionInProgress` is set, as do the seeding funnels and detection-path
+device registration (rule 24 (d)). Chosen over
 pausing inside the wipe (DECIDED 2026-10-15,
 `Features/Wallet_Deletion_Partial_Failure.md`): the refresh is an
 unstructured task with no cancellation point, and a visible wait before
@@ -392,15 +393,34 @@ shipped it onto healthy two-device accounts, which inverts the rule: an
 escape hatch presented as a routine option is its own hazard. Also fixed here: `unregisterCurrentDevice()` cleared the mirror
 only inside `if let registration`, so a device whose row hadn't imported (fresh
 adopt) or had already been deduped left a permanent ghost that each reinstall
-re-wrote.
+re-wrote. (d) **This device's mirror entry is cleared before any step that
+can fail.** `unregisterCurrentDevice` and `unlinkDevice` remove the KVS
+entries first and only then touch the row; a retained row is reported as a
+typed outcome (`UnregistrationOutcome` → `DeletionSummary.deviceUnregistration`,
+error-level log) and never stops the deletion, because a row is a named
+blocker that ages out after 30 days and that the other devices can unlink
+(desktop today; the iOS row menu is hidden until the Tier 1 "forget this
+device" item) while a mirror entry has no remedy at all. The
+2026-09-24 "unconditional" clear still sat behind a nil-context guard, the
+device-ID read and the row's `save()`, and the cleanup service swallowed the
+throw (2026-10-16, `Features/Wallet_Deletion_Ghost_Hardening.md`). Detection-path
+device registration skips while `isDeletionInProgress` (the same switch as
+the refresh and seeding skips in rule 17), checked inside the dedup task in
+the same turn as its writes, so no registration can land after the
+unregister and re-create the entry.
 Enforced: `DeviceRegistrationService.swift`
-(`otherDeviceReport`, `mirrorKeys(forDeviceId:in:)`, `unregisterCurrentDevice`),
-`WalletDataCleanupService.swift` (`assessDeletion`, `includesCloudData`),
+(`otherDeviceReport`, `mirrorKeys(forDeviceId:in:)`, `unregisterCurrentDevice`,
+`unlinkDevice`, `unlinkVerdict`, `registrationSuspended`),
+`WalletDataCleanupService.swift` (`assessDeletion`, `includesCloudData`,
+`deviceUnregistrationRecord`), `WalletManager+Wallet.swift`
+(`setWalletDeletionInProgress`),
 `DeleteWalletSettingView.swift` / `DeletePermanentlyConfirmationView.swift`
 (named blockers, acknowledged override), `LinkedDevicesView*.swift`
 (mirror-only rows, wallet-hash scoping).
 Test: `OtherDeviceReportTests`, `FullWipeOverrideTests`,
-`MirrorKeySelectionTests`.
+`MirrorKeySelectionTests`, `UnlinkVerdictTests`,
+`DeletionAssessmentOrchestrationTests` (Step 1 record, non-fatal). The
+clear-first ordering and the in-task skip are traced by hand, not tested.
 
 **25. Store and file writes on background-reachable paths hold a task assertion; `App.init()` does no filesystem probing.**
 A process suspended while holding a SQLite or file lock is killed outright —

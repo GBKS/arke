@@ -738,7 +738,9 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   own work (plan §10). Device check in plan §9 owed. Sweep found
   two more late writers: the 90 s seeding waiter (fixed in the plan) and
   the launch device registration (filed on the ghost item below).
-- [ ] **Ghost-device hardening (1), residual**: the mirror clear in
+- [x] **Ghost-device hardening (1), residual — DONE 2026-10-19** (device
+  check passed on both phones, plan §6.1; full-wipe step skipped on the
+  mainnet pair; commits pending). Original entry: the mirror clear in
   `unregisterCurrentDevice` is already unconditional and across hashes
   (`DeviceRegistrationService.swift:475-486`, commit 3dc292c) but still
   skipped when `modelContext` is nil, `getOrCreateDeviceId` throws or
@@ -757,6 +759,40 @@ Tier 0/1 work. Guiding docs hold the full arguments.
   re-creating the same ghost mirror entry; `registerCurrentDevice` should
   refuse while `isDeletionInProgress`, or the cleanup re-clears the mirror
   after its quiesce (`Features/Wallet_Deletion_Partial_Failure.md` §8).
+  **Plan DECIDED, BUILT and REVIEWED 2026-10-16** (uncommitted),
+  `Features/Wallet_Deletion_Ghost_Hardening.md`: full writer/clearer/reader
+  trace (one writer, two clearers), mirror clear moved ahead of every
+  fallible step in both functions with a typed `UnregistrationOutcome` →
+  `DeletionSummary.deviceUnregistration` (deletion continues, error-level
+  line for the export), registration skip inside the dedup closure via the
+  existing `setWalletDeletionInProgress` switch, `unlinkDevice` succeeds on
+  a mirror-only ID (the Tier 1 "forget this device" item is UI-only now),
+  `getOrCreateDeviceId` mints only on `errSecItemNotFound`, dead
+  `cleanupStaleDevices` / `migrateToThisDevice` removed. Adversarial pass
+  in plan §9: two claim fixes, one false-alarm fix, one plan correction,
+  one pre-existing hazard filed below. Device check 2026-10-19 (plan §6.1):
+  B-side local deletion, no ghost line, and re-registration after rejoin
+  PASS from the console log; on A the device row vanished within seconds
+  and the delete screen offered the full wipe after ~10 s of KVS lag (the
+  CloudKit row deletion arrived before the mirror removal — a short
+  mirror-only window, then clean). Full-wipe step skipped on mainnet.
+- [ ] **Deletion abort after Step 1 strips this device's own blocker
+  evidence** (found 2026-10-16 by the ghost-hardening review, pre-existing):
+  `performDeleteWalletData` unregisters first — mirror cleared, row delete
+  committed — and only then runs the fallible CloudKit deletion and the
+  keychain delete. If either throws, the view returns to the info screen
+  with the wallet working (`DeleteWalletSettingView.swift`, phase 1 catch)
+  and nothing re-registers until the next cold launch. In that window
+  another device's `otherDeviceReport` sees no blocker, is offered the full
+  wipe, and deletes the shared seed under a device that still spends. The
+  next launch then registers a *new* row with `isPrimaryDevice == false`
+  (detection paths never claim), so an ex-primary comes back as a secondary.
+  PROPOSED fix: move Step 1 to after the CloudKit step and before the
+  keychain step — on a full wipe Step 2 deletes every row anyway, on
+  local-only nothing fallible follows, so every abort path leaves the
+  registration intact; the keychain-failure residual in rule 17 stays.
+  Needs the refresh-gate tests' "nothing destructive reached" proof
+  re-anchored. Plan `Features/Wallet_Deletion_Ghost_Hardening.md` §7.
 - [ ] **Paste button accepts unverified Lightning Addresses**: in
   `SendViewModel+Clipboard`, `tryParallelResolution` (`:154`, fallback
   `:216-219`) and `tryLightningAddressFallback` (`:239`, fallback `:251-253`)
@@ -1201,7 +1237,17 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   override) and from Linked Devices. The "KVS-only ghost is invisible" item
   folds in here. Two-device verify: create a ghost (install, link, wipe the
   device without unregistering), forget it from the other phone, confirm
-  the full wipe is no longer blocked.
+  the full wipe is no longer blocked. **Updated 2026-10-19:** the service
+  half is done — `unlinkDevice` now clears the mirror first and succeeds on
+  a row-less ID (ghost-hardening change, `UnlinkVerdictTests`), so no
+  `forgetUnsyncedDevice` is needed; what remains is UI. And the row unlink
+  is hidden on iPhone too: `DeviceRow`'s menu with Remove has been commented
+  out since f7b9002 (2026-05-11), so iOS has **no** unlink of any kind and a
+  registry row left by a failed unregister save blocks the other devices'
+  full wipe for the 30-day stale cutoff (Christoph spotted this during the
+  ghost-hardening device-check prep). Scope: re-enable the row unlink
+  (confirmed, per device) and add the mirror-only forget, on Linked Devices
+  and the delete screen's blocker list.
 - [x] **Blocked-strategy copy** — already built (2026-10-09 hygiene pass):
   `DeleteWalletSettingView.swift:238-243` shows
   `settings_delete_warning_check_failed` when the blocker report is nil
@@ -1717,6 +1763,20 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Settings, devices, deletion
 
+- [ ] **Mirror-only blocker copy reads as a fact during a sync gap**
+  (Christoph, 2026-10-19 device check, PROPOSED): right after B's local
+  deletion, A's delete screen said "Another device on this iCloud account
+  is still registered to the wallet, though its details haven't reached
+  this device yet" (`DeleteWalletSettingView.swift:331`; same shape in
+  `UnsyncedDeviceRow.swift:55, 61`) for about ten seconds, because the
+  CloudKit row deletion reached A before the KVS mirror removal did. The
+  copy asserts a device exists when the honest state is "the two stores
+  disagree right now". Proposal: on a mirror-only-only report, show a
+  neutral "Syncing devices…" row and re-run the assessment after a few
+  seconds; name the unrecognized device only if the entry survives the
+  re-check. The same mirror-only state is also the permanent ghost
+  (2026-09-23), so the neutral copy must not stay forever — the re-check
+  is what separates the two. Needs a ruling on the wording and the delay.
 - [ ] **An iOS build run on the Mac registers as "iPad8,6"** (Christoph's
   Devices list, 2026-10-14): Xcode's "My Mac (Designed for iPad)" run of
   2026-10-01 22:07 (the `.XCInstall/ArkeMobile.app/WrappedBundle` wrapper in
@@ -1886,6 +1946,29 @@ Reminders merge; wording kept so the two can be matched.
   blocker's device-ID prefix and `registeredAt` in the "Other-device check"
   line; debug-only override of `mirrorSettleWindow` (a test ghost blocks for
   two days by design).
+- [ ] **`device_<id>_isPrimary` KVS key has no clearer**: written by
+  `writeOwnPrimaryFlag`, never removed by unregister, unlink or the full
+  wipe, although `SharedStateWipeCoverage` lists `device_<id>_*` as
+  `fullWipeOnly` (`WalletDataCleanupService.swift:1087`). Not read by the
+  registry scan, so not a blocker; layer 2 of `shouldBlockWalletAccess`
+  reads it on a reinstall whose local breadcrumb is gone — fold into the
+  Tier 0 `checkReadOnlyMode` item or fix the inventory label. Found
+  2026-10-16 by the ghost-hardening sweep
+  (`Features/Wallet_Deletion_Ghost_Hardening.md` §7).
+- [ ] **"Device has been demoted" logged for a routine secondary**: right
+  after "🔒 Read-only: this device is registered as a secondary (iCloud KV
+  mirror)" the caller logs "⚠️ [WalletManager] Device has been demoted -
+  switching to read-only mode" for a device that was never primary
+  (`Docs/debug_logs.txt:131-132`, 2026-10-19). The 2026-09-24 fix corrected
+  the layer-2 line but not this follow-up line; same shape. Reword to the
+  actual verdict.
+- [ ] **SwiftUI warning at deletion teardown**: "`navigationDestination`
+  modifier only works inside a `NavigationStack`… presenting
+  `DeletePhraseConfirmationView`… It will be ignored" is logged once while
+  the wallet view unmounts after a deletion (`Docs/debug_logs.txt:242`). The
+  phrase screen itself works (device check 2026-10-15); the modifier is
+  evaluated once outside the stack during teardown. Cosmetic; move the
+  modifier inside the stack or gate it on presentation.
 - [ ] **Collapse `shouldBlockWalletAccess`'s three layers**: layer 2 has no
   unique job (its KVS flag is only ever written by the reading device). Left
   because layer 3 returns nil on a fresh install and would hand a new
@@ -1896,7 +1979,10 @@ Reminders merge; wording kept so the two can be matched.
   caller since the blocker report replaced them (`WalletDataCleanupService.swift:
   1062`). `migrateToThisDevice()` goes now (DECIDED 2026-10-10, no longer
   held for S5); rides with the next device-registry change, e.g. the
-  deletion cluster's ghost-hardening residual.
+  deletion cluster's ghost-hardening residual. **`cleanupStaleDevices()` and
+  `migrateToThisDevice()` removed 2026-10-16** with the ghost-hardening
+  change (uncommitted); `DeleteLocallyConfirmationView` and the
+  `DeletionStrategy` strings remain.
 - [ ] **The `showNoPrimaryDeviceBanner` NotificationCenter post has no
   observer** (`DeviceRegistrationService.swift:1069`, from `demoteThisDevice`).
   It is the hook the Tier 1 "no primary device" banner would use — wire it
