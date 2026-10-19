@@ -210,6 +210,22 @@ struct WalletWipeCoverageTests {
         outer.merge(DeletionSummary(timestamp: Date()))
         #expect(outer.scope == .everywhere)
     }
+
+    @Test("Merging the CloudKit sub-summary never erases Step 1's record")
+    func summaryUnregistrationRecordSurvivesMerge() {
+        // Step 1 runs once, before the CloudKit sub-summary exists; the
+        // sub-summary carries .notAttempted and must not overwrite a retained
+        // row, which is the export's only trace of a blocker left behind
+        var outer = DeletionSummary(timestamp: Date())
+        outer.deviceUnregistration = .rowRetained("save failed")
+        outer.merge(DeletionSummary(timestamp: Date()))
+        #expect(outer.deviceUnregistration == .rowRetained("save failed"))
+        #expect(outer.deviceUnregistered == false)
+
+        var complete = DeletionSummary(timestamp: Date())
+        complete.deviceUnregistration = .complete
+        #expect(complete.deviceUnregistered)
+    }
 }
 
 // MARK: - Deletion Strategy
@@ -775,6 +791,89 @@ struct DeletionAssessmentOrchestrationTests {
             // expected
         } catch {
             Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    // Step 1 (Wallet_Deletion_Ghost_Hardening.md §3.2): the unregister's
+    // outcome is recorded, never fatal. Nothing before Step 1 is destructive
+    // and the mirror — the half with no remedy — is cleared before anything
+    // inside unregisterCurrentDevice can fail, so a retained row (a named,
+    // unlinkable blocker) must not make the wallet undeletable.
+
+    private struct DeviceIdUnavailable: Error {}
+
+    @Test("Step 1 outcomes map onto the summary record")
+    func unregistrationOutcomesMapOntoRecord() {
+        typealias S = WalletDataCleanupService
+        #expect(S.deviceUnregistrationRecord(.success(.complete(mirrorEntriesRemoved: 1, rowExisted: true))) == .complete)
+        #expect(S.deviceUnregistrationRecord(.success(.complete(mirrorEntriesRemoved: 0, rowExisted: false))) == .complete)
+        #expect(S.deviceUnregistrationRecord(.success(.rowRetained(mirrorEntriesRemoved: 1, reason: "save failed"))) == .rowRetained("save failed"))
+        if case .failed = S.deviceUnregistrationRecord(.failure(DeviceIdUnavailable())) {
+            // expected
+        } else {
+            Issue.record("A throw must map to .failed")
+        }
+    }
+
+    @Test("A retained registry row does not stop a local-only deletion")
+    func retainedRowDoesNotStopDeletion() async throws {
+        let service = Self.makeService()
+        service.deviceUnregistrar = { .rowRetained(mirrorEntriesRemoved: 1, reason: "save failed") }
+
+        // Local-only with no model context: Steps 2 and 3 are skipped, so the
+        // run reaches the summary without touching any store
+        let summary = try await service.deleteWalletData(strategy: .localOnly, overrideConfirmed: false,
+                                                         isLoadingWalletData: { false })
+
+        #expect(summary.scope == .localOnly)
+        #expect(summary.deviceUnregistration == .rowRetained("save failed"))
+        #expect(summary.deviceUnregistered == false)
+    }
+
+    @Test("An unregister throw is recorded as failed and the deletion still completes")
+    func unregisterThrowIsRecordedNotFatal() async throws {
+        let service = Self.makeService()
+        service.deviceUnregistrar = { throw DeviceIdUnavailable() }
+
+        let summary = try await service.deleteWalletData(strategy: .localOnly, overrideConfirmed: false,
+                                                         isLoadingWalletData: { false })
+
+        if case .failed = summary.deviceUnregistration {
+            // expected
+        } else {
+            Issue.record("Expected .failed, got \(summary.deviceUnregistration)")
+        }
+    }
+}
+
+// MARK: - Unlink verdict
+
+/// `unlinkDevice` clears the mirror before it looks for the row, so the only
+/// error left is "nothing in either store". A row-less ID whose mirror
+/// entries were removed is the mirror-only ghost case, and removing it is a
+/// successful unlink (Wallet_Deletion_Ghost_Hardening.md §3.4).
+@Suite("Unlink Verdict")
+struct UnlinkVerdictTests {
+
+    @Test("Row and mirror entries: unlinked")
+    func rowAndMirror() throws {
+        try DeviceRegistrationService.unlinkVerdict(rowExisted: true, mirrorEntriesRemoved: 1)
+    }
+
+    @Test("Row only (mirror never arrived or already cleared): unlinked")
+    func rowOnly() throws {
+        try DeviceRegistrationService.unlinkVerdict(rowExisted: true, mirrorEntriesRemoved: 0)
+    }
+
+    @Test("Mirror-only ghost: unlinked — this is the case the remedy exists for")
+    func mirrorOnly() throws {
+        try DeviceRegistrationService.unlinkVerdict(rowExisted: false, mirrorEntriesRemoved: 2)
+    }
+
+    @Test("Nothing in either store is the only deviceNotFound")
+    func nothingAnywhere() {
+        #expect(throws: DeviceRegistrationError.self) {
+            try DeviceRegistrationService.unlinkVerdict(rowExisted: false, mirrorEntriesRemoved: 0)
         }
     }
 }

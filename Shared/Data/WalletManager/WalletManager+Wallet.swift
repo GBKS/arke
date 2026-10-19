@@ -522,11 +522,16 @@ extension WalletManager {
     /// app switch in that window would otherwise back the deleted wallet up
     /// again. Clearing it on success matters too — the FFI object outlives the
     /// handle and serves the next wallet created in this process. The same
-    /// call sets `isDeletionInProgress`, which makes `performRefresh` skip and
-    /// the seeding funnels return for the same window.
+    /// call sets `isDeletionInProgress`, which makes `refresh()` skip and
+    /// the seeding funnels return for the same window, and suspends device
+    /// registration so a detection-path registration cannot re-create the
+    /// mirror entry and row after the cleanup's unregister
+    /// (`Features/Wallet_Deletion_Ghost_Hardening.md`). One switch, one
+    /// `defer` in the delete view, four readers.
     func setWalletDeletionInProgress(_ inProgress: Bool) {
         isDeletionInProgress = inProgress
         (wallet as? BarkWalletFFI)?.opportunisticBackupsSuspended = inProgress
+        ServiceContainer.shared.deviceRegistrationService.registrationSuspended = inProgress
     }
 
     /// Delete the current wallet and reset all manager state

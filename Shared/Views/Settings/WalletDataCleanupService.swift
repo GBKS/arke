@@ -8,13 +8,18 @@
 import Foundation
 import SwiftData
 import Observation
+import os
 
 /// Responsible for comprehensive wallet data cleanup operations
 /// Handles deletion of all wallet-related data from local storage, Keychain, and CloudKit
 @MainActor
 @Observable
 class WalletDataCleanupService {
-    
+
+    /// Release-build logging for the outcomes the export must show; the
+    /// step-by-step narration below stays DEBUG-only print
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "WalletCleanup")
+
     // MARK: - Published Properties
     
     /// Current deletion progress (nil when not deleting)
@@ -103,6 +108,37 @@ class WalletDataCleanupService {
     private func fetchOtherDeviceReport(walletHash: String?) async throws -> OtherDeviceReport {
         if let otherDeviceReportProvider { return try await otherDeviceReportProvider(walletHash) }
         return try await deviceRegistrationService.otherDeviceReport(walletHash: walletHash)
+    }
+
+    /// Test seam for Step 1. Nil in production → the real DeviceRegistrationService.
+    var deviceUnregistrar: (() async throws -> UnregistrationOutcome)?
+
+    private func unregisterCurrentDevice() async throws -> UnregistrationOutcome {
+        if let deviceUnregistrar { return try await deviceUnregistrar() }
+        return try await deviceRegistrationService.unregisterCurrentDevice()
+    }
+
+    /// Maps Step 1's result onto the summary. Pure; pinned by
+    /// `DeletionAssessmentOrchestrationTests`. The deletion continues on
+    /// every outcome (DECIDED 2026-10-16): nothing before Step 1 is
+    /// destructive, the mirror — the half with no remedy — is cleared before
+    /// anything can fail inside `unregisterCurrentDevice`, and a retained row
+    /// is a named blocker that ages out after 30 days and that the other
+    /// devices can unlink (desktop today; the iOS row menu returns with the
+    /// Tier 1 "forget this device" item). Aborting would make the wallet
+    /// undeletable from a device whose save keeps failing, and would not
+    /// help the other devices either.
+    nonisolated static func deviceUnregistrationRecord(
+        _ result: Result<UnregistrationOutcome, Swift.Error>
+    ) -> DeviceUnregistrationRecord {
+        switch result {
+        case .success(.complete):
+            return .complete
+        case .success(.rowRetained(_, let reason)):
+            return .rowRetained(reason)
+        case .failure(let error):
+            return .failed(error.localizedDescription)
+        }
     }
 
     /// Determine the appropriate deletion strategy based on device registry
@@ -312,19 +348,28 @@ class WalletDataCleanupService {
         print("🗑️ [WalletDataCleanupService] Starting wallet data deletion (includeCloudData: \(includeCloudData))")
         #endif
 
-        // Step 1: Unregister device
+        // Step 1: Unregister device. Non-fatal by decision (see
+        // deviceUnregistrationRecord); the outcome is the summary's record
+        // and, when anything was retained, an error-level line for the export
         updateProgress(.unregisteringDevice, message: "Unregistering device...")
+        let unregisterResult: Result<UnregistrationOutcome, Swift.Error>
         do {
-            try await deviceRegistrationService.unregisterCurrentDevice()
-            summary.deviceUnregistered = true
+            unregisterResult = .success(try await unregisterCurrentDevice())
+        } catch {
+            unregisterResult = .failure(error)
+        }
+        summary.deviceUnregistration = Self.deviceUnregistrationRecord(unregisterResult)
+        switch summary.deviceUnregistration {
+        case .complete:
             #if DEBUG
             print("✅ [WalletDataCleanupService] Device unregistered")
             #endif
-        } catch {
-            #if DEBUG
-            print("⚠️ [WalletDataCleanupService] Failed to unregister device: \(error)")
-            #endif
-            // Non-fatal, continue
+        case .rowRetained(let reason):
+            Self.logger.error("Device unregistration left the registry row behind (mirror cleared) — \(reason, privacy: .public); it blocks other devices' full wipe until unlinked or stale (30 d)")
+        case .failed(let reason):
+            Self.logger.error("Device unregistration failed before the mirror could be cleared — \(reason, privacy: .public); a ghost entry may block other devices' full wipe")
+        case .notAttempted:
+            break
         }
         
         // Step 2: Delete cloud data if requested. The fallible part (the
@@ -352,6 +397,16 @@ class WalletDataCleanupService {
             do {
                 let cloudSummary = try await deleteCloudKitData(modelContext: modelContext)
                 summary.merge(cloudSummary)
+
+                // deleteDeviceRegistrations deleted every row, this device's
+                // included, and the save above committed Step 1's pending
+                // delete with it — a row Step 1 could not commit is gone
+                // now, so the record must not keep saying "retained"
+                // (review 2026-10-16, finding 3)
+                if case .rowRetained(let reason) = summary.deviceUnregistration {
+                    Self.logger.info("Device registration row retained in Step 1 (\(reason, privacy: .public)) was deleted by the full wipe")
+                    summary.deviceUnregistration = .complete
+                }
             } catch {
                 // Drop whatever deleteCloudKitData queued before it threw
                 modelContext.rollback()
@@ -920,12 +975,29 @@ nonisolated enum DeletionScope: String, Codable, Equatable {
     case everywhere   // last-device full wipe: account state, seed and the backup slot go too
 }
 
+/// What Step 1 of the deletion did to this device's two registry entries.
+/// `Codable` with the summary; `nonisolated` so the pure mapping and its
+/// tests can build it off the main actor.
+nonisolated enum DeviceUnregistrationRecord: Codable, Equatable, Sendable {
+    case notAttempted
+    /// Mirror entry and registry row both gone (or never there)
+    case complete
+    /// Mirror cleared; the CloudKit row could not be deleted. Named blocker
+    /// that ages out after 30 days and can be unlinked (desktop today).
+    case rowRetained(String)
+    /// `unregisterCurrentDevice` threw before it could clear anything (the
+    /// device ID was unreadable). A mirror ghost may remain.
+    case failed(String)
+}
+
 /// Summary of what was deleted during wallet cleanup
 struct DeletionSummary: Codable {
     /// Set by `performDeleteWalletData` from the `includeCloudData` it ran with
     var scope: DeletionScope = .localOnly
     var keychainDeleted: Bool = false
-    var deviceUnregistered: Bool = false
+    var deviceUnregistration: DeviceUnregistrationRecord = .notAttempted
+    /// Both stores clean. Kept for callers that only need the boolean.
+    var deviceUnregistered: Bool { deviceUnregistration == .complete }
     var ubiquitousHashDeleted: Bool = false
     var userDefaultsCleared: Bool = false
     var iCloudBackupDeleted: Bool = false
@@ -971,7 +1043,11 @@ struct DeletionSummary: Codable {
     /// Merge another summary into this one
     mutating func merge(_ other: DeletionSummary) {
         keychainDeleted = keychainDeleted || other.keychainDeleted
-        deviceUnregistered = deviceUnregistered || other.deviceUnregistered
+        // Step 1 runs once, in the outer summary; a sub-summary never
+        // attempted it, so the outer record stands unless it is empty
+        if deviceUnregistration == .notAttempted {
+            deviceUnregistration = other.deviceUnregistration
+        }
         ubiquitousHashDeleted = ubiquitousHashDeleted || other.ubiquitousHashDeleted
         userDefaultsCleared = userDefaultsCleared || other.userDefaultsCleared
         iCloudBackupDeleted = iCloudBackupDeleted || other.iCloudBackupDeleted
@@ -1084,13 +1160,18 @@ enum SharedStateWipeCoverage {
         Entry(key: "com.arke.wallet / mnemonic",           store: "iCloud Keychain", scope: .fullWipeOnly),
         Entry(key: "com.arke.wallet.mnemonicHash",         store: "iCloud KVS",      scope: .fullWipeOnly),
         Entry(key: "com.arke.wallet.networkConfigId",      store: "iCloud KVS",      scope: .fullWipeOnly),
+        // The per-device primary flag. Labelled fullWipeOnly as policy, but no
+        // path clears it today — not unregister, unlink or the full wipe
+        // (found 2026-10-16, Tier 4 backlog item). Harmless for the registry
+        // scan, which reads only the `registered.` keys below.
         Entry(key: "device_<id>_* (registration mirror)",  store: "iCloud KVS",      scope: .fullWipeOnly),
         // The fast device registry that the deletion decision reads. Listed as
         // fullWipeOnly because that is the only path that clears *other* devices'
         // entries (clearDeviceRegistrationsFromKVStore); this device's own entries
         // are removed by unregisterCurrentDevice on every deletion, local-only
-        // included — leaving one behind blocks every remaining device's full wipe
-        // forever (2026-09-23).
+        // included, and before any step that can fail — leaving one behind
+        // blocks every remaining device's full wipe forever (2026-09-23;
+        // ordering 2026-10-16, Wallet_Deletion_Ghost_Hardening.md).
         Entry(key: "com.arke.device.registered.<hash>.<id>", store: "iCloud KVS",    scope: .fullWipeOnly),
         // The wallet database backup (current slot + timestamped copies).
         // Emptied by deleteAllBackups on the full wipe, and the FFI shutdown

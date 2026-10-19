@@ -54,6 +54,16 @@ class DeviceRegistrationService {
     /// Pending registration (for lazy registration pattern)
     private var pendingRegistration: (hash: String, hasSeed: Bool)?
 
+    /// While a wallet deletion is in flight, `registerCurrentDevice` skips
+    /// instead of writing. Set and cleared by the one deletion switch,
+    /// `WalletManager.setWalletDeletionInProgress(_:)`, alongside the refresh
+    /// and seeding skips (contract rule 17). A detection-path registration
+    /// that ran its write turn after `unregisterCurrentDevice` re-created the
+    /// mirror entry and the row for a wallet this device was leaving — the
+    /// ghost that blocks every other device's full wipe
+    /// (`Features/Wallet_Deletion_Ghost_Hardening.md`).
+    var registrationSuspended: Bool = false
+
     /// Observer token for CloudKit remote-change refreshes
     @ObservationIgnored private var cloudKitChangeObserver: NSObjectProtocol?
     
@@ -149,12 +159,22 @@ class DeviceRegistrationService {
            let data = result as? Data,
            let deviceId = String(data: data, encoding: .utf8) {
             cachedDeviceId = deviceId
-            
+
             Self.logger.info("Loaded existing device ID: \(deviceId)")
-            
+
             return deviceId
         }
-        
+
+        // Only a definite "no item" may mint a new ID. Any other read failure
+        // (locked keychain, errSecInteractionNotAllowed, I/O) used to fall
+        // through to SecItemAdd, and a successful add would have split this
+        // device's identity: a second registration, and the first one's
+        // mirror entry left as a ghost nobody can name (review 2026-10-16).
+        guard status == errSecItemNotFound else {
+            Self.logger.error("Device ID keychain read failed with status \(status); not minting a new ID")
+            throw DeviceRegistrationError.keychainError(status)
+        }
+
         // Generate new device ID
         let newDeviceId = UUID().uuidString
         guard let data = newDeviceId.data(using: .utf8) else {
@@ -326,6 +346,16 @@ class DeviceRegistrationService {
         allowPrimaryClaim: Bool
     ) async throws {
         return try await taskManager.execute(key: "registerCurrentDevice") {
+            // Checked here, inside the dedup task and in the same main-actor
+            // turn as the writes below (there is no await between this line
+            // and save()), not at the public entry: a call that passed the
+            // entry before the deletion flag flipped would otherwise still
+            // run its writes after the unregister.
+            guard !self.registrationSuspended else {
+                Self.logger.notice("⏭️ [DeviceRegistration] Skipped — wallet deletion in progress")
+                return
+            }
+
             guard let modelContext = self.modelContext else {
                 throw DeviceRegistrationError.noModelContext
             }
@@ -453,41 +483,73 @@ class DeviceRegistrationService {
         await loadRegisteredDevices()
     }
     
-    /// Unregisters the current device from the device registry
-    func unregisterCurrentDevice() async throws {
-        guard let modelContext = modelContext else {
-            throw DeviceRegistrationError.noModelContext
-        }
-        
+    /// Unregisters the current device from the device registry.
+    ///
+    /// Order is the contract (rule 24): the KVS mirror is cleared **first**,
+    /// before anything that can fail, because a mirror entry is the one thing
+    /// nobody can remove afterwards — `unlinkDevice` needs a row, and the
+    /// deletion decision reads the mirror, so a surviving entry blocks every
+    /// *remaining* device's full wipe for the settle window and then needs
+    /// the override. The 2026-09-24 fix made the clear unconditional but left
+    /// three exits ahead of it (nil context, unreadable device ID, failed
+    /// save); the save failure was reachable and the cleanup service swallowed
+    /// it (`Features/Wallet_Deletion_Ghost_Hardening.md` §2.2).
+    ///
+    /// The row half reports instead of throwing: a retained row is a *named*
+    /// blocker that ages out after 30 days and that the other devices can
+    /// unlink (desktop today; the iOS row menu is commented out and comes
+    /// back with the Tier 1 "forget this device" item), so it must not stop
+    /// the deletion.
+    ///
+    /// - Throws: only when the device ID cannot be read or created. Without
+    ///   it the device cannot name its own mirror entry, so nothing here can
+    ///   be done; the cleanup service records the failure.
+    /// - Returns: what happened to each store, for the deletion summary.
+    @discardableResult
+    func unregisterCurrentDevice() async throws -> UnregistrationOutcome {
         let deviceId = try getOrCreateDeviceId()
-        
-        let descriptor = FetchDescriptor<DeviceRegistration>(
-            predicate: #Predicate { $0.deviceId == deviceId }
-        )
-        
-        let registration = try? modelContext.fetch(descriptor).first
 
-        if let registration {
-            modelContext.delete(registration)
-            try modelContext.save()
-        }
-
-        // Remove the fast-registry mirror unconditionally, and for every wallet
-        // hash — this device is leaving, so none of its entries are valid.
-        //
-        // This used to sit inside `if let registration`, so a missing row meant
-        // the mirror entry survived: a fresh adopt whose CloudKit row hadn't
-        // imported yet, a row already collapsed by dedupeOwnRecords, or an
-        // unreadable context all left a permanent ghost. Since the mirror is what
-        // the deletion decision reads, that ghost blocks every *remaining*
-        // device's full wipe indefinitely — and each reinstall of this device
-        // re-writes it, so it never ages out. Clearing across hashes also removes
-        // the case where the row's hash and the account's hash disagree.
+        // Cleared across every wallet hash — this device is leaving, so none
+        // of its entries are valid, including one under a hash that disagrees
+        // with the account's.
         let removedMirrorEntries = removeMirrorEntries(deviceId: deviceId)
 
-        Self.logger.debug("Unregistered current device (registry row existed: \(registration != nil), mirror entries removed: \(removedMirrorEntries))")
+        let outcome: UnregistrationOutcome
+        if let modelContext {
+            let descriptor = FetchDescriptor<DeviceRegistration>(
+                predicate: #Predicate { $0.deviceId == deviceId }
+            )
+            let registration = try? modelContext.fetch(descriptor).first
+
+            if let registration {
+                modelContext.delete(registration)
+                do {
+                    try modelContext.save()
+                    outcome = .complete(mirrorEntriesRemoved: removedMirrorEntries, rowExisted: true)
+                } catch {
+                    // No rollback: this is the container's shared main
+                    // context and rollback() would discard every writer's
+                    // pending changes. The queued delete is what the user
+                    // asked for; if a later save commits it, good.
+                    outcome = .rowRetained(mirrorEntriesRemoved: removedMirrorEntries,
+                                           reason: "save failed: \(error.localizedDescription)")
+                }
+            } else {
+                outcome = .complete(mirrorEntriesRemoved: removedMirrorEntries, rowExisted: false)
+            }
+        } else {
+            outcome = .rowRetained(mirrorEntriesRemoved: removedMirrorEntries, reason: "no model context")
+        }
+
+        switch outcome {
+        case .complete(let mirrorEntriesRemoved, let rowExisted):
+            Self.logger.info("Unregistered current device (registry row existed: \(rowExisted), mirror entries removed: \(mirrorEntriesRemoved))")
+        case .rowRetained(let mirrorEntriesRemoved, let reason):
+            Self.logger.error("Unregistered current device from the mirror only (entries removed: \(mirrorEntriesRemoved)); registry row retained — \(reason, privacy: .public)")
+        }
 
         await loadRegisteredDevices()
+        return outcome
     }
     
     // MARK: - Heartbeat System
@@ -929,34 +991,59 @@ class DeviceRegistrationService {
     
     // MARK: - Device Management
     
-    /// Unlinks a specific device by deviceId
+    /// Unlinks a specific device by deviceId.
+    ///
+    /// Same ordering contract as `unregisterCurrentDevice`: the KVS mirror is
+    /// cleared first, across ALL wallet hashes (a mirror entry left under a
+    /// different hash keeps blocking that wallet's full wipe with nothing to
+    /// unlink; multi-wallet test devices lose their other-wallet entry too,
+    /// accepted), and only then the row. Until 2026-10-16 the row guard threw
+    /// `deviceNotFound` *before* the clear, so unlinking a device whose row a
+    /// CloudKit import had already removed left its mirror entry behind.
+    ///
+    /// - Throws: `deviceNotFound` only when there was nothing in either store
+    ///   (`unlinkVerdict`); a row-less ID whose mirror entries were removed is
+    ///   a successful unlink. A failed save rethrows with the mirror already
+    ///   clean.
     func unlinkDevice(_ deviceId: String) async throws {
+        // Before the context guard: the mirror needs no context, and the
+        // guard is one of the fallible steps the clear must precede
+        let mirrorEntriesRemoved = removeMirrorEntries(deviceId: deviceId)
+
         guard let modelContext = modelContext else {
             throw DeviceRegistrationError.noModelContext
         }
-        
+
         let descriptor = FetchDescriptor<DeviceRegistration>(
             predicate: #Predicate { $0.deviceId == deviceId }
         )
-        
-        guard let registration = try? modelContext.fetch(descriptor).first else {
-            throw DeviceRegistrationError.deviceNotFound
+        let registration = try? modelContext.fetch(descriptor).first
+
+        try Self.unlinkVerdict(rowExisted: registration != nil, mirrorEntriesRemoved: mirrorEntriesRemoved)
+
+        if let registration {
+            // Delete the registration (could also set isActive = false to keep history)
+            modelContext.delete(registration)
+            // No rollback on failure (shared main context); the queued
+            // delete is the user's intent and may commit on a later save
+            try modelContext.save()
         }
-        
-        // Delete the registration (could also set isActive = false to keep history)
-        modelContext.delete(registration)
-        try modelContext.save()
 
-        // Also remove from the KV store mirror — across ALL wallet hashes,
-        // same rationale as unregisterCurrentDevice (2026-09-24): a mirror
-        // entry left under a different hash keeps blocking that wallet's full
-        // wipe with nothing to unlink. Multi-wallet test devices lose their
-        // other-wallet entry too; accepted.
-        removeMirrorEntries(deviceId: deviceId)
-
-        Self.logger.debug("Unlinked device: \(deviceId)")
+        Self.logger.info("Unlinked device \(deviceId) (registry row existed: \(registration != nil), mirror entries removed: \(mirrorEntriesRemoved))")
 
         await loadRegisteredDevices()
+    }
+
+    /// Whether an unlink found anything to remove. Pure; pinned by
+    /// `UnlinkVerdictTests`.
+    ///
+    /// Only "nothing in either store" is an error. A missing row with mirror
+    /// entries is the mirror-only ghost case — the device the Tier 1 "forget
+    /// this device" remedy will pass in — and clearing it is the whole point.
+    nonisolated static func unlinkVerdict(rowExisted: Bool, mirrorEntriesRemoved: Int) throws {
+        guard rowExisted || mirrorEntriesRemoved > 0 else {
+            throw DeviceRegistrationError.deviceNotFound
+        }
     }
 
     /// Unlinks all devices except the current one, scoped to the account's
@@ -972,60 +1059,12 @@ class DeviceRegistrationService {
         Self.logger.debug("Unlinked \(others.count) other devices")
     }
     
-    /// Cleans up stale devices (not seen in specified number of days)
-    func cleanupStaleDevices(olderThan days: Int = 30) async throws {
-        let staleDevices = try await getStaleDevices(olderThan: days)
-        
-        guard !staleDevices.isEmpty else {
-            Self.logger.info("No stale devices to cleanup")
-            return
-        }
-        
-        for device in staleDevices {
-            try await unlinkDevice(device.deviceId)
-        }
-        
-        Self.logger.debug("Cleaned up \(staleDevices.count) stale devices")
-    }
-    
-    /// Migrates primary device status to the current device
-    /// Sets current device as primary and removes primary status from all other devices
-    func migrateToThisDevice() async throws {
-        guard let modelContext = modelContext else {
-            throw DeviceRegistrationError.noModelContext
-        }
-        
-        let currentDeviceId = try getOrCreateDeviceId()
-        
-        // Get all devices for this wallet
-        let currentDevice = try await getCurrentDevice()
-        guard let walletHash = currentDevice?.walletHash else {
-            throw DeviceRegistrationError.deviceNotRegistered
-        }
-        
-        let descriptor = FetchDescriptor<DeviceRegistration>(
-            predicate: #Predicate { $0.walletHash == walletHash }
-        )
-        
-        let allDevices = try modelContext.fetch(descriptor)
-        
-        // Update all devices: current becomes primary, others become secondary
-        for device in allDevices {
-            if device.deviceId == currentDeviceId {
-                device.isPrimaryDevice = true
-                Self.logger.info("Set current device as primary")
-            } else if device.isPrimaryDevice {
-                device.isPrimaryDevice = false
-                Self.logger.debug("Removed primary status from device: \(device.deviceName)")
-            }
-        }
-        
-        try modelContext.save()
-        await loadRegisteredDevices()
-        
-        Self.logger.info("Migration complete - this device is now primary")
-    }
-    
+    // `cleanupStaleDevices()` and `migrateToThisDevice()` were deleted
+    // 2026-10-16 (zero callers; DECIDED 2026-10-10). Stale-device pruning
+    // must stay a per-device, user-named unlink — see the note above
+    // `clearDeviceRegistrationsFromKVStore`. Primary moves go through
+    // demote/promote below.
+
     // MARK: - Manual Primary Device Assignment
     
     /// Demote this device from primary to secondary
@@ -1341,6 +1380,16 @@ class DeviceRegistrationService {
 }
 
 // MARK: - Supporting Types
+
+/// What `unregisterCurrentDevice` did to each store. The mirror half is
+/// always attempted first and never fails; only the row half can be left
+/// behind, and a retained row has remedies (the 30-day stale cutoff, an
+/// unlink from another device) that a retained mirror entry does not.
+nonisolated enum UnregistrationOutcome: Equatable, Sendable {
+    case complete(mirrorEntriesRemoved: Int, rowExisted: Bool)
+    /// The mirror is clean; the CloudKit row is still there.
+    case rowRetained(mirrorEntriesRemoved: Int, reason: String)
+}
 
 /// Pure-data view of a primary-conflict candidate, extracted for testability
 struct PrimaryDeviceCandidate {
