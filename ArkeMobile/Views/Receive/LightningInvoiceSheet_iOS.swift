@@ -171,8 +171,10 @@ struct LightningInvoiceSheet_iOS: View {
         .onDisappear {
             cleanupSubscription()
         }
+        // Full brightness while the QR is up so a dim phone still scans
+        .brightScreenWhileVisible()
     }
-    
+
     // MARK: - Owner View (Normal Orientation)
     
     private func ownerView(screenWidth: CGFloat) -> some View {

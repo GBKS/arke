@@ -74,6 +74,9 @@ struct TiltShareOverlay_iOS: View {
                     }
                     .tabViewStyle(.page(indexDisplayMode: .automatic))
                     .indexViewStyle(.page(backgroundDisplayMode: .never))
+                    // Both pages show a QR for the other person to scan; full
+                    // brightness while the overlay is up, user level after
+                    .brightScreenWhileVisible()
                     .safeAreaPadding(.bottom, 60)  // Push page indicators above dynamic island
                     .rotationEffect(.degrees(180))  // Flip upside down for person viewing
                     .scaleEffect(isVisible ? 1.0 : 0.95)
