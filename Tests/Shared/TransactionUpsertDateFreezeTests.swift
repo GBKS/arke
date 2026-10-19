@@ -52,11 +52,14 @@ struct TransactionUpsertDateFreezeTests {
         return service
     }
 
-    /// Exit movement JSON in the shape returned by bark's movement API
+    /// Exit movement JSON in the shape returned by bark's movement API.
+    /// `updatedAt` defaults to `createdAt`; pass a later value to mimic bark
+    /// touching a finished movement (metadata patch) without re-finishing it.
     private func exitMovementJson(
         status: String,
         createdAt: String,
-        completedAt: String?
+        completedAt: String?,
+        updatedAt: String? = nil
     ) -> String {
         let completedAtJson = completedAt.map { "\"\($0)\"" } ?? "null"
         return """
@@ -75,7 +78,7 @@ struct TransactionUpsertDateFreezeTests {
             "exited_vtxo_ids": [],
             "metadata_json": "",
             "created_at": "\(createdAt)",
-            "updated_at": "\(createdAt)",
+            "updated_at": "\(updatedAt ?? createdAt)",
             "completed_at": \(completedAtJson)
         }]
         """
@@ -164,5 +167,35 @@ struct TransactionUpsertDateFreezeTests {
         let movement = try fetchMovement(context: context)
         #expect(movement.transactionStatus == .confirmed)
         #expect(movement.date > dateWhilePending)
+    }
+
+    // The row date is bark's `completed_at ?? created_at`. bark 0.7.1 writes
+    // `completed_at` once, when the movement finishes, and later touches
+    // (metadata patches) only move `updated_at` — so a re-sync must leave a
+    // settled row where it was; `updated_at` never dates a row
+    // (Open_Follow_Ups "Activity rows are dated by…", step (c), 2026-10-19).
+    @Test("Settled movement keeps its date when a re-sync only moves updated_at")
+    func settledDateIgnoresUpdatedAt() async throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+        let service = makeService(context: context)
+
+        await service.upsertTransactionsFromServerData(exitMovementJson(
+            status: "successful",
+            createdAt: "2026-07-18T10:00:00.000+00:00",
+            completedAt: "2026-07-18T12:00:00.000+00:00"
+        ))
+        let dateWhenSettled = try fetchMovement(context: context).date
+
+        await service.upsertTransactionsFromServerData(exitMovementJson(
+            status: "successful",
+            createdAt: "2026-07-18T10:00:00.000+00:00",
+            completedAt: "2026-07-18T12:00:00.000+00:00",
+            updatedAt: "2026-07-20T08:00:00.000+00:00"
+        ))
+
+        let movement = try fetchMovement(context: context)
+        #expect(movement.transactionStatus == .confirmed)
+        #expect(movement.date == dateWhenSettled)
     }
 }
