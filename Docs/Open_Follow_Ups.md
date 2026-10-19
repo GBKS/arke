@@ -52,7 +52,7 @@ summarised in one line under "Past trains".
 | Stage | Status |
 |---|---|
 | Decide | rulings done 2026-10-10 (15 of 16; exploration season explicitly deferred); picks below PROPOSED, Christoph to confirm |
-| Build | started 2026-10-09 with the hygiene pass; **cut DECIDED 2026-10-19** (see below) — closes with the mainnet fee ceiling and a cosmetic pass on 2026-10-20/21 |
+| Build | started 2026-10-09 with the hygiene pass; **cut DECIDED 2026-10-19** (see below); **closed 2026-10-19** — fee ceiling, cosmetic pass and loading wave all committed (through b270c7d), 531/531 |
 | Review | per cluster as built (deletion cluster: four adversarial passes, all filed); `/code-review` over the range since build 23 on 2026-10-21 |
 | Device | deletion cluster fully device-checked (10-14, 10-15, 10-16, 10-19); the remaining checklist items are Tier 2 debt and do not gate the upload |
 | Release | **target 2026-10-21 evening**: build number bump (Christoph, Xcode), full mobile suite via `xcodebuild`, TestFlight upload, notes from the checked-off entries |
@@ -71,11 +71,13 @@ the payments / savings totals of the balance details view. Moved to Train
 Live Activity on demotion + dead `closeWallet()`, abort-after-unregister),
 clusters 3, 5 and 6, the remainder of cluster 4, and the new Tier 1 gate on
 onchain sends at the fee ceiling (DECIDED 2026-10-19).
-Cosmetic pass built 2026-10-19 (six items ticked in Tier 3; the
-activity-dating item's step (c) came back negative, its (b) still needs a
-ruling; the loading wave stays PROPOSED and was not built). Owed before the
-upload: device look at the boarding modal (minimum + image) and the tags
-no-fee row, which the funds-less simulator wallet cannot show.
+Cosmetic pass built and committed 2026-10-19 (six items ticked in Tier 3;
+the activity-dating item's step (c) came back negative and its (b) became
+upstream ask 20; the loading wave was DECIDED the same evening and is
+committed). Brightness device-checked. Owed before the upload: device look
+at the loading wave in motion, the boarding modal (minimum + image), the
+tags no-fee row and the exit state rows, none of which the funds-less
+simulator wallet can show.
 
 The exploration-season ruling is parked until the most important items are
 worked off (Christoph, 2026-10-09).
