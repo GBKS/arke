@@ -82,8 +82,14 @@ checklist items under "Bark 0.23 Migration" in `Open_Follow_Ups.md`:
 
 - **`OnchainWallet.initialScan(birthdayHeight:)`** — recovers pre-existing
   onchain history on seed import; `sync()` alone never finds it.
-- **`estimateEmergencyExitFee(...)`** — exit pre-flight showing broadcast vs
-  claim fees; `fundable == false` should block/warn. Slow (syncs first).
+- **`estimateEmergencyExitFee(...)`** — broadcast vs claim fees, tx count
+  and `fundable` (serial CPFP walk simulated against confirmed coins).
+  Slow (syncs first); requires the BDK-backed onchain wallet the app
+  already passes at `Wallet.open`. **DECIDED 2026-10-19:** adopted as a
+  *replacement* for the app's own `ExitView_iOS.calculateExitCost` (tree
+  depth / CPFP multiplier / margin guesses, affordability against the total
+  rather than confirmed balance), Train 2 Tier 1 "Exits" in
+  `Open_Follow_Ups.md`. A thrown estimate does not block the exit.
 - **`recoveryStatus()`** — distinguishes a failed recovery scan from one that
   never ran; the import path still infers from `recoveryReport()` nil-ness.
 - **`RoundState.state: RoundFlowKind` / `scheduledHeight`** — richer round
@@ -214,6 +220,25 @@ Methods present in the bindings before v0.18.0 that neither
   schedule a refresh at a future block height. Pairs with the Background
   Execution plan: instead of hoping a BGTask lands before expiry, register
   the refresh with the server at a chosen height.
+
+### Onchain wallet (`OnchainWalletProtocol`, not `WalletProtocol`)
+
+- **`OnchainWallet.feeRates() -> FeeRates`** — bark's cached fee-rate
+  estimates (sat/kwu; divide by 250 for sat/vB), read from the same Esplora
+  `/fee-estimates` endpoint at the same 1 / 3 / 6-block targets as
+  `FeeRateService` (`bark/src/chain.rs:36-38` at `bark-0.7.1`). Could make
+  bark the single rate source so the exit preview and bark's own broadcast
+  rate come from one cache. Deliberately **not** adopted 2026-10-19: the
+  mainnet ceiling and the non-mainnet cap live in `FeeRateService` and were
+  the Tier 0 fix of that week; the bark cache exists only after the wallet
+  opens, while the service serves the send flow before that; `isLive` /
+  `lastUpdated` semantics would change. Revisit if `FeeRateService` is next
+  touched for another reason. Not a backlog item.
+- Reminder that the rest of this protocol is still thin: `send`, `sync`,
+  `balance`, `utxos`, `transactions`, `tipHeight`, `newAddress`, `evictTx`,
+  `initialScan`. No prepare / estimate / drain-preview call exists at
+  v0.25.0, so the BDK shadow estimator (`BDKFeeEstimator.swift`) stays until
+  feedback §2.5b lands.
 
 ### Validation & utilities
 
