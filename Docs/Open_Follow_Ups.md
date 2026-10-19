@@ -1796,9 +1796,11 @@ Reminders merge; wording kept so the two can be matched.
   foreground, restore on Done, nothing on a tab round-trip — 6 lines, all
   as predicted. The first cut routed dismissal through an `onChange` on
   the sheet's own view and never restored (dismissed view tree, no body
-  pass); caught by the same simulator run, fixed before build. Device
-  check still owed: the simulator does not surface the actual brightness
-  value, only the log lines. Finding on the way: the Receive tab's addresses page shows no
+  pass); caught by the same simulator run, fixed before build. The change
+  ramps over 0.5 s (eased) after the instant jump read as a flash.
+  Device-checked by Christoph 2026-10-19 ("works well"). Known limit: a
+  Control Center change made while the sheet is up is overwritten by the
+  restore. Finding on the way: the Receive tab's addresses page shows no
   QR at all — addresses with copy buttons and a share button only — so the
   QR lives in the sheet; the item's wording assumed otherwise.
 - [ ] **Lightning request page: every control reads as "Lightning invoice
@@ -1862,13 +1864,14 @@ Reminders merge; wording kept so the two can be matched.
   and stamps the movement with the phone's clock when it processes the
   message — that is the "when the app loaded it" date. Nothing in the
   bindings exposes the per-message time, so there is no app-side fix.
-  PROPOSED: file an upstream ask in `Bark_Bindings_Feedback.md` — stamp
-  mailbox-delivered movements with the checkpoint's time (or expose it as
-  a `received_at` on the movement); on adoption, the parser uses it as the
-  row date for received rows and keeps `completed_at` for everything the
-  wallet did itself. Until then the row date is honest about one thing
-  only: when this phone learned of the payment. Ruling owed on filing the
-  ask.
+  DECIDED 2026-10-19 (Christoph): filed as an upstream ask —
+  `Bark_Bindings_Feedback.md` §1.10 / ask 20: stamp mailbox-delivered
+  movements with the checkpoint's time (or expose it as a `received_at`
+  on the movement). On adoption, the parser uses it as the row date for
+  received rows and keeps `completed_at` for everything the wallet did
+  itself. Until then the row date is honest about one thing only: when
+  this phone learned of the payment. Stays open as the adoption item,
+  blocked on upstream.
 - [ ] **Hide failed and completed refreshes that were free?** (The growing
   "Failed refresh" list in the Tier 0 divergence cluster is the extreme
   case; this line is the general one.)
@@ -1903,15 +1906,34 @@ Reminders merge; wording kept so the two can be matched.
 
 ### Balance, board / offboard
 
-- [ ] **Loading wave on the balance details totals** (Christoph, 2026-10-19,
-  PROPOSED — "not 100% sold"): the balance card's glyph wave
+- [x] **Loading wave on the balance details totals** (Christoph, 2026-10-19,
+  PROPOSED — "not 100% sold"; built 2026-10-19, see the end of this
+  entry): the balance card's glyph wave
   (`BalanceLoadIndicatorModel`) could also run on the separate payments and
   savings totals in the balance details view, each driven by whether *its*
   data is still loading (the Ark balance arrives before the onchain sync
   since the Ark-first refresh, so the two would settle at different
   moments). Purpose: someone wondering what is still loading gets the
-  answer without a spinner or copy. Needs a ruling before it is picked; if
-  yes, it rides in the Train 1 cosmetic pass.
+  answer without a spinner or copy. **DECIDED 2026-10-19** (Christoph:
+  "tackle the loading wave next") — rides in the Train 1 cosmetic pass.
+  Premise check: no per-source loading signal existed; `isRefreshing`
+  covers the whole refresh. Built as two flags written by `performRefresh`
+  (Ark settles after Step 2b's early publish, onchain after Step 3's
+  onchain balance read, both cleared when the refresh ends) and the card's
+  wave machinery extracted into a `loadingWave(isLoading:)` modifier
+  (`Shared/UI/LoadingWaveModifier.swift`) the two totals and the balance
+  card share. Verified 2026-10-19 by the modifier's info-level log lines
+  (`category == "LoadingWave"`) on the iOS 27.0 iPhone 17 simulator, two
+  pull-to-refreshes on the details view: both totals arm at the pull; the
+  Payments total returns to idle 0.2 s later when Step 2b publishes, so it
+  never shows (the 1 s arming guard); the Savings total arms at 1 s, starts
+  its pass, and finishes the pass when Step 3 ends; the Activity card still
+  waves on the launch refresh. On the zero-balance simulator wallet the
+  onchain sync lasts ~2 s, so the Savings wave is one pass; on the phone it
+  runs for the ~25 s sync. Not seen in motion — device look owed. Tooling
+  note: a first "no wave" verdict came from a stale simulator build (the
+  run destination had been switched back to the phone, so Xcode built the
+  device slice); always rebuild after switching destinations.
 - [ ] **VoiceOver hears nothing about the running launch load** (filed
   2026-10-13 from the load-wave item): the activity screen's balance
   element has a label and value but no "updating" state while

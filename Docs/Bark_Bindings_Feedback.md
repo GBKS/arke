@@ -362,6 +362,33 @@ write an explicit "expired" entry into wallet history instead of silently
 showing less money. Complements §1.8's question 3 (rendering not-yet-swept
 expired VTXOs honestly).
 
+### 1.10 Received payments are dated by the receiver's sync, though the server knows when they arrived
+
+Filed 2026-10-19 from a field observation: a phone that was closed for a
+day shows yesterday's incoming payments dated today, because the activity
+row takes the movement's `completed_at ?? created_at`, and both are stamped
+with the receiving wallet's clock when it processes the mailbox message
+(`MovementManager::new_movement` / `finish_movement`, `movement/manager.rs`
+at 0.7.1). For anything the wallet did itself that is the right time; for
+anything it *received* it is the time the user next opened the app.
+
+The real arrival time is already on the wire. Every `MailboxMessage`
+carries a `checkpoint` (`mailbox_server.proto`), and the server builds it
+from its clock at deposit time: `next_checkpoint()` in
+`V21__blinded_mailbox.sql` packs milliseconds since epoch into the upper
+44 bits and a same-millisecond counter into the lower 20. The client reads
+that value for every message and keeps only the highest one as its read
+cursor (`store_mailbox_checkpoint(u64)`); the per-message time is dropped
+before the movement is written. Nothing in the FFI exposes it either, so
+there is no app-side fix.
+
+**Ask:** stamp mailbox-delivered movements — arkoor receives, incoming
+Lightning payments, round completions — with the message's checkpoint time,
+either as the movement's `created_at` or as a new `received_at` field on
+`Movement`. On adoption we use it as the row date for received rows and keep
+`completed_at` for everything the wallet initiated. Cheap on both sides: the
+number is already parsed, and `checkpoint >> 20` is the timestamp.
+
 ---
 
 ## Priority 2 — costs us reliability and battery
@@ -694,3 +721,4 @@ pattern we're asking you to extend everywhere:
 | 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) | Silent, inexplicable balance shrinkage after seed import |
 | 18 | Delegated refresh: selection excludes live participations; cancel for `NonInteractivePending`; re-delegation self-heal (§2.7) | Guard C exclusion + near-expiry safety valve in `RefreshExclusion` |
 | 19 | `ExitClaimTransaction.vtxoIds` / `skippedVtxoIds` — which ids the claim PSBT actually contains (§1.3 addendum) | Claim links recorded for VTXOs bark skipped |
+| 20 | Mailbox checkpoint time on received movements (`received_at`, §1.10) | Activity rows dated by when the phone synced, not when the payment arrived |
