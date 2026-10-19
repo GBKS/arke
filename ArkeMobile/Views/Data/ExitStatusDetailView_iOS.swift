@@ -652,12 +652,16 @@ private struct ExitStepRow: View {
     }
 }
 
+/// Truncated txid whose long-press menu copies the full id. Every txid the
+/// exit screens show goes through here, so no displayed id is copy-only in
+/// its shortened form.
 private struct CopyableTxidRow: View {
     let txid: String
+    var font: Font.TextStyle = .subheadline
 
     var body: some View {
         Text(txid.prefix(5) + "..." + txid.suffix(5))
-            .font(.system(.subheadline, design: .monospaced))
+            .font(.system(font, design: .monospaced))
             .contextMenu {
                 Button {
                     UIPasteboard.general.string = txid
@@ -844,8 +848,7 @@ private struct ParsedStateDetails: View {
                             .foregroundStyle(.secondary)
 
                         ForEach(Array(data.transactions.enumerated()), id: \.offset) { _, tx in
-                            Text(tx.txid.prefix(8) + "..." + tx.txid.suffix(8))
-                                .font(.system(.caption2, design: .monospaced))
+                            CopyableTxidRow(txid: tx.txid, font: .caption2)
                                 .foregroundStyle(.tertiary)
                         }
                     }
@@ -865,12 +868,12 @@ private struct ParsedStateDetails: View {
             case .claimInProgress(let data):
                 StateDetailRow(label: "Type", value: "Claim In Progress")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
-                StateDetailRow(label: "Claim TX", value: data.claimTxid.prefix(8) + "..." + data.claimTxid.suffix(8))
+                StateDetailTxidRow(label: "Claim TX", txid: data.claimTxid)
 
             case .claimed(let data):
                 StateDetailRow(label: "Type", value: "Claimed")
                 StateDetailRow(label: "Tip Height", value: "\(data.tipHeight)")
-                StateDetailRow(label: "Claim TX", value: data.txid.prefix(8) + "..." + data.txid.suffix(8))
+                StateDetailTxidRow(label: "Claim TX", txid: data.txid)
                 StateDetailRow(label: "Block", value: "\(data.block.height)")
 
             case .vtxoAlreadySpent(let data):
@@ -903,6 +906,21 @@ private struct StateDetailRow: View {
             Spacer()
             Text(value)
                 .font(.system(.caption2, design: .monospaced))
+        }
+    }
+}
+
+/// StateDetailRow for a txid: shortened on screen, full id on copy.
+private struct StateDetailTxidRow: View {
+    let label: String
+    let txid: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .foregroundStyle(.secondary)
+            Spacer()
+            CopyableTxidRow(txid: txid, font: .caption2)
         }
     }
 }

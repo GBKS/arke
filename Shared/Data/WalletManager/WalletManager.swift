@@ -324,7 +324,15 @@ class WalletManager {
     var arkInfo: ArkInfoModel? {
         balanceService?.arkInfo
     }
-    
+
+    /// Fetches `arkInfo` when the cache is empty or expired. The cache lives
+    /// five minutes, so a screen that needs a server limit (the boarding
+    /// minimum) must call this on open rather than hope a refresh or an X-Ray
+    /// visit left a value behind. No-op before the wallet is open.
+    func cacheArkInfoIfNeeded() async {
+        await balanceService?.cacheArkInfoIfNeeded()
+    }
+
     var estimatedBlockHeight: Int? {
         balanceService?.estimatedBlockHeight
     }

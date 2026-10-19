@@ -240,15 +240,22 @@ private struct TagRow: View {
                 // For system tags (Balance tag for internal transfers), only show fees
                 if tag.isSystemTag {
                     Spacer()
-                    
-                    Text(L10n.activityFeesPaid)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                    
-                    Text(statistic.formattedTotalFees)
-                        .font(.body)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.Arke.red)
+
+                    if statistic.totalFees > 0 {
+                        Text(L10n.activityFeesPaid)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+
+                        Text(statistic.formattedTotalFees)
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.Arke.red)
+                    } else {
+                        // Free transfers so far: say so instead of "-0 B fees paid"
+                        Text(String(localized: "tags_no_fees_paid", defaultValue: "No fees paid"))
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                    }
                 } else {
                     Text(String(localized: "tags_transaction_count", defaultValue: "^[\(statistic.transactionCount) transaction](inflect: true)"))
                         .font(.body)

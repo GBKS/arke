@@ -24380,6 +24380,17 @@
         }
       }
     },
+    "tags_no_fees_paid" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No fees paid"
+          }
+        }
+      }
+    },
     "tags_no_transaction_data" : {
       "localizations" : {
         "de" : {

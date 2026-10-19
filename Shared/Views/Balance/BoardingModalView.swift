@@ -23,13 +23,19 @@ struct BoardingModalView: View {
     // Picked once per modal presentation so the character stays
     // consistent across the boarding/success states
     @State private var videoPair = ReactionVideoPair.random()
-    
+
+    /// Server minimum for a board, loaded on open. Held in view state because
+    /// the arkInfo cache is not observable and expires after five minutes, so
+    /// the modal used to show "Loading minimum amount…" for good unless a
+    /// recent refresh or an X-Ray visit had refilled the cache.
+    @State private var minimumAmount: Int?
+
     var body: some View {
         ZStack {
             switch state {
             case .form:
                 BoardingModalFormView(
-                    minimumAmount: manager.arkInfo?.minBoardAmount,
+                    minimumAmount: minimumAmount,
                     onConfirm: { amount in
                         Task {
                             await performBoarding(amount: amount)
@@ -76,6 +82,12 @@ struct BoardingModalView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: state)
         .frame(maxHeight: .infinity, alignment: .top)
+        .task {
+            minimumAmount = manager.arkInfo?.minBoardAmount
+            guard minimumAmount == nil else { return }
+            await manager.cacheArkInfoIfNeeded()
+            minimumAmount = manager.arkInfo?.minBoardAmount
+        }
     }
     
     @MainActor
