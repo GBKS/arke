@@ -244,7 +244,10 @@ struct CreateWalletView_iOS: View {
                 
                 let attemptTime = CFAbsoluteTimeGetCurrent() - attemptStartTime
                 Self.logger.info("⏱️ [PROFILE] Wallet creation attempt took \(String(format: "%.3f", attemptTime))s")
-                Self.logger.info("✅ Wallet created on \(networkConfig.name): \(result)")
+                // `result` is the mnemonic — never interpolate it into a log
+                // line, even behind default redaction (simulator logs are not
+                // redacted; one `privacy: .public` would leak the seed)
+                Self.logger.info("✅ Wallet created on \(networkConfig.name) (\(result.split(separator: " ").count) words)")
                 
                 let totalTime = CFAbsoluteTimeGetCurrent() - overallStartTime
                 Self.logger.info("⏱️ [PROFILE] CreateWalletView: Total wallet creation took \(String(format: "%.3f", totalTime))s")
