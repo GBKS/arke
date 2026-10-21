@@ -185,6 +185,47 @@ the rest wait.
   (~2026-10-11, observable on the current build already), auth-wake journal
   rows.
 
+**Train 2 — PROPOSED 2026-10-19** (asked by Christoph while Train 1 waits
+for its Release; Soak may overlap Decide and Build, not Release). Tier 0 is
+not empty at Train 1's Release, so Train 2 takes nothing from Tier 3 or 4
+beyond the already-DECIDED ArkéUI fee-arithmetic deletion. Build runs while
+Christoph is in Lugano; Device is his first home stretch with both phones
+afterwards, and the Lugano soak's findings are read into the picks before
+Build closes. Picks, one cluster per session, in order:
+
+1. **Train 1 leftovers, Tier 0** — deletion residual (four unprotected store
+   writes; exit Live Activity on demotion + dead `closeWallet()`, DECIDED;
+   abort-after-Step-1 reorder, PROPOSED fix needs a ruling) and the
+   permission-denied banner for expiry reminders. Plans exist, files are warm.
+2. **Phrase exposure, Tier 0** — clipboard 2–3 min, QR-sheet selection off,
+   `privacySensitive` / capture hiding on the four phrase surfaces.
+3. **Send path, Tier 0 + DECIDED Tier 1** — BIP-353 query skip + softer
+   error; paste fallback + the shared `detectFormatOrNil` fix; nearby sheet
+   contact rule (DECIDED); onchain-send gate at the fee ceiling (DECIDED);
+   BDK estimator full-scan-and-retry (option (a), PROPOSED). Lugano's
+   send-path findings land here.
+4. **Exits, DECIDED Tier 1** — `estimateEmergencyExitFee` replacement; its
+   device step shares the stuck-signet session with the Tier 2 exit items.
+5. **Boards, Tier 0** — `maxVtxoAmount` into the boarding form, refuse
+   client-side. The "disable while unreachable" half waits on the
+   connectivity signal (Tier 1 "can never show disconnected"), which is
+   PROPOSED as the one Tier 1 connectivity pick if the soak evidences it.
+6. **Ops, Christoph's hands** — rotate `RELAY_API_TOKEN` and move it out of
+   the tree; pin `bark-ffi-bindings` and BIP39 in Xcode.
+
+Pre-emption: a bindings release from Second with the recovery fixes goes
+to the front and displaces 5 and 4 in that order. Deferred to Train 3 with
+reasons: the three send proposals (design-heavy; the detector fix rides
+with 3), claimed-exit funds and backup binding (design first),
+`checkReadOnlyMode` (after the self-unlink run on this train's device day),
+metadata-import name merge (no field evidence; pull forward if 2 is quick),
+security gating (after the linking scope pass), the offline feature beyond
+its signal. Device checklist: the Tier 2 two-device set, exit blocked state
++ completion, phrase paste checks, forced-clamp look, cold-launch export
+with Step markers. Decide stage: the eight DECIDE lines below are PROPOSED
+for bulk deferral except "disable the Settings exit entry while an exit is
+active", which cluster 4 touches.
+
 **Past trains:** none yet.
 
 ## Decisions needed (Christoph)
