@@ -89,8 +89,11 @@ committed). Brightness device-checked. The device looks owed before the
 upload (loading wave in motion, boarding modal minimum + image, tags no-fee
 row, exit state rows) were done by Christoph, confirmed 2026-10-21. Code
 frozen at `fd4e2f8` for his manual pass, mobile suite 566/566 via
-`xcodebuild` on that commit; the `/code-review` pass runs after the manual
-testing (Christoph, 2026-10-21), then bump to build 25 and upload.
+`xcodebuild` on that commit. `/code-review` (medium, `06d3cfc..fd4e2f8`)
+ran 2026-10-21 before the manual pass: ten findings, all filed (one Tier
+0 deletion, two Tier 1, six Tier 3; the CloudKit import-gate claim is
+already Tier 2 "Seeding scenarios" (2)), none fixed — fix-before-upload
+is Christoph's ruling. Then bump to build 25 and upload.
 
 The exploration-season ruling is parked until the most important items are
 worked off (Christoph, 2026-10-09).
@@ -626,6 +629,14 @@ needs a ruling or a sentence of reasoning before it can become work.
   upstream commits are only on `origin/master`; the local `~/workspace/bark`
   checkout is at `8adc8e7` (2026-09-30), so `git fetch` before quoting more.
 
+- [ ] **A device-ID keychain read failure makes the delete override appear**
+  — `otherDeviceReport` calls `getOrCreateDeviceId()` before reading either
+  registry, so the 2026-10-16 throw-on-read-failure guard aborts with no
+  evidence; `assessDeletion` maps that to `.undetermined` (nil report) and
+  `shouldOfferOverride` answers true. CONFIRMED by trace, code-review
+  2026-10-21; low likelihood (device unlocked, override still needs the
+  acknowledgement + phrase). Fix: read both stores with an unknown own id.
+
 ## Tier 1 — What users hit every day
 
 ### Send and fees
@@ -825,6 +836,13 @@ needs a ruling or a sentence of reasoning before it can become work.
   anything in a local-only container. Still a wipe on a transient error.
   Narrow the condition to confirmed migration failures, or back up the store
   files before deleting them.
+
+- [ ] **Tag and contact lookups answer by txid, not by row** —
+  `liveTagAssignments` / `liveContactAssignments` fetch
+  `transaction?.txid == txid`, so two rows sharing a txid (item above, cause
+  (b)) see each other's assignments and `hasTag` / `hasContact` skip
+  inserting their own; the dedupe then drops the only copy. PLAUSIBLE,
+  code-review 2026-10-21; key the fetch on `persistentModelID`.
 
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
 
@@ -1049,6 +1067,13 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   state on the invoice sheet and in Activity, show the last claim error when
   it repeats, and offer cancel / exit for a receive that never settles. Pair
   with "Invoice request timeout" above.
+
+- [ ] **Relay renewal timer wipes the stored registration before the mint**
+  — `RelayRegistrationService.scheduleAuthRefresh` sets `registration =
+  .empty`, then calls `onNeedsRefresh`; an offline mint failure leaves
+  `renewalDate` nil until a later foreground mint succeeds, so the BGTask is
+  submitted undated and X-Ray shows no expiry. CONFIRMED by reading, not
+  reproduced, code-review 2026-10-21; keep the old record until replaced.
 
 ### Release readiness
 
@@ -1301,6 +1326,17 @@ log).
   `PendingPaymentMetadata.matchedTxid` comment says "for debugging" but it is
   load-bearing (priority-0 matching) — fix the comment.
 
+- [ ] **Bitcoin-field zero keystroke writes "0" and drops Max** —
+  `SendViewModel.writeAmount` stores a parsed 0 as `"0"` where the fiat path
+  stores nil, and every write clears `isSendingMax`; a leading "0" typed after
+  Max flips validation mid-entry. PLAUSIBLE, partly by design, code-review
+  2026-10-21: decide whether zero clears the amount like the fiat path.
+- [ ] **Empty wallet never shows the over-budget signal** —
+  `SendAmountInput.exceedsBalance` is false whenever `maxSpendableAmount ==
+  0` and overrides the component's own check, so 5,000 sats typed into a
+  zero-balance wallet stays grey. CONFIRMED by reading, code-review
+  2026-10-21; distinguish "balance unknown" from "balance zero".
+
 ### Receive
 
 - [ ] **Lightning request page: every control reads as "Lightning invoice
@@ -1312,6 +1348,12 @@ log).
 - [ ] **Test scanning from a laptop camera; ensure amount and memo input
   interactions work properly**.
 - [ ] **QR network indicators not showing?**
+
+- [ ] **QR brightness: `boost()` during a restore ramp saves the mid-ramp
+  level** — `ScreenBrightnessBooster.boost` reads `screen.brightness` while a
+  `restore()` ramp is still stepping (scene phase inactive → active within the
+  ramp), so the final restore lands near full. CONFIRMED by reading,
+  code-review 2026-10-21; remember the ramp target as the user level.
 
 ### Activity, transaction details, tags
 
@@ -1384,6 +1426,13 @@ log).
   txids from the list and re-fetch the window; re-verify the entrance/drag
   choreography on device.
 
+- [ ] **A skipped refresh still ends the loading skeleton** —
+  `WalletManager.performRefresh` sets `hasLoadedOnce` in a `defer` placed
+  above the "database not open yet" and read-only skips, so a mailbox push
+  during launch flips Activity to its empty state before the first real
+  sync. CONFIRMED by reading, code-review 2026-10-21; set it after a
+  completed pass.
+
 ### Balance, board / offboard
 
 - [ ] **VoiceOver hears nothing about the running launch load** (filed
@@ -1425,6 +1474,18 @@ log).
   import VTXOs come back as bare `Spent` with no reason. Blocked on upstream
   spent-reason (`sweptAtExpiry`, feedback §1.9 / ask 17); once available,
   write an explicit "expired" history entry. The pre-sweep half is the
+- [ ] **Stale "Time to Refresh" reminder after an unusable-inputs rejection**
+  — the auto check in `VTXORefreshService` returns inside the scheduling
+  `catch`, skipping `scheduleNextRefreshNotification()`, so a reminder for
+  VTXOs now held back still fires. CONFIRMED by reading, code-review
+  2026-10-21; reschedule before returning.
+- [ ] **Rejection back-off not persisted while the service is stopped** —
+  `persistRejectionBackoff` returns on `guard isRunning`, but
+  `refreshManually` can record a verdict after demotion's `stop()` with the
+  object still alive, so the next launch re-submits the rejected ids.
+  PLAUSIBLE, code-review 2026-10-21; gate on "wallet being deleted", not on
+  running.
+
   Tier 0 divergence cluster.
 
 ### Exits
