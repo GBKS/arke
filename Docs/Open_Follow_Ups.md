@@ -1555,6 +1555,15 @@ log).
   the nearby-payload ruling (DECIDED 2026-10-10): gate receiving on the
   same distance check as sending, accept one payload per exchange, ignore
   invitations outside an active exchange.
+- [ ] **X-Ray VTXO bar reads its inflect markup aloud** — `VTXOGraph`
+  `accessibilityText` builds the label with `String(localized:)` and a
+  `^[… days](inflect: true)` span, which `Text(String)` never inflects; the
+  simulator hierarchy showed the raw `^[1 days](inflect: true)` (seen
+  2026-10-21, signet import session). Use a plural-variation catalog key.
+- [ ] **X-Ray header says "1 VTXOs"** — `VTXOListView_iOS` and the Shared
+  `VTXOListView` interpolate `"\(vtxos.count) VTXOs • …"` unlocalized, so
+  no plural and no translation (seen 2026-10-21). One catalog key with a
+  plural variation, both copies.
 
 ### Localization
 
