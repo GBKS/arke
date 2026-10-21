@@ -62,8 +62,8 @@ summarised in one line under "Past trains".
 | Decide | rulings done 2026-10-10 (15 of 16; exploration season explicitly deferred); picks below PROPOSED, Christoph to confirm |
 | Build | started 2026-10-09 with the hygiene pass; **cut DECIDED 2026-10-19** (see below); **closed 2026-10-19** — fee ceiling, cosmetic pass and loading wave all committed (through b270c7d), 531/531 |
 | Review | per cluster as built (deletion cluster: four adversarial passes, all filed); `/code-review` over the range since build 23 on 2026-10-21 |
-| Device | deletion cluster fully device-checked (10-14, 10-15, 10-16, 10-19); the remaining checklist items are Tier 2 debt and do not gate the upload |
-| Release | **target 2026-10-21 evening**: build number bump (Christoph, Xcode), full mobile suite via `xcodebuild`, TestFlight upload, notes from the checked-off entries |
+| Device | deletion cluster fully device-checked (10-14, 10-15, 10-16, 10-19); owed cosmetic looks done 10-21; **manual pass on the frozen build done 2026-10-21, everything works** (Christoph); the remaining checklist items are Tier 2 debt and do not gate the upload |
+| Release | **2026-10-21**: code frozen at `fd4e2f8`, suite 566/566, `/code-review` ten findings filed (DECIDED 2026-10-21: none fixed before the upload, all ride into Train 2 with their clusters), **build 25** bumped and committed; TestFlight upload + notes next |
 | Soak | Plan B Forum, Lugano, from 2026-10-22 — a week of conference use on the new build |
 
 **Cut DECIDED 2026-10-19** (Christoph: TestFlight before Lugano). Build
