@@ -85,10 +85,12 @@ opening hygiene pass).
 Cosmetic pass built and committed 2026-10-19 (six items ticked in Tier 3;
 the activity-dating item's step (c) came back negative and its (b) became
 upstream ask 20; the loading wave was DECIDED the same evening and is
-committed). Brightness device-checked. Owed before the upload: device look
-at the loading wave in motion, the boarding modal (minimum + image), the
-tags no-fee row and the exit state rows, none of which the funds-less
-simulator wallet can show.
+committed). Brightness device-checked. The device looks owed before the
+upload (loading wave in motion, boarding modal minimum + image, tags no-fee
+row, exit state rows) were done by Christoph, confirmed 2026-10-21. Code
+frozen at `fd4e2f8` for his manual pass, mobile suite 566/566 via
+`xcodebuild` on that commit; the `/code-review` pass runs after the manual
+testing (Christoph, 2026-10-21), then bump to build 25 and upload.
 
 The exploration-season ruling is parked until the most important items are
 worked off (Christoph, 2026-10-09).
