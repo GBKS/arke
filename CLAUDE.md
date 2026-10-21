@@ -117,6 +117,19 @@ is history and loses to a living doc.
   Avoid `log stream`, it wedges the simulator. Bundle id is `GBKS.Arke`.
 - **Build numbers are not bumped per build.** Fingerprint a device build by
   distinctive log lines plus `git log -S`, not the version header.
+- **Simulator sessions leave a trail.** A PostToolUse hook in
+  `.claude/settings.local.json` (git-ignored) copies every simulator
+  screenshot to `~/workspace/Arke-sessions/screenshots/<date>/` and appends
+  a row to that day's `index.md`. At the end of any session that drove the
+  simulator, fill the empty `Note` column with what each screenshot shows
+  and which change it belonged to; the index is what gets searched later.
+- **The simulator test wallet is a throwaway signet wallet.** Its recovery
+  phrase is typed into the import screen only. Never write it into any
+  tracked file, `Docs/`, a test fixture, memory, or this file; if automated
+  tests ever need it, they read it from an environment variable or a
+  git-ignored file. Nothing seed-touching counts as verified in the
+  simulator, and the backup screen stays closed there so no screenshot
+  captures the phrase.
 - **Xcode write tools can report success without persisting**, especially
   for package files. Grep the disk after a batch of `XcodeUpdate` or
   `XcodeWrite` edits.

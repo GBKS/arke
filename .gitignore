@@ -48,3 +48,6 @@ Docs/debug_logs*.txt
 
 # Generated localization audit output (rerun Scripts/localization_audit.py)
 Scripts/audit_output/
+
+# Personal Claude Code overrides (screenshot hook); see CLAUDE.md "Simulator sessions"
+.claude/settings.local.json
