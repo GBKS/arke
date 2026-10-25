@@ -500,3 +500,45 @@ Pro simulator refused to spawn the test host twice that day ("Launchd job
 spawn failed", before any test ran, after a simulator shutdown too) — a
 simulator fault, recorded so the next session does not chase it as a
 regression.
+
+## 10. iPhone unlink restored as a hidden remedy (2026-10-25)
+
+**Trigger.** Christoph's iPhone listed a second device as `iPhone12,3` (an
+iPhone 11 Pro, raw identifier because `getDeviceModelName()`'s map stops at
+the iPhone 15 series) with no way to remove it. Not a simulator remnant: the
+simulator's `uname().machine` is the host architecture (`arm64`), so a
+simulator registration would read "arm64", never an iPhone identifier.
+
+**History.** iPhone had no unlink of any kind since f7b9002 (2026-05-11),
+when `DeviceRow_iOS`'s inline menu with Remove was commented out. The
+confirmation dialog, handler and `unlinkDevice` call stayed wired but
+unreachable; the row's VoiceOver hint still promised "double tap for
+options". Desktop kept its button. §3.4 made the service safe for row-less
+IDs, which is what makes one gesture serve both row kinds below.
+
+**Change (one-off, DECIDED in chat 2026-10-25; the Tier 1 S7 entry stays
+open).** `DeviceRow_iOS` and the Shared `UnsyncedDeviceRow` gained a
+`.contextMenu` with a single destructive "Unlink Device" item, offered only
+when the parent passes an `onUnlink` callback. `LinkedDevicesView_iOS` passes
+it for other devices' registry rows and for mirror-only rows, and `nil` for
+the current device, so self-unlink is not reachable (it is the path behind
+the "`checkReadOnlyMode()` infers primary" item). The confirmation acts on a
+private `UnlinkTarget` (device id + display name) covering both row types;
+after a successful unlink the view re-reads `currentOtherDeviceReport()` so a
+mirror-only row disappears at once. The dead promote/demote row callbacks and
+the untrue hint were removed; a context menu is exposed through the VoiceOver
+actions rotor on its own. Chosen over swipe-to-delete and a hint on the
+delete screen's blocker list because Christoph does not want this
+discoverable yet.
+
+**Copy.** New key `alert_unlink_device_explanation`: unlink edits the device
+list and nothing more; it is for a device the user no longer has, and a
+device still running Arké re-registers itself on its next launch (the old
+"must re-import the recovery phrase" text was false). de/ja/zh-Hant added as
+`needs_review`. The `kvsOnly` doc comment on `OtherWalletDevice.Source` no
+longer claims unlink cannot clear mirror-only entries.
+
+**Verified.** Diagnostics clean on the three files; `BuildProject` green; full
+mobile suite **566 passed, 0 failed** on the iPhone 17 Pro simulator;
+`translation_lint.py` clean. **Not verified:** the gesture on a device, and
+the two-device ghost run the Tier 1 entry still owes.

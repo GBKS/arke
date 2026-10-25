@@ -884,30 +884,13 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   `NSPersistentCloudKitContainer` import events. The explicit-device-linking
   DECIDE would absorb the first-launch half; the syncing-state UI is needed
   under either ruling. (Desktop `TransactionList` half is in Parked.)
-- [ ] **"Forget this device" for mirror-only ghosts** (the one piece of
-  full S7 approved to build, DECIDED 2026-10-10; deliberately not built
-  2026-09-24; now the only remedy for a healthy-but-unwanted blocker since
-  the override is no longer offered there): `unlinkDevice` throws
-  `deviceNotFound` with no registry row (`DeviceRegistrationService.swift:
-  933-944`), so needs `forgetUnsyncedDevice(_:)` (does not exist) that
-  clears the mirror entry for one named device, per-device and confirmed,
-  owned by the cleanup service's rules for shared state; fail closed when
-  the registry can't be read. Surface it from the delete screen's blocker
-  list (which already names mirror-only blockers; aged ones unlock the
-  override) and from Linked Devices. The "KVS-only ghost is invisible" item
-  folds in here. Two-device verify: create a ghost (install, link, wipe the
-  device without unregistering), forget it from the other phone, confirm
-  the full wipe is no longer blocked. **Updated 2026-10-19:** the service
-  half is done — `unlinkDevice` now clears the mirror first and succeeds on
-  a row-less ID (ghost-hardening change, `UnlinkVerdictTests`), so no
-  `forgetUnsyncedDevice` is needed; what remains is UI. And the row unlink
-  is hidden on iPhone too: `DeviceRow`'s menu with Remove has been commented
-  out since f7b9002 (2026-05-11), so iOS has **no** unlink of any kind and a
-  registry row left by a failed unregister save blocks the other devices'
-  full wipe for the 30-day stale cutoff (Christoph spotted this during the
-  ghost-hardening device-check prep). Scope: re-enable the row unlink
-  (confirmed, per device) and add the mirror-only forget, on Linked Devices
-  and the delete screen's blocker list.
+- [ ] **"Forget this device" for mirror-only ghosts** (full S7's one approved
+  piece, DECIDED 2026-10-10). Service half done 2026-10-16 (`unlinkDevice`,
+  `UnlinkVerdictTests`). **2026-10-25:** iPhone Linked Devices unlinks
+  registry and mirror-only rows via the row's context menu, deliberately
+  undiscoverable; the current device is excluded. Remaining: the delete
+  screen's blocker-list surface, the discoverability call, the two-device
+  ghost verify. History: `Features/Wallet_Deletion_Ghost_Hardening.md` §10.
 - [ ] **Deletion-flow copywriting** (2026-09-26 session, cosmetic): strategy
   intro, blockers copy, override acknowledgement, scope-changed banner
   (`error_delete_scope_changed`) — then de/ja/zh-Hant. The amount-warning
@@ -1991,6 +1974,13 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
 Moved out of Tier 1 "Release readiness" 2026-10-09: no user hits these;
 they are the infrastructure `Development/Release_Train.md` assumes.
 
+- [ ] **`Scripts/apply_translations.py` rewrites the whole catalog**
+  (2026-10-25): it serializes with Python's default separators and
+  `sort_keys`, so one new key produced a 35k-line diff in
+  `Shared/Localizable.xcstrings`, and a rebuild does not normalize it back
+  (Xcode re-serializes only when extraction changes). Fix: emit Xcode's
+  `" : "` separators and ordering, or re-save through Xcode after running.
+  Until then, small batches go through `StringCatalogEdit` after a build.
 - [ ] **Canvas previews for app-target files cannot launch** (2026-10-13,
   `RenderPreview` on `GlyphWaveTextRenderer.swift`): the preview host
   fails with `CouldNotLoadInputStaticArchiveFile … Debug-iphonesimulator/

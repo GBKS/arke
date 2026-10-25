@@ -150,8 +150,10 @@ on-device verify of the live demotion handoff.
 ### S4 — Lost primary: take over on the secondary, remove the lost device ⚠️/◻
 User lost the phone that was primary. On the secondary: promote self
 (possible because the seed is synced), then unlink the lost device from the
-registry (`unlinkDevice` — exposed on both platforms). The lost device, if it
-ever comes back, observes its demotion and drops to read-only.
+registry (`unlinkDevice` — a button on the Mac; on iPhone, since 2026-10-25,
+the row's touch-and-hold context menu, deliberately undiscoverable until the
+S7 design lands). The lost device, if it ever comes back, observes its
+demotion and drops to read-only.
 
 Walkthrough:
 - **Does (on the surviving secondary):** opens Settings → Linked Devices.
