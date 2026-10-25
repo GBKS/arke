@@ -12,7 +12,7 @@ struct LinkedDevicesView_iOS: View {
     let onNavigateToActivity: (() -> Void)?
     @Environment(\.deviceRegistrationService) private var deviceService
     @Environment(\.dismiss) private var dismiss
-    @State private var deviceToUnlink: DeviceRegistration?
+    @State private var deviceToUnlink: UnlinkTarget?
     @State private var showingUnlinkConfirmation = false
     @State private var isUnlinking = false
     @State private var errorMessage: String?
@@ -43,34 +43,37 @@ struct LinkedDevicesView_iOS: View {
             
             Section {
                 // Current device section
+                // The current device gets no unlink: self-unlink is the path
+                // behind the open "checkReadOnlyMode infers primary" item and
+                // has not been run on device.
                 if let currentDevice = currentDevice {
-                    DeviceRow_iOS(
-                        device: currentDevice,
-                        isCurrent: true,
-                        onRemove: { deviceToUnlink = currentDevice; showingUnlinkConfirmation = true },
-                        onMakeSecondary: { makeDeviceSecondary(currentDevice) },
-                        onMakePrimary: { makeDevicePrimary(currentDevice) }
-                    )
+                    DeviceRow_iOS(device: currentDevice, isCurrent: true, onUnlink: nil)
                 }
-            
-                // Other devices section
+
+                // Other devices section. Unlink is deliberately reachable only
+                // through the row's context menu (touch and hold) — a stuck-user
+                // remedy, not a discoverable feature yet.
                 if !otherDevices.isEmpty {
                     ForEach(otherDevices) { device in
-                        DeviceRow_iOS(
-                            device: device,
-                            isCurrent: false,
-                            onRemove: { deviceToUnlink = device; showingUnlinkConfirmation = true },
-                            onMakeSecondary: { makeDeviceSecondary(device) },
-                            onMakePrimary: { makeDevicePrimary(device) }
-                        )
+                        DeviceRow_iOS(device: device, isCurrent: false, onUnlink: {
+                            deviceToUnlink = UnlinkTarget(deviceId: device.deviceId, displayName: device.deviceName)
+                            showingUnlinkConfirmation = true
+                        })
                     }
                 }
 
                 // Devices the fast mirror knows about but this device's registry
-                // copy does not. Shown without unlink actions because there is no
-                // row to unlink — see UnsyncedDeviceRow.
+                // copy does not. The same unlink applies: `unlinkDevice` clears
+                // the mirror entries first and treats a row-less ID as success.
                 ForEach(otherDeviceReport?.mirrorOnly ?? []) { device in
-                    UnsyncedDeviceRow(device: device)
+                    UnsyncedDeviceRow(device: device, onUnlink: {
+                        deviceToUnlink = UnlinkTarget(
+                            deviceId: device.deviceId,
+                            displayName: device.deviceName
+                                ?? String(localized: "linked_devices_unsynced_device", defaultValue: "Unrecognized device")
+                        )
+                        showingUnlinkConfirmation = true
+                    })
                 }
             }
             
@@ -164,18 +167,21 @@ struct LinkedDevicesView_iOS: View {
         .confirmationDialog(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
             isPresented: $showingUnlinkConfirmation,
             presenting: deviceToUnlink
-        ) { (device: DeviceRegistration) in
+        ) { (target: UnlinkTarget) in
             Button(String(format: String(localized: "button_unlink_device_name",
                                          defaultValue: "Unlink %@"),
-                          device.deviceName), role: .destructive) {
+                          target.displayName), role: .destructive) {
                 Task {
-                    await unlinkDevice(device)
+                    await unlinkDevice(target)
                 }
             }
             Button(L10n.buttonCancel, role: .cancel) { }
-        } message: { (device: DeviceRegistration) in
-            Text(String(localized: "alert_device_lose_access",
-                        defaultValue: "This device will no longer have access to the wallet. It will need to re-import the recovery phrase to regain access."))
+        } message: { (target: UnlinkTarget) in
+            // Honest about what unlink does: it edits the device list, nothing
+            // more. A device that still runs Arké keeps its seed and registers
+            // itself again on its next launch.
+            Text(String(localized: "alert_unlink_device_explanation",
+                        defaultValue: "Removes this device from the wallet's device list. Use this for a device you no longer have. If it still runs Arké, it will reappear here on its own."))
         }
 
     }
@@ -222,13 +228,16 @@ struct LinkedDevicesView_iOS: View {
     
     // MARK: - Actions
     
-    private func unlinkDevice(_ device: DeviceRegistration) async {
+    private func unlinkDevice(_ target: UnlinkTarget) async {
         isUnlinking = true
         errorMessage = nil
-        
+
         do {
-            try await deviceService.unlinkDevice(device.deviceId)
-            
+            try await deviceService.unlinkDevice(target.deviceId)
+            // The mirror-only list comes from the merged report, not from
+            // `registeredDevices`, so it needs its own re-read
+            otherDeviceReport = try? await deviceService.currentOtherDeviceReport()
+
             // Provide haptic feedback
             await MainActor.run {
                 let generator = UINotificationFeedbackGenerator()
@@ -249,20 +258,6 @@ struct LinkedDevicesView_iOS: View {
         }
         
         isUnlinking = false
-    }
-    
-    private func makeDeviceSecondary(_ device: DeviceRegistration) {
-        // Show demotion sheet for current device only
-        if device.deviceId == currentDevice?.deviceId {
-            showDemoteSheet = true
-        }
-    }
-    
-    private func makeDevicePrimary(_ device: DeviceRegistration) {
-        // Show promotion sheet for current device only
-        if device.deviceId == currentDevice?.deviceId {
-            showPromoteSheet = true
-        }
     }
     
     private func reload() async {
@@ -296,15 +291,22 @@ struct LinkedDevicesView_iOS: View {
     }
 }
 
+/// What the unlink confirmation acts on. Covers both a registry row and a
+/// mirror-only entry, which have no common model type but the same remedy.
+private struct UnlinkTarget {
+    let deviceId: String
+    let displayName: String
+}
+
 // MARK: - Device Row
 
 struct DeviceRow_iOS: View {
     let device: DeviceRegistration
     let isCurrent: Bool
-    let onRemove: () -> Void
-    let onMakeSecondary: () -> Void
-    let onMakePrimary: () -> Void
-    
+    /// Offered in the row's context menu when non-nil. Nil for the current
+    /// device, which must not unlink itself here.
+    let onUnlink: (() -> Void)?
+
     var body: some View {
         HStack(spacing: 12) {
             // Platform icon
@@ -355,46 +357,22 @@ struct DeviceRow_iOS: View {
             }
             
             Spacer()
-            
-            /*
-            // Menu button
-            Menu {
-                if device.isPrimaryDevice {
-                    Button {
-                        onMakeSecondary()
-                    } label: {
-                        Label(String(localized: "settings_make_secondary", defaultValue: "Make Secondary"), systemImage: "arrow.down.circle")
-                    }
-                } else {
-                    Button {
-                        onMakePrimary()
-                    } label: {
-                        Label(String(localized: "settings_make_primary", defaultValue: "Make Primary"), systemImage: "arrow.up.circle")
-                    }
-                }
-                
-                if !isCurrent {
-                    Divider()
-                    
-                    Button(role: .destructive) {
-                        onRemove()
-                    } label: {
-                        Label(L10n.actionRemove, systemImage: "trash")
-                    }
-                }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 20))
-                    .foregroundColor(.secondary)
-                    .contentShape(Rectangle())
-            }
-            */
         }
         .padding(.vertical, 4)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(deviceAccessibilityLabel)
-        .accessibilityHint(String(localized: "accessibility_device_options_hint",
-                                  defaultValue: "Double tap to view options for this device"))
+        // Touch and hold. VoiceOver exposes the menu through the actions rotor,
+        // so no hint is needed and the old "double tap for options" one was
+        // untrue since the inline menu went away.
+        .contextMenu {
+            if let onUnlink {
+                Button(role: .destructive, action: onUnlink) {
+                    Label(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
+                          systemImage: "minus.circle")
+                }
+            }
+        }
     }
     
     private var deviceAccessibilityLabel: String {

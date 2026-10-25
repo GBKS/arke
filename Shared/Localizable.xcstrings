@@ -1161,7 +1161,7 @@
       }
     },
     "accessibility_device_options_hint" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4694,6 +4694,7 @@
       }
     },
     "alert_device_lose_access" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4773,6 +4774,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "匯出成功"
+          }
+        }
+      }
+    },
+    "alert_unlink_device_explanation" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entfernt dieses Gerät aus der Geräteliste des Wallets. Nutze dies für ein Gerät, das du nicht mehr hast. Wenn darauf noch Arké läuft, erscheint es hier von selbst wieder."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Removes this device from the wallet's device list. Use this for a device you no longer have. If it still runs Arké, it will reappear here on its own."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスをウォレットのデバイス一覧から削除します。もう手元にないデバイスに使ってください。そのデバイスでまだ Arké が動いている場合は、自動的にここに再表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將此裝置從錢包的裝置清單中移除。適用於你已不再擁有的裝置。如果該裝置仍在執行 Arké，它會自動再次出現在這裡。"
           }
         }
       }
@@ -27347,5 +27377,5 @@
       }
     }
   },
-  "version" : "1.1"
+  "version" : "1.3"
 }

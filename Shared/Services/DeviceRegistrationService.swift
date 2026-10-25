@@ -1423,7 +1423,8 @@ nonisolated struct OtherWalletDevice: Equatable, Identifiable, Sendable {
         /// Present only in the KVS mirror. Either the CloudKit row hasn't
         /// imported yet (seconds to never, when offline) or it never will,
         /// because the row was deleted without its mirror entry. `unlinkDevice`
-        /// cannot clear these: it throws `deviceNotFound` with no row to delete.
+        /// clears these too: the mirror is cleared before the row lookup and a
+        /// row-less ID with mirror entries removed counts as success.
         case kvsOnly
     }
 

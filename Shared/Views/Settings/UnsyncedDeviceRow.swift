@@ -15,14 +15,17 @@ import ArkeUI
 /// undiagnosable: Linked Devices read the registry and said "1 device" while the
 /// delete flow read the mirror and refused the full wipe, with nothing on screen
 /// to reconcile the two. An entry the user cannot see is an entry they cannot
-/// act on — and a mirror-only entry is precisely the kind that has no registry
-/// row for `unlinkDevice` to remove.
+/// act on. Since the 2026-10-16 ghost hardening `unlinkDevice` clears the
+/// mirror entries before looking for a row, so a mirror-only entry can be
+/// unlinked like any other device.
 ///
 /// Deliberately not a `DeviceRow`: there is no platform, no primary status and
 /// no heartbeat to show, and borrowing that row's shape would imply we know more
 /// than we do.
 struct UnsyncedDeviceRow: View {
     let device: OtherWalletDevice
+    /// Offered in the row's context menu (touch and hold) when non-nil.
+    var onUnlink: (() -> Void)? = nil
 
     var body: some View {
         Label {
@@ -39,7 +42,16 @@ struct UnsyncedDeviceRow: View {
                 .foregroundStyle(.orange)
                 .accessibilityHidden(true)
         }
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .contextMenu {
+            if let onUnlink {
+                Button(role: .destructive, action: onUnlink) {
+                    Label(String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
+                          systemImage: "minus.circle")
+                }
+            }
+        }
     }
 
     /// A mirror entry carries no name of its own. One is shown only when some
