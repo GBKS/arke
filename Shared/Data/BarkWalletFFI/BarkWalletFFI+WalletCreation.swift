@@ -523,6 +523,24 @@ extension BarkWalletFFI {
             self.cachedMnemonic = mnemonic
             secureWalletFilePermissions()
 
+            // Both import branches start from an empty BDK store: a seed-only
+            // import creates it, and a backup file carries only bark's
+            // `db.sqlite`, never the `bdk/` directory. bark's `sync` covers only
+            // the addresses this BDK instance has revealed, so a previous
+            // incarnation's onchain history (every receive and exit claim past
+            // index 0) stays invisible without one gap-limited full scan.
+            // Non-fatal — a failed scan leaves the Savings balance low, not the
+            // import broken; the next launch's sync does not repeat it, so the
+            // failure is logged for the export. (Bark 0.26 migration Phase 4,
+            // DECIDED 2026-10-25; backup branch added after the adversarial
+            // pass found the "BDK arrives with the backup" premise false.)
+            do {
+                let scannedSats = try await builtInWallet.initialScan(birthdayHeight: nil)
+                Self.logger.notice("Onchain initial scan after import: \(scannedSats) sats found (\(walletExists ? "backup file" : "seed only", privacy: .public))")
+            } catch {
+                Self.logger.error("Onchain initial scan after import failed: \(error.localizedDescription, privacy: .public)")
+            }
+
             // NOTE: Mnemonic storage is handled by WalletManager.importWalletWithBackup() to avoid duplication
             // WalletManager calls securityService.handleSeedImport() which saves the mnemonic
             // Only call storeMnemonic() here if NOT coming from WalletManager (e.g., direct import without backup)
