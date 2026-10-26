@@ -112,7 +112,7 @@ struct ImportWalletView_iOS: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text(String(localized: "backup_file_section_description", defaultValue: "Add your wallet backup file whenever you have one. It restores your complete wallet state, including payment history, notes and tags. Without it, your funds are rebuilt from the network and that history is lost."))
+                        Text(String(localized: "backup_file_section_description", defaultValue: "Recommended if you have one. It restores your payment history and anything still in progress. Without it, your funds are recovered from the network and the history starts fresh."))
                             .font(.system(.body))
                             .foregroundStyle(.white.opacity(0.8))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -141,12 +141,11 @@ struct ImportWalletView_iOS: View {
                                             .font(.footnote)
                                             .opacity(0.8)
                                     } else {
+                                        // No second line: the section description above
+                                        // already explains what the file adds.
                                         Text(String(localized: "button_select_backup_file", defaultValue: "Select Backup File"))
                                             .font(.subheadline)
                                             .fontWeight(.medium)
-                                        Text(String(localized: "backup_file_not_selected", defaultValue: "Recommended. Without it, this is an emergency recovery from the phrase alone."))
-                                            .font(.footnote)
-                                            .opacity(0.8)
                                     }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)

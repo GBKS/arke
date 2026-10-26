@@ -1685,11 +1685,12 @@ log).
 
 ### Localization
 
-- [ ] **Import screen: two keys changed meaning on 2026-10-26**
-  (`backup_file_section_description`, `backup_file_not_selected` — the
-  backup file is now "recommended", a phrase-only import "an emergency
-  recovery"); the de / ja / zh-Hant values still say "optional". Retranslate
-  through `Scripts/apply_translations.py` with the next batch.
+- [ ] **Import screen: `backup_file_section_description` changed meaning on
+  2026-10-26** (the backup file is now "recommended if you have one" and
+  restores payment history and in-progress activity, funds either way);
+  the de / ja / zh-Hant values still say "optional". The button's second
+  line (`backup_file_not_selected`) was removed. Retranslate through
+  `Scripts/apply_translations.py` with the next batch.
 - [ ] **Translation debt — 128 user-facing keys have no de or ja value,
   112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
   `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`

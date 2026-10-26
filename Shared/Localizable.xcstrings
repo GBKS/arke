@@ -5064,7 +5064,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Add your wallet backup file whenever you have one. It restores your complete wallet state, including payment history, notes and tags. Without it, your funds are rebuilt from the network and that history is lost."
+            "value" : "Recommended if you have one. It restores your payment history and anything still in progress. Without it, your funds are recovered from the network and the history starts fresh."
           }
         },
         "ja" : {

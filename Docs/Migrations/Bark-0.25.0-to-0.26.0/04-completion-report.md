@@ -125,12 +125,16 @@ Rework ledger: two rows, 2026-10-25.
 - **Import screen hardening** (Christoph's observation during the
   re-import): once "Import" is tapped, the back button, the phrase field
   and the backup-file button are disabled for the duration
-  (`ImportWalletView_iOS`, `isImporting`). Copy changed: the backup-file
-  section no longer reads "optional"; it is "recommended" and a
-  phrase-only import is described as an emergency recovery
-  (`backup_file_section_description`, `backup_file_not_selected` — source
-  values changed on existing keys, translations become stale and follow
-  the usual script). The users' procedure explains why they must still
+  (`ImportWalletView_iOS`, `isImporting`). Copy changed, second pass after
+  Christoph's review of the first wording: the section description reads
+  "Recommended if you have one. It restores your payment history and
+  anything still in progress. Without it, your funds are recovered from
+  the network and the history starts fresh." — no claim about notes and
+  tags, which live in the metadata export. The button's second line was
+  removed as a repeat of the description; its key
+  (`backup_file_not_selected`) is unreferenced and goes when a build
+  re-extracts the catalog. The description's translations are stale (Tier
+  3 Localization line). The users' procedure explains why they must still
   leave the backup out.
 - **Feedback asks 21–23** (§2.8): already-known check before chain
   validation, skip recovery-stored arkoor messages on the first sync,
