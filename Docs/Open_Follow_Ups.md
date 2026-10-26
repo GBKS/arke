@@ -198,6 +198,19 @@ Christoph is in Lugano; Device is his first home stretch with both phones
 afterwards, and the Lugano soak's findings are read into the picks before
 Build closes. Picks, one cluster per session, in order:
 
+0. **Bindings bump v0.26.0 (bark 0.8.0), Track A — the recovery release**
+   (pre-empted to the front 2026-10-25 when Second cut the release; two
+   mainnet users with diverged wallets re-import on it). Built 2026-10-25:
+   compile fixes, balance totals with `needsRefreshSat`, `vtxoSwept` folded
+   into cancelled, bark logger kept public, onchain `initialScan` after
+   import; adversarial pass done, two findings fixed (ledger). Plan, device
+   scenarios 1–6 and the users' procedure:
+   `Migrations/Bark-0.25.0-to-0.26.0/`. Christoph next: pin the package to
+   the tag, deploy the CloudKit schema (four new `ArkBalanceModel` fields) to
+   Production, build 26, scenarios, TestFlight, procedure to the users.
+   Track B (nine items) filed under Tier 4 "Bindings adoption" as the
+   follow-on cluster. Soak of Train 1 closed 2026-10-25 on Christoph's
+   return; its minor findings he records separately.
 1. **Train 1 leftovers, Tier 0** — deletion residual (four unprotected store
    writes; exit Live Activity on demotion + dead `closeWallet()`, DECIDED;
    abort-after-Step-1 reorder, PROPOSED fix needs a ruling) and the
@@ -218,8 +231,9 @@ Build closes. Picks, one cluster per session, in order:
 6. **Ops, Christoph's hands** — rotate `RELAY_API_TOKEN` and move it out of
    the tree; pin `bark-ffi-bindings` and BIP39 in Xcode.
 
-Pre-emption: a bindings release from Second with the recovery fixes goes
-to the front and displaces 5 and 4 in that order. Deferred to Train 3 with
+Pre-emption: happened 2026-10-25 (cluster 0 above); 5 and 4 move back one
+slot each, and 4 is rewritten first (its premises changed at bark 0.8.0,
+see the Tier 1 Exits entry). Deferred to Train 3 with
 reasons: the three send proposals (design-heavy; the detector fix rides
 with 3), claimed-exit funds and backup binding (design first),
 `checkReadOnlyMode` (after the self-unlink run on this train's device day),
@@ -605,7 +619,10 @@ needs a ruling or a sentence of reasoning before it can become work.
   `TransactionService.processSingleMovement` (`:185-200`), which the daemon
   stream drives from `WalletNotificationService.swift:268,285`. Only the two
   crash-proven sites were wrapped.
-- [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** (surfaced
+- [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** — upstream
+  fix `f85ca92ac` ships in bark 0.8.0 (bindings v0.26.0, built 2026-10-25),
+  so this becomes a Tier 2 verification once build 26 is on a phone: a
+  board refused after signing leaves the onchain wallet untouched (surfaced
   by the 2026-10-05 Second server incident: an attacker registered boards
   with only his own signatures via `BoardBuilder::new_from_vtxo`, a lib
   function only the server's register-board handler calls, so our client
@@ -765,7 +782,15 @@ needs a ruling or a sentence of reasoning before it can become work.
 - [ ] **Replace the hand-rolled exit cost estimate with
   `estimateEmergencyExitFee`** (DECIDED 2026-10-19 as a Train 2 Tier 1
   item, Christoph: "do it"; supersedes the Tier 3 "exit pre-flight" line,
-  which was an addition — this is a replacement). Today
+  which was an addition — this is a replacement). **Premises changed at
+  bark 0.8.0 (bindings v0.26.0, 2026-10-25): `fundable` is deprecated and
+  no longer computed from confirmed coins, the estimate never syncs or reads
+  the onchain wallet, `exitBroadcastFeeSats` already includes a `feeMargin`
+  (default 1.2). Rewrite the build steps below per
+  `Migrations/Bark-0.25.0-to-0.26.0/01-api-changes.md` §1.4 before
+  building: compare `exitBroadcastFeeSats` against the confirmed onchain
+  balance in the app; the "unconfirmed funds pass our check" argument is
+  moot.** The 0.7.1 description follows for the record. Today
   `ExitView_iOS.calculateExitCost` (`:285-358`) prices a forced move
   itself: no tree-tx deduplication, guessed depth 1–3, a 1.5–2.0× CPFP
   multiplier, a 10–15 % margin, three scenarios rendered as a range by
@@ -808,6 +833,21 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 (The metadata-import name-merge item moved to Tier 0 on 2026-10-09.)
 
+- [ ] **Metadata import keys per-payment notes and tags by `movement_<id>`,
+  which restarts from 1 after a seed import** — `MetadataImportService.apply`
+  matches `transactionsByTxid` by string equality and Ark rows carry
+  `"movement_\(id)"` as their txid. An old export imported after new
+  payments misfiles notes onto other rows; nothing in the export survives a
+  re-import for Ark payments. Needs a stable key (VTXO ids or funding txid).
+  Found by the 0.26 user-outcome trace (`Migrations/Bark-0.25.0-to-0.26.0/03-impact-analysis.md` §3b).
+- [ ] **Savings funds invisible after a launch-time iCloud restore** —
+  `BarkWalletFFI.restoreWalletFromBackup` (and `importWalletWithBackup`'s
+  restore) copy only `db.sqlite`; the BDK store under `bdk/` starts empty
+  and bark's `sync` covers revealed addresses only, so onchain history past
+  index 0 never appears. The import paths run `OnchainWallet.initialScan`
+  since 2026-10-25 (0.26 Track A); the launch-time restore does not yet.
+  Same class as feedback ask 7c. Rework ledger 2026-10-25.
+
 - [ ] **The transaction upsert deletes duplicate `PersistentTransaction`
   rows itself** (`TransactionService+Upsert.swift`,
   `buildExistingTransactionDictionary`: `modelContext.delete` + save on a
@@ -845,6 +885,26 @@ needs a ruling or a sentence of reasoning before it can become work.
   code-review 2026-10-21; key the fetch on `persistentModelID`.
 
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
+
+- [ ] **CloudKit Production schema was never deployed — no TestFlight build
+  has ever synced a SwiftData row** (found 2026-10-26 in the CloudKit
+  Console while preparing build 26: Production holds only Apple's `Users`
+  type, Development has every `CD_` type; builds run from Xcode use
+  Development, where types are created on first use, TestFlight and App
+  Store builds use Production, which never auto-creates). Consequences:
+  on TestFlight builds, secondary read-only data, tag / contact / note sync,
+  `DeviceRegistration` rows, `BackupStatus` and the balance mirror never
+  left the device; the iCloud KVS registration mirror, the wallet hash and
+  the iCloud Drive backup are unaffected. Remedy: Christoph deploys the
+  schema once (Deploy Schema Changes… in the Console) — then existing
+  TestFlight installs upload their local stores on the next launch; watch
+  for duplicate default tags / contacts where two of Christoph's own
+  TestFlight devices merge (singleton rows already read `lastUpdated desc`).
+  Process fix: `Development/Release_Train.md` Release stage now requires a
+  Debug run + schema deploy after any `@Model` change. (Not the cause of the
+  Tier 1 "secondary's balance" entry: there tags and activity did sync, so
+  that was an Xcode build.) The Tier 2 two-device checklist needs one run
+  on a TestFlight build after the deploy.
 
 Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 2026-09-24; full S7, S5 and the security-check matrix await decisions above.
@@ -1342,6 +1402,10 @@ log).
 
 - [ ] **Activity rows are dated by when the wallet processed the movement,
   not when it happened** (Christoph, 2026-10-19; Train 1 cosmetic pass).
+  Related, not a fix: bark 0.8.0 (#2610, feedback ask 11) stops finished
+  exits from re-stamping `completed_at` on every sync, which removes one
+  cause of old cancelled exits floating to the top; the date-freeze
+  workaround in the upsert can go once a build-26 export shows no churn.
   Traced: the row date is `parseDate(movement.completedAt ?? movement.createdAt)`
   (`TransactionService+Parsing.swift:320`), and bark's `MovementTimestamp`
   (`bark/src/movement/mod.rs:326-334`) has only `created_at`, `updated_at`,
@@ -1479,9 +1543,12 @@ log).
 - [ ] **Adopt `cancelExit` from bindings v0.18.0**: the escape hatch for
   fee-blocked exits. Prerequisites: Live Activity `ExitState` lacks terminal
   `canceled`/`vtxoAlreadySpent`; verify the date-freeze workaround covers
-  explicit cancels (feedback §1.4); check whether bark purges cancelled exits
-  from `getExitVtxos()` like claimed ones (snapshot into
-  `PersistentExitCache` if so). Notes in `Bark_Bindings_Unadopted_API.md`
+  explicit cancels (feedback §1.4); purge question answered at bark 0.8.0
+  (2026-10-25): `cancel_exit` keeps the cancelled row on disk "for
+  auditing", `listFinishedExits` enumerates it, and `getExitVtxos()` drops
+  finished exits only at load, so a cancelled exit stays listed until the
+  next launch — `ExitVtxo.isCancelled` now treats `.canceled` and
+  `.vtxoSwept` as terminal. Notes in `Bark_Bindings_Unadopted_API.md`
   §1.1. Folds in the Reminders question "review exit cancellation — only
   until the first transaction is committed?".
 - [ ] **Exit UX pass** (Reminders): completed exit did not show the status
@@ -1521,7 +1588,12 @@ log).
   (`ProcessInfo.processInfo.isiOSAppOnMac` → "Mac (iPhone app)", Mac icon)
   and add the identifier to the map. Such a row counts as a live device for
   the deletion strategy and the forfeit-warning copy until it is unlinked.
-- [ ] **Delete wallet with an exit in flight shows no funds warning** (from
+- [ ] **Delete wallet with an exit in flight shows no funds warning** — also
+  no warning for an open Lightning invoice (its preimage lives only in the
+  deleted database; a paid-in HTLC times out to the payer) or a pending
+  board (not recoverable by the app); the 0.26 user procedure tells users
+  to wait these out (`Migrations/Bark-0.25.0-to-0.26.0/03-impact-analysis.md`
+  §3b, 2026-10-25) (from
   the 2026-10-13 forfeit-warning review, PLAUSIBLE; Tier 3 confirmed by
   Christoph 2026-10-14, no field case): the old generic box
   fired on the grand total, which included `pendingExitSat`; the forfeit box
@@ -1613,6 +1685,11 @@ log).
 
 ### Localization
 
+- [ ] **Import screen: two keys changed meaning on 2026-10-26**
+  (`backup_file_section_description`, `backup_file_not_selected` — the
+  backup file is now "recommended", a phrase-only import "an emergency
+  recovery"); the de / ja / zh-Hant values still say "optional". Retranslate
+  through `Scripts/apply_translations.py` with the next batch.
 - [ ] **Translation debt — 128 user-facing keys have no de or ja value,
   112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
   `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`
@@ -1775,29 +1852,45 @@ survivors.)
 ### Bindings adoption
 
 `Bark_Bindings_Unadopted_API.md` records the unadopted surface (baseline
-v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
+v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 - [ ] **Keep the unadopted-API record current on every bindings bump**.
-- [ ] **Next bump: take the post-incident bark client fixes — now a funds
-  path, front of Train 2** (upstream master as of 2026-10-08, no tag past
-  `bark-0.7.1` / `server-0.7.1` yet; depends on Second cutting a bindings
-  release). A mainnet user is waiting on it: Second's remedy for the Tier 0
-  divergence incident is recovery from seed, and every client-side recovery
-  fix is newer than the bark 0.7.1 our bindings carry — `f83de1901`
-  (2026-09-14, recovery reader stopped paging on pages without vtxo ids),
-  `d9e305d0e` (09-17, recover from both mailboxes and ask the server per
-  vtxo), the `fix-recovery-bug` merge `1ea9116ae` (09-21), `e9e78ad33`
-  (10-08, read the mailboxes to the end). Also: `f85ca92ac` failed boards
-  kept out of the onchain wallet (Tier 0 item), `48b005f10` lib board
-  funding-output check (server-only path, harmless for us), `244e3981f`
-  `GetVtxosByIds` rpc, and upstream master's `Balance.needs_refresh` split.
-  Watch for a `bindings` release that pins a bark with these; re-run the
-  migration checklist, update `Bark_Bindings_Unadopted_API.md`, then tell
-  the user to recover.
-- [ ] **`initialScanOnchain(birthdayHeight:)` on import** — recovers onchain
-  history from a previous incarnation of the seed; `sync()` never finds it.
-  Needs a "scanning" import UI state + on-device verify. (Relates to the
-  Tier 0 claimed-exit-funds item.)
+- [ ] **Bindings v0.26.0 (bark 0.8.0) — ship Track A to the two stuck
+  users** (the former "Next bump" entry; the release carries every recovery
+  fix it waited for, verified as ancestors of `bark-0.8.0`). Built
+  2026-10-25 as Train 2 cluster 0 (`Migrations/Bark-0.25.0-to-0.26.0/`).
+  Closes when build 26 has passed device scenarios 2 and 3 and the written
+  procedure has gone to the users; the "scanning" import UI state is Tier 3.
+- [ ] **0.26 Track B — `vtxoSwept` as its own domain case**: `ParsedExitState`
+  gains it (`spentInputs`, label "Swept by server", icon, detail rows,
+  legacy-string parse, reverse mapping, Live Activity), delete the Track A
+  pin test `testVtxoSweptFoldsIntoAlreadySpent`. Until then swept exits are
+  persisted as already-spent (lossy, documented). Plan §Track B 1.
+- [ ] **0.26 Track B — claim link from `ExitClaimTransaction.vtxoIds`**,
+  `skippedVtxoIds` logged and shown as blocked; `ExitClaimSequenceTests`
+  cases; protocol doc comment (binding: "Link the claim transaction to
+  these, not to the ids you asked for"). Replaces the 0.25 included-ids gap
+  entry (answered upstream, ask 19). Plan §Track B 2.
+- [ ] **0.26 Track B — movement ids from sends into `PendingPaymentMetadata`**
+  (`sendArkoorPayment` → `UInt32`, `OffboardResult.movementId`,
+  `LightningSend.movementId`): feedback ask 3's "deletes the heuristic
+  matching subsystem". Own plan in `Features/Send_Metadata.md` first. Plan
+  §Track B 3.
+- [ ] **0.26 Track B — protocol mirroring and startup adoptions**:
+  `retryForSecs` on the four `pay*` methods (nil until a policy exists);
+  `walletExists(datadir:)` / `readDatadirInfo` for the existence probes
+  (throws on a corrupt db — design the error path; Launch_Sequence_Contract
+  rule 3 successor); `listFinishedExits` / `listAllExits` as the completed
+  exits source with `PersistentExitCache` demoted to a display cache. Plan
+  §Track B 5–7.
+- [ ] **0.26 Track B — one-paragraph proposals in the unadopted doc** for
+  `balanceSummary()`, `debugInfo()` (support screen), `bip321Uri` (one
+  receive QR), `parsePaymentRequest` / `sendPayment` against the send
+  flow's branching, `decodeBolt11Invoice` (invoice preview). Plan §Track B 8.
+- [ ] **0.26 Track B — `Refresh_Deduplication.md` premises re-read against
+  bark 0.8.0 #2443** (inputs lock at attempt start, not registration;
+  participations shrink or re-delegate on sync) with device scenario 1's
+  evidence attached. Plan §Track B 9.
 - [ ] **`recoveryStatus()` adoption** — distinguishes recovery-failed from
   never-ran; at minimum log `.failed(message:)` where the import path reads
   `recoveryReport()` (`BarkWalletFFI+WalletCreation.swift:572`).
@@ -1808,9 +1901,6 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   `WalletManager.importVtxo` has zero callers) and **protocol mirroring of
   `importVtxo(args:)` / `recoverVtxos(gapLimit:)`** when a caller needs a
   non-default.
-- [ ] **0.25: `ExitClaimTransaction` included-ids gap** — skips unclaimable
-  ids silently, so `recordClaim` links every *requested* id. Asked upstream
-  (feedback §1.3 addendum); no app workaround planned.
 - [ ] **BDK fee estimator removal, Phase 3** — blocked until bark exposes
   onchain estimate/drain fee APIs; then drop `bdk-swift`.
 - [ ] **`refreshVtxosScheduled(vtxoIds:scheduledHeight:)`** — DECIDED
@@ -1876,7 +1966,12 @@ v0.25.0 / bark 0.7.1). Migration guides in `Migrations/`.
   sync on every refresh" (DECIDED, Train 1); what stays here is the
   one-onchain-sync-per-refresh restructuring and the "Ark-fresh ends the
   wave" revisit.
-- [ ] **Explicit daemon start is redundant and logs a bark error**: bark
+- [ ] **Explicit daemon start is redundant and logs a bark error** (B6
+  re-verified at bark 0.8.0, 2026-10-25: `Wallet::open` calls
+  `start_daemon()` when `WalletOpenArgs.run_daemon` is set, and the Swift
+  `WalletOpenArgs` has had `runDaemon: Bool = true` all along — so the fix is
+  either dropping the launch `runDaemon()` call or opening with
+  `runDaemon: false` where the app wants to own the start): bark
   0.7.1's `Wallet::open` starts the daemon itself (`Starting daemon for
   wallet …` is logged before `Existing wallet opened successfully` on every
   launch, 2026-10-14), so `initializePrimaryMode`'s `runDaemon()` call

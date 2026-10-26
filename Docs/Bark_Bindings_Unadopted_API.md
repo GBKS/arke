@@ -5,9 +5,11 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.25.0** (bark **v0.7.1**), pinned to
-`master` @ `157b0fc`. Compared against `Shared/Data/BarkWalletProtocol.swift`
-and actual `BarkWalletFFI` usage on 2026-09-26.
+**Baseline:** bark-ffi-bindings **v0.26.0** (bark **v0.8.0**), tag
+`v0.26.0+bark-0.8.0` @ `ada76c3` (branch `master` in `Package.resolved`
+until Christoph pins it in Xcode). Compared against
+`Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage on
+2026-10-25.
 
 **Maintenance:** on every bindings bump, diff the new `WalletProtocol` in the
 package checkout against the previous version (the DerivedData checkout at
@@ -18,6 +20,98 @@ it to the Adopted-since list at the bottom with the date. Sibling doc:
 *we* haven't used yet).
 
 ---
+
+## New in v0.26.0 (bark v0.8.0)
+
+Theme: "tell the client what happened" — movement ids from sends, which
+ids a claim contains, a terminal exit state with a cause, a balance split
+that stops counting expired VTXOs as spendable, and one parser plus one
+sender for every payment string. Full diff, repo impact and the two-track
+plan in `Migrations/Bark-0.25.0-to-0.26.0/`. Adopted at the bump (Track A,
+2026-10-25): the `Balance` fields (data only), the `OffboardResult` /
+`sendArkoorPayment` return values (logged only), `vtxoSwept` (folded into
+cancelled), `OnchainWallet.initialScan` after import, the logger's
+`redactMessages:` flag. Everything below is **unadopted**; the backlog
+entry each serves is named.
+
+### `ExitClaimTransaction.vtxoIds` / `skippedVtxoIds` — which ids the claim PSBT contains
+
+Our own ask 19. `ExitClaimSequence.run` still links the *requested* ids
+(`recordClaim`). Backlog: Tier 4 "0.26 Track B — claim link".
+
+### Movement ids: `sendArkoorPayment -> UInt32`, `OffboardResult.movementId`, `LightningSend.movementId`
+
+Our own ask 3. Today the app matches a sent payment to its movement by
+destination, amount and time (`PendingPaymentMetadata`). Backlog: Tier 4
+"0.26 Track B — movement ids".
+
+### `pay*(… retryForSecs: UInt64?)` and `sendPayment(… retryForSecs:)`
+
+`nil` leaves the retry window to the server, `0` is a single attempt,
+anything else is capped at the server maximum. The class defaults to `nil`,
+so the protocol does not mirror it yet. Backlog: Tier 4 "0.26 Track B —
+protocol mirroring".
+
+### `parsePaymentRequest(payment:) -> PaymentRequest`, `sendPayment(method:…) -> PaymentResult`, `estimatePaymentFee(method:amountSats:)`
+
+One parser for BIP 321, `lightning:` URIs, BOLT11/12, Lightning addresses,
+LNURL, Ark and bitcoin addresses, hex scripts; per-option `errors` and
+`requiresAmount`; checking an Ark address needs a server connection. Could
+replace `AddressValidator.parsePaymentRequest` and the send flow's
+branching. Backlog: Tier 4 "0.26 Track B — proposals".
+
+### `balanceSummary() -> BalanceSummary`
+
+`spendableSats`, `needsRefreshSats`, `pendingSats`, `totalSats` — the four
+numbers the app now computes itself in `ArkBalanceResponse`. Adopting it
+would delete the two parallel total computations. Same backlog entry.
+
+### `bip321Uri(options:) -> Bip321Uri`
+
+One receive QR combining Ark address, BOLT11 invoice and onchain address.
+Same backlog entry.
+
+### `debugInfo() -> DebugInfo`
+
+Network, mailbox id, VTXO xpub — what Second asks for in a support thread
+(the mailbox id is already in X-Ray). Same backlog entry.
+
+### `listLiveExits` / `listFinishedExits` / `listAllExits(includeHistory:includeTransactions:)`
+
+Our own ask 12. Finished exits are enumerable; `getExitVtxos()` stays live
+only across launches (it drops finished exits at load, not mid-session).
+`PersistentExitCache` becomes a display cache once the completed-exits
+section reads `listFinishedExits`. Backlog: Tier 4 "0.26 Track B —
+protocol mirroring".
+
+### `walletExists(datadir:)`, `readDatadirInfo(datadir:)` (global)
+
+Our own ask 6. Read-only, no side effects; `walletExists` **throws** on an
+unreadable database so a corrupt wallet is never mistaken for an absent
+one — the error path needs a design before it replaces the file probes
+(Launch_Sequence_Contract rule 3). Same backlog entry.
+
+### `decodeBolt11Invoice(invoice:) -> Bolt11InvoiceDetails` (global)
+
+Decode only; no network or expiry check. Invoice preview before paying.
+Backlog: "0.26 Track B — proposals".
+
+### `ExitTransactionStatus.transactions: [ExitTransactionPackage]`
+
+Exit tx and its CPFP child with origin and fee rate, when
+`includeTransactions` is set. The app reads `transactionCount` and the
+`.processing` payload; the cache reconstructs statuses with `[]`. No
+backlog entry; revisit with the exit detail view.
+
+### `clearLogger()` (global)
+
+Turns bark logging off; `setLogger` now replaces instead of throwing. Not
+needed: the app attaches once per process.
+
+### Deliberately not used: `estimateEmergencyExitFee … feeMargin:` default, `fundable`
+
+`feeMargin: nil` means bark's 1.2; `fundable` is deprecated upstream and
+must not be read. The Tier 1 Exits entry owns the adoption.
 
 ## New in v0.25.0 (bark v0.7.1)
 
@@ -306,3 +400,18 @@ the FFI, policy lives in `WalletManager`).
   `ExitClaimWallet`; always `drainAll: false` (see v0.25 section above).
 - **`LightningReceive.amountSats: UInt64?`** — 2026-09-26; no UI surface
   today (debug reads only), fixtures updated.
+- **`Balance.needsRefreshSats` / `claimableLightningReceiveSats` /
+  `pendingArkoorSendSats` / `pendingOffboardSats`** — 2026-10-25, v0.26
+  bump: mapped into `ArkBalanceResponse` and `ArkBalanceModel`; the Ark
+  total is bark's `Balance::total` and the balance card's Pending figure is
+  `heldSat` (pending + needs-refresh). Pinned by `ArkBalanceTotalsTests`.
+- **`OnchainWallet.initialScan(birthdayHeight:)`** — 2026-10-25, v0.26 bump,
+  internal to `BarkWalletFFI.importWallet` on both import branches (seed
+  only and backup file); non-fatal, logged. The launch-time iCloud restore
+  path does not run it yet (Tier 1 Data safety).
+- **`barkAttachOSLogger(… redactMessages: false)`** — 2026-10-25: keeps
+  bark's lines in clear in device exports; the v0.26 default is `.private`.
+- **`ExitState.vtxoSwept`** — 2026-10-25, folded into `.vtxoAlreadySpent`
+  (lossy); own domain case is Track B.
+- **Movement ids from `sendArkoorPayment` / `OffboardResult`** —
+  2026-10-25, logged only; linking is Track B.

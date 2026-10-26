@@ -534,6 +534,26 @@ in all shutdown paths. Deferred adoption (see plan §2.2-2.4, §Phase 3):
   done 2026-09-17 as a catch-up section during the 0.24 bump (baseline now
   v0.24.0).
 
+## Bark 0.26 Migration (Track A built 2026-10-25; device + TestFlight pending)
+Guiding docs: `Migrations/Bark-0.25.0-to-0.26.0/`. Built: 21 compile fixes,
+`vtxoSwept` folded into cancelled (`isCancelled` now covers `.canceled` and
+`.vtxoSwept`), four new balance fields with bark's total and the card's
+`heldSat`, bark logger `redactMessages: false`, `OnchainWallet.initialScan`
+after both import branches; `ArkBalanceTotalsTests` (6) and the swept pin
+test; adversarial pass with two confirmed findings fixed (ledger
+2026-10-25). The open release entry stays under Tier 4 "Bindings adoption"
+until the device scenarios and the users' procedure are done. Closed here:
+
+- [x] **0.25: `ExitClaimTransaction` included-ids gap** — answered upstream
+  in v0.26.0 (`vtxoIds` / `skippedVtxoIds`, feedback ask 19) on 2026-10-25;
+  the app-side adoption is the Tier 4 "0.26 Track B — claim link" entry.
+- [x] **`initialScanOnchain(birthdayHeight:)` on import** — adopted
+  2026-10-25 in `BarkWalletFFI.importWallet` for the seed-only and the
+  backup-file branch (no UI state; the import view already blocks on the
+  scan). Remaining halves filed separately: the launch-time iCloud restore
+  path (Tier 1 Data safety) and a "scanning" import state (Tier 3).
+
+
 ## Bark 0.25 Migration (shipped 2026-09-26)
 Guiding docs: `Migrations/Bark-0.24.0-to-0.25.0/`. Shipped: `drainAll`
 plumbing (always `false`; empty-ids guard in `ExitClaimSequence`),

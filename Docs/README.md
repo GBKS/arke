@@ -29,7 +29,7 @@ Welcome to the project documentation. It is organized to help you understand the
 - [Relay Registration API](API/Relay_Registration_API.md) — the push relay contract (`/v1/register`)
 - [Bark Bindings Unadopted API](Bark_Bindings_Unadopted_API.md) — binding surface the app has not adopted yet; roadmap inspiration
 - [Bark Bindings Feedback](Bark_Bindings_Feedback.md) — issues and asks for the upstream bark developers
-- [Migrations/](Migrations/) — one folder per bindings bump (`README`, `01-api-changes`, `02-migration-plan`, `04-completion-report`), from 0.6.3 through 0.25.0
+- [Migrations/](Migrations/) — one folder per bindings bump (`README`, `01-api-changes`, `02-migration-plan`, `04-completion-report`; the 0.26 folder adds a `03-impact-analysis`), from 0.6.3 through 0.26.0
 - [Bark Movements](Movements/Bark_Movements.md), [Movement Onchain Linking](Movements/Movement_Onchain_Linking.md)
 
 ## Features

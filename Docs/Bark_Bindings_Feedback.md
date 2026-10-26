@@ -556,6 +556,42 @@ cancelling a `NonInteractivePending` participation; (c) ship/backport the
 re-delegation self-heal so a replaced participation doesn't strand local
 pending state.
 
+### 2.8 The first sync after a seed recovery re-walks and re-validates the whole mailbox, twice
+
+Observed 2026-10-25 on a mainnet wallet re-imported on bark 0.8.0
+(bindings v0.26.0): recovery itself was fast and complete — the xpub
+lookup returned 631 VTXOs, 77 recovered as spendable, 666 stored as spent,
+0 failed. The first regular sync afterwards then spent many minutes
+replaying roughly 740 historical mailbox messages, and the export showed
+each message processed twice plus 229 "Error storing mailbox checkpoint:
+Checkpoint not advanced - another thread may have a higher value". Three
+causes, all read in the `bark-0.8.0` source:
+
+1. **Chain validation runs before the already-known check.** In
+   `bark/src/mailbox.rs` an arkoor package's VTXOs go through
+   `validate_vtxo` (an esplora fetch of the anchor tx), the receive policy
+   and the ownership check before the deduplication step logs "Ignoring
+   already-known VTXO". After a recovery every historical VTXO is already
+   known, so every one costs a network round trip for nothing.
+2. **Recovery stores no mailbox checkpoint** (`bark/src/recovery.rs`: "The
+   paging cursor is never persisted … the wallet syncs from its own stored
+   checkpoint afterwards"), so the regular sync starts from zero and
+   replays the full history that recovery just read.
+3. **Concurrent mailbox syncs each process every message.** The daemon's
+   sync and an explicit `Wallet::sync` both stream from the stored
+   checkpoint; the per-message processing lock serializes them but does
+   not deduplicate, so each message is handled twice and the loser of each
+   checkpoint store logs the error above. (Our side adds the second walker
+   by calling `sync()` while the daemon already runs one; we are fixing
+   that.)
+
+**Ask:** (a) check `get_wallet_vtxo` before validating a received arkoor
+VTXO; (b) let recovery skip, on the first regular sync, the arkoor
+messages whose VTXOs it already stored — rather than persisting the
+checkpoint, since round and Lightning messages may still need replaying;
+(c) make `sync_mailbox` single-flight, so a second caller waits for the
+running pass instead of starting its own.
+
 ## Priority 3 — ergonomics and polish
 
 **Lightning**
@@ -702,23 +738,26 @@ pattern we're asking you to extend everywhere:
 |---|---|---|
 | 1 | Typed exit states (and `ExitTx` statuses) | 540-line Debug-string parser + its test suite |
 | 2 | Typed errors / stable error codes; rename `Error` | All substring-based error classification |
-| 3 | Movement id (or metadata key) returned from sends | Heuristic payment-matching subsystem |
+| 3 | ~~Movement id (or metadata key) returned from sends~~ ✅ shipped in bark 0.8.0 / bindings v0.26.0 (`sendArkoorPayment -> UInt32`, `OffboardResult.movementId`, `LightningSend.movementId`); adoption is our Track B | Heuristic payment-matching subsystem |
 | 4 | Events: exit/round/lightning/connection/tip | 4 standing timers + 2 ad-hoc poll loops |
 | 5 | `wallet.close()` with deterministic resource release | Three 500 ms shutdown sleeps (a race) |
-| 6 | `walletExists()` / datadir info | Filename probing (data-loss near-miss in 0.11) |
+| 6 | ~~`walletExists()` / datadir info~~ ✅ shipped in v0.26.0 (`walletExists(datadir:)`, `readDatadirInfo(datadir:)`, read-only, throws on a corrupt db); adoption is our Track B | Filename probing (data-loss near-miss in 0.11) |
 | 7 | ~~`OnchainWallet.listTransactions()`~~ ✅ shipped as `transactions()` (0.6.1) — remaining: block time on `BlockRef` | History side of the parallel BDK wallet (migrated 2026-08-13) |
 | 7b | `OnchainWallet` estimate/drain preview (§2.5b) | The rest of the parallel BDK wallet (fee estimation) |
 | 7c | Onchain rescan API with configurable stop gap; next-unused `address()` variant (§2.6) | Invisible-funds hole after seed import (verified: 8,839 sats) |
-| 8 | `paymentHash` on `LightningSend`; `failed` status case | Client-side BOLT11 parsing; poll-timeout guessing |
+| 8 | `paymentHash` on `LightningSend` ✅ shipped in v0.26.0; `failed` status case still open | Client-side BOLT11 parsing; poll-timeout guessing |
 | 9 | Richer `RoundState`; enum `Vtxo`/`Movement` fields | Guesswork UI and undocumented string matching |
 | 10 | Upstream migration notes per release | Hand-written binding-diff docs |
-| 11 | Stop re-finishing cancelled exit movements (`completed_at` churn) | Date-freeze workaround in transaction upsert |
-| 12 | Keep completed exits queryable (or an exit-history API) | Drain-time status snapshots + claim-tx capture window |
+| 11 | ~~Stop re-finishing cancelled exit movements (`completed_at` churn)~~ ✅ shipped in bark 0.8.0 (#2610); workaround removal pending a build-26 export | Date-freeze workaround in transaction upsert |
+| 12 | ~~Keep completed exits queryable (or an exit-history API)~~ ✅ shipped in v0.26.0 (`listFinishedExits` / `listAllExits`; `getExitVtxos` documented live-only, finished exits dropped at load); adoption is our Track B | Drain-time status snapshots + claim-tx capture window |
 | 13 | Recovery-mailbox reader via FFI (or auto-processing in `sync()`) | Any need for client-side VTXO backup |
 | 14 | Terminal failure + abandon API for rounds that fail validation | Nothing yet — the affected funds are simply stuck |
 | 15 | Recovery scan: run whenever never-completed, explicit outcome, retried connect, public re-scan | Wipe-and-reopen retry loop in wallet import |
 | 16 | Expired-VTXO semantics: exit viability, re-issue policy, explicit state | Users seeing "spendable" balance they can't move |
-| 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) | Silent, inexplicable balance shrinkage after seed import |
+| 17 | Spent-reason on recovery/VTXO state (`sweptAtExpiry` etc., §1.9) — partly: v0.26.0 adds `ExitState.vtxoSwept(spentInputs:)` and `ExitError::VtxoSwept` for exits; the recovery-mailbox spent reason is still open | Silent, inexplicable balance shrinkage after seed import |
 | 18 | Delegated refresh: selection excludes live participations; cancel for `NonInteractivePending`; re-delegation self-heal (§2.7) | Guard C exclusion + near-expiry safety valve in `RefreshExclusion` |
-| 19 | `ExitClaimTransaction.vtxoIds` / `skippedVtxoIds` — which ids the claim PSBT actually contains (§1.3 addendum) | Claim links recorded for VTXOs bark skipped |
+| 19 | ~~`ExitClaimTransaction.vtxoIds` / `skippedVtxoIds` — which ids the claim PSBT actually contains (§1.3 addendum)~~ ✅ shipped in v0.26.0, one release after the ask; adoption is our Track B | Claim links recorded for VTXOs bark skipped |
 | 20 | Mailbox checkpoint time on received movements (`received_at`, §1.10) | Activity rows dated by when the phone synced, not when the payment arrived |
+| 21 | Check already-known before validating a received arkoor VTXO (§2.8) | Minutes of per-message chain fetches on the first sync after recovery |
+| 22 | First sync after recovery skips the arkoor messages recovery already stored (§2.8) | The full-history replay after every seed import |
+| 23 | Single-flight `sync_mailbox` (§2.8) | Doubled mailbox work and the "Checkpoint not advanced" error storm |

@@ -270,15 +270,39 @@ contract and link it here.
 **Bark facts (class 4).** Verified at the bindings tag named; re-verify on
 every bump (the migration guides in `../Migrations/` are where that happens).
 - B1. The seed-recovery scan runs only on the creating `open`
-  (`created_now`); `initWallet` first disables it forever (bark 0.7.x).
-- B2. Claimed exits are purged from `getExitVtxos()`; snapshot at drain
-  time (`PersistentExitCache`). Cancelled exits: unknown — open question
-  under the `cancelExit` item.
+  (`created_now`); `initWallet` first disables it forever (bark 0.7.x;
+  re-verified at `bark-0.8.0`, `lib.rs` `if !created_now { NotRun }`).
+  Since 0.8.0 the scan runs an xpub lookup first and falls back to the two
+  mailboxes on `Unimplemented`; any other xpub error fails the whole report
+  (`Migrations/Bark-0.25.0-to-0.26.0/README.md` fact 6).
+- B2. `getExitVtxos()` lists live exits only **across launches**: finished
+  exits (claimed, cancelled, already-spent, swept) are filtered at load,
+  not mid-session, so they linger in the list until the next launch and
+  `ExitVtxo.isCancelled` / `isInFlight` must treat every terminal state as
+  such. `getExitStatus` has always answered for finished exits;
+  `listFinishedExits` (v0.26) enumerates them. Snapshot at drain time
+  (`PersistentExitCache`) stays until Track B adopts the listing. Cancelled
+  rows stay on disk (`cancel_exit`, both tags). Re-verified at `bark-0.8.0`
+  source level 2026-10-25; the bark-ffi 0.8.0 layer was not readable.
 - B3. On a fresh DB bark replays finished exits through the state machine
-  for ~2 s; they read as in-flight.
+  for ~2 s; they read as in-flight. (Not re-verified at 0.8.0; timing
+  observation.)
 - B4. Signet runs ~10 min/block like mainnet; `BlockTimeFormatter.secondsPerBlock`
-  is the single source (600).
+  is the single source (600). (App-side rule, tag-independent.)
 - B5. `nil` fee rate means internal estimation on mainnet only; off mainnet
-  pass the capped app-side rate.
-- B6. The daemon auto-starts on `Wallet.open()` since bark 0.7.0; our
-  explicit `runDaemon()` may restart it (unconfirmed — Tier 4 item).
+  pass the capped app-side rate. (App-side rule, tag-independent.)
+- B6. The daemon auto-starts on `Wallet.open()` when `WalletOpenArgs.runDaemon`
+  is true, which is the binding's default (re-verified at `bark-0.8.0`,
+  `lib.rs` `if args.run_daemon { ret.start_daemon() }`); our explicit
+  `runDaemon()` then logs bark's "already running" warning. Fix options on
+  the Tier 4 item.
+- B7. `Balance.spendableSats` excludes expired and max-exit-depth VTXOs since
+  0.8.0 (`needsRefreshSats`); `Balance::total = spendable + needs_refresh +
+  pending()`, seven pending buckets. `ArkBalanceResponse` / `ArkBalanceModel`
+  mirror it (`ArkBalanceTotalsTests`). Verified at `bark-0.8.0`
+  `balance.rs`.
+- B8. bark's onchain `sync` covers only addresses this BDK instance has
+  revealed; a previous incarnation's history needs one
+  `OnchainWallet.initialScan` (esplora gap-50 full scan, birthday ignored).
+  Backups carry only `db.sqlite`, never the BDK store. Verified at
+  `bark-0.8.0` `onchain/bdk.rs` and `WalletBackupService` 2026-10-25.

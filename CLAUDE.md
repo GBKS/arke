@@ -219,6 +219,15 @@ is history and loses to a living doc.
   keychain items. The seed is deleted only on a last-device full wipe.
 - Nothing that needs bark runs before the handle is open; it skips with a
   log line.
+- **A `@Model` field is permanent once deployed.** Xcode builds use the
+  CloudKit Development environment, which creates record types and fields
+  on first use; TestFlight and App Store builds use Production, which never
+  does. Production cannot drop, rename or retype a field, so get the name
+  and type right before the deploy; afterwards add a new field and abandon
+  the old one (unused types and fields stay in the schema forever, which is
+  fine). Every model change needs a Debug run plus "Deploy Schema Changes…"
+  in the CloudKit Console for `iCloud.gbks.sigma` before the TestFlight
+  upload (`Release_Train.md`, Release stage; first deploy 2026-10-26).
 
 ## UI conventions
 

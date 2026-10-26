@@ -1,6 +1,6 @@
 # Metadata Export & Import
 
-**Status:** Decided (2026-08-23) — scope and policies approved by Christoph (see Decisions). Implementation not started.
+**Status:** Phases 1 and 2 shipped (export 2026-08-23, import 2026-08-23); on-device import verify still pending — the 0.26 migration's device scenario 2 covers it. Known limitation (2026-10-25, Tier 1 Data safety): per-payment annotations are keyed by `movement_<id>`, which restarts after a seed import; contacts, tags and profile survive a re-import, notes and tag assignments on Ark payments do not.
 **Problem:** Everything the user *adds on top of* the wallet — contacts, transaction
 notes, tags, the personal profile — lives only in SwiftData synced through the
 CloudKit private database. There is no user-controlled copy: the manual backup
