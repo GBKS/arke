@@ -27,16 +27,27 @@ class ArkBalanceModel {
     var pendingInRoundSat: Int = 0
     var pendingExitSat: Int = 0
     var pendingBoardSat: Int = 0
+    // Added with bindings v0.26.0 (bark 0.8.0). Defaults keep the CloudKit
+    // schema change additive: a record written by an older build reads as 0
+    // here, and an older build ignores the fields.
+    var needsRefreshSat: Int = 0
+    var claimableLightningReceiveSat: Int = 0
+    var pendingArkoorSendSat: Int = 0
+    var pendingOffboardSat: Int = 0
     var lastUpdated: Date = Date()  // Default value for CloudKit compatibility
-    
+
     // MARK: - Initialization
-    
+
     init(
         spendableSat: Int,
         pendingLightningSendSat: Int,
         pendingInRoundSat: Int,
         pendingExitSat: Int,
         pendingBoardSat: Int,
+        needsRefreshSat: Int = 0,
+        claimableLightningReceiveSat: Int = 0,
+        pendingArkoorSendSat: Int = 0,
+        pendingOffboardSat: Int = 0,
         lastUpdated: Date = Date()
     ) {
         self.id = "ark_balance" // Singleton approach
@@ -45,11 +56,15 @@ class ArkBalanceModel {
         self.pendingInRoundSat = pendingInRoundSat
         self.pendingExitSat = pendingExitSat
         self.pendingBoardSat = pendingBoardSat
+        self.needsRefreshSat = needsRefreshSat
+        self.claimableLightningReceiveSat = claimableLightningReceiveSat
+        self.pendingArkoorSendSat = pendingArkoorSendSat
+        self.pendingOffboardSat = pendingOffboardSat
         self.lastUpdated = lastUpdated
     }
-    
+
     // MARK: - Convenience Methods
-    
+
     /// Create from API response
     convenience init(from response: ArkBalanceResponse) {
         self.init(
@@ -58,6 +73,10 @@ class ArkBalanceModel {
             pendingInRoundSat: response.pendingInRoundSat,
             pendingExitSat: response.pendingExitSat,
             pendingBoardSat: response.pendingBoardSat,
+            needsRefreshSat: response.needsRefreshSat,
+            claimableLightningReceiveSat: response.claimableLightningReceiveSat,
+            pendingArkoorSendSat: response.pendingArkoorSendSat,
+            pendingOffboardSat: response.pendingOffboardSat,
             lastUpdated: Date()
         )
     }
@@ -77,6 +96,10 @@ class ArkBalanceModel {
         self.pendingInRoundSat = response.pendingInRoundSat
         self.pendingExitSat = response.pendingExitSat
         self.pendingBoardSat = response.pendingBoardSat
+        self.needsRefreshSat = response.needsRefreshSat
+        self.claimableLightningReceiveSat = response.claimableLightningReceiveSat
+        self.pendingArkoorSendSat = response.pendingArkoorSendSat
+        self.pendingOffboardSat = response.pendingOffboardSat
         self.lastUpdated = Date()
     }
     
@@ -102,18 +125,25 @@ class ArkBalanceModel {
         Double(pendingBoardSat) / 100_000_000
     }
     
-    // Total of all pending amounts
+    /// Mirrors `ArkBalanceResponse.totalPendingSat` — change both or neither.
     var totalPendingSat: Int {
-        pendingLightningSendSat + pendingInRoundSat + pendingExitSat + pendingBoardSat
+        pendingLightningSendSat + claimableLightningReceiveSat + pendingInRoundSat
+            + pendingExitSat + pendingBoardSat + pendingArkoorSendSat + pendingOffboardSat
     }
-    
+
     var totalPendingBTC: Double {
         Double(totalPendingSat) / 100_000_000
     }
-    
-    // Total balance including spendable and all pending
+
+    /// Mirrors `ArkBalanceResponse.heldSat`: pending plus needs-refresh, the
+    /// balance card's "Pending" figure.
+    var heldSat: Int {
+        needsRefreshSat + totalPendingSat
+    }
+
+    /// Mirrors `ArkBalanceResponse.totalSat`: spendable + needs-refresh + pending.
     var totalSat: Int {
-        spendableSat + totalPendingSat
+        spendableSat + needsRefreshSat + totalPendingSat
     }
     
     var totalBTC: Double {

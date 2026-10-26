@@ -53,10 +53,14 @@ extension WalletManager {
                 arkBalance: arkBalance.map { model in
                     ArkBalanceResponse(
                         spendableSat: model.spendableSat,
+                        needsRefreshSat: model.needsRefreshSat,
                         pendingLightningSendSat: model.pendingLightningSendSat,
+                        claimableLightningReceiveSat: model.claimableLightningReceiveSat,
                         pendingInRoundSat: model.pendingInRoundSat,
                         pendingExitSat: model.pendingExitSat,
-                        pendingBoardSat: model.pendingBoardSat
+                        pendingBoardSat: model.pendingBoardSat,
+                        pendingArkoorSendSat: model.pendingArkoorSendSat,
+                        pendingOffboardSat: model.pendingOffboardSat
                     )
                 },
                 onchainBalance: onchainBalance.map { model in

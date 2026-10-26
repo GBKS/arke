@@ -63,14 +63,16 @@ struct ArkBalanceView: View {
                         
                         Spacer()
                         
-                        // Total pending section
-                        if balance.totalPendingSat > 0 {
+                        // Held section: pending plus needs-refresh, so that
+                        // Spendable + Pending == Total on this screen too
+                        // (same rule as the balance card, 0.26 migration)
+                        if balance.heldSat > 0 {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(L10n.statusPending)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                    Text(BitcoinFormatter.shared.formatAmount(balance.totalPendingSat))
+                                    Text(BitcoinFormatter.shared.formatAmount(balance.heldSat))
                                         .font(.title2)
                                         .fontWeight(.medium)
                                         .foregroundStyle(.orange)
@@ -95,8 +97,12 @@ struct ArkBalanceView: View {
                     
                     // Detailed breakdown
                     VStack(alignment: .leading, spacing: 4) {
+                        BalanceRowView(label: "Needs Refresh", amount: balance.needsRefreshSat)
                         BalanceRowView(label: "Lightning Send", amount: balance.pendingLightningSendSat)
+                        BalanceRowView(label: "Lightning Receive (claimable)", amount: balance.claimableLightningReceiveSat)
                         BalanceRowView(label: "In Round", amount: balance.pendingInRoundSat)
+                        BalanceRowView(label: "Arkoor Send", amount: balance.pendingArkoorSendSat)
+                        BalanceRowView(label: "Offboard", amount: balance.pendingOffboardSat)
                         BalanceRowView(label: "Exit", amount: balance.pendingExitSat)
                         BalanceRowView(label: "Board", amount: balance.pendingBoardSat)
                     }

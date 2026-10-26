@@ -36,7 +36,9 @@ struct BalanceView: View {
                             title: "Payments balance",
                             description: "Fast & low fees · Ark network",
                             spendable: arkBalance.spendableSat,
-                            pending: arkBalance.totalPendingSat,
+                            // heldSat = pending + needs-refresh, so Available +
+                            // Pending == Total (0.26 migration; desktop unbuilt)
+                            pending: arkBalance.heldSat,
                             total: arkBalance.totalSat,
                             color: .Arke.blue,
                             imageName: "wallet",

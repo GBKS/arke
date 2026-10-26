@@ -37,15 +37,23 @@ struct BalanceView_iOS: View {
                         title: "Payments\nBalance",
                         description: "Fast, low-fee payments.\nMaintenance fees.",
                         spendable: manager.arkBalance?.spendableSat,
-                        pending: manager.arkBalance?.totalPendingSat,
+                        // Needs-refresh sats ride inside the Pending figure for
+                        // now so Available + Pending == Total on the card
+                        // (DECIDED 2026-10-25, Bark 0.26 migration); the card's
+                        // own needs-refresh state is the Tier 0 balance item.
+                        pending: manager.arkBalance?.heldSat,
                         total: manager.arkBalance?.totalSat,
                         color: .Arke.blue,
                         imageName: "wallet",
                         pendingItems: manager.arkBalance.map { arkBalance in
                             [
+                                (label: "Needs refresh", amount: arkBalance.needsRefreshSat),
                                 (label: "Pending Lightning send", amount: arkBalance.pendingLightningSendSat),
                                 (label: "Pending in round", amount: arkBalance.pendingInRoundSat),
                                 (label: "Pending board", amount: arkBalance.pendingBoardSat),
+                                (label: "Claimable Lightning receive", amount: arkBalance.claimableLightningReceiveSat),
+                                (label: "Pending arkoor send", amount: arkBalance.pendingArkoorSendSat),
+                                (label: "Pending offboard", amount: arkBalance.pendingOffboardSat),
                                 (label: "Pending exit", amount: arkBalance.pendingExitSat)
                             ]
                         },

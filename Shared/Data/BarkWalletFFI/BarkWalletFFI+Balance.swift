@@ -21,10 +21,14 @@ extension BarkWalletFFI {
         if isPreview {
             return ArkBalanceResponse(
                 spendableSat: 50000,
+                needsRefreshSat: 0,
                 pendingLightningSendSat: 0,
+                claimableLightningReceiveSat: 0,
                 pendingInRoundSat: 0,
                 pendingExitSat: 0,
-                pendingBoardSat: 0
+                pendingBoardSat: 0,
+                pendingArkoorSendSat: 0,
+                pendingOffboardSat: 0
             )
         }
         
@@ -42,19 +46,26 @@ extension BarkWalletFFI {
             // Call FFI balance method
             let ffiBalance = try await wallet.balance()
             
-            Self.logger.notice("Balance retrieved - Spendable: \(ffiBalance.spendableSats) sats")
+            Self.logger.notice("Balance retrieved - Spendable: \(ffiBalance.spendableSats) sats, Needs refresh: \(ffiBalance.needsRefreshSats) sats")
             Self.logger.debug("Pending Lightning Send: \(ffiBalance.pendingLightningSendSats) sats")
+            Self.logger.debug("Claimable Lightning receive: \(ffiBalance.claimableLightningReceiveSats) sats")
             Self.logger.debug("Pending in round: \(ffiBalance.pendingInRoundSats) sats")
             Self.logger.debug("Pending exit: \(ffiBalance.pendingExitSats) sats")
             Self.logger.debug("Pending board: \(ffiBalance.pendingBoardSats) sats")
-            
-            // Convert FFI Balance to ArkBalanceResponse
+            Self.logger.debug("Pending arkoor send: \(ffiBalance.pendingArkoorSendSats) sats")
+            Self.logger.debug("Pending offboard: \(ffiBalance.pendingOffboardSats) sats")
+
+            // Convert FFI Balance to ArkBalanceResponse, every bark field mapped
             let response = ArkBalanceResponse(
                 spendableSat: Int(ffiBalance.spendableSats),
+                needsRefreshSat: Int(ffiBalance.needsRefreshSats),
                 pendingLightningSendSat: Int(ffiBalance.pendingLightningSendSats),
+                claimableLightningReceiveSat: Int(ffiBalance.claimableLightningReceiveSats),
                 pendingInRoundSat: Int(ffiBalance.pendingInRoundSats),
                 pendingExitSat: Int(ffiBalance.pendingExitSats),
-                pendingBoardSat: Int(ffiBalance.pendingBoardSats)
+                pendingBoardSat: Int(ffiBalance.pendingBoardSats),
+                pendingArkoorSendSat: Int(ffiBalance.pendingArkoorSendSats),
+                pendingOffboardSat: Int(ffiBalance.pendingOffboardSats)
             )
             
             return response
