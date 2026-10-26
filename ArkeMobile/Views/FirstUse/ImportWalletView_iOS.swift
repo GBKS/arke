@@ -148,6 +148,9 @@ struct ImportWalletView_iOS: View {
                                             .fontWeight(.medium)
                                     }
                                 }
+                                // Wrapped lines (long file names) centre by default;
+                                // keep every line flush left like the stack itself.
+                                .multilineTextAlignment(.leading)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .foregroundStyle(backupFileURL == nil ? .white : Color.Arke.gold)
