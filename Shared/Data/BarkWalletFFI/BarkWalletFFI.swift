@@ -60,11 +60,17 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// Bridges bark's internal Rust logs (round streams, mailbox subscription,
     /// esplora calls) into the unified logging system under the
     /// "tech.second.bark" subsystem, so they appear in debug log exports.
-    /// The FFI bridge can only be installed once per process, hence the
-    /// lazily-evaluated static.
+    /// Installed once per process, hence the lazily-evaluated static.
+    ///
+    /// `redactMessages: false`: bindings v0.26.0 made the OS logger
+    /// interpolate every record as `.private` by default, which turns bark's
+    /// lines (recovery, sync, rounds) into `<private>` in device exports and
+    /// sysdiagnose — the lines support requests are read for. Keep them in
+    /// clear until the debug export stops depending on the unified log
+    /// (DECIDED 2026-10-25, `Docs/Migrations/Bark-0.25.0-to-0.26.0/`).
     private static let barkRustLoggerInstalled: Bool = {
         do {
-            try barkAttachOSLogger(maxLevel: .debug)
+            try barkAttachOSLogger(maxLevel: .debug, redactMessages: false)
             logger.info("Bark Rust logger attached (subsystem: tech.second.bark)")
             return true
         } catch {
@@ -139,6 +145,10 @@ class BarkWalletFFI: BarkWalletProtocol {
     /// Without it, bark seeds its fee cache at 1 sat/vB (broadcast minimum)
     /// and errors on fee estimation whenever the Esplora backend is unreachable.
     static let defaultFallbackFeeRateSatPerVb: UInt64 = 10
+
+    /// Placeholder payment hash for the preview-mode `LightningSend` fixtures
+    /// (`LightningSend.paymentHash` is required as of bindings v0.26.0).
+    static let previewPaymentHash = String(repeating: "0", count: 64)
 
     /// User agent reported to the Ark server, e.g. "arke-ios/17".
     /// The number is the app's build number (CFBundleVersion).

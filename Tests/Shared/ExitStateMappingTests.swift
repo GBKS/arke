@@ -30,6 +30,20 @@ struct ExitStateMappingTests {
         #expect(ParsedExitState(from: .canceled(tipHeight: 3)) == .canceled(.init(tipHeight: 3)))
     }
 
+    /// Bark 0.8.0's `vtxoSwept` has no domain case yet: the 0.26 recovery
+    /// release folds it into `.vtxoAlreadySpent` (lossy, `spentInputs`
+    /// dropped). This test pins that choice so the Track B change that adds
+    /// the real case deletes it on purpose. It is deliberately NOT part of
+    /// `testRoundTrip`, which would fail by construction.
+    @Test("vtxoSwept folds into vtxoAlreadySpent (0.26 Track A, lossy by decision)")
+    func testVtxoSweptFoldsIntoAlreadySpent() {
+        let swept = Bark.ExitState.vtxoSwept(
+            tipHeight: 9,
+            spentInputs: [Bark.OutPoint(txid: "aa", vout: 0)]
+        )
+        #expect(ParsedExitState(from: swept) == .vtxoAlreadySpent(.init(tipHeight: 9)))
+    }
+
     @Test("AwaitingDelta carries confirmed block and claimable height")
     func testAwaitingDelta() {
         let parsed = ParsedExitState(from: .awaitingDelta(tipHeight: 301_587, confirmedBlock: block, claimableHeight: 301_555))
@@ -133,7 +147,8 @@ struct ExitSnapshotFormatTests {
                     Bark.ExitTx(txid: "aa", status: .awaitingConfirmation(childTxid: "bb", origin: .wallet(confirmedIn: block)))
                 ])
             ],
-            transactionCount: 1
+            transactionCount: 1,
+            transactions: []
         )
 
         let json = try #require(ExitStatusSnapshot.encodeJson(from: status))

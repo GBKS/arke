@@ -222,10 +222,12 @@ extension BarkWalletFFI {
         Self.logger.debug("Sending \(amount) sats to \(address) via FFI, Network: \(self.networkConfig.name)")
         
         do {
-            // Call FFI sendArkoorPayment method (returns Void as of Bark 0.11)
-            try await wallet.sendArkoorPayment(arkAddress: address, amountSats: amountSats)
+            // bark 0.8.0 returns the id of the movement that records the
+            // payment. Logged for now; linking it to PendingPaymentMetadata
+            // is Track B of the 0.26 migration.
+            let movementId = try await wallet.sendArkoorPayment(arkAddress: address, amountSats: amountSats)
 
-            Self.logger.info("Payment sent successfully, Amount: \(amount) sats, To: \(address)")
+            Self.logger.info("Payment sent successfully, Amount: \(amount) sats, To: \(address), Movement: \(movementId)")
 
             // Return success message. Completion is reflected via Movement events,
             // not a return value.
@@ -264,19 +266,13 @@ extension BarkWalletFFI {
         let amountSats = UInt64(amount)
         
         do {
-            // Call FFI sendRoundOnchainPayment method
-            // This sends a specific amount during a round (better than offboarding all)
-            //let roundId = try wallet.sendRoundOnchainPayment(address: address, amountSats: amountSats)
-            let roundState = try await wallet.sendOnchain(address: address, amountSats: amountSats)
-            
-            // TODO: See if sendRoundOnchainPayment still exists under a different name in the new bindings repo
-            //let result = try await sendOnchain(to: address, amount: Int(amountSats), feeRateSatPerVb: nil)
-            
-            Self.logger.info("Onchain payment initiated, Round state: \(roundState), Destination: \(address), Amount: \(amount) sats")
-            
-            // Return result with round ID
-            //return "Onchain payment initiated. Round ID: \(roundId)"
-            return roundState
+            // Offboard via bark. Since 0.8.0 the result carries the offboard
+            // txid and the movement id; callers only ever used the txid.
+            let result = try await wallet.sendOnchain(address: address, amountSats: amountSats)
+
+            Self.logger.info("Onchain payment initiated, Txid: \(result.txid), Movement: \(result.movementId), Destination: \(address), Amount: \(amount) sats")
+
+            return result.txid
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error sending onchain payment: \(error)")
             throw BarkWalletFFIError.configurationError("Failed to send onchain payment: \(error.localizedDescription)")

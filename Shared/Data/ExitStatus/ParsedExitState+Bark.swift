@@ -58,6 +58,13 @@ nonisolated extension ParsedExitState {
             ))
         case .vtxoAlreadySpent(let tipHeight):
             self = .vtxoAlreadySpent(.init(tipHeight: tipHeight))
+        case .vtxoSwept(let tipHeight, _):
+            // bark 0.8.0: the server swept an output the exit chain needed.
+            // Terminal like already-spent, with a different cause. Folded
+            // into `.vtxoAlreadySpent` for the 0.26 recovery release (lossy:
+            // `spentInputs` is dropped); the own domain case is Track B of
+            // `Docs/Migrations/Bark-0.25.0-to-0.26.0/`.
+            self = .vtxoAlreadySpent(.init(tipHeight: tipHeight))
         case .canceled(let tipHeight):
             self = .canceled(.init(tipHeight: tipHeight))
         }

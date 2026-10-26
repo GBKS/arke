@@ -47,7 +47,8 @@ struct ExitProgressTests {
             vtxoId: "test-vtxo-id",
             state: Bark.ExitState(from: ExitStatusParser.parseState(state) ?? .unparsed(state)),
             history: history.map { $0.map { Bark.ExitState(from: ExitStatusParser.parseState($0) ?? .unparsed($0)) } },
-            transactionCount: transactionCount
+            transactionCount: transactionCount,
+            transactions: []
         )
     }
 
@@ -493,7 +494,7 @@ struct ExitClaimSequenceTests {
             drainedVtxoIds = vtxoIds
             drainedAll = drainAll
             drainedFeeRate = feeRateSatPerVb
-            return ExitClaimTransaction(psbtBase64: "cHNidP_test", feeSats: 3376)
+            return ExitClaimTransaction(psbtBase64: "cHNidP_test", feeSats: 3376, vtxoIds: vtxoIds, skippedVtxoIds: [])
         }
 
         func extractTxFromPsbt(psbtBase64: String) throws -> String {

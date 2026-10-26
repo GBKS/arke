@@ -92,7 +92,10 @@ nonisolated struct ExitStatusSnapshot: Codable {
             vtxoId: vtxoId,
             state: Bark.ExitState(from: state),
             history: history.map { $0.map { Bark.ExitState(from: $0) } },
-            transactionCount: transactionCount
+            transactionCount: transactionCount,
+            // Snapshots never stored the transaction packages (bark 0.8.0
+            // field); the app reads `transactionCount` and `history`.
+            transactions: []
         )
     }
 

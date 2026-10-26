@@ -48,7 +48,11 @@ struct ImportWalletView_iOS: View {
                         .controlSize(.large)
                         .tint(Color.Arke.gold)
                         .accessibilityLabel(L10n.buttonBack)
-                        
+                        // Once the import runs, bark owns the wallet directory and
+                        // the keychain write follows; leaving the screen or
+                        // changing the inputs mid-way has no defined outcome.
+                        .disabled(isImporting)
+
                         Spacer()
                     }
                     .padding(.top, 10)
@@ -81,6 +85,7 @@ struct ImportWalletView_iOS: View {
                         .autocorrectionDisabled(true)
                         .keyboardType(.asciiCapable)
                         .submitLabel(.done)
+                        .disabled(isImporting)
                         .accessibilityLabel(String(localized: "accessibility_recovery_phrase_field", defaultValue: "Recovery phrase"))
                         .accessibilityHint(String(localized: "accessibility_recovery_phrase_hint", defaultValue: "Enter your 12 or 24 word recovery phrase"))
                         .onChange(of: mnemonicPhrase) { oldValue, newValue in
@@ -107,7 +112,7 @@ struct ImportWalletView_iOS: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         
-                        Text(String(localized: "backup_file_section_description", defaultValue: "Optionally add your wallet backup file to restore your transaction history and wallet data. Without it, your funds are recovered from the network, but local history is not restored."))
+                        Text(String(localized: "backup_file_section_description", defaultValue: "Add your wallet backup file whenever you have one. It restores your complete wallet state, including payment history, notes and tags. Without it, your funds are rebuilt from the network and that history is lost."))
                             .font(.system(.body))
                             .foregroundStyle(.white.opacity(0.8))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -139,7 +144,7 @@ struct ImportWalletView_iOS: View {
                                         Text(String(localized: "button_select_backup_file", defaultValue: "Select Backup File"))
                                             .font(.subheadline)
                                             .fontWeight(.medium)
-                                        Text(String(localized: "backup_file_not_selected", defaultValue: "Optional — restore from recovery phrase only"))
+                                        Text(String(localized: "backup_file_not_selected", defaultValue: "Recommended. Without it, this is an emergency recovery from the phrase alone."))
                                             .font(.footnote)
                                             .opacity(0.8)
                                     }
@@ -161,8 +166,9 @@ struct ImportWalletView_iOS: View {
                             )
                         }
                         .frame(maxWidth: 400)
+                        .disabled(isImporting)
                     }
-                    
+
                     Spacer(minLength: 10)
                     
                     Button {

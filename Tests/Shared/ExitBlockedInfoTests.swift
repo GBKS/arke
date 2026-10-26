@@ -193,7 +193,8 @@ struct ExitStoreTests {
                 claimTxid: "dc2b6f00"
             ),
             history: nil,
-            transactionCount: 1
+            transactionCount: 1,
+            transactions: []
         )
         var barkList = [ExitVtxo(
             vtxoId: "vtxo_a",
@@ -263,7 +264,8 @@ struct ExitStoreTests {
                 claimTxid: "ab"
             ),
             history: [.start(tipHeight: 0)],
-            transactionCount: 1
+            transactionCount: 1,
+            transactions: []
         )
         let store = makeStore(context: context, counter: counter, statuses: ["vtxo_a": status]) { [] }
 

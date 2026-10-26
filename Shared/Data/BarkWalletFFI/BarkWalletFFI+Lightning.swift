@@ -21,7 +21,7 @@ extension BarkWalletFFI {
         // If amount is provided, use it; otherwise invoice should have amount encoded
         
         if isPreview {
-            let send = LightningSend(invoice: invoice, amountSats: amountSats ?? 0, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
+            let send = LightningSend(invoice: invoice, paymentHash: Self.previewPaymentHash, movementId: nil, amountSats: amountSats ?? 0, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
             return .inProgress(send: send)
         }
         
@@ -277,7 +277,7 @@ extension BarkWalletFFI {
         // Pay a BOLT12 lightning offer
         
         if isPreview {
-            let send = LightningSend(invoice: "lnbc...", amountSats: amountSats ?? 0, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
+            let send = LightningSend(invoice: "lnbc...", paymentHash: Self.previewPaymentHash, movementId: nil, amountSats: amountSats ?? 0, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
             return .inProgress(send: send)
         }
         
@@ -322,7 +322,7 @@ extension BarkWalletFFI {
         // Pay a Lightning address (user@domain format)
         
         if isPreview {
-            let send = LightningSend(invoice: "lnbc...", amountSats: amountSats, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
+            let send = LightningSend(invoice: "lnbc...", paymentHash: Self.previewPaymentHash, movementId: nil, amountSats: amountSats, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
             return .inProgress(send: send)
         }
         
@@ -372,7 +372,7 @@ extension BarkWalletFFI {
         // Pay an LNURL-pay endpoint (bech32-encoded `lnurl...` or Lightning address)
 
         if isPreview {
-            let send = LightningSend(invoice: "lnbc...", amountSats: amountSats, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
+            let send = LightningSend(invoice: "lnbc...", paymentHash: Self.previewPaymentHash, movementId: nil, amountSats: amountSats, feeSats: 50, htlcVtxoCount: 1, hasFailedRevocation: false)
             return .inProgress(send: send)
         }
 

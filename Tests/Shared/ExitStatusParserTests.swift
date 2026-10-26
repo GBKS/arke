@@ -286,7 +286,8 @@ struct ExitStatusParserTests {
             vtxoId: "test:0",
             state: Bark.ExitState(from: ExitStatusParser.parseState(state) ?? .unparsed(state)),
             history: history.map { $0.map { Bark.ExitState(from: ExitStatusParser.parseState($0) ?? .unparsed($0)) } },
-            transactionCount: 1
+            transactionCount: 1,
+            transactions: []
         )
     }
 }

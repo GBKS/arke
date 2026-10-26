@@ -73,7 +73,8 @@ private enum Fixture {
                 finalProcessing,
                 "ClaimInProgress(ExitClaimInProgressState { tip_height: 313408, claimable_since: 313408:0000000e22c16b0092658a78a3791dba2c9a111b1bdbb66821c9257cc995916a, claim_txid: \(claim) })"
             ].map { barkState($0) },
-            transactionCount: 4
+            transactionCount: 4,
+            transactions: []
         )
     }
 }

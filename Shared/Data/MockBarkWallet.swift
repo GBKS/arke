@@ -17,7 +17,11 @@ import Bark
 class MockBarkWallet: BarkWalletProtocol {
     let walletDir: URL
     var networkConfig: NetworkConfig
-    
+
+    /// Placeholder payment hash for the canned `LightningSend` responses
+    /// (`LightningSend.paymentHash` is required as of bindings v0.26.0).
+    static let mockPaymentHash = String(repeating: "0", count: 64)
+
     var isMainnet: Bool {
         return networkConfig.isMainnet
     }
@@ -54,10 +58,14 @@ class MockBarkWallet: BarkWalletProtocol {
     func getArkBalance() async throws -> ArkBalanceResponse {
         return ArkBalanceResponse(
             spendableSat: 50000,
+            needsRefreshSat: 0,
             pendingLightningSendSat: 0,
+            claimableLightningReceiveSat: 0,
             pendingInRoundSat: 10000,
             pendingExitSat: 0,
-            pendingBoardSat: 0
+            pendingBoardSat: 0,
+            pendingArkoorSendSat: 0,
+            pendingOffboardSat: 0
         )
     }
     
@@ -324,6 +332,8 @@ class MockBarkWallet: BarkWalletProtocol {
         print("⚡️ Mock: Paid Lightning invoice: \(String(invoice.prefix(30)))... for \(amount) sats, wait: \(wait)")
         let send = LightningSend(
             invoice: invoice,
+            paymentHash: Self.mockPaymentHash,
+            movementId: nil,
             amountSats: amount,
             feeSats: 50,
             htlcVtxoCount: 1,
@@ -524,9 +534,13 @@ class MockBarkWallet: BarkWalletProtocol {
     func drainExits(vtxoIds: [String], drainAll: Bool, address: String, feeRateSatPerVb: UInt64?) async throws -> ExitClaimTransaction {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         print("💸 Mock: Draining \(drainAll ? "all" : "\(vtxoIds.count)") exits to \(address)")
+        // The mock does not model unclaimable ids: every requested id is
+        // reported as claimed, nothing as skipped.
         return ExitClaimTransaction(
             psbtBase64: "mock_psbt_base64_string",
-            feeSats: 1000
+            feeSats: 1000,
+            vtxoIds: vtxoIds,
+            skippedVtxoIds: []
         )
     }
     
@@ -642,6 +656,8 @@ class MockBarkWallet: BarkWalletProtocol {
         print("⚡️ Mock: Paying Lightning BOLT12 offer: \(String(offer.prefix(30)))... for \(amount) sats, wait: \(wait)")
         let send = LightningSend(
             invoice: "lnbc\(amount)n1mock...",
+            paymentHash: Self.mockPaymentHash,
+            movementId: nil,
             amountSats: amount,
             feeSats: 50,
             htlcVtxoCount: 1,
@@ -659,6 +675,8 @@ class MockBarkWallet: BarkWalletProtocol {
         }
         let send = LightningSend(
             invoice: "lnbc\(amountSats)n1mock...",
+            paymentHash: Self.mockPaymentHash,
+            movementId: nil,
             amountSats: amountSats,
             feeSats: 50,
             htlcVtxoCount: 1,
@@ -676,6 +694,8 @@ class MockBarkWallet: BarkWalletProtocol {
         }
         let send = LightningSend(
             invoice: "lnbc\(amountSats)n1mock...",
+            paymentHash: Self.mockPaymentHash,
+            movementId: nil,
             amountSats: amountSats,
             feeSats: 50,
             htlcVtxoCount: 1,

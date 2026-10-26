@@ -1165,8 +1165,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://gitlab.com/ark-bitcoin/bark-ffi-bindings.git";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = revision;
+				revision = ada76c33da82b77a794eb991f390c2cc042d373d;
 			};
 		};
 		596754972F509E4500396429 /* XCRemoteSwiftPackageReference "bdk-swift" */ = {

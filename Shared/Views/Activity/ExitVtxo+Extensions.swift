@@ -30,7 +30,7 @@ extension Bark.ExitState {
             return String(localized: "status_withdrawing", defaultValue: "Withdrawing")
         case .claimed:
             return String(localized: "status_complete", defaultValue: "Complete")
-        case .vtxoAlreadySpent, .canceled:
+        case .vtxoAlreadySpent, .vtxoSwept, .canceled:
             return L10n.transactionCancelled
         }
     }
@@ -79,11 +79,18 @@ extension ExitVtxo {
         return !isClaimed
     }
 
-    /// Check if this exit was cancelled because the VTXO was spent elsewhere
-    /// (e.g. a refresh won the race before the exit chain broadcast)
+    /// Check if this exit ended without a claim: the VTXO was spent elsewhere
+    /// (e.g. a refresh won the race before the exit chain broadcast), the
+    /// server swept an output the exit chain needed (bark 0.8.0), or the
+    /// exit was cancelled. All three are terminal; without them here
+    /// `isInFlight` would keep polling the exit forever.
     var isCancelled: Bool {
-        if case .vtxoAlreadySpent = state { return true }
-        return false
+        switch state {
+        case .vtxoAlreadySpent, .vtxoSwept, .canceled:
+            return true
+        default:
+            return false
+        }
     }
 
     /// Check if this exit still has work to do: neither claimed nor cancelled.

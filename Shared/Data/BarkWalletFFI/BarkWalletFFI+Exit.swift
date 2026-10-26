@@ -349,7 +349,7 @@ extension BarkWalletFFI {
         // Drain claimable exits to an address
 
         if isPreview {
-            return ExitClaimTransaction(psbtBase64: "mock_psbt", feeSats: 1000)
+            return ExitClaimTransaction(psbtBase64: "mock_psbt", feeSats: 1000, vtxoIds: vtxoIds, skippedVtxoIds: [])
         }
 
         guard let wallet = wallet else {
