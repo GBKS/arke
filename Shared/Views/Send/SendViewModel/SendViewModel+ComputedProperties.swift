@@ -192,17 +192,30 @@ extension SendViewModel {
         return ranked?.estimatedFee.map(FeeDisplayState.value) ?? .unavailable
     }
 
+    /// The onchain quote when it covers the selected destination, this
+    /// amount and the current rates; nil otherwise, so views never see a
+    /// quote for other inputs
+    func currentOnchainFeeQuote(amountSats: Int?) -> OnchainFeeQuote? {
+        guard let destination = selectedDestination, isOnchainDestination,
+              let amountSats,
+              let quote = onchainFeeQuote,
+              quote.matches(address: destination.address, amountSats: amountSats, rates: onchainFeeRates) else {
+            return nil
+        }
+        return quote
+    }
+
+    /// The quote for the amount as entered, for the speed sheet
+    var currentOnchainFeeQuote: OnchainFeeQuote? {
+        currentOnchainFeeQuote(amountSats: Int(amount))
+    }
+
     /// BDK's exact fee at the selected tier for the selected onchain
     /// destination and this amount, or nil when no current quote covers
     /// them. The pre-send balance check prefers this over the ranker's
     /// rough medium-tier placeholder.
     func exactOnchainFee(amountSats: Int) -> Int? {
-        guard let destination = selectedDestination, isOnchainDestination,
-              let quote = onchainFeeQuote,
-              quote.matches(address: destination.address, amountSats: amountSats, rates: onchainFeeRates) else {
-            return nil
-        }
-        return quote.fee(for: selectedFeePriority)
+        currentOnchainFeeQuote(amountSats: amountSats)?.fee(for: selectedFeePriority)
     }
     
     // MARK: - Destination State

@@ -36,6 +36,7 @@ struct ContactPaymentView: View {
     let paymentContext: PaymentDestinationSelector.PaymentContext?
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
+    let onchainFeeQuote: OnchainFeeQuote?
 
     /// Enables fiat entry on the amount field; nil keeps it bitcoin-only (desktop)
     var sendViewModel: SendViewModel? = nil
@@ -504,6 +505,8 @@ struct ContactPaymentView: View {
             FeeSelectionSheet(
                 selectedPriority: $selectedFeePriority,
                 feeRates: onchainFeeRates,
+                quote: onchainFeeQuote,
+                isEstimating: feeState == .estimating,
                 onDismiss: {
                     showFeeSelectionSheet = false
                 }

@@ -32,6 +32,7 @@ struct ManualSendView: View {
     let contactLookup: ((String) -> ContactModel?)?
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
+    let onchainFeeQuote: OnchainFeeQuote?
     
     // MARK: - Callbacks
     let onSend: () -> Void
@@ -260,6 +261,8 @@ struct ManualSendView: View {
             FeeSelectionSheet(
                 selectedPriority: $selectedFeePriority,
                 feeRates: onchainFeeRates,
+                quote: onchainFeeQuote,
+                isEstimating: feeState == .estimating,
                 onDismiss: {
                     showFeeSelectionSheet = false
                 }

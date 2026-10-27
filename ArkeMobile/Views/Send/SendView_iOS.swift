@@ -610,6 +610,7 @@ struct SendView_iOS: View {
             },
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
             onSend: {
                 sendOperation = SendOperation_iOS {
                     try await viewModel.executeSend()
@@ -699,6 +700,7 @@ struct SendView_iOS: View {
             paymentContext: viewModel.paymentContext,
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
             sendViewModel: viewModel
         )
     }
@@ -749,6 +751,7 @@ struct SendView_iOS: View {
             feeState: viewModel.feeDisplayState,
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
             showFeeSelectionSheet: $viewModel.showFeeSelectionSheet,
             selectedFeePriority: $viewModel.selectedFeePriority,
             amount: $viewModel.amount,

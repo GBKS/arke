@@ -3428,6 +3428,17 @@
         }
       }
     },
+    "fee_rate_sat_per_vb" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%llu sat/vB"
+          }
+        }
+      }
+    },
     "fee_state_estimating" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

@@ -63,6 +63,7 @@ struct QuickPaymentView: View {
     let feeState: FeeDisplayState
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
+    let onchainFeeQuote: OnchainFeeQuote?
     let source: PaymentRequestSource
     let onCalculateMaxSendable: (() async -> Int?)?
     let onEstimateFee: (() async -> Void)?
@@ -100,6 +101,7 @@ struct QuickPaymentView: View {
         feeState: FeeDisplayState = .unavailable,
         shouldShowFeeDisclosure: Bool = false,
         onchainFeeRates: OnchainFeeRates = .default,
+        onchainFeeQuote: OnchainFeeQuote? = nil,
         showFeeSelectionSheet: Binding<Bool> = .constant(false),
         selectedFeePriority: Binding<FeePriority> = .constant(.medium),
         amount: Binding<String> = .constant(""),
@@ -125,6 +127,7 @@ struct QuickPaymentView: View {
         self.feeState = feeState
         self.shouldShowFeeDisclosure = shouldShowFeeDisclosure
         self.onchainFeeRates = onchainFeeRates
+        self.onchainFeeQuote = onchainFeeQuote
         self._showFeeSelectionSheet = showFeeSelectionSheet
         self._selectedFeePriority = selectedFeePriority
         self._amount = amount
@@ -637,6 +640,8 @@ struct QuickPaymentView: View {
             FeeSelectionSheet(
                 selectedPriority: $selectedFeePriority,
                 feeRates: onchainFeeRates,
+                quote: onchainFeeQuote,
+                isEstimating: feeState == .estimating,
                 onDismiss: {
                     showFeeSelectionSheet = false
                 }

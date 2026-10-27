@@ -4,6 +4,9 @@
 //
 //  Created by Christoph on 3/25/26.
 //  Moved into ArkéUI as a pure, previewable presentation view.
+//  2026-10-27: shows the rate and, when the send flow has a quote, the
+//  exact fee this tier would cost, so the tiers can be compared before
+//  one is picked.
 //
 
 import SwiftUI
@@ -11,12 +14,29 @@ import SwiftUI
 public struct FeeOptionRow: View {
     let priority: FeePriority
     let feeRate: UInt64
+    let feeSats: Int?
+    let isEstimating: Bool
     let isSelected: Bool
     let onSelect: () -> Void
 
-    public init(priority: FeePriority, feeRate: UInt64, isSelected: Bool, onSelect: @escaping () -> Void) {
+    /// - Parameters:
+    ///   - feeRate: The tier's rate in sat/vB, always known
+    ///   - feeSats: The exact fee for the current send at this tier, when
+    ///     the flow has quoted it; nil shows the rate alone
+    ///   - isEstimating: A quote request is open; shows a spinner where the
+    ///     fee will appear
+    public init(
+        priority: FeePriority,
+        feeRate: UInt64,
+        feeSats: Int? = nil,
+        isEstimating: Bool = false,
+        isSelected: Bool,
+        onSelect: @escaping () -> Void
+    ) {
         self.priority = priority
         self.feeRate = feeRate
+        self.feeSats = feeSats
+        self.isEstimating = isEstimating
         self.isSelected = isSelected
         self.onSelect = onSelect
     }
@@ -31,18 +51,23 @@ public struct FeeOptionRow: View {
 
                     HStack(spacing: 8) {
                         Text(priority.estimatedConfirmationTime)
-                            .font(.body)
-                            .foregroundColor(.secondary)
-
-                        /*
-                        Text("\(feeRate) sat/vB")
-                            .font(.body)
-                            .foregroundColor(.secondary)
-                         */
+                        Text(verbatim: "·")
+                        Text(String(localized: "fee_rate_sat_per_vb", defaultValue: "\(feeRate) sat/vB", bundle: .module))
                     }
+                    .font(.body)
+                    .foregroundColor(.secondary)
                 }
 
                 Spacer()
+
+                if let feeSats {
+                    Text(BitcoinFormatter.shared.formatAmount(feeSats))
+                        .font(.body)
+                        .monospacedDigit()
+                } else if isEstimating {
+                    ProgressView()
+                        .controlSize(.small)
+                }
 
                 // Selection indicator
                 ZStack {
@@ -76,12 +101,26 @@ public struct FeeOptionRow: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityValue(feeSats == nil && isEstimating
+            ? Text(String(localized: "accessibility_value_fee_estimating", defaultValue: "Estimating", bundle: .module))
+            : Text(verbatim: ""))
     }
 }
 
-#Preview {
+#Preview("With quote") {
     VStack(spacing: 12) {
-        FeeOptionRow(priority: .fast, feeRate: 10, isSelected: true, onSelect: {})
+        FeeOptionRow(priority: .fast, feeRate: 50, feeSats: 7_839, isSelected: false, onSelect: {})
+        FeeOptionRow(priority: .medium, feeRate: 20, feeSats: 3_136, isSelected: true, onSelect: {})
+        FeeOptionRow(priority: .slow, feeRate: 5, feeSats: 784, isSelected: false, onSelect: {})
+    }
+    .padding()
+}
+
+#Preview("Estimating / rates only") {
+    VStack(spacing: 12) {
+        FeeOptionRow(priority: .fast, feeRate: 10, isEstimating: true, isSelected: true, onSelect: {})
         FeeOptionRow(priority: .medium, feeRate: 5, isSelected: false, onSelect: {})
         FeeOptionRow(priority: .slow, feeRate: 2, isSelected: false, onSelect: {})
     }

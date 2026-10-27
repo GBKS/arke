@@ -157,6 +157,7 @@ struct SendView: View {
             },
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
             onSend: {
                 sendOperation = SendOperation_macOS {
                     try await viewModel.executeSend()
@@ -238,7 +239,8 @@ struct SendView: View {
             minimumSendAmount: viewModel.minimumSendAmount,
             paymentContext: viewModel.paymentContext,
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
-            onchainFeeRates: viewModel.onchainFeeRates
+            onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote
         )
     }
     
@@ -288,6 +290,7 @@ struct SendView: View {
             feeState: viewModel.feeDisplayState,
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
             showFeeSelectionSheet: $viewModel.showFeeSelectionSheet,
             selectedFeePriority: $viewModel.selectedFeePriority,
             amount: $viewModel.amount,
