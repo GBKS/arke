@@ -118,6 +118,8 @@ extension SendViewModel {
         sendModalState = nil
         cachedLightningFee = nil
         cachedLightningFeeAmount = nil
+        lightningFeeRequestGeneration += 1
+        isEstimatingLightningFee = false
         cachedArkFee = nil
         cachedArkFeeAmount = nil
         resetOnchainFeeQuote()

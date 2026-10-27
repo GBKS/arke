@@ -189,11 +189,37 @@ extension SendViewModel {
 
                 logger.info("Onchain (BDK): Exact calculation complete")
                 logger.debug("   Drain amount: \(drainAmount) sats, fee: \(fee) sats, bark spendable: \(balance) sats")
-                if let maxAmount, maxAmount < drainAmount {
-                    logger.info("Onchain (BDK): send-all capped at \(maxAmount) sats to fit bark's spendable balance")
-                }
 
-                return maxAmount
+                guard var offered = maxAmount else { return nil }
+                guard offered < drainAmount else { return offered }
+
+                // Capped, so no longer a drain: re-quote as a recipient amount
+                // (change output, larger fee) and shrink until amount plus
+                // fee fits bark's balance, which is exactly what the Send
+                // gate will check. Each pass is one shadow-wallet sync.
+                logger.info("Onchain (BDK): send-all capped at \(offered) sats to fit bark's spendable balance; re-quoting")
+                for _ in 0..<3 {
+                    let quote = try await walletManager.estimateOnchainFees(
+                        address: destination.address,
+                        amountSats: UInt64(offered),
+                        feeRates: onchainFeeRates
+                    )
+                    guard case .fee(let requoted)? = quote[selectedFeePriority] else {
+                        logger.warning("Onchain (BDK): capped amount \(offered) is unfundable at the selected tier; leaving it to the gate")
+                        break
+                    }
+                    guard let refit = OnchainSendAll.refit(
+                        amountSats: offered,
+                        requotedFeeSats: Int(clamping: requoted),
+                        barkSpendableSats: balance
+                    ) else {
+                        return nil
+                    }
+                    if refit == offered { break }
+                    logger.debug("   Re-quoted fee \(requoted) sats; send-all shrinks \(offered) → \(refit)")
+                    offered = refit
+                }
+                return offered
                 
             } catch {
                 logger.error("Onchain (BDK): Calculation failed: \(error)")

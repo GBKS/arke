@@ -49,6 +49,8 @@ extension SendViewModel {
             return
         }
 
+        // Own the newest generation (the debounce may already have claimed
+        // one for this request; claiming again is harmless)
         onchainFeeRequestGeneration += 1
         let generation = onchainFeeRequestGeneration
         isEstimatingOnchainFee = true
@@ -120,6 +122,17 @@ extension SendViewModel {
     func updateOnchainFeeEstimate() {
         // Cancel any pending estimation
         onchainFeeEstimationTask?.cancel()
+
+        // The row says "estimating" from the first keystroke, not from the
+        // end of the debounce: in that half second the placeholder would
+        // otherwise show and the Send gate would let it through (review F3,
+        // 2026-10-27). The generation bump makes any older reply stale.
+        if let destination = selectedDestination, isOnchainDestination,
+           let amountInt = Int(amount), amountInt > 0,
+           !(onchainFeeQuote?.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) ?? false) {
+            onchainFeeRequestGeneration += 1
+            isEstimatingOnchainFee = true
+        }
 
         // Schedule new estimation with delay
         onchainFeeEstimationTask = Task { @MainActor in

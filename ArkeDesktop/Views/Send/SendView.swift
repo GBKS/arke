@@ -177,7 +177,8 @@ struct SendView: View {
             },
             onEstimateArkFee: {
                 viewModel.updateArkFeeEstimate()
-            }
+            },
+            sendViewModel: viewModel
         )
         .onChange(of: viewModel.selectedDestination) { oldDestination, newDestination in
             // When destination changes in manual mode, rank it for fee calculation
@@ -240,7 +241,8 @@ struct SendView: View {
             paymentContext: viewModel.paymentContext,
             shouldShowFeeDisclosure: viewModel.shouldShowFeeDisclosure,
             onchainFeeRates: viewModel.onchainFeeRates,
-            onchainFeeQuote: viewModel.currentOnchainFeeQuote
+            onchainFeeQuote: viewModel.currentOnchainFeeQuote,
+            sendViewModel: viewModel
         )
     }
     

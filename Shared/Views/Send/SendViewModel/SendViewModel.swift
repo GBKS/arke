@@ -56,6 +56,9 @@ final class SendViewModel {
     var cachedLightningFeeAmount: Int?
     /// A Lightning fee request is open; the row says "estimating" instead of a dash
     var isEstimatingLightningFee: Bool = false
+    /// Generation of the newest Lightning fee request; an older reply is
+    /// dropped and the flag clears only with the newest request
+    var lightningFeeRequestGeneration: Int = 0
     
     /// Cached Ark fee estimate in satoshis
     var cachedArkFee: Int?

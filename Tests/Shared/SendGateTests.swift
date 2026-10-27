@@ -48,9 +48,20 @@ struct SendGateTests {
         #expect(gate(onchain: false, ceiling: true) == nil)
     }
 
-    @Test("A locked amount needs no entry and is not gated by the minimum")
-    func lockedAmountPasses() {
+    @Test("A locked amount skips the minimum but an invoice above the balance is still refused")
+    func lockedAmountPassesUnlessOverBalance() {
         #expect(gate(amount: nil, locked: true, onchain: false) == nil)
+        #expect(gate(amount: 300, locked: true, onchain: false) == nil)
+        #expect(gate(amount: 100_001, locked: true, fee: .unavailable, onchain: false) == .exceedsAvailable)
+        #expect(gate(amount: 99_900, locked: true, fee: .value(200), onchain: false) == .exceedsAvailable)
+    }
+
+    @Test("A capped send-all shrinks to fit the re-quoted fee, and stands once it fits")
+    func sendAllRefitsToTheRequotedFee() {
+        // 133,121 + 8,451 == 141,572 fits exactly; one extra vbyte of fee does not
+        #expect(OnchainSendAll.refit(amountSats: 133_121, requotedFeeSats: 8_451, barkSpendableSats: 141_572) == 133_121)
+        #expect(OnchainSendAll.refit(amountSats: 133_121, requotedFeeSats: 8_600, barkSpendableSats: 141_572) == 132_972)
+        #expect(OnchainSendAll.refit(amountSats: 500, requotedFeeSats: 1_000, barkSpendableSats: 900) == nil)
     }
 
     @Test("No amount is simply off, with no line")

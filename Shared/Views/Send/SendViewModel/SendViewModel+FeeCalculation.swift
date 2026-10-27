@@ -110,14 +110,27 @@ extension SendViewModel {
         }
         
         logger.debug("   → Calling walletManager.estimateLightningSendFee(amountSats: \(amountToEstimate))")
+        // Same ownership as the onchain quote: the newest request owns the
+        // flag, an older reply is dropped (review F2, 2026-10-27)
+        lightningFeeRequestGeneration += 1
+        let generation = lightningFeeRequestGeneration
         isEstimatingLightningFee = true
-        defer { isEstimatingLightningFee = false }
+        defer {
+            if generation == lightningFeeRequestGeneration {
+                isEstimatingLightningFee = false
+            }
+        }
         do {
             let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(amountToEstimate))
+            guard generation == lightningFeeRequestGeneration else {
+                logger.debug("   Dropping Lightning fee reply from superseded request \(generation)")
+                return
+            }
             cachedLightningFee = Int(feeEstimate.feeSats)
             cachedLightningFeeAmount = amountToEstimate
             logger.info("   Lightning fee estimated: \(feeEstimate.feeSats) sats for \(amountToEstimate) sats")
         } catch {
+            guard generation == lightningFeeRequestGeneration else { return }
             // The row shows "unavailable"; no static stand-in anywhere
             logger.error("   Failed to estimate Lightning fee: \(error)")
             cachedLightningFee = nil

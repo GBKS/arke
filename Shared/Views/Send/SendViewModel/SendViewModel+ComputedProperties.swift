@@ -171,7 +171,9 @@ extension SendViewModel {
         // open, otherwise unavailable; never a stale ranked fee and never
         // the static constant the ranker used to hide a failed estimate behind
         if isLightningDestination {
-            if let cached = cachedLightningFee {
+            // The cache counts only for the amount it was made for
+            if let cached = cachedLightningFee,
+               cachedLightningFeeAmount == lightningEstimateAmount {
                 return .value(cached)
             }
             return isEstimatingLightningFee ? .estimating : .unavailable
@@ -265,9 +267,17 @@ extension SendViewModel {
     /// broken estimator (`Features/Mainnet_Fee_Rate_Ceiling.md` §2); the
     /// clamp warning in `FeeRateService` fires on the same condition. Only
     /// mainnet: the signet cap is hit routinely under fee spam and is a
-    /// different constant.
+    /// different constant. Reads the same predicate the cap itself uses
+    /// (`WalletManager.isMainnet`), so gate and cap cannot disagree about
+    /// which network this is (review F5, 2026-10-27).
     var fastTierAtMainnetCeiling: Bool {
-        currentNetworkConfig.isMainnet && onchainFeeRates.fast == FeeRateService.mainnetMaxRateSatPerVb
+        walletManager.isMainnet && onchainFeeRates.fast == FeeRateService.mainnetMaxRateSatPerVb
+    }
+
+    /// The amount a Lightning fee estimate is made for: the request's
+    /// embedded amount, else the amount as entered
+    var lightningEstimateAmount: Int? {
+        currentPaymentRequest?.amount ?? Int(amount)
     }
 
     /// Returns whether to show the fee disclosure indicator: an onchain

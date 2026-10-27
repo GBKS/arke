@@ -65,7 +65,12 @@ enum SendBlocker: Equatable, Sendable {
             return .feeEstimateUnreliable
         }
         if isAmountLocked {
-            return nil
+            // A payment request fixed the amount: no entry, no minimum, but
+            // an invoice above the balance is still refused up front (review
+            // F4, 2026-10-27: it used to pass and fail at the tap)
+            guard let amountSats, amountSats > 0 else { return nil }
+            let fee = feeState.displayedFee ?? 0
+            return amountSats + fee > availableSats ? .exceedsAvailable : nil
         }
         guard let amountSats, amountSats > 0 else {
             return .noAmount
@@ -106,5 +111,19 @@ enum OnchainSendAll {
         let fitsBark = barkSpendableSats - drainFeeSats
         let amount = min(drainAmountSats, fitsBark)
         return amount > 0 ? amount : nil
+    }
+
+    /// A capped amount is no longer a drain: quoted as a recipient amount
+    /// the shadow wallet adds a change output and the fee grows, so amount
+    /// plus the new fee can exceed bark's balance again (review F1,
+    /// 2026-10-27). Shrink the amount to what fits the re-quoted fee; the
+    /// caller repeats until the quote stands.
+    /// - Returns: the amount that fits, or nil when nothing can be sent
+    static func refit(amountSats: Int, requotedFeeSats: Int, barkSpendableSats: Int) -> Int? {
+        if amountSats + requotedFeeSats <= barkSpendableSats {
+            return amountSats
+        }
+        let fits = barkSpendableSats - requotedFeeSats
+        return fits > 0 ? fits : nil
     }
 }
