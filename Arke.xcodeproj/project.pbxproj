@@ -611,7 +611,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ArkeMobile/ArkeMobile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -657,7 +657,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ArkeMobile/ArkeMobile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -880,7 +880,7 @@
 				CODE_SIGN_ENTITLEMENTS = ArkeDesktop/ArkeDesktop.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				ENABLE_APP_SANDBOX = YES;
@@ -936,7 +936,7 @@
 				CODE_SIGN_ENTITLEMENTS = ArkeDesktop/ArkeDesktop.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				ENABLE_APP_SANDBOX = YES;
@@ -1034,7 +1034,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = ArkeWidgets/ArkeWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ArkeWidgets/Info.plist;
@@ -1067,7 +1067,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = ArkeWidgets/ArkeWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 25;
+				CURRENT_PROJECT_VERSION = 26;
 				DEVELOPMENT_TEAM = 2XW7BAURR2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ArkeWidgets/Info.plist;
@@ -1166,7 +1166,7 @@
 			repositoryURL = "https://gitlab.com/ark-bitcoin/bark-ffi-bindings.git";
 			requirement = {
 				kind = revision;
-				revision = ada76c33da82b77a794eb991f390c2cc042d373d;
+				revision = 4670c1ad54bf0778d0579661bc497f5413ec2b53;
 			};
 		};
 		596754972F509E4500396429 /* XCRemoteSwiftPackageReference "bdk-swift" */ = {
@@ -1174,15 +1174,15 @@
 			repositoryURL = "https://github.com/bitcoindevkit/bdk-swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.3.0;
+				minimumVersion = 3.1.1;
 			};
 		};
 		59D2633A2ED9E1D2006570D0 /* XCRemoteSwiftPackageReference "BIP39" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/anquii/BIP39";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = exactVersion;
+				version = 3.0.0;
 			};
 		};
 		59FB9D142F17D9E800CB26B7 /* XCRemoteSwiftPackageReference "qrcode" */ = {
@@ -1190,7 +1190,7 @@
 			repositoryURL = "https://github.com/dagronf/qrcode.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 27.13.0;
+				minimumVersion = 28.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

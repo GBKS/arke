@@ -6,8 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://gitlab.com/ark-bitcoin/bark-ffi-bindings.git",
       "state" : {
-        "branch" : "master",
-        "revision" : "ada76c33da82b77a794eb991f390c2cc042d373d"
+        "revision" : "4670c1ad54bf0778d0579661bc497f5413ec2b53"
       }
     },
     {
@@ -15,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/bitcoindevkit/bdk-swift",
       "state" : {
-        "revision" : "c38d7caa06ec26289cb40b1ea42531aea631c47e",
-        "version" : "2.3.1"
+        "revision" : "55284dc4e767c301c7926c412daad241c0667106",
+        "version" : "3.1.1"
       }
     },
     {
@@ -24,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/anquii/BIP39",
       "state" : {
-        "branch" : "main",
-        "revision" : "6eaf92d2b059bec565bcbca8ae830e1d19be22ab"
+        "revision" : "6eaf92d2b059bec565bcbca8ae830e1d19be22ab",
+        "version" : "3.0.0"
       }
     },
     {
@@ -42,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/dagronf/qrcode.git",
       "state" : {
-        "revision" : "19d6daac07a290e55c29c1d596e95f90f0c72bbf",
-        "version" : "27.13.0"
+        "revision" : "a8b8a5166e072156baf66ec2fff0850aa14b5297",
+        "version" : "28.1.0"
       }
     },
     {

@@ -47,12 +47,16 @@ final class BDKFeeEstimator {
     ///   - dataDir: Directory holding the wallet database
     init(mnemonic: String, network: Bark.Network, esploraURL: String, dataDir: URL) throws {
         let bdkNetwork = try Self.convertToBDKNetwork(network)
+        // bdk-swift 3.x: key and descriptor constructors take the coarse
+        // mainnet/testnet kind (it only selects the xprv/tprv prefix and the
+        // BIP86 coin type); the full Network still drives the wallet itself.
+        let bdkNetworkKind: NetworkKind = bdkNetwork == .bitcoin ? .main : .test
 
         // Must match bark's onchain wallet configuration: BIP86, empty
         // passphrase, single descriptor, external path m/86'/coin'/0'/0/*
         let mnemonicObj = try Mnemonic.fromString(mnemonic: mnemonic)
         let secretKey = DescriptorSecretKey(
-            network: bdkNetwork,
+            networkKind: bdkNetworkKind,
             mnemonic: mnemonicObj,
             password: nil  // Empty passphrase to match bark's mnemonic.to_seed("")
         )
@@ -60,7 +64,7 @@ final class BDKFeeEstimator {
         let descriptor = Descriptor.newBip86(
             secretKey: secretKey,
             keychainKind: .external,
-            network: bdkNetwork
+            networkKind: bdkNetworkKind
         )
 
         let dbPath = dataDir.appendingPathComponent("bdk_transactions.db")
