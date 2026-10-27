@@ -136,6 +136,49 @@ extension WalletManager {
         )
     }
     
+    /// Estimate the fee for one onchain send at every priority tier in one
+    /// pass: the estimator syncs once (the only network step), then builds
+    /// one transaction per tier locally. Costs the same as a single-tier
+    /// estimate, so the send flow can quote all three tiers at once and a
+    /// tier switch needs no new estimate.
+    /// - Parameters:
+    ///   - address: Destination Bitcoin address
+    ///   - amountSats: Amount to send in satoshis
+    ///   - feeRates: Rates per tier, as published by `FeeRateService`
+    /// - Returns: Fee in satoshis for each tier; a tier is missing only if
+    ///   its own build failed while another succeeded, which cannot happen
+    ///   for coin selection (the same inputs fund every tier) and is kept
+    ///   as a dictionary so the caller never reads a tier it did not get
+    /// - Throws: When the estimator cannot be created or the sync fails, or
+    ///   when every tier fails (the first error)
+    func estimateOnchainFees(address: String, amountSats: UInt64, feeRates: OnchainFeeRates) async throws -> [FeePriority: UInt64] {
+        guard let ffiWallet = wallet as? BarkWalletFFI else {
+            throw BarkErrorArke.commandFailed("BDK wallet not available")
+        }
+
+        let feeEstimator = try await ffiWallet.ensureFeeEstimator()
+        try await feeEstimator.sync(fullScan: false)
+
+        var fees: [FeePriority: UInt64] = [:]
+        var firstError: Swift.Error?
+        for priority in FeePriority.allCases {
+            do {
+                fees[priority] = try feeEstimator.estimateFee(
+                    address: address,
+                    amountSats: amountSats,
+                    feeRateSatPerVb: feeRates.rate(for: priority)
+                )
+            } catch {
+                firstError = firstError ?? error
+            }
+        }
+
+        if fees.isEmpty, let firstError {
+            throw firstError
+        }
+        return fees
+    }
+
     // MARK: - Onchain Max Sendable
     
     /// Calculate maximum sendable amount for onchain Bitcoin transactions

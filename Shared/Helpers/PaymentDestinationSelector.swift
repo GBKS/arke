@@ -466,22 +466,21 @@ class PaymentDestinationSelector {
             return estimateFeeFallback(for: destination)
         }
         
-        // Estimate transaction size in vBytes
-        // Standard P2WPKH transaction: ~140 vB (1 input, 2 outputs)
-        // Silent payments: ~180 vB (additional output overhead)
-        let estimatedVBytes: UInt64
-        switch destination.format {
-        case .bitcoin:
-            estimatedVBytes = 140
-        case .silentPayments:
-            estimatedVBytes = 180
-        default:
-            estimatedVBytes = 140
-        }
-        
-        let fee = Int(feeRate * estimatedVBytes)
+        // A placeholder until BDK's exact estimate lands, never the fee
+        // charged; sized so it does not undershoot the simplest real send
+        let fee = Int(feeRate * roughOnchainSendVBytes)
         return fee
     }
+
+    /// Virtual size of the simplest send bark's onchain wallet can build:
+    /// one P2TR input (57.5 vB), two P2TR outputs (2 × 43 vB) and the
+    /// transaction overhead (10.5 vB), 154 vB, rounded up. The wallet is
+    /// BIP86, so the P2WPKH figure of 140 vB used before 2026-10-27
+    /// undershot every real estimate by about a tenth (7,000 vs 7,839 sats
+    /// at 50 sat/vB on signet). Silent-payment destinations also pay to a
+    /// P2TR output, so the same size applies. Multi-input sends are larger;
+    /// only BDK knows by how much.
+    static let roughOnchainSendVBytes: UInt64 = 155
     
     // MARK: - Convenience Methods
     
