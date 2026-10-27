@@ -601,13 +601,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   The preview shows counts only (`MetadataBackupSectionView.swift:200-225`).
   Fix: validate imported addresses, drop or disclose name-only merges, list
   added addresses per contact in the preview.
-- [ ] **Pin `bark-ffi-bindings` and BIP39 to tags, not branches** (moved up
-  from Tier 1 2026-10-09: supply chain into the component that holds keys):
-  `project.pbxproj:1164-1170` has `bark-ffi-bindings` on `master` and
-  `:1180-1186` `anquii/BIP39` on `main`; `Package.resolved` holds revisions,
-  so builds are stable only until "Update to Latest Package Versions" pulls
-  whatever is on the branch. Xcode UI change (Package Dependencies → exact
-  version / revision); review the diff on each bump.
 - [ ] **Background runs killed for holding a store lock (0xdead10cc)** —
   mitigations shipped 2026-09-24 (probe write removed, task assertions around
   `registerCurrentDevice` and the headless open, the only two wrappers that

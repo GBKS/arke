@@ -12,6 +12,13 @@ Tier 4 "Bindings adoption" as the follow-on Train 2 cluster.
 `ada76c33da82b77a794eb991f390c2cc042d373d`, tag `v0.26.0+bark-0.8.0`,
 branch `master`; UniFFI contract version **30, unchanged** — verified at
 `Bark.swift:12315`)
+**Patch re-pin 2026-10-27:** v0.26.1+bark-0.8.0 (`4670c1a`), taken as an
+exact-revision pin in the project. No migration folder of its own: the
+Swift wrapper builds from the same `bark-ffi` crate commit `4a1c1c0`
+(`swift/rust/Cargo.toml`, both tags) against the same bark-wallet 0.8.0,
+and `swift/Sources/Bark` is byte-identical; the release carried
+React Native and Dart notification fixes, Android packaging, and a new
+xcframework checksum from the rebuild. Verified by diff of the two tags.
 
 ## Why this bump is different
 

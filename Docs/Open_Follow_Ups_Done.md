@@ -1708,3 +1708,19 @@ DECIDED label in place.
   v0.25.0), and `validateArkoorAddress(address:)` is the unadopted
   pre-check (`Bark_Bindings_Unadopted_API.md` §2) should the send flow want
   to tell the user before the attempt.
+
+## Moved from the open list 2026-10-27
+
+### Tier 0 — Funds or security at risk
+
+- [x] **Pin `bark-ffi-bindings` and BIP39 to tags, not branches** — closed
+  2026-10-27 (moved up from Tier 1 2026-10-09: supply chain into the
+  component that holds keys). bark went to an exact revision on 2026-10-26
+  (a68c69b, v0.26.0) and to `4670c1a` (v0.26.1+bark-0.8.0) on 2026-10-27;
+  BIP39 went from branch `main` to exact 3.0.0 the same day (Christoph, in
+  Xcode's Package Dependencies UI). Both were already resolving to those
+  commits, so the resolved pins did not move. In the same pass bdk-swift
+  went 2.3.1 → 3.1.1 (one call-site change in `BDKFeeEstimator`, the
+  `NetworkKind` constructors) and qrcode 27.13.0 → 28.1.0 (no call-site
+  change). Rules, the update recipe and the stale-`.pcm` trap are in
+  `Development/Setup.md`.

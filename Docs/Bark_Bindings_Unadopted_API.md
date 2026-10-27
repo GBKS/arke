@@ -5,9 +5,11 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.26.0** (bark **v0.8.0**), tag
-`v0.26.0+bark-0.8.0` @ `ada76c3` (branch `master` in `Package.resolved`
-until Christoph pins it in Xcode). Compared against
+**Baseline:** bark-ffi-bindings **v0.26.1** (bark **v0.8.0**), tag
+`v0.26.1+bark-0.8.0` @ `4670c1a`, pinned as an exact revision in the
+project. v0.26.1 (2026-10-27) rebuilt the same `bark-ffi` crate commit as
+v0.26.0 (`4a1c1c0`, bark-wallet 0.8.0); the generated Swift is identical,
+so the surface below is unchanged since the v0.26.0 comparison against
 `Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage on
 2026-10-25.
 

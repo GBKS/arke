@@ -29,20 +29,46 @@ Open `Arke.xcodeproj`. Three shared schemes:
 | `ArkeWidgetsExtension` | ArkeWidgets | widget extension; only when touching widgets |
 
 Package dependencies resolve on first open. The bark wallet library comes
-from `bark-ffi-bindings` (gitlab.com/ark-bitcoin), pinned to a revision on
-`master` in `Package.resolved`; its `Package.swift` declares a
-`binaryTarget` that downloads `BarkFFI.xcframework.zip` for the matching
-release (v0.25.0+bark-0.7.1 at the time of writing). Nothing is built
-locally; the `.gitignore` entries for `bark_ffi.swift` and
-`/BarkFFI.xcframework` are left over from the hand-vendored era. The
-resolved binding source, which is the only correct place to read FFI
-signatures, lives under
+from `bark-ffi-bindings` (gitlab.com/ark-bitcoin), pinned to an **exact
+revision** in the project (Package Dependencies → Revision; since
+2026-10-26, tag `v0.26.1+bark-0.8.0` since 2026-10-27). Its `Package.swift`
+declares a `binaryTarget` that downloads `BarkFFI.xcframework.zip` for the
+matching release. Nothing is built locally; the `.gitignore` entries for
+`bark_ffi.swift` and `/BarkFFI.xcframework` are left over from the
+hand-vendored era. The resolved binding source, which is the only correct
+place to read FFI signatures, lives under
 `~/Library/Developer/Xcode/DerivedData/Arke-<hash>/SourcePackages/checkouts/bark-ffi-bindings/`.
 
-Other pins: `bdk-swift` (onchain wallet), `BIP39`, `qrcode` and
-`swift-qrcode-generator`, `SwiftImageReadWrite`, and `Hallmarks` (shared
-with the local `ArkeUI` package, which holds the previewable UI components
-and its own string catalog).
+The bindings repo holds no Rust. The xcframework is built from the separate
+`gitlab.com/ark-bitcoin/bark-ffi` crate, pinned by commit in the bindings'
+`swift/rust/Cargo.toml`, which in turn pins `bark-wallet` by git rev in its
+`Cargo.lock`. To tell whether a bindings release changes our binary, diff
+that `rev` between the two tags; a patch release that only touches the
+other language wrappers (v0.26.1 did) keeps the same rev and only the
+checksum moves.
+
+Other pins, with their rules and the one file that imports each:
+`bdk-swift` ≥ 3.1.1 up to next major (`BDKFeeEstimator.swift`, fee preview
+only), `BIP39` exact 3.0.0 (`BIP39Usage.swift`, mnemonic generation and
+validation), `qrcode` ≥ 28.1.0 up to next major (`QRCodeGenerator.swift`),
+`swift-qrcode-generator` and `SwiftImageReadWrite` (transitive, through
+`qrcode`), and `Hallmarks` ≥ 1.0.0 (declared by the local `ArkeUI`
+package, which holds the previewable UI components and its own string
+catalog). Rules are edited in Xcode's Package Dependencies UI, never in
+`project.pbxproj` by hand. "Update to Latest Package Versions" moves a
+package only inside its rule, so a major bump is always a deliberate rule
+change plus a diff of the upstream tags against our call sites (last done
+2026-10-27).
+
+After any bump of a binary package (bark, bdk) the first build fails with
+`<Name>FFI.h has been modified since the module file … .pcm was built`,
+followed by dozens of `Cannot find 'uniffi_…_checksum_…' in scope` errors
+inside the package's generated Swift. Nothing is wrong with the pin: the
+Swift compiler is reusing a module precompiled from the old header. Delete
+the `<Name>FFI-*.pcm` directories under
+`DerivedData/Arke-<hash>/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/`
+(or Clean Build Folder) and build again. Hit on 2026-10-25 (barkFFI) and
+2026-10-27 (BitcoinDevKitFFI).
 
 Code layout: `ArkeMobile/`, `ArkeDesktop/`, `ArkeWidgets/` hold the
 platform-specific entry points and views; `Shared/` holds everything else
