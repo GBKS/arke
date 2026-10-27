@@ -194,32 +194,53 @@ extension SendViewModel {
                 guard offered < drainAmount else { return offered }
 
                 // Capped, so no longer a drain: re-quote as a recipient amount
-                // (change output, larger fee) and shrink until amount plus
-                // fee fits bark's balance, which is exactly what the Send
-                // gate will check. Each pass is one shadow-wallet sync.
+                // (change output, larger fee) until amount plus fee fits
+                // bark's balance, which is exactly what the Send gate will
+                // check. The shadow wallet's coin selection is not
+                // deterministic, so the fee can swing between passes (the
+                // simulator left 2,887 sats behind on 2026-10-27); keep the
+                // largest amount that fitted. Each pass is one sync.
                 logger.info("Onchain (BDK): send-all capped at \(offered) sats to fit bark's spendable balance; re-quoting")
-                for _ in 0..<3 {
+                var best: Int?
+                var seen: Set<Int> = []
+                for _ in 0..<4 {
+                    guard seen.insert(offered).inserted else { break }
                     let quote = try await walletManager.estimateOnchainFees(
                         address: destination.address,
                         amountSats: UInt64(offered),
                         feeRates: onchainFeeRates
                     )
                     guard case .fee(let requoted)? = quote[selectedFeePriority] else {
-                        logger.warning("Onchain (BDK): capped amount \(offered) is unfundable at the selected tier; leaving it to the gate")
+                        logger.warning("Onchain (BDK): capped amount \(offered) is unfundable at the selected tier")
                         break
                     }
+                    let requotedFee = Int(clamping: requoted)
                     guard let refit = OnchainSendAll.refit(
                         amountSats: offered,
-                        requotedFeeSats: Int(clamping: requoted),
+                        requotedFeeSats: requotedFee,
                         barkSpendableSats: balance
                     ) else {
-                        return nil
+                        break
                     }
-                    if refit == offered { break }
-                    logger.debug("   Re-quoted fee \(requoted) sats; send-all shrinks \(offered) → \(refit)")
-                    offered = refit
+                    if refit == offered {
+                        // Fits; remember it and probe whether the fee at this
+                        // amount leaves room for more
+                        best = max(best ?? 0, offered)
+                        let roomier = balance - requotedFee
+                        if roomier <= offered { break }
+                        logger.debug("   Fee \(requotedFee) at \(offered) leaves room; probing \(roomier)")
+                        offered = roomier
+                    } else {
+                        logger.debug("   Re-quoted fee \(requotedFee) sats; send-all shrinks \(offered) → \(refit)")
+                        offered = refit
+                    }
                 }
-                return offered
+                if let best {
+                    logger.info("Onchain (BDK): send-all offers \(best) sats")
+                } else {
+                    logger.warning("Onchain (BDK): no capped amount fitted after re-quoting; leaving the cap to the gate")
+                }
+                return best ?? offered
                 
             } catch {
                 logger.error("Onchain (BDK): Calculation failed: \(error)")

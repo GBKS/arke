@@ -127,11 +127,18 @@ extension SendViewModel {
         // end of the debounce: in that half second the placeholder would
         // otherwise show and the Send gate would let it through (review F3,
         // 2026-10-27). The generation bump makes any older reply stale.
-        if let destination = selectedDestination, isOnchainDestination,
-           let amountInt = Int(amount), amountInt > 0,
-           !(onchainFeeQuote?.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) ?? false) {
-            onchainFeeRequestGeneration += 1
-            isEstimatingOnchainFee = true
+        if let destination = selectedDestination, isOnchainDestination {
+            if let amountInt = Int(amount), amountInt > 0 {
+                if !(onchainFeeQuote?.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) ?? false) {
+                    onchainFeeRequestGeneration += 1
+                    isEstimatingOnchainFee = true
+                }
+            } else {
+                // Emptied: nothing to quote, and no spinner while the
+                // debounce runs out (seen when backspacing to empty)
+                resetOnchainFeeQuote()
+                return
+            }
         }
 
         // Schedule new estimation with delay
