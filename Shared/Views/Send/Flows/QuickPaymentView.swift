@@ -291,7 +291,11 @@ struct QuickPaymentView: View {
         
         // Need the callback to be provided
         guard onSendImmediately != nil else { return false }
-        
+
+        // The shared gate: fee still estimating, speed or amount over the
+        // balance, mainnet estimator at the ceiling (reason shown under the button)
+        if sendViewModel?.sendBlocker != nil { return false }
+
         return true
     }
     
@@ -537,6 +541,8 @@ struct QuickPaymentView: View {
                     .controlSize(.large)
                     .tint(.Arke.gold)
                     .disabled(!canSendImmediately || isSending)
+
+                    SendBlockedReasonText(reason: sendViewModel?.sendBlockedReason)
                 } else {
                     Text(String(localized: "error_address_wrong_network", defaultValue: "Cannot use this address on current network"))
                         .font(.caption)

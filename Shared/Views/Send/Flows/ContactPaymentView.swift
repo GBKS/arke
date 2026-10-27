@@ -287,7 +287,15 @@ struct ContactPaymentView: View {
         // Otherwise, we need a valid amount
         let hasValidAmount = !amount.isEmpty && Int(amount) != nil
         print("   └─ \(hasValidAmount ? "✅ PASSED" : "❌ FAILED"): Valid amount check")
-        return hasValidAmount
+        guard hasValidAmount else { return false }
+
+        // The shared gate: minimum, fee still estimating, speed or amount
+        // over the balance, mainnet estimator at the ceiling
+        if let blocker = sendViewModel?.sendBlocker {
+            print("   └─ ❌ FAILED: Send gate \(String(describing: blocker))")
+            return false
+        }
+        return true
     }
     
     var body: some View {
@@ -452,6 +460,8 @@ struct ContactPaymentView: View {
             .frame(maxWidth: .infinity)
             .disabled(!canSend)
             .padding(.top, 16)
+
+            SendBlockedReasonText(reason: hasMatchedAddress ? sendViewModel?.sendBlockedReason : nil)
         }
         .frame(maxWidth: 400)
         .toolbar {

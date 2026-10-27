@@ -81,7 +81,13 @@ struct ManualSendView: View {
         if amountValue < minimumSendAmount {
             return false
         }
-        
+
+        // The shared gate: fee still estimating, speed or amount over the
+        // balance, mainnet estimator at the ceiling (reason shown under the button)
+        if sendViewModel?.sendBlocker != nil {
+            return false
+        }
+
         return true
     }
     
@@ -206,6 +212,8 @@ struct ManualSendView: View {
             .frame(maxWidth: .infinity)
             .disabled(!canSend)
             .padding(.top, 16)
+
+            SendBlockedReasonText(reason: isConfirmed ? sendViewModel?.sendBlockedReason : nil)
         }
         .frame(maxWidth: 400)
         .toolbar {

@@ -175,14 +175,25 @@ extension SendViewModel {
                     feeRateSatPerVb: feeRate
                 )
                 
-                let maxAmount = Int(result.sendAmount)
+                let drainAmount = Int(result.sendAmount)
                 let fee = Int(result.fee)
-                
+
+                // The shadow wallet's coins are not bark's coins (it finds
+                // some bark has not revealed, misses locks bark knows); the
+                // amount offered must fit the balance bark spends from
+                let maxAmount = OnchainSendAll.cappedAmount(
+                    drainAmountSats: drainAmount,
+                    drainFeeSats: fee,
+                    barkSpendableSats: balance
+                )
+
                 logger.info("Onchain (BDK): Exact calculation complete")
-                logger.debug("   Max sendable: \(maxAmount) sats")
-                logger.debug("   Fee: \(fee) sats")
-                
-                return maxAmount > 0 ? maxAmount : nil
+                logger.debug("   Drain amount: \(drainAmount) sats, fee: \(fee) sats, bark spendable: \(balance) sats")
+                if let maxAmount, maxAmount < drainAmount {
+                    logger.info("Onchain (BDK): send-all capped at \(maxAmount) sats to fit bark's spendable balance")
+                }
+
+                return maxAmount
                 
             } catch {
                 logger.error("Onchain (BDK): Calculation failed: \(error)")

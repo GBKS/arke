@@ -248,6 +248,34 @@ extension SendViewModel {
         return destination.format == .ark
     }
     
+    /// Why Send is disabled right now, nil when it may be tapped. The one
+    /// gate for all three flows; see `SendBlocker`.
+    var sendBlocker: SendBlocker? {
+        SendBlocker.evaluate(
+            amountSats: Int(amount),
+            isAmountLocked: isAmountLocked,
+            minimumSendAmount: minimumSendAmount,
+            availableSats: maxSpendableAmount,
+            feeState: feeDisplayState,
+            isOnchain: isOnchainDestination,
+            fastTierAtMainnetCeiling: fastTierAtMainnetCeiling
+        )
+    }
+
+    /// The line under the Send button, when the blocker has one
+    var sendBlockedReason: String? {
+        sendBlocker?.reason
+    }
+
+    /// The live fast rate equals the mainnet sanity ceiling: a poisoned or
+    /// broken estimator (`Features/Mainnet_Fee_Rate_Ceiling.md` §2); the
+    /// clamp warning in `FeeRateService` fires on the same condition. Only
+    /// mainnet: the signet cap is hit routinely under fee spam and is a
+    /// different constant.
+    var fastTierAtMainnetCeiling: Bool {
+        currentNetworkConfig.isMainnet && onchainFeeRates.fast == FeeRateService.mainnetMaxRateSatPerVb
+    }
+
     /// Returns whether to show the fee disclosure indicator: an onchain
     /// destination whose tiers differ in rate. When every tier is priced
     /// the same there is nothing to choose, so the row does not pretend

@@ -1956,6 +1956,17 @@
         }
       }
     },
+    "accessibility_send_blocked" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Send is unavailable: %@"
+          }
+        }
+      }
+    },
     "accessibility_settings_hint" : {
       "localizations" : {
         "de" : {
@@ -19816,6 +19827,50 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "其他選項"
+          }
+        }
+      }
+    },
+    "send_blocked_estimating_fee" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Estimating the fee…"
+          }
+        }
+      }
+    },
+    "send_blocked_exceeds_available" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "More than your available balance"
+          }
+        }
+      }
+    },
+    "send_blocked_fee_estimate_unreliable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The fee estimate is unreliable right now. Onchain sending is paused."
+          }
+        }
+      }
+    },
+    "send_blocked_unaffordable_tier" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This speed exceeds your balance. Pick a slower one."
           }
         }
       }
