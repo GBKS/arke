@@ -42,6 +42,16 @@ class AddressService {
         self.wallet = wallet
         self.taskManager = taskManager
         self.modelContext = modelContext
+
+        // Publish the saved history right away. The service is created in
+        // `setModelContext`, before the wallet opens; `loadAddresses()` only
+        // runs at Step 3 of the launch refresh, behind the onchain sync, so
+        // the receive screen showed a spinner for the whole sync although
+        // the rows were already local (2026-10-27). This is a database read
+        // only — the bark reveal that contract rule 7 orders before the
+        // onchain history read still happens in Step 3, which overwrites
+        // these values if the sync marked the onchain address used.
+        updateCachedAddresses()
     }
     
     // MARK: - Public Methods

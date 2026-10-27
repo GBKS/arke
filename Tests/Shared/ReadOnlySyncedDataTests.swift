@@ -180,6 +180,53 @@ struct ReadOnlySyncedDataTests {
         #expect(await eventually { service.arkAddress == "tark1secondary" })
         #expect(service.onchainAddress == "tb1qsecondary")
     }
+
+    /// The primary-mode sibling. `AddressService` is created in
+    /// `setModelContext`, long before the wallet opens, and its
+    /// `loadAddresses()` only runs at Step 3 of the launch refresh, behind the
+    /// onchain sync — so the receive screen spun for the whole sync although
+    /// the rows were local. The service now reads the history at init, as the
+    /// read-only one always did; nothing is asked of bark before Step 3.
+    @Test("Primary address service publishes the saved history at init, not bark's answer")
+    func primaryServiceReadsHistoryAtInit() throws {
+        let context = ModelContext(try createTestContainer())
+        context.insert(PersistentAddress(address: "tark1saved", addressType: .ark))
+        let used = PersistentAddress(address: "tb1qused", addressType: .onchain, generatedAt: .now)
+        used.isUsed = true
+        context.insert(used)
+        context.insert(PersistentAddress(
+            address: "tb1qfresh",
+            addressType: .onchain,
+            generatedAt: .now.addingTimeInterval(-60)
+        ))
+        try context.save()
+
+        let service = AddressService(
+            wallet: MockBarkWallet(),
+            taskManager: TaskDeduplicationManager(),
+            modelContext: context
+        )
+
+        // The saved rows, not the mock wallet's "ark1qxyz…" / "tb1qmock…"
+        #expect(service.arkAddress == "tark1saved")
+        // The newest *unused* onchain row, the same pick Step 3 makes
+        #expect(service.onchainAddress == "tb1qfresh")
+    }
+
+    @Test("Primary address service stays empty at init when no history exists")
+    func primaryServiceEmptyWithoutHistory() throws {
+        let context = ModelContext(try createTestContainer())
+
+        let service = AddressService(
+            wallet: MockBarkWallet(),
+            taskManager: TaskDeduplicationManager(),
+            modelContext: context
+        )
+
+        // A fresh wallet keeps its spinner until Step 3 generates via bark
+        #expect(service.arkAddress.isEmpty)
+        #expect(service.onchainAddress.isEmpty)
+    }
 }
 
 /// The observer that feeds everything above used to *drop* remote-change

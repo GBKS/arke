@@ -59,7 +59,15 @@ Enforced: `SecurityService.swift`. Test: `KeychainAccessibilityMigrationTests`.
 bark's revealed-SPK sync scans nothing until at least one address is
 revealed; on a fresh import the first balance read must come after the
 reveal or it reports zero (fixed 2026-08-12, commit `fc9a006`-adjacent).
-Enforced: `WalletManager.swift` (`performRefresh`, addresses-first step). Test: none.
+The rule orders the bark *reveal*, not the display: since 2026-10-27
+`AddressService` publishes the saved `PersistentAddress` rows at init (a
+local read in `setModelContext`, before the open), so the receive screen no
+longer waits behind the onchain sync; the Step 3 call stays and overwrites
+those values when the sync marked the onchain address used.
+Enforced: `WalletManager.swift` (`performRefresh`, addresses-first step),
+`AddressService.init` (history-first read). Test: `ReadOnlySyncedDataTests`
+(`primaryServiceReadsHistoryAtInit`) for the init read; the reveal ordering
+has none.
 
 **7a. `vtxoRefreshService.start()` must come after the first `refresh()`.**
 `start()` runs an immediate `checkAndRefreshVTXOs()`, whose Guard C
