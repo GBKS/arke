@@ -5,10 +5,11 @@ fees", Train 2). Batch 1 (§1–§6): `20c4ac4`, `c46daf4`, `2fe0f62`,
 `157609e`. Batch 2 (§8): `4323294`, `df7f125`, `bd2f5a4`, `2f8357c`,
 `dfed057`, `4e4cf99`, `8de98fd`. Both adversarial passes' confirmed findings
 fixed the same day. Device look §8.8 PASSED on Christoph's mainnet phone
-for every item it could reach; two states need conditions the phone did
-not offer that evening ("Exceeds balance" and "Estimate unreliable"). Open
-in the backlog: send-all latency (PROPOSED fix), approximate-placeholder
-gating (PROPOSED), the ceiling entry's forced-clamp look.**
+for every item it could reach; "Exceeds balance" needs rates that differ
+and "Estimate unreliable" a forced clamp, which was waived (DECIDED
+2026-10-27). All rulings made the same day: approximate placeholder not
+gated, send-all fills at once, single-destination row plain and its address
+black. Nothing open in the backlog from this cluster.**
 
 Backlog entries: `Open_Follow_Ups.md`, Tier 1 "Send and fees": the fee
 row three-state proposal (onchain half closed by this), the blind

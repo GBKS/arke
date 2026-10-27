@@ -1770,3 +1770,219 @@ DECIDED label in place.
   row is a button only when there are alternatives, so a single destination
   is no longer dimmed as a disabled button. Device-checked "works great".
   Write-up: `Features/Send_Fee_Quotes.md` §8.9.
+
+- [x] **Gate onchain sends while the mainnet fee estimate sits at the
+  ceiling** — closed 2026-10-27 (DECIDED 2026-10-19 as a Train 2 item from
+  the mainnet-ceiling adversarial pass). Built as `SendBlocker.feeEstimateUnreliable`
+  and `FeeDisplayState.unreliable`: when the mainnet fast tier equals
+  `FeeRateService.mainnetMaxRateSatPerVb` the fee row reads "Estimate
+  unreliable" in orange and Send is disabled for onchain destinations; Ark
+  and Lightning stay usable; the gate lifts on the next fetch below the
+  ceiling. Unit-tested (`SendGateTests`). The definition of done asked for a
+  device look with a forced clamp; **waived, DECIDED 2026-10-27** (no debug
+  override; the condition cannot be produced on a real network, the state
+  is rendered by the same path as the other fee-row states that were
+  device-checked). `Features/Send_Fee_Quotes.md` §8.3.
+- [x] **PROPOSED — gate Send on the approximate placeholder too** — DECIDED
+  2026-10-27 **not to gate**. After a failed onchain quote the row shows the
+  grey "~₿ …" placeholder and Send stays enabled. Reasons: the placeholder is
+  marked approximate and sized not to undershoot the simplest Taproot send;
+  the common failure (the never-persisted shadow wallet) is fixed; when
+  Esplora is down bark's own send fails too, so a gate would add little while
+  blocking all onchain sending. Revisit when bark exposes its own onchain
+  estimate and the shadow wallet goes away.
+
+## Train 1 (opened 2026-10-08, closed 2026-10-27) — archived Current train block
+
+Moved verbatim from `Open_Follow_Ups.md` when Train 2 took over the block.
+
+**Train 1** — opened 2026-10-08.
+
+| Stage | Status |
+|---|---|
+| Decide | rulings done 2026-10-10 (15 of 16; exploration season explicitly deferred); picks below PROPOSED, Christoph to confirm |
+| Build | started 2026-10-09 with the hygiene pass; **cut DECIDED 2026-10-19** (see below); **closed 2026-10-19** — fee ceiling, cosmetic pass and loading wave all committed (through b270c7d), 531/531 |
+| Review | per cluster as built (deletion cluster: four adversarial passes, all filed); `/code-review` over the range since build 23 on 2026-10-21 |
+| Device | deletion cluster fully device-checked (10-14, 10-15, 10-16, 10-19); owed cosmetic looks done 10-21; **manual pass on the frozen build done 2026-10-21, everything works** (Christoph); the remaining checklist items are Tier 2 debt and do not gate the upload |
+| Release | **2026-10-21**: code frozen at `fd4e2f8`, suite 566/566, `/code-review` ten findings filed (DECIDED 2026-10-21: none fixed before the upload, all ride into Train 2 with their clusters), **build 25** bumped and committed; TestFlight upload + notes next |
+| Soak | Plan B Forum, Lugano, from 2026-10-22 — a week of conference use on the new build |
+
+**Cut DECIDED 2026-10-19** (Christoph: TestFlight before Lugano). Build
+closes with: the Tier 0 mainnet fee-rate crash (cluster 4's first item,
+pulled forward because mainnet payments at a conference are the field
+condition) and a cosmetic pass from Tier 3 — QR screen brightening,
+"-0 B fees paid" no-fee state, exit-status txid copy, onboard-modal minimum,
+move-to-payments image line, rejoin screen styling, plus the two added the
+same day: activity rows dated by the movement's own time rather than the
+wallet's processing time, and (PROPOSED, not yet picked) the loading wave on
+the payments / savings totals of the balance details view. Moved to Train
+2: the rest of the deletion cluster (four unprotected store writes, exit
+Live Activity on demotion + dead `closeWallet()`, abort-after-unregister),
+clusters 3, 5 and 6, the remainder of cluster 4, the new Tier 1 gate on
+onchain sends at the fee ceiling (DECIDED 2026-10-19), and the exit cost
+estimate replacement via `estimateEmergencyExitFee` (Tier 1 "Exits",
+DECIDED 2026-10-19, with the dead ArkéUI fee arithmetic deletion in the
+opening hygiene pass).
+Cosmetic pass built and committed 2026-10-19 (six items ticked in Tier 3;
+the activity-dating item's step (c) came back negative and its (b) became
+upstream ask 20; the loading wave was DECIDED the same evening and is
+committed). Brightness device-checked. The device looks owed before the
+upload (loading wave in motion, boarding modal minimum + image, tags no-fee
+row, exit state rows) were done by Christoph, confirmed 2026-10-21. Code
+frozen at `fd4e2f8` for his manual pass, mobile suite 566/566 via
+`xcodebuild` on that commit. `/code-review` (medium, `06d3cfc..fd4e2f8`)
+ran 2026-10-21 before the manual pass: ten findings, all filed (one Tier
+0 deletion, two Tier 1, six Tier 3; the CloudKit import-gate claim is
+already Tier 2 "Seeding scenarios" (2)), none fixed — fix-before-upload
+is Christoph's ruling. Then bump to build 25 and upload.
+
+The exploration-season ruling is parked until the most important items are
+worked off (Christoph, 2026-10-09).
+
+Tier 0 ranked on three axes — field evidence (observed loss / latent trap /
+hardening), size of loss, cost of the fix including its device step. Twenty
+items will not empty in one train; the ranking says which go now and why
+the rest wait.
+
+- Decide — done 2026-10-10, one decision per message in chat. Rulings that
+  add Train 1 work: Savings default + no auto-switch (send cluster); nearby
+  contact card (send-inputs cluster); Live Activity ends on demotion
+  (deletion cluster); dead images deleted (build to confirm). Rulings that
+  shape later trains: explicit linking accepted (scope pass first), S7
+  ghost remedy only, S5 and the join notification after linking, expiry
+  safety net (a)+(c) planned later, operator dependence recorded as contract
+  rule 13a. Exploration season explicitly deferred.
+- Build, Tier 0, in rank order, one cluster per session:
+  1. **Divergence (field; funds safe server-side, user stuck):** the
+     wallet-state-diverged cluster (classifier back-off ✓ 2026-10-11 and
+     FFI log line ✓ 2026-10-11, committed `04e571f..b24fac1`; balance card
+     refused state + floor on the manual path ✓ 2026-10-11, committed
+     `31e0ad1..5a007ed`; orphan rows ✓ 2026-10-12 — a log artefact of the
+     notification path, no rows existed, uncommitted); forfeit warning
+     on deletion ✓ 2026-10-13 (amount + time to expiry, strategy-aware copy,
+     uncommitted); permission-denied banner for expiry reminders.
+  2. **Deletion (traced traps, same function):** skip the backup on the
+     delete path ✓ 2026-10-14 (built, reviewed, device-checked the same
+     evening, uncommitted; plan `Features/Wallet_Deletion_Backup_Skip.md`;
+     the check surfaced the Tier 1 "deleted wallet's onchain row reappears"
+     regression from 31e2f10, filed under Data safety); the two-word
+     phrase confirmation next (DECIDED 2026-10-10, did not ride along;
+     ✓ 2026-10-15 — own pushed screen between the info screen and the
+     slider sheet; built, reviewed, committed `b42d536..daabaf8` and
+     device-checked on one phone the same day, plan
+     `Features/Wallet_Deletion_Phrase_Confirmation.md`; two-device
+     override route on the Device checklist);
+     partial-failure handling + `isDeleting` ✓ 2026-10-16 (gate on the
+     refresh instead of a pause, DECIDED 2026-10-15; built, reviewed,
+     device-checked, uncommitted; plan
+     `Features/Wallet_Deletion_Partial_Failure.md`); ghost-hardening
+     residual (clear-first + surfaced unregister error, same in
+     `unlinkDevice`); wrap the four unprotected store writes; end the exit
+     Live Activity on demotion + drop dead `closeWallet()` (DECIDED
+     2026-10-10, same file).
+  3. **Phrase exposure (hardening, cheap):** clipboard 2–3 min + QR-sheet
+     selection off; screen-capture / `privacySensitive` on the four phrase
+     surfaces. Device check: Handoff paste at 60 s and local paste at 70 s.
+  4. **Send inputs (hardening, cheap, one detector):** mainnet fee ceiling +
+     test; BIP-353 query skip + softer error; paste fallback + the shared
+     `detectFormatOrNil` fix (also header proposal (d)); nearby received
+     sheet shows a contact only when every URI destination is theirs
+     (DECIDED 2026-10-10).
+  5. **Boards (incident-derived, small):** `maxVtxoAmount` into the boarding
+     form, refuse client-side, disable while the server is unreachable.
+  6. **Ops, Christoph's hands:** rotate `RELAY_API_TOKEN` on the relay and
+     move the token out of the tree; pin `bark-ffi-bindings` and BIP39 to
+     revisions in Xcode's Package Dependencies.
+  Then the Tier 1 cluster: the three send proposals (address header, fee
+  three-state incl. the static-20 fallback, onchain from Payments) — the
+  last one needs the onchain-default ruling. Added 2026-10-12 (DECIDED):
+  the Tier 1 Connectivity icon fix, "no Ark connection" shown for the whole
+  launch refresh — built and reviewed the same day, device check in the
+  Device stage (one launch, icon must not appear); and the Tier 1 launch
+  load indicator (built, reviewed and device-checked 2026-10-13 as a glyph
+  wave on the amount; DONE, Device stage has nothing left on it). Added
+  2026-10-14 (DECIDED): the Tier 1 Connectivity item "Ark data waits for the
+  onchain sync on every refresh" — Step 2 split into Ark sync → early Ark
+  publish → onchain sync, plus the balance service publishing the Ark
+  balance on arrival; plan in `Features/Launch_Ark_First_Refresh.md`, device
+  check one unattached cold launch with a mailbox payment waiting.
+- Deferred to Train 2, each with its reason: claimed-exit funds (design pass
+  on the claim address + test rewrite); backup binding to wallet hash
+  (format change on seed-adjacent state, design first — moves into this
+  train if the mainnet user confirms a restore); `checkReadOnlyMode` (fix
+  after the Tier 2 self-unlink run in the Device stage settles the shape);
+  metadata-import name merge (medium, no field evidence; pull forward if
+  cluster 4 finishes early); security gating (design unblocked 2026-10-10,
+  explicit linking accepted; build with or after the linking scope pass); the
+  offline feature; CI; the bindings bump with bark's recovery fixes (waits
+  on a bindings release from Second).
+- Review — fresh-context adversarial pass per cluster against the five
+  fault classes (`Development/Change_Review_Playbook.md`); findings fixed or
+  filed, ledger lines written, then the device checklist
+  (`Development/Device_Day_<date>.md`, dated the day Review closes).
+- Device — the two-device set: deletion + rejoin, deletion strategy,
+  second-iPhone read-only data, seeding scenarios (incl. the Faucetto
+  duplicate), SwiftData import crash repro, self-unlink → relaunch; plus
+  exit blocked state and exit completion with the stuck-signet wallet; plus
+  the phrase-exposure paste checks from cluster 3.
+- Release — bump build number, code-review pass, mobile suite via
+  `xcodebuild`, TestFlight.
+- Soak — 0xdead10cc signatures in Organizer, bark 0.25 day-15 renewal
+  (~2026-10-11, observable on the current build already), auth-wake journal
+  rows.
+
+**Train 2 — PROPOSED 2026-10-19** (asked by Christoph while Train 1 waits
+for its Release; Soak may overlap Decide and Build, not Release). Tier 0 is
+not empty at Train 1's Release, so Train 2 takes nothing from Tier 3 or 4
+beyond the already-DECIDED ArkéUI fee-arithmetic deletion. Build runs while
+Christoph is in Lugano; Device is his first home stretch with both phones
+afterwards, and the Lugano soak's findings are read into the picks before
+Build closes. Picks, one cluster per session, in order:
+
+0. **Bindings bump v0.26.0 (bark 0.8.0), Track A — the recovery release**
+   (pre-empted to the front 2026-10-25 when Second cut the release; two
+   mainnet users with diverged wallets re-import on it). Built 2026-10-25:
+   compile fixes, balance totals with `needsRefreshSat`, `vtxoSwept` folded
+   into cancelled, bark logger kept public, onchain `initialScan` after
+   import; adversarial pass done, two findings fixed (ledger). Plan, device
+   scenarios 1–6 and the users' procedure:
+   `Migrations/Bark-0.25.0-to-0.26.0/`. Christoph next: pin the package to
+   the tag, deploy the CloudKit schema (four new `ArkBalanceModel` fields) to
+   Production, build 26, scenarios, TestFlight, procedure to the users.
+   Track B (nine items) filed under Tier 4 "Bindings adoption" as the
+   follow-on cluster. Soak of Train 1 closed 2026-10-25 on Christoph's
+   return; its minor findings he records separately.
+1. **Train 1 leftovers, Tier 0** — deletion residual (four unprotected store
+   writes; exit Live Activity on demotion + dead `closeWallet()`, DECIDED;
+   abort-after-Step-1 reorder, PROPOSED fix needs a ruling) and the
+   permission-denied banner for expiry reminders. Plans exist, files are warm.
+2. **Phrase exposure, Tier 0** — clipboard 2–3 min, QR-sheet selection off,
+   `privacySensitive` / capture hiding on the four phrase surfaces.
+3. **Send path, Tier 0 + DECIDED Tier 1** — BIP-353 query skip + softer
+   error; paste fallback + the shared `detectFormatOrNil` fix; nearby sheet
+   contact rule (DECIDED); onchain-send gate at the fee ceiling (DECIDED);
+   BDK estimator full-scan-and-retry (option (a), PROPOSED). Lugano's
+   send-path findings land here.
+4. **Exits, DECIDED Tier 1** — `estimateEmergencyExitFee` replacement; its
+   device step shares the stuck-signet session with the Tier 2 exit items.
+5. **Boards, Tier 0** — `maxVtxoAmount` into the boarding form, refuse
+   client-side. The "disable while unreachable" half waits on the
+   connectivity signal (Tier 1 "can never show disconnected"), which is
+   PROPOSED as the one Tier 1 connectivity pick if the soak evidences it.
+6. **Ops, Christoph's hands** — rotate `RELAY_API_TOKEN` and move it out of
+   the tree; pin `bark-ffi-bindings` and BIP39 in Xcode.
+
+Pre-emption: happened 2026-10-25 (cluster 0 above); 5 and 4 move back one
+slot each, and 4 is rewritten first (its premises changed at bark 0.8.0,
+see the Tier 1 Exits entry). Deferred to Train 3 with
+reasons: the three send proposals (design-heavy; the detector fix rides
+with 3), claimed-exit funds and backup binding (design first),
+`checkReadOnlyMode` (after the self-unlink run on this train's device day),
+metadata-import name merge (no field evidence; pull forward if 2 is quick),
+security gating (after the linking scope pass), the offline feature beyond
+its signal. Device checklist: the Tier 2 two-device set, exit blocked state
++ completion, phrase paste checks, forced-clamp look, cold-launch export
+with Step markers. Decide stage: the eight DECIDE lines below are PROPOSED
+for bulk deferral except "disable the Settings exit entry while an exit is
+active", which cluster 4 touches.
+
