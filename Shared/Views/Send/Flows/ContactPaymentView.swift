@@ -29,7 +29,7 @@ struct ContactPaymentView: View {
     let availableBalanceName: String
     let availableBalanceAmount: String
     let feeText: String
-    let feeAmount: Int?
+    let feeState: FeeDisplayState
     let isAmountLocked: Bool
     let lockedAmountReason: String?
     let minimumSendAmount: Int
@@ -429,7 +429,7 @@ struct ContactPaymentView: View {
             )
             
             FeeDisplayView(
-                fee: feeAmount,
+                state: feeState,
                 showDisclosure: shouldShowFeeDisclosure,
                 onTap: shouldShowFeeDisclosure ? {
                     showFeeSelectionSheet = true

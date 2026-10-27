@@ -523,6 +523,28 @@
         }
       }
     },
+    "accessibility_value_fee_approximate" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Approximate, not yet priced"
+          }
+        }
+      }
+    },
+    "accessibility_value_fee_estimating" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Estimating"
+          }
+        }
+      }
+    },
     "accessibility_value_fee_pending" : {
       "localizations" : {
         "de" : {
@@ -3143,6 +3165,17 @@
         }
       }
     },
+    "fee_approximate_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "~%@"
+          }
+        }
+      }
+    },
     "fee_priority_fast" : {
       "localizations" : {
         "de" : {
@@ -3391,6 +3424,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "約 1-2 小時"
+          }
+        }
+      }
+    },
+    "fee_state_estimating" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Estimating…"
           }
         }
       }

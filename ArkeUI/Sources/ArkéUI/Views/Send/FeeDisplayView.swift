@@ -3,6 +3,8 @@
 //  Arké
 //
 //  Created by Assistant on 3/24/26.
+//  2026-10-27: renders a FeeDisplayState so an approximate placeholder and
+//  an open request look different from a fee the wallet has priced.
 //
 
 import SwiftUI
@@ -10,20 +12,20 @@ import SwiftUI
 /// A reusable view component that displays transaction fee information
 /// with optional disclosure indicator for interactive fee selection
 public struct FeeDisplayView: View {
-    let fee: Int?
+    let state: FeeDisplayState
     let showDisclosure: Bool
     let onTap: (() -> Void)?
-    
+
     public init(
-        fee: Int?,
+        state: FeeDisplayState,
         showDisclosure: Bool = false,
         onTap: (() -> Void)? = nil
     ) {
-        self.fee = fee
+        self.state = state
         self.showDisclosure = showDisclosure
         self.onTap = onTap
     }
-    
+
     public var body: some View {
         Group {
             if showDisclosure && onTap != nil {
@@ -36,7 +38,7 @@ public struct FeeDisplayView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var content: some View {
         HStack(spacing: 8) {
@@ -46,8 +48,7 @@ public struct FeeDisplayView: View {
 
             Spacer()
 
-            Text(feeText)
-                .font(.body)
+            feeLabel
 
             if showDisclosure {
                 Image(systemName: "chevron.down")
@@ -69,37 +70,60 @@ public struct FeeDisplayView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityValue(fee == nil
-            ? Text(String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module))
-            : Text(verbatim: ""))
+        .accessibilityValue(Text(accessibilityValue))
         .accessibilityHint(showDisclosure && onTap != nil
             ? Text(String(localized: "accessibility_hint_change_fee", defaultValue: "Opens fee selection", bundle: .module))
             : Text(verbatim: ""))
     }
-    
-    private var feeText: String {
-        guard let fee = fee else {
-            return "—"
+
+    @ViewBuilder
+    private var feeLabel: some View {
+        switch state {
+        case .value(let fee):
+            Text(BitcoinFormatter.shared.formatAmount(fee))
+                .font(.body)
+        case .approximate(let fee):
+            // The tilde is the whole point: this number is a size guess
+            Text(String(localized: "fee_approximate_format",
+                        defaultValue: "~\(BitcoinFormatter.shared.formatAmount(fee))",
+                        bundle: .module))
+                .font(.body)
+                .foregroundStyle(.secondary)
+        case .estimating:
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                Text(String(localized: "fee_state_estimating", defaultValue: "Estimating…", bundle: .module))
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+            }
+        case .unavailable:
+            Text(verbatim: "—")
+                .font(.body)
         }
-        return BitcoinFormatter.shared.formatAmount(fee)
+    }
+
+    /// Spoken after the combined label, so a sighted tilde has a spoken twin
+    private var accessibilityValue: String {
+        switch state {
+        case .value:
+            return ""
+        case .approximate:
+            return String(localized: "accessibility_value_fee_approximate", defaultValue: "Approximate, not yet priced", bundle: .module)
+        case .estimating:
+            return String(localized: "accessibility_value_fee_estimating", defaultValue: "Estimating", bundle: .module)
+        case .unavailable:
+            return String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module)
+        }
     }
 }
 
-#Preview("Fee Available") {
+#Preview("States") {
     VStack(spacing: 20) {
-        FeeDisplayView(fee: 250)
-        
-        FeeDisplayView(fee: 1500)
-        
-        FeeDisplayView(fee: 50000)
-    }
-    .padding()
-    .frame(width: 400)
-}
-
-#Preview("Fee Unavailable") {
-    VStack(spacing: 20) {
-        FeeDisplayView(fee: nil)
+        FeeDisplayView(state: .value(7_839))
+        FeeDisplayView(state: .approximate(7_750))
+        FeeDisplayView(state: .estimating)
+        FeeDisplayView(state: .unavailable)
     }
     .padding()
     .frame(width: 400)
@@ -108,13 +132,19 @@ public struct FeeDisplayView: View {
 #Preview("With Disclosure") {
     VStack(spacing: 20) {
         FeeDisplayView(
-            fee: 250,
+            state: .value(250),
             showDisclosure: true,
             onTap: { print("Fee tapped") }
         )
-        
+
         FeeDisplayView(
-            fee: nil,
+            state: .approximate(250),
+            showDisclosure: true,
+            onTap: { print("Fee tapped") }
+        )
+
+        FeeDisplayView(
+            state: .estimating,
             showDisclosure: true,
             onTap: { print("Fee tapped") }
         )
@@ -128,32 +158,32 @@ public struct FeeDisplayView: View {
         Text("Payment Details")
             .font(.title2)
             .fontWeight(.medium)
-        
+
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Text("Available")
                     .font(.body)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
-                
+
                 Text("₿ 1,000")
                     .font(.body)
             }
-            
+
             HStack(spacing: 8) {
                 Text("Minimum")
                     .font(.body)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
-                
+
                 Text("₿ 330")
                     .font(.body)
             }
-            
+
             FeeDisplayView(
-                fee: 250,
+                state: .value(250),
                 showDisclosure: true,
                 onTap: { print("Fee tapped") }
             )

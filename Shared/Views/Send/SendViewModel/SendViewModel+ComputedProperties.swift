@@ -154,50 +154,55 @@ extension SendViewModel {
         }
     }
     
-    /// Returns the estimated fee amount (in satoshis) for the selected destination
-    var feeAmount: Int? {
+    /// What the fee row shows for the selected destination. Onchain
+    /// destinations distinguish a priced fee from the size-based placeholder
+    /// and from an open request; the other formats show a fee or nothing.
+    var feeDisplayState: FeeDisplayState {
         guard let destination = selectedDestination else {
-            return nil
+            return .unavailable
         }
-        
-        // For on-chain destinations, use cached BDK fee if available
+
         if isOnchainDestination {
-            // Use cached BDK fee if we have one
-            if let cached = cachedOnchainFee {
-                return cached
-            }
-            
-            // Fallback to static estimate while calculating
-            let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
-            let amountInt = Int(amount)
-            return PaymentDestinationSelector.estimateOnchainFee(
+            let roughFee = PaymentDestinationSelector.estimateOnchainFee(
                 for: destination,
-                amount: amountInt,
-                feeRate: feeRate
+                amount: Int(amount),
+                feeRate: onchainFeeRates.rate(for: selectedFeePriority)
+            )
+            return OnchainFeeQuote.displayState(
+                quote: onchainFeeQuote,
+                address: destination.address,
+                amountSats: Int(amount),
+                rates: onchainFeeRates,
+                priority: selectedFeePriority,
+                isEstimating: isEstimatingOnchainFee,
+                roughFee: roughFee
             )
         }
-        
-        // For Lightning destinations, use the cached fee if available
+
+        // Lightning and Ark: the cached estimate or nothing, never a stale ranked fee
         if isLightningDestination {
-            if let cached = cachedLightningFee {
-                return cached
-            }
-            // No cached fee and no valid amount - return nil instead of stale ranked fee
-            return nil
+            return cachedLightningFee.map(FeeDisplayState.value) ?? .unavailable
         }
-        
-        // For Ark destinations, use the cached fee if available
         if isArkDestination {
-            if let cached = cachedArkFee {
-                return cached
-            }
-            // No cached fee and no valid amount - return nil instead of stale ranked fee
-            return nil
+            return cachedArkFee.map(FeeDisplayState.value) ?? .unavailable
         }
-        
+
         // For other destinations, use the ranked fee estimate
         let ranked = rankedDestinations.first { $0.destination.id == destination.id }
-        return ranked?.estimatedFee
+        return ranked?.estimatedFee.map(FeeDisplayState.value) ?? .unavailable
+    }
+
+    /// BDK's exact fee at the selected tier for the selected onchain
+    /// destination and this amount, or nil when no current quote covers
+    /// them. The pre-send balance check prefers this over the ranker's
+    /// rough medium-tier placeholder.
+    func exactOnchainFee(amountSats: Int) -> Int? {
+        guard let destination = selectedDestination, isOnchainDestination,
+              let quote = onchainFeeQuote,
+              quote.matches(address: destination.address, amountSats: amountSats, rates: onchainFeeRates) else {
+            return nil
+        }
+        return quote.fee(for: selectedFeePriority)
     }
     
     // MARK: - Destination State

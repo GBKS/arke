@@ -106,36 +106,6 @@ extension WalletManager {
     
     // MARK: - Onchain Fee Estimation
     
-    /// Estimate fee for a specific onchain Bitcoin transaction amount
-    /// Uses BDK's transaction builder to determine the exact fee based on
-    /// actual UTXO selection and transaction size
-    /// - Parameters:
-    ///   - address: Destination Bitcoin address
-    ///   - amountSats: Amount to send in satoshis
-    ///   - feeRateSatPerVb: Fee rate in satoshis per vByte
-    /// - Returns: Estimated fee in satoshis
-    /// - Throws: Error if calculation fails or the estimator can't be created
-    func estimateOnchainFeeWithBDK(address: String, amountSats: UInt64, feeRateSatPerVb: UInt64) async throws -> UInt64 {
-        guard let ffiWallet = wallet as? BarkWalletFFI else {
-            throw BarkErrorArke.commandFailed("BDK wallet not available")
-        }
-
-        // Created lazily on first use; a fresh database full-scans once
-        let feeEstimator = try await ffiWallet.ensureFeeEstimator()
-
-        // Sync to ensure we have the latest UTXOs
-        // Use incremental sync for speed (not full scan)
-        try await feeEstimator.sync(fullScan: false)
-
-        // Estimate fee using BDK's transaction builder
-        // This builds an actual transaction to determine exact fees
-        return try feeEstimator.estimateFee(
-            address: address,
-            amountSats: amountSats,
-            feeRateSatPerVb: feeRateSatPerVb
-        )
-    }
-    
     /// Estimate the fee for one onchain send at every priority tier in one
     /// pass: the estimator syncs once (the only network step), then builds
     /// one transaction per tier locally. Costs the same as a single-tier

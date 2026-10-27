@@ -120,6 +120,7 @@ extension SendViewModel {
         cachedLightningFeeAmount = nil
         cachedArkFee = nil
         cachedArkFeeAmount = nil
+        onchainFeeQuote = nil
         resolvedLNURL = nil
         isSendingMax = false
     }

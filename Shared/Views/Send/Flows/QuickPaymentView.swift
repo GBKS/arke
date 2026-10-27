@@ -60,7 +60,7 @@ struct QuickPaymentView: View {
     let availableBalanceName: String
     let availableBalanceAmount: String
     let feeText: String
-    let feeAmount: Int?
+    let feeState: FeeDisplayState
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
     let source: PaymentRequestSource
@@ -97,7 +97,7 @@ struct QuickPaymentView: View {
         availableBalanceName: String = "",
         availableBalanceAmount: String = "",
         feeText: String = "",
-        feeAmount: Int? = nil,
+        feeState: FeeDisplayState = .unavailable,
         shouldShowFeeDisclosure: Bool = false,
         onchainFeeRates: OnchainFeeRates = .default,
         showFeeSelectionSheet: Binding<Bool> = .constant(false),
@@ -122,7 +122,7 @@ struct QuickPaymentView: View {
         self.availableBalanceName = availableBalanceName
         self.availableBalanceAmount = availableBalanceAmount
         self.feeText = feeText
-        self.feeAmount = feeAmount
+        self.feeState = feeState
         self.shouldShowFeeDisclosure = shouldShowFeeDisclosure
         self.onchainFeeRates = onchainFeeRates
         self._showFeeSelectionSheet = showFeeSelectionSheet
@@ -503,7 +503,7 @@ struct QuickPaymentView: View {
                     }
                     
                     FeeDisplayView(
-                        fee: feeAmount,
+                        state: feeState,
                         showDisclosure: shouldShowFeeDisclosure,
                         onTap: shouldShowFeeDisclosure ? {
                             showFeeSelectionSheet = true

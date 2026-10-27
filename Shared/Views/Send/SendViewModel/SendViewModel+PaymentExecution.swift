@@ -136,8 +136,12 @@ extension SendViewModel {
                 throw SendError.destinationNotViable(ranked.reason)
             }
             
-            // Check if amount + fee exceeds available balance
-            let totalRequired = amountInt + (ranked.estimatedFee ?? 0)
+            // Check if amount + fee exceeds available balance. For onchain
+            // sends prefer BDK's exact fee at the chosen tier: the ranker
+            // prices every onchain destination with the rough medium-tier
+            // placeholder, which can pass a send that bark then rejects
+            let feeForCheck = exactOnchainFee(amountSats: amountInt) ?? ranked.estimatedFee ?? 0
+            let totalRequired = amountInt + feeForCheck
             if let availableBalance = ranked.availableBalance, totalRequired > availableBalance {
                 logger.error("   ❌ Insufficient balance: need \(totalRequired) sats, have \(availableBalance) sats")
                 throw SendError.insufficientBalance(required: totalRequired, available: availableBalance)

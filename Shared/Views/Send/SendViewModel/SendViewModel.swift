@@ -60,12 +60,16 @@ final class SendViewModel {
     /// Amount used for the cached Ark fee (to invalidate cache when amount changes)
     var cachedArkFeeAmount: Int?
     
-    /// Cached onchain fee estimate in satoshis
-    var cachedOnchainFee: Int?
-    /// Amount used for the cached onchain fee (to invalidate cache when amount changes)
-    var cachedOnchainFeeAmount: Int?
-    /// Fee priority used for the cached onchain fee (to invalidate cache when priority changes)
-    var cachedOnchainFeePriority: FeePriority?
+    /// Exact onchain fees per tier for one address, amount and rate set,
+    /// from the shadow BDK wallet. A quote for any other inputs does not
+    /// count (see `OnchainFeeQuote.matches`), so nothing invalidates it by
+    /// hand; it is replaced or cleared.
+    var onchainFeeQuote: OnchainFeeQuote?
+    /// Generation of the newest onchain quote request. A reply from an older
+    /// request is dropped, and the row shows "estimating" only while the
+    /// newest one is open.
+    var onchainFeeRequestGeneration: Int = 0
+    var isEstimatingOnchainFee: Bool = false
     
     // MARK: - State
     var manualInput: String = ""
