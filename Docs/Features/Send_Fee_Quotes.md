@@ -222,27 +222,28 @@ and it is judged only once the field has lost focus. While typing, "1000"
 passes through 1, 10 and 100, and a hint blinking three times about a
 state the user is leaving was noise. The Send button stays disabled below
 the minimum throughout; with the keyboard up it is hidden anyway, and
-after Done the hint explains it. For the same reason the reason line under
-the Send button (`SendBlockedReasonText`) now occupies a fixed two-line
-slot whether or not a reason is shown, so the button never moves.
-Simulator: Send frame identical across nine captures with and without the
-caption and the hint; the hint at the card's right edge on the "Enter
-amount" row; no hint in any focused capture.
+after Done the hint explains it. The reason line under the Send button
+that this ruling first introduced was removed the same evening (§8.3).
+Simulator: the hint at the card's right edge on the "Enter amount" row; no
+hint in any focused capture.
 
 ### 8.3 One gate for the Send button
 
 `SendBlocker.evaluate` (`SendGate.swift`) is a pure decision read by the
-manual, contact and quick flows through their `sendViewModel` handle, with
-`SendBlockedReasonText` as the one orange line under the button:
+manual, contact and quick flows through their `sendViewModel` handle. It
+only disables the button; it carries no text. Every blocker is explained
+where its data is shown, which is where the user is looking (DECIDED
+2026-10-27 after a line under the button duplicated four of the five
+cases and, in the quick flow's `HStack`, sat beside a shrunken button):
 
-| Blocker | When | Line under Send |
+| Blocker | When | Explained by |
 |---|---|---|
-| `feeEstimateUnreliable` | onchain, mainnet fast tier at the ceiling (`WalletManager.isMainnet`, the cap's own predicate) | "The fee estimate is unreliable right now. Onchain sending is paused." |
-| `noAmount` | nothing typed | none |
-| `belowMinimum` | under the minimum | none, the card's hint explains |
-| `estimatingFee` | onchain quote open, from the first keystroke | "Estimating the fee…" |
-| `unaffordableTier` | the chosen speed priced out of the balance | "This speed exceeds your balance. Pick a slower one." |
-| `exceedsAvailable` | amount plus the shown fee over the balance, locked invoice amounts included | "More than your available balance" |
+| `feeEstimateUnreliable` | onchain, mainnet fast tier at the ceiling (`WalletManager.isMainnet`, the cap's own predicate) | fee row "Estimate unreliable" (orange) |
+| `noAmount` | nothing typed | the empty field |
+| `belowMinimum` | under the minimum | header-corner hint after blur |
+| `estimatingFee` | onchain quote open, from the first keystroke | fee row spinner "Estimating…" |
+| `unaffordableTier` | the chosen speed priced out of the balance | fee row "Exceeds balance" |
+| `exceedsAvailable` | amount plus the shown fee over the balance, locked invoice amounts included | amount field's orange "Exceeds available" tint |
 
 ### 8.4 Send-all within bark's balance
 
@@ -295,3 +296,41 @@ when the rates differ; tier switch pays the representative's rate; "fee
 estimate unreliable" line with a forced clamp (custom network at a
 poisoned Esplora); a Lightning invoice above the Ark balance is refused
 before the tap.
+
+### 8.7 The shadow wallet never persisted (found 2026-10-27, evening)
+
+Christoph's device test showed 5 to 10 seconds to the first quote. The
+cause is older than this cluster: in bdk 1.0 and later `applyUpdate` only
+stages changes and `Wallet.persist(persister:)` is what reaches SQLite,
+and `BDKFeeEstimator` never called it. Evidence from the signet simulator
+after a day of estimates with two full scans: the shadow database's
+modification time was still its creation time (09:44) and every table was
+empty (`bdk_txs` 0, `bdk_txouts` 0, `bdk_descriptor_last_revealed` 0).
+So every launch started blind, the incremental sync found no coins, and
+the full-scan retry from §2 fired on the first quote of every launch: the
+10:43 and 18:31 logs both show "finds no funds … running one full scan".
+This, not the revealed-address theory, is the root cause behind the
+backlog's blind-estimator entry (derived from the same symptom sequence;
+the device export that closes the entry will confirm it).
+
+Three changes, all in the estimator and the view model:
+
+1. Persist after every applied update, full scan or incremental.
+2. Skip an incremental sync within 30 seconds of the last successful one;
+   a full scan always runs. Coins do not change while someone types.
+3. Do not quote below the destination's minimum; BDK refused those builds
+   with `OutputBelowDustLimit` and the log filled with errors (three today).
+
+Measured on the simulator, timestamps from the unified log:
+
+| Launch | Quote | Path | Time to price |
+|---|---|---|---|
+| One, empty db | 1000 sats | incremental finds nothing → full scan → persist | 4.4 s |
+| One, 51 s later | 2000 sats | incremental sync + builds | 1.6 s |
+| Two, warm db | 1000 sats | incremental sync only, no full scan | 1.5 s |
+| Two, 26 s later | 2000 sats | no sync, local builds | 2 ms |
+
+After launch one the database held 7 transactions, 6 outputs and 17
+blocks, its first rows ever. The 30-second window costs preview accuracy
+only: a coin arriving inside it is missed by the quote, the gate catches
+an overspend at the tap, and bark builds its own transaction.
