@@ -1,12 +1,12 @@
 # Send Fee Quotes: One Quote Per Tier, A Fee Row That Says What It Knows
 
-**Status: BUILT and REVIEWED 2026-10-27 (Tier 1 "Send and fees", Train 2).
-Four commits on `main` (`20c4ac4`, `c46daf4`, `2fe0f62`, review fixes).
-Adversarial pass §5: two confirmed findings, both fixed the same session;
-four plausible, two fixed, two filed. Simulator walkthrough §6 on the
-signet test wallet PASSED for every state except "Exceeds balance", which
-the wallet could not produce (§6.3). Owed: the device look on Christoph's
-phone (§7).**
+**Status: BUILT and REVIEWED 2026-10-27 in two batches (Tier 1 "Send and
+fees", Train 2). Batch 1 (§1–§6): `20c4ac4`, `c46daf4`, `2fe0f62`,
+`157609e`. Batch 2 (§8): `4323294`, `df7f125`, `bd2f5a4`, `2f8357c` and the
+follow-up fixes. Both adversarial passes' confirmed findings fixed the same
+day; two PROPOSED questions remain in the backlog. Simulator walkthroughs
+PASSED for every state the signet wallet can produce. Owed: the device look
+on Christoph's phone (§7, extended in §8.6).**
 
 Backlog entries: `Open_Follow_Ups.md`, Tier 1 "Send and fees": the fee
 row three-state proposal (onchain half closed by this), the blind
@@ -181,3 +181,104 @@ evidence, not device evidence, so the backlog entry stays open.
 3. Export: `Fee estimator finds no funds … running one full scan` followed
    by `Onchain fees quoted` closes the blind-estimator entry.
 4. VoiceOver pass over the fee row and the three sheet rows.
+
+## 8. Second batch: picker, minimum, gates, Lightning (2026-10-27, DECIDED)
+
+Christoph's rulings after reviewing the batch 1 screenshots: remove the
+sat/vB line; show the minimum only as a conditional hint; collapse tiers
+that share a rate; and fold in the four open fee issues so the area is not
+revisited. Built as three steps plus review fixes.
+
+### 8.1 One row per distinct rate
+
+`FeeTierGroup` (ArkéUI) groups the tiers by equal rate, fastest first; a
+group is named and timed by its fastest member because that rate meets the
+shortest target in the group. The sheet shows one row per group, selects
+by group membership, and writes the representative tier on pick; with one
+group the fee row loses its chevron and never opens the sheet. On a quiet
+mainnet mempool the 1-, 3- and 6-block estimates are all 1 sat/vB, so one
+row is the normal mainnet case, not a signet quirk. `selectedFeePriority`
+may still name a non-representative tier; the send pays
+`rate(for: selectedFeePriority)`, identical by construction (reviewer).
+The shadow wallet builds once per distinct rate so two tiers at one rate
+never show two fees.
+
+Each tier owns its Esplora target (`confirmationTargetBlocks` 1 / 3 / 6,
+bark's own constants, verified in `bark/src/chain.rs` on master) and
+`FeeRateService` reads the same numbers; the duration shown is
+`BlockTimeFormatter.confirmationEstimate(forBlocks:)`, "~10 min",
+"~30 min", "~1 hr". The sat/vB line is gone; the rate lives in X-Ray.
+
+### 8.2 Minimum as a hint
+
+The permanent "Minimum" row on the amount card is replaced by an orange
+caption "Minimum is ₿ 546" shown only while the typed amount is under the
+destination's minimum (onchain dust; Ark and Lightning have none). Fiat
+entry mode uses the sats behind the field (`currentAmountSats`).
+
+### 8.3 One gate for the Send button
+
+`SendBlocker.evaluate` (`SendGate.swift`) is a pure decision read by the
+manual, contact and quick flows through their `sendViewModel` handle, with
+`SendBlockedReasonText` as the one orange line under the button:
+
+| Blocker | When | Line under Send |
+|---|---|---|
+| `feeEstimateUnreliable` | onchain, mainnet fast tier at the ceiling (`WalletManager.isMainnet`, the cap's own predicate) | "The fee estimate is unreliable right now. Onchain sending is paused." |
+| `noAmount` | nothing typed | none |
+| `belowMinimum` | under the minimum | none, the card's hint explains |
+| `estimatingFee` | onchain quote open, from the first keystroke | "Estimating the fee…" |
+| `unaffordableTier` | the chosen speed priced out of the balance | "This speed exceeds your balance. Pick a slower one." |
+| `exceedsAvailable` | amount plus the shown fee over the balance, locked invoice amounts included | "More than your available balance" |
+
+### 8.4 Send-all within bark's balance
+
+`OnchainSendAll.cappedAmount` caps the shadow wallet's drain at bark's
+`spendableSat` minus the drain fee. The capped amount is no longer a
+drain: re-quoted as a recipient amount it carries a change output and a
+larger fee (review F1), so the send-all path re-quotes and `refit`s until
+amount plus fee fits, keeping the largest amount that fitted across the
+shadow wallet's non-deterministic coin selection (the first simulator
+pass left 2,887 sats behind before the best-of loop).
+
+### 8.5 Lightning half
+
+`PaymentDestinationSelector.estimateFee` returns nil instead of a static
+constant when no estimate could be made; viability judges the amount
+alone. The Lightning row shows "Estimating…" while the request is open
+(generation-owned flag, stale replies dropped, cache valid only for the
+amount it was made for) and "unavailable" on failure. The unrendered
+`feeText` chain through `SendAmountInput`, `AmountInputSection`, the three
+flows and both presenters is deleted.
+
+### 8.6 Adversarial pass (range `4323294^..bd2f5a4`)
+
+| # | Verdict | Finding | Resolution |
+|---|---|---|---|
+| F1 | CONFIRMED | Capped send-all re-quotes with a change output; the gate refuses it | `refit` loop, §8.4 |
+| F2 | CONFIRMED | Lightning estimating flag unowned under overlapping calls; cached fee shown for another amount | Generation counter; amount-keyed cache read; `clearAll` resets |
+| F3 | CONFIRMED | Placeholder shown and Send enabled during the 500 ms debounce and after a failed quote | Estimating from the first keystroke; failed-quote gating filed as PROPOSED |
+| F4 | pre-existing gap | Locked invoice amounts skipped every balance check | Still exempt from the minimum, refused above the balance |
+| F5 | PLAUSIBLE | Gate and cap read "mainnet" from two predicates | Gate reads `WalletManager.isMainnet` |
+| F6 | PLAUSIBLE, low | Lightning destination viable on amount alone when its estimate fails | Accepted; bark rejects at send, the row says unavailable |
+| F7 | hygiene | Four stale ArkéUI keys after the build | Dropped |
+
+Not verified by the reviewer: BDK adds a change output at the capped
+amount (standard behaviour, confirmed indirectly by the simulator's 2,887
+sat slack); bark's own send at the capped amount; whether Send can be
+tapped inside the debounce on a device.
+
+Simulator walkthrough (iPhone 17e, signet, build `2f8357c`): no Minimum
+row; hint at 300; "Estimating…" and the caption from the first keystroke;
+priced fee ₿ 7,713; no chevron, no sheet (one rate); send-all 130,972 with
+fee 7,713 inside 141,572, Send enabled, no caption; placeholder when
+cleared. Two follow-up fixes from it: the best-of loop in §8.4 and an
+immediate reset when the amount is emptied (a spinner flashed during the
+debounce). Noted, not fixed: the send-all control responds to its label
+text, not the whole row.
+
+Device checklist additions: mainnet sheet shows two or three rows only
+when the rates differ; tier switch pays the representative's rate; "fee
+estimate unreliable" line with a forced clamp (custom network at a
+poisoned Esplora); a Lightning invoice above the Ark balance is refused
+before the tap.

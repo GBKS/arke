@@ -652,18 +652,12 @@ needs a ruling or a sentence of reasoning before it can become work.
 ### Send and fees
 
 - [ ] **Gate onchain sends while the mainnet fee estimate sits at the
-  ceiling** (DECIDED 2026-10-19 as a Train 2 item; from the mainnet-ceiling
-  adversarial pass F2, `Features/Mainnet_Fee_Rate_Ceiling.md` §2 and §10).
-  With the 10,000 sat/vB ceiling a poisoned estimator prices a 1.4 M-sat fee
-  for a 140 vB send that passes the viability check; the fee line is the
-  only guard. Explicit-gate pattern (O5): when the fast tier equals
-  `FeeRateService.mainnetMaxRateSatPerVb`, disable onchain sending with a
-  reason ("fee estimate unreliable"), Ark and Lightning stay usable; the
-  gate lifts on the next fetch below the ceiling. Signal is already there
-  (the clamp warning fires on the same condition). Needs its own device
-  look because it is new policy on the send path. Definition of done:
-  unit test on the gate decision, on-device look with a forced clamp
-  (custom network pointing at a poisoned Esplora, or a debug override).
+  ceiling** (DECIDED 2026-10-19, Train 2; `Features/Mainnet_Fee_Rate_Ceiling.md`
+  §2, §10). **BUILT 2026-10-27** as `SendBlocker.feeEstimateUnreliable`
+  (`Features/Send_Fee_Quotes.md` §8): mainnet fast tier at
+  `FeeRateService.mainnetMaxRateSatPerVb` disables onchain Send with "fee
+  estimate unreliable"; Ark and Lightning stay usable; unit-tested. Stays
+  open for the on-device look with a forced clamp named in the DoD.
 - [ ] **BDK fee estimator is blind to onchain funds that arrived after its
   one full scan** (found 2026-10-19; history and the trace in
   `Features/Send_Fee_Quotes.md` §1, §6.2). Option (a) BUILT 2026-10-27 in
@@ -671,24 +665,12 @@ needs a ruling or a sentence of reasoning before it can become work.
   `spendableSat` covers the amount → one full scan, quote again. Fired on
   the simulator; closes on a device export with `finds no funds … running
   one full scan` followed by `Onchain fees quoted`.
-- [ ] **Fee row three-state, Lightning half** (PROPOSAL 2026-10-07; the
-  onchain half was BUILT 2026-10-27, `Features/Send_Fee_Quotes.md`). Still
-  open: (0) the ranking path hides a failed Lightning estimate behind a
-  static 20 sats (`estimateFeeFallback`), (1) `feeDisplayState` shows a dash
-  while `feeText` shows that constant, two accessors in two places; in quick
-  mode with no viable destination no fee path runs although Send is enabled.
-- [ ] **PROPOSED — gate Send while the fee row says "Estimating…"** (review
-  F5, `Features/Send_Fee_Quotes.md` §5): the rates are refreshed before the
-  quote lands, so a send in that window pays the new rate while the gate
-  judged it by the rough one; `canSend` in the three flows ignores
-  `.estimating`. Explicit-gates rule says disable with a reason; the cost is
-  a disabled button for one shadow-wallet sync per amount change.
-- [ ] **Send-all can exceed bark's Savings balance** (simulator 2026-10-27,
-  `Features/Send_Fee_Quotes.md` §6.3): `calculateOnchainMaxSendable` drains
-  the shadow wallet, which funded 8,839 sats more than bark reports (the
-  feedback ask 7c figure), so the amount field flags "Exceeds available"
-  while Send stays enabled and the pre-send gate throws at tap time. Cap the
-  send-all amount at bark's `spendableSat` minus the quoted fee, or gate Send.
+- [ ] **PROPOSED — gate Send on the approximate placeholder too** (review
+  F3 of the second fee pass, `Features/Send_Fee_Quotes.md` §8): after a
+  failed onchain quote the row shows "~₿ …" and Send is enabled, paying a
+  fee the user has not seen. Gating it means no onchain send while the
+  shadow estimator is down (the full-scan retry heals the common case).
+  Christoph's call; the estimating window itself is gated since 2026-10-27.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever

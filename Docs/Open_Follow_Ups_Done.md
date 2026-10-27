@@ -1724,3 +1724,29 @@ DECIDED label in place.
   `NetworkKind` constructors) and qrcode 27.13.0 → 28.1.0 (no call-site
   change). Rules, the update recipe and the stale-`.pcm` trap are in
   `Development/Setup.md`.
+
+### Tier 1 — Send and fees
+
+- [x] **Fee row three-state, Lightning half** — closed 2026-10-27
+  (PROPOSAL 2026-10-07; onchain half built the same morning). The ranker
+  no longer hides a failed Lightning estimate behind a static 20 sats
+  (`PaymentDestinationSelector.estimateFee` returns nil, viability judges
+  the amount alone); the row says "Estimating…" while the request is open
+  and "unavailable" when it failed; the unrendered `feeText` accessor chain
+  is gone, so one screen can no longer show two fees. In quick mode with no
+  viable destination Send is disabled by `canSendImmediately`. Write-up:
+  `Features/Send_Fee_Quotes.md` §8.
+- [x] **PROPOSED — gate Send while the fee row says "Estimating…"** —
+  closed 2026-10-27, DECIDED and built as `SendBlocker.estimatingFee`: the
+  row says "estimating" from the first keystroke (not from the end of the
+  debounce, review F3) and Send is disabled with "Estimating the fee…"
+  under it until the quote lands. The follow-on question, gating the
+  approximate placeholder after a failed quote, is its own PROPOSED entry.
+- [x] **Send-all can exceed bark's Savings balance** — closed 2026-10-27.
+  `OnchainSendAll.cappedAmount` caps the drain at bark's `spendableSat`
+  minus the drain fee; review F1 of the second pass found the capped
+  amount re-quotes with a change output and a larger fee, so
+  `OnchainSendAll.refit` shrinks it until amount plus fee fits, keeping the
+  largest amount that fitted across BDK's non-deterministic coin
+  selection. Simulator: 130,972 + 7,713 within 141,572, no orange flag,
+  Send enabled. Write-up: `Features/Send_Fee_Quotes.md` §8.
