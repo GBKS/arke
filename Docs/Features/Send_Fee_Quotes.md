@@ -216,6 +216,19 @@ caption "Minimum is ₿ 546" shown only while the typed amount is under the
 destination's minimum (onchain dust; Ark and Lightning have none). Fiat
 entry mode uses the sats behind the field (`currentAmountSats`).
 
+Second ruling (2026-10-27, after the first walkthrough): the hint sits in
+the right corner of the card's header row, so the card keeps its height,
+and it is judged only once the field has lost focus. While typing, "1000"
+passes through 1, 10 and 100, and a hint blinking three times about a
+state the user is leaving was noise. The Send button stays disabled below
+the minimum throughout; with the keyboard up it is hidden anyway, and
+after Done the hint explains it. For the same reason the reason line under
+the Send button (`SendBlockedReasonText`) now occupies a fixed two-line
+slot whether or not a reason is shown, so the button never moves.
+Simulator: Send frame identical across nine captures with and without the
+caption and the hint; the hint at the card's right edge on the "Enter
+amount" row; no hint in any focused capture.
+
 ### 8.3 One gate for the Send button
 
 `SendBlocker.evaluate` (`SendGate.swift`) is a pure decision read by the
