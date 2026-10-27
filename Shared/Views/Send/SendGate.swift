@@ -26,22 +26,12 @@ enum SendBlocker: Equatable, Sendable {
     /// Mainnet fast tier sits at the sanity ceiling: the estimator is not to be trusted
     case feeEstimateUnreliable
 
-    /// The line under the Send button; nil when the disabled button is
-    /// self-explanatory or another control already says why
-    var reason: String? {
-        switch self {
-        case .noAmount, .belowMinimum:
-            return nil
-        case .exceedsAvailable:
-            return String(localized: "send_blocked_exceeds_available", defaultValue: "More than your available balance")
-        case .estimatingFee:
-            return String(localized: "send_blocked_estimating_fee", defaultValue: "Estimating the fee…")
-        case .unaffordableTier:
-            return String(localized: "send_blocked_unaffordable_tier", defaultValue: "This speed exceeds your balance. Pick a slower one.")
-        case .feeEstimateUnreliable:
-            return String(localized: "send_blocked_fee_estimate_unreliable", defaultValue: "The fee estimate is unreliable right now. Onchain sending is paused.")
-        }
-    }
+    // No reason text lives here (DECIDED 2026-10-27): every blocker is
+    // already explained where its data is shown, the fee row for fee
+    // problems (estimating, exceeds balance, estimate unreliable), the
+    // amount card for amount problems (orange tint, minimum hint). A line
+    // under the Send button duplicated them and broke the quick flow's
+    // button row.
 
     /// The decision, checked in order of what the user can least do about.
     /// - Parameters:
@@ -84,6 +74,8 @@ enum SendBlocker: Equatable, Sendable {
                 return .estimatingFee
             case .unaffordable:
                 return .unaffordableTier
+            case .unreliable:
+                return .feeEstimateUnreliable
             case .value, .approximate, .unavailable:
                 break
             }

@@ -101,6 +101,11 @@ public struct FeeDisplayView: View {
             Text(String(localized: "fee_state_unaffordable", defaultValue: "Exceeds balance", bundle: .module))
                 .font(.body)
                 .foregroundStyle(.secondary)
+        case .unreliable:
+            // The one fee problem no other control shows; Send is paused
+            Text(String(localized: "fee_state_unreliable", defaultValue: "Estimate unreliable", bundle: .module))
+                .font(.body)
+                .foregroundStyle(.orange)
         case .unavailable:
             Text(verbatim: "—")
                 .font(.body)
@@ -118,6 +123,8 @@ public struct FeeDisplayView: View {
             return String(localized: "accessibility_value_fee_estimating", defaultValue: "Estimating", bundle: .module)
         case .unaffordable:
             return String(localized: "accessibility_value_fee_unaffordable", defaultValue: "Exceeds balance at this speed", bundle: .module)
+        case .unreliable:
+            return String(localized: "accessibility_value_fee_unreliable", defaultValue: "Fee estimate unreliable, onchain sending paused", bundle: .module)
         case .unavailable:
             return String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module)
         }
@@ -130,6 +137,7 @@ public struct FeeDisplayView: View {
         FeeDisplayView(state: .approximate(7_750))
         FeeDisplayView(state: .estimating)
         FeeDisplayView(state: .unaffordable)
+        FeeDisplayView(state: .unreliable)
         FeeDisplayView(state: .unavailable)
     }
     .padding()

@@ -18,6 +18,9 @@ public enum FeeDisplayState: Equatable, Sendable {
     case approximate(Int)
     /// The wallet priced this tier and the amount plus its fee exceeds the balance
     case unaffordable
+    /// The rate estimator is not to be trusted right now (mainnet fast tier
+    /// at the sanity ceiling); sending is paused until it recovers
+    case unreliable
     /// No estimate possible, nothing to show
     case unavailable
 
@@ -26,7 +29,7 @@ public enum FeeDisplayState: Equatable, Sendable {
         switch self {
         case .value(let fee), .approximate(let fee):
             return fee
-        case .estimating, .unaffordable, .unavailable:
+        case .estimating, .unaffordable, .unreliable, .unavailable:
             return nil
         }
     }

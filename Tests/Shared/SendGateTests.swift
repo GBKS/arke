@@ -64,16 +64,14 @@ struct SendGateTests {
         #expect(OnchainSendAll.refit(amountSats: 500, requotedFeeSats: 1_000, barkSpendableSats: 900) == nil)
     }
 
-    @Test("No amount is simply off, with no line")
-    func noAmountHasNoReason() {
+    @Test("No amount is simply off")
+    func noAmountIsOff() {
         #expect(gate(amount: nil) == .noAmount)
-        #expect(SendBlocker.noAmount.reason == nil)
     }
 
-    @Test("Below the minimum is off; the amount card already explains")
-    func belowMinimumHasNoReason() {
+    @Test("Below the minimum is off; the amount card explains after blur")
+    func belowMinimumIsOff() {
         #expect(gate(amount: 300) == .belowMinimum)
-        #expect(SendBlocker.belowMinimum.reason == nil)
     }
 
     @Test("An open onchain quote blocks the send until the fee is known")
@@ -82,10 +80,14 @@ struct SendGateTests {
         #expect(gate(fee: .estimating, onchain: false) == nil)
     }
 
-    @Test("A speed the wallet priced out of the balance blocks with a nudge to a slower one")
+    @Test("A speed the wallet priced out of the balance blocks; the fee row says so")
     func unaffordableTierBlocks() {
         #expect(gate(fee: .unaffordable) == .unaffordableTier)
-        #expect(SendBlocker.unaffordableTier.reason != nil)
+    }
+
+    @Test("A fee row saying the estimate is unreliable blocks an onchain send")
+    func unreliableFeeStateBlocks() {
+        #expect(gate(fee: .unreliable) == .feeEstimateUnreliable)
     }
 
     @Test("Amount plus the shown fee must fit the balance, approximate fees included")

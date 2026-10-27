@@ -151,6 +151,11 @@ extension SendViewModel {
         }
 
         if isOnchainDestination {
+            // The fee row is where fee problems are shown; the ceiling is the
+            // one blocker no other control carries
+            if fastTierAtMainnetCeiling {
+                return .unreliable
+            }
             let roughFee = PaymentDestinationSelector.estimateOnchainFee(
                 for: destination,
                 amount: Int(amount),
@@ -256,11 +261,6 @@ extension SendViewModel {
             isOnchain: isOnchainDestination,
             fastTierAtMainnetCeiling: fastTierAtMainnetCeiling
         )
-    }
-
-    /// The line under the Send button, when the blocker has one
-    var sendBlockedReason: String? {
-        sendBlocker?.reason
     }
 
     /// The live fast rate equals the mainnet sanity ceiling: a poisoned or

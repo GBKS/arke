@@ -458,8 +458,6 @@ struct ContactPaymentView: View {
             .frame(maxWidth: .infinity)
             .disabled(!canSend)
             .padding(.top, 16)
-
-            SendBlockedReasonText(reason: hasMatchedAddress ? sendViewModel?.sendBlockedReason : nil)
         }
         .frame(maxWidth: 400)
         .toolbar {

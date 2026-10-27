@@ -42,6 +42,13 @@ extension SendViewModel {
             resetOnchainFeeQuote()
             return
         }
+        guard amountInt >= minimumSendAmount else {
+            // Below dust BDK refuses to build (OutputBelowDustLimit); the row
+            // shows the placeholder and the card shows the minimum
+            logger.debug("Amount \(amountInt) under the minimum \(self.minimumSendAmount); not quoting")
+            resetOnchainFeeQuote()
+            return
+        }
 
         if let quote = onchainFeeQuote,
            quote.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) {
@@ -128,14 +135,14 @@ extension SendViewModel {
         // otherwise show and the Send gate would let it through (review F3,
         // 2026-10-27). The generation bump makes any older reply stale.
         if let destination = selectedDestination, isOnchainDestination {
-            if let amountInt = Int(amount), amountInt > 0 {
+            if let amountInt = Int(amount), amountInt >= max(1, minimumSendAmount) {
                 if !(onchainFeeQuote?.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) ?? false) {
                     onchainFeeRequestGeneration += 1
                     isEstimatingOnchainFee = true
                 }
             } else {
-                // Emptied: nothing to quote, and no spinner while the
-                // debounce runs out (seen when backspacing to empty)
+                // Emptied or under the minimum: nothing to quote, and no
+                // spinner while the debounce runs out
                 resetOnchainFeeQuote()
                 return
             }

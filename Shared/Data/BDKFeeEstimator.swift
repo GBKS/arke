@@ -33,10 +33,22 @@ final class BDKFeeEstimator {
 
     private let wallet: BitcoinDevKit.Wallet
     private let esploraClient: EsploraClient
+    /// Kept so every applied update can be written: in bdk 1.0+ the wallet
+    /// only stages changes and `persist` is what reaches SQLite. Until
+    /// 2026-10-27 nothing ever persisted and every launch started blind
+    /// (the shadow db held zero transactions after a day of estimates).
+    private let persister: Persister
 
     /// True when init created a brand-new database — the caller must run
     /// one `sync(fullScan: true)` before estimates mean anything.
     let createdFreshDatabase: Bool
+
+    /// When the last successful sync finished. Coins do not change while
+    /// someone types an amount, so a sync within `minimumSyncInterval` of
+    /// the last one is skipped and the estimate builds from memory.
+    private var lastSyncedAt: Date?
+    private let syncClock = NSLock()
+    static let minimumSyncInterval: TimeInterval = 30
 
     // MARK: - Initialization
 
@@ -76,6 +88,7 @@ final class BDKFeeEstimator {
                     descriptor: descriptor,
                     persister: persister
                 )
+                self.persister = persister
                 self.createdFreshDatabase = false
             } catch {
                 print("⚠️ [BDKFeeEstimator] Failed to load existing database, recreating: \(error)")
@@ -86,6 +99,7 @@ final class BDKFeeEstimator {
                     network: bdkNetwork,
                     persister: newPersister
                 )
+                self.persister = newPersister
                 self.createdFreshDatabase = true
             }
         } else {
@@ -94,15 +108,31 @@ final class BDKFeeEstimator {
                 network: bdkNetwork,
                 persister: persister
             )
+            self.persister = persister
             self.createdFreshDatabase = true
         }
 
         self.esploraClient = EsploraClient(url: esploraURL)
     }
 
+    /// True when the last successful sync is recent enough to reuse
+    private var isRecentlySynced: Bool {
+        syncClock.lock(); defer { syncClock.unlock() }
+        guard let lastSyncedAt else { return false }
+        return Date().timeIntervalSince(lastSyncedAt) < Self.minimumSyncInterval
+    }
+
+    private func markSynced() {
+        syncClock.lock(); defer { syncClock.unlock() }
+        lastSyncedAt = Date()
+    }
+
     // MARK: - Sync
 
-    /// Sync the wallet so estimates reflect the current UTXO set.
+    /// Sync the wallet so estimates reflect the current UTXO set, and write
+    /// the result to disk. An incremental sync within
+    /// `minimumSyncInterval` of the last successful one is skipped; a full
+    /// scan always runs.
     /// - Parameters:
     ///   - fullScan: If true, performs full scan. If false, incremental sync.
     ///   - stopGap: Number of consecutive unused addresses before stopping
@@ -113,6 +143,9 @@ final class BDKFeeEstimator {
     /// We use withCheckedThrowingContinuation + DispatchQueue.global to ensure this
     /// runs on a background thread and never blocks the main thread/UI.
     func sync(fullScan: Bool = false, stopGap: UInt64 = 10, parallelRequests: UInt64 = 3) async throws {
+        if !fullScan, isRecentlySynced {
+            return
+        }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Swift.Error>) in
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 guard let self = self else {
@@ -137,6 +170,10 @@ final class BDKFeeEstimator {
                         )
                         try self.wallet.applyUpdate(update: update)
                     }
+                    // Staged changes reach SQLite only here; without it the
+                    // next launch starts from nothing and full-scans again
+                    _ = try self.wallet.persist(persister: self.persister)
+                    self.markSynced()
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)

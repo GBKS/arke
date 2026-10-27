@@ -210,8 +210,6 @@ struct ManualSendView: View {
             .frame(maxWidth: .infinity)
             .disabled(!canSend)
             .padding(.top, 16)
-
-            SendBlockedReasonText(reason: isConfirmed ? sendViewModel?.sendBlockedReason : nil)
         }
         .frame(maxWidth: 400)
         .toolbar {

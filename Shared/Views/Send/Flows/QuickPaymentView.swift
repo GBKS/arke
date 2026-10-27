@@ -537,8 +537,6 @@ struct QuickPaymentView: View {
                     .controlSize(.large)
                     .tint(.Arke.gold)
                     .disabled(!canSendImmediately || isSending)
-
-                    SendBlockedReasonText(reason: sendViewModel?.sendBlockedReason)
                 } else {
                     Text(String(localized: "error_address_wrong_network", defaultValue: "Cannot use this address on current network"))
                         .font(.caption)
