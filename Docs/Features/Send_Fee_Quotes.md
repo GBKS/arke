@@ -1,12 +1,14 @@
 # Send Fee Quotes: One Quote Per Tier, A Fee Row That Says What It Knows
 
-**Status: BUILT and REVIEWED 2026-10-27 in two batches (Tier 1 "Send and
+**Status: BUILT, REVIEWED and DEVICE-CHECKED 2026-10-27 (Tier 1 "Send and
 fees", Train 2). Batch 1 (§1–§6): `20c4ac4`, `c46daf4`, `2fe0f62`,
-`157609e`. Batch 2 (§8): `4323294`, `df7f125`, `bd2f5a4`, `2f8357c` and the
-follow-up fixes. Both adversarial passes' confirmed findings fixed the same
-day; two PROPOSED questions remain in the backlog. Simulator walkthroughs
-PASSED for every state the signet wallet can produce. Owed: the device look
-on Christoph's phone (§7, extended in §8.6).**
+`157609e`. Batch 2 (§8): `4323294`, `df7f125`, `bd2f5a4`, `2f8357c`,
+`dfed057`, `4e4cf99`, `8de98fd`. Both adversarial passes' confirmed findings
+fixed the same day. Device look §8.8 PASSED on Christoph's mainnet phone
+for every item it could reach; two states need conditions the phone did
+not offer that evening ("Exceeds balance" and "Estimate unreliable"). Open
+in the backlog: send-all latency (PROPOSED fix), approximate-placeholder
+gating (PROPOSED), the ceiling entry's forced-clamp look.**
 
 Backlog entries: `Open_Follow_Ups.md`, Tier 1 "Send and fees": the fee
 row three-state proposal (onchain half closed by this), the blind
@@ -334,3 +336,20 @@ After launch one the database held 7 transactions, 6 outputs and 17
 blocks, its first rows ever. The 30-second window costs preview accuracy
 only: a coin arriving inside it is missed by the quote, the gate catches
 an overspend at the tap, and bark builds its own transaction.
+
+
+### 8.8 Device look (Christoph, mainnet phone, 2026-10-27 evening)
+
+| Check | Result |
+|---|---|
+| Relaunch twice, first quote each time | No `finds no funds` line in consecutive relaunches; quotes fast. Closes the blind-estimator entry (§8.7). |
+| Fee row and speed sheet | Two rows, Fast and Slow: X-Ray rates 2 / 2 / 1 sat/vB, so Fast and Medium merged under Fast. Tier switch instant. |
+| Minimum hint | Header corner after Done, gone while focused, Send disabled below 546. |
+| Send-all | Amount within Savings, no orange, Send enabled. Took about 5 s from the tap to the amount appearing: the field fills only after the shadow wallet's incremental sync and drain build. Filed. |
+| Lightning invoice above the Payments balance | Send disabled before the tap. The quick flow's destination row renders greyed and hard to read; this is the existing "Human-readable address header" PROPOSAL. |
+| VoiceOver over fee row and sheet | Speaks each state. |
+
+Not reachable that evening: "Exceeds balance" in the sheet (with Fast and
+Medium at the same rate, send-all at Medium leaves no faster tier to price
+out) and "Estimate unreliable" (needs the mainnet fast tier at the ceiling;
+a forced clamp or debug override is the open question on that entry).

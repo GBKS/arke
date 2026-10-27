@@ -1750,3 +1750,14 @@ DECIDED label in place.
   largest amount that fitted across BDK's non-deterministic coin
   selection. Simulator: 130,972 + 7,713 within 141,572, no orange flag,
   Send enabled. Write-up: `Features/Send_Fee_Quotes.md` §8.
+- [x] **BDK fee estimator is blind to onchain funds after a relaunch** —
+  closed 2026-10-27 (found 2026-10-19 as "blind to funds that arrived after
+  its one full scan"). Root cause found the same day the fix shipped: the
+  shadow wallet never called `Wallet.persist`, so in bdk 1.0+ nothing it
+  learned reached SQLite and every launch started from an empty chain state;
+  the revealed-address theory in the original entry was the symptom's
+  shape, not its cause. Fixed by persisting after every applied update plus
+  a 30 s sync window; the full-scan retry stays as the safety net. Device
+  evidence (Christoph, mainnet, 2026-10-27): consecutive relaunches, no
+  `finds no funds … running one full scan` line, first quote in about a
+  second. Write-up: `Features/Send_Fee_Quotes.md` §8.7.
