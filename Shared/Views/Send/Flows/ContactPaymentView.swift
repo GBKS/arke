@@ -485,6 +485,13 @@ struct ContactPaymentView: View {
             print("   └─ from: \(oldValue?.address ?? "nil")")
             print("   └─ to: \(newValue?.address ?? "nil")")
             print("   └─ canSend is now: \(canSend)")
+            // A contact can hold several onchain addresses; the quote is
+            // keyed by address, so the new one needs its own quote
+            if oldValue?.address != newValue?.address, let estimator = onEstimateFee {
+                Task {
+                    await estimator()
+                }
+            }
         }
         .onChange(of: selectedFeePriority) { _, _ in
             // Recalculate fee immediately when priority changes (onchain only)

@@ -9,6 +9,7 @@
 import Foundation
 import Bark
 import ArkeUI
+import os
 
 extension WalletManager {
 
@@ -106,22 +107,38 @@ extension WalletManager {
     
     // MARK: - Onchain Fee Estimation
     
+    /// What the shadow wallet said about one tier of an onchain send
+    enum OnchainTierFee: Equatable, Sendable {
+        /// Exact fee in satoshis
+        case fee(UInt64)
+        /// Amount plus this tier's fee exceeds the shadow wallet's spendable balance
+        case insufficientFunds
+    }
+
     /// Estimate the fee for one onchain send at every priority tier in one
     /// pass: the estimator syncs once (the only network step), then builds
     /// one transaction per tier locally. Costs the same as a single-tier
     /// estimate, so the send flow can quote all three tiers at once and a
     /// tier switch needs no new estimate.
+    ///
+    /// Every tier gets a result. A tier the wallet cannot fund is reported
+    /// as such rather than dropped: after "Max" at one tier every faster
+    /// tier is unfundable by construction, and a quote with holes would be
+    /// read as "not priced yet". Any other build error aborts the whole
+    /// quote, since all tiers share the same inputs.
+    ///
+    /// When every tier is unfundable but bark's own onchain balance covers
+    /// the amount, the shadow wallet is behind (it only learns addresses
+    /// from its own scans; backlog "BDK fee estimator is blind to onchain
+    /// funds that arrived after its one full scan"): run one full scan and
+    /// quote again, once.
     /// - Parameters:
     ///   - address: Destination Bitcoin address
     ///   - amountSats: Amount to send in satoshis
     ///   - feeRates: Rates per tier, as published by `FeeRateService`
-    /// - Returns: Fee in satoshis for each tier; a tier is missing only if
-    ///   its own build failed while another succeeded, which cannot happen
-    ///   for coin selection (the same inputs fund every tier) and is kept
-    ///   as a dictionary so the caller never reads a tier it did not get
-    /// - Throws: When the estimator cannot be created or the sync fails, or
-    ///   when every tier fails (the first error)
-    func estimateOnchainFees(address: String, amountSats: UInt64, feeRates: OnchainFeeRates) async throws -> [FeePriority: UInt64] {
+    /// - Throws: When the estimator cannot be created, a sync fails, or a
+    ///   build fails for a reason other than funds
+    func estimateOnchainFees(address: String, amountSats: UInt64, feeRates: OnchainFeeRates) async throws -> [FeePriority: OnchainTierFee] {
         guard let ffiWallet = wallet as? BarkWalletFFI else {
             throw BarkErrorArke.commandFailed("BDK wallet not available")
         }
@@ -129,24 +146,37 @@ extension WalletManager {
         let feeEstimator = try await ffiWallet.ensureFeeEstimator()
         try await feeEstimator.sync(fullScan: false)
 
-        var fees: [FeePriority: UInt64] = [:]
-        var firstError: Swift.Error?
+        var tiers = try Self.quoteTiers(with: feeEstimator, address: address, amountSats: amountSats, feeRates: feeRates)
+
+        let allUnfundable = tiers.values.allSatisfy { $0 == .insufficientFunds }
+        let barkSpendable = onchainBalance?.spendableSat ?? 0
+        if allUnfundable, barkSpendable >= Int(clamping: amountSats) {
+            Self.logger.info("Fee estimator finds no funds for \(amountSats) sats while bark holds \(barkSpendable) spendable; running one full scan and quoting again")
+            try await feeEstimator.sync(fullScan: true)
+            tiers = try Self.quoteTiers(with: feeEstimator, address: address, amountSats: amountSats, feeRates: feeRates)
+        }
+        return tiers
+    }
+
+    private static func quoteTiers(
+        with feeEstimator: BDKFeeEstimator,
+        address: String,
+        amountSats: UInt64,
+        feeRates: OnchainFeeRates
+    ) throws -> [FeePriority: OnchainTierFee] {
+        var tiers: [FeePriority: OnchainTierFee] = [:]
         for priority in FeePriority.allCases {
             do {
-                fees[priority] = try feeEstimator.estimateFee(
+                tiers[priority] = .fee(try feeEstimator.estimateFee(
                     address: address,
                     amountSats: amountSats,
                     feeRateSatPerVb: feeRates.rate(for: priority)
-                )
-            } catch {
-                firstError = firstError ?? error
+                ))
+            } catch let error as BDKFeeEstimatorError where error.isInsufficientFunds {
+                tiers[priority] = .insufficientFunds
             }
         }
-
-        if fees.isEmpty, let firstError {
-            throw firstError
-        }
-        return fees
+        return tiers
     }
 
     // MARK: - Onchain Max Sendable

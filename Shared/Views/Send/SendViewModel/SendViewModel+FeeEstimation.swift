@@ -39,7 +39,7 @@ extension SendViewModel {
 
         guard let amountInt = Int(amount), amountInt > 0 else {
             logger.debug("No amount to quote for; clearing the onchain quote")
-            onchainFeeQuote = nil
+            resetOnchainFeeQuote()
             return
         }
 
@@ -62,7 +62,7 @@ extension SendViewModel {
         logger.info("Quoting onchain fees for \(amountInt) sats at fast \(rates.fast) / medium \(rates.medium) / slow \(rates.slow) sat/vB")
 
         do {
-            let fees = try await walletManager.estimateOnchainFees(
+            let result = try await walletManager.estimateOnchainFees(
                 address: destination.address,
                 amountSats: UInt64(amountInt),
                 feeRates: rates
@@ -71,15 +71,27 @@ extension SendViewModel {
                 logger.debug("Dropping onchain quote from superseded request \(generation)")
                 return
             }
+            let tiers = result.mapValues { tier -> OnchainTierQuote in
+                switch tier {
+                case .fee(let fee):
+                    return .fee(Int(clamping: fee))
+                case .insufficientFunds:
+                    return .unaffordable
+                }
+            }
             onchainFeeQuote = OnchainFeeQuote(
                 address: destination.address,
                 amountSats: amountInt,
                 rates: rates,
-                fees: fees.mapValues { Int(clamping: $0) }
+                tiers: tiers
             )
-            let summary = FeePriority.allCases
-                .map { "\($0.rawValue) \(fees[$0].map(String.init) ?? "–")" }
-                .joined(separator: ", ")
+            let summary = FeePriority.allCases.map { priority -> String in
+                switch tiers[priority] {
+                case .fee(let fee)?: return "\(priority.rawValue) \(fee)"
+                case .unaffordable?: return "\(priority.rawValue) unaffordable"
+                case nil: return "\(priority.rawValue) –"
+                }
+            }.joined(separator: ", ")
             logger.info("Onchain fees quoted for \(amountInt) sats: \(summary)")
         } catch {
             guard generation == onchainFeeRequestGeneration else { return }
@@ -88,6 +100,18 @@ extension SendViewModel {
             // such; a quote for other inputs must not stand in for this one
             onchainFeeQuote = nil
         }
+    }
+
+    /// Forgets the quote and every request still in flight for it: the
+    /// debounce is cancelled, a reply from an open request is dropped by
+    /// the generation check, and the row stops saying "estimating".
+    /// Called on clear and when the amount is emptied.
+    @MainActor
+    func resetOnchainFeeQuote() {
+        onchainFeeEstimationTask?.cancel()
+        onchainFeeRequestGeneration += 1
+        isEstimatingOnchainFee = false
+        onchainFeeQuote = nil
     }
 
     /// Updates the onchain fee estimate with debouncing

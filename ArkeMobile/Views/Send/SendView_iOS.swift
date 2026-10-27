@@ -643,6 +643,8 @@ struct SendView_iOS: View {
                 Task {
                     await viewModel.rankManualDestination(destination)
                 }
+                // The onchain quote is keyed by address, so a new address needs a new quote
+                viewModel.updateOnchainFeeEstimate()
             }
         }
         .popover(isPresented: $viewModel.showAddressFormatsPopover) {

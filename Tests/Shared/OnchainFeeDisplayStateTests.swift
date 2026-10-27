@@ -3,8 +3,9 @@
 //  ArkéTests
 //
 //  The fee row's decision for onchain sends: a priced fee is shown only
-//  when the quote was made for exactly the current inputs; otherwise the
-//  row says it is estimating or marks the placeholder as approximate.
+//  when the quote was made for exactly the current inputs; a tier the
+//  wallet priced out of the balance says so; otherwise the row says it is
+//  estimating or marks the placeholder as approximate.
 //
 
 import Testing
@@ -24,12 +25,17 @@ struct OnchainFeeDisplayStateTests {
     private let address = "tb1p-current"
     private let rough = 3_100
 
-    private func quote(address: String? = nil, amount: Int = 1_000, rates: OnchainFeeRates? = nil) -> OnchainFeeQuote {
+    private func quote(
+        address: String? = nil,
+        amount: Int = 1_000,
+        rates: OnchainFeeRates? = nil,
+        tiers: [FeePriority: OnchainTierQuote] = [.fast: .fee(7_839), .medium: .fee(3_136), .slow: .fee(784)]
+    ) -> OnchainFeeQuote {
         OnchainFeeQuote(
             address: address ?? self.address,
             amountSats: amount,
             rates: rates ?? self.rates,
-            fees: [.fast: 7_839, .medium: 3_136, .slow: 784]
+            tiers: tiers
         )
     }
 
@@ -55,6 +61,17 @@ struct OnchainFeeDisplayStateTests {
         let q = quote()
         #expect(state(quote: q, priority: .fast) == .value(7_839))
         #expect(state(quote: q, priority: .slow) == .value(784))
+    }
+
+    @Test("A tier the wallet priced out of the balance says so, it is not 'not yet priced'")
+    func unaffordableTierSaysSo() {
+        // After "Max" at medium: medium fits exactly, fast does not
+        let q = quote(tiers: [.fast: .unaffordable, .medium: .fee(3_136), .slow: .fee(784)])
+        #expect(state(quote: q, priority: .fast) == .unaffordable)
+        #expect(state(quote: q, priority: .fast, isEstimating: true) == .unaffordable)
+        #expect(state(quote: q, priority: .medium) == .value(3_136))
+        #expect(q.fee(for: .fast) == nil)
+        #expect(q.isUnaffordable(.fast))
     }
 
     @Test("A quote for another amount never stands in, even for a moment")

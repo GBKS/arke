@@ -37,6 +37,7 @@ struct FeeSelectionSheet: View {
                         priority: priority,
                         feeRate: feeRates.rate(for: priority),
                         feeSats: quote?.fee(for: priority),
+                        isUnaffordable: quote?.isUnaffordable(priority) ?? false,
                         isEstimating: isEstimating,
                         isSelected: selectedPriority == priority,
                         onSelect: {

@@ -97,6 +97,10 @@ public struct FeeDisplayView: View {
                     .font(.body)
                     .foregroundStyle(.secondary)
             }
+        case .unaffordable:
+            Text(String(localized: "fee_state_unaffordable", defaultValue: "Exceeds balance", bundle: .module))
+                .font(.body)
+                .foregroundStyle(.secondary)
         case .unavailable:
             Text(verbatim: "—")
                 .font(.body)
@@ -112,6 +116,8 @@ public struct FeeDisplayView: View {
             return String(localized: "accessibility_value_fee_approximate", defaultValue: "Approximate, not yet priced", bundle: .module)
         case .estimating:
             return String(localized: "accessibility_value_fee_estimating", defaultValue: "Estimating", bundle: .module)
+        case .unaffordable:
+            return String(localized: "accessibility_value_fee_unaffordable", defaultValue: "Exceeds balance at this speed", bundle: .module)
         case .unavailable:
             return String(localized: "accessibility_value_fee_unavailable", defaultValue: "Not available", bundle: .module)
         }
@@ -123,6 +129,7 @@ public struct FeeDisplayView: View {
         FeeDisplayView(state: .value(7_839))
         FeeDisplayView(state: .approximate(7_750))
         FeeDisplayView(state: .estimating)
+        FeeDisplayView(state: .unaffordable)
         FeeDisplayView(state: .unavailable)
     }
     .padding()

@@ -119,11 +119,17 @@ extension SendViewModel {
         logger.debug("   → Parsed amount: \(amountInt) sats")
         
         // Validate amount against viability using FRESH balance data and REAL fee estimates
-        // The ranking now includes real Lightning fee estimation via the paymentContext
+        // The ranking now includes real Lightning fee estimation via the paymentContext.
+        // For onchain sends hand the ranker BDK's exact fee at the chosen tier when
+        // the quote covers this send: the ranker's own onchain number is the rough
+        // medium-tier placeholder, which blocked "Max" sends the wallet could build
+        // and passed sends bark then rejected (review finding F1, 2026-10-27)
+        let exactFee = exactOnchainFee(amountSats: amountInt)
         let freshRanking = await PaymentDestinationSelector.rankDestination(
             destination,
             amount: amountInt,
-            context: paymentContext  // This reads CURRENT balance from walletManager and estimates fees
+            context: paymentContext,  // This reads CURRENT balance from walletManager and estimates fees
+            exactFee: exactFee
         )
         logger.debug("   → Fresh ranking: viable=\(freshRanking?.viable ?? false), reason=\(freshRanking?.reason ?? "nil")")
         
@@ -136,11 +142,9 @@ extension SendViewModel {
                 throw SendError.destinationNotViable(ranked.reason)
             }
             
-            // Check if amount + fee exceeds available balance. For onchain
-            // sends prefer BDK's exact fee at the chosen tier: the ranker
-            // prices every onchain destination with the rough medium-tier
-            // placeholder, which can pass a send that bark then rejects
-            let feeForCheck = exactOnchainFee(amountSats: amountInt) ?? ranked.estimatedFee ?? 0
+            // Check if amount + fee exceeds available balance (the exact fee,
+            // when there is one, already sits in the fresh ranking)
+            let feeForCheck = exactFee ?? ranked.estimatedFee ?? 0
             let totalRequired = amountInt + feeForCheck
             if let availableBalance = ranked.availableBalance, totalRequired > availableBalance {
                 logger.error("   ❌ Insufficient balance: need \(totalRequired) sats, have \(availableBalance) sats")

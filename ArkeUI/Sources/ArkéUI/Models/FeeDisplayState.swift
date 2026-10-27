@@ -16,6 +16,8 @@ public enum FeeDisplayState: Equatable, Sendable {
     case estimating
     /// A size-based placeholder shown before (or instead of) a real price
     case approximate(Int)
+    /// The wallet priced this tier and the amount plus its fee exceeds the balance
+    case unaffordable
     /// No estimate possible, nothing to show
     case unavailable
 
@@ -24,7 +26,7 @@ public enum FeeDisplayState: Equatable, Sendable {
         switch self {
         case .value(let fee), .approximate(let fee):
             return fee
-        case .estimating, .unavailable:
+        case .estimating, .unaffordable, .unavailable:
             return nil
         }
     }

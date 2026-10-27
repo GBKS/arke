@@ -158,13 +158,17 @@ struct FeeRateServiceTests {
     @MainActor
     func testCeilingKeepsRankerArithmeticInRange() {
         // The one `Int(feeRate * vBytes)` in the app trapped above ~6.6e16
-        // sat/vB; at the ceiling both transaction sizes stay far below Int.max
+        // sat/vB; at the ceiling the product stays far below Int.max for
+        // every destination format the rough estimate prices (one shared
+        // size since 2026-10-27, so the two formats agree)
         let ceiling = FeeRateService.mainnetMaxRateSatPerVb
         let bitcoin = PaymentDestination(format: .bitcoin, network: nil, address: "bc1qexample")
         let silent = PaymentDestination(format: .silentPayments, network: nil, address: "sp1qexample")
+        let atCeiling = Int(ceiling * PaymentDestinationSelector.roughOnchainSendVBytes)
 
-        #expect(PaymentDestinationSelector.estimateOnchainFee(for: bitcoin, amount: nil, feeRate: ceiling) == 1_400_000)
-        #expect(PaymentDestinationSelector.estimateOnchainFee(for: silent, amount: nil, feeRate: ceiling) == 1_800_000)
+        #expect(PaymentDestinationSelector.estimateOnchainFee(for: bitcoin, amount: nil, feeRate: ceiling) == atCeiling)
+        #expect(PaymentDestinationSelector.estimateOnchainFee(for: silent, amount: nil, feeRate: ceiling) == atCeiling)
+        #expect(atCeiling > 0 && atCeiling < Int.max / 1_000_000)
     }
 
     // MARK: - Invalid Input

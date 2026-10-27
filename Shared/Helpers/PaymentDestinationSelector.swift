@@ -246,17 +246,28 @@ class PaymentDestinationSelector {
     
     /// Ranks a single destination with viability and priority information
     /// Uses real fee estimates when available for accurate ranking
+    /// - Parameter exactFee: A fee the wallet has already priced for exactly
+    ///   this destination and amount (the send flow's onchain quote at the
+    ///   chosen tier). When given it replaces the ranker's own estimate, so
+    ///   the viability gate judges the send by the fee it will pay and not
+    ///   by the rough medium-tier placeholder.
     static func rankDestination(
         _ destination: PaymentDestination,
         amount: Int?,
-        context: PaymentContext
+        context: PaymentContext,
+        exactFee: Int? = nil
     ) async -> RankedDestination? {
         let balanceSource = balanceSource(for: destination)
         let availableBalance = availableBalance(for: destination, context: context)
         let priority = priorityScore(for: destination.format, preferences: context.userPreferences)
-        
-        // Get fee estimate - try real estimation first, fall back to static estimate
-        let estimatedFee = await estimateFee(for: destination, amount: amount, context: context)
+
+        // Get fee estimate - the caller's exact fee, else try real estimation, fall back to static estimate
+        let estimatedFee: Int
+        if let exactFee {
+            estimatedFee = exactFee
+        } else {
+            estimatedFee = await estimateFee(for: destination, amount: amount, context: context)
+        }
         
         // Check viability
         let viabilityCheck = checkViability(

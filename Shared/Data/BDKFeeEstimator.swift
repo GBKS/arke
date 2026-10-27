@@ -164,7 +164,17 @@ final class BDKFeeEstimator {
             .addRecipient(script: destAddress.scriptPubkey(), amount: amount)
             .feeRate(feeRate: feeRate)
 
-        let psbt = try txBuilder.finish(wallet: wallet)
+        let psbt: Psbt
+        do {
+            psbt = try txBuilder.finish(wallet: wallet)
+        } catch CreateTxError.InsufficientFunds(let needed, let available) {
+            // Typed so callers can tell "this amount plus this fee does not
+            // fit" from a real failure; after "Max" at one tier every faster
+            // tier lands here by construction
+            throw BDKFeeEstimatorError.insufficientFunds(neededSat: needed, availableSat: available)
+        } catch CreateTxError.CoinSelection(let message) {
+            throw BDKFeeEstimatorError.insufficientFunds(neededSat: nil, availableSat: nil, detail: message)
+        }
         let tx = try psbt.extractTx()
 
         let feeAmount = try wallet.calculateFee(tx: tx)
@@ -225,4 +235,13 @@ enum BDKFeeEstimatorError: Swift.Error {
     case unsupportedNetwork
     case syncFailed(Swift.Error)
     case invalidTransaction
+    /// The shadow wallet cannot fund amount plus fee at the requested rate.
+    /// Either the send really does not fit, or the shadow wallet is behind
+    /// bark's (it only learns about addresses from its own scans)
+    case insufficientFunds(neededSat: UInt64?, availableSat: UInt64?, detail: String? = nil)
+
+    var isInsufficientFunds: Bool {
+        if case .insufficientFunds = self { return true }
+        return false
+    }
 }

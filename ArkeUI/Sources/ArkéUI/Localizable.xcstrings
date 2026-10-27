@@ -573,6 +573,17 @@
         }
       }
     },
+    "accessibility_value_fee_unaffordable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exceeds balance at this speed"
+          }
+        }
+      }
+    },
     "accessibility_value_fee_unavailable" : {
       "localizations" : {
         "de" : {
@@ -3446,6 +3457,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Estimating…"
+          }
+        }
+      }
+    },
+    "fee_state_unaffordable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Exceeds balance"
           }
         }
       }
