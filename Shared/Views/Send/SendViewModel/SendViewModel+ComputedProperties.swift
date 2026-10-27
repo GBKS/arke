@@ -142,18 +142,6 @@ extension SendViewModel {
     
     // MARK: - Fee Information
 
-    /// Returns the estimated fee text for the selected destination
-    var feeText: String? {
-        guard let destination = selectedDestination else {
-            return nil
-        }
-        
-        let ranked = rankedDestinations.first { $0.destination.id == destination.id }
-        return ranked?.estimatedFee.map { fee in
-            fee > 0 ? BitcoinFormatter.shared.formatAmount(fee) : L10n.labelNoFee
-        }
-    }
-    
     /// What the fee row shows for the selected destination. Onchain
     /// destinations distinguish a priced fee from the size-based placeholder
     /// and from an open request; the other formats show a fee or nothing.
@@ -179,10 +167,16 @@ extension SendViewModel {
             )
         }
 
-        // Lightning and Ark: the cached estimate or nothing, never a stale ranked fee
+        // Lightning: the cached estimate, "estimating" while the request is
+        // open, otherwise unavailable; never a stale ranked fee and never
+        // the static constant the ranker used to hide a failed estimate behind
         if isLightningDestination {
-            return cachedLightningFee.map(FeeDisplayState.value) ?? .unavailable
+            if let cached = cachedLightningFee {
+                return .value(cached)
+            }
+            return isEstimatingLightningFee ? .estimating : .unavailable
         }
+        // Ark: the cached estimate or nothing
         if isArkDestination {
             return cachedArkFee.map(FeeDisplayState.value) ?? .unavailable
         }

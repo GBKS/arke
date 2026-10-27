@@ -28,7 +28,6 @@ struct ContactPaymentView: View {
     let availableBalanceText: String
     let availableBalanceName: String
     let availableBalanceAmount: String
-    let feeText: String
     let feeState: FeeDisplayState
     let isAmountLocked: Bool
     let lockedAmountReason: String?
@@ -429,7 +428,6 @@ struct ContactPaymentView: View {
                 availableBalanceText: availableBalanceText,
                 availableBalanceName: availableBalanceName,
                 availableBalanceAmount: availableBalanceAmount,
-                feeText: feeText,
                 isAmountLocked: isAmountLocked,
                 lockedAmountReason: lockedAmountReason,
                 minimumSendAmount: minimumSendAmount,

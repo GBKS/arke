@@ -54,6 +54,8 @@ final class SendViewModel {
     var cachedLightningFee: Int?
     /// Amount used for the cached Lightning fee (to invalidate cache when amount changes)
     var cachedLightningFeeAmount: Int?
+    /// A Lightning fee request is open; the row says "estimating" instead of a dash
+    var isEstimatingLightningFee: Bool = false
     
     /// Cached Ark fee estimate in satoshis
     var cachedArkFee: Int?

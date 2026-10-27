@@ -25,7 +25,6 @@ public struct AmountInputSection<Accessory: View>: View {
     let availableBalanceText: String
     let availableBalanceName: String
     let availableBalanceAmount: String
-    let feeText: String
     let isAmountLocked: Bool
     let lockedAmountReason: String?
     let minimumSendAmount: Int
@@ -52,7 +51,6 @@ public struct AmountInputSection<Accessory: View>: View {
         availableBalanceText: String,
         availableBalanceName: String,
         availableBalanceAmount: String,
-        feeText: String,
         isAmountLocked: Bool,
         lockedAmountReason: String?,
         minimumSendAmount: Int,
@@ -73,7 +71,6 @@ public struct AmountInputSection<Accessory: View>: View {
         self.availableBalanceText = availableBalanceText
         self.availableBalanceName = availableBalanceName
         self.availableBalanceAmount = availableBalanceAmount
-        self.feeText = feeText
         self.isAmountLocked = isAmountLocked
         self.lockedAmountReason = lockedAmountReason
         self.minimumSendAmount = minimumSendAmount
@@ -309,7 +306,6 @@ extension AmountInputSection where Accessory == EmptyView {
         availableBalanceText: String,
         availableBalanceName: String,
         availableBalanceAmount: String,
-        feeText: String,
         isAmountLocked: Bool,
         lockedAmountReason: String?,
         minimumSendAmount: Int,
@@ -322,7 +318,6 @@ extension AmountInputSection where Accessory == EmptyView {
             availableBalanceText: availableBalanceText,
             availableBalanceName: availableBalanceName,
             availableBalanceAmount: availableBalanceAmount,
-            feeText: feeText,
             isAmountLocked: isAmountLocked,
             lockedAmountReason: lockedAmountReason,
             minimumSendAmount: minimumSendAmount,
@@ -344,7 +339,6 @@ extension AmountInputSection where Accessory == EmptyView {
             availableBalanceText: "Ark balance: ₿ 1,000",
             availableBalanceName: "Ark balance",
             availableBalanceAmount: "₿ 1,000",
-            feeText: "Fee: ₿ 100",
             isAmountLocked: false,
             lockedAmountReason: nil,
             minimumSendAmount: 330,
@@ -364,7 +358,6 @@ extension AmountInputSection where Accessory == EmptyView {
             availableBalanceText: "Ark balance: ₿ 1,000",
             availableBalanceName: "Ark balance",
             availableBalanceAmount: "₿ 1,000",
-            feeText: "Fee: ₿ 100",
             isAmountLocked: false,
             lockedAmountReason: nil,
             minimumSendAmount: 330,

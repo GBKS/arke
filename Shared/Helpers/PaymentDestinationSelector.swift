@@ -261,8 +261,8 @@ class PaymentDestinationSelector {
         let availableBalance = availableBalance(for: destination, context: context)
         let priority = priorityScore(for: destination.format, preferences: context.userPreferences)
 
-        // Get fee estimate - the caller's exact fee, else try real estimation, fall back to static estimate
-        let estimatedFee: Int
+        // Get fee estimate - the caller's exact fee, else try real estimation; nil when none could be made
+        let estimatedFee: Int?
         if let exactFee {
             estimatedFee = exactFee
         } else {
@@ -295,7 +295,7 @@ class PaymentDestinationSelector {
         destination: PaymentDestination,
         amount: Int?,
         availableBalance: Int?,
-        estimatedFee: Int,
+        estimatedFee: Int?,
         balanceSource: BalanceSource,
         context: PaymentContext
     ) -> (viable: Bool, reason: String) {
@@ -318,8 +318,8 @@ class PaymentDestinationSelector {
             return (false, "Balance unavailable")
         }
         
-        // Check if balance is sufficient
-        let totalRequired = amount + estimatedFee
+        // Check if balance is sufficient; with no estimate the amount alone is judged
+        let totalRequired = amount + (estimatedFee ?? 0)
         
         // Special handling for Ark balance with reserve
         /*
@@ -394,31 +394,35 @@ class PaymentDestinationSelector {
     
     // MARK: - Fee Estimation
     
-    /// Estimates fee for a destination using real fee estimation when available
-    /// Falls back to conservative static estimates if real estimation unavailable or fails
+    /// Estimates the fee for a destination with the real estimator when
+    /// there is one. Returns nil when no estimate could be made: a failed
+    /// Lightning estimate is not hidden behind a constant (the old static
+    /// 20 sats let one screen show two different fees and let a too-low
+    /// number pass a payment that then failed; DECIDED 2026-10-27), and
+    /// viability then checks the amount alone.
     private static func estimateFee(
         for destination: PaymentDestination,
         amount: Int?,
         context: PaymentContext
-    ) async -> Int {
+    ) async -> Int? {
         // For Lightning payments, try to use real fee estimation if available
         if let unwrappedAmount = amount,
-           (destination.format == .lightning || destination.format == .lightningInvoice || 
+           (destination.format == .lightning || destination.format == .lightningInvoice ||
             destination.format == .lnurl || destination.format == .bolt12) {
-            
+
             // Check if walletManager is available for real-time fee estimation
             guard let walletManager = context.walletManager else {
                 // This should rarely happen in normal usage since SendViewModel holds a strong reference
                 // If you see this warning, it may indicate the context is being used incorrectly (stored long-term)
-                logger.warning("WalletManager is nil during Lightning fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. Falling back to static estimate.")
-                return estimateFeeFallback(for: destination)
+                logger.warning("WalletManager is nil during Lightning fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. No estimate.")
+                return nil
             }
-            
+
             do {
                 let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(unwrappedAmount))
                 // Calculate actual fee as difference between gross and payment amount
                 let rawFee = Int(feeEstimate.grossAmountSats) - unwrappedAmount
-                
+
                 // Defensive check: ensure fee is non-negative (shouldn't happen, but guard against FFI bugs)
                 if rawFee < 0 {
                     logger.warning("Detected negative fee calculation: grossAmount=\(feeEstimate.grossAmountSats), amount=\(unwrappedAmount), rawFee=\(rawFee). Using 0.")
@@ -426,8 +430,8 @@ class PaymentDestinationSelector {
                 let actualFee = max(0, rawFee)
                 return actualFee
             } catch {
-                logger.error("Lightning fee estimation failed for payment (format: \(String(describing: destination.format)), amount: \(unwrappedAmount) sats): \(error.localizedDescription). Falling back to static estimate of 20 sats.")
-                // Fall through to static estimate
+                logger.error("Lightning fee estimation failed for payment (format: \(String(describing: destination.format)), amount: \(unwrappedAmount) sats): \(error.localizedDescription). No estimate.")
+                return nil
             }
         }
 
@@ -435,29 +439,20 @@ class PaymentDestinationSelector {
         // (medium priority, matching SendViewModel's default selection)
         if destination.format == .bitcoin || destination.format == .silentPayments {
             guard let walletManager = context.walletManager else {
-                logger.warning("WalletManager is nil during onchain fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. Falling back to static estimate.")
-                return estimateFeeFallback(for: destination)
+                logger.warning("WalletManager is nil during onchain fee estimation for \(destination.format.rawValue). This may indicate PaymentContext is being stored instead of created on-demand. No estimate.")
+                return nil
             }
             let feeRate = await walletManager.currentFeeRates().rate(for: .medium)
             return estimateOnchainFee(for: destination, amount: amount, feeRate: feeRate)
         }
 
-        return estimateFeeFallback(for: destination)
-    }
-    
-    /// Static fallback fee estimates (synchronous version for cases that don't support async)
-    private static func estimateFeeFallback(for destination: PaymentDestination) -> Int {
+        // Ark-to-Ark transfers on the same server carry no fee; wrapper
+        // formats are resolved before they reach this point
         switch destination.format {
         case .ark:
-            return 0 // Typically free for same-server transfers
-        case .lightning, .lightningInvoice, .lnurl, .bolt12:
-            return 20 // Fallback estimate based on Ark server base fee
-        case .bitcoin:
-            return 500 // Last-resort estimate when no WalletManager is available for live rates
-        case .silentPayments:
-            return 600 // Slightly higher due to additional outputs
-        case .bip353, .bip21:
-            return 0 // Wrapper formats
+            return 0
+        default:
+            return nil
         }
     }
     
@@ -473,8 +468,8 @@ class PaymentDestinationSelector {
         feeRate: UInt64
     ) -> Int {
         guard destination.format == .bitcoin || destination.format == .silentPayments else {
-            // For non-onchain, use static fallback estimate
-            return estimateFeeFallback(for: destination)
+            // Only onchain sends have a size-based placeholder
+            return 0
         }
         
         // A placeholder until BDK's exact estimate lands, never the fee

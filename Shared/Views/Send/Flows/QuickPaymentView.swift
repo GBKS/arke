@@ -59,7 +59,6 @@ struct QuickPaymentView: View {
     let availableBalanceText: String
     let availableBalanceName: String
     let availableBalanceAmount: String
-    let feeText: String
     let feeState: FeeDisplayState
     let shouldShowFeeDisclosure: Bool
     let onchainFeeRates: OnchainFeeRates
@@ -97,7 +96,6 @@ struct QuickPaymentView: View {
         availableBalanceText: String = "",
         availableBalanceName: String = "",
         availableBalanceAmount: String = "",
-        feeText: String = "",
         feeState: FeeDisplayState = .unavailable,
         shouldShowFeeDisclosure: Bool = false,
         onchainFeeRates: OnchainFeeRates = .default,
@@ -123,7 +121,6 @@ struct QuickPaymentView: View {
         self.availableBalanceText = availableBalanceText
         self.availableBalanceName = availableBalanceName
         self.availableBalanceAmount = availableBalanceAmount
-        self.feeText = feeText
         self.feeState = feeState
         self.shouldShowFeeDisclosure = shouldShowFeeDisclosure
         self.onchainFeeRates = onchainFeeRates
@@ -499,7 +496,6 @@ struct QuickPaymentView: View {
                             availableBalanceText: availableBalanceText,
                             availableBalanceName: availableBalanceName,
                             availableBalanceAmount: availableBalanceAmount,
-                            feeText: feeText,
                             isAmountLocked: isAmountLocked,
                             lockedAmountReason: lockedAmountReason,
                             minimumSendAmount: minimumSendAmount,

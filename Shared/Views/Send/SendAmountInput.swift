@@ -34,7 +34,6 @@ struct SendAmountInput: View {
     let availableBalanceText: String
     let availableBalanceName: String
     let availableBalanceAmount: String
-    let feeText: String
     let isAmountLocked: Bool
     let lockedAmountReason: String?
     let minimumSendAmount: Int
@@ -159,7 +158,6 @@ struct SendAmountInput: View {
             availableBalanceText: availableBalanceText,
             availableBalanceName: availableBalanceName,
             availableBalanceAmount: availableBalanceAmount,
-            feeText: feeText,
             isAmountLocked: isAmountLocked,
             lockedAmountReason: lockedAmountReason,
             minimumSendAmount: minimumSendAmount,

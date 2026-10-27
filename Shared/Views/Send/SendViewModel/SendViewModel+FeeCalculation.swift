@@ -110,14 +110,16 @@ extension SendViewModel {
         }
         
         logger.debug("   → Calling walletManager.estimateLightningSendFee(amountSats: \(amountToEstimate))")
+        isEstimatingLightningFee = true
+        defer { isEstimatingLightningFee = false }
         do {
             let feeEstimate = try await walletManager.estimateLightningSendFee(amountSats: UInt64(amountToEstimate))
             cachedLightningFee = Int(feeEstimate.feeSats)
             cachedLightningFeeAmount = amountToEstimate
             logger.info("   Lightning fee estimated: \(feeEstimate.feeSats) sats for \(amountToEstimate) sats")
         } catch {
+            // The row shows "unavailable"; no static stand-in anywhere
             logger.error("   Failed to estimate Lightning fee: \(error)")
-            // Fall back to static estimate on error
             cachedLightningFee = nil
             cachedLightningFeeAmount = nil
         }
