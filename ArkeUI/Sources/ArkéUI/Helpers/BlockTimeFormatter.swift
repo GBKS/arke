@@ -34,4 +34,20 @@ public enum BlockTimeFormatter {
 
         return formatter.string(from: TimeInterval(seconds)) ?? "< 1m"
     }
+
+    /// A confirmation target as the time it roughly takes, with the tilde
+    /// that says "roughly": "~10 min", "~30 min", "~1 hr". Used by the fee
+    /// tiers, whose targets are 1, 3 and 6 blocks.
+    public static func confirmationEstimate(forBlocks blocks: Int) -> String {
+        let seconds = max(blocks, 1) * secondsPerBlock
+
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.maximumUnitCount = 1
+        formatter.unitsStyle = .short
+        formatter.zeroFormattingBehavior = .dropAll
+
+        let duration = formatter.string(from: TimeInterval(seconds)) ?? "\(seconds / 60) min"
+        return String(localized: "confirmation_estimate_format", defaultValue: "~\(duration)", bundle: .module)
+    }
 }

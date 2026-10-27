@@ -92,6 +92,17 @@
         }
       }
     },
+    "accessibility_amount_below_minimum" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Below the minimum of %@"
+          }
+        }
+      }
+    },
     "accessibility_amount_field" : {
       "localizations" : {
         "de" : {
@@ -1999,6 +2010,17 @@
         }
       }
     },
+    "confirmation_estimate_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "~%@"
+          }
+        }
+      }
+    },
     "connection_ark_server_title" : {
       "localizations" : {
         "de" : {
@@ -3244,6 +3266,7 @@
       }
     },
     "fee_priority_fast_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3328,6 +3351,7 @@
       }
     },
     "fee_priority_medium_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3412,6 +3436,7 @@
       }
     },
     "fee_priority_slow_time" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3435,17 +3460,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "約 1-2 小時"
-          }
-        }
-      }
-    },
-    "fee_rate_sat_per_vb" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%llu sat/vB"
           }
         }
       }
@@ -4516,6 +4530,7 @@
       }
     },
     "label_minimum" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -5183,6 +5198,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "地址格式"
+          }
+        }
+      }
+    },
+    "send_amount_below_minimum" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Minimum is %@"
           }
         }
       }

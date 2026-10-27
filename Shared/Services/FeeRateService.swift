@@ -44,10 +44,11 @@ class FeeRateService {
     private let maxRateSatPerVb: @MainActor () -> UInt64
 
     /// Esplora confirmation targets (in blocks) for each priority tier,
-    /// matching Bark's fast/regular/slow targets.
-    private nonisolated static let fastTarget = 1
-    private nonisolated static let mediumTarget = 3
-    private nonisolated static let slowTarget = 6
+    /// matching Bark's fast/regular/slow targets. Owned by `FeePriority`
+    /// so the duration each tier displays is derived from the same number.
+    private nonisolated static let fastTarget = FeePriority.fast.confirmationTargetBlocks
+    private nonisolated static let mediumTarget = FeePriority.medium.confirmationTargetBlocks
+    private nonisolated static let slowTarget = FeePriority.slow.confirmationTargetBlocks
 
     /// Sanity cap for networks whose coins are worthless (signet/regtest):
     /// spam with enormous attached fees regularly drives their estimators to

@@ -5,6 +5,9 @@
 //  Created by Assistant on 3/25/26.
 //  Moved into ArkéUI as a pure, previewable presentation value type
 //  (no SwiftData/Bark). Localized strings use `bundle: .module`.
+//  2026-10-27: each tier owns its Esplora confirmation target, and the
+//  duration shown is derived from it through BlockTimeFormatter, the one
+//  block-time source, instead of a hand-written range.
 //
 
 import Foundation
@@ -39,15 +42,20 @@ public enum FeePriority: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    public var estimatedConfirmationTime: String {
+    /// The Esplora confirmation target this tier is priced for, in blocks.
+    /// Mirrors bark's own chain source (FEE_RATE_TARGET_CONF_FAST / REGULAR
+    /// / SLOW = 1 / 3 / 6), so the rate shown is the rate bark broadcasts at.
+    public var confirmationTargetBlocks: Int {
         switch self {
-        case .fast:
-            return String(localized: "fee_priority_fast_time", defaultValue: "~10-20 min", bundle: .module)
-        case .medium:
-            return String(localized: "fee_priority_medium_time", defaultValue: "~30-60 min", bundle: .module)
-        case .slow:
-            return String(localized: "fee_priority_slow_time", defaultValue: "~1-2 hours", bundle: .module)
+        case .fast: return 1
+        case .medium: return 3
+        case .slow: return 6
         }
+    }
+
+    /// The target as a duration, e.g. "~10 min", "~30 min", "~1 hr"
+    public var estimatedConfirmationTime: String {
+        BlockTimeFormatter.confirmationEstimate(forBlocks: confirmationTargetBlocks)
     }
 
     /// Default fee rate in sat/vB for this priority

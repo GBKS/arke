@@ -3,8 +3,9 @@
 //  Arké
 //
 //  Created by Assistant on 3/25/26.
-//  2026-10-27: each tier shows its exact fee when the flow holds a quote
-//  for the current send, so the choice is a comparison, not a guess.
+//  2026-10-27: one row per distinct rate (FeeTierGroup), each showing its
+//  exact fee when the flow holds a quote for the current send, so the
+//  choice is a comparison between real alternatives.
 //
 
 import SwiftUI
@@ -21,6 +22,10 @@ struct FeeSelectionSheet: View {
     var isEstimating: Bool = false
     let onDismiss: () -> Void
 
+    private var groups: [FeeTierGroup] {
+        FeeTierGroup.groups(from: feeRates)
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             // Header
@@ -30,18 +35,17 @@ struct FeeSelectionSheet: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 30)
 
-            // Fee options
+            // One option per distinct rate, labelled by its fastest tier
             VStack(spacing: 12) {
-                ForEach(FeePriority.allCases) { priority in
+                ForEach(groups) { group in
                     FeeOptionRow(
-                        priority: priority,
-                        feeRate: feeRates.rate(for: priority),
-                        feeSats: quote?.fee(for: priority),
-                        isUnaffordable: quote?.isUnaffordable(priority) ?? false,
+                        priority: group.representative,
+                        feeSats: quote?.fee(for: group.representative),
+                        isUnaffordable: quote?.isUnaffordable(group.representative) ?? false,
                         isEstimating: isEstimating,
-                        isSelected: selectedPriority == priority,
+                        isSelected: group.contains(selectedPriority),
                         onSelect: {
-                            selectedPriority = priority
+                            selectedPriority = group.representative
                             onDismiss()
                         }
                     )

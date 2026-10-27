@@ -248,9 +248,12 @@ extension SendViewModel {
         return destination.format == .ark
     }
     
-    /// Returns whether to show the fee disclosure indicator
+    /// Returns whether to show the fee disclosure indicator: an onchain
+    /// destination whose tiers differ in rate. When every tier is priced
+    /// the same there is nothing to choose, so the row does not pretend
+    /// (DECIDED 2026-10-27).
     var shouldShowFeeDisclosure: Bool {
-        return isOnchainDestination
+        isOnchainDestination && FeeTierGroup.groups(from: onchainFeeRates).count > 1
     }
     
     // MARK: - Balance Loading State

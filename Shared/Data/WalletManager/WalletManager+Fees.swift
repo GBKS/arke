@@ -164,16 +164,26 @@ extension WalletManager {
         amountSats: UInt64,
         feeRates: OnchainFeeRates
     ) throws -> [FeePriority: OnchainTierFee] {
+        // One build per distinct rate, shared by every tier at that rate:
+        // BDK's coin selection is not deterministic between builds, and two
+        // tiers at the same rate must not show two different fees
+        var byRate: [UInt64: OnchainTierFee] = [:]
         var tiers: [FeePriority: OnchainTierFee] = [:]
         for priority in FeePriority.allCases {
-            do {
-                tiers[priority] = .fee(try feeEstimator.estimateFee(
-                    address: address,
-                    amountSats: amountSats,
-                    feeRateSatPerVb: feeRates.rate(for: priority)
-                ))
-            } catch let error as BDKFeeEstimatorError where error.isInsufficientFunds {
-                tiers[priority] = .insufficientFunds
+            let rate = feeRates.rate(for: priority)
+            if byRate[rate] == nil {
+                do {
+                    byRate[rate] = .fee(try feeEstimator.estimateFee(
+                        address: address,
+                        amountSats: amountSats,
+                        feeRateSatPerVb: rate
+                    ))
+                } catch let error as BDKFeeEstimatorError where error.isInsufficientFunds {
+                    byRate[rate] = .insufficientFunds
+                }
+            }
+            if let result = byRate[rate] {
+                tiers[priority] = result
             }
         }
         return tiers

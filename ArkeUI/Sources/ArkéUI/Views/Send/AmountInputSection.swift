@@ -98,6 +98,13 @@ public struct AmountInputSection<Accessory: View>: View {
         return enteredAmount > maxSpendableAmount
     }
 
+    /// Something was typed and it is under the destination's minimum
+    private var isBelowMinimum: Bool {
+        guard minimumSendAmount > 0, !isAmountLocked else { return false }
+        guard let sats = currentAmountSats ?? Int(amount), sats > 0 else { return false }
+        return sats < minimumSendAmount
+    }
+
     /// Write a sats value: through the caller when the field holds
     /// something other than sats (fiat entry), else into the field
     private func setSats(_ sats: Int) {
@@ -263,18 +270,19 @@ public struct AmountInputSection<Accessory: View>: View {
                         .foregroundColor(.secondary)
                 }
 
-                if minimumSendAmount > 0 {
-                    HStack(spacing: 8) {
-                        Text(String(localized: "label_minimum", defaultValue: "Minimum", bundle: .module))
-                            .font(.body)
-                            .foregroundColor(.secondary)
-
-                        Spacer()
-
-                        Text(BitcoinFormatter.shared.formatAmount(minimumSendAmount))
-                            .font(.body)
-                    }
-                    .accessibilityElement(children: .combine)
+                // The minimum is stated only when the typed amount is under
+                // it; the Send button is disabled below it, and this is the
+                // one line that says why (DECIDED 2026-10-27, replacing a
+                // permanent "Minimum" row)
+                if isBelowMinimum {
+                    Text(String(localized: "send_amount_below_minimum",
+                                defaultValue: "Minimum is \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
+                                bundle: .module))
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .accessibilityLabel(Text(String(localized: "accessibility_amount_below_minimum",
+                                                        defaultValue: "Below the minimum of \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
+                                                        bundle: .module)))
                 }
             }
         }
