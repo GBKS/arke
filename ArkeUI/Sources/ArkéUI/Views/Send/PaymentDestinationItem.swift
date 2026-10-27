@@ -96,9 +96,12 @@ public struct PaymentDestinationItem: View {
                             .foregroundColor(.secondary)
                     }
                     
+                    // The address is the payload: black whenever the destination
+                    // is usable, selectable or not (DECIDED 2026-10-27; a single
+                    // destination used to read as faded grey)
                     Text(shortAddress)
                         .font(.body)
-                        .foregroundColor(isSelectable && viable ? .primary : .secondary)
+                        .foregroundColor(viable ? .primary : .secondary)
                     
                     // Show viability reason for non-viable destinations
                     if !viable {
@@ -126,7 +129,7 @@ public struct PaymentDestinationItem: View {
                         
                         Text(fee > 0 ? "~\(BitcoinFormatter.shared.formatAmount(fee))" : String(localized: "label_free", defaultValue: "Free", bundle: .module))
                             .font(.body)
-                            .foregroundColor(isSelectable && viable ? .primary : .secondary)
+                            .foregroundColor(viable ? .primary : .secondary)
                     }
                 }
             }
