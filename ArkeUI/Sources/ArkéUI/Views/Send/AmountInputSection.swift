@@ -96,8 +96,11 @@ public struct AmountInputSection<Accessory: View>: View {
     }
 
     /// Something was typed and it is under the destination's minimum
+    /// Judged only once the field has lost focus: while typing, "1000"
+    /// passes through 1, 10 and 100, and a hint that blinks three times
+    /// about a state the user is leaving is noise (DECIDED 2026-10-27)
     private var isBelowMinimum: Bool {
-        guard minimumSendAmount > 0, !isAmountLocked else { return false }
+        guard minimumSendAmount > 0, !isAmountLocked, !isAmountFieldFocused else { return false }
         guard let sats = currentAmountSats ?? Int(amount), sats > 0 else { return false }
         return sats < minimumSendAmount
     }
@@ -171,15 +174,33 @@ public struct AmountInputSection<Accessory: View>: View {
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
+            HStack(alignment: .firstTextBaseline) {
                 Text(L10n.placeholderEnterAmount)
                     .font(.body)
                     .fontWeight(.medium)
-                
+
                 if isAmountLocked, let reason = lockedAmountReason {
                     Text(verbatim: "(\(reason))")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                }
+
+                Spacer(minLength: 8)
+
+                // The minimum, stated in the header's spare corner so the
+                // card keeps its height, and only after the field has lost
+                // focus; the Send button is disabled below it and this is
+                // the one line that says why (DECIDED 2026-10-27)
+                if isBelowMinimum {
+                    Text(String(localized: "send_amount_below_minimum",
+                                defaultValue: "Minimum is \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
+                                bundle: .module))
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                        .lineLimit(1)
+                        .accessibilityLabel(Text(String(localized: "accessibility_amount_below_minimum",
+                                                        defaultValue: "Below the minimum of \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
+                                                        bundle: .module)))
                 }
             }
             
@@ -265,21 +286,6 @@ public struct AmountInputSection<Accessory: View>: View {
                     Text(String(localized: "send_amount_fixed", defaultValue: "Amount is fixed", bundle: .module))
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }
-
-                // The minimum is stated only when the typed amount is under
-                // it; the Send button is disabled below it, and this is the
-                // one line that says why (DECIDED 2026-10-27, replacing a
-                // permanent "Minimum" row)
-                if isBelowMinimum {
-                    Text(String(localized: "send_amount_below_minimum",
-                                defaultValue: "Minimum is \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
-                                bundle: .module))
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                        .accessibilityLabel(Text(String(localized: "accessibility_amount_below_minimum",
-                                                        defaultValue: "Below the minimum of \(BitcoinFormatter.shared.formatAmount(minimumSendAmount))",
-                                                        bundle: .module)))
                 }
             }
         }
