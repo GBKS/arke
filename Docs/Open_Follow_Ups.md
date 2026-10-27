@@ -665,57 +665,30 @@ needs a ruling or a sentence of reasoning before it can become work.
   unit test on the gate decision, on-device look with a forced clamp
   (custom network pointing at a poisoned Esplora, or a debug override).
 - [ ] **BDK fee estimator is blind to onchain funds that arrived after its
-  one full scan, so the exact fee and max-sendable always fall back**
-  (found 2026-10-19 in the mainnet-ceiling device check export,
-  `Docs/debug_logs.txt`): with 20,000 sats confirmed onchain per bark, the
-  estimator threw `CoinSelection … 0 BTC available` on every attempt
-  (`estimateOnchainFeeWithBDK` and `calculateOnchainMaxSendable`), and the
-  send screen priced the fee from the 140 vB fallback (280 sats) and max
-  from `balance - fallback`. Traced: `ensureFeeEstimator`
-  (`BarkWalletFFI+Fees.swift:46-49`) full-scans only when
-  `createdFreshDatabase` is true; the export has "Creating fee estimator"
-  but no "database is fresh" line, so the db pre-existed and only
-  `startSyncWithRevealedSpks` ran (`BDKFeeEstimator.swift:131`). The
-  estimator is its own BDK wallet on which nothing ever reveals addresses,
-  so a UTXO on an address bark revealed after that first scan is invisible
-  to it forever — the same revealed-SPK mechanism as the §4 notes in
-  `Features/BDK_Transaction_Reader_Removal.md`, now on the estimator. Not
-  a funds problem (bark's own wallet sends fine); the shown fee and the
-  max amount are guesses. Fix options: (a) when the estimate fails with
-  insufficient funds while bark's onchain balance covers the amount, run
-  one full scan and retry once; (b) reveal the estimator's external chain
-  up to bark's address index before each sync; (c) retire the estimator
-  (Tier 4 "BDK fee estimator removal, Phase 3", blocked upstream).
-  Recommend (a): one line of policy, self-healing, no new state. Device
-  evidence named: `Fee estimator database is fresh - running one-time full
-  scan` followed by a `Fee calculated:` line instead of `Failed to estimate fee`.
-- [ ] **PROPOSAL (2026-10-07) — Fee row three-state + stale-cache guard**:
-  the fee row shows "—" for Lightning addresses and keeps the old value when
-  onchain priority changes. (0) **The ranking path falls back silently**:
-  when `PaymentDestinationSelector.estimateFee()` (`:388-435`) fails for a
-  Lightning destination it logs "Falling back to static estimate of 20 sats"
-  and `estimateFeeFallback` returns 20 (`:443`), so the fee shown can differ
-  from the fee paid and a too-low estimate can fail the payment (merged from
-  its own entry 2026-10-09; carried from
-  `Archive/Fixes/LIGHTNING_FEE_ESTIMATION_ISSUES.md` item 3). (1) `feeAmount`
-  for Lightning (`SendViewModel+ComputedProperties.swift:181-187`) returns
-  only `cachedLightningFee`; when `estimateLightningSendFee` throws,
-  `calculateLightningFee` nils the cache → dash, while the ranking path hides
-  the same failure behind the static 20 (the "20 ₿" on the 750-sat invoice
-  screenshot is that constant). `feeText` (ranked, `:146-155`) and
-  `feeAmount` (cached) are two accessors shown in two places
-  (`QuickPaymentView.swift:495,506`), which is how one screenshot shows "20"
-  in one row and "—" in another. In quick mode with no viable ranked
-  destination (`selectedDestination == nil`, balance label falls back to
-  "Total balance") no fee path runs although Send is enabled.
-  (2) `estimateOnchainFee` keeps the previous cache on any BDK/sync error
-  (`SendViewModel+FeeEstimation.swift:73-76`) and `feeAmount` returns
-  `cachedOnchainFee` without checking `cachedOnchainFeePriority` /
-  `cachedOnchainFeeAmount` match (`+ComputedProperties.swift:164-168`).
-  Proposal: value / estimating / unavailable states (never a bare dash, never
-  a silent constant); `feeAmount` requires a cache match; log the bark error
-  once and confirm on device whether the Lightning estimate really fails;
-  when quick mode has no viable destination, say why.
+  one full scan** (found 2026-10-19; history and the trace in
+  `Features/Send_Fee_Quotes.md` §1, §6.2). Option (a) BUILT 2026-10-27 in
+  `WalletManager.estimateOnchainFees`: every tier unfundable while bark's
+  `spendableSat` covers the amount → one full scan, quote again. Fired on
+  the simulator; closes on a device export with `finds no funds … running
+  one full scan` followed by `Onchain fees quoted`.
+- [ ] **Fee row three-state, Lightning half** (PROPOSAL 2026-10-07; the
+  onchain half was BUILT 2026-10-27, `Features/Send_Fee_Quotes.md`). Still
+  open: (0) the ranking path hides a failed Lightning estimate behind a
+  static 20 sats (`estimateFeeFallback`), (1) `feeDisplayState` shows a dash
+  while `feeText` shows that constant, two accessors in two places; in quick
+  mode with no viable destination no fee path runs although Send is enabled.
+- [ ] **PROPOSED — gate Send while the fee row says "Estimating…"** (review
+  F5, `Features/Send_Fee_Quotes.md` §5): the rates are refreshed before the
+  quote lands, so a send in that window pays the new rate while the gate
+  judged it by the rough one; `canSend` in the three flows ignores
+  `.estimating`. Explicit-gates rule says disable with a reason; the cost is
+  a disabled button for one shadow-wallet sync per amount change.
+- [ ] **Send-all can exceed bark's Savings balance** (simulator 2026-10-27,
+  `Features/Send_Fee_Quotes.md` §6.3): `calculateOnchainMaxSendable` drains
+  the shadow wallet, which funded 8,839 sats more than bark reports (the
+  feedback ask 7c figure), so the amount field flags "Exceeds available"
+  while Send stays enabled and the pre-send gate throws at tap time. Cap the
+  send-all amount at bark's `spendableSat` minus the quoted fee, or gate Send.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
