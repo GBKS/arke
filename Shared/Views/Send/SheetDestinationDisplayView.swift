@@ -38,36 +38,26 @@ struct SheetDestinationDisplayView: View {
                 }
                 */
                 
-                // Primary/Selected destination display
-                Button {
-                    if hasAlternativeDestinations {
+                // Primary/Selected destination display. A button only when
+                // there is something to choose; a disabled button dims its
+                // label, and the address was hard to read for the common
+                // single-destination case (Christoph, device 2026-10-27)
+                if hasAlternativeDestinations {
+                    Button {
                         isSheetPresented = true
+                    } label: {
+                        primaryDestinationItem(primaryDisplay)
+                            .overlay(alignment: .trailing) {
+                                Image(systemName: "chevron.down")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                    .padding(.trailing, 20)
+                            }
                     }
-                } label: {
-                    PaymentDestinationItem(
-                        formatName: formatNameOverride ?? primaryDisplay.destination.format.simplifiedDisplayName,
-                        shortAddress: primaryDisplay.destination.shortAddress,
-                        estimatedFee: nil, // primaryDisplay.estimatedFee
-                        isSelectable: false,
-                        isSelected: false,
-                        onTap: {},
-                        contactName: primaryDisplay.matchedContact?.displayName,
-                        contactAvatar: primaryDisplay.matchedContact?.avatarData,
-                        viable: primaryDisplay.viable,
-                        viabilityReason: primaryDisplay.viabilityReason,
-                        showMatchedContact: showMatchedContact
-                    )
-                    .overlay(alignment: .trailing) {
-                        if hasAlternativeDestinations {
-                            Image(systemName: "chevron.down")
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                                .padding(.trailing, 20)
-                        }
-                    }
+                    .buttonStyle(.plain)
+                } else {
+                    primaryDestinationItem(primaryDisplay)
                 }
-                .buttonStyle(.plain)
-                .disabled(!hasAlternativeDestinations)
             }
             .sheet(isPresented: $isSheetPresented) {
                 DestinationSelectionSheet(
@@ -82,6 +72,25 @@ struct SheetDestinationDisplayView: View {
                 .presentationDragIndicator(.visible)
             }
         }
+    }
+}
+
+extension SheetDestinationDisplayView {
+    /// The primary destination as shown in the row, with or without a button around it
+    fileprivate func primaryDestinationItem(_ primaryDisplay: DisplayDestination) -> some View {
+        PaymentDestinationItem(
+            formatName: formatNameOverride ?? primaryDisplay.destination.format.simplifiedDisplayName,
+            shortAddress: primaryDisplay.destination.shortAddress,
+            estimatedFee: nil, // primaryDisplay.estimatedFee
+            isSelectable: false,
+            isSelected: false,
+            onTap: {},
+            contactName: primaryDisplay.matchedContact?.displayName,
+            contactAvatar: primaryDisplay.matchedContact?.avatarData,
+            viable: primaryDisplay.viable,
+            viabilityReason: primaryDisplay.viabilityReason,
+            showMatchedContact: showMatchedContact
+        )
     }
 }
 

@@ -353,3 +353,23 @@ Not reachable that evening: "Exceeds balance" in the sheet (with Fast and
 Medium at the same rate, send-all at Medium leaves no faster tier to price
 out) and "Estimate unreliable" (needs the mainnet fast tier at the ceiling;
 a forced clamp or debug override is the open question on that entry).
+
+### 8.9 Send-all fills at once; the destination row is readable (2026-10-27, late)
+
+Two device findings from §8.8, both DECIDED the same evening. Send-all
+used to fill the amount field only after the shadow wallet's incremental
+sync and drain build, about 5 s on the mainnet phone; the field now takes
+bark's spendable balance minus the rough placeholder fee at once, the fee
+row says "estimating", the gate keeps Send disabled, and the exact drain
+amount replaces the number when it lands. Simulator: 133,822 sats
+immediately, 130,972 after 6 s with the fee priced. The 2,887 sat gap to
+"balance minus fee" is the §8.4 shadow-versus-bark difference on that
+wallet, not new.
+
+The quick flow's destination row was a button disabled whenever there was
+nothing to choose, and a disabled button dims its label. It is now a
+button only when alternatives exist; otherwise plain content. The address
+still renders in the component's secondary grey (`PaymentDestinationItem`
+colours it primary only when selectable and viable); making the single
+destination's address primary is a one-line call if the grey is still too
+faint on the phone.

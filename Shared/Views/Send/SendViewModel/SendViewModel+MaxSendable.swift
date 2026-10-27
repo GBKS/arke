@@ -165,7 +165,23 @@ extension SendViewModel {
             // Use BDK transaction reader to calculate exact max sendable amount
             // This builds an actual drain transaction to determine precise fees
             logger.info("Onchain (BDK): Calculating exact max sendable with BDK")
-            
+
+            // Show a number at once: bark's balance minus the rough placeholder
+            // fee, replaced by the exact drain amount when the shadow wallet
+            // answers (its sync took ~5 s on the mainnet phone, 2026-10-27).
+            // The fee row says "estimating" meanwhile and the gate keeps Send
+            // disabled until the exact quote lands.
+            let approximateFee = PaymentDestinationSelector.estimateOnchainFee(
+                for: destination,
+                amount: balance,
+                feeRate: onchainFeeRates.rate(for: selectedFeePriority)
+            )
+            let approximateMax = balance - approximateFee
+            if approximateMax > 0 {
+                amount = "\(approximateMax)"
+                logger.debug("   Showing approximate send-all \(approximateMax) sats while the drain is computed")
+            }
+
             do {
                 let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
                 

@@ -1761,3 +1761,12 @@ DECIDED label in place.
   evidence (Christoph, mainnet, 2026-10-27): consecutive relaunches, no
   `finds no funds … running one full scan` line, first quote in about a
   second. Write-up: `Features/Send_Fee_Quotes.md` §8.7.
+- [x] **Send-all waits ~5 s before the amount appears** — closed 2026-10-27
+  (Christoph, mainnet device, same evening). The balance button filled the
+  field only after the shadow wallet's incremental sync and drain build; it
+  now fills at once with bark's spendable minus the rough placeholder fee
+  while the fee row says "estimating" and the gate keeps Send disabled, then
+  takes the exact drain amount. Same commit: the quick flow's destination
+  row is a button only when there are alternatives, so a single destination
+  is no longer dimmed as a disabled button. Device-checked "works great".
+  Write-up: `Features/Send_Fee_Quotes.md` §8.9.

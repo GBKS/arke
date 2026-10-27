@@ -658,12 +658,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   `FeeRateService.mainnetMaxRateSatPerVb` disables onchain Send with "fee
   estimate unreliable"; Ark and Lightning stay usable; unit-tested. Stays
   open for the on-device look with a forced clamp named in the DoD.
-- [ ] **Send-all waits ~5 s before the amount appears** (Christoph, mainnet
-  device 2026-10-27, `Features/Send_Fee_Quotes.md` §8.8): the balance button
-  fills the field only after the shadow wallet's incremental sync and drain
-  build return. PROPOSED: fill at once with bark's spendable minus the rough
-  placeholder fee and mark the row estimating, then replace with BDK's exact
-  amount when it lands; the gate already blocks Send until then.
 - [ ] **PROPOSED — gate Send on the approximate placeholder too** (review
   F3 of the second fee pass, `Features/Send_Fee_Quotes.md` §8): after a
   failed onchain quote the row shows "~₿ …" and Send is enabled, paying a
