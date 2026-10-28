@@ -71,7 +71,9 @@ the fee ceiling (DECIDED 2026-10-19; built as "Estimate unreliable" in the
 fee row, device look waived 2026-10-27) and the Lightning half of the fee
 row three-state. Also closed on the way: the blind shadow estimator (root
 cause: it never persisted), send-all exceeding bark's balance, the pin-to-
-tags Tier 0 item.
+tags Tier 0 item. Since the release: send onchain from the Payments
+balance, built, reviewed and device-checked 2026-10-28
+(`Features/Send_Onchain_From_Payments.md`), not yet in a build.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -489,6 +491,11 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
+- [ ] **The ranker does not check whether an Ark address is reachable**: a
+  BIP-21 whose Ark address belongs to another server wins the Payments row
+  (one row per balance, DECIDED 2026-10-28) and bark rejects the send, while
+  the Lightning or onchain path would have worked. The 0.26 bindings expose
+  `validateArkoorAddress`; rank with it. `Features/Send_Onchain_From_Payments.md` §9.1.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -503,25 +510,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   ₿-prefixed or actually-resolved BIP-353 input — same permissive
   `BIP353Resolver.detectFormatOrNil` (`:214-244`) as the Tier 0 paste
   fallback, one detector fix serves both.
-- [ ] **PROPOSAL (2026-10-07) — Send onchain from the Payments balance**
-  (asked by Neil, Second): bitcoin addresses can only be paid from Savings.
-  The round-based path exists — `sendToOnchain` / `estimateSendToOnchainFee`
-  on `BarkWalletProtocol` (bark `Wallet.sendOnchain(address:amountSats:)`) —
-  the send is used only by the offboarding modal, the fee estimate also by
-  `SendViewModel+MaxSendable`. `balanceSource(for:)` maps `.bitcoin` to
-  `.bitcoin` only (`PaymentDestinationSelector.swift:357-358`);
-  `SendViewModel+PaymentExecution` (`:170-174`) always calls the
-  onchain-wallet `sendOnchain`. Also explains "scanned Noah QR, onchain failed
-  with error building tx" (empty Savings). Design: ranking emits two entries
-  for bitcoin addresses, selection keyed on (destination, source); the round
-  path has a server fee, no priority picker, settles at the next round — say
-  so in the option row; tell third-party round sends apart from offboards
-  via `AddressService` history so Activity doesn't label them "Moved".
-  Default source DECIDED 2026-10-10 (Savings; five rules in the Decisions
-  section): ranking must be redone with the typed amount so viability stays
-  current (today it runs once at parse time and the quick flow's amount
-  handler only re-selects within the stale list), the picker rows show
-  source + fee + settlement, and nothing auto-switches during input.
 - [ ] **Contact assignment mixes up send and receive addresses** (four
   Reminders reports: batch assignment uses the receive-to address; assigning
   a payment adds the Lightning invoice as a contact address; assigning an Ark
@@ -1101,6 +1089,18 @@ log).
 
 ### Send
 
+- [ ] **Four sheets title themselves in the navigation bar (sans-serif)** while
+  the app's modals put a serif title in the content (speed sheet, boarding
+  and offboarding modals, settings pages): `TagSelectorSheet` ("Choose
+  Tags"), `ContactImportSheet`, the assign-contact sheet in
+  `SendMetadataSection`, `DeviceAssignmentSheets_iOS`. Found 2026-10-28
+  while fixing the "Pay from" sheet; same two-line change each.
+- [ ] **PROPOSED: the funding source lives in the amount card, not the
+  recipient card.** The "Pay from" control sits inside the recipient card
+  (`SheetDestinationDisplayView`); the amount card's balance row already
+  names the source. Recipient card = who, amount card = from where. Tier 3:
+  "Pay from Savings" caption fixes the misread for now.
+  `Features/Send_Onchain_From_Payments.md` §9.2.
 - [ ] **Number pad sometimes has no Done button** (also "amount input
   keyboard done button"). Related: tap-outside keyboard dismissal added to
   the Boarding/Offboarding forms 2026-08-21 as fallback for the flaky toolbar

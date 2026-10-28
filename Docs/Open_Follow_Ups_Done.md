@@ -1046,7 +1046,9 @@ DECIDED label in place.
   exceeds-balance state names both balances. (5) No fee-based auto-pick;
   both fees are shown, the choice is speed/liquidity vs. keeping onchain
   coins untouched. Build item: the Payments-balance onchain proposal in
-  Tier 1.
+  Tier 1. Rule (1)'s "settles at the next round" superseded 2026-10-27:
+  bark's path is a collaborative offboard, not a round, and the row
+  carries no settlement caption (`Features/Send_Onchain_From_Payments.md` §7).
 - [x] **DECIDED 2026-10-10 — nearby-exchange payloads: fix the contact
   card now, defer the peer gating to the tilt-share pass.** Background (PR
   #8 description): payloads are accepted whatever the distance check says,
@@ -1405,6 +1407,14 @@ DECIDED label in place.
 
 ### Tier 1 — What users hit every day › Send and fees
 
+- [x] **Send onchain from the Payments balance** — DONE 2026-10-28 (asked
+  by Neil, Second, 2026-10-07): a bitcoin address ranks as two rows,
+  Savings and Payments (`BalanceSource.arkToOnchain`, a collaborative
+  offboard), selection keyed on `PaymentDestinationSelector.Choice`; the
+  "Pay from" sheet keeps one row per balance; the collapsed row reads "Pay
+  from Savings"; Activity calls an onchain send "Moved" only when it went to
+  an own address. Fault-class pass fixed, 617/617, signet device check
+  passed. Not run: the forced parked error. `Features/Send_Onchain_From_Payments.md`.
 - [x] **Nothing on screen says the launch load is still running** — DONE
   2026-10-13: device look passed on the themes, pull-to-refresh and Reduce
   Motion on and off (Christoph: "looks great"); shipped shape is the glyph
