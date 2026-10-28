@@ -100,6 +100,10 @@ struct TransactionSwipeCard: View, Equatable {
                     Text(transaction.formattedDisplayAmount)
                         .font(.system(size: isEditingNote ? 26 : 40, weight: .bold, design: .rounded))
                         .foregroundColor(headerAmountColor)
+                        .strikethrough(isAmountStruckThrough, color: headerAmountColor)
+                        // The header is always dark; resolve the adaptive
+                        // secondary grey for a dark backdrop in light mode too
+                        .environment(\.colorScheme, .dark)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                 }
@@ -223,9 +227,15 @@ struct TransactionSwipeCard: View, Equatable {
         return (color == .black || color == .primary) ? .white : color
     }
 
+    /// Failed and cancelled payments moved no money; their amount is struck
+    /// through so a red or negative number doesn't read as a withdrawal.
+    private var isAmountStruckThrough: Bool {
+        transaction.transactionStatus == .failed || transaction.transactionStatus == .cancelled
+    }
+
     private var amountColor: Color {
-        if transaction.transactionStatus == .cancelled {
-            return .gray
+        if isAmountStruckThrough {
+            return .arkeSecondary
         }
 
         if transaction.hasUnilateralExit {
@@ -240,10 +250,8 @@ struct TransactionSwipeCard: View, Equatable {
             return transaction.isInternalTransfer ? .primary : transaction.transactionType.amountColor
         case .pending:
             return .Arke.blue
-        case .failed:
-            return .Arke.red
-        case .cancelled:
-            return .gray
+        case .failed, .cancelled:
+            return .arkeSecondary
         }
     }
 

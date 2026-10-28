@@ -155,6 +155,7 @@ struct TransactionDetailView_iOS: View {
                     Text(transaction.formattedDisplayAmount)
                         .font(.system(size: 54, weight: .bold, design: .rounded))
                         .foregroundColor(amountTextColor == .black || amountTextColor == .primary ? .white : amountTextColor)
+                        .strikethrough(isAmountStruckThrough, color: amountTextColor)
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
@@ -230,12 +231,18 @@ struct TransactionDetailView_iOS: View {
         }
     }
     
+    /// Failed and cancelled payments moved no money; their amount is struck
+    /// through so a red or negative number doesn't read as a withdrawal.
+    private var isAmountStruckThrough: Bool {
+        transaction.transactionStatus == .failed || transaction.transactionStatus == .cancelled
+    }
+
     /// Returns the appropriate amount text color based on transaction status
     private var amountTextColor: Color {
-        // Cancelled is terminal and wins over the exit-progress check below,
-        // which would otherwise show a never-completing pending state.
-        if transaction.transactionStatus == .cancelled {
-            return .gray
+        // Failed and cancelled are terminal and win over the exit-progress
+        // check below, which would otherwise show a never-completing pending state.
+        if isAmountStruckThrough {
+            return .arkeSecondary
         }
 
         // Special case for unilateral exits: only complete when claimed.
@@ -264,11 +271,8 @@ struct TransactionDetailView_iOS: View {
         case .pending:
             return .Arke.blue
 
-        case .failed:
-            return .Arke.red
-
-        case .cancelled:
-            return .gray
+        case .failed, .cancelled:
+            return .arkeSecondary
         }
     }
 
