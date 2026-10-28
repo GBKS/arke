@@ -121,37 +121,66 @@ struct ContactPaymentView: View {
         matchedContactAddress?.format == .bip353
     }
     
+    /// The ranking the rows show: the view model's live one when it has
+    /// ranked this contact, else the view's own BIP-353 ranking
+    private var effectiveRankedDestinations: [PaymentDestinationSelector.RankedDestination] {
+        if let sendViewModel, !sendViewModel.rankedDestinations.isEmpty {
+            return sendViewModel.rankedDestinations
+        }
+        return rankedDestinations
+    }
+
     /// Convert ranked destinations to DisplayDestination for the destination display
     private var displayDestinations: [DisplayDestination] {
-        rankedDestinations.map { ranked in
-            DisplayDestination(
-                destination: ranked.destination,
-                estimatedFee: ranked.estimatedFee,
-                balanceSourceName: ranked.balanceSource.displayName,
-                matchedContact: contact,
-                viable: ranked.viable,
-                viabilityReason: ranked.reason,
-                availableBalance: ranked.availableBalance
-            )
+        effectiveRankedDestinations.map { ranked in
+            DisplayDestination(ranked: ranked, matchedContact: contact)
         }
     }
-    
+
+    /// The selected row: the view model's choice when there is one, else
+    /// the bound destination with its default source
+    private var selectedChoice: Binding<PaymentDestinationSelector.Choice?> {
+        Binding(
+            get: {
+                if let sendViewModel { return sendViewModel.selectedChoice }
+                return selectedDestination.map {
+                    PaymentDestinationSelector.Choice(destinationId: $0.id, source: PaymentDestinationSelector.balanceSource(for: $0))
+                }
+            },
+            set: { newValue in
+                guard let newValue else { return }
+                if let sendViewModel {
+                    sendViewModel.selectedChoice = newValue
+                } else if let ranked = effectiveRankedDestinations.first(where: { $0.choice == newValue }) {
+                    selectedDestination = ranked.destination
+                }
+            }
+        )
+    }
+
     /// Primary destination to display (selected or first ranked)
     private var primaryDisplayDestination: DisplayDestination? {
-        // If user has selected a destination, show that one
-        if let selectedId = selectedDestination?.id,
-           let selected = displayDestinations.first(where: { $0.destination.id == selectedId }) {
-            return selected
+        // If user has selected a row, show that one
+        if let selected = selectedChoice.wrappedValue,
+           let display = displayDestinations.first(where: { $0.choice == selected }) {
+            return display
         }
         // Otherwise show first ranked destination
         return displayDestinations.first
     }
-    
+
     /// Alternative destinations (all except primary)
     private var alternativeDisplayDestinations: [DisplayDestination] {
         guard let primary = primaryDisplayDestination else { return [] }
-        return displayDestinations.filter { $0.destination.id != primary.destination.id
-        }
+        return displayDestinations.filter { $0.choice != primary.choice }
+    }
+
+    /// A plain (non-BIP-353) address with more than one way to pay it, a
+    /// bitcoin address from Savings or Payments: the picker replaces the
+    /// simple address card so the source can be chosen
+    private var plainAddressHasSourceChoice: Bool {
+        guard !isBIP353Address, let destination = selectedDestination else { return false }
+        return effectiveRankedDestinations.filter { $0.destination.id == destination.id }.count > 1
     }
     
     // MARK: - BIP-353 Resolution
@@ -360,15 +389,18 @@ struct ContactPaymentView: View {
                             isSimpleAddress: false,
                             showMatchedContact: false,
                             formatNameOverride: matchedContactAddress?.address,
-                            selectedDestinationId: Binding(
-                                get: { selectedDestination?.id },
-                                set: { id in
-                                    if let id = id,
-                                       let ranked = rankedDestinations.first(where: { $0.destination.id == id }) {
-                                        selectedDestination = ranked.destination
-                                    }
-                                }
-                            )
+                            selectedChoice: selectedChoice
+                        )
+                    } else if plainAddressHasSourceChoice {
+                        // Bitcoin address: Savings or Payments, chosen here
+                        SheetDestinationDisplayView(
+                            primaryDisplayDestination: primaryDisplayDestination,
+                            alternativeDisplayDestinations: alternativeDisplayDestinations,
+                            primaryDestinationLabel: L10n.labelAddress,
+                            isSimpleAddress: true,
+                            showMatchedContact: false,
+                            formatNameOverride: nil,
+                            selectedChoice: selectedChoice
                         )
                     } else {
                         // Non-BIP-353: show simple card

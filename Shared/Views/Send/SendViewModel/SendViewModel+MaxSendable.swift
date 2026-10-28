@@ -30,10 +30,10 @@ extension SendViewModel {
         // This enables retry logic for Lightning payments with dynamic routing fees
         isSendingMax = true
         
-        let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
-        
+        let balanceSource = selectedSource ?? PaymentDestinationSelector.balanceSource(for: destination)
+
         guard let initialBalance = PaymentDestinationSelector.availableBalance(
-            for: destination,
+            source: balanceSource,
             context: paymentContext
         ) else {
             logger.error("No balance available for destination")
@@ -85,7 +85,11 @@ extension SendViewModel {
         
         var currentAmount = balance
         var previousGross = 0
-        
+        // The largest amount whose gross fitted the balance; only that is
+        // ever offered (review F6, 2026-10-28: the loop used to hand back
+        // its last probe even when that probe did not fit)
+        var lastFitting: Int?
+
         // Iterate up to 5 times to converge on the correct amount
         for iteration in 1...5 {
             logger.debug("   Iteration \(iteration): Testing amount \(currentAmount) sats")
@@ -109,6 +113,7 @@ extension SendViewModel {
                 
                 // Check if gross amount fits in balance
                 if grossAmount <= balance {
+                    lastFitting = max(lastFitting ?? 0, currentAmount)
                     // Check if we've converged (gross didn't change)
                     if grossAmount == previousGross && iteration > 1 {
                         logger.info("Lightning: Converged after \(iteration) iterations")
@@ -278,7 +283,11 @@ extension SendViewModel {
         
         var currentAmount = balance
         var previousGross = 0
-        
+        // The largest amount whose gross fitted the balance; only that is
+        // ever offered (review F6, 2026-10-28: the loop used to hand back
+        // its last probe even when that probe did not fit)
+        var lastFitting: Int?
+
         // Iterate up to 5 times to converge on the correct amount
         for iteration in 1...5 {
             logger.debug("   Iteration \(iteration): Testing amount \(currentAmount) sats")
@@ -295,6 +304,7 @@ extension SendViewModel {
                 
                 // Check if gross amount fits in balance
                 if grossAmount <= balance {
+                    lastFitting = max(lastFitting ?? 0, currentAmount)
                     // Check if we've converged (gross didn't change)
                     if grossAmount == previousGross && iteration > 1 {
                         logger.info("Offboarding: Converged after \(iteration) iterations")
@@ -325,16 +335,15 @@ extension SendViewModel {
                 }
                 
             } catch {
+                // No guessed fee: the row shows "unavailable" and the gate
+                // blocks the Payments source until bark can price it
                 logger.error("Offboarding: Fee estimation failed: \(error)")
-                // Fall back to conservative estimate
-                let conservativeFee = 500 // 500 sats conservative estimate
-                logger.debug("   Using conservative fee estimate: \(conservativeFee) sats")
-                return balance - conservativeFee
+                return nil
             }
         }
         
-        // After 5 iterations, use the last calculated amount
-        logger.info("Offboarding: Completed 5 iterations, final amount: \(currentAmount) sats")
-        return currentAmount
+        // After 5 iterations, offer the largest amount that fitted (nil if none did)
+        logger.info("Offboarding: Completed 5 iterations, final amount: \(lastFitting?.description ?? "none") sats")
+        return lastFitting
     }
 }

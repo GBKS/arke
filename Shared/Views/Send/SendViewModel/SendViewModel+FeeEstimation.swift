@@ -27,7 +27,14 @@ extension SendViewModel {
             return
         }
 
-        guard isOnchainDestination else {
+        // Paid from Payments: bark prices it, the shadow wallet has no say
+        if isPaymentsOnchainSend {
+            resetOnchainFeeQuote()
+            await calculateOffboardFee()
+            return
+        }
+
+        guard isSavingsOnchainSend else {
             logger.warning("Not an onchain destination")
             return
         }
@@ -109,6 +116,7 @@ extension SendViewModel {
             // such; a quote for other inputs must not stand in for this one
             onchainFeeQuote = nil
         }
+        rerankForTypedAmount()
     }
 
     /// Forgets the quote and every request still in flight for it: the
@@ -130,11 +138,20 @@ extension SendViewModel {
         // Cancel any pending estimation
         onchainFeeEstimationTask?.cancel()
 
+        // Paid from Payments: bark's estimate, debounced the same way; the
+        // BDK quote is dropped so a source switch never shows the old number
+        if isPaymentsOnchainSend {
+            resetOnchainFeeQuote()
+            updateOffboardFeeEstimate()
+            return
+        }
+        clearOffboardFee()
+
         // The row says "estimating" from the first keystroke, not from the
         // end of the debounce: in that half second the placeholder would
         // otherwise show and the Send gate would let it through (review F3,
         // 2026-10-27). The generation bump makes any older reply stale.
-        if let destination = selectedDestination, isOnchainDestination {
+        if let destination = selectedDestination, isSavingsOnchainSend {
             if let amountInt = Int(amount), amountInt >= max(1, minimumSendAmount) {
                 if !(onchainFeeQuote?.matches(address: destination.address, amountSats: amountInt, rates: onchainFeeRates) ?? false) {
                     onchainFeeRequestGeneration += 1

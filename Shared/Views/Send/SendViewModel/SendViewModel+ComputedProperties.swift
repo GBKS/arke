@@ -95,42 +95,75 @@ extension SendViewModel {
         return "set by Lightning invoice"
     }
     
-    /// Returns the maximum spendable amount based on the selected destination
+    // MARK: - Funding Source
+
+    /// The balance the selected destination is paid from: the explicit
+    /// choice, else the destination's default; nil without a destination
+    var selectedSource: PaymentDestinationSelector.BalanceSource? {
+        guard let destination = selectedDestination else { return nil }
+        return selectedBalanceSource ?? PaymentDestinationSelector.balanceSource(for: destination)
+    }
+
+    /// The selected row as the pickers see it
+    var selectedChoice: PaymentDestinationSelector.Choice? {
+        get {
+            guard let destination = selectedDestination, let source = selectedSource else { return nil }
+            return PaymentDestinationSelector.Choice(destinationId: destination.id, source: source)
+        }
+        set {
+            guard let choice = newValue else { return }
+            if let ranked = rankedDestinations.first(where: { $0.choice == choice }) {
+                select(ranked)
+            } else if let ranked = rankedDestinations.first(where: { $0.destination.id == choice.destinationId }) {
+                // The source is not ranked for this destination; keep the destination, default source
+                selectedDestination = ranked.destination
+                selectedBalanceSource = nil
+                updateOnchainFeeEstimate()
+            }
+        }
+    }
+
+    /// Selects a ranked row: destination and the balance it pays from. The
+    /// fee for the new source is quoted at once so the row and the gate
+    /// never show the other source's number.
+    func select(_ ranked: PaymentDestinationSelector.RankedDestination) {
+        let sourceChanged = selectedChoice != ranked.choice
+        selectedDestination = ranked.destination
+        selectedBalanceSource = ranked.balanceSource
+        if sourceChanged {
+            updateOnchainFeeEstimate()
+        }
+    }
+
+    /// Returns the maximum spendable amount based on the selected destination and source
     var maxSpendableAmount: Int {
-        guard let destination = selectedDestination else {
+        guard let source = selectedSource else {
             // No destination selected, show total balance
             return walletManager.totalBalance?.totalSpendableSat ?? 0
         }
-        
-        // Use the selector to get available balance for this specific destination
-        if let balance = PaymentDestinationSelector.availableBalance(for: destination, context: paymentContext) {
-            return balance
-        }
-        
-        return 0
+
+        return PaymentDestinationSelector.availableBalance(source: source, context: paymentContext) ?? 0
     }
-    
+
     /// Returns the appropriate balance text based on the selected destination
     var availableBalanceText: String {
-        guard let destination = selectedDestination else {
+        guard let balanceSource = selectedSource else {
             let formattedBalance = BitcoinFormatter.shared.formatAmount(walletManager.totalBalance?.totalSpendableSat ?? 0)
             return "Total balance: \(formattedBalance)"
         }
-        
-        let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
+
         let balance = maxSpendableAmount
         let formattedBalance = BitcoinFormatter.shared.formatAmount(balance)
-        
+
         return "\(balanceSource.displayName): \(formattedBalance)"
     }
-    
+
     /// Returns the balance source name based on the selected destination
     var availableBalanceName: String {
-        guard let destination = selectedDestination else {
+        guard let balanceSource = selectedSource else {
             return "Total balance"
         }
-        
-        let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
+
         return balanceSource.displayName
     }
     
@@ -150,7 +183,17 @@ extension SendViewModel {
             return .unavailable
         }
 
-        if isOnchainDestination {
+        // Payments-funded onchain send: bark's estimate for exactly this
+        // address and amount, "estimating" while the request is open,
+        // otherwise unavailable (which blocks Send, DECIDED 2026-10-27)
+        if isPaymentsOnchainSend {
+            if let fee = currentOffboardFee(amountSats: offboardEstimateAmount) {
+                return .value(fee)
+            }
+            return isEstimatingOffboardFee ? .estimating : .unavailable
+        }
+
+        if isSavingsOnchainSend {
             // The fee row is where fee problems are shown; the ceiling is the
             // one blocker no other control carries
             if fastTierAtMainnetCeiling {
@@ -193,11 +236,30 @@ extension SendViewModel {
         return ranked?.estimatedFee.map(FeeDisplayState.value) ?? .unavailable
     }
 
+    /// The amount an offboard fee is estimated for: the amount as entered
+    /// (pre-filled from the request when it carries one), else the
+    /// request's amount. Request, cache and row all use this one key.
+    var offboardEstimateAmount: Int? {
+        Int(amount) ?? currentPaymentRequest?.amount
+    }
+
+    /// bark's offboard fee when it was priced for the selected address and
+    /// this amount; nil otherwise
+    func currentOffboardFee(amountSats: Int?) -> Int? {
+        guard let destination = selectedDestination, let amountSats,
+              let fee = cachedOffboardFee,
+              cachedOffboardFeeAmount == amountSats,
+              cachedOffboardFeeAddress == destination.address else {
+            return nil
+        }
+        return fee
+    }
+
     /// The onchain quote when it covers the selected destination, this
     /// amount and the current rates; nil otherwise, so views never see a
     /// quote for other inputs
     func currentOnchainFeeQuote(amountSats: Int?) -> OnchainFeeQuote? {
-        guard let destination = selectedDestination, isOnchainDestination,
+        guard let destination = selectedDestination, isSavingsOnchainSend,
               let amountSats,
               let quote = onchainFeeQuote,
               quote.matches(address: destination.address, amountSats: amountSats, rates: onchainFeeRates) else {
@@ -231,10 +293,22 @@ extension SendViewModel {
         viableDestinationCount > 1
     }
     
-    /// Returns whether the selected destination is an on-chain format that supports fee selection
+    /// Returns whether the selected destination is an on-chain format (paid from either balance)
     var isOnchainDestination: Bool {
         guard let destination = selectedDestination else { return false }
         return destination.format == .bitcoin || destination.format == .silentPayments
+    }
+
+    /// An onchain destination paid from Savings: BDK quote per tier, speed
+    /// sheet, mainnet ceiling check
+    var isSavingsOnchainSend: Bool {
+        isOnchainDestination && selectedSource == .bitcoin
+    }
+
+    /// An onchain destination paid from Payments through bark's offboard:
+    /// one server-priced fee, no speed choice
+    var isPaymentsOnchainSend: Bool {
+        isOnchainDestination && selectedSource == .arkToOnchain
     }
     
     /// Returns whether the selected destination is a Lightning-based format
@@ -258,8 +332,9 @@ extension SendViewModel {
             minimumSendAmount: minimumSendAmount,
             availableSats: maxSpendableAmount,
             feeState: feeDisplayState,
-            isOnchain: isOnchainDestination,
-            fastTierAtMainnetCeiling: fastTierAtMainnetCeiling
+            isOnchain: isSavingsOnchainSend,
+            fastTierAtMainnetCeiling: fastTierAtMainnetCeiling,
+            requiresPricedFee: isPaymentsOnchainSend
         )
     }
 
@@ -285,7 +360,7 @@ extension SendViewModel {
     /// the same there is nothing to choose, so the row does not pretend
     /// (DECIDED 2026-10-27).
     var shouldShowFeeDisclosure: Bool {
-        isOnchainDestination && FeeTierGroup.groups(from: onchainFeeRates).count > 1
+        isSavingsOnchainSend && FeeTierGroup.groups(from: onchainFeeRates).count > 1
     }
     
     // MARK: - Balance Loading State

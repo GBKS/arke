@@ -50,7 +50,8 @@ enum PaymentRequestSource {
 struct QuickPaymentView: View {
     let paymentRequest: PaymentRequest
     let onDismiss: () -> Void
-    let onSendImmediately: ((UUID?, String?) -> Void)?
+    /// Sends the selected row (destination plus funding source) with the entered amount
+    let onSendImmediately: ((PaymentDestinationSelector.Choice?, String?) -> Void)?
     let currentNetwork: NetworkConfig?
     let paymentContext: PaymentDestinationSelector.PaymentContext?
     let minimumSendAmount: Int
@@ -76,18 +77,19 @@ struct QuickPaymentView: View {
     @Binding var selectedFeePriority: FeePriority
     @Binding var amount: String
     
-    @State private var selectedDestinationId: UUID?
+    /// Selection and ranking when no view model backs the view (previews,
+    /// desktop); with a view model both live there, so the rows, the fee
+    /// row and the Send gate read one selection and one live ranking
+    @State private var localSelectedChoice: PaymentDestinationSelector.Choice?
+    @State private var localRankedDestinations: [PaymentDestinationSelector.RankedDestination] = []
     @State private var isSending = false
-    
-    /// Cached ranked destinations to avoid recalculating on every render
-    @State private var rankedDestinations: [PaymentDestinationSelector.RankedDestination] = []
-    
+
     @FocusState private var isAmountFieldFocused: Bool
-    
+
     init(
         paymentRequest: PaymentRequest,
         onDismiss: @escaping () -> Void,
-        onSendImmediately: ((UUID?, String?) -> Void)? = nil,
+        onSendImmediately: ((PaymentDestinationSelector.Choice?, String?) -> Void)? = nil,
         currentNetwork: NetworkConfig? = nil,
         paymentContext: PaymentDestinationSelector.PaymentContext? = nil,
         minimumSendAmount: Int = 0,
@@ -137,34 +139,43 @@ struct QuickPaymentView: View {
     }
     
     // MARK: - Computed Properties
-    
+
+    /// The ranking the rows show: the view model's live one when there is a
+    /// view model, else the view's own load-time ranking
+    private var rankedDestinations: [PaymentDestinationSelector.RankedDestination] {
+        if let sendViewModel, !sendViewModel.rankedDestinations.isEmpty {
+            return sendViewModel.rankedDestinations
+        }
+        return localRankedDestinations
+    }
+
+    /// The selected row, read from and written to the view model when there is one
+    private var selectedChoice: Binding<PaymentDestinationSelector.Choice?> {
+        Binding(
+            get: { sendViewModel?.selectedChoice ?? localSelectedChoice },
+            set: { newValue in
+                if let sendViewModel {
+                    sendViewModel.selectedChoice = newValue
+                } else {
+                    localSelectedChoice = newValue
+                }
+            }
+        )
+    }
+
     /// The optimal (first viable) destination
     private var optimalDestination: PaymentDestinationSelector.RankedDestination? {
         rankedDestinations.first(where: { $0.viable })
     }
-    
-    /// Other viable destinations (excluding the optimal one)
-    private var otherViableDestinations: [PaymentDestinationSelector.RankedDestination] {
-        guard let optimal = optimalDestination else { return [] }
-        return rankedDestinations.filter { $0.viable && $0.destination.id != optimal.destination.id }
-    }
-    
+
     // MARK: - Unified Display Properties
-    
+
     /// All destinations as DisplayDestination objects
     private var allDisplayDestinations: [DisplayDestination] {
         if paymentContext != nil {
             // With context: all ranked destinations with viability info
             return rankedDestinations.map { ranked in
-                DisplayDestination(
-                    destination: ranked.destination,
-                    estimatedFee: ranked.estimatedFee,
-                    balanceSourceName: ranked.balanceSource.displayName,
-                    matchedContact: contactLookup?(ranked.destination.address),
-                    viable: ranked.viable,
-                    viabilityReason: ranked.reason,
-                    availableBalance: ranked.availableBalance
-                )
+                DisplayDestination(ranked: ranked, matchedContact: contactLookup?(ranked.destination.address))
             }
         } else {
             // Without context: primary + alternatives (assume viable)
@@ -197,24 +208,16 @@ struct QuickPaymentView: View {
     
     /// The primary destination to always show (whether expanded or collapsed)
     private var primaryDisplayDestination: DisplayDestination? {
-        // If user has selected a destination, show that one
-        if let selectedId = selectedDestinationId,
-           let selected = allDisplayDestinations.first(where: { $0.destination.id == selectedId }) {
-            return selected
+        // If user has selected a row, show that one
+        if let selected = selectedChoice.wrappedValue,
+           let display = allDisplayDestinations.first(where: { $0.choice == selected }) {
+            return display
         }
-        
+
         // Otherwise, fall back to default logic
         if paymentContext != nil, let firstRanked = rankedDestinations.first {
             // With context: show the first ranked destination (optimal or first non-viable)
-            return DisplayDestination(
-                destination: firstRanked.destination,
-                estimatedFee: firstRanked.estimatedFee,
-                balanceSourceName: firstRanked.balanceSource.displayName,
-                matchedContact: contactLookup?(firstRanked.destination.address),
-                viable: firstRanked.viable,
-                viabilityReason: firstRanked.reason,
-                availableBalance: firstRanked.availableBalance
-            )
+            return DisplayDestination(ranked: firstRanked, matchedContact: contactLookup?(firstRanked.destination.address))
         } else if let primary = paymentRequest.primaryDestination {
             // Without context: show the primary destination
             return DisplayDestination(
@@ -234,8 +237,8 @@ struct QuickPaymentView: View {
     private var alternativeDisplayDestinations: [DisplayDestination] {
         guard let primary = primaryDisplayDestination else { return [] }
         
-        // Return all destinations except the one currently shown as primary
-        return allDisplayDestinations.filter { $0.destination.id != primary.destination.id }
+        // Return all rows except the one currently shown as primary
+        return allDisplayDestinations.filter { $0.choice != primary.choice }
     }
     
     /// Whether there are alternatives to show
@@ -483,7 +486,7 @@ struct QuickPaymentView: View {
                         isSimpleAddress: isSimpleAddress,
                         showMatchedContact: true,
                         formatNameOverride: BIP353Resolver.isBIP353Format(paymentRequest.originalString) ? paymentRequest.originalString : nil,
-                        selectedDestinationId: $selectedDestinationId
+                        selectedChoice: selectedChoice
                     )
                     .disabled(isSending)
                     
@@ -522,10 +525,10 @@ struct QuickPaymentView: View {
                         isSending = true
                         
                         // Capture state values before async work
-                        let destId = selectedDestinationId
+                        let choice = selectedChoice.wrappedValue
                         let amountToSend = amount.isEmpty ? nil : amount
-                        
-                        onSendImmediately?(destId, amountToSend)
+
+                        onSendImmediately?(choice, amountToSend)
                         isSending = false
                     } label: {
                         Text(L10n.buttonSend)
@@ -556,36 +559,33 @@ struct QuickPaymentView: View {
             }
         }
         .onAppear {
-            // Calculate ranked destinations once when view appears (if context provided)
-            if let context = paymentContext {
+            // Without a view model the view ranks once itself (the view
+            // model ranks in enterQuickMode and re-ranks as the amount is typed)
+            if sendViewModel == nil, let context = paymentContext {
                 Task {
-                    rankedDestinations = await paymentRequest.rankedDestinations(context: context)
-                    print("🎯 [QuickPaymentView] Ranked \(rankedDestinations.count) destinations on appear")
+                    localRankedDestinations = await paymentRequest.rankedDestinations(context: context)
+                    print("🎯 [QuickPaymentView] Ranked \(localRankedDestinations.count) destinations on appear")
+                    if localSelectedChoice == nil {
+                        localSelectedChoice = optimalDestination?.choice
+                    }
                 }
             }
-            
-            // Auto-select the optimal destination when the view appears
-            if selectedDestinationId == nil {
-                selectedDestinationId = optimalDestination?.destination.id
-            }
-            
+
             // Pre-populate amount if payment request has one
             if let requestAmount = paymentRequest.amount, amount.isEmpty {
                 amount = "\(requestAmount)"
             }
         }
         .onChange(of: paymentRequest.id) {
-            // Recalculate ranked destinations when payment request changes
-            if let context = paymentContext {
+            // Recalculate the local ranking when the payment request changes
+            if sendViewModel == nil, let context = paymentContext {
                 Task {
-                    rankedDestinations = await paymentRequest.rankedDestinations(context: context)
-                    print("🎯 [QuickPaymentView] Recalculated \(rankedDestinations.count) destinations")
+                    localRankedDestinations = await paymentRequest.rankedDestinations(context: context)
+                    print("🎯 [QuickPaymentView] Recalculated \(localRankedDestinations.count) destinations")
+                    localSelectedChoice = optimalDestination?.choice
                 }
             }
-            
-            // Reset selection when payment request changes
-            selectedDestinationId = optimalDestination?.destination.id
-            
+
             // Update amount if payment request has one
             if let requestAmount = paymentRequest.amount {
                 amount = "\(requestAmount)"
@@ -596,18 +596,11 @@ struct QuickPaymentView: View {
         .onChange(of: amount) { oldValue, newValue in
             // Avoid triggering if amount hasn't actually changed
             guard oldValue != newValue else { return }
-            
-            // Re-select optimal destination when amount changes
-            // This ensures we always have a viable destination selected
-            if let optimal = optimalDestination {
-                // Only auto-switch if current selection is not viable
-                if let currentId = selectedDestinationId,
-                   let current = rankedDestinations.first(where: { $0.destination.id == currentId }),
-                   !current.viable {
-                    selectedDestinationId = optimal.destination.id
-                }
-            }
-            
+
+            // No re-selection here: the selected row never moves while the
+            // amount is typed (DECIDED rule 3, 2026-10-10). The exceeds-
+            // balance state and the picker rows carry the viability instead.
+
             // Trigger debounced fee estimation for all destination types
             // Call even when empty to clear the cache
             Task {

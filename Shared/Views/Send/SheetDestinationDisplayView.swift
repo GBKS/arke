@@ -15,14 +15,17 @@ struct SheetDestinationDisplayView: View {
     let isSimpleAddress: Bool
     let showMatchedContact: Bool
     let formatNameOverride: String?
-    
-    @Binding var selectedDestinationId: UUID?
+
+    /// The selected row: destination plus the balance it is paid from. A
+    /// bitcoin address has one row per source, so the destination id alone
+    /// would not tell them apart.
+    @Binding var selectedChoice: PaymentDestinationSelector.Choice?
     @State private var isSheetPresented = false
-    
+
     private var hasAlternativeDestinations: Bool {
         !alternativeDisplayDestinations.isEmpty
     }
-    
+
     var body: some View {
         if let primaryDisplay = primaryDisplayDestination {
             VStack(spacing: 10) {
@@ -32,12 +35,12 @@ struct SheetDestinationDisplayView: View {
                     HStack {
                         Text(primaryDestinationLabel)
                             .font(.title2)
-                        
+
                         Spacer()
                     }
                 }
                 */
-                
+
                 // Primary/Selected destination display. A button only when
                 // there is something to choose; a disabled button dims its
                 // label, and the address was hard to read for the common
@@ -62,7 +65,7 @@ struct SheetDestinationDisplayView: View {
             .sheet(isPresented: $isSheetPresented) {
                 DestinationSelectionSheet(
                     allDestinations: [primaryDisplay] + alternativeDisplayDestinations,
-                    selectedDestinationId: $selectedDestinationId,
+                    selectedChoice: $selectedChoice,
                     showMatchedContact: showMatchedContact,
                     onDismiss: {
                         isSheetPresented = false
@@ -79,7 +82,7 @@ extension SheetDestinationDisplayView {
     /// The primary destination as shown in the row, with or without a button around it
     fileprivate func primaryDestinationItem(_ primaryDisplay: DisplayDestination) -> some View {
         PaymentDestinationItem(
-            formatName: formatNameOverride ?? primaryDisplay.destination.format.simplifiedDisplayName,
+            formatName: formatNameOverride ?? primaryDisplay.payFromTitle,
             shortAddress: primaryDisplay.destination.shortAddress,
             estimatedFee: nil, // primaryDisplay.estimatedFee
             isSelectable: false,
@@ -94,59 +97,67 @@ extension SheetDestinationDisplayView {
     }
 }
 
-// MARK: - Destination Selection Sheet
+// MARK: - "Pay from" Sheet
 
+/// Which balance the payment leaves from. One row per balance and rail
+/// the ranker offers; the recipient is not repeated here, the form above
+/// shows it (`Features/Send_Onchain_From_Payments.md` §9, DECIDED
+/// 2026-10-28).
 private struct DestinationSelectionSheet: View {
     let allDestinations: [DisplayDestination]
-    @Binding var selectedDestinationId: UUID?
+    @Binding var selectedChoice: PaymentDestinationSelector.Choice?
     let showMatchedContact: Bool
     let onDismiss: () -> Void
-    
+
     var body: some View {
-        NavigationStack {
+        // Same shape as the speed sheet next door: a serif header in the
+        // content, not a navigation-bar title (the app's modals set their
+        // titles this way; Christoph, 2026-10-28)
+        VStack(spacing: 20) {
+            Text(String(localized: "nav_title_pay_from", defaultValue: "Pay from"))
+                .font(.system(size: 24, design: .serif))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+                .padding(.top, 30)
+
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(allDestinations, id: \.destination.id) { displayDest in
-                        Button {
-                            selectedDestinationId = displayDest.destination.id
-                            onDismiss()
-                        } label: {
-                            PaymentDestinationItem(
-                                formatName: displayDest.destination.format.simplifiedDisplayName,
-                                shortAddress: displayDest.destination.shortAddress,
-                                estimatedFee: displayDest.estimatedFee,
-                                isSelectable: true,
-                                isSelected: selectedDestinationId == displayDest.destination.id,
-                                onTap: {
-                                    selectedDestinationId = displayDest.destination.id
-                                    onDismiss()
-                                },
-                                contactName: displayDest.matchedContact?.displayName,
-                                contactAvatar: displayDest.matchedContact?.avatarData,
-                                viable: displayDest.viable,
-                                viabilityReason: displayDest.viabilityReason,
-                                showMatchedContact: showMatchedContact
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(!displayDest.viable)
+                    ForEach(allDestinations, id: \.choice) { displayDest in
+                        FundingSourceRow(
+                            balanceName: displayDest.title,
+                            availableSats: displayDest.availableBalance,
+                            railCaption: railCaption(for: displayDest),
+                            addressCaption: addressCaption(for: displayDest),
+                            estimatedFee: displayDest.estimatedFee,
+                            isSelected: selectedChoice == displayDest.choice,
+                            viable: displayDest.viable,
+                            viabilityReason: displayDest.viabilityReason,
+                            onTap: {
+                                selectedChoice = displayDest.choice
+                                onDismiss()
+                            }
+                        )
                     }
                 }
-                .padding()
-            }
-            .navigationTitle(String(localized: "nav_title_select_payment_method", defaultValue: "Select Payment Method"))
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                /*
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        onDismiss()
-                    }
-                }
-                */
+                .padding(.horizontal, 24)
             }
         }
+        .frame(maxWidth: 450)
+    }
+
+    /// The rail, only when another row leaves from the same balance
+    private func railCaption(for row: DisplayDestination) -> String? {
+        let sharesBalance = allDestinations.contains {
+            $0.choice != row.choice && $0.title == row.title
+        }
+        return sharesBalance ? row.railName : nil
+    }
+
+    /// The address, only when another row shares balance and rail
+    private func addressCaption(for row: DisplayDestination) -> String? {
+        let sharesRail = allDestinations.contains {
+            $0.choice != row.choice && $0.title == row.title && $0.railName == row.railName
+        }
+        return sharesRail ? row.destination.shortAddress : nil
     }
 }

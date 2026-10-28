@@ -197,7 +197,7 @@ extension BarkWalletFFI {
     
     // Three types of send operations:
     // 1. send() - Ark-to-Ark payment (off-chain, uses VTXOs)
-    // 2. sendToOnchain() - Offboard Ark funds to Bitcoin address (via round)
+    // 2. sendToOnchain() - Offboard Ark funds to Bitcoin address (arkoor split + collaborative offboard, not a round)
     // 3. sendOnchain() - Direct Bitcoin transaction (uses onchain balance)
     
     func send(to address: String, amount: Int) async throws -> String {
@@ -275,11 +275,25 @@ extension BarkWalletFFI {
             return result.txid
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error sending onchain payment: \(error)")
+            // bark's `run_offboard` parks a transiently failed offboard after
+            // the checkpoint ("could not complete yet … retried on wallet
+            // sync", bark-0.8.0 offboard.rs); everything else failed before
+            // anything was committed. Classified here, by bark's message,
+            // the only signal the binding carries.
+            if Self.isParkedOffboardMessage(error.localizedDescription) {
+                throw BarkWalletFFIError.offboardPending(error.localizedDescription)
+            }
             throw BarkWalletFFIError.configurationError("Failed to send onchain payment: \(error.localizedDescription)")
         } catch {
             Self.logger.error("Error sending onchain payment: \(error)")
             throw error
         }
+    }
+
+    /// bark-0.8.0 `run_offboard`: "offboard {id} could not complete yet
+    /// (parked in …); it remains pending and will be retried on wallet sync"
+    static func isParkedOffboardMessage(_ message: String) -> Bool {
+        message.contains("retried on wallet sync") || message.contains("could not complete yet")
     }
     
     func sendOnchain(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String {

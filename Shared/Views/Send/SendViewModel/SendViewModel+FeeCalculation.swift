@@ -67,6 +67,7 @@ extension SendViewModel {
             cachedArkFee = nil
             cachedArkFeeAmount = nil
         }
+        rerankForTypedAmount()
     }
     
     // MARK: - Lightning Fee Estimation
@@ -136,10 +137,106 @@ extension SendViewModel {
             cachedLightningFee = nil
             cachedLightningFeeAmount = nil
         }
+        rerankForTypedAmount()
     }
     
+    // MARK: - Offboard Fee Estimation (bitcoin address paid from Payments)
+
+    /// Asks bark what paying the selected bitcoin address from the Payments
+    /// balance costs for the current amount. Only bark can price it: the
+    /// server's offboard rate and the per-VTXO expiry table
+    /// (`Features/Send_Onchain_From_Payments.md` §2.2). Cached per address
+    /// and amount; a failed estimate leaves the row "unavailable", which
+    /// blocks Send for this source.
+    func calculateOffboardFee() async {
+        guard isPaymentsOnchainSend, let destination = selectedDestination else {
+            clearOffboardFee()
+            return
+        }
+
+        // One key for request, cache and row (review F4, 2026-10-28: a
+        // request amount that differed from the typed one left the row
+        // "estimating" for good)
+        guard let amountToEstimate = offboardEstimateAmount, amountToEstimate >= max(1, minimumSendAmount) else {
+            clearOffboardFee()
+            return
+        }
+
+        if currentOffboardFee(amountSats: amountToEstimate) != nil {
+            logger.debug("Offboard fee still current for \(amountToEstimate) sats")
+            isEstimatingOffboardFee = false
+            return
+        }
+
+        offboardFeeRequestGeneration += 1
+        let generation = offboardFeeRequestGeneration
+        isEstimatingOffboardFee = true
+        defer {
+            if generation == offboardFeeRequestGeneration {
+                isEstimatingOffboardFee = false
+            }
+        }
+
+        logger.info("Quoting offboard fee for \(amountToEstimate) sats from Payments")
+        do {
+            let estimate = try await walletManager.estimateSendToOnchainFee(
+                address: destination.address,
+                amountSats: UInt64(amountToEstimate)
+            )
+            guard generation == offboardFeeRequestGeneration else {
+                logger.debug("Dropping offboard fee reply from superseded request \(generation)")
+                return
+            }
+            cachedOffboardFee = Int(estimate.feeSats)
+            cachedOffboardFeeAmount = amountToEstimate
+            cachedOffboardFeeAddress = destination.address
+            logger.info("Offboard fee quoted: \(estimate.feeSats) sats for \(amountToEstimate) sats")
+        } catch {
+            guard generation == offboardFeeRequestGeneration else { return }
+            logger.error("Failed to quote offboard fee: \(error)")
+            clearOffboardFee()
+        }
+        rerankForTypedAmount()
+    }
+
+    /// Forgets the offboard fee and any request still open for it
+    func clearOffboardFee() {
+        offboardFeeRequestGeneration += 1
+        isEstimatingOffboardFee = false
+        cachedOffboardFee = nil
+        cachedOffboardFeeAmount = nil
+        cachedOffboardFeeAddress = nil
+    }
+
+    /// Debounced offboard fee update; the row says "estimating" from the
+    /// first keystroke so the gate never passes a stale or missing fee
+    @MainActor
+    func updateOffboardFeeEstimate() {
+        offboardFeeEstimationTask?.cancel()
+
+        guard isPaymentsOnchainSend else {
+            clearOffboardFee()
+            return
+        }
+        if let amountInt = offboardEstimateAmount, amountInt >= max(1, minimumSendAmount) {
+            if currentOffboardFee(amountSats: amountInt) == nil {
+                offboardFeeRequestGeneration += 1
+                isEstimatingOffboardFee = true
+            }
+        } else {
+            clearOffboardFee()
+            return
+        }
+
+        offboardFeeEstimationTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
+            guard !Task.isCancelled else { return }
+            await calculateOffboardFee()
+        }
+    }
+
     // MARK: - Debounced Fee Updates
-    
+
     /// Updates the Lightning fee estimate with debouncing
     /// This should be called when the amount changes
     @MainActor
@@ -194,6 +291,18 @@ extension SendViewModel {
         }
     }
     
+    /// Storage for the debounced offboard estimation task
+    private static var offboardFeeEstimationTaskStorage: [ObjectIdentifier: Task<Void, Never>] = [:]
+
+    private var offboardFeeEstimationTask: Task<Void, Never>? {
+        get {
+            Self.offboardFeeEstimationTaskStorage[ObjectIdentifier(self)]
+        }
+        set {
+            Self.offboardFeeEstimationTaskStorage[ObjectIdentifier(self)] = newValue
+        }
+    }
+
     /// Storage for the debounced Ark estimation task
     private static var arkFeeEstimationTaskStorage: [ObjectIdentifier: Task<Void, Never>] = [:]
     

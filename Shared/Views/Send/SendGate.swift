@@ -25,6 +25,8 @@ enum SendBlocker: Equatable, Sendable {
     case unaffordableTier
     /// Mainnet fast tier sits at the sanity ceiling: the estimator is not to be trusted
     case feeEstimateUnreliable
+    /// The source needs a priced fee and bark could not price this send
+    case feeUnavailable
 
     // No reason text lives here (DECIDED 2026-10-27): every blocker is
     // already explained where its data is shown, the fee row for fee
@@ -42,6 +44,9 @@ enum SendBlocker: Equatable, Sendable {
     ///   - feeState: what the fee row shows for this destination
     ///   - isOnchain: the destination spends Savings through the shadow estimator
     ///   - fastTierAtMainnetCeiling: the live fast rate equals the mainnet ceiling
+    ///   - requiresPricedFee: the send goes through bark's offboard, which
+    ///     re-prices at send time; without a current estimate the user would
+    ///     pay an unseen fee or hit a rejection (DECIDED 2026-10-27: block)
     static func evaluate(
         amountSats: Int?,
         isAmountLocked: Bool,
@@ -49,7 +54,8 @@ enum SendBlocker: Equatable, Sendable {
         availableSats: Int,
         feeState: FeeDisplayState,
         isOnchain: Bool,
-        fastTierAtMainnetCeiling: Bool
+        fastTierAtMainnetCeiling: Bool,
+        requiresPricedFee: Bool = false
     ) -> SendBlocker? {
         if isOnchain && fastTierAtMainnetCeiling {
             return .feeEstimateUnreliable
@@ -59,6 +65,13 @@ enum SendBlocker: Equatable, Sendable {
             // an invoice above the balance is still refused up front (review
             // F4, 2026-10-27: it used to pass and fail at the tap)
             guard let amountSats, amountSats > 0 else { return nil }
+            if requiresPricedFee {
+                switch feeState {
+                case .estimating: return .estimatingFee
+                case .unavailable: return .feeUnavailable
+                default: break
+                }
+            }
             let fee = feeState.displayedFee ?? 0
             return amountSats + fee > availableSats ? .exceedsAvailable : nil
         }
@@ -77,6 +90,16 @@ enum SendBlocker: Equatable, Sendable {
             case .unreliable:
                 return .feeEstimateUnreliable
             case .value, .approximate, .unavailable:
+                break
+            }
+        }
+        if requiresPricedFee {
+            switch feeState {
+            case .estimating:
+                return .estimatingFee
+            case .unavailable:
+                return .feeUnavailable
+            case .value, .approximate, .unaffordable, .unreliable:
                 break
             }
         }

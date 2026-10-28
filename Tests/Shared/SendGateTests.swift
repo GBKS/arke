@@ -27,18 +27,32 @@ struct SendGateTests {
         available: Int = 100_000,
         fee: FeeDisplayState = .value(500),
         onchain: Bool = true,
-        ceiling: Bool = false
+        ceiling: Bool = false,
+        pricedFeeRequired: Bool = false
     ) -> SendBlocker? {
         SendBlocker.evaluate(
             amountSats: amount, isAmountLocked: locked, minimumSendAmount: minimum,
             availableSats: available, feeState: fee, isOnchain: onchain,
-            fastTierAtMainnetCeiling: ceiling
+            fastTierAtMainnetCeiling: ceiling, requiresPricedFee: pricedFeeRequired
         )
     }
 
     @Test("A priced fee that fits lets the send through")
     func fittingSendPasses() {
         #expect(gate() == nil)
+    }
+
+    @Test("Paid from Payments: bark's fee is required, so unavailable and estimating both block (DECIDED 2026-10-27)")
+    func paymentsSourceNeedsAPricedFee() {
+        // Not the BDK path: no tier cases, no ceiling case
+        #expect(gate(fee: .unavailable, onchain: false, pricedFeeRequired: true) == .feeUnavailable)
+        #expect(gate(fee: .estimating, onchain: false, pricedFeeRequired: true) == .estimatingFee)
+        #expect(gate(fee: .value(400), onchain: false, ceiling: true, pricedFeeRequired: true) == nil)
+        #expect(gate(amount: 99_700, fee: .value(400), onchain: false, pricedFeeRequired: true) == .exceedsAvailable)
+        // A locked amount is refused the same way
+        #expect(gate(amount: 1_000, locked: true, fee: .unavailable, onchain: false, pricedFeeRequired: true) == .feeUnavailable)
+        // Lightning keeps passing without a fee
+        #expect(gate(fee: .unavailable, onchain: false) == nil)
     }
 
     @Test("Mainnet estimator at the ceiling pauses onchain sending, whatever else is true")

@@ -4117,6 +4117,17 @@
         }
       }
     },
+    "funding_source_available %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ available"
+          }
+        }
+      }
+    },
     "hint_change_settings_formats" : {
       "localizations" : {
         "de" : {

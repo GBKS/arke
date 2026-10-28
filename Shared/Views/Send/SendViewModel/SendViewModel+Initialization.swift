@@ -59,8 +59,8 @@ extension SendViewModel {
                         currentPaymentRequest = paymentRequest
                         rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                         
-                        if let optimal = rankedDestinations.first(where: { $0.viable }) {
-                            selectedDestination = optimal.destination
+                        if let optimal = PaymentDestinationSelector.initialPick(in: rankedDestinations) {
+                            select(optimal)
                             logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             error = nil
                         } else {
@@ -109,8 +109,8 @@ extension SendViewModel {
                         currentPaymentRequest = paymentRequest
                         rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                         
-                        if let optimal = rankedDestinations.first(where: { $0.viable }) {
-                            selectedDestination = optimal.destination
+                        if let optimal = PaymentDestinationSelector.initialPick(in: rankedDestinations) {
+                            select(optimal)
                             logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             self.error = nil
                         } else {
@@ -144,8 +144,8 @@ extension SendViewModel {
                 currentPaymentRequest = paymentRequest
                 rankedDestinations = await paymentRequest.rankedDestinations(context: paymentContext)
                 
-                if let optimal = rankedDestinations.first(where: { $0.viable }) {
-                    selectedDestination = optimal.destination
+                if let optimal = PaymentDestinationSelector.initialPick(in: rankedDestinations) {
+                    select(optimal)
                     logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                     error = nil
                 } else {

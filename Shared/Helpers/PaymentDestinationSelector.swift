@@ -143,11 +143,16 @@ class PaymentDestinationSelector {
     // MARK: - Balance Source
     
     /// Indicates which balance would be used for a payment
-    enum BalanceSource {
+    nonisolated enum BalanceSource: Hashable, Sendable {
         case ark           // Direct Ark-to-Ark transfer using arkBalance
         case arkViaServer  // Lightning payment routed through Ark server using arkBalance
         case bitcoin       // On-chain Bitcoin payment using bitcoinBalance
-        
+        /// Bitcoin address paid from the Payments balance: bark splits an
+        /// exact VTXO and the server builds the offboard transaction
+        /// (`Features/Send_Onchain_From_Payments.md` §2). Server fee rate,
+        /// no speed choice, confirms onchain like any Bitcoin payment.
+        case arkToOnchain
+
         var displayName: String {
             switch self {
             case .ark:
@@ -156,9 +161,11 @@ class PaymentDestinationSelector {
                 return "Payments Balance"
             case .bitcoin:
                 return "Savings Balance"
+            case .arkToOnchain:
+                return "Payments Balance"
             }
         }
-        
+
         var networkName: String {
             switch self {
             case .ark:
@@ -167,12 +174,56 @@ class PaymentDestinationSelector {
                 return "Lightning Network"
             case .bitcoin:
                 return "Bitcoin Network"
+            case .arkToOnchain:
+                return "Bitcoin Network"
             }
         }
+
+        /// The balance alone, as the picker rows and the collapsed row name
+        /// it (DECIDED 2026-10-28: the currency is always bitcoin, so no
+        /// "(Bitcoin)"; the rail is a caption only where rows need telling apart)
+        var shortName: String {
+            switch self {
+            case .ark, .arkViaServer, .arkToOnchain:
+                return String(localized: "funding_source_payments", defaultValue: "Payments")
+            case .bitcoin:
+                return String(localized: "funding_source_savings", defaultValue: "Savings")
+            }
+        }
+
+        /// The rail the balance leaves on; shown only when two rows share a balance
+        var railName: String {
+            switch self {
+            case .ark:
+                return String(localized: "rail_ark", defaultValue: "Ark")
+            case .arkViaServer:
+                return String(localized: "rail_lightning", defaultValue: "Lightning")
+            case .bitcoin, .arkToOnchain:
+                return String(localized: "rail_onchain", defaultValue: "onchain")
+            }
+        }
+
+        /// The payment needs the Ark server on the line
+        var needsArkServer: Bool {
+            self == .arkViaServer || self == .arkToOnchain
+        }
+
+        /// Spends the Payments (offchain) balance
+        var spendsArkBalance: Bool {
+            self != .bitcoin
+        }
     }
-    
+
+    /// One selectable row in the send flow: a destination paid from one
+    /// balance. A bitcoin address yields two choices, so the destination id
+    /// alone no longer identifies a selection.
+    nonisolated struct Choice: Hashable, Sendable {
+        let destinationId: UUID
+        let source: BalanceSource
+    }
+
     // MARK: - Ranked Destination
-    
+
     /// A payment destination with ranking and viability information
     struct RankedDestination {
         let destination: PaymentDestination
@@ -182,9 +233,13 @@ class PaymentDestinationSelector {
         let viable: Bool
         let reason: String
         let priority: Int // Lower number = higher priority
-        
+
         var requiresServerRouting: Bool {
             balanceSource == .arkViaServer
+        }
+
+        var choice: Choice {
+            Choice(destinationId: destination.id, source: balanceSource)
         }
     }
     
@@ -212,23 +267,85 @@ class PaymentDestinationSelector {
             destination.isCompatible(with: context.networkConfig)
         }
         
-        // Rank each destination (using async fee estimation)
+        // Rank each destination from every balance that can pay it
         var rankedDestinations: [RankedDestination] = []
         for destination in networkCompatibleDestinations {
-            if let ranked = await rankDestination(destination, amount: paymentRequest.amount, context: context) {
-                rankedDestinations.append(ranked)
+            rankedDestinations.append(contentsOf: await rankDestinations(
+                destination,
+                amount: paymentRequest.amount,
+                context: context
+            ))
+        }
+
+        return oneRowPerBalance(sorted(rankedDestinations))
+    }
+
+    /// Re-ranks the request with the amount as typed, reusing fees the send
+    /// flow already holds (`knownFees`, keyed by choice) and estimating
+    /// nothing else: entries without a known fee are judged by the amount
+    /// alone until their own estimator reports (DECIDED rule 3, 2026-10-10:
+    /// viability follows the typed amount; the selection never moves).
+    static func rerankDestinations(
+        from paymentRequest: PaymentRequest,
+        amount: Int?,
+        context: PaymentContext,
+        knownFees: [Choice: Int]
+    ) -> [RankedDestination] {
+        var rankedDestinations: [RankedDestination] = []
+        for destination in paymentRequest.destinations where destination.isCompatible(with: context.networkConfig) {
+            for source in balanceSources(for: destination) {
+                let choice = Choice(destinationId: destination.id, source: source)
+                rankedDestinations.append(rank(
+                    destination,
+                    source: source,
+                    amount: amount,
+                    context: context,
+                    estimatedFee: knownFees[choice]
+                ))
             }
         }
-        
-        // Sort by priority (viable first, then by priority number)
-        rankedDestinations.sort { lhs, rhs in
+        return oneRowPerBalance(sorted(rankedDestinations))
+    }
+
+    /// "Pay from" offers each balance once (DECIDED 2026-10-28, §9.1 of
+    /// `Features/Send_Onchain_From_Payments.md`). Within a balance the
+    /// best-ranked row wins: a request that lets Payments reach the payee
+    /// directly (Ark, then Lightning) makes the Payments-onchain twin of its
+    /// bitcoin address a dominated path, same balance with a fee and a
+    /// confirmation wait. Rows on the kept row's own rail stay, since they
+    /// are different addresses rather than different paths (a contact with
+    /// two bitcoin addresses). Input must already be sorted.
+    static func oneRowPerBalance(_ sorted: [RankedDestination]) -> [RankedDestination] {
+        var keptRail: [String: String] = [:]
+        return sorted.filter { row in
+            let balance = row.balanceSource.shortName
+            if let rail = keptRail[balance] {
+                return rail == row.balanceSource.railName
+            }
+            keptRail[balance] = row.balanceSource.railName
+            return true
+        }
+    }
+
+    /// The row to start on: the first viable row whose balance holds
+    /// anything, else the first viable row. Without an amount every row is
+    /// viable, so without this an empty Savings balance would still be the
+    /// default for a bitcoin address and the user would type an amount into
+    /// a source that cannot pay (DECIDED rule 1 reads "when both are
+    /// viable"; an empty balance is not). This is the one load-time pick;
+    /// nothing moves the selection afterwards.
+    static func initialPick(in ranked: [RankedDestination]) -> RankedDestination? {
+        ranked.first { $0.viable && ($0.availableBalance ?? 0) > 0 } ?? ranked.first { $0.viable }
+    }
+
+    /// Viable entries first, then by priority number
+    private static func sorted(_ ranked: [RankedDestination]) -> [RankedDestination] {
+        ranked.sorted { lhs, rhs in
             if lhs.viable != rhs.viable {
                 return lhs.viable // Viable destinations first
             }
             return lhs.priority < rhs.priority // Lower priority number = higher priority
         }
-        
-        return rankedDestinations
     }
     
     /// Checks if a payment request can be fulfilled with any destination
@@ -251,25 +368,57 @@ class PaymentDestinationSelector {
     ///   chosen tier). When given it replaces the ranker's own estimate, so
     ///   the viability gate judges the send by the fee it will pay and not
     ///   by the rough medium-tier placeholder.
+    /// - Parameter source: the balance to pay from; the destination's default
+    ///   source when nil
     static func rankDestination(
         _ destination: PaymentDestination,
         amount: Int?,
         context: PaymentContext,
-        exactFee: Int? = nil
+        exactFee: Int? = nil,
+        source: BalanceSource? = nil
     ) async -> RankedDestination? {
-        let balanceSource = balanceSource(for: destination)
-        let availableBalance = availableBalance(for: destination, context: context)
-        let priority = priorityScore(for: destination.format, preferences: context.userPreferences)
+        let balanceSource = source ?? balanceSource(for: destination)
 
         // Get fee estimate - the caller's exact fee, else try real estimation; nil when none could be made
         let estimatedFee: Int?
         if let exactFee {
             estimatedFee = exactFee
         } else {
-            estimatedFee = await estimateFee(for: destination, amount: amount, context: context)
+            estimatedFee = await estimateFee(for: destination, source: balanceSource, amount: amount, context: context)
         }
-        
-        // Check viability
+
+        return rank(destination, source: balanceSource, amount: amount, context: context, estimatedFee: estimatedFee)
+    }
+
+    /// Ranks a destination once per balance that can pay it: a bitcoin
+    /// address from Savings and from Payments, everything else from its one
+    /// source. Order follows `balanceSources(for:)`, Savings first.
+    static func rankDestinations(
+        _ destination: PaymentDestination,
+        amount: Int?,
+        context: PaymentContext
+    ) async -> [RankedDestination] {
+        var ranked: [RankedDestination] = []
+        for source in balanceSources(for: destination) {
+            if let entry = await rankDestination(destination, amount: amount, context: context, source: source) {
+                ranked.append(entry)
+            }
+        }
+        return ranked
+    }
+
+    /// The pure part of ranking: balance, viability and priority for a
+    /// destination, source and (possibly absent) fee
+    private static func rank(
+        _ destination: PaymentDestination,
+        source balanceSource: BalanceSource,
+        amount: Int?,
+        context: PaymentContext,
+        estimatedFee: Int?
+    ) -> RankedDestination {
+        let availableBalance = availableBalance(source: balanceSource, context: context)
+        let priority = priorityScore(for: destination.format, source: balanceSource, preferences: context.userPreferences)
+
         let viabilityCheck = checkViability(
             destination: destination,
             amount: amount,
@@ -278,7 +427,7 @@ class PaymentDestinationSelector {
             balanceSource: balanceSource,
             context: context
         )
-        
+
         return RankedDestination(
             destination: destination,
             balanceSource: balanceSource,
@@ -289,7 +438,7 @@ class PaymentDestinationSelector {
             priority: priority
         )
     }
-    
+
     /// Checks if a destination is viable for payment
     private static func checkViability(
         destination: PaymentDestination,
@@ -299,23 +448,23 @@ class PaymentDestinationSelector {
         balanceSource: BalanceSource,
         context: PaymentContext
     ) -> (viable: Bool, reason: String) {
-        // Check server connectivity for Lightning payments
-        if requiresServerRouting(destination) && !context.arkServerConnected {
-            return (false, "Ark server not connected")
+        // Lightning and Payments-funded onchain sends go through the server
+        if balanceSource.needsArkServer && !context.arkServerConnected {
+            return (false, String(localized: "viability_server_not_connected", defaultValue: "Ark server not connected"))
         }
-        
-        if requiresServerRouting(destination) && !context.hasLightningCapability {
-            return (false, "Lightning not available")
+
+        if balanceSource == .arkViaServer && !context.hasLightningCapability {
+            return (false, String(localized: "viability_lightning_unavailable", defaultValue: "Lightning not available"))
         }
         
         // If no amount specified, all destinations are viable (amount will be entered later)
         guard let amount = amount else {
-            return (true, "No amount specified")
+            return (true, String(localized: "viability_no_amount", defaultValue: "No amount specified"))
         }
         
         // Check balance availability
         guard let balance = availableBalance else {
-            return (false, "Balance unavailable")
+            return (false, String(localized: "viability_balance_unavailable", defaultValue: "Balance unavailable"))
         }
         
         // Check if balance is sufficient; with no estimate the amount alone is judged
@@ -333,7 +482,7 @@ class PaymentDestinationSelector {
         
         if balance < totalRequired {
             let shortfall = totalRequired - balance
-            return (false, "Need \(BitcoinFormatter.shared.formatAmount(shortfall)) more")
+            return (false, String(localized: "viability_need_more %@", defaultValue: "Need \(BitcoinFormatter.shared.formatAmount(shortfall)) more"))
         }
         
         // Check large amount preference
@@ -341,24 +490,32 @@ class PaymentDestinationSelector {
            amount >= context.userPreferences.largeAmountThreshold &&
            balanceSource != .bitcoin {
             // Deprioritize but don't make unviable
-            return (true, "Large amount: on-chain preferred")
+            return (true, String(localized: "viability_large_amount_onchain", defaultValue: "Large amount: on-chain preferred"))
         }
         
-        return (true, "Sufficient balance")
+        return (true, String(localized: "viability_sufficient", defaultValue: "Sufficient balance"))
     }
     
-    /// Determines priority score for a format (lower = higher priority)
-    private static func priorityScore(for format: AddressFormat, preferences: PaymentPreferences) -> Int {
-        if let index = preferences.priorityOrder.firstIndex(of: format) {
-            return index
+    /// Determines priority score for a format (lower = higher priority).
+    /// Formats take even scores so the Payments twin of a bitcoin address
+    /// can sit right behind Savings (DECIDED rule 1, 2026-10-10) without
+    /// tying with the next format.
+    private static func priorityScore(
+        for format: AddressFormat,
+        source: BalanceSource,
+        preferences: PaymentPreferences
+    ) -> Int {
+        guard let index = preferences.priorityOrder.firstIndex(of: format) else {
+            // Unknown formats get lowest priority
+            return Int.max
         }
-        // Unknown formats get lowest priority
-        return Int.max
+        return index * 2 + (source == .arkToOnchain ? 1 : 0)
     }
-    
+
     // MARK: - Balance Helpers
-    
-    /// Determines which balance source a destination would use
+
+    /// The default balance source for a destination: Savings for a bitcoin
+    /// address (DECIDED 2026-10-10), the only source for every other format
     static func balanceSource(for destination: PaymentDestination) -> BalanceSource {
         switch destination.format {
         case .ark:
@@ -373,27 +530,43 @@ class PaymentDestinationSelector {
             return .bitcoin // Default fallback
         }
     }
-    
-    /// Gets available balance for a specific destination
+
+    /// Every balance that can pay a destination, default first. A bitcoin
+    /// address can also be paid from Payments as an offboard; a silent
+    /// payment cannot, since bark's offboard pays a plain script and the
+    /// silent-payment output needs sender-side key derivation it does not do.
+    static func balanceSources(for destination: PaymentDestination) -> [BalanceSource] {
+        switch destination.format {
+        case .bitcoin:
+            return [.bitcoin, .arkToOnchain]
+        default:
+            return [balanceSource(for: destination)]
+        }
+    }
+
+    /// Gets available balance for a destination paid from its default source
     static func availableBalance(
         for destination: PaymentDestination,
         context: PaymentContext
     ) -> Int? {
-        switch balanceSource(for: destination) {
-        case .ark, .arkViaServer:
-            return context.arkBalance
-        case .bitcoin:
-            return context.bitcoinBalance
-        }
+        availableBalance(source: balanceSource(for: destination), context: context)
     }
-    
+
+    /// The balance a source spends from
+    static func availableBalance(
+        source: BalanceSource,
+        context: PaymentContext
+    ) -> Int? {
+        source.spendsArkBalance ? context.arkBalance : context.bitcoinBalance
+    }
+
     /// Checks if a destination requires server routing
     static func requiresServerRouting(_ destination: PaymentDestination) -> Bool {
         return balanceSource(for: destination) == .arkViaServer
     }
-    
+
     // MARK: - Fee Estimation
-    
+
     /// Estimates the fee for a destination with the real estimator when
     /// there is one. Returns nil when no estimate could be made: a failed
     /// Lightning estimate is not hidden behind a constant (the old static
@@ -402,9 +575,30 @@ class PaymentDestinationSelector {
     /// viability then checks the amount alone.
     private static func estimateFee(
         for destination: PaymentDestination,
+        source: BalanceSource,
         amount: Int?,
         context: PaymentContext
     ) async -> Int? {
+        // Payments-funded onchain send: only bark can price it (server
+        // offboard rate, per-VTXO expiry table); no estimate without an amount
+        if source == .arkToOnchain {
+            guard let amount else { return nil }
+            guard let walletManager = context.walletManager else {
+                logger.warning("WalletManager is nil during offboard fee estimation. No estimate.")
+                return nil
+            }
+            do {
+                let estimate = try await walletManager.estimateSendToOnchainFee(
+                    address: destination.address,
+                    amountSats: UInt64(amount)
+                )
+                return Int(estimate.feeSats)
+            } catch {
+                logger.error("Offboard fee estimation failed for \(amount) sats: \(error.localizedDescription). No estimate.")
+                return nil
+            }
+        }
+
         // For Lightning payments, try to use real fee estimation if available
         if let unwrappedAmount = amount,
            (destination.format == .lightning || destination.format == .lightningInvoice ||

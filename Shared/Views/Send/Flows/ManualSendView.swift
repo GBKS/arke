@@ -50,7 +50,8 @@ struct ManualSendView: View {
     @State private var resolvedPaymentRequest: PaymentRequest?
     @State private var originalBIP353Address: String?
     @State private var isAlternativesExpanded = false
-    @State private var selectedDestinationId: UUID?
+    /// The selected row when no view model backs the view
+    @State private var localSelectedChoice: PaymentDestinationSelector.Choice?
     @State private var resolutionTask: Task<Void, Never>?
     
     // MARK: - Computed Properties
@@ -92,16 +93,25 @@ struct ManualSendView: View {
     
     // MARK: - BIP-353 Resolution Display Properties
     
-    /// All destinations as DisplayDestination objects (for BIP-353 resolved addresses)
+    /// All rows: the view model's live ranking when it covers the current
+    /// destination (one row per balance that can pay it), else the BIP-353
+    /// resolution's destinations with static info
     private var allDisplayDestinations: [DisplayDestination] {
+        if let sendViewModel, let destination = selectedDestination {
+            let ranked = sendViewModel.rankedDestinations
+            if ranked.contains(where: { $0.destination.id == destination.id }) {
+                return ranked.map { DisplayDestination(ranked: $0, matchedContact: contactLookup?($0.destination.address)) }
+            }
+        }
+
         guard let paymentRequest = resolvedPaymentRequest else { return [] }
-        
+
         // Note: This is a synchronous computed property, so we can't call async ranking here.
         // The destinations are displayed with static info; fees are calculated when selected
         return paymentRequest.destinations.map { destination in
             let balanceSource = PaymentDestinationSelector.balanceSource(for: destination)
             let availableBalance = PaymentDestinationSelector.availableBalance(for: destination, context: paymentContext)
-            
+
             return DisplayDestination(
                 destination: destination,
                 estimatedFee: nil,  // Will be calculated async when user selects
@@ -109,27 +119,49 @@ struct ManualSendView: View {
                 matchedContact: contactLookup?(destination.address),
                 viable: true,  // Assume viable for display; will validate on selection
                 viabilityReason: "Tap to select",
-                availableBalance: availableBalance
+                availableBalance: availableBalance,
+                balanceSource: balanceSource
             )
         }
     }
-    
+
+    /// The selected row, read from and written to the view model when there is one
+    private var selectedChoice: Binding<PaymentDestinationSelector.Choice?> {
+        Binding(
+            get: { sendViewModel?.selectedChoice ?? localSelectedChoice },
+            set: { newValue in
+                if let sendViewModel {
+                    sendViewModel.selectedChoice = newValue
+                } else {
+                    localSelectedChoice = newValue
+                }
+            }
+        )
+    }
+
     /// The primary destination to show
     private var primaryDisplayDestination: DisplayDestination? {
-        // If user has selected a destination, show that one
-        if let selectedId = selectedDestinationId,
-           let selected = allDisplayDestinations.first(where: { $0.destination.id == selectedId }) {
-            return selected
+        // If user has selected a row, show that one
+        if let selected = selectedChoice.wrappedValue,
+           let display = allDisplayDestinations.first(where: { $0.choice == selected }) {
+            return display
         }
-        
+
         // Otherwise, show the first ranked destination
         return allDisplayDestinations.first
     }
-    
+
     /// Alternative destinations to show when expanded
     private var alternativeDisplayDestinations: [DisplayDestination] {
         guard let primary = primaryDisplayDestination else { return [] }
-        return allDisplayDestinations.filter { $0.destination.id != primary.destination.id }
+        return allDisplayDestinations.filter { $0.choice != primary.choice }
+    }
+
+    /// A typed or pasted bitcoin address can be paid from Savings or
+    /// Payments; the picker appears when the ranking offers both
+    private var plainAddressHasSourceChoice: Bool {
+        guard case .valid = recipientState, let destination = selectedDestination else { return false }
+        return allDisplayDestinations.filter { $0.destination.id == destination.id }.count > 1
     }
     
     var body: some View {
@@ -168,7 +200,18 @@ struct ManualSendView: View {
                     isSimpleAddress: false,
                     showMatchedContact: true,
                     formatNameOverride: originalBIP353Address,
-                    selectedDestinationId: $selectedDestinationId
+                    selectedChoice: selectedChoice
+                )
+            } else if plainAddressHasSourceChoice, let primaryDisplay = primaryDisplayDestination {
+                // Bitcoin address: Savings or Payments, chosen here
+                SheetDestinationDisplayView(
+                    primaryDisplayDestination: primaryDisplay,
+                    alternativeDisplayDestinations: alternativeDisplayDestinations,
+                    primaryDestinationLabel: L10n.labelAddress,
+                    isSimpleAddress: true,
+                    showMatchedContact: false,
+                    formatNameOverride: nil,
+                    selectedChoice: selectedChoice
                 )
             }
                 
@@ -224,11 +267,11 @@ struct ManualSendView: View {
         .onChange(of: recipientState) { oldState, newState in
             handleRecipientStateChange(oldState: oldState, newState: newState)
         }
-        .onChange(of: selectedDestinationId) { _, newId in
-            // Update selectedDestination when user picks from alternatives
-            if let newId = newId,
-               let destination = allDisplayDestinations.first(where: { $0.destination.id == newId }) {
-                selectedDestination = destination.destination
+        .onChange(of: localSelectedChoice) { _, newChoice in
+            // Without a view model, a pick from the alternatives sets the bound destination
+            if sendViewModel == nil, let newChoice,
+               let display = allDisplayDestinations.first(where: { $0.choice == newChoice }) {
+                selectedDestination = display.destination
             }
         }
         .onChange(of: amount) { _, newValue in
@@ -367,13 +410,18 @@ struct ManualSendView: View {
             
             // Rank destinations and select optimal
             let ranked = await paymentRequest.rankedDestinations(context: paymentContext)
-            if let optimal = ranked.first(where: { $0.viable }) {
-                selectedDestination = optimal.destination
-                selectedDestinationId = optimal.destination.id
-            } else if let first = ranked.first {
-                // No viable destinations, but select the first one anyway
-                selectedDestination = first.destination
-                selectedDestinationId = first.destination.id
+            if let pick = PaymentDestinationSelector.initialPick(in: ranked) ?? ranked.first {
+                // No viable destination still selects the first one
+                if let sendViewModel {
+                    // The request first, so the host's re-ranking on the new
+                    // destination keeps every alternative (review F2)
+                    sendViewModel.currentPaymentRequest = paymentRequest
+                    sendViewModel.rankedDestinations = ranked
+                    sendViewModel.select(pick)
+                } else {
+                    selectedDestination = pick.destination
+                    localSelectedChoice = pick.choice
+                }
             }
             
             // Pre-fill amount if present
@@ -414,7 +462,10 @@ struct ManualSendView: View {
                 resolvedPaymentRequest = paymentRequest
                 originalBIP353Address = trimmedInput
                 selectedDestination = lightningDestination
-                selectedDestinationId = lightningDestination.id
+                localSelectedChoice = PaymentDestinationSelector.Choice(
+                    destinationId: lightningDestination.id,
+                    source: PaymentDestinationSelector.balanceSource(for: lightningDestination)
+                )
                 
                 // Update state to resolved (reusing bip353Resolved for now)
                 recipientState = .bip353Resolved(trimmedInput)

@@ -617,7 +617,9 @@ struct SendView_iOS: View {
             },
             onSwitchToQuickMode: { paymentRequest in
                 logger.debug("🔄 Switching to quick mode from manual input")
-                viewModel.sendMode = .quick(paymentRequest, source: .manual)
+                // Rank through the view model so the quick flow's rows, fee
+                // row and gate read one live ranking (not the manual one)
+                Task { await viewModel.enterQuickMode(paymentRequest: paymentRequest, source: .manual) }
             },
             onCalculateMaxSendable: {
                 await viewModel.calculateMaxSendable()
@@ -714,9 +716,9 @@ struct SendView_iOS: View {
             onDismiss: {
                 viewModel.clearAll()
             },
-            onSendImmediately: { destinationId, enteredAmount in
+            onSendImmediately: { choice, enteredAmount in
                 // Capture values immediately to avoid state race conditions
-                let capturedDestinationId = destinationId
+                let capturedChoice = choice
                 let capturedAmount = enteredAmount
                 
                 // Determine the amount to send
@@ -730,7 +732,7 @@ struct SendView_iOS: View {
                 }
                 
                 sendOperation = SendOperation_iOS {
-                    try await viewModel.executeSend(paymentRequest: paymentRequest, destinationId: capturedDestinationId, amount: amountToSend)
+                    try await viewModel.executeSend(paymentRequest: paymentRequest, choice: capturedChoice, amount: amountToSend)
                 }
             },
             currentNetwork: viewModel.currentNetworkConfig,

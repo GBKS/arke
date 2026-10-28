@@ -18,15 +18,24 @@ extension SendViewModel {
     // MARK: - Payment Execution
     
     /// Executes the payment using the current send state
-    func executeSend(paymentRequest: PaymentRequest? = nil, destinationId: UUID? = nil, amount: String? = nil) async throws {
+    /// - Parameter choice: the row the quick flow had selected (destination
+    ///   plus funding source); the view model's own selection otherwise
+    func executeSend(paymentRequest: PaymentRequest? = nil, choice: PaymentDestinationSelector.Choice? = nil, amount: String? = nil) async throws {
         logger.info("executeSend() called")
         logger.debug("   → paymentRequest provided: \(paymentRequest != nil)")
-        logger.debug("   → destinationId provided: \(destinationId?.uuidString ?? "nil")")
+        logger.debug("   → choice provided: \(choice.map { "\($0.destinationId.uuidString) / \(String(describing: $0.source))" } ?? "nil")")
         logger.debug("   → amount provided: \(amount ?? "nil")")
-        
+
         // Compute ranked destinations from payment request if provided, otherwise use state
         let rankedDestinations: [PaymentDestinationSelector.RankedDestination]
-        if let request = paymentRequest {
+        let liveRankingCoversRequest = paymentRequest.map { request in
+            request.destinations.allSatisfy { destination in
+                self.rankedDestinations.contains { $0.destination.id == destination.id }
+            }
+        } ?? false
+        if let request = paymentRequest, !liveRankingCoversRequest {
+            // Rank only when the live ranking does not know this request;
+            // ranking a bitcoin address prices its Payments row at the server
             rankedDestinations = await request.rankedDestinations(context: paymentContext)
             logger.debug("   → Using payment request with \(request.destinations.count) destination(s)")
             for (index, dest) in request.destinations.enumerated() {
@@ -36,24 +45,41 @@ extension SendViewModel {
             rankedDestinations = self.rankedDestinations
             logger.debug("   → Using state rankedDestinations: \(rankedDestinations.count)")
         }
-        
-        // Determine the destination to use
+
+        // Determine the destination and the balance it is paid from
         let destination: PaymentDestination
-        if let destId = destinationId,
-           let found = rankedDestinations.first(where: { $0.destination.id == destId })?.destination {
+        let source: PaymentDestinationSelector.BalanceSource
+        if let choice,
+           let found = rankedDestinations.first(where: { $0.choice == choice }) {
+            destination = found.destination
+            source = found.balanceSource
+            logger.debug("   → Selected destination by choice: \(destination.format.rawValue) from \(source.displayName)")
+        } else if let choice,
+                  let found = rankedDestinations.first(where: { $0.destination.id == choice.destinationId })?.destination {
             destination = found
-            logger.debug("   → Selected destination by ID: \(destination.format.rawValue)")
+            source = PaymentDestinationSelector.balanceSource(for: found)
+            logger.debug("   → Selected destination by ID (source not ranked, default): \(destination.format.rawValue)")
         } else if let selected = selectedDestination {
             destination = selected
-            logger.debug("   → Using selectedDestination: \(destination.format.rawValue)")
-        } else if let firstViable = rankedDestinations.first(where: { $0.viable })?.destination {
-            destination = firstViable
-            logger.debug("   → Using first viable destination: \(destination.format.rawValue)")
+            source = selectedSource ?? PaymentDestinationSelector.balanceSource(for: selected)
+            logger.debug("   → Using selectedDestination: \(destination.format.rawValue) from \(source.displayName)")
+        } else if let firstViable = rankedDestinations.first(where: { $0.viable }) {
+            destination = firstViable.destination
+            source = firstViable.balanceSource
+            logger.debug("   → Using first viable destination: \(destination.format.rawValue) from \(source.displayName)")
         } else {
             logger.error("   No viable destination found!")
             throw SendError.noDestinationSelected
         }
-        
+
+        // The fee caches and the pre-send check read the selection; make it
+        // the row being paid (a quick-flow pick may differ from the state)
+        if selectedChoice != PaymentDestinationSelector.Choice(destinationId: destination.id, source: source) {
+            selectedDestination = destination
+            selectedBalanceSource = source
+        }
+        let paysFromPaymentsOnchain = source == .arkToOnchain
+
         logger.debug("   → Final destination format: \(destination.format.rawValue)")
         logger.debug("   → Final destination address: \(destination.address)")
         logger.debug("   → Final destination network: \(destination.network?.displayName ?? "N/A")")
@@ -124,12 +150,16 @@ extension SendViewModel {
         // the quote covers this send: the ranker's own onchain number is the rough
         // medium-tier placeholder, which blocked "Max" sends the wallet could build
         // and passed sends bark then rejected (review finding F1, 2026-10-27)
-        let exactFee = exactOnchainFee(amountSats: amountInt)
+        // A Payments-funded onchain send hands over bark's own fee the same way.
+        let exactFee = paysFromPaymentsOnchain
+            ? currentOffboardFee(amountSats: amountInt)
+            : exactOnchainFee(amountSats: amountInt)
         let freshRanking = await PaymentDestinationSelector.rankDestination(
             destination,
             amount: amountInt,
             context: paymentContext,  // This reads CURRENT balance from walletManager and estimates fees
-            exactFee: exactFee
+            exactFee: exactFee,
+            source: source
         )
         logger.debug("   → Fresh ranking: viable=\(freshRanking?.viable ?? false), reason=\(freshRanking?.reason ?? "nil")")
         
@@ -175,6 +205,27 @@ extension SendViewModel {
         logger.debug("   → About to enter switch statement for payment routing")
         
         switch destination.format {
+        case .bitcoin where paysFromPaymentsOnchain:
+            // Paid from Payments: bark splits an exact VTXO and the server
+            // builds the offboard transaction (`Features/Send_Onchain_From_Payments.md` §2).
+            // bark checkpoints the action first, so an error here does not
+            // mean nothing happened: a parked offboard finishes on the next
+            // sync (§2.3). The error says so.
+            logger.info("   → Sending onchain from Payments to: \(destination.address)")
+            do {
+                let txid = try await walletManager.sendToOnchain(to: destination.address, amount: amountInt)
+                logger.info("   Payments-funded onchain send broadcast, txid: \(txid)")
+            } catch BarkWalletFFIError.offboardPending(let reason) {
+                logger.error("   Payments-funded onchain send parked, retried on sync: \(reason)")
+                throw SendError.paymentsOnchainSendUnsettled(reason)
+            } catch {
+                // Failed before bark committed anything (dust, input
+                // selection, server unreachable): a plain failure
+                logger.error("   Payments-funded onchain send failed: \(error.localizedDescription)")
+                throw SendError.paymentsOnchainSendFailed(error.localizedDescription)
+            }
+            // Note: No payment hash; the movement carries the address and net amount
+
         case .bitcoin, .silentPayments:
             logger.info("   → Sending onchain to: \(destination.address)")
             let feeRate = onchainFeeRates.rate(for: selectedFeePriority)
@@ -442,7 +493,13 @@ extension SendViewModel {
         case destinationNotViable(String)
         case insufficientBalance(required: Int, available: Int)
         case invalidFormat(String)
-        
+        /// bark's offboard threw. The action is checkpointed before it runs,
+        /// so a transient failure parks it and the next wallet sync drives
+        /// it on; the message must not claim nothing was sent.
+        case paymentsOnchainSendUnsettled(String)
+        /// bark's offboard failed before anything was committed
+        case paymentsOnchainSendFailed(String)
+
         var errorDescription: String? {
             switch self {
             case .noDestinationSelected:
@@ -455,6 +512,16 @@ extension SendViewModel {
                 return "Amount + fees (\(required) sats) exceeds available balance (\(available) sats)"
             case .invalidFormat(let message):
                 return message
+            case .paymentsOnchainSendFailed(let reason):
+                return String(
+                    localized: "send_error_payments_onchain_failed %@",
+                    defaultValue: "Could not send from your Payments balance: \(reason)"
+                )
+            case .paymentsOnchainSendUnsettled(let reason):
+                return String(
+                    localized: "send_error_payments_onchain_unsettled %@",
+                    defaultValue: "The payment from your Payments balance did not complete yet: \(reason) If the server already accepted it, the wallet finishes it on the next sync and the amount shows as pending until then."
+                )
             }
         }
     }

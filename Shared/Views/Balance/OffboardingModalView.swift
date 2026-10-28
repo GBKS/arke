@@ -91,6 +91,12 @@ struct OffboardingModalView: View {
             _ = try await manager.sendToOnchain(to: onchainAddress, amount: amount)
             
             state = .success
+        } catch BarkWalletFFIError.offboardPending {
+            // Checkpointed, parked before broadcast; the next sync drives it on
+            state = .error(String(
+                localized: "offboard_error_pending",
+                defaultValue: "The transfer did not complete yet. The wallet retries it on the next sync; until then the amount shows as pending."
+            ))
         } catch {
             state = .error("Failed to transfer coins: \(error.localizedDescription)")
         }

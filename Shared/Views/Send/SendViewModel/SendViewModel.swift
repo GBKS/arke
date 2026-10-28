@@ -64,6 +64,17 @@ final class SendViewModel {
     var cachedArkFee: Int?
     /// Amount used for the cached Ark fee (to invalidate cache when amount changes)
     var cachedArkFeeAmount: Int?
+
+    /// bark's fee for paying a bitcoin address from the Payments balance
+    /// (`Features/Send_Onchain_From_Payments.md` §2.2), with the address
+    /// and amount it was priced for; a quote for other inputs does not count
+    var cachedOffboardFee: Int?
+    var cachedOffboardFeeAmount: Int?
+    var cachedOffboardFeeAddress: String?
+    /// An offboard fee request is open; the row says "estimating"
+    var isEstimatingOffboardFee: Bool = false
+    /// Generation of the newest offboard fee request; older replies are dropped
+    var offboardFeeRequestGeneration: Int = 0
     
     /// Exact onchain fees per tier for one address, amount and rate set,
     /// from the shadow BDK wallet. A quote for any other inputs does not
@@ -91,7 +102,21 @@ final class SendViewModel {
     /// The bitcoin field's text as typed, in the user's unit format ("0.5"
     /// under a decimal format, "50000" under sats) — parsed into `amount`
     var bitcoinAmountText: String = ""
-    var selectedDestination: PaymentDestination?
+    /// The destination being paid. Views may set it directly from a parsed
+    /// address; a new destination resets the source to its default so a
+    /// Payments choice made for one address never carries to another.
+    var selectedDestination: PaymentDestination? {
+        didSet {
+            if oldValue?.id != selectedDestination?.id {
+                selectedBalanceSource = nil
+            }
+        }
+    }
+    /// The balance the selected destination is paid from; nil means the
+    /// destination's default (`PaymentDestinationSelector.balanceSource(for:)`).
+    /// Set through `select(_:)` / `selectedChoice`, never auto-switched while
+    /// the amount is typed (DECIDED rule 3, 2026-10-10).
+    var selectedBalanceSource: PaymentDestinationSelector.BalanceSource?
     var rankedDestinations: [PaymentDestinationSelector.RankedDestination] = []
     var currentPaymentRequest: PaymentRequest?
     var error: String?

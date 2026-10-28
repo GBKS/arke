@@ -15087,6 +15087,28 @@
         }
       }
     },
+    "funding_source_payments" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payments"
+          }
+        }
+      }
+    },
+    "funding_source_savings" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Savings"
+          }
+        }
+      }
+    },
     "help_clear_filter" : {
       "localizations" : {
         "de" : {
@@ -17035,6 +17057,17 @@
         }
       }
     },
+    "nav_title_pay_from" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pay from"
+          }
+        }
+      }
+    },
     "nav_title_receive" : {
       "localizations" : {
         "de" : {
@@ -17064,6 +17097,7 @@
       }
     },
     "nav_title_select_payment_method" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -17483,6 +17517,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "該更新了"
+          }
+        }
+      }
+    },
+    "offboard_error_pending" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The transfer did not complete yet. The wallet retries it on the next sync; until then the amount shows as pending."
           }
         }
       }
@@ -19027,6 +19072,39 @@
         }
       }
     },
+    "rail_ark" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ark"
+          }
+        }
+      }
+    },
+    "rail_lightning" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Lightning"
+          }
+        }
+      }
+    },
+    "rail_onchain" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "onchain"
+          }
+        }
+      }
+    },
     "receive_add_note" : {
       "localizations" : {
         "de" : {
@@ -19876,6 +19954,28 @@
         }
       }
     },
+    "send_error_payments_onchain_failed %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not send from your Payments balance: %@"
+          }
+        }
+      }
+    },
+    "send_error_payments_onchain_unsettled %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The payment from your Payments balance did not complete yet: %@ If the server already accepted it, the wallet finishes it on the next sync and the amount shows as pending until then."
+          }
+        }
+      }
+    },
     "send_input_method" : {
       "localizations" : {
         "de" : {
@@ -19956,6 +20056,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "從剪貼板貼上付款地址或付款請求"
+          }
+        }
+      }
+    },
+    "send_pay_from_source %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pay from %@"
           }
         }
       }
@@ -27362,6 +27473,83 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "轉移中"
+          }
+        }
+      }
+    },
+    "viability_balance_unavailable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Balance unavailable"
+          }
+        }
+      }
+    },
+    "viability_large_amount_onchain" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Large amount: on-chain preferred"
+          }
+        }
+      }
+    },
+    "viability_lightning_unavailable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Lightning not available"
+          }
+        }
+      }
+    },
+    "viability_need_more %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Need %@ more"
+          }
+        }
+      }
+    },
+    "viability_no_amount" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No amount specified"
+          }
+        }
+      }
+    },
+    "viability_server_not_connected" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ark server not connected"
+          }
+        }
+      }
+    },
+    "viability_sufficient" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sufficient balance"
           }
         }
       }

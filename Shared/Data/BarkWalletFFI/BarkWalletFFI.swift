@@ -317,6 +317,11 @@ enum BarkWalletFFIError: Swift.Error, LocalizedError {
     /// Existing wallet data on disk belongs to a different network than the
     /// one requested, so bark refused to open it.
     case networkMismatch(String)
+    /// bark checkpointed an offboard (send from the Payments balance to an
+    /// onchain address) but a transient error parked it before broadcast.
+    /// The checkpoint survives and the next wallet sync drives it on, so
+    /// the funds may still move; callers must not report "nothing sent".
+    case offboardPending(String)
 
     var errorDescription: String? {
         switch self {
@@ -332,6 +337,8 @@ enum BarkWalletFFIError: Swift.Error, LocalizedError {
             return "Configuration error: \(message)"
         case .networkMismatch(let message):
             return "Wallet data belongs to a different network: \(message)"
+        case .offboardPending(let message):
+            return "Offboard pending, retried on the next sync: \(message)"
         }
     }
 }
