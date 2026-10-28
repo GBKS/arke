@@ -66,7 +66,7 @@ extension TransactionModel {
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
-                if(subsystemName == "bark.offboard") {
+                if isInternalTransfer {
                     return statusAwareText(
                         confirmed: L10n.transactionMoved,
                         pending: L10n.transactionMoving,
@@ -236,7 +236,7 @@ extension TransactionModel {
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
-                if(subsystemName == "bark.offboard") {
+                if isInternalTransfer {
                     let amountText = BitcoinFormatter.shared.formatAmount(amount)
                     return statusAwareText(
                         confirmed: String(localized: "transaction_moved_amount %@", defaultValue: "Moved \(amountText)"),
@@ -407,7 +407,7 @@ extension TransactionModel {
                     includePrefix: includeStatusPrefix
                 )
             case .onchainSend:
-                if subsystemName == "bark.offboard" {
+                if isInternalTransfer {
                     return statusAwareText(
                         confirmed: L10n.transactionDetailPaymentsToSavings,
                         pending: L10n.transactionDetailPaymentsToSavings,

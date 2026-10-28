@@ -55,6 +55,13 @@ public struct TransactionModel: Identifiable, Hashable, Codable, Sendable {
     // Movement category for enhanced display
     public let category: MovementCategory?
 
+    /// The destination is one of the wallet's own addresses (the persisted
+    /// transaction has a linked receiving address). Decides whether an
+    /// onchain send reads as a move to Savings or as a payment; the
+    /// `bark.offboard` subsystem alone cannot, since a bitcoin address paid
+    /// from the Payments balance uses the same subsystem.
+    public let sentToOwnAddress: Bool
+
     public init(txid: String, movementId: Int?, recipientIndex: Int? = nil, type: TransactionTypeEnum,
                 amount: Int, date: Date, status: TransactionStatusEnum, address: String?, notes: String? = nil,
                 associatedTags: [TagModel] = [], associatedContacts: [ContactModel] = [], fees: Int? = nil,
@@ -63,7 +70,8 @@ public struct TransactionModel: Identifiable, Hashable, Codable, Sendable {
                 paymentHash: String? = nil, paymentPreimage: String? = nil, fundingTxid: String? = nil,
                 inputVtxoIds: [String] = [], outputVtxoIds: [String] = [],
                 exitedVtxoIds: [String] = [], confirmationHeight: UInt32? = nil, confirmationCount: UInt32? = nil,
-                category: MovementCategory? = nil, parentTxid: String? = nil, childTxids: [String]? = nil) {
+                category: MovementCategory? = nil, parentTxid: String? = nil, childTxids: [String]? = nil,
+                sentToOwnAddress: Bool = false) {
         self.txid = txid
         self.movementId = movementId
         self.recipientIndex = recipientIndex
@@ -92,6 +100,7 @@ public struct TransactionModel: Identifiable, Hashable, Codable, Sendable {
         self.category = category
         self.parentTxid = parentTxid
         self.childTxids = childTxids
+        self.sentToOwnAddress = sentToOwnAddress
     }
 
     // MARK: - Identifiable
@@ -254,12 +263,10 @@ public struct TransactionModel: Identifiable, Hashable, Codable, Sendable {
             // This is indicated by subsystemKind being "self_transfer"
             return subsystemKind == "self_transfer"
         case .onchainSend:
-            return subsystemName == "bark.offboard"
-            // For onchain sends, this will be determined by whether a receivingAddress
-            // is linked in PersistentTransaction. This property will be true when
-            // the TransactionService detects the destination is owned by the user.
-            // Note: This check is placeholder - actual detection happens in PersistentTransaction
-            //return false
+            // Own-address link, mirrored from PersistentTransaction. A send
+            // from the Payments balance to someone else is a bark.offboard
+            // too, so the subsystem is not the signal (2026-10-28).
+            return sentToOwnAddress
         default:
             return false
         }

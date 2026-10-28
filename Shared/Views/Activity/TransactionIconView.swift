@@ -70,8 +70,10 @@ struct TransactionIconView: View {
     /// Category artwork for internal transfers ("wallet"/"safe" assets)
     private var internalImageName: String {
         if let category = transaction.category {
-            // Special case: onchain_send with bark.offboard subsystem should use offboarding logic
-            if category == .onchainSend, transaction.subsystemName == "bark.offboard" {
+            // An onchain send to the wallet's own address is a move to
+            // Savings; a third-party send from Payments is not (the own-
+            // address link decides, not the bark.offboard subsystem)
+            if category == .onchainSend, transaction.isInternalTransfer {
                 return "safe"
             }
 
@@ -100,8 +102,9 @@ struct TransactionIconView: View {
     private var iconName: String {
         // For internal transfers, use category-specific icons
         if transaction.isInternalTransfer, let category = transaction.category {
-            // Special case: onchain_send with bark.offboard subsystem should use offboarding icon
-            if category == .onchainSend, transaction.subsystemName == "bark.offboard" {
+            // Inside the internal-transfer branch, so an onchain send here is
+            // one to the wallet's own address: the offboarding icon
+            if category == .onchainSend {
                 return MovementCategory.offboarding.icon
             }
 

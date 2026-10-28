@@ -68,7 +68,8 @@ extension TransactionModel {
             confirmationCount: persistentTransaction.confirmationCount,
             category: persistentTransaction.category,
             parentTxid: persistentTransaction.parentTxid,
-            childTxids: persistentTransaction.childTxids
+            childTxids: persistentTransaction.childTxids,
+            sentToOwnAddress: persistentTransaction.receivingAddress != nil
         )
     }
 
