@@ -30,6 +30,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 - **[Signet_Faucet.md](Signet_Faucet.md)** — the signet faucet contact
 - **[Fiat_Rates.md](Fiat_Rates.md)** — fiat values next to sats from one public rates file: contract, cache, staleness, money-safety rules, phases
 - **[Mainnet_Fee_Rate_Ceiling.md](Mainnet_Fee_Rate_Ceiling.md)** — Tier 0 fix (2026-10-19): the 10,000 sat/vB sanity ceiling on mainnet Esplora rates, the two overflow sites it bounds, the reader sweep
+- **[BIP353_DNSSEC.md](BIP353_DNSSEC.md)** — Tier 0 fix (DONE 2026-10-29): BIP-353 names resolve again through two validating DoH resolvers that must agree; why Apple's DNSSEC validator could not be used (probe evidence); the documented deviation from the BIP and the bark-ffi route to close it
 
 ## Data
 

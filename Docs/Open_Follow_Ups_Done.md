@@ -2043,3 +2043,20 @@ active", which cluster 4 touches.
   `Features/Recovery_Phrase_Exposure.md` §4). A one-line
   `.phraseExposureCover()` was offered and declined. The import screen stays
   uncovered (DECIDED 2026-10-29).
+- [x] **BIP-353: validate with DNSSEC instead of querying for nothing —
+  DONE 2026-10-29** (merged the Tier 0 query-skip and the Tier 1 full-DNSSEC
+  entries, DECIDED 2026-10-29). `BIP353Resolver` ran the DNS query and then
+  a stub that always failed, so BIP-353 names were refused while the query
+  still told the resolver who the user pays. Apple's validator
+  (`kDNSServiceFlagsValidate`) was probed on the Mac, the simulator and the
+  phone on Wi-Fi and cellular: it accepts the query, fetches the DNSKEY/DS
+  chain and never reaches a verdict (mDNSResponder log evidence). DECIDED
+  option B: two validating DNS-over-HTTPS resolvers (Cloudflare, Google) must
+  both answer with AD set and identical `bitcoin:` records; TXT strings
+  concatenated byte-wise; one `bitcoin:` record, case-insensitive; cache
+  capped at the TTL. A documented deviation from the BIP's "MUST NOT trust a
+  remote resolver". 24 tests, 607/607 suite, fault-class review (two
+  CONFIRMED fixed, ledger rows), live check from the Mac, phone check
+  2026-10-29: `₿matt@mattcorallo.com` resolves and pays, `satoshi@twelve.cash`
+  refused as multiple records (by spec), a plain Lightning address still wins.
+  Write-up `Features/BIP353_DNSSEC.md`.

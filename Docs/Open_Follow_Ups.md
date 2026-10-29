@@ -381,17 +381,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   verify" state so both paths match. Shares a root with the Tier 1
   address-header proposal (d): `BIP353Resolver.detectFormatOrNil` accepts
   plain `user@domain` — fix the detector once for both.
-- [ ] **BIP-353: stop sending the DNS query while DNSSEC is unimplemented**
-  — `performDNSLookup` (`BIP353Resolver.swift:176`) runs before
-  `validateDNSSEC` (`:184`), which always returns `false` (`:395-407`), so
-  every lookup is refused but the query is still sent and its answer thrown
-  away, telling the network's DNS who the user is about to pay. Five callers
-  all send it: `SendViewModel+Clipboard.swift:128,160`,
-  `SendViewModel+Initialization.swift:36`, `ManualSendView.swift:337`,
-  `ContactPaymentView.swift:170`. Skip the query now; soften the error text
-  ("address may be compromised" + both raw errors), which lives in
-  `BIP353Error.errorDescription` (`:139-140`), not in the views. Full DNSSEC
-  implementation is Tier 1.
 - [ ] **`RelayAPIToken` is checked into the repo**: the 64-hex value sits in
   `ArkeMobile/Info.plist:15-16` (tracked, in history since 9c4a5a2) and is
   read at `WalletManager.swift:430`; no xcconfig exists, tracked or not. The
@@ -872,18 +861,6 @@ the macOS suite, the helper test and `SECURITY.md` moved to Tier 4
 - [ ] **Phase D per-language QA**: App Language de (+30% expansion layout
   pass — badges, fixed-width buttons, alerts), ja (typography), zh-Hant
   (CJK/Latin spacing, line breaking), plus guard test + full suite.
-- [ ] **BIP-353 DNSSEC validation** (full implementation): DNSSEC-validating
-  library, RRSIG check, or a validating DoH resolver. Unblocks the BIP-353
-  items in Tier 3 (BIP-353 vs Lightning-address logic + resolved-address
-  display under Send, and the address-header proposal's override (d)). Two
-  resolver defects to fix with it (read 2026-10-08, moot while the query is
-  skipped): only the first character-string of the TXT RDATA is read
-  (`BIP353Resolver.swift:310-315`), so records over 255 bytes truncate; and
-  the lookup does one `select` + one `DNSServiceProcessResult` (`:376-388`)
-  with the timeout source cancelled before processing, so a reply with
-  `kDNSServiceFlagsMoreComing` set never resumes the continuation and the
-  caller hangs. Keep the rule that an unverified BIP-353 answer never
-  pre-empts the TLS-authenticated Lightning-address path.
 - [ ] **OS `bitcoin:` URI scheme registration**: no `CFBundleURLSchemes` in
   the mobile Info.plist or the generated desktop plist, and no `onOpenURL` /
   `openURLContexts` handler anywhere, so the work is registration plus
@@ -1086,8 +1063,9 @@ log).
 - [ ] **Review logic for telling BIP-353 and Lightning addresses apart**,
   in Send and when adding a contact address (merged with the Contacts
   fragment 2026-10-09); a contact with a resolved BIP-353 shows only the
-  resolved address in the send view; actually resolve and test — all
-  DNSSEC-blocked (Tier 1).
+  resolved address in the send view; actually resolve and test. Unblocked
+  2026-10-29: BIP-353 names resolve again (`Features/BIP353_DNSSEC.md`), so
+  the `user@domain` race in `tryParallelResolution` is now live (review F6).
 - [ ] **LNURL comment input and metadata** (short/long text, image) —
   `Features/LNURL_Pay.md` "not implemented"; `commentAllowed` is parsed and
   ignored (`comment: nil` passed to `payLnurl`).
@@ -1597,6 +1575,12 @@ survivors.)
 v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 - [ ] **Keep the unadopted-API record current on every bindings bump**.
+- [ ] **PROPOSAL (2026-10-29) — BIP-353 validation through bark-ffi**: the
+  reference DNSSEC validator `dnssec-prover` is already linked into the app
+  (bark → LDK `lightning` 0.2.2 → `dnssec-prover` 0.6.8, verified in the
+  bindings' lock file) but not exposed. One bark-ffi function resolving a
+  BIP-353 name with a verified proof would close the documented deviation
+  in `Features/BIP353_DNSSEC.md` §4 as a new `DNSTXTSource`. Ask Second.
 - [ ] **Bindings v0.26.0 (bark 0.8.0) — ship Track A to the two stuck
   users** (the former "Next bump" entry; the release carries every recovery
   fix it waited for, verified as ancestors of `bark-0.8.0`). Built
