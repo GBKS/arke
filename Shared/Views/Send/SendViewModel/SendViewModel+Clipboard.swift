@@ -129,13 +129,7 @@ extension SendViewModel {
                 logger.info("BIP-353 resolved successfully!")
                 logger.debug("   → Original BIP-353: \(resolved.originalAddress)")
                 logger.debug("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
-                logger.debug("   → DNSSEC verified: \(resolved.dnssecVerified)")
-                
-                if !resolved.dnssecVerified {
-                    logger.warning("Warning: DNSSEC validation failed for \(trimmedString)")
-                    // For v1, just log - future: show security warning to user
-                }
-                
+
                 return await processClipboardPaymentRequest(resolved.bip21URI, originalBIP353Address: resolved.originalAddress)
             } catch {
                 logger.error("BIP-353 resolution failed: \(error.localizedDescription)")
@@ -160,12 +154,7 @@ extension SendViewModel {
                     let resolved = try await BIP353Resolver.resolve(address)
                     self.logger.info("BIP-353 resolution won the race!")
                     self.logger.debug("   → Resolved BIP-21 URI: \(resolved.bip21URI)")
-                    self.logger.debug("   → DNSSEC verified: \(resolved.dnssecVerified)")
-                    
-                    if !resolved.dnssecVerified {
-                        self.logger.warning("Warning: DNSSEC validation failed for \(address)")
-                    }
-                    
+
                     return .bip353Success(resolved)
                 } catch {
                     self.logger.error("BIP-353 resolution failed: \(error.localizedDescription)")

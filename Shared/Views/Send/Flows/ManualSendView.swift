@@ -474,7 +474,7 @@ struct ManualSendView: View {
                 // Both BIP-353 and Lightning Address failed
                 guard !Task.isCancelled else { return }
                 
-                recipientState = .invalid("Address resolution failed. BIP-353: \(error.localizedDescription), Lightning: \(lightningError.localizedDescription)")
+                recipientState = .invalid(String(localized: "send_address_resolution_failed", defaultValue: "Couldn't resolve this address. BIP-353: \(error.localizedDescription) Lightning: \(lightningError.localizedDescription)"))
                 resolvedPaymentRequest = nil
                 originalBIP353Address = nil
             }

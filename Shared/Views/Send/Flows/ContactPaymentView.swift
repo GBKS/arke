@@ -262,7 +262,7 @@ struct ContactPaymentView: View {
                 
             } catch let lightningError {
                 // Both BIP-353 and Lightning Address failed
-                resolutionError = "Failed to resolve. BIP-353: \(error.localizedDescription), Lightning: \(lightningError.localizedDescription)"
+                resolutionError = String(localized: "send_address_resolution_failed", defaultValue: "Couldn't resolve this address. BIP-353: \(error.localizedDescription) Lightning: \(lightningError.localizedDescription)")
                 isResolvingBIP353 = false
             }
         }

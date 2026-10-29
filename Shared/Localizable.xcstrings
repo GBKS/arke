@@ -7180,6 +7180,238 @@
         }
       }
     },
+    "bip353_error_invalid_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das ist keine gültige Adresse im Format ₿name@domain."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This isn't a valid ₿user@domain address."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これは有効な ₿user@domain 形式のアドレスではありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這不是有效的 ₿user@domain 地址。"
+          }
+        }
+      }
+    },
+    "bip353_error_lookup_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die DNS-Einträge dieser Adresse konnten gerade nicht abgerufen werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Couldn't look up this address's DNS records right now."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在、このアドレスの DNS レコードを取得できませんでした。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "目前無法查詢這個地址的 DNS 記錄。"
+          }
+        }
+      }
+    },
+    "bip353_error_multiple_records" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Adresse hat mehr als einen Zahlungseintrag, was der Standard nicht erlaubt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This address publishes more than one payment record, which the standard doesn't allow."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスには複数の支払いレコードが公開されていますが、規格では許可されていません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個地址公開了多筆付款記錄，標準不允許這種情況。"
+          }
+        }
+      }
+    },
+    "bip353_error_no_bitcoin_record" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Adresse hat DNS-Einträge, aber keinen mit Bitcoin-Zahlungsanweisungen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This address publishes DNS records, but none with Bitcoin payment instructions."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスには DNS レコードがありますが、ビットコインの支払い情報を含むものはありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個地址有 DNS 記錄，但沒有包含比特幣付款資訊的記錄。"
+          }
+        }
+      }
+    },
+    "bip353_error_no_record" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Für diese Adresse sind keine Zahlungsanweisungen hinterlegt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No payment instructions are published for this address."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスには支払い情報が公開されていません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個地址沒有公開任何付款資訊。"
+          }
+        }
+      }
+    },
+    "bip353_error_not_signed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die DNS-Einträge dieser Adresse sind nicht per DNSSEC signiert und daher nicht vertrauenswürdig."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This address's DNS records aren't DNSSEC-signed, so they can't be trusted."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスの DNS レコードは DNSSEC で署名されていないため、信頼できません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個地址的 DNS 記錄沒有 DNSSEC 簽章，因此無法信任。"
+          }
+        }
+      }
+    },
+    "bip353_error_resolver_failure" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ein DNS-Resolver konnte die Einträge dieser Adresse nicht prüfen. Das kann eine vorübergehende Störung sein oder eine fehlerhafte DNSSEC-Signatur auf Seiten des Empfängers."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A DNS resolver couldn't verify this address's records. That can be a temporary outage or a broken DNSSEC signature on the recipient's side."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "DNS リゾルバーがこのアドレスのレコードを検証できませんでした。一時的な障害か、受取人側の DNSSEC 署名が壊れている可能性があります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "DNS 解析器無法驗證這個地址的記錄。可能是暫時性的故障，或是收款方的 DNSSEC 簽章有問題。"
+          }
+        }
+      }
+    },
+    "bip353_error_resolvers_disagree" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zwei DNS-Resolver haben für diese Adresse unterschiedliche Einträge geliefert, daher ist sie nicht vertrauenswürdig."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Two DNS resolvers returned different records for this address, so it can't be trusted."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "2 つの DNS リゾルバーがこのアドレスに対して異なるレコードを返したため、信頼できません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "兩個 DNS 解析器為這個地址回傳了不同的記錄，因此無法信任。"
+          }
+        }
+      }
+    },
     "Block %u" : {
       "localizations" : {
         "zh-Hant" : {
@@ -19888,6 +20120,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "你嘗試付款的地址尚未儲存於 **%@** 的資料中。"
+          }
+        }
+      }
+    },
+    "send_address_resolution_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Adresse konnte nicht aufgelöst werden. BIP-353: %1$@ Lightning: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Couldn't resolve this address. BIP-353: %1$@ Lightning: %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスを解決できませんでした。BIP-353: %1$@ Lightning: %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法解析這個地址。BIP-353：%1$@ Lightning：%2$@"
           }
         }
       }

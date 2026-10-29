@@ -1,229 +1,382 @@
 //
 //  BIP353Resolver.swift
-//  Ark wallet prototype
+//  Arké
 //
-//  Created by Assistant on 11/20/25.
+//  BIP-353: DNS Payment Instructions.
+//  Resolves ₿user@domain / user@domain to the bitcoin: URI published in the
+//  TXT record at user.user._bitcoin-payment.domain.
 //
-//  BIP-353: DNS Payment Instructions
-//  Resolves human-readable Bitcoin addresses to BIP-21 URIs via DNS TXT records
+//  Validation model (DECIDED 2026-10-29, Docs/Features/BIP353_DNSSEC.md §4):
+//  the OS validator never completes on iOS 27 / macOS 27, so two independent
+//  validating resolvers are asked over HTTPS and the answer is accepted only
+//  when both report the chain as authenticated (AD) and return the same
+//  records. This is a documented deviation from the BIP's "MUST NOT trust a
+//  remote resolver"; `DNSTXTSource` is the seam where in-app validation can
+//  replace it without touching callers.
 //
 
 import Foundation
-import dnssd
+import OSLog
 
-// MARK: - fd_set helpers for select()
+// MARK: - Validated TXT answers
 
-private func fdZero(_ set: inout fd_set) {
-    set.fds_bits = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+/// What a validating resolver said about one TXT name.
+nonisolated struct DNSTXTAnswer: Equatable, Sendable {
+    /// DNS response code: 0 NOERROR, 3 NXDOMAIN, 2 SERVFAIL.
+    let rcode: Int
+    /// The resolver's Authenticated Data bit: it validated the DNSSEC chain.
+    let authenticated: Bool
+    /// Each TXT record with its character-strings concatenated in RDATA order.
+    let records: [String]
+    /// Smallest TTL among the TXT records, nil when there are none.
+    let minimumTTL: TimeInterval?
+
+    static let serverFailure = 2
+    static let nxdomain = 3
 }
 
-private func fdSet(_ fd: Int32, _ set: inout fd_set) {
-    let intOffset = Int(fd / 32)
-    let bitOffset = Int32(fd % 32)
-    let mask: Int32 = 1 << bitOffset
-    switch intOffset {
-    case 0: set.fds_bits.0 = set.fds_bits.0 | mask
-    case 1: set.fds_bits.1 = set.fds_bits.1 | mask
-    case 2: set.fds_bits.2 = set.fds_bits.2 | mask
-    case 3: set.fds_bits.3 = set.fds_bits.3 | mask
-    case 4: set.fds_bits.4 = set.fds_bits.4 | mask
-    case 5: set.fds_bits.5 = set.fds_bits.5 | mask
-    case 6: set.fds_bits.6 = set.fds_bits.6 | mask
-    case 7: set.fds_bits.7 = set.fds_bits.7 | mask
-    case 8: set.fds_bits.8 = set.fds_bits.8 | mask
-    case 9: set.fds_bits.9 = set.fds_bits.9 | mask
-    case 10: set.fds_bits.10 = set.fds_bits.10 | mask
-    case 11: set.fds_bits.11 = set.fds_bits.11 | mask
-    case 12: set.fds_bits.12 = set.fds_bits.12 | mask
-    case 13: set.fds_bits.13 = set.fds_bits.13 | mask
-    case 14: set.fds_bits.14 = set.fds_bits.14 | mask
-    case 15: set.fds_bits.15 = set.fds_bits.15 | mask
-    case 16: set.fds_bits.16 = set.fds_bits.16 | mask
-    case 17: set.fds_bits.17 = set.fds_bits.17 | mask
-    case 18: set.fds_bits.18 = set.fds_bits.18 | mask
-    case 19: set.fds_bits.19 = set.fds_bits.19 | mask
-    case 20: set.fds_bits.20 = set.fds_bits.20 | mask
-    case 21: set.fds_bits.21 = set.fds_bits.21 | mask
-    case 22: set.fds_bits.22 = set.fds_bits.22 | mask
-    case 23: set.fds_bits.23 = set.fds_bits.23 | mask
-    case 24: set.fds_bits.24 = set.fds_bits.24 | mask
-    case 25: set.fds_bits.25 = set.fds_bits.25 | mask
-    case 26: set.fds_bits.26 = set.fds_bits.26 | mask
-    case 27: set.fds_bits.27 = set.fds_bits.27 | mask
-    case 28: set.fds_bits.28 = set.fds_bits.28 | mask
-    case 29: set.fds_bits.29 = set.fds_bits.29 | mask
-    case 30: set.fds_bits.30 = set.fds_bits.30 | mask
-    case 31: set.fds_bits.31 = set.fds_bits.31 | mask
-    default: break
+/// A resolver that can answer a TXT query with a DNSSEC verdict.
+nonisolated protocol DNSTXTSource: Sendable {
+    var name: String { get }
+    func queryTXT(_ dnsName: String) async throws -> DNSTXTAnswer
+}
+
+// MARK: - TXT RDATA presentation parsing
+
+/// Turns the presentation form of TXT RDATA into the concatenated string the
+/// BIP wants: character-strings "in RDATA order, without inserting separators".
+nonisolated enum TXTRecordData {
+    /// Cloudflare returns `"part one" "part two"` with RFC 1035 escapes;
+    /// Google returns the already-concatenated text without quotes.
+    static func concatenated(_ presentation: String) -> String {
+        guard presentation.first == "\"" else { return presentation }
+
+        // Work on bytes: a \DDD escape is one byte of the record, and multi-byte
+        // UTF-8 (Cloudflare writes "é" as \195\169) must reassemble before decoding.
+        var bytes: [UInt8] = []
+        var inQuotes = false
+        let input = Array(presentation.utf8)
+        var index = 0
+        while index < input.count {
+            let byte = input[index]
+            if !inQuotes {
+                if byte == UInt8(ascii: "\"") { inQuotes = true }
+                index += 1
+                continue
+            }
+            switch byte {
+            case UInt8(ascii: "\""):
+                inQuotes = false
+                index += 1
+            case UInt8(ascii: "\\"):
+                // \DDD is a decimal byte, \X is the literal X.
+                if let value = decimalEscape(input, at: index + 1) {
+                    bytes.append(value)
+                    index += 4
+                } else if index + 1 < input.count {
+                    bytes.append(input[index + 1])
+                    index += 2
+                } else {
+                    index += 1
+                }
+            default:
+                bytes.append(byte)
+                index += 1
+            }
+        }
+        return String(decoding: bytes, as: UTF8.self)
+    }
+
+    private static func decimalEscape(_ bytes: [UInt8], at start: Int) -> UInt8? {
+        guard start + 2 < bytes.count else { return nil }
+        var value = 0
+        for digit in bytes[start...start + 2] {
+            guard digit >= UInt8(ascii: "0"), digit <= UInt8(ascii: "9") else { return nil }
+            value = value * 10 + Int(digit - UInt8(ascii: "0"))
+        }
+        guard value <= 255 else { return nil }
+        return UInt8(value)
     }
 }
 
-private func fdIsSet(_ fd: Int32, _ set: inout fd_set) -> Bool {
-    let intOffset = Int(fd / 32)
-    let bitOffset = Int32(fd % 32)
-    let mask: Int32 = 1 << bitOffset
-    switch intOffset {
-    case 0: return set.fds_bits.0 & mask != 0
-    case 1: return set.fds_bits.1 & mask != 0
-    case 2: return set.fds_bits.2 & mask != 0
-    case 3: return set.fds_bits.3 & mask != 0
-    case 4: return set.fds_bits.4 & mask != 0
-    case 5: return set.fds_bits.5 & mask != 0
-    case 6: return set.fds_bits.6 & mask != 0
-    case 7: return set.fds_bits.7 & mask != 0
-    case 8: return set.fds_bits.8 & mask != 0
-    case 9: return set.fds_bits.9 & mask != 0
-    case 10: return set.fds_bits.10 & mask != 0
-    case 11: return set.fds_bits.11 & mask != 0
-    case 12: return set.fds_bits.12 & mask != 0
-    case 13: return set.fds_bits.13 & mask != 0
-    case 14: return set.fds_bits.14 & mask != 0
-    case 15: return set.fds_bits.15 & mask != 0
-    case 16: return set.fds_bits.16 & mask != 0
-    case 17: return set.fds_bits.17 & mask != 0
-    case 18: return set.fds_bits.18 & mask != 0
-    case 19: return set.fds_bits.19 & mask != 0
-    case 20: return set.fds_bits.20 & mask != 0
-    case 21: return set.fds_bits.21 & mask != 0
-    case 22: return set.fds_bits.22 & mask != 0
-    case 23: return set.fds_bits.23 & mask != 0
-    case 24: return set.fds_bits.24 & mask != 0
-    case 25: return set.fds_bits.25 & mask != 0
-    case 26: return set.fds_bits.26 & mask != 0
-    case 27: return set.fds_bits.27 & mask != 0
-    case 28: return set.fds_bits.28 & mask != 0
-    case 29: return set.fds_bits.29 & mask != 0
-    case 30: return set.fds_bits.30 & mask != 0
-    case 31: return set.fds_bits.31 & mask != 0
-    default: return false
+// MARK: - DNS-over-HTTPS JSON source
+
+/// A public resolver speaking the DNS-over-HTTPS JSON API.
+nonisolated struct DoHJSONSource: DNSTXTSource {
+    typealias Fetch = @Sendable (URLRequest) async throws -> (Data, URLResponse)
+
+    enum DoHError: Swift.Error, Equatable {
+        case badEndpoint
+        case httpStatus(Int)
+        case malformedResponse
+    }
+
+    let name: String
+    let endpoint: String
+    let acceptHeader: String?
+    let fetch: Fetch
+
+    init(name: String, endpoint: String, acceptHeader: String?, fetch: @escaping Fetch = { try await URLSession.shared.data(for: $0) }) {
+        self.name = name
+        self.endpoint = endpoint
+        self.acceptHeader = acceptHeader
+        self.fetch = fetch
+    }
+
+    static let cloudflare = DoHJSONSource(
+        name: "Cloudflare",
+        endpoint: "https://cloudflare-dns.com/dns-query",
+        acceptHeader: "application/dns-json"
+    )
+
+    static let google = DoHJSONSource(
+        name: "Google",
+        endpoint: "https://dns.google/resolve",
+        acceptHeader: nil
+    )
+
+    func queryTXT(_ dnsName: String) async throws -> DNSTXTAnswer {
+        guard var components = URLComponents(string: endpoint) else { throw DoHError.badEndpoint }
+        components.queryItems = [
+            URLQueryItem(name: "name", value: dnsName),
+            URLQueryItem(name: "type", value: "TXT"),
+        ]
+        guard let url = components.url else { throw DoHError.badEndpoint }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10
+        if let acceptHeader {
+            request.setValue(acceptHeader, forHTTPHeaderField: "Accept")
+        }
+
+        let (data, response) = try await fetch(request)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw DoHError.httpStatus(http.statusCode)
+        }
+        return try Self.parse(data)
+    }
+
+    /// The JSON shape both Cloudflare and Google return (verified 2026-10-29).
+    private struct Response: Decodable {
+        struct Answer: Decodable {
+            let type: Int
+            let TTL: Int
+            let data: String
+        }
+        let Status: Int
+        let AD: Bool
+        let Answer: [Answer]?
+    }
+
+    /// Parses a dns-json body into an answer; TXT records only, strings concatenated.
+    static func parse(_ data: Data) throws -> DNSTXTAnswer {
+        let decoded: Response
+        do {
+            decoded = try JSONDecoder().decode(Response.self, from: data)
+        } catch {
+            throw DoHError.malformedResponse
+        }
+        let txt = (decoded.Answer ?? []).filter { $0.type == 16 }
+        return DNSTXTAnswer(
+            rcode: decoded.Status,
+            authenticated: decoded.AD,
+            records: txt.map { TXTRecordData.concatenated($0.data) },
+            minimumTTL: txt.map { TimeInterval($0.TTL) }.min()
+        )
     }
 }
 
-/// Resolves BIP-353 human-readable Bitcoin addresses via DNS
+// MARK: - Validation policy
+
+/// The decisions that turn resolver answers into an accepted bitcoin: URI.
+nonisolated enum BIP353Validation {
+    /// Accepts the payment records only when at least two resolvers answered,
+    /// every one reports an authenticated chain, and they agree on the
+    /// `bitcoin:` records. Sibling records (SPF, decoys) are not compared:
+    /// the two providers present escapes differently and they carry no payment.
+    static func combine(_ answers: [DNSTXTAnswer]) throws -> [String] {
+        guard answers.count >= 2 else {
+            throw BIP353Resolver.BIP353Error.dnsLookupFailed("fewer than two resolver answers")
+        }
+        // SERVFAIL carries AD=false by definition, whether the cause is an
+        // outage or a bogus signature; it must not read as "unsigned".
+        if answers.contains(where: { $0.rcode == DNSTXTAnswer.serverFailure }) {
+            throw BIP353Resolver.BIP353Error.resolverFailure
+        }
+        if answers.allSatisfy({ $0.rcode == DNSTXTAnswer.nxdomain }) {
+            // A validating resolver authenticates its denial too.
+            guard answers.allSatisfy(\.authenticated) else {
+                throw BIP353Resolver.BIP353Error.dnssecValidationFailed
+            }
+            throw BIP353Resolver.BIP353Error.noDNSRecord
+        }
+        guard answers.allSatisfy({ $0.rcode == 0 }) else {
+            throw BIP353Resolver.BIP353Error.resolversDisagree
+        }
+        guard answers.allSatisfy(\.authenticated) else {
+            throw BIP353Resolver.BIP353Error.dnssecValidationFailed
+        }
+        if answers.allSatisfy({ $0.records.isEmpty }) {
+            throw BIP353Resolver.BIP353Error.noDNSRecord
+        }
+        let candidateSets = answers.map { bitcoinCandidates(in: $0.records).sorted() }
+        guard let first = candidateSets.first, candidateSets.allSatisfy({ $0 == first }) else {
+            throw BIP353Resolver.BIP353Error.resolversDisagree
+        }
+        return first
+    }
+
+    /// The records that begin with `bitcoin:`, ignoring case.
+    static func bitcoinCandidates(in records: [String]) -> [String] {
+        records.filter { $0.lowercased().hasPrefix("bitcoin:") }
+    }
+
+    /// Exactly one record may begin with `bitcoin:` (ignoring case); others are ignored.
+    static func selectBitcoinURI(from records: [String]) throws -> String {
+        let matches = bitcoinCandidates(in: records)
+        switch matches.count {
+        case 0: throw BIP353Resolver.BIP353Error.noBitcoinRecord
+        case 1: return matches[0]
+        default: throw BIP353Resolver.BIP353Error.multipleBitcoinRecords
+        }
+    }
+}
+
+// MARK: - Resolver
+
+/// Resolves BIP-353 human-readable Bitcoin addresses via validating DNS resolvers.
 class BIP353Resolver {
-    
-    // MARK: - Types
-    
+
+    // MARK: Types
+
     enum BIP353Format {
-        case bitcoinSymbol(String)  // ₿alice.example.com
+        case bitcoinSymbol(String)  // ₿alice@example.com
         case userAtDomain(String)   // alice@example.com (ambiguous with Lightning Address)
     }
-    
+
     struct ResolvedBIP353 {
-        let originalAddress: String      // ₿alice.example.com or alice@example.com
-        let bip21URI: String             // The bitcoin: URI from DNS TXT record
-        let dnssecVerified: Bool         // Whether DNSSEC validation succeeded
+        let originalAddress: String      // ₿alice@example.com or alice@example.com
+        let bip21URI: String             // The bitcoin: URI from the DNS TXT record
         let resolvedFrom: String         // DNS name that was queried
-        let resolvedAt: Date             // Timestamp for cache expiration
+        let resolvedAt: Date
+        let expiresAt: Date              // Never later than the record TTL allows
+
+        func isFresh(at date: Date = Date()) -> Bool {
+            date < expiresAt
+        }
     }
-    
-    enum BIP353Error: LocalizedError {
+
+    enum BIP353Error: LocalizedError, Equatable {
         case invalidFormat
         case noDNSRecord
         case noBitcoinRecord
-        case dnsLookupFailed(String)
+        case multipleBitcoinRecords
         case dnssecValidationFailed
-        case networkError(Error)
-        case cacheExpired
-        
+        case resolversDisagree
+        case resolverFailure
+        case dnsLookupFailed(String)
+
         var errorDescription: String? {
             switch self {
             case .invalidFormat:
-                return "Invalid BIP-353 address format"
+                return String(localized: "bip353_error_invalid_format", defaultValue: "This isn't a valid ₿user@domain address.")
             case .noDNSRecord:
-                return "No DNS TXT record found for this address"
+                return String(localized: "bip353_error_no_record", defaultValue: "No payment instructions are published for this address.")
             case .noBitcoinRecord:
-                return "No Bitcoin payment record found in DNS"
-            case .dnsLookupFailed(let reason):
-                return "DNS lookup failed: \(reason)"
+                return String(localized: "bip353_error_no_bitcoin_record", defaultValue: "This address publishes DNS records, but none with Bitcoin payment instructions.")
+            case .multipleBitcoinRecords:
+                return String(localized: "bip353_error_multiple_records", defaultValue: "This address publishes more than one payment record, which the standard doesn't allow.")
             case .dnssecValidationFailed:
-                return "DNSSEC validation failed - address may be compromised"
-            case .networkError(let error):
-                return "Network error: \(error.localizedDescription)"
-            case .cacheExpired:
-                return "Cached resolution expired"
+                return String(localized: "bip353_error_not_signed", defaultValue: "This address's DNS records aren't DNSSEC-signed, so they can't be trusted.")
+            case .resolversDisagree:
+                return String(localized: "bip353_error_resolvers_disagree", defaultValue: "Two DNS resolvers returned different records for this address, so it can't be trusted.")
+            case .resolverFailure:
+                return String(localized: "bip353_error_resolver_failure", defaultValue: "A DNS resolver couldn't verify this address's records. That can be a temporary outage or a broken DNSSEC signature on the recipient's side.")
+            case .dnsLookupFailed:
+                return String(localized: "bip353_error_lookup_failed", defaultValue: "Couldn't look up this address's DNS records right now.")
             }
         }
     }
-    
-    // MARK: - Cache
-    
+
+    // MARK: Configuration
+
+    /// Both must agree; see `BIP353Validation.combine`.
+    static let defaultSources: [any DNSTXTSource] = [DoHJSONSource.cloudflare, DoHJSONSource.google]
+
+    private static let maximumCacheDuration: TimeInterval = 600
     private static var cache: [String: ResolvedBIP353] = [:]
-    private static let cacheDuration: TimeInterval = 600 // 10 minutes
-    private static let cacheQueue = DispatchQueue(label: "com.ark.bip353cache")
-    
-    // MARK: - Public API
-    
-    /// Resolves a BIP-353 address to a BIP-21 URI via DNS lookup
-    /// - Parameter address: BIP-353 address (₿alice.example.com or alice@example.com)
-    /// - Returns: Resolved BIP-21 URI and metadata
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "GBKS.Arke", category: "BIP353Resolver")
+
+    // MARK: Public API
+
+    /// Resolves a BIP-353 address to its BIP-21 URI through the default resolvers.
     static func resolve(_ address: String) async throws -> ResolvedBIP353 {
-        // Check cache first
-        if let cached = getCached(address) {
+        try await resolve(address, using: defaultSources)
+    }
+
+    /// Resolves through the given sources; every source is queried and all must agree.
+    static func resolve(_ address: String, using sources: [any DNSTXTSource], now: Date = Date()) async throws -> ResolvedBIP353 {
+        if let cached = cache[address], cached.isFresh(at: now) {
+            logger.debug("Using cached resolution for \(address, privacy: .private)")
             return cached
         }
-        
-        // Detect format
+        cache.removeValue(forKey: address)
+
         let format = try detectFormat(address)
-        
-        // Construct DNS name
         let dnsName = constructDNSName(address, format: format)
-        
-        print("🔍 [BIP353Resolver] Resolving \(address)")
-        print("   → DNS lookup: \(dnsName)")
-        
-        // Perform DNS TXT lookup
-        let txtRecords = try await performDNSLookup(dnsName)
-        
-        print("   → Found \(txtRecords.count) TXT record(s)")
-        
-        // BIP-353 requires DNSSEC: without it, whoever answers the DNS query
-        // chooses the payee, so an unvalidated record must not be used.
-        // Callers fall back to the Lightning Address lookup, which is
-        // authenticated by TLS.
-        let dnssecValid = await validateDNSSEC(dnsName)
-        
-        guard dnssecValid else {
-            print("   ⚠️ DNSSEC validation failed!")
-            throw BIP353Error.dnssecValidationFailed
+        logger.info("Resolving \(address, privacy: .private) via \(sources.count) resolver(s)")
+
+        let answers: [DNSTXTAnswer]
+        do {
+            answers = try await withThrowingTaskGroup(of: DNSTXTAnswer.self) { group in
+                for source in sources {
+                    group.addTask { try await source.queryTXT(dnsName) }
+                }
+                var collected: [DNSTXTAnswer] = []
+                for try await answer in group { collected.append(answer) }
+                return collected
+            }
+        } catch let error as BIP353Error {
+            throw error
+        } catch is CancellationError {
+            // The caller moved on (a Lightning-address race was won); not a failure.
+            throw CancellationError()
+        } catch {
+            logger.error("Resolver query failed: \(error.localizedDescription, privacy: .public)")
+            throw BIP353Error.dnsLookupFailed(error.localizedDescription)
         }
-        
-        // Find Bitcoin payment record (BIP-21 URI)
-        guard let bip21URI = txtRecords.first(where: { $0.hasPrefix("bitcoin:") }) else {
-            throw BIP353Error.noBitcoinRecord
-        }
-        
-        print("   → BIP-21 URI: \(bip21URI)")
-        print("   ✅ Resolved successfully")
-        
+
+        let records = try BIP353Validation.combine(answers)
+        let bip21URI = try BIP353Validation.selectBitcoinURI(from: records)
+
+        let ttl = answers.compactMap(\.minimumTTL).min() ?? 0
         let resolved = ResolvedBIP353(
             originalAddress: address,
             bip21URI: bip21URI,
-            dnssecVerified: dnssecValid,
             resolvedFrom: dnsName,
-            resolvedAt: Date()
+            resolvedAt: now,
+            expiresAt: now.addingTimeInterval(min(maximumCacheDuration, ttl))
         )
-        
-        // Cache the result
-        cache(resolved, for: address)
-        
+        cache[address] = resolved
+        logger.info("Resolved \(address, privacy: .private); both resolvers authenticated, \(records.count) TXT record(s)")
         return resolved
     }
-    
+
     /// Check if an address looks like a BIP-353 address
     static func isBIP353Format(_ address: String) -> Bool {
         return detectFormatOrNil(address) != nil
     }
-    
-    // MARK: - Format Detection
-    
+
+    // MARK: Format Detection
+
     private static func detectFormat(_ address: String) throws -> BIP353Format {
         guard let format = detectFormatOrNil(address) else {
             throw BIP353Error.invalidFormat
         }
         return format
     }
-    
+
     private static func detectFormatOrNil(_ address: String) -> BIP353Format? {
         // Check for ₿ prefix (unambiguous BIP-353)
         if address.hasPrefix("₿") {
@@ -233,18 +386,18 @@ class BIP353Resolver {
                 return .bitcoinSymbol(address)
             }
         }
-        
+
         // Check for user@domain format (ambiguous - could be Lightning Address)
         let userAtDomainPattern = "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
         if address.range(of: userAtDomainPattern, options: .regularExpression) != nil {
             return .userAtDomain(address)
         }
-        
+
         return nil
     }
-    
-    // MARK: - DNS Name Construction
-    
+
+    // MARK: DNS Name Construction
+
     private static func constructDNSName(_ address: String, format: BIP353Format) -> String {
         switch format {
         case .bitcoinSymbol(let addr):
@@ -255,7 +408,7 @@ class BIP353Resolver {
                 return "user._bitcoin-payment.\(withoutSymbol)" // Fallback
             }
             return "\(components[0]).user._bitcoin-payment.\(components[1])"
-            
+
         case .userAtDomain(let addr):
             // alice@example.com → alice.user._bitcoin-payment.example.com
             let components = addr.split(separator: "@")
@@ -265,182 +418,16 @@ class BIP353Resolver {
             return "\(components[0]).user._bitcoin-payment.\(components[1])"
         }
     }
-    
-    // MARK: - DNS Resolution
-    
-    private static func performDNSLookup(_ dnsName: String) async throws -> [String] {
-        // Use native DNS Service Discovery API for TXT record lookup
-        // This works on all Apple platforms (iOS, macOS, etc.)
-        
-        // Helper class to bridge continuation into callback context
-        class CallbackContext {
-            var continuation: CheckedContinuation<[String], Error>?
-            var records: [String] = []
-            var hasResumed = false
-            let lock = NSLock()
-            
-            func resume(with result: Result<[String], Error>) {
-                lock.lock()
-                defer { lock.unlock() }
-                
-                if !hasResumed {
-                    hasResumed = true
-                    continuation?.resume(with: result)
-                    continuation = nil
-                }
-            }
-        }
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            var sdRef: DNSServiceRef?
-            let context = CallbackContext()
-            context.continuation = continuation
-            
-            let callback: DNSServiceQueryRecordReply = { _, flags, _, errorCode, _, _, _, rdlen, rdata, _, contextPtr in
-                guard let contextPtr = contextPtr else { return }
-                let context = Unmanaged<CallbackContext>.fromOpaque(contextPtr).takeUnretainedValue()
-                
-                guard errorCode == kDNSServiceErr_NoError else {
-                    context.resume(with: .failure(BIP353Error.dnsLookupFailed("DNS error code: \(errorCode)")))
-                    return
-                }
-                
-                guard let rdata = rdata else { return }
-                
-                // Parse TXT record (first byte is length, rest is data)
-                let dataPtr = rdata.assumingMemoryBound(to: UInt8.self)
-                let length = Int(dataPtr.pointee)
-                
-                if length > 0 && rdlen > 1 {
-                    let txtData = Data(bytes: dataPtr.advanced(by: 1), count: min(length, Int(rdlen) - 1))
-                    if let txtString = String(data: txtData, encoding: .utf8) {
-                        context.records.append(txtString)
-                    }
-                }
-                
-                // Check if this is the last record (MoreComing flag not set)
-                if (flags & kDNSServiceFlagsMoreComing) == 0 {
-                    context.resume(with: .success(context.records))
-                }
-            }
-            
-            let contextPtr = Unmanaged.passRetained(context).toOpaque()
-            
-            let err = DNSServiceQueryRecord(
-                &sdRef,
-                0, // flags
-                0, // interface (0 = all interfaces)
-                dnsName,
-                UInt16(kDNSServiceType_TXT),
-                UInt16(kDNSServiceClass_IN),
-                callback,
-                contextPtr
-            )
-            
-            guard err == kDNSServiceErr_NoError, let serviceRef = sdRef else {
-                Unmanaged<CallbackContext>.fromOpaque(contextPtr).release()
-                continuation.resume(throwing: BIP353Error.dnsLookupFailed("Failed to start DNS query: \(err)"))
-                return
-            }
-            
-            // Process the DNS query on a background queue
-            // We manually ensure thread safety here - both pointers are only accessed
-            // in this closure and are properly deallocated in the defer block
-            nonisolated(unsafe) let capturedServiceRef = serviceRef
-            nonisolated(unsafe) let capturedContextPtr = contextPtr
-            DispatchQueue.global(qos: .userInitiated).async {
-                defer {
-                    DNSServiceRefDeallocate(capturedServiceRef)
-                    Unmanaged<CallbackContext>.fromOpaque(capturedContextPtr).release()
-                }
-                
-                let socketFD = DNSServiceRefSockFD(capturedServiceRef)
-                guard socketFD >= 0 else {
-                    context.resume(with: .failure(BIP353Error.dnsLookupFailed("Invalid socket")))
-                    return
-                }
-                
-                // Set up a timeout
-                let timeoutSource = DispatchSource.makeTimerSource(queue: .global())
-                timeoutSource.schedule(deadline: .now() + 10.0)
-                timeoutSource.setEventHandler {
-                    context.resume(with: .failure(BIP353Error.dnsLookupFailed("DNS lookup timeout")))
-                }
-                timeoutSource.resume()
-                
-                // Process results
-                var fdSetVar = fd_set()
-                fdZero(&fdSetVar)
-                fdSet(socketFD, &fdSetVar)
-                
-                var timeout = timeval(tv_sec: 10, tv_usec: 0)
-                let selectResult = select(socketFD + 1, &fdSetVar, nil, nil, &timeout)
-                
-                timeoutSource.cancel()
-                
-                if selectResult > 0 && fdIsSet(socketFD, &fdSetVar) {
-                    let processResult = DNSServiceProcessResult(capturedServiceRef)
-                    if processResult != kDNSServiceErr_NoError {
-                        context.resume(with: .failure(BIP353Error.dnsLookupFailed("Process error: \(processResult)")))
-                    }
-                } else {
-                    context.resume(with: .failure(BIP353Error.noDNSRecord))
-                }
-            }
-        }
-    }
-    
-    // MARK: - DNSSEC Validation
-    
-    private static func validateDNSSEC(_ dnsName: String) async -> Bool {
-        // TODO: Implement proper DNSSEC validation using dnssd
-        // For now, we can't reliably validate DNSSEC on iOS without external libraries
-        // The DNSServiceQueryRecord API doesn't expose DNSSEC validation results directly
-        // 
-        // Options for future implementation:
-        // 1. Use a third-party DNS library that supports DNSSEC
-        // 2. Query for RRSIG records separately and validate them
-        // 3. Use a trusted DNS-over-HTTPS resolver that validates DNSSEC
-        //
-        // For now, return false to indicate DNSSEC is not verified
-        return false
-    }
-    
-    // MARK: - Cache Management
-    
-    private static func getCached(_ address: String) -> ResolvedBIP353? {
-        return cacheQueue.sync {
-            guard let cached = cache[address] else { return nil }
-            
-            // Check if cache is expired (10 minutes)
-            let age = Date().timeIntervalSince(cached.resolvedAt)
-            if age > cacheDuration {
-                cache.removeValue(forKey: address)
-                return nil
-            }
-            
-            print("🎯 [BIP353Resolver] Using cached resolution for \(address) (age: \(Int(age))s)")
-            return cached
-        }
-    }
-    
-    private static func cache(_ resolved: ResolvedBIP353, for address: String) {
-        cacheQueue.sync {
-            cache[address] = resolved
-        }
-    }
-    
+
+    // MARK: Cache Management
+
     /// Clear all cached resolutions (for testing or manual refresh)
     static func clearCache() {
-        cacheQueue.sync {
-            cache.removeAll()
-        }
+        cache.removeAll()
     }
-    
+
     /// Clear cache for a specific address
     static func clearCache(for address: String) {
-        cacheQueue.sync {
-            _ = cache.removeValue(forKey: address)
-        }
+        cache.removeValue(forKey: address)
     }
 }

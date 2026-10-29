@@ -125,7 +125,7 @@ extension SendViewModel {
                         
                     } catch let lightningError {
                         logger.warning("   Lightning Address resolution also failed: \(lightningError.localizedDescription)")
-                        self.error = "Could not resolve address. BIP-353: \(error.localizedDescription), Lightning: \(lightningError.localizedDescription)"
+                        self.error = String(localized: "send_address_resolution_failed", defaultValue: "Couldn't resolve this address. BIP-353: \(error.localizedDescription) Lightning: \(lightningError.localizedDescription)")
                         sendMode = .manual
                         return
                     }
