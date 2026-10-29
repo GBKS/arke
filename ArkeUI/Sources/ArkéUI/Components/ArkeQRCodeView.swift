@@ -27,13 +27,18 @@ public typealias PlatformColor = UIColor
 public struct ArkeQRCodeView: View {
     let content: String
     let title: String
+    let allowsTextSelection: Bool
     let onClose: () -> Void
 
     @State private var qrImage: PlatformImage?
 
-    public init(content: String, title: String, onClose: @escaping () -> Void) {
+    /// Pass `allowsTextSelection: false` for secrets: a selectable text
+    /// offers long-press Copy, which writes to the plain pasteboard with no
+    /// expiry and bypasses `copySecretToClipboard`.
+    public init(content: String, title: String, allowsTextSelection: Bool = true, onClose: @escaping () -> Void) {
         self.content = content
         self.title = title
+        self.allowsTextSelection = allowsTextSelection
         self.onClose = onClose
     }
 
@@ -69,11 +74,7 @@ public struct ArkeQRCodeView: View {
                     .frame(width: 200, height: 200)
                 }
                 
-                Text(content)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
+                contentText
                     .padding(.horizontal)
                     .padding(.bottom, 20)
                 
@@ -99,6 +100,19 @@ public struct ArkeQRCodeView: View {
         }
     }
     
+    @ViewBuilder
+    private var contentText: some View {
+        let text = Text(content)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+        if allowsTextSelection {
+            text.textSelection(.enabled)
+        } else {
+            text.textSelection(.disabled)
+        }
+    }
+
     private func generateQRCode() {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()

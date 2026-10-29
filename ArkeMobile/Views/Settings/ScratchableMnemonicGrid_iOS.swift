@@ -56,6 +56,11 @@ struct ScratchableMnemonicGrid_iOS: View {
             .onChange(of: revealAll) { oldValue, newValue in
                 if newValue {
                     showHandIcon = false
+                } else {
+                    // Hiding again restores the untouched surface, not the
+                    // earlier scratch holes.
+                    scratchedPoints = []
+                    showHandIcon = true
                 }
             }
     }

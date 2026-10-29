@@ -8204,6 +8204,17 @@
         }
       }
     },
+    "button_hide_words" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hide All Words"
+          }
+        }
+      }
+    },
     "button_import" : {
       "localizations" : {
         "de" : {
@@ -19682,6 +19693,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in %@ instead"
+          }
+        }
+      }
+    },
+    "recovery_phrase_covered" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recovery phrase hidden"
           }
         }
       }

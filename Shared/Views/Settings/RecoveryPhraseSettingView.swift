@@ -49,29 +49,29 @@ struct RecoveryPhraseSettingView: View {
                             mnemonic: mnemonic,
                             revealAll: $revealAllWords
                         )
+                        .phraseExposureCover()
                         #else
                         MnemonicGrid(mnemonic: mnemonic)
                         #endif
                         
                         HStack(spacing: 15) {
                             #if os(iOS)
-                            if !revealAllWords {
-                                Button {
-                                    revealAllWords = true
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "eye")
-                                            .frame(width: 24, height: 24)
-                                            .foregroundStyle(Color.Arke.gold2)
-                                        //Text(String(localized: "button_reveal_words", defaultValue: "Reveal All Words"))
-                                        //    .foregroundStyle(Color.Arke.gold2)
-                                    }
+                            Button {
+                                revealAllWords.toggle()
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: revealAllWords ? "eye.slash" : "eye")
+                                        .frame(width: 24, height: 24)
+                                        .foregroundStyle(Color.Arke.gold2)
+                                        .contentTransition(.symbolEffect(.replace))
                                 }
-                                .accessibilityLabel(String(localized: "button_reveal_words", defaultValue: "Reveal All Words"))
-                                .buttonStyle(.glass)
-                                .controlSize(.regular)
-                                .tint(Color.Arke.gold)
                             }
+                            .accessibilityLabel(revealAllWords
+                                ? String(localized: "button_hide_words", defaultValue: "Hide All Words")
+                                : String(localized: "button_reveal_words", defaultValue: "Reveal All Words"))
+                            .buttonStyle(.glass)
+                            .controlSize(.regular)
+                            .tint(Color.Arke.gold)
                             #endif
                             
                             Button(action: {
@@ -208,8 +208,11 @@ struct RecoveryPhraseSettingView: View {
             ArkeQRCodeView(
                 content: mnemonic,
                 title: "Recovery Phrase",
+                allowsTextSelection: false,
                 onClose: { showingQRCode = false }
             )
+            // The sheet sits above the grid's cover, so it carries its own.
+            .phraseExposureCover(cornerRadius: 0)
             #if os(macOS)
             .frame(minWidth: 300, minHeight: 300)
             #endif
@@ -231,11 +234,13 @@ struct RecoveryPhraseSettingView: View {
                 .shadow(color: Color.black.opacity(0.15), radius: 3, x: 0, y: 2)
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(String(localized: "action_download_backup", defaultValue: "Download backup sheet"))
+                // The instruction leads: the sheet is blank until the user
+                // writes the phrase on it.
+                Text(String(localized: "settings_backup_print", defaultValue: "Print and write your phrase"))
                     .font(.system(size: 15))
                     .foregroundColor(.primary)
-                
-                Text(String(localized: "settings_backup_print", defaultValue: "Print and write your phrase"))
+
+                Text(String(localized: "action_download_backup", defaultValue: "Download backup sheet"))
                     .font(.system(size: 13))
                     .foregroundColor(.secondary)
             }

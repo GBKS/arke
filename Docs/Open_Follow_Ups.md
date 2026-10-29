@@ -73,12 +73,15 @@ row three-state. Also closed on the way: the blind shadow estimator (root
 cause: it never persisted), send-all exceeding bark's balance, the pin-to-
 tags Tier 0 item. Since the release: send onchain from the Payments
 balance, built, reviewed and device-checked 2026-10-28
-(`Features/Send_Onchain_From_Payments.md`), not yet in a build.
+(`Features/Send_Onchain_From_Payments.md`), not yet in a build; recovery
+phrase exposure (app-switcher and capture cover, hide toggle, QR text not
+selectable, 180 s clipboard), device-checked 2026-10-29
+(`Features/Recovery_Phrase_Exposure.md`), not yet in a build.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
-the Tier 0 security pass (relay API token in the repo, screen-capture
-protection on the recovery phrase, phrase clipboard) or the exit-cost
+the Tier 0 security pass (relay API token in the repo; the phrase
+cover and clipboard landed 2026-10-29) or the exit-cost
 estimate replacement via `estimateEmergencyExitFee` (Tier 1 Exits, DECIDED
 2026-10-19). Still deferred from Train 1 and not yet picked: the rest of the
 deletion cluster (four unprotected store writes, exit Live Activity on
@@ -396,40 +399,18 @@ needs a ruling or a sentence of reasoning before it can become work.
   acknowledges the token ships in the app. Whatever the injection mechanism
   (untracked xcconfig, build-phase injection, per-device relay auth), the
   token has to be **rotated** on the relay as well, since history keeps it.
-- [ ] **No screen-capture protection on the recovery phrase**: nothing in
-  the repo observes `UIScreen.isCaptured` or uses `privacySensitive()`.
-  Phrase surfaces: `ManualBackupView_iOS`, `ScratchableMnemonicGrid_iOS`,
-  `RecoveryPhraseSettingView` (Shared), desktop `ManualBackupView`. Hide
-  while recorded or mirrored; exclude from the app-switcher snapshot. One
-  "phrase exposure" cluster with the clipboard item below.
-- [ ] **Recovery phrase clipboard** (moved up from Tier 1 2026-10-09; the
-  train and the ledger already treated it as Tier 0): expiry of 60 s
-  (`copySecretToClipboard` default, `Shared/Helpers/Clipboard.swift:27`, sole
-  caller `RecoveryPhraseSettingView.swift:78`) is too short to reach a
-  password manager — raise to 2–3 min. macOS still uses the plain general
-  pasteboard with no expiry (`Clipboard.swift:17-18`) —
-  `org.nspasteboard.ConcealedType` + delayed clear (**assumed**: a
-  third-party clipboard-manager convention, not an Apple API; whether
-  Universal Clipboard honours it is unverified — label stays until checked
-  on a Mac + iPhone).
-  - [ ] **QR sheet bypasses the hardened Copy button** (fault-class review of
-    `0de06d4`, 2026-10-07, CONFIRMED, class 2): `RecoveryPhraseSettingView`
-    (`:208-209`) hands the mnemonic to `ArkeQRCodeView`, which renders it as
-    `Text(content).textSelection(.enabled)` (`ArkeQRCodeView.swift:73-76`,
-    no selection parameter on the init); long-press → Copy writes the phrase
-    to the plain general pasteboard with no `.localOnly` and no expiry, one
-    button to the right of the fixed one. Fix: a parameter on `ArkeQRCodeView`
-    to disable selection, or a secret-aware variant. Its only other caller is
-    the desktop Receive QR (`ArkeDesktop/Views/Receive/ReceiveView.swift:215`);
-    the mobile receive QR does not use this view. Same review also noted the
-    desktop Send view calls `checkClipboardForAddress()` on every
-    `didBecomeKey` (`ArkeDesktop/Views/Send/SendView.swift:93-97`) and the
-    shared method (`Shared/Views/Send/SendViewModel/SendViewModel+Clipboard.swift`,
-    comment at `:31` claims tap-only — false on macOS) logs the content at
-    debug (`:48`); redacted on device, plaintext in the console. Desktop is
-    parked, so note only. Device check owed for the iOS fix itself:
-    two-device Handoff paste within 60 s (expect nothing) and local paste at
-    ~70 s (expect nothing).
+- [ ] **Typed recovery words uncovered on the delete confirmation**:
+  `DeletePhraseConfirmationView` shows two typed words with their positions
+  in the app switcher and during screen capture (review F3,
+  `Features/Recovery_Phrase_Exposure.md` §4). Fix is one
+  `.phraseExposureCover()`; needs a ruling. The import screen stays
+  uncovered (DECIDED 2026-10-29).
+- [ ] **Desktop recovery phrase exposure** (parked with desktop): macOS
+  `copySecretToClipboard` uses the plain pasteboard with no expiry
+  (`org.nspasteboard.ConcealedType` + delayed clear, **assumed** convention,
+  unverified with Universal Clipboard); `PhraseExposureCover` is a no-op on
+  macOS; desktop Send logs clipboard content on every `didBecomeKey`
+  (`SendViewModel+Clipboard`). Detail in the Done log, 2026-10-29.
 - [ ] **Metadata import attaches addresses to existing contacts by name**
   (moved up from Tier 1 2026-10-09: a foreign file can set the default payee
   of a trusted contact, which misdirects funds). `MetadataImportService.swift`

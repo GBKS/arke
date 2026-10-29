@@ -23,8 +23,9 @@ public func copyToClipboard(_ string: String) {
 
 /// Copy a secret such as the recovery phrase. On iOS the item stays on this
 /// device (it is not offered to other devices through Universal Clipboard)
-/// and expires after `lifetime`.
-public func copySecretToClipboard(_ string: String, lifetime: TimeInterval = 60) {
+/// and expires after `lifetime`. Three minutes leaves time to switch to a
+/// password manager and paste (DECIDED 2026-10-28; 60 s was too short).
+public func copySecretToClipboard(_ string: String, lifetime: TimeInterval = 180) {
     #if os(macOS)
     copyToClipboard(string)
     #elseif os(iOS)

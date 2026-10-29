@@ -1996,3 +1996,43 @@ with Step markers. Decide stage: the eight DECIDE lines below are PROPOSED
 for bulk deferral except "disable the Settings exit entry while an exit is
 active", which cluster 4 touches.
 
+## Moved from the open list 2026-10-29
+
+### Tier 0 — Funds or security at risk
+
+- [x] **Recovery phrase screen-capture and app-switcher cover — DONE
+  2026-10-29, device-checked by Christoph**: built
+  2026-10-28 for the stored phrase (`PhraseExposureCover`, DECIDED: cover
+  while not active, restore on return); device check passed
+  (`Features/Recovery_Phrase_Exposure.md` §3). Import screen left uncovered
+  (DECIDED 2026-10-29); delete confirmation and desktop stay open.
+- [x] **Recovery phrase clipboard — iOS DONE 2026-10-29, device-checked;
+  macOS half stays open (desktop residual entry)** (moved up from Tier 1 2026-10-09; the
+  train and the ledger already treated it as Tier 0): expiry of 60 s
+  (`copySecretToClipboard` default, `Shared/Helpers/Clipboard.swift:27`, sole
+  caller `RecoveryPhraseSettingView.swift:78`) is too short to reach a
+  password manager — raised to 180 s (DECIDED and built 2026-10-28). macOS still uses the plain general
+  pasteboard with no expiry (`Clipboard.swift:17-18`) —
+  `org.nspasteboard.ConcealedType` + delayed clear (**assumed**: a
+  third-party clipboard-manager convention, not an Apple API; whether
+  Universal Clipboard honours it is unverified — label stays until checked
+  on a Mac + iPhone).
+  - [x] **QR sheet bypasses the hardened Copy button — DONE 2026-10-29**
+    (`ArkeQRCodeView(allowsTextSelection: false)`, device-checked; fault-class review of
+    `0de06d4`, 2026-10-07, CONFIRMED, class 2): `RecoveryPhraseSettingView`
+    (`:208-209`) hands the mnemonic to `ArkeQRCodeView`, which renders it as
+    `Text(content).textSelection(.enabled)` (`ArkeQRCodeView.swift:73-76`,
+    no selection parameter on the init); long-press → Copy writes the phrase
+    to the plain general pasteboard with no `.localOnly` and no expiry, one
+    button to the right of the fixed one. Fix: a parameter on `ArkeQRCodeView`
+    to disable selection, or a secret-aware variant. Its only other caller is
+    the desktop Receive QR (`ArkeDesktop/Views/Receive/ReceiveView.swift:215`);
+    the mobile receive QR does not use this view. Same review also noted the
+    desktop Send view calls `checkClipboardForAddress()` on every
+    `didBecomeKey` (`ArkeDesktop/Views/Send/SendView.swift:93-97`) and the
+    shared method (`Shared/Views/Send/SendViewModel/SendViewModel+Clipboard.swift`,
+    comment at `:31` claims tap-only — false on macOS) logs the content at
+    debug (`:48`); redacted on device, plaintext in the console. Desktop is
+    parked, so note only. Device check owed for the iOS fix itself:
+    two-device Handoff paste within 180 s (expect nothing) and local paste at
+    ~190 s (expect nothing).
