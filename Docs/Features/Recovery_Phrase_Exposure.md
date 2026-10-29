@@ -3,7 +3,8 @@
 **Status: DONE 2026-10-29, all six device steps (§3) checked by
 Christoph (Tier 0 "phrase exposure" cluster plus two Lugano UI notes,
 Train 2). F1 and F2 settled by that check. F3: import screen stays
-uncovered (DECIDED 2026-10-29); delete confirmation filed in the backlog. Rulings DECIDED
+uncovered and the delete confirmation kept as is (both DECIDED
+2026-10-29). Rulings DECIDED
 2026-10-28: cover only while the app is not active and restore on return;
 clipboard expiry 180 s. Adversarial pass done (§4); full mobile suite green
 after it (TEST SUCCEEDED, no failures). No new tests: the change is view

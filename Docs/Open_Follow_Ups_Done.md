@@ -2036,3 +2036,10 @@ active", which cluster 4 touches.
     parked, so note only. Device check owed for the iOS fix itself:
     two-device Handoff paste within 180 s (expect nothing) and local paste at
     ~190 s (expect nothing).
+- [x] **Typed recovery words uncovered on the delete confirmation — CLOSED
+  2026-10-29, kept as is (DECIDED 2026-10-29)**:
+  `DeletePhraseConfirmationView` shows two typed words with their positions
+  in the app switcher and during screen capture (review F3,
+  `Features/Recovery_Phrase_Exposure.md` §4). A one-line
+  `.phraseExposureCover()` was offered and declined. The import screen stays
+  uncovered (DECIDED 2026-10-29).

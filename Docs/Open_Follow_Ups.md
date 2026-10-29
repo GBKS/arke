@@ -399,12 +399,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   acknowledges the token ships in the app. Whatever the injection mechanism
   (untracked xcconfig, build-phase injection, per-device relay auth), the
   token has to be **rotated** on the relay as well, since history keeps it.
-- [ ] **Typed recovery words uncovered on the delete confirmation**:
-  `DeletePhraseConfirmationView` shows two typed words with their positions
-  in the app switcher and during screen capture (review F3,
-  `Features/Recovery_Phrase_Exposure.md` §4). Fix is one
-  `.phraseExposureCover()`; needs a ruling. The import screen stays
-  uncovered (DECIDED 2026-10-29).
 - [ ] **Desktop recovery phrase exposure** (parked with desktop): macOS
   `copySecretToClipboard` uses the plain pasteboard with no expiry
   (`org.nspasteboard.ConcealedType` + delayed clear, **assumed** convention,
