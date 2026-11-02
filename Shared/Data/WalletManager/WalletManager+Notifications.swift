@@ -222,6 +222,14 @@ extension WalletManager {
     /// the foreground and background registration paths - callers own the
     /// gating (initialization, settings, keychain).
     private func mintAndRegisterWithRelay(trigger: RelayRegistrationTrigger) async -> Bool {
+        // The relay told us it does not serve this wallet's Ark server: every
+        // later attempt this session would get the same answer. Not journaled,
+        // like the renewal skip below - no relay traffic happens.
+        if pushUnavailableForServer {
+            Self.logger.info("Skipping relay registration (trigger: \(trigger.rawValue, privacy: .public)) - relay does not serve this Ark server")
+            return false
+        }
+
         // Proactive-renewal gate: mint only when the persisted registration
         // says so - none known, device token changed, other wallet's mailbox,
         // or the token is past the midpoint of its 30-day life. Otherwise a
@@ -261,6 +269,7 @@ extension WalletManager {
             return false
         }
 
+        let arkAddrForLog = wallet.networkConfig.arkServerBaseURL
         do {
             // Get mailbox credentials from wallet
             let mailboxId = try wallet.mailboxIdentifier()
@@ -294,6 +303,12 @@ extension WalletManager {
 
             Self.logger.info("Successfully registered for push notifications")
             return true
+        } catch RelayError.arkServerNotServed {
+            // Custom server not on the relay's allowlist: expected, final for
+            // this session, surfaced in Notifications settings
+            pushUnavailableForServer = true
+            Self.logger.notice("Relay does not serve this wallet's Ark server (\(arkAddrForLog, privacy: .public)) - push notifications unavailable, not retrying this session")
+            return false
         } catch {
             Self.logger.error("Failed to register for push: \(error.localizedDescription)")
             return false

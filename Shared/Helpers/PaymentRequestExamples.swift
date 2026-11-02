@@ -107,17 +107,19 @@ enum PaymentRequestExamples {
     // MARK: - Network Filtering
     
     static func filterByNetwork() {
-        let testnetAddress = "tb1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-        
+        // tb1 addresses are shared by signet and testnet; the app's only
+        // test-network preset is signet (the testnet preset was dropped 2026-10-29)
+        let signetAddress = "tb1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+
         // Parse with network validation
         if let request = AddressValidator.parsePaymentRequest(
-            testnetAddress,
-            expectedNetwork: .testnet
+            signetAddress,
+            expectedNetwork: .signet
         ) {
-            print("✅ Valid for testnet")
+            print("✅ Valid for signet")
             print("   Matching destinations: \(request.destinations.count)")
         } else {
-            print("❌ Not valid for testnet")
+            print("❌ Not valid for signet")
         }
     }
     

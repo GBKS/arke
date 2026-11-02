@@ -190,6 +190,10 @@ struct WalletWipeCoverageTests {
         #expect(fullWipeKeys.contains("com.arke.wallet / mnemonic"))
         #expect(fullWipeKeys.contains("com.arke.wallet.mnemonicHash"))
         #expect(fullWipeKeys.contains("com.arke.wallet.networkConfigId"))
+        // The full-config twin of the id (custom Ark servers, 2026-10-29): a
+        // local-only delete that cleared it would strand the other device's
+        // custom server exactly like the 2026-08-20 id incident.
+        #expect(fullWipeKeys.contains("com.arke.wallet.networkConfig"))
         #expect(fullWipeKeys.contains("com.arke.device.registered.<hash>.<id>"))
         // The iCloud Drive backup slot: a local-only deletion keeps it (the
         // promoted secondary restores from it), the full wipe empties it and

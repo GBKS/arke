@@ -555,6 +555,8 @@ class RelayRegistrationService {
         // Try to decode structured error response
         if let errorResponse = try? JSONDecoder().decode(RelayErrorResponse.self, from: data) {
             switch statusCode {
+            case 400 where Self.isArkServerNotServed(errorResponse.error):
+                return .arkServerNotServed
             case 400:
                 return .badRequest(errorResponse.error)
             case 401:
@@ -574,6 +576,8 @@ class RelayRegistrationService {
         // Fallback for non-JSON errors
         let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
         switch statusCode {
+        case 400 where Self.isArkServerNotServed(errorMessage):
+            return .arkServerNotServed
         case 400:
             return .badRequest(errorMessage)
         case 401:
@@ -588,6 +592,15 @@ class RelayRegistrationService {
         }
     }
     
+    /// The relay rejects `ark_addr` values outside its `ARK_ADDR_ALLOWLIST`
+    /// with HTTP 400 and the reason `ark_addr_not_allowed`. The reason is only
+    /// in the relay's logs; the body carries the text below, so match on it.
+    /// (Relay source: `rejectRequest(res, 400, 'ark_addr_not_allowed', { error: … })`.)
+    nonisolated static func isArkServerNotServed(_ message: String) -> Bool {
+        message.contains("not an Ark server this relay serves")
+            || message.contains("ark_addr_not_allowed")
+    }
+
     private func addAuthHeader(to request: inout URLRequest) {
         guard let token = relayAPIToken, !token.isEmpty else { return }
         
@@ -608,6 +621,10 @@ class RelayRegistrationService {
 
 enum RelayError: LocalizedError {
     case badRequest(String)
+    /// The wallet's Ark server is not on the relay's allowlist, so this
+    /// relay cannot watch its mailbox. Expected for custom servers nobody has
+    /// allowlisted; not a transient failure, so callers stop retrying.
+    case arkServerNotServed
     case unauthorized(String)
     case rateLimited(retryAfter: Int)
     case serverError(String)
@@ -619,6 +636,8 @@ enum RelayError: LocalizedError {
         switch self {
         case .badRequest(let message):
             return "Bad request: \(message)"
+        case .arkServerNotServed:
+            return String(localized: "relay_error_server_not_served", defaultValue: "Notifications are not available for this server.")
         case .unauthorized(let message):
             return "Unauthorized: \(message). Check relay API token."
         case .rateLimited(let retryAfter):

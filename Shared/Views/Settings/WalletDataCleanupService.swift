@@ -1160,6 +1160,9 @@ enum SharedStateWipeCoverage {
         Entry(key: "com.arke.wallet / mnemonic",           store: "iCloud Keychain", scope: .fullWipeOnly),
         Entry(key: "com.arke.wallet.mnemonicHash",         store: "iCloud KVS",      scope: .fullWipeOnly),
         Entry(key: "com.arke.wallet.networkConfigId",      store: "iCloud KVS",      scope: .fullWipeOnly),
+        // Full config JSON beside the id (custom Ark servers, 2026-10-29); same
+        // owner and scope as the id, cleared by the same two calls
+        Entry(key: "com.arke.wallet.networkConfig",        store: "iCloud KVS",      scope: .fullWipeOnly),
         // The per-device primary flag. Labelled fullWipeOnly as policy, but no
         // path clears it today — not unregister, unlink or the full wipe
         // (found 2026-10-16, Tier 4 backlog item). Harmless for the registry

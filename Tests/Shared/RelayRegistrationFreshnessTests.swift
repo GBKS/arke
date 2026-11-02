@@ -275,3 +275,27 @@ struct RelayRateLimitRetryTests {
         #expect(RelayRegistrationService.retryDelaySeconds(retryAfter: .max) == nil)
     }
 }
+
+@Suite("Relay Disallowed Server Detection Tests")
+struct RelayDisallowedServerDetectionTests {
+
+    // The relay rejects an `ark_addr` outside its allowlist with HTTP 400 and
+    // only the body text below (the `ark_addr_not_allowed` reason stays in its
+    // logs). Matching that text is what turns a generic bad request into the
+    // "stop retrying, tell the user" outcome for custom servers
+    // (Features/Ark_Server_Selection.md §4.7).
+
+    @Test("The relay's allowlist rejection text is recognised")
+    func allowlistRejectionIsRecognised() {
+        #expect(RelayRegistrationService.isArkServerNotServed("ark_addr is not an Ark server this relay serves"))
+        // In case a later relay puts the reason code in the body
+        #expect(RelayRegistrationService.isArkServerNotServed("ark_addr_not_allowed"))
+    }
+
+    @Test("Other 400 bodies stay generic bad requests")
+    func otherBadRequestsAreNotMatched() {
+        #expect(!RelayRegistrationService.isArkServerNotServed("ark_addr must be a valid http:// or https:// URL"))
+        #expect(!RelayRegistrationService.isArkServerNotServed("missing_fields"))
+        #expect(!RelayRegistrationService.isArkServerNotServed(""))
+    }
+}

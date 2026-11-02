@@ -222,8 +222,11 @@ extension BarkWalletFFI {
             // prior initWallet() call writes the properties row first, which
             // makes this a "subsequent" open and permanently disables bark's
             // seed-recovery scan (gated on the open that creates the wallet).
-            // createWithoutServer keeps creation working when the server is
-            // unreachable, as initWallet's allowUnreachableServer did.
+            // createWithoutServer is false: bark pins the server's pubkey in the
+            // wallet database at creation, and a wallet created without the server
+            // pins whatever answers at that address later. With user-entered server
+            // URLs that must fail here instead (Ark_Server_Selection.md §4.5,
+            // DECIDED 2026-10-29). Creation therefore needs the server once.
             let newWallet = try await Wallet.open(
                 network: net,
                 mnemonicOrSeed: mnemonic,
@@ -232,7 +235,7 @@ extension BarkWalletFFI {
                     datadir: datadir,
                     onchain: builtInWallet,
                     createIfNotExists: true,
-                    createWithoutServer: true,
+                    createWithoutServer: false,
                     // Freshly generated seed - nothing to recover, and the scan
                     // would block creation on a network round-trip.
                     skipRecovery: true
@@ -606,10 +609,13 @@ extension BarkWalletFFI {
                     datadir: datadir,
                     onchain: builtInWallet,
                     createIfNotExists: true,
-                    // Import must succeed even when the server is briefly
-                    // unreachable; unlike an initWallet-then-open split, this
-                    // flag does not suppress the recovery scan.
-                    createWithoutServer: true,
+                    // Import needs the server once: the seed-recovery scan below
+                    // runs only on the creating open and needs the server, so an
+                    // import that "succeeded" without it would be an empty wallet
+                    // that never recovers on its own; and a wallet created without
+                    // the server pins whatever answers at the address later
+                    // (Ark_Server_Selection.md §4.5, DECIDED 2026-10-29).
+                    createWithoutServer: false,
                     // skipRecovery stays false: this is a seed import, so the
                     // recovery mailbox scan is what restores existing VTXOs.
                     skipRecovery: false

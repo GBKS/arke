@@ -225,7 +225,30 @@ class WalletManager {
     var isMainnet: Bool {
         wallet?.isMainnet ?? false
     }
-    
+
+    /// Whether the signet faucet applies to this wallet. The faucet at
+    /// `arke.cash` pays through Second's signet server, and an Ark address
+    /// embeds its server's key, so a wallet on any other signet server could
+    /// not receive from it. Server-shaped, unlike `isMainnet`, which is
+    /// chain-shaped (Features/Ark_Server_Selection.md §4.7).
+    var hasSignetFaucet: Bool {
+        networkConfig?.serverKind == .secondSignet
+    }
+
+    /// Set when the push relay answered that it does not serve this wallet's
+    /// Ark server (`RelayError.arkServerNotServed`). Registration stops
+    /// retrying for the rest of the session and the Notifications setting
+    /// explains why. In-memory: a wallet never changes server, and a relaunch
+    /// is the right moment to ask again after an allowlist change.
+    var pushUnavailableForServer: Bool = false
+
+    /// Whether the launch-time network config came from a resolvable local
+    /// cache (true) or from `load()`'s mainnet fallback (false). Only a
+    /// resolved config says anything about the wallet database on disk, so
+    /// only it may be kept against the account's value
+    /// (`NetworkConfigPersistence.reapplyDecision`).
+    private(set) var networkConfigResolvedFromCacheAtLaunch: Bool = false
+
     var networkConfig: NetworkConfig? {
         wallet?.networkConfig
     }
@@ -365,10 +388,15 @@ class WalletManager {
         let config: NetworkConfig
         if let explicitConfig = networkConfig {
             config = explicitConfig
+            networkConfigResolvedFromCacheAtLaunch = true
             Self.logger.info("Using explicit network config: \(config.name)")
         } else {
+            // Remember whether load() resolved the cache or fell back to
+            // mainnet: the pre-open reconciliation treats the two differently
+            // (`NetworkConfigPersistence.reapplyDecision`)
+            networkConfigResolvedFromCacheAtLaunch = NetworkConfigPersistence.localCacheResolves()
             config = NetworkConfigPersistence.load()
-            Self.logger.info("Network config loaded: \(config.name)")
+            Self.logger.info("Network config loaded: \(config.name) (resolved from cache: \(self.networkConfigResolvedFromCacheAtLaunch))")
         }
         
         setupWallet(useMock: shouldUseMock, networkConfig: config)
@@ -654,7 +682,8 @@ class WalletManager {
 
         switch NetworkConfigPersistence.reconciliation(
             walletNetworkId: wallet.networkConfig.id,
-            cachedConfigId: NetworkConfigPersistence.savedConfigId()
+            cachedConfigId: NetworkConfigPersistence.savedConfigId(),
+            storedConfig: NetworkConfigPersistence.storedConfig()
         ) {
         case .inSync:
             Self.logger.info("🌐 Network config in sync before wallet open: \(wallet.networkConfig.name)")
@@ -668,8 +697,27 @@ class WalletManager {
                 Self.logger.warning("🌐 Network config mismatch, but the wallet opened during reconciliation — leaving it alone (rule 22)")
                 return
             }
-            Self.logger.warning("🌐 Network config mismatch before wallet open — wallet was built on \(wallet.networkConfig.name), account says \(config.name); re-applying")
-            wallet.updateNetworkConfig(config)
+            let databaseExists = ["db.sqlite", "bark.sqlite"].contains {
+                FileManager.default.fileExists(atPath: wallet.walletDir.appendingPathComponent($0).path)
+            }
+            switch NetworkConfigPersistence.reapplyDecision(
+                current: wallet.networkConfig,
+                currentResolvedFromCache: networkConfigResolvedFromCacheAtLaunch,
+                cached: config,
+                walletDatabaseExists: databaseExists
+            ) {
+            case .reapply:
+                Self.logger.warning("🌐 Network config mismatch before wallet open — wallet was built on \(wallet.networkConfig.name), account says \(config.name); re-applying")
+                wallet.updateNetworkConfig(config)
+            case .keepCurrent(let reason):
+                // The sync above already wrote the account's value into the
+                // local cache; put this device's config back locally so the
+                // next launch does not open the database with the other
+                // server's config. The account's value is left alone: two
+                // devices on different servers must not fight over it.
+                Self.logger.error("🌐 Network config: account says \(config.name) but keeping \(wallet.networkConfig.name): \(reason, privacy: .public)")
+                NetworkConfigPersistence.saveLocally(wallet.networkConfig)
+            }
 
         case .noUsableConfig:
             // Normal on a first install: onboarding sets the network. Only a problem
@@ -860,7 +908,9 @@ class WalletManager {
             return
         }
         await createDefaultTagsIfNeeded()
-        if !isMainnet {
+        // The default contact is the faucet, which pays through Second's signet
+        // server only (not "any non-mainnet chain")
+        if hasSignetFaucet {
             await createDefaultContactsIfNeeded()
         }
     }
@@ -1529,6 +1579,13 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
     case binaryNotFound
     case commandFailed(String)
     case walletAlreadyOnAccount
+    /// The account names a custom Ark server whose details have not synced to
+    /// this device yet; creating or importing with another server would
+    /// replace it account-wide (Ark_Server_Selection.md §4.2).
+    case customServerConfigPending(host: String)
+    /// A restored backup database belongs to a different Ark server than the
+    /// one selected; bark pins the server key in the database.
+    case backupBelongsToAnotherServer
 
     var errorDescription: String? {
         switch self {
@@ -1538,6 +1595,10 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
             return message
         case .walletAlreadyOnAccount:
             return String(localized: "error_wallet_already_on_account", defaultValue: "This iCloud account already has a wallet. Rejoin it or import its recovery phrase — creating a second wallet would overwrite the existing one.")
+        case .customServerConfigPending(let host):
+            return String(format: String(localized: "error_custom_server_pending", defaultValue: "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."), host)
+        case .backupBelongsToAnotherServer:
+            return String(localized: "error_backup_other_server", defaultValue: "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created on and try again.")
         }
     }
 }

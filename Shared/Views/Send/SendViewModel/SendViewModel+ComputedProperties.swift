@@ -44,27 +44,16 @@ extension SendViewModel {
     
     // MARK: - Network & Context
     
-    /// Returns the current network configuration based on arkInfo
+    /// The wallet's network configuration, used for address validation and
+    /// destination compatibility.
+    ///
+    /// This is the wallet's own config, not a preset rebuilt from `arkInfo`:
+    /// the config carries the Ark server as well as the chain, and a preset
+    /// lookup by chain would silently swap a custom server for Second's
+    /// (Features/Ark_Server_Selection.md §4.7). The previous arkInfo mapping
+    /// also never matched on mainnet, where bark reports `"bitcoin"`.
     var currentNetworkConfig: NetworkConfig {
-        // Try to get the network from arkInfo
-        guard let arkInfo = walletManager.arkInfo,
-              let bitcoinNetwork = arkInfo.bitcoinNetwork else {
-            // Fallback to networkConfig if available
-            return walletManager.networkConfig ?? .signet
-        }
-        
-        // Map BitcoinNetwork to NetworkConfig
-        switch bitcoinNetwork {
-        case .mainnet:
-            return .mainnet
-        case .testnet:
-            return .testnet
-        case .signet:
-            return .signet
-        case .regtest:
-            // No predefined regtest config, use signet as fallback
-            return .signet
-        }
+        walletManager.networkConfig ?? .signet
     }
     
     /// Creates payment context for destination selection with real Lightning fee estimation

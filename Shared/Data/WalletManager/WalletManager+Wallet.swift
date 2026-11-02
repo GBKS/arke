@@ -75,6 +75,10 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Invalid mnemonic format - must be 12, 15, 18, 21, or 24 words")
         }
         
+        // Before any mutation: never write another config over an account
+        // custom server whose details are still syncing
+        try await Self.refuseIfCustomServerPending(for: networkConfig ?? wallet.networkConfig)
+
         // Track what we've done for rollback purposes
         var backupRestored = false
         var mnemonicSaved = false
@@ -123,7 +127,24 @@ extension WalletManager {
                 arkServer: config.arkServerBaseURL,
                 mnemonic: trimmedMnemonic
             )
-            
+
+            // Step 6b: Opening a restored database never contacts the server;
+            // bark compares its pinned server key on the first server call.
+            // Make that call now, so a backup restored under the wrong server
+            // fails here and rolls back, instead of after the config and seed
+            // are persisted (adversarial pass 2026-10-29, F4). An unreachable
+            // server is not a mismatch: the import stands and the next launch
+            // connects.
+            do {
+                try await wallet.refreshServer()
+            } catch {
+                if Self.isServerKeyMismatch(error) {
+                    Self.logger.error("❌ Restored backup belongs to another Ark server than \(config.arkServerBaseURL): \(error.localizedDescription)")
+                    throw BarkErrorArke.backupBelongsToAnotherServer
+                }
+                Self.logger.warning("⚠️ Server not reachable right after backup import (continuing): \(error.localizedDescription)")
+            }
+
             // Step 7: Persist the network configuration
             NetworkConfigPersistence.save(config)
             
@@ -255,6 +276,7 @@ extension WalletManager {
         
         // Use provided networkConfig or fall back to wallet's current config
         let config = networkConfig ?? wallet.networkConfig
+        try await Self.refuseIfCustomServerPending(for: config)
 
         // Update the wallet's network configuration BEFORE importing: the FFI
         // derives its esplora URL from the stored config, so importing first
@@ -366,6 +388,31 @@ extension WalletManager {
     /// Saves the mnemonic to secure storage and syncs hash via iCloud KVS
     /// - Parameters:
     ///   - networkConfig: Optional network configuration. If nil, uses wallet's current networkConfig.
+    /// The account can name a custom Ark server whose full config has not
+    /// reached this device yet (the id and the JSON are separate iCloud keys).
+    /// Creating or importing with any *other* config in that window would
+    /// write it over the account's and, on the device that holds the custom
+    /// wallet, point a working database at the wrong server
+    /// (Ark_Server_Selection.md §4.2). Entering the same custom server is fine:
+    /// it supplies the missing details.
+    /// bark's refusal when a database's pinned server (or mailbox) key differs
+    /// from the server it is pointed at: "Server public key has changed. You
+    /// should exit all your VTXOs!" / "Server mailbox public key has changed."
+    /// (`bark/src/lib.rs` at `bark-0.8.0`). The FFI delivers it as text.
+    static func isServerKeyMismatch(_ error: Swift.Error) -> Bool {
+        let text = "\(error) \(error.localizedDescription)"
+        return text.localizedCaseInsensitiveContains("public key has changed")
+    }
+
+    static func refuseIfCustomServerPending(for config: NetworkConfig) async throws {
+        // Reads iCloud directly: on a fresh device the launch-time sync has
+        // not run yet when the user creates or imports
+        if let pending = await NetworkConfigPersistence.accountPendingCustomServerId(), pending != config.id {
+            Self.logger.error("❌ Refusing to use \(config.id) while the account's custom server \(pending) has not synced")
+            throw BarkErrorArke.customServerConfigPending(host: NetworkConfig.hostFromCustomId(pending) ?? pending)
+        }
+    }
+
     func createWallet(networkConfig: NetworkConfig? = nil) async throws -> String {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
@@ -397,13 +444,14 @@ extension WalletManager {
             
             // Use provided networkConfig or fall back to wallet's current config
             let config = networkConfig ?? wallet.networkConfig
-            
-            // Update the wallet's network configuration to match what was actually created
+            try await Self.refuseIfCustomServerPending(for: config)
+
+            // Update the wallet's network configuration to match what is about to be created.
+            // Persisting it waits until the FFI create succeeds (below), like the two
+            // import paths: with a user-entered server a config whose server never
+            // answered must not become the launch-time config.
             wallet.updateNetworkConfig(config)
-            
-            // Persist the network configuration so it's restored on next app launch
-            NetworkConfigPersistence.save(config)
-            
+
             Self.logger.info("⏱️ [PROFILE] Config setup took \(String(format: "%.3f", CFAbsoluteTimeGetCurrent() - stepStartTime))s")
 
             // The FFI create removes an existing directory itself; this only
@@ -419,7 +467,10 @@ extension WalletManager {
             let walletCreationTime = CFAbsoluteTimeGetCurrent() - stepStartTime
             Self.logger.info("⏱️ [PROFILE] FFI wallet.createWallet() took \(String(format: "%.3f", walletCreationTime))s")
             Self.logger.info("✅ New wallet created successfully on \(config.name)")
-            
+
+            // Persist the network configuration so it's restored on next app launch
+            NetworkConfigPersistence.save(config)
+
             // Save mnemonic to keychain (this also saves hash to NSUbiquitousKeyValueStore)
             stepStartTime = CFAbsoluteTimeGetCurrent()
             do {
@@ -708,6 +759,10 @@ extension WalletManager {
         hasLoadedOnce = false
         freshWalletOrigin = nil
         hasEverSyncedSuccessfully = false
+        // The relay verdict belongs to the deleted wallet's server; the next
+        // wallet in this process (rule 20 routes onboarding here) may be on
+        // a served one
+        pushUnavailableForServer = false
         UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
 
         // Reset balance service state (in-memory; the persisted rows are the

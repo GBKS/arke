@@ -14,7 +14,12 @@ extension UserDefaults {
     
     /// Key for storing the network configuration ID (mainnet, signet, etc.)
     static let networkConfigKey = "com.arke.wallet.networkConfigId"
-    
+
+    /// Key for the full network configuration as JSON, written beside the id
+    /// since 2026-10-29 so custom Ark servers survive restarts and sync across
+    /// devices (mirrored to iCloud KVS under the same key).
+    static let networkConfigDataKey = "com.arke.wallet.networkConfig"
+
     /// Key for storing notifications enabled preference
     static let notificationsEnabledKey = "notifications_enabled"
     
