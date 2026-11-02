@@ -2060,3 +2060,21 @@ active", which cluster 4 touches.
   2026-10-29: `₿matt@mattcorallo.com` resolves and pays, `satoshi@twelve.cash`
   refused as multiple records (by spec), a plain Lightning address still wins.
   Write-up `Features/BIP353_DNSSEC.md`.
+
+## Moved from the open list 2026-11-02
+
+- [x] **Ark server selection: cover-screen sheet with Default, Development
+  and a custom server — DONE 2026-11-02** (DECIDED 2026-10-29). Built in
+  three steps 2026-10-29: `ArkServerKind` beside the chain on
+  `NetworkConfig`, full config persisted beside the id (UserDefaults + KVS),
+  `BarkWalletFFI.probeServer`, `createWithoutServer: false`, testnet preset
+  dropped; cover sheet (page one names the current server, Options page with
+  the same rows, custom form with probe); faucet and relay gating on the
+  server kind. Two adversarial passes 2026-10-29/30, every CONFIRMED finding
+  fixed (same-chain server re-point guard, pending account sync gate, probe
+  timeout race, backup server check). Committed `6b37012..d862c67`. Device
+  2026-11-02: Zappin wallet created, Lightning both ways, second device
+  synced the custom config and ran read-only, delete + re-import, signet
+  regression, wrong URL at Check, backup from another server refused; the
+  build-26 check waived (DECIDED 2026-11-02). Not yet in a TestFlight build.
+  Plan and evidence: `Features/Ark_Server_Selection.md`.

@@ -77,8 +77,9 @@ balance, built, reviewed and device-checked 2026-10-28
 phrase exposure (app-switcher and capture cover, hide toggle, QR text not
 selectable, 180 s clipboard), device-checked 2026-10-29
 (`Features/Recovery_Phrase_Exposure.md`), not yet in a build; Ark server
-selection (cover-screen sheet, custom servers), DECIDED and Step 1 of three
-built 2026-10-29 (`Features/Ark_Server_Selection.md`).
+selection (cover-screen sheet, Default / Development / custom server),
+built and reviewed 2026-10-29/30, committed and device-checked 2026-11-02
+(`Features/Ark_Server_Selection.md`), not yet in a build.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -457,11 +458,17 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
-- [ ] **The ranker does not check whether an Ark address is reachable**: a
-  BIP-21 whose Ark address belongs to another server wins the Payments row
-  (one row per balance, DECIDED 2026-10-28) and bark rejects the send, while
-  the Lightning or onchain path would have worked. The 0.26 bindings expose
-  `validateArkoorAddress`; rank with it. `Features/Send_Onchain_From_Payments.md` §9.1.
+- [ ] **An Ark address from another server validates and fails only at send**:
+  `AddressValidator` checks the `ark1`/`tark1` prefix only; bark refuses in
+  `sendArkoorPayment` with "Ark address is for different server"
+  (`validate_arkoor_address`, bark 0.8.0), surfaced as raw text. Also the
+  ranker: a BIP-21 whose Ark address is foreign wins the Payments row (one
+  row per balance, DECIDED 2026-10-28) though Lightning or onchain would
+  work. More likely since custom servers (2026-11-02): Second and Zappin
+  users will trade addresses. Fix: `validateArkoorAddress` or
+  `parsePaymentRequest(payment:)` (both in the 0.26 bindings, unadopted)
+  before send and in the ranker; show "belongs to a different server".
+  `Features/Send_Onchain_From_Payments.md` §9.1.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -681,22 +688,6 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   catalog first. (Desktop promote/demote parity is in Parked.)
 
 ### Connectivity and offline
-
-- [ ] **Ark server selection: cover-screen sheet with Second mainnet, Second
-  signet and a custom server** (DECIDED 2026-10-29, built in three steps).
-  Step 1 built 2026-10-29: `ArkServerKind` beside the chain on
-  `NetworkConfig`, full config persisted beside the id (UserDefaults + KVS),
-  `BarkWalletFFI.probeServer`, `createWithoutServer: false`, testnet preset
-  dropped; live-probed Zappin. Steps 2 and 3 built 2026-10-29: cover-screen
-  sheet (Default / Development / Custom, dark style, terms link), faucet
-  and relay gating on the server kind. Two adversarial passes 2026-10-29/30,
-  every CONFIRMED finding fixed (same-chain server re-point guard, pending
-  account sync gate, probe timeout race, backup server check). Device
-  2026-11-02: Zappin wallet created on the phone, Lightning in and out
-  smooth; second device synced the custom config and ran read-only on it;
-  delete + re-import on Zappin worked. Open: signet regression look,
-  build-26 device, refusal paths; then commit. Plan:
-  `Features/Ark_Server_Selection.md`.
 
 - [ ] **The activity screen shows "no Ark connection" for the whole launch
   refresh although the server answered in 1 s** (Christoph's unattached

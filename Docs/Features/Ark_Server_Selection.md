@@ -1,7 +1,12 @@
 # Ark Server Selection
 
-**Status:** PROPOSED 2026-10-29, first rulings the same day (see §8). Target:
-built within days, not a train-length item. No code has been written.
+**Status:** DONE 2026-11-02. Built in three steps 2026-10-29, two adversarial
+passes 2026-10-29/30 with every confirmed finding fixed, design iterated to
+Christoph's mockup 2026-10-30, committed `6b37012..d862c67` 2026-11-02,
+device-checked the same day (create on Zappin, Lightning both ways,
+two-device sync, re-import, signet regression, wrong URL, backup from
+another server refused; the build-26 check waived, §7). Not yet in a
+TestFlight build. The sections below are the plan and its history.
 
 Rulings so far (DECIDED 2026-10-29): no server switching for existing
 wallets, not now and not as a later entry; Esplora field shown and
@@ -945,10 +950,36 @@ adversarial pass over the whole range and the device list.
   recovery scan against Zappin, the pending-sync gate passing because the
   chosen config matches the account's id, config saved after the FFI
   success, funds back. Together with the creation test this covers both
-  wallet-producing paths on a device. Still not exercised on a device: a
-  wrong URL at Check, the Second signet regression look, a build-26 device,
-  and the two refusal paths (same-chain re-point, backup from another
-  server), which need a deliberately wrong setup.
+  wallet-producing paths on a device. **Second signet regression look,
+  2026-11-02 (Christoph, phone): worked**, so the faucet gating on
+  `hasSignetFaucet` and the rest of the signet wallet survived the change.
+  Wrong URL at Check on the phone: worked (2026-11-02). Backup from
+  another server refused as expected (2026-11-02, Christoph: a Second
+  backup file imported with Zappin selected → the typed error and
+  rollback). Still not exercised on a device: a build-26 device on the
+  same account. Waived (DECIDED 2026-11-02, "I agree"): build 26's
+  behaviour was read in its source during the review (`syncFromiCloud`
+  ignores an unknown id with a warning and never writes it locally);
+  custom-server wallets can only exist on fresh or fully wiped accounts
+  (`createWallet` refuses when the account has a wallet), so the overlap
+  with an old-build device is testers only; and in the worst variant (old
+  device, seed not synced, phrase typed) funds stay on the custom server,
+  visible from the new-build device, with the re-point guard unit-tested.
+  Nothing at risk beyond confusion, and it ends when the old device
+  updates.
+  **The same-chain re-point refusal cannot be produced from the UI on the
+  current build** (checked 2026-11-02): a second phone on the same iCloud
+  account never sees onboarding, it gets read-only mode or the Rejoin
+  screen, and the only phrase entry there (`ConnectionInfoSheet` →
+  `ImportWalletView_iOS` when the seed has not synced) passes the synced
+  config, or is refused by the pending gate while the JSON is missing. The
+  only trigger left is a build-26 device on the same account whose seed
+  has not synced yet and whose user types the phrase — the F1 scenario
+  exactly, and it disappears once every device is on the new build. The
+  guard stays covered by `NetworkConfigReapplyGuardTests`; it is off the
+  device list.
+  Committed 2026-11-02: `6b37012` (network config, persistence, probe,
+  tests), `08f336f` (cover sheet, gating), `d862c67` (docs).
 
 Definition of done per `Release_Train.md` Tier 1, Rework Ledger line if
 anything is revisited.
