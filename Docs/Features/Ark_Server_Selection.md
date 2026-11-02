@@ -720,6 +720,25 @@ changed once the wallet exists.
 
 **Create / Import captions:** unchanged ("Connects to <host>.").
 
+### 4.12 Copy refinement (DECIDED and built 2026-11-02)
+
+The server is infrastructure and the wording should say so: it neither
+creates nor holds the wallet, and funds are not "held on" it. Three
+strings changed; the dependency itself is already explained in the intro
+videos ("A server keeps it fast. As long as you open the app now and then,
+it can't touch your funds on its own."), so no further notices were added.
+
+- Page one: "A connection to an Ark server is required to make payments.
+  Your wallet is tied to the server you choose and cannot be moved to
+  another one later." (The non-portability sentence is new; the videos do
+  not say it, and the import flow has no videos.)
+- Import caption: "Connects to %@. Only funds on that Ark server are
+  recovered."
+- Backup error: "… Choose the server the wallet was created with and try
+  again."
+
+Translations for the three keys follow later through the scripts.
+
 ## 5. Sweep list
 
 Sites the pattern touches, to be marked covered / exempt / missed in the

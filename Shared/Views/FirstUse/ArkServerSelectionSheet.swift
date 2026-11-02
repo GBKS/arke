@@ -56,7 +56,10 @@ struct ArkServerSelectionSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityAddTraits(.isHeader)
 
-                    Text(String(localized: "server_sheet_intro", defaultValue: "A server helps create your wallet and make payments. Note that this can't be changed later."))
+                    // The server is infrastructure: it neither creates nor holds the
+                    // wallet. Non-portability is stated here because the intro videos
+                    // do not say it.
+                    Text(String(localized: "server_sheet_intro", defaultValue: "A connection to an Ark server is required to make payments. Your wallet is tied to the server you choose and cannot be moved to another one later."))
                         .font(.body)
                         .foregroundStyle(.white.opacity(0.8))
                         .frame(maxWidth: .infinity, alignment: .leading)

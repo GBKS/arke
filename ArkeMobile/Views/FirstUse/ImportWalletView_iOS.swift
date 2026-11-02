@@ -77,7 +77,7 @@ struct ImportWalletView_iOS: View {
                         // as empty on another server, and bark cannot warn about it
                         if networkConfig.serverKind == .custom {
                             Text(String(
-                                format: String(localized: "onboarding_restore_custom_server", defaultValue: "Connects to %@. Only funds held on that Ark server are recovered."),
+                                format: String(localized: "onboarding_restore_custom_server", defaultValue: "Connects to %@. Only funds on that Ark server are recovered."),
                                 NetworkConfig.serverHost(networkConfig.arkServerURL) ?? networkConfig.name
                             ))
                             .font(.system(.body))

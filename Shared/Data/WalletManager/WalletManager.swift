@@ -1598,7 +1598,7 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
         case .customServerConfigPending(let host):
             return String(format: String(localized: "error_custom_server_pending", defaultValue: "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."), host)
         case .backupBelongsToAnotherServer:
-            return String(localized: "error_backup_other_server", defaultValue: "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created on and try again.")
+            return String(localized: "error_backup_other_server", defaultValue: "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created with and try again.")
         }
     }
 }

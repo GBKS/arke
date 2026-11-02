@@ -13334,7 +13334,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created on and try again."
+            "value" : "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created with and try again."
           }
         }
       }
@@ -18356,7 +18356,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Connects to %@. Only funds held on that Ark server are recovered."
+            "value" : "Connects to %@. Only funds on that Ark server are recovered."
           }
         }
       }
@@ -20964,7 +20964,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "A server helps create your wallet and make payments. Note that this can't be changed later."
+            "value" : "A connection to an Ark server is required to make payments. Your wallet is tied to the server you choose and cannot be moved to another one later."
           }
         }
       }
