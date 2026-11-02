@@ -11,6 +11,10 @@ public struct ConnectionInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let isOnSignet: Bool
+    /// Whether the test-network section mentions the faucet. The faucet pays
+    /// through one specific signet server, so a wallet on another signet
+    /// server gets the section without the hint.
+    let showsFaucetHint: Bool
     let networkName: String
     let connectionStatus: ConnectionStatus
     /// Shown as a button in the read-only section when the wallet key hasn't
@@ -19,11 +23,13 @@ public struct ConnectionInfoSheet: View {
 
     public init(
         isOnSignet: Bool,
+        showsFaucetHint: Bool = true,
         networkName: String,
         connectionStatus: ConnectionStatus,
         onEnterRecoveryPhrase: (() -> Void)? = nil
     ) {
         self.isOnSignet = isOnSignet
+        self.showsFaucetHint = showsFaucetHint
         self.networkName = networkName
         self.connectionStatus = connectionStatus
         self.onEnterRecoveryPhrase = onEnterRecoveryPhrase
@@ -120,7 +126,9 @@ public struct ConnectionInfoSheet: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 ConnectionInfoRow(icon: "testtube.2", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_safe", defaultValue: "Test network for safe experimentation", bundle: .module))
                                 ConnectionInfoRow(icon: "bitcoinsign", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_no_value", defaultValue: "Test coins have no real value", bundle: .module))
-                                ConnectionInfoRow(icon: "books.vertical", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_faucet", defaultValue: "Use the faucet to get test funds", bundle: .module))
+                                if showsFaucetHint {
+                                    ConnectionInfoRow(icon: "books.vertical", iconColor: Color.Arke.blue, text: String(localized: "connection_test_network_row_faucet", defaultValue: "Use the faucet to get test funds", bundle: .module))
+                                }
                             }
                         }
                         

@@ -118,32 +118,12 @@ public struct ArkConfigModel: Codable, Sendable {
         vtxoRefreshExpiryThreshold ?? 144  // Default to 144 blocks if not set
     }
 
-    // Check if using signet endpoints (based on common signet domain patterns or network field)
-    public var isSignetConfig: Bool {
-        if network.lowercased() == "signet" {
-            return true
-        }
-
-        let signetKeywords = ["signet", "testnet"]
-        let serverContainsSignet = signetKeywords.contains { keyword in
-            serverAddress.lowercased().contains(keyword)
-        }
-        let esploraContainsSignet = signetKeywords.contains { keyword in
-            esploraAddress?.lowercased().contains(keyword) ?? false
-        }
-        return serverContainsSignet || esploraContainsSignet
-    }
-
+    // The chain this config runs on, as bark reports it ("bitcoin", "signet", …).
+    // The former URL-keyword matchers (`isSignetConfig`, `isTestnet`,
+    // `isRegtest`) were removed 2026-10-29: they guessed the chain from
+    // hostnames, which a custom Ark server breaks, and nothing read them.
     public var isMainnet: Bool {
         network.lowercased() == "bitcoin"
-    }
-
-    public var isTestnet: Bool {
-        network.lowercased() == "testnet"
-    }
-
-    public var isRegtest: Bool {
-        network.lowercased() == "regtest"
     }
 
     // Configuration summary for display

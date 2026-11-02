@@ -1,6 +1,6 @@
 //
 //  FirstUseView_iOS.swift
-//  Arké
+//  Arké
 //
 //  Created by Christoph on 11/27/25.
 //
@@ -9,13 +9,20 @@ import SwiftUI
 import ArkeUI
 
 struct FirstUseView_iOS: View {
-    @Binding var isMainnet: Bool
+    /// The server (and chain) the wallet will be created or imported on.
+    /// Chosen in `ArkServerSelectionSheet`; the chain drives the video and
+    /// the test-wallet notice. The cover shows nothing else about the choice
+    /// (DECIDED 2026-10-30); Create and Import name a non-default server.
+    @Binding var networkConfig: NetworkConfig
     let onCreateWallet: () -> Void
     let onImportWallet: () -> Void
 
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    
+    @State private var showServerSheet = false
+
+    private var isMainnet: Bool { networkConfig.isMainnet }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Background video covering entire view
@@ -25,62 +32,37 @@ struct FirstUseView_iOS: View {
                 .clipped()
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
-            
+
             VStack {
                 HStack {
-                    // Mainnet toggle in top-left corner
+                    // Server sheet in the top-left corner. The lab vial stays: the
+                    // server choice is still an experimental corner of the app
+                    // (Features/Ark_Server_Selection.md §4.10, DECIDED 2026-10-30).
                     Button {
-                        if reduceMotion {
-                            isMainnet.toggle()
-                        } else {
-                            withAnimation {
-                                isMainnet.toggle()
-                            }
-                        }
-                        
-                        // Announce network change for VoiceOver users
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            let announcement = isMainnet ? 
-                                String(localized: "accessibility_switched_mainnet", defaultValue: "Switched to mainnet. You will create a real wallet.") : 
-                                String(localized: "accessibility_switched_testnet", defaultValue: "Switched to testnet. You will create a test wallet.")
-                            UIAccessibility.post(notification: .announcement, argument: announcement)
-                        }
+                        showServerSheet = true
                     } label: {
                         Image(systemName: "testtube.2")
                             .frame(width: 24, height: 24)
                     }
-                    .accessibilityLabel(isMainnet ? String(localized: "accessibility_switch_to_testnet", defaultValue: "Switch to testnet") : String(localized: "accessibility_switch_to_mainnet", defaultValue: "Switch to mainnet"))
-                    .accessibilityHint(String(localized: "accessibility_network_toggle_hint", defaultValue: "Toggle between mainnet and testnet"))
+                    .accessibilityLabel(String(localized: "accessibility_choose_server", defaultValue: "Server and network"))
+                    .accessibilityValue(serverSummary)
+                    .accessibilityHint(String(localized: "accessibility_choose_server_hint", defaultValue: "Opens the server choice for the new wallet"))
                     .buttonStyle(.glass)
                     .controlSize(.regular)
                     .tint(.Arke.gold)
                     .padding(.top, 60)
                     .padding(.leading, 20)
-                    
+
                     Spacer()
                 }
-                
+
                 Spacer()
             }
             .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.8)))
-             
+
             // Content overlaid at bottom
             VStack(spacing: 30) {
                 VStack(spacing: 8) {
-                    /*
-                    Button {
-                        withAnimation {
-                            isMainnet.toggle()
-                        }
-                    } label: {
-                        Text(L10n.appName)
-                            .font(.system(size: 100, design: .serif))
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Color.Arke.gold)
-                    }
-                    .buttonStyle(.plain)
-                    */
-                    
                     if !isMainnet {
                         Text(String(localized: "onboarding_test_wallet_notice", defaultValue: "You will create a test wallet."))
                             .font(.title2)
@@ -92,7 +74,7 @@ struct FirstUseView_iOS: View {
                     }
                 }
                 .animation(.smooth(duration: 0.5), value: isMainnet)
-                
+
                 VStack(spacing: 16) {
                     Button {
                         onCreateWallet()
@@ -127,5 +109,26 @@ struct FirstUseView_iOS: View {
         .colorScheme(.dark)
         .background(Color.Arke.gold4)
         .safeAreaPadding([.top, .bottom])
+        .sheet(isPresented: $showServerSheet) {
+            // The sheet sizes itself: compact for page one, full height for
+            // the pushed pages (presentationDetents with a selection inside)
+            ArkServerSelectionSheet(selection: $networkConfig)
+        }
+    }
+
+    /// Spoken value of the server button: the current choice, for VoiceOver only.
+    private var serverSummary: String {
+        switch networkConfig.serverKind {
+        case .secondMainnet:
+            return String(localized: "server_summary_default", defaultValue: "Bitcoin, Second")
+        case .secondSignet:
+            return String(localized: "server_summary_second_signet", defaultValue: "Signet, Second")
+        case .custom:
+            let chain = networkConfig.isMainnet
+                ? String(localized: "network_name_bitcoin", defaultValue: "Bitcoin")
+                : String(localized: "server_summary_signet_short", defaultValue: "Signet")
+            let host = NetworkConfig.serverHost(networkConfig.arkServerURL) ?? networkConfig.name
+            return "\(chain), \(host)"
+        }
     }
 }

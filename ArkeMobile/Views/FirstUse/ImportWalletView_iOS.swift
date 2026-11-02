@@ -19,7 +19,8 @@ struct ImportWalletView_iOS: View {
     
     // MARK: - Properties
     
-    let isMainnet: Bool
+    /// Server and chain chosen on the cover screen.
+    let networkConfig: NetworkConfig
     let onBack: () -> Void
     let onWalletImported: () -> Void
     
@@ -71,6 +72,19 @@ struct ImportWalletView_iOS: View {
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
+
+                        // Funds live per Ark server: a phrase used on Second restores
+                        // as empty on another server, and bark cannot warn about it
+                        if networkConfig.serverKind == .custom {
+                            Text(String(
+                                format: String(localized: "onboarding_restore_custom_server", defaultValue: "Connects to %@. Only funds held on that Ark server are recovered."),
+                                NetworkConfig.serverHost(networkConfig.arkServerURL) ?? networkConfig.name
+                            ))
+                            .font(.system(.body))
+                            .foregroundStyle(Color.Arke.gold)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                     
                     TextField(String(localized: "placeholder_enter_recovery_phrase", defaultValue: "Enter your 12-words here..."), text: $mnemonicPhrase, axis: .vertical)
@@ -243,9 +257,6 @@ struct ImportWalletView_iOS: View {
         isImporting = true
 
         do {
-            // Select network configuration based on isMainnet flag
-            let networkConfig = isMainnet ? NetworkConfig.mainnet : NetworkConfig.signet
-
             // The backup file is optional: with one, the wallet database is
             // restored directly; without one, bark recovers funds from the
             // network via its seed-recovery scan (local history is not restored)

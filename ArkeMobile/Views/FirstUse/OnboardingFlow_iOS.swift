@@ -43,7 +43,10 @@ enum NavigationDirection {
 struct OnboardingFlow_iOS: View {
     @State private var currentState: OnboardingState = .firstUse
     @State private var navigationDirection: NavigationDirection = .forward
-    @State private var isMainnet: Bool = true
+    /// Server and chain for the wallet about to be created or imported. The
+    /// cover screen's sheet sets it; create/import consume it and persist it
+    /// once the wallet exists.
+    @State private var networkConfig: NetworkConfig = .mainnet
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
     
@@ -54,7 +57,7 @@ struct OnboardingFlow_iOS: View {
                     switch currentState {
                     case .firstUse:
                         FirstUseView_iOS(
-                            isMainnet: $isMainnet,
+                            networkConfig: $networkConfig,
                             onCreateWallet: {
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
@@ -98,7 +101,7 @@ struct OnboardingFlow_iOS: View {
                                     currentState = .createWallet
                                 }
                             },
-                            isMainnet: isMainnet
+                            isMainnet: networkConfig.isMainnet
                         )
                         .transition(.asymmetric(
                             insertion: navigationDirection == .forward ?
@@ -112,7 +115,7 @@ struct OnboardingFlow_iOS: View {
                         
                     case .importWallet:
                         ImportWalletView_iOS(
-                            isMainnet: isMainnet,
+                            networkConfig: networkConfig,
                             onBack: {
                                 navigationDirection = .backward
                                 withAnimation(.smooth(duration: 0.4)) {
@@ -217,7 +220,7 @@ struct OnboardingFlow_iOS: View {
                         */
                     case .createWallet:
                         CreateWalletView_iOS(
-                            isMainnet: isMainnet,
+                            networkConfig: networkConfig,
                             onWalletCreated: {
                                 onWalletReady()
                                 /*

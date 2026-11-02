@@ -17,7 +17,8 @@ struct CreateWalletView_iOS: View {
     
     // MARK: - Properties
     
-    let isMainnet: Bool
+    /// Server and chain chosen on the cover screen.
+    let networkConfig: NetworkConfig
     let onWalletCreated: () -> Void
     let onBack: () -> Void
     let walletManager: WalletManager
@@ -33,7 +34,7 @@ struct CreateWalletView_iOS: View {
     
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isGetStartedFocused: Bool
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -85,7 +86,7 @@ struct CreateWalletView_iOS: View {
                                 .font(.system(.title, design: .serif))
                                 .foregroundStyle(Color.Arke.gold4)
                                 .accessibilityAddTraits(.isHeader)
-                            
+
                             Button {
                                 guard !hasNavigated else { return }
                                 hasNavigated = true
@@ -226,7 +227,7 @@ struct CreateWalletView_iOS: View {
         while retryCount <= maxRetries {
             do {
                 print("🔧 Wallet creation attempt \(retryCount + 1)/\(maxRetries + 1)")
-                print("   Network: \(isMainnet ? "mainnet" : "signet")")
+                print("   Network: \(networkConfig.networkType), server: \(networkConfig.arkServerBaseURL)")
                 
                 // Add small delay before retry (not on first attempt)
                 if retryCount > 0 {
@@ -236,8 +237,6 @@ struct CreateWalletView_iOS: View {
                 
                 let attemptStartTime = CFAbsoluteTimeGetCurrent()
                 
-                // Select network configuration based on isMainnet flag
-                let networkConfig = isMainnet ? NetworkConfig.mainnet : NetworkConfig.signet
                 let result = try await walletManager.createWallet(
                     networkConfig: networkConfig
                 )
@@ -295,8 +294,12 @@ struct CreateWalletView_iOS: View {
                     // Non-retryable error or max retries reached
                     print("❌ Failed to create wallet: \(error)")
                     
-                    // Provide more helpful error messages
-                    if isServerError {
+                    // Provide more helpful error messages. Typed app errors carry
+                    // their own instruction and must not be flattened by the
+                    // keyword matching below ("uses the server …" contains "server")
+                    if let arkeError = error as? BarkErrorArke, case .customServerConfigPending = arkeError {
+                        errorMessage = arkeError.localizedDescription
+                    } else if isServerError {
                         errorMessage = String(localized: "error_ark_server_connection", defaultValue: "Unable to connect to the Ark server. Please try again later.")
                     } else if isNetworkError && retryCount >= maxRetries {
                         errorMessage = String(localized: "error_network_multiple_attempts", defaultValue: "Connection failed after multiple attempts. Please check your internet connection and try again.")

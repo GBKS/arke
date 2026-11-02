@@ -51,6 +51,19 @@ struct NotificationsSettingView_iOS: View {
                         }
                     }
 
+                    // The relay refused this wallet's Ark server (custom server not
+                    // on its allowlist). Local reminders still work; push does not.
+                    if manager.pushUnavailableForServer {
+                        Label {
+                            Text(String(localized: "settings_notifications_server_not_served", defaultValue: "Payment notifications are not available for this server. Reminders scheduled on this device still work."))
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        } icon: {
+                            Image(systemName: "antenna.radiowaves.left.and.right.slash")
+                                .foregroundStyle(Color.Arke.gold)
+                        }
+                    }
+
                     VStack(alignment: .leading, spacing: 10) {
                         Text(String(localized: "settings_notifications_explainer_intro", defaultValue: "There are several time-sensitive activities:"))
                             .font(.body)
@@ -116,6 +129,15 @@ struct NotificationsSettingView_iOS: View {
 
                 // Register with relay
                 await manager.registerForPushNotifications()
+
+                // Tell the user once when the relay cannot serve this wallet's
+                // server; the toggle stays on for the device-local reminders
+                if manager.pushUnavailableForServer {
+                    await MainActor.run {
+                        notificationErrorMessage = String(localized: "notification_error_server_not_served", defaultValue: "Payment notifications are not available for this server. Reminders scheduled on this device still work.")
+                        showNotificationError = true
+                    }
+                }
 
                 // One global setting: restore exit check-in reminders
                 // if a forced move is underway

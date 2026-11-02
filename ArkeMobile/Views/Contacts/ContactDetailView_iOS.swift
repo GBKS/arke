@@ -203,10 +203,10 @@ struct ContactDetailView_iOS: View {
     
     // MARK: - Computed Properties
     
-    /// Check if we're on signet network
+    /// Whether the faucet can pay this wallet: Second's signet server only,
+    /// not any signet server (the faucet's Ark payments are server-bound)
     private var isSignetNetwork: Bool {
-        guard let networkConfig = walletManager.networkConfig else { return false }
-        return networkConfig.networkType.lowercased() == "signet"
+        walletManager.hasSignetFaucet
     }
     
 

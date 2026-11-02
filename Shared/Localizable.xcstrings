@@ -936,6 +936,28 @@
         }
       }
     },
+    "accessibility_choose_server" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Server and network"
+          }
+        }
+      }
+    },
+    "accessibility_choose_server_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Opens the server choice for the new wallet"
+          }
+        }
+      }
+    },
     "accessibility_connection_issue" : {
       "localizations" : {
         "de" : {
@@ -13306,6 +13328,17 @@
         }
       }
     },
+    "error_backup_other_server" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created on and try again."
+          }
+        }
+      }
+    },
     "error_boarding_failed" : {
       "localizations" : {
         "de" : {
@@ -13386,6 +13419,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "需要聯絡人存取權限"
+          }
+        }
+      }
+    },
+    "error_custom_server_pending" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."
           }
         }
       }
@@ -17620,6 +17664,50 @@
         }
       }
     },
+    "network_name_bitcoin" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bitcoin"
+          }
+        }
+      }
+    },
+    "network_name_regtest" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Regtest (test network)"
+          }
+        }
+      }
+    },
+    "network_name_signet" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signet (test network)"
+          }
+        }
+      }
+    },
+    "network_name_testnet" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Testnet (test network)"
+          }
+        }
+      }
+    },
     "notification_error_permission_denied" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -17674,6 +17762,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "註冊失敗：%@"
+          }
+        }
+      }
+    },
+    "notification_error_server_not_served" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment notifications are not available for this server. Reminders scheduled on this device still work."
           }
         }
       }
@@ -18247,6 +18346,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "放鬆身心。"
+          }
+        }
+      }
+    },
+    "onboarding_restore_custom_server" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Connects to %@. Only funds held on that Ark server are recovered."
           }
         }
       }
@@ -20030,6 +20140,17 @@
         }
       }
     },
+    "relay_error_server_not_served" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Notifications are not available for this server."
+          }
+        }
+      }
+    },
     "Replace '%@' with '%@'" : {
       "localizations" : {
         "de" : {
@@ -20536,6 +20657,402 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in %@ instead"
+          }
+        }
+      }
+    },
+    "server_form_address_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Server address"
+          }
+        }
+      }
+    },
+    "server_form_address_placeholder" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "ark.example.com"
+          }
+        }
+      }
+    },
+    "server_form_check" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Check connection"
+          }
+        }
+      }
+    },
+    "server_form_check_again" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Check again"
+          }
+        }
+      }
+    },
+    "server_form_check_passed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ark server found"
+          }
+        }
+      }
+    },
+    "server_form_checking" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Checking…"
+          }
+        }
+      }
+    },
+    "server_form_esplora_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Block explorer address"
+          }
+        }
+      }
+    },
+    "server_form_esplora_placeholder" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "esplora.example.com/api"
+          }
+        }
+      }
+    },
+    "server_form_intro" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter the address of an Ark server. The check confirms it is compatible and finds out which network it runs on. Connections use HTTPS."
+          }
+        }
+      }
+    },
+    "server_form_name_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Display name"
+          }
+        }
+      }
+    },
+    "server_form_name_placeholder" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Optional"
+          }
+        }
+      }
+    },
+    "server_form_network_label" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Network"
+          }
+        }
+      }
+    },
+    "server_form_section_esplora" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Block explorer (Esplora)"
+          }
+        }
+      }
+    },
+    "server_form_section_esplora_footer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Used for on-chain data such as fees and confirmations. Prefilled with Second's explorer for this network; change it if the server operator provides one."
+          }
+        }
+      }
+    },
+    "server_form_section_name" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Name"
+          }
+        }
+      }
+    },
+    "server_form_terms_footer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Terms of use are set by the server operator."
+          }
+        }
+      }
+    },
+    "server_form_test_network_footer" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This is a test network. Coins on it have no value."
+          }
+        }
+      }
+    },
+    "server_form_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Custom Server"
+          }
+        }
+      }
+    },
+    "server_probe_invalid_url" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter a server address like ark.example.com."
+          }
+        }
+      }
+    },
+    "server_probe_timed_out" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The server did not answer in time."
+          }
+        }
+      }
+    },
+    "server_probe_unreachable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Could not connect to an Ark server at this address."
+          }
+        }
+      }
+    },
+    "server_sheet_by_second" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "By Second"
+          }
+        }
+      }
+    },
+    "server_sheet_coins_no_value" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Coins have no value"
+          }
+        }
+      }
+    },
+    "server_sheet_custom" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Custom server"
+          }
+        }
+      }
+    },
+    "server_sheet_custom_enter" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter an address"
+          }
+        }
+      }
+    },
+    "server_sheet_default" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Default"
+          }
+        }
+      }
+    },
+    "server_sheet_development" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Development"
+          }
+        }
+      }
+    },
+    "server_sheet_intro" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "A server helps create your wallet and make payments. Note that this can't be changed later."
+          }
+        }
+      }
+    },
+    "server_sheet_options" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Options"
+          }
+        }
+      }
+    },
+    "server_sheet_signet_test_network" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signet test network"
+          }
+        }
+      }
+    },
+    "server_sheet_terms_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Opens the server operator's terms in the browser"
+          }
+        }
+      }
+    },
+    "server_sheet_terms_link" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Terms of use"
+          }
+        }
+      }
+    },
+    "server_sheet_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Server"
+          }
+        }
+      }
+    },
+    "server_summary_default" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Bitcoin, Second"
+          }
+        }
+      }
+    },
+    "server_summary_second_signet" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signet, Second"
+          }
+        }
+      }
+    },
+    "server_summary_signet_short" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Signet"
           }
         }
       }
@@ -22352,6 +22869,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "資金到帳時收到通知"
+          }
+        }
+      }
+    },
+    "settings_notifications_server_not_served" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment notifications are not available for this server. Reminders scheduled on this device still work."
           }
         }
       }

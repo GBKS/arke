@@ -186,9 +186,9 @@ struct ActivityView_iOS: View {
                         selectedTransaction: $selectedTransaction,
                         filterTag: filterTag,
                         filterContact: filterContact,
-                        onShowFaucet: manager.isMainnet ? nil : {
+                        onShowFaucet: manager.hasSignetFaucet ? {
                             showFaucetModal = true
-                        },
+                        } : nil,
                         onNavigateToReceive: onNavigateToReceive
                     )
                         .environment(transactionService)
@@ -246,8 +246,9 @@ struct ActivityView_iOS: View {
             }
             */
             
-            // Faucet button (only on testnet/signet and not in read-only mode)
-            if !manager.isMainnet && !manager.isReadOnlyMode {
+            // Faucet button (only for Second's signet server, which the faucet
+            // pays through, and not in read-only mode)
+            if manager.hasSignetFaucet && !manager.isReadOnlyMode {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         showFaucetModal = true
@@ -317,7 +318,10 @@ struct ActivityView_iOS: View {
         }
         .sheet(isPresented: $showConnectionInfoSheet) {
             ConnectionInfoSheet(
-                isOnSignet: manager.networkConfig?.networkType.lowercased() == "signet",
+                // Chain-shaped: any test network gets the section; the faucet
+                // row inside it is server-shaped (Second's signet only)
+                isOnSignet: manager.networkConfig.map { !$0.isMainnet } ?? false,
+                showsFaucetHint: manager.hasSignetFaucet,
                 networkName: manager.currentNetworkName,
                 connectionStatus: manager.connectionStatus,
                 onEnterRecoveryPhrase: manager.connectionStatus.readOnlyReason == .seedNotSynced ? {
@@ -327,7 +331,9 @@ struct ActivityView_iOS: View {
         }
         .sheet(isPresented: $showImportWalletSheet) {
             ImportWalletView_iOS(
-                isMainnet: manager.networkConfig?.networkType.lowercased() != "signet",
+                // Seed entry on a device that already runs the wallet: the
+                // server and chain are the wallet's own, including a custom server
+                networkConfig: manager.networkConfig ?? .mainnet,
                 onBack: {
                     showImportWalletSheet = false
                 },
