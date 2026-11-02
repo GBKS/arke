@@ -300,7 +300,10 @@ deletion: a local-only delete on one device stranded the live secondary on
 default-mainnet, whose signet db then failed to open with a network mismatch
 that looked like total data loss (2026-08-20). Same fault class as rule 19.
 `clearLocal()` vs `clearEverywhere()` make the scope explicit; the inventory
-of shared keys and their scopes lives in `SharedStateWipeCoverage`. Related:
+of shared keys and their scopes lives in `SharedStateWipeCoverage`. Since
+2026-10-29 the network config is two KVS keys, the id and the full config as
+JSON (custom Ark servers resolve only through the latter); both have the same
+owner and scope and are cleared by the same two calls. Related:
 rule 22 reconciles the wallet's network against that shared config before the
 first open instead of silently defaulting to mainnet.
 Enforced: `NetworkConfigPersistence.swift`, `WalletDataCleanupService.swift`

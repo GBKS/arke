@@ -177,8 +177,9 @@ init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
 1. **No saved config**: `load()` falls back to mainnet at init time;
    reconciliation answers `.noUsableConfig` (never a silent fallback) and
    onboarding sets the network
-2. **Invalid saved ID** (e.g. a `custom_<UUID>` id): same split — `load()`
-   falls back to mainnet, `reconciliation()` reports `.noUsableConfig`
+2. **Unresolvable saved ID** (an old `testnet` id, or a `custom:*` id whose
+   full-config twin is missing): same split — `load()` falls back to mainnet,
+   `reconciliation()` reports `.noUsableConfig`
 3. **Wallet deletion**: strategy-aware — `clearLocal()` on every deletion,
    `clearEverywhere()` only on the last-device full wipe (rule 21)
 4. **Testing**: Can override config with explicit parameter
@@ -190,11 +191,41 @@ init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
    `reconcileNetworkConfigBeforeWalletOpen()` make the account's value
    authoritative in the window before a wallet open (rule 22)
 
+## Custom Ark servers (2026-10-29)
+
+`NetworkConfig` now carries `serverKind` (`.secondMainnet`, `.secondSignet`,
+`.custom`) beside the chain in `networkType`, and the persistence layer writes
+two keys in both stores (`Features/Ark_Server_Selection.md` §4.1–4.2):
+
+| Key | Content | Who resolves it |
+|---|---|---|
+| `com.arke.wallet.networkConfigId` | the id (`mainnet`, `signet`, `custom:<chain>:<host>`) | every build; presets resolve by id alone |
+| `com.arke.wallet.networkConfig` | the full config as JSON | builds from 2026-10-29; the only way a `custom:*` id resolves |
+
+`resolve(id:stored:)` is the pure core: presets by id, otherwise the stored
+config if and only if its id matches, so a stale or foreign blob never answers
+for another id. `reconciliation(walletNetworkId:cachedConfigId:storedConfig:)`
+and `load()` go through it; `syncFromiCloud()` reads both KVS keys, resolves the
+account's id against the account's own blob, and writes both local keys when it
+adopts the account's value. Builds before 2026-10-29 see a `custom:*` id as
+unknown and ignore it with a warning, so a mixed-version account degrades to
+"that device keeps what it has". Both keys are `.fullWipeOnly` in
+`SharedStateWipeCoverage`. The former `testnet` preset (no server) was dropped;
+an old `testnet` id resolves to nothing.
+
+Two guards sit beside rule 22 for servers (not chains):
+`reapplyDecision(current:currentResolvedFromCache:cached:walletDatabaseExists:)`
+refuses to re-point an existing database to another server on the same chain
+when the launch config was resolved from the local cache, and the caller
+restores it with `saveLocally` (never to iCloud);
+`accountPendingCustomServerId()` reads iCloud directly so create and import
+can refuse a different config while the account names a custom server whose
+JSON has not arrived. Rationale and scenarios:
+`Features/Ark_Server_Selection.md` §4.2 and §7 (review findings F1, R1–R4).
+
 ## Still Open
 
-1. **Custom Network Support**: `custom_<UUID>` ids can't be resolved by
-   `findConfig`; no UI constructs one today, so latent only
-2. **Validation**: Validate loaded config against actual wallet data on open —
+1. **Validation**: Validate loaded config against actual wallet data on open —
    there is still no recovery path when the ACCOUNT's value is the stale one
    (the open fails with a mismatch every launch and no user-facing escape)
 
@@ -219,3 +250,6 @@ init(useMock: Bool = false, networkConfig: NetworkConfig? = nil) {
 - 2026-09-25: Claims audit — corrected the stale signet-fallback claims
   (actual fallback is mainnet), the pre-KVS code samples, and the "iCloud sync
   is future work" listing (implemented and load-bearing since rule 22)
+- 2026-10-29: Custom Ark servers — second key with the full config,
+  `resolve(id:stored:)`, `reconciliation` takes the stored config, testnet
+  preset dropped, `createWallet` saves after the FFI create like the imports

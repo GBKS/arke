@@ -76,7 +76,9 @@ balance, built, reviewed and device-checked 2026-10-28
 (`Features/Send_Onchain_From_Payments.md`), not yet in a build; recovery
 phrase exposure (app-switcher and capture cover, hide toggle, QR text not
 selectable, 180 s clipboard), device-checked 2026-10-29
-(`Features/Recovery_Phrase_Exposure.md`), not yet in a build.
+(`Features/Recovery_Phrase_Exposure.md`), not yet in a build; Ark server
+selection (cover-screen sheet, custom servers), DECIDED and Step 1 of three
+built 2026-10-29 (`Features/Ark_Server_Selection.md`).
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -680,6 +682,22 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 
 ### Connectivity and offline
 
+- [ ] **Ark server selection: cover-screen sheet with Second mainnet, Second
+  signet and a custom server** (DECIDED 2026-10-29, built in three steps).
+  Step 1 built 2026-10-29: `ArkServerKind` beside the chain on
+  `NetworkConfig`, full config persisted beside the id (UserDefaults + KVS),
+  `BarkWalletFFI.probeServer`, `createWithoutServer: false`, testnet preset
+  dropped; live-probed Zappin. Steps 2 and 3 built 2026-10-29: cover-screen
+  sheet (Default / Development / Custom, dark style, terms link), faucet
+  and relay gating on the server kind. Two adversarial passes 2026-10-29/30,
+  every CONFIRMED finding fixed (same-chain server re-point guard, pending
+  account sync gate, probe timeout race, backup server check). Device
+  2026-11-02: Zappin wallet created on the phone, Lightning in and out
+  smooth; second device synced the custom config and ran read-only on it;
+  delete + re-import on Zappin worked. Open: signet regression look,
+  build-26 device, refusal paths; then commit. Plan:
+  `Features/Ark_Server_Selection.md`.
+
 - [ ] **The activity screen shows "no Ark connection" for the whole launch
   refresh although the server answered in 1 s** (Christoph's unattached
   log 2026-10-12, icon visible ~19–23 s): `connectionStatus.isConnected`
@@ -873,6 +891,15 @@ Cheap to clear in a dedicated device session; expensive to carry. Each item
 names the fix it verifies; the write-ups are in the Done log.
 
 ### Two-device
+
+- [ ] **Backup import rolled back for a server mismatch leaves the FFI handle
+  open on an unlinked database** (`WalletManager.importWalletWithBackup`
+  → `BarkErrorArke.backupBelongsToAnotherServer`; same shape as the older
+  network-mismatch rollback). A retry runs `shutdownWallet()` first, which
+  syncs and backs up against the mismatched server. Settle on device: import
+  a Second backup with a custom server selected, then retry with Second.
+  Found by the second adversarial pass 2026-10-30 (R6),
+  `Features/Ark_Server_Selection.md` §7.
 
 - [ ] **Deletion + rejoin** (fix 2026-08-19, `Features/Wallet_Deletion_And_Rejoin.md`
   definition of done): local-only delete keeps the seed everywhere (phrase
@@ -1439,6 +1466,14 @@ survivors.)
 
 ### Concurrency and the FFI boundary
 
+- [ ] **The regular wallet open relies on the bindings' `createIfNotExists: true`
+  default** (`WalletOpenArgs` in `BarkWalletFFI+WalletLifecycle`
+  `tryOpenExistingWallet`): with a schema-only `db.sqlite` (a create that died
+  after the schema write) plus a keychain mnemonic, the launch open would
+  *create* a wallet instead of failing. Pre-existing, surfaced by the
+  2026-10-29 adversarial pass on `Features/Ark_Server_Selection.md`. Pass
+  `createIfNotExists: false` there and decide what the error path shows.
+
 - [ ] **Export noise from the 2026-10-19 mainnet device check** (not
   caused by the ceiling; filed so the next reader does not chase them):
   eleven `client connection error: hyper::Error(IncompleteMessage)` lines
@@ -1843,11 +1878,31 @@ they are the infrastructure `Development/Release_Train.md` assumes.
 
 Onboarding, settings, launch/registration done. Desktop is ignored in the
 day-to-day workflow until the macOS test suite is trustworthy (Tier 1).
+Re-inventoried 2026-11-01 as Track 1 of `Features/MCP_Server.md`; the seven
+batches and the porting rules (`Development/Platform_Porting_Rules.md`) are
+PROPOSED, not scheduled.
 
 - [ ] Exit UI; notifications; promote/demote UI (S3); read-only mode for
   `TransactionList`; embed `CurrencySettingView` next to `ThemeSettingView`
   (one line, the view is Shared); the never-cleared banner in
-  `ActivityView.swift`.
+  `ActivityView.swift`. Folded into Batches 3–7 of the parity doc.
+- [ ] **Desktop quick-mode send misses the view model** (found 2026-11-01):
+  `SendView.quickModeView` does not pass `sendViewModel:` as
+  `SendView_iOS` does, so `QuickPaymentView` falls back to its load-time
+  ranking and has no fiat entry. One argument; Batch 4 in the parity doc.
+- [ ] **Desktop `MainView` lifecycle gaps** (confirmed 2026-11-01): no
+  foreground re-check, no protected-data re-check, `onWalletDeleted` does
+  not stop CloudKit sync or deactivate services, none of the scene-phase
+  foreground work. Batch 2 in the parity doc; gates MCP Track 2.
+
+### Agents (`Features/MCP_Server.md`)
+
+- [ ] **MCP server, Track 2** (PARKED 2026-11-01, shape DECIDED): official
+  Swift SDK inside the app over loopback HTTP, `.mcpb` shim for Claude
+  Desktop, seed-keyed local link first then CloudKit, no hosted connector.
+  Prerequisites: `WalletBootstrapper` out of both `MainView.task`s; a
+  payment executor pulled out of `SendViewModel`. Starts after desktop
+  parity completes; two spikes and a doc review first.
 
 ### Themes (`Features/Theme_System.md`)
 

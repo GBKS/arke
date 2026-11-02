@@ -594,6 +594,16 @@ running pass instead of starting its own.
 
 ## Priority 3 — ergonomics and polish
 
+**Server info**
+
+- `ArkInfo.tos_link` is in the protocol (`bark_server.proto`, "Link to the
+  server's terms of service, if any") and Second's mainnet server sets it
+  to `https://second.tech/terms`, but the FFI `ArkInfo` struct omits the
+  field (verified against bindings v0.26.1, 2026-10-29). With custom Ark
+  servers in the app we have to hard-code the link for the preset and show
+  "Terms of use are set by the server operator" for everything else.
+  Please expose it so the server picker can link each operator's terms.
+
 **Lightning**
 
 - `LightningSend` has no `paymentHash` field. After

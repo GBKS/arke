@@ -22,6 +22,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 - **[Wallet_Deletion_And_Rejoin.md](Wallet_Deletion_And_Rejoin.md)** — deletion strategies, the tombstone, rejoin
 - **[Wallet_Deletion_Backup_Skip.md](Wallet_Deletion_Backup_Skip.md)** — plan (DECIDED 2026-10-14): the full wipe no longer re-creates the iCloud backup it just deleted
 - **[BIP39.md](BIP39.md)** — mnemonic generation, validation, and Keychain storage
+- **[Ark_Server_Selection.md](Ark_Server_Selection.md)** — PROPOSED 2026-10-29: cover-screen sheet replacing the mainnet/signet toggle, custom Ark server entry, chain/server model split, full-config persistence, probe, what a server change means for an existing wallet
 
 ## Payments
 
@@ -43,7 +44,11 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 ## UI and platform
 
 - **[Theme_System.md](Theme_System.md)** — the four image-based themes and the surfaces they cover
-- **[Desktop_Parity.md](Desktop_Parity.md)** — macOS parity roadmap and status
+- **[Desktop_Parity.md](Desktop_Parity.md)** — macOS parity: done phases, the 2026-11-01 inventory, and the seven batches (Track 1 of the MCP plan); rules in `../Development/Platform_Porting_Rules.md`
 - **[Accessibility.md](Accessibility.md)**, **[Intro_Video_Player.md](Intro_Video_Player.md)**, **[Scratch_Card.md](Scratch_Card.md)**
+
+## Agents
+
+- **[MCP_Server.md](MCP_Server.md)** — PROPOSED 2026-11-01: an MCP server inside the Mac app in three tracks (desktop parity → single approved payments → policy engine); the secondary-to-primary transport proposal and what to reuse from the `hackathon/agent-payments` branch
 
 See also `../Send/SendView_Architecture.md` and `../Send/Payment_Destination_Selector.md` for the send flow, and `../Previewable_Models_Extraction_Plan.md` for the paused ArkéUI refactor.
