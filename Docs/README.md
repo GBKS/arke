@@ -42,6 +42,7 @@ Welcome to the project documentation. It is organized to help you understand the
 - Data: [Balance Persistence](Features/Balance_Persistence.md), [Tag System](Features/Tag_System.md), [Metadata Export/Import](Features/Metadata_Export_Import.md), [Address History](Features/Address_History.md), [BDK Transaction Reader Removal](Features/BDK_Transaction_Reader_Removal.md)
 - Contacts: [Default Contact](Contacts/Default_Contact.md), [Contact Address Deletion](Contacts/Contact_Address_Deletion.md)
 - UI and platform: [Theme System](Features/Theme_System.md), [Desktop Parity](Features/Desktop_Parity.md), [Accessibility](Features/Accessibility.md), [Intro Video Player](Features/Intro_Video_Player.md), [Scratch Card](Features/Scratch_Card.md), [Signet Faucet](Features/Signet_Faucet.md), [BIP39](Features/BIP39.md)
+- Agents: [MCP Server](Features/MCP_Server.md) — PROPOSED three-track plan (desktop parity → approved single payments → policy engine); [Siri AI and App Intents](Features/Siri_And_App_Intents.md) — PROPOSED, behind desktop parity, second client of the same bootstrap and executor
 - Refactors in flight: [Previewable Models Extraction Plan](Previewable_Models_Extraction_Plan.md) (paused at Phase 3b)
 
 ## Localization
@@ -60,6 +61,7 @@ Welcome to the project documentation. It is organized to help you understand the
 - [Change Review Playbook](Development/Change_Review_Playbook.md) — how review passes are run and recorded
 - [Release Train](Development/Release_Train.md) — one release per train through six stage-gated steps (Decide → Build → Review → Device → Release → Soak), Build with a soft two-week budget
 - [Exploration Season](Development/Exploration_Season.md) — PROPOSED: a four-phase season of trains favouring features over stability, starting with scope docs; the floor, flags and the sorted roadmap features
+- [Platform Porting Rules](Development/Platform_Porting_Rules.md) — PROPOSED: how a view moves between ArkeMobile and ArkeDesktop (layout, input, API shims, lifecycle, verification) so an agent can run a port from a checklist
 
 ## Data samples
 

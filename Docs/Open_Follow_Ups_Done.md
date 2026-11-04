@@ -490,6 +490,18 @@ green):
 ## Background Execution
 See `Features/Background_Execution.md` (Phase 1 done, soak running).
 
+### 0xdead10cc watch — answered 2026-11-02
+- [x] **0xdead10cc kills: watch Organizer for build 25+ signatures — 2026-11-02**:
+  the Tier 2 item asked for absence over a week of wakes; the answer is
+  presence. Queried as TestFlight (`is_beta`), the feed holds five signatures
+  (builds 21–26, 2026-08-14 to 2026-10-28) and every one is `RUNNINGBOARD
+  0xdead10cc`, as is Christoph's own iPhone 17 report of 2026-10-27 (build
+  26, CloudKit mirroring export mid-commit at suspension). Neither of the two
+  sites wrapped on 2026-09-24 reappears; the new holders are the balance
+  persist, CloudKit's own export, and `Arke_mobile.init` on system-initiated
+  launches. Closed as answered; the fix work stays open in Tier 0 and the
+  evidence table lives in `Features/Background_Execution.md` §4.
+
 ### Background runs are being killed for holding a store lock (0xdead10cc)
 Found 2026-09-24 in Apple's TestFlight crash data (Xcode Organizer /
 `GetTopCrashIssues`), not from the field reports or the journal. **Two of the

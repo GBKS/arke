@@ -408,17 +408,21 @@ needs a ruling or a sentence of reasoning before it can become work.
   The preview shows counts only (`MetadataBackupSectionView.swift:200-225`).
   Fix: validate imported addresses, drop or disclose name-only merges, list
   added addresses per contact in the preview.
-- [ ] **Background runs killed for holding a store lock (0xdead10cc)** —
-  mitigations shipped 2026-09-24 (probe write removed, task assertions around
-  `registerCurrentDevice` and the headless open, the only two wrappers that
-  exist; see Done log). Still open: **audit the other unprotected store
-  writes on background-reachable paths**: `unregisterCurrentDevice`
-  (`DeviceRegistrationService.swift:457-491`), the upsert in
-  `refreshTransactionsAfterWrite` (`TransactionService.swift:161-181`), the
-  balance persist (`BalanceService.swift:318-347`), and — added 2026-10-09 —
-  `TransactionService.processSingleMovement` (`:185-200`), which the daemon
-  stream drives from `WalletNotificationService.swift:268,285`. Only the two
-  crash-proven sites were wrapped.
+- [ ] **Background runs killed for holding a store lock (0xdead10cc)** — all
+  six Arké crash reports found 2026-11-02 (TestFlight builds 21–26 plus
+  Christoph's phone) are this kill; the Organizer signature names are noise.
+  Crash-proven unwrapped writers: the balance persist in
+  `BalanceService.updateArkBalanceFromResponse`, and CloudKit's own mirroring
+  export. Still unaudited: `unregisterCurrentDevice`,
+  `refreshTransactionsAfterWrite`, `TransactionService.processSingleMovement`.
+  Evidence: `Features/Background_Execution.md` §4, 2026-11-02 block.
+- [ ] **`Arke_mobile.init` does the full store, CloudKit and bark setup on
+  system-initiated launches** — three of the six 0xdead10cc kills came
+  0.8–2.2 s after a launch with role "unknown" (prewarm or push), thread 0
+  still in `SwiftDataHelper.createModelContainer` or `BarkWalletFFI.init`
+  while CoreData's CloudKit migrator held the store. PROPOSED fix direction:
+  detect `ActivePrewarm` / a background launch and defer the heavy init, or
+  hold a task assertion across it. Evidence: `Features/Background_Execution.md` §4.
 - [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** — upstream
   fix `f85ca92ac` ships in bark 0.8.0 (bindings v0.26.0, built 2026-10-25),
   so this becomes a Tier 2 verification once build 26 is on a phone: a
@@ -953,10 +957,6 @@ names the fix it verifies; the write-ups are in the Done log.
 
 ### Background and relay
 
-- [ ] **0xdead10cc kills**: watch Organizer for build 25+ signatures at
-  `getWalletDirectory`/`registerCurrentDevice` and the new `⏳ Background
-  assertion '…' expired` / `ℹ️ … not granted` lines. Absence over a week of
-  wakes is the only confirmation.
 - [ ] **Auth wake push from field data** (2026-09-17/21, acceptance criteria
   in `Features/Background_Execution.md`): X-Ray journal rows "Auth wake push ·
   refreshed" and "Stale mailbox unregistered · success · wake_push"; relay
@@ -1894,6 +1894,13 @@ PROPOSED, not scheduled.
   Prerequisites: `WalletBootstrapper` out of both `MainView.task`s; a
   payment executor pulled out of `SendViewModel`. Starts after desktop
   parity completes; two spikes and a doc review first.
+- [ ] **Siri AI and App Intents** (PROPOSED 2026-11-04, behind desktop
+  parity): read entities and intents, invoice with `Transferable`, a
+  payment draft that ends on the confirmation screen, one `SKILL.md`.
+  DECIDED 2026-11-04: history goes into the Spotlight index (to be felt
+  out), Mac first on a second APFS volume with the 27.3 beta, no spike
+  before parity. Same two prerequisites as MCP Track 2. Plan:
+  `Features/Siri_And_App_Intents.md`.
 
 ### Themes (`Features/Theme_System.md`)
 
@@ -1917,7 +1924,8 @@ PROPOSED, not scheduled.
   sats at people; replace address parsing with Matt's Rust crate; Ark server
   picker V2 with auto-pick default (plus the cover-screen server selection
   mockup); console; Passkey (may be moot given the server requirement); export
-  transactions (metadata export covers part of this); macOS Shortcuts.
+  transactions (metadata export covers part of this). macOS Shortcuts folded
+  into `Features/Siri_And_App_Intents.md` on 2026-11-04.
 
 Moved from Tier 3 on 2026-10-19 as ideas, not scheduled work:
 

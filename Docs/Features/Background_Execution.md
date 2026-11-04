@@ -249,6 +249,57 @@ See rule 25 in `Initialization/Launch_Sequence_Contract.md` and the
 Background Execution section of `Open_Follow_Ups.md` for the remaining items
 (notably: a background launch still constructs the whole app in `App.init()`).
 
+**Evidence 2026-11-02** (triggered by a tester's "Arké crashed" TestFlight
+prompt and a "quit unexpectedly" dialog on Christoph's Mac, both for an app
+nobody had opened):
+
+| Report | Build | Age at kill | Who held the store |
+|---|---|---|---|
+| TestFlight 2026-08-14, iPhone15,2 | 21 | 10 h | main thread idle in the background; holder not on thread 0 |
+| TestFlight 2026-08-20, iPhone18,3 | 21 | 0.8 s | `SwiftDataHelper.createModelContainer` loading the store, inside `Arke_mobile.init` |
+| TestFlight 2026-10-24, iPhone16,1 | 25 | 1.2 s | thread 0 in `BarkWalletFFI.init` (Rust logger attach) inside `Arke_mobile.init`; thread 1 in CoreData's `PFCloudKitMetadataModelMigrator` reading the WAL |
+| TestFlight 2026-10-26, iPhone16,1 | 25 | 2.2 s | `BalanceService.updateArkBalanceFromResponse` → `ModelContext.save()` on the main thread; a bark Rust thread alive |
+| Christoph's iPhone 17, 2026-10-27 | 26 (debug) | 6.5 min | CloudKit `NSCloudKitMirroringDelegate _performExportWithRequest` committing on the store's SQL queue; main thread idle |
+| TestFlight 2026-10-28, iPhone19,2 | 26 | 8.5 h | main thread idle; symbolication garbage ("QRCode…") |
+
+Reading: every Arké crash on record is this kill; none is a fault in app
+code. The Organizer signature names ("BarkLogger", "QRCode", "SwiftUI
+withMemoryRebound") are whatever thread 0 happened to be doing. Three kills
+arrive 0.8–2.2 s after a launch with `Role: unknown`, i.e. a system-initiated
+start (prewarm, CloudKit silent push or BGTask) that is suspended again at
+once. A SwiftUI `App` initializer runs before `UIApplicationMain`, so by
+then `Arke_mobile.init` has built the CloudKit `ModelContainer`,
+`WalletManager` and `BarkWalletFFI`, and CoreData's CloudKit setup is
+touching the store on a second thread. The other three are the ordinary
+backgrounded app being suspended while a write (app or CloudKit's own
+export) is mid-commit. Apple's text ties the code to files in shared
+containers; our store sits in the app's own container and is killed anyway,
+so the reports win over the doc.
+
+Users notice because TestFlight shows its crash-feedback prompt for these
+reports, long after a background kill nobody saw. Debug builds show nothing,
+which is why Christoph's phone carries the same kill and no prompt.
+
+The Mac "desktop crash" of the same week was not ArkeDesktop. The Mac's
+unified log shows the iPhone build, installed by Xcode as a
+Designed-for-iPhone wrapper, push-launched about 25 times between
+2026-10-25 and 10-27 for CloudKit `content-available` pushes
+(`_LSOpenExtractBackgroundLaunchReasonFromAppleEvent => com.apple.remote-notification`,
+host `usernoted` → `dasd` → Launch Services, role Background, 30 s
+assertion). ArkeDesktop has no background launch path (no background modes,
+no push handler, no login item). The wrapper is gone and the launches
+stopped on 2026-10-27; the Mac's own crash report was not retained. Running
+the mobile scheme on "My Mac (Designed for iPhone)" re-arms this (the
+"iPad8,6" entry in Tier 3 is the same install).
+
+How to pull the evidence again: `GetTopCrashIssues` / `GetCrashIssueLogs`
+return nothing for `GBKS.Arke` unless `is_beta` is true; a paired phone's
+reports come from `xcrun devicectl device info files --domain-type
+systemCrashLogs` and `device copy from` (the Wi‑Fi link resets, retry); the
+Mac push-launch trail is `log show --predicate 'eventMessage CONTAINS
+"pushLaunch.GBKS.Arke"'` plus `runningboardd` lines containing
+`LS launch GBKS.Arke`.
+
 ## Use cases → primitives
 
 ### Incoming Lightning payments (hardest: latency is seconds)
