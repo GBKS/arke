@@ -76,7 +76,13 @@ class PaymentDestinationSelector {
         /// - `estimateFee()` will use static fallback estimates (20 sats for Lightning, 500 for Bitcoin, etc.)
         /// - No crash or error - degraded accuracy only
         weak var walletManager: WalletManager?
-        
+
+        /// bark's verdicts on which Ark addresses this wallet's server can
+        /// deliver to, remembered across rankings so the synchronous
+        /// re-rank sees what the asynchronous ranking learned. `nil` means
+        /// never ask; an unknown verdict never blocks.
+        let arkReachability: ArkAddressReachability?
+
         init(
             arkBalance: Int?,
             bitcoinBalance: Int?,
@@ -84,7 +90,8 @@ class PaymentDestinationSelector {
             userPreferences: PaymentPreferences = .default,
             arkServerConnected: Bool = true,
             hasLightningCapability: Bool = true,
-            walletManager: WalletManager? = nil
+            walletManager: WalletManager? = nil,
+            arkReachability: ArkAddressReachability? = nil
         ) {
             self.arkBalance = arkBalance
             self.bitcoinBalance = bitcoinBalance
@@ -93,6 +100,7 @@ class PaymentDestinationSelector {
             self.arkServerConnected = arkServerConnected
             self.hasLightningCapability = hasLightningCapability
             self.walletManager = walletManager
+            self.arkReachability = arkReachability
         }
     }
     
@@ -224,6 +232,60 @@ class PaymentDestinationSelector {
 
     // MARK: - Ranked Destination
 
+    /// Why a row is, or is not, payable. Typed so the send form can tell
+    /// a block nothing typed will lift (the server, the address) from one
+    /// the amount decides (`Features/Foreign_Server_Ark_Address.md` §10).
+    enum ViabilityReason: Equatable {
+        case serverNotConnected
+        case arkUnreachable
+        case lightningUnavailable
+        case noAmount
+        case balanceUnavailable
+        case needMore(sats: Int)
+        case largeAmountOnchainPreferred
+        case sufficient
+
+        /// The row caption
+        var text: String {
+            switch self {
+            case .serverNotConnected:
+                return String(localized: "viability_server_not_connected", defaultValue: "Ark server not connected")
+            case .arkUnreachable:
+                return String(localized: "viability_ark_unreachable", defaultValue: "Address belongs to a different server")
+            case .lightningUnavailable:
+                return String(localized: "viability_lightning_unavailable", defaultValue: "Lightning not available")
+            case .noAmount:
+                return String(localized: "viability_no_amount", defaultValue: "No amount specified")
+            case .balanceUnavailable:
+                return String(localized: "viability_balance_unavailable", defaultValue: "Balance unavailable")
+            case .needMore(let sats):
+                return String(localized: "viability_need_more %@", defaultValue: "Need \(BitcoinFormatter.shared.formatAmount(sats)) more")
+            case .largeAmountOnchainPreferred:
+                return String(localized: "viability_large_amount_onchain", defaultValue: "Large amount: on-chain preferred")
+            case .sufficient:
+                return String(localized: "viability_sufficient", defaultValue: "Sufficient balance")
+            }
+        }
+
+        /// A block that belongs to the request itself and no amount can
+        /// lift: this wallet's server cannot deliver to the address, or the
+        /// rail is not offered. Transient blocks are left out on purpose.
+        /// `balanceUnavailable` is a loading gap that resolves by itself, and
+        /// `serverNotConnected` lifts when the server is back; the send form
+        /// has no trigger to re-rank on either, so hiding the amount field
+        /// for them would leave no way out but dismissing (review 2026-11-04,
+        /// `Features/Foreign_Server_Ark_Address.md` §11). Those rows stay
+        /// grey with their reason and the Send button stays disabled.
+        var blocksRegardlessOfAmount: Bool {
+            switch self {
+            case .arkUnreachable, .lightningUnavailable:
+                return true
+            case .serverNotConnected, .noAmount, .balanceUnavailable, .needMore, .largeAmountOnchainPreferred, .sufficient:
+                return false
+            }
+        }
+    }
+
     /// A payment destination with ranking and viability information
     struct RankedDestination {
         let destination: PaymentDestination
@@ -231,8 +293,11 @@ class PaymentDestinationSelector {
         let availableBalance: Int?
         let estimatedFee: Int?
         let viable: Bool
-        let reason: String
+        let viabilityReason: ViabilityReason
         let priority: Int // Lower number = higher priority
+
+        /// The row caption, see `ViabilityReason.text`
+        var reason: String { viabilityReason.text }
 
         var requiresServerRouting: Bool {
             balanceSource == .arkViaServer
@@ -338,11 +403,20 @@ class PaymentDestinationSelector {
         ranked.first { $0.viable && ($0.availableBalance ?? 0) > 0 } ?? ranked.first { $0.viable }
     }
 
-    /// Viable entries first, then by priority number
+    /// Viable entries first, then, among the unviable, the ones an amount
+    /// can still fix before the dead ones, then by priority number. The
+    /// middle tier keeps `oneRowPerBalance` from letting an address nothing
+    /// can pay displace a row the user could repair by typing less (review
+    /// finding 2026-11-04, `Features/Foreign_Server_Ark_Address.md` §11).
     private static func sorted(_ ranked: [RankedDestination]) -> [RankedDestination] {
         ranked.sorted { lhs, rhs in
             if lhs.viable != rhs.viable {
                 return lhs.viable // Viable destinations first
+            }
+            let lhsDead = !lhs.viable && lhs.viabilityReason.blocksRegardlessOfAmount
+            let rhsDead = !rhs.viable && rhs.viabilityReason.blocksRegardlessOfAmount
+            if lhsDead != rhsDead {
+                return !lhsDead // Fixable before dead
             }
             return lhs.priority < rhs.priority // Lower priority number = higher priority
         }
@@ -387,6 +461,14 @@ class PaymentDestinationSelector {
             estimatedFee = await estimateFee(for: destination, source: balanceSource, amount: amount, context: context)
         }
 
+        // Settle an Ark address's reachability here, the one async funnel
+        // every ranking passes through; `rank` reads the remembered verdict
+        // (`Features/Foreign_Server_Ark_Address.md`). Other formats are
+        // never asked.
+        if destination.format == .ark {
+            await context.arkReachability?.check(destination.address)
+        }
+
         return rank(destination, source: balanceSource, amount: amount, context: context, estimatedFee: estimatedFee)
     }
 
@@ -419,13 +501,18 @@ class PaymentDestinationSelector {
         let availableBalance = availableBalance(source: balanceSource, context: context)
         let priority = priorityScore(for: destination.format, source: balanceSource, preferences: context.userPreferences)
 
+        // Only a remembered `false` counts; unknown never blocks
+        let arkUnreachable = destination.format == .ark
+            && context.arkReachability?.known(destination.address) == false
+
         let viabilityCheck = checkViability(
             destination: destination,
             amount: amount,
             availableBalance: availableBalance,
             estimatedFee: estimatedFee,
             balanceSource: balanceSource,
-            context: context
+            context: context,
+            arkUnreachable: arkUnreachable
         )
 
         return RankedDestination(
@@ -434,9 +521,18 @@ class PaymentDestinationSelector {
             availableBalance: availableBalance,
             estimatedFee: estimatedFee,
             viable: viabilityCheck.viable,
-            reason: viabilityCheck.reason,
+            viabilityReason: viabilityCheck.reason,
             priority: priority
         )
+    }
+
+    /// Nothing in the ranking can be paid and no amount would change that:
+    /// every row is blocked for an amount-independent reason. The send
+    /// form then drops the amount and fee entry and says so instead
+    /// (DECIDED 2026-11-04, `Features/Foreign_Server_Ark_Address.md` §10).
+    /// False for an empty ranking, which is "not ranked yet", not "blocked".
+    static func nothingPayable(_ ranked: [RankedDestination]) -> Bool {
+        !ranked.isEmpty && ranked.allSatisfy { !$0.viable && $0.viabilityReason.blocksRegardlessOfAmount }
     }
 
     /// Checks if a destination is viable for payment
@@ -446,25 +542,33 @@ class PaymentDestinationSelector {
         availableBalance: Int?,
         estimatedFee: Int?,
         balanceSource: BalanceSource,
-        context: PaymentContext
-    ) -> (viable: Bool, reason: String) {
+        context: PaymentContext,
+        arkUnreachable: Bool
+    ) -> (viable: Bool, reason: ViabilityReason) {
         // Lightning and Payments-funded onchain sends go through the server
         if balanceSource.needsArkServer && !context.arkServerConnected {
-            return (false, String(localized: "viability_server_not_connected", defaultValue: "Ark server not connected"))
+            return (false, .serverNotConnected)
+        }
+
+        // An Ark address bark cannot deliver to from this wallet's server
+        // (another server, most likely); checked before the amount so the
+        // row is out regardless of what gets typed
+        if arkUnreachable {
+            return (false, .arkUnreachable)
         }
 
         if balanceSource == .arkViaServer && !context.hasLightningCapability {
-            return (false, String(localized: "viability_lightning_unavailable", defaultValue: "Lightning not available"))
+            return (false, .lightningUnavailable)
         }
-        
+
         // If no amount specified, all destinations are viable (amount will be entered later)
         guard let amount = amount else {
-            return (true, String(localized: "viability_no_amount", defaultValue: "No amount specified"))
+            return (true, .noAmount)
         }
-        
+
         // Check balance availability
         guard let balance = availableBalance else {
-            return (false, String(localized: "viability_balance_unavailable", defaultValue: "Balance unavailable"))
+            return (false, .balanceUnavailable)
         }
         
         // Check if balance is sufficient; with no estimate the amount alone is judged
@@ -481,19 +585,18 @@ class PaymentDestinationSelector {
         */
         
         if balance < totalRequired {
-            let shortfall = totalRequired - balance
-            return (false, String(localized: "viability_need_more %@", defaultValue: "Need \(BitcoinFormatter.shared.formatAmount(shortfall)) more"))
+            return (false, .needMore(sats: totalRequired - balance))
         }
-        
+
         // Check large amount preference
         if context.userPreferences.preferOnChainForLargeAmounts &&
            amount >= context.userPreferences.largeAmountThreshold &&
            balanceSource != .bitcoin {
             // Deprioritize but don't make unviable
-            return (true, String(localized: "viability_large_amount_onchain", defaultValue: "Large amount: on-chain preferred"))
+            return (true, .largeAmountOnchainPreferred)
         }
-        
-        return (true, String(localized: "viability_sufficient", defaultValue: "Sufficient balance"))
+
+        return (true, .sufficient)
     }
     
     /// Determines priority score for a format (lower = higher priority).

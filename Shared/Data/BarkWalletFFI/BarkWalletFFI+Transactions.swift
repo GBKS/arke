@@ -241,7 +241,24 @@ extension BarkWalletFFI {
             throw error
         }
     }
-    
+
+    func validateArkoorAddress(address: String) async throws -> Bool {
+        if isPreview {
+            return true
+        }
+
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+
+        do {
+            return try await wallet.validateArkoorAddress(address: address)
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error validating Ark address: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to validate Ark address: \(error.localizedDescription)")
+        }
+    }
+
     func sendToOnchain(to address: String, amount: Int) async throws -> String {
         // This is an "offboard" operation in Ark terminology
         // It sends Ark funds to a Bitcoin onchain address

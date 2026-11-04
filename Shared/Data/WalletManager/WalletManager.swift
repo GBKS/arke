@@ -67,7 +67,16 @@ struct WalletExportData: Codable {
 class WalletManager {
     /// Logger for WalletManager operations
     nonisolated static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "WalletManager")
-    
+
+    /// Remembered bark verdicts on which Ark addresses this wallet's server
+    /// can deliver to, scoped to the current server so a wallet re-created
+    /// on another server starts clean (`canPayArkAddress`).
+    @ObservationIgnored
+    private(set) lazy var arkReachability = ArkAddressReachability(
+        scope: { [weak self] in self?.networkConfig?.arkServerURL ?? "" },
+        probe: { [weak self] address in await self?.canPayArkAddress(address) }
+    )
+
     // MARK: - Coordinator State
     var isInitialized: Bool = false
     var error: String?

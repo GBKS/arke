@@ -144,6 +144,11 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     // MARK: - Send Operations
     
     func send(to address: String, amount: Int) async throws -> String // Ark-to-ark payment
+    /// Whether this wallet can pay `address` out of round: same network and
+    /// server, a supported VTXO policy, a known delivery mechanism. bark
+    /// answers `false` for every failure, including "no server connection";
+    /// throws only when the address does not parse.
+    func validateArkoorAddress(address: String) async throws -> Bool
     func sendToOnchain(to address: String, amount: Int) async throws -> String // From Ark balance to onchain balance
     func sendOnchain(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String // From onchain balance to onchain balance
     

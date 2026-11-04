@@ -197,6 +197,10 @@ class MockBarkWallet: BarkWalletProtocol {
         try await Task.sleep(nanoseconds: 1_000_000_000)
         return ""
     }
+
+    func validateArkoorAddress(address: String) async throws -> Bool {
+        true
+    }
     
     func sendOnchain(to address: String, amount: Int, feeRateSatPerVb: UInt64?) async throws -> String {
         try await Task.sleep(nanoseconds: 1_000_000_000)

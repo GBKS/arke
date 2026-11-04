@@ -23,7 +23,8 @@ extension WalletManager {
             userPreferences: preferences ?? .default,
             arkServerConnected: isArkServerReachable,
             hasLightningCapability: true, // Ark servers always provide Lightning routing
-            walletManager: self
+            walletManager: self,
+            arkReachability: arkReachability
         )
     }
 }

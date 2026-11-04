@@ -10,6 +10,7 @@
 import Foundation
 import ArkeUI
 import Bark
+import OSLog
 
 extension WalletManager {
     
@@ -21,7 +22,35 @@ extension WalletManager {
         }
         return try await walletOperationsService.send(to: address, amount: amount)
     }
-    
+
+    /// Whether bark can deliver an out-of-round payment to `address`: same
+    /// server, network and VTXO policy. `nil` means unknown and must never
+    /// block: no open wallet, no warm server connection, or an address bark
+    /// cannot parse, which the send itself reports.
+    ///
+    /// The warm-connection gate is bark's own `arkInfo()`, a read of the
+    /// server cell with no network call (bark 0.8.0 `Wallet::ark_info`).
+    /// It matters because bark-ffi folds "no server connection" into plain
+    /// `false`, and because the validation itself connects lazily, so asking
+    /// on a cold cell would both misreport and block on a connect. The
+    /// app's connection flags are not usable here: `isArkServerReachable`
+    /// is optimistic before the first sync and `connectionStatus.isConnected`
+    /// turns true after a sync that cannot fail (review finding, 2026-11-04).
+    /// `Features/Foreign_Server_Ark_Address.md`.
+    func canPayArkAddress(_ address: String) async -> Bool? {
+        guard let wallet else { return nil }
+        guard (try? await wallet.getArkInfo()) != nil else {
+            Self.logger.debug("Ark address reachability unknown: no warm server connection")
+            return nil
+        }
+        do {
+            return try await wallet.validateArkoorAddress(address: address)
+        } catch {
+            Self.logger.warning("Ark address reachability unknown: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     func sendOnchain(to address: String, amount: Int, feeRateSatPerVb: UInt64? = nil) async throws -> String {
         guard let walletOperationsService = walletOperationsService else {
             throw BarkErrorArke.commandFailed("Wallet operations service not initialized")
