@@ -63,7 +63,7 @@ summarised in one line under "Past trains".
 | Build | 0.26 Track A built 2026-10-25; dependency bump (bark v0.26.1, bdk-swift 3.1.1, qrcode 28.1.0, BIP39 pinned) and the send-fee cluster in two batches built 2026-10-27 (`Features/Send_Fee_Quotes.md`) |
 | Review | 0.26 Track A adversarial pass 2026-10-25; fee cluster two adversarial passes 2026-10-27, every confirmed finding fixed the same day, rework ledger updated |
 | Device | 0.26 recovery scenarios (Christoph, before the upload); fee cluster device look 2026-10-27 (§8.8–8.9), two states unreachable on the phone and waived or left to their entries |
-| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed |
+| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). Owed before upload: device re-check of "backup from another server refused", build number bump |
 | Soak | from 2026-10-27, Christoph's daily use |
 
 Delivered from Train 1's deferral list: the Tier 1 gate on onchain sends at
@@ -1053,6 +1053,13 @@ log).
 
 ### Send
 
+- [ ] **The selected row can vanish from the "Pay from" ranking on a typed
+  amount** (release review 2026-11-04, PLAUSIBLE): `oneRowPerBalance` runs
+  on every re-rank, so when the selected Lightning row turns unviable for
+  the amount while its Payments-onchain twin is judged viable, the twin
+  takes the Payments slot and `selectedChoice` points at a dropped row; the
+  fee row and gate still follow the old selection. PROPOSED rule: the
+  selected choice survives the reducer. `PaymentDestinationSelector`.
 - [ ] **Four sheets title themselves in the navigation bar (sans-serif)** while
   the app's modals put a serif title in the content (speed sheet, boarding
   and offboarding modals, settings pages): `TagSelectorSheet` ("Choose
@@ -1131,6 +1138,11 @@ log).
 
 ### Activity, transaction details, tags
 
+- [ ] **Struck-through failed/cancelled amounts are decided in three views**
+  (release review 2026-11-04): `isAmountStruckThrough` and the grey colour
+  rule are repeated in `TransactionListItem`, `TransactionSwipeCard` and
+  `TransactionDetailView_iOS`, and already diverge (only the card carries
+  the dark colour-scheme workaround). One property on `TransactionModel`.
 - [ ] **Activity rows are dated by when the wallet processed the movement,
   not when it happened** (Christoph, 2026-10-19; Train 1 cosmetic pass).
   Related, not a fix: bark 0.8.0 (#2610, feedback ask 11) stops finished
@@ -1656,6 +1668,19 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 ### Startup and background structure
 
+- [ ] **Network config iCloud sync writes before the reconciler decides**
+  (release review 2026-11-04): `syncFromiCloud` overwrites the local cache
+  with the account's config, then the `.keepCurrent` branch of
+  `reconcileNetworkConfigBeforeWalletOpen` writes this device's config
+  back, on every launch and wake (error log, cache churn, a sync
+  notification each time). Make the sync pure and let the reconciler write
+  once. `WalletManager.swift`, `NetworkConfigPersistence`.
+- [ ] **Three debounced fee tasks live in static dictionaries keyed by
+  `ObjectIdentifier`** (release review 2026-11-04): onchain, Lightning and
+  offboard estimation each keep a `static var …TaskStorage`, entries are
+  never removed and an identifier can be reused by a later view model.
+  Replace with stored properties on `SendViewModel`.
+  `SendViewModel+FeeEstimation`, `SendViewModel+FeeCalculation`.
 - [ ] **`OnchainTransactionEntity` persistence is dead code**: the model
   (`Shared/Models/OnchainTransactionEntity.swift`) is not in the schema
   (`SwiftDataHelper.swift:49` lists `PersistentTransaction` only), so
