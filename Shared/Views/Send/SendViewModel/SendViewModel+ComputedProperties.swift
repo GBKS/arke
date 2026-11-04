@@ -345,10 +345,11 @@ extension SendViewModel {
         walletManager.isMainnet && onchainFeeRates.fast == FeeRateService.mainnetMaxRateSatPerVb
     }
 
-    /// The amount a Lightning fee estimate is made for: the request's
-    /// embedded amount, else the amount as entered
+    /// The amount a Lightning fee estimate is made for: the amount as
+    /// entered, else the request's embedded amount (the same precedence as
+    /// `offboardEstimateAmount`, the re-rank and the send gate)
     var lightningEstimateAmount: Int? {
-        currentPaymentRequest?.amount ?? Int(amount)
+        Int(amount) ?? currentPaymentRequest?.amount
     }
 
     /// Returns whether to show the fee disclosure indicator: an onchain

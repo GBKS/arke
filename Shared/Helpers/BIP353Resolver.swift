@@ -342,6 +342,10 @@ class BIP353Resolver {
         } catch is CancellationError {
             // The caller moved on (a Lightning-address race was won); not a failure.
             throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            // A cancelled URLSession request surfaces as URLError, not
+            // CancellationError (release review 2026-11-04)
+            throw CancellationError()
         } catch {
             logger.error("Resolver query failed: \(error.localizedDescription, privacy: .public)")
             throw BIP353Error.dnsLookupFailed(error.localizedDescription)

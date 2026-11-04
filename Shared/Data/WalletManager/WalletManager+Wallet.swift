@@ -219,6 +219,16 @@ extension WalletManager {
                 }
             }
             
+            // Rollback Step 2a: Close the bark handle if Step 6 opened it, so the
+            // database is not deleted under a live wallet and its daemon, and
+            // `isWalletOpen` does not keep reporting a wallet that is gone. No
+            // backup on the way out: the database being rolled back may belong
+            // to another server (release review 2026-11-04).
+            if let ffiWallet = wallet as? BarkWalletFFI, ffiWallet.isWalletOpen {
+                Self.logger.info("🔄 Rolling back: Closing the wallet handle opened by the import...")
+                await ffiWallet.shutdownWallet(backingUp: false)
+            }
+
             // Rollback Step 2: Remove restored backup database if it was restored
             if backupRestored {
                 Self.logger.info("🔄 Rolling back: Removing restored database...")

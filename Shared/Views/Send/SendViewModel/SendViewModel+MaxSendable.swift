@@ -152,9 +152,11 @@ extension SendViewModel {
             }
         }
         
-        // After 5 iterations, use the last calculated amount
-        logger.info("Lightning: Completed 5 iterations, final amount: \(currentAmount) sats")
-        return currentAmount
+        // After 5 iterations, offer the largest amount that fitted (nil if
+        // none did), never the last probe, which may not fit (release
+        // review 2026-11-04; the offboard loop already did this)
+        logger.info("Lightning: Completed 5 iterations, final amount: \(lastFitting?.description ?? "none") sats")
+        return lastFitting
     }
     
     // MARK: - Onchain Max Sendable

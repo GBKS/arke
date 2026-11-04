@@ -140,7 +140,11 @@ extension SendViewModel {
             return
         }
 
-        let typedAmount = currentPaymentRequest?.amount ?? Int(amount)
+        // The amount as entered wins over the request's embedded amount, the
+        // same precedence the fee caches and the send gate use; a request
+        // amount only fills in while the field is empty (release review
+        // 2026-11-04)
+        let typedAmount = Int(amount) ?? currentPaymentRequest?.amount
         var knownFees: [PaymentDestinationSelector.Choice: Int] = [:]
         for ranked in rankedDestinations {
             if ranked.choice == selectedChoice, let typedAmount {
