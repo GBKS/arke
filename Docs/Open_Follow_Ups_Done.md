@@ -2090,3 +2090,25 @@ active", which cluster 4 touches.
   regression, wrong URL at Check, backup from another server refused; the
   build-26 check waived (DECIDED 2026-11-02). Not yet in a TestFlight build.
   Plan and evidence: `Features/Ark_Server_Selection.md`.
+
+## Moved from the open list 2026-11-04
+
+- [x] **An Ark address from another server validates and fails only at
+  send — DONE 2026-11-04** (DECIDED for the custom-server release). The
+  ranker asks bark's `validateArkoorAddress` through
+  `WalletManager.canPayArkAddress` (gated on bark's own `arkInfo()`, a
+  server-cell read, since the app's connection flags are optimistic or
+  never go false), remembers verdicts per server in
+  `ArkAddressReachability`, and marks the row unviable with "Address
+  belongs to a different server"; a BIP-21 falls through to Lightning or
+  onchain. When every row is blocked by the request itself the three send
+  flows hide amount, fee and Send (`nothingPayable`, typed
+  `ViabilityReason`; fixable rows outrank dead ones). Two adversarial
+  passes, four CONFIRMED findings fixed the same day (ledger rows):
+  stale connection gate, verdict lost to `oneRowPerBalance`, dead row
+  displacing the fixable one, contact flow reading an empty ranking.
+  Coinos device check, simulator pass with a minted foreign signet
+  address, copy and layout rework on Christoph's screenshots, then the
+  full device list on his phone including the cold offline launch, all
+  good 2026-11-04. Not yet in a TestFlight build. Plan and evidence:
+  `Features/Foreign_Server_Ark_Address.md`.

@@ -338,9 +338,11 @@ Methods present in the bindings before v0.18.0 that neither
 
 ### Validation & utilities
 
-- **`validateArkoorAddress(address:) -> Bool`** — FFI-backed ark address
-  validation; could back/replace parts of our own `AddressValidator` for ark
-  addresses in the Send flow.
+- ~~**`validateArkoorAddress(address:) -> Bool`**~~ — ADOPTED 2026-11-04 as
+  `BarkWalletProtocol.validateArkoorAddress`, behind
+  `WalletManager.canPayArkAddress` in the destination ranker
+  (`Features/Foreign_Server_Ark_Address.md`). Note the bark-ffi wrapper
+  returns `false` for every failure including "no server connection".
 - **`signExitClaimInputs(psbtBase64:)`** — sign a custom exit-claim PSBT.
   `drainExits` covers the whole claim path today; only needed if we ever
   build custom claim transactions (e.g. batching with other outputs).

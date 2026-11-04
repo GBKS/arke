@@ -79,7 +79,12 @@ selectable, 180 s clipboard), device-checked 2026-10-29
 (`Features/Recovery_Phrase_Exposure.md`), not yet in a build; Ark server
 selection (cover-screen sheet, Default / Development / custom server),
 built and reviewed 2026-10-29/30, committed and device-checked 2026-11-02
-(`Features/Ark_Server_Selection.md`), not yet in a build.
+(`Features/Ark_Server_Selection.md`), not yet in a build; foreign-server
+Ark address detection with the nothing-payable send form, built, twice
+reviewed and device-checked 2026-11-04
+(`Features/Foreign_Server_Ark_Address.md`), not yet in a build. These
+four make the custom-server release (DECIDED 2026-11-04, Tier 0 does not
+gate it).
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -462,17 +467,6 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
-- [ ] **An Ark address from another server validates and fails only at send**:
-  `AddressValidator` checks the `ark1`/`tark1` prefix only; bark refuses in
-  `sendArkoorPayment` with "Ark address is for different server"
-  (`validate_arkoor_address`, bark 0.8.0), surfaced as raw text. Also the
-  ranker: a BIP-21 whose Ark address is foreign wins the Payments row (one
-  row per balance, DECIDED 2026-10-28) though Lightning or onchain would
-  work. More likely since custom servers (2026-11-02): Second and Zappin
-  users will trade addresses. Fix: `validateArkoorAddress` or
-  `parsePaymentRequest(payment:)` (both in the 0.26 bindings, unadopted)
-  before send and in the ranker; show "belongs to a different server".
-  `Features/Send_Onchain_From_Payments.md` §9.1.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
