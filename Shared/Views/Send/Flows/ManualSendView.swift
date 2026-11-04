@@ -163,6 +163,20 @@ struct ManualSendView: View {
         guard case .valid = recipientState, let destination = selectedDestination else { return false }
         return allDisplayDestinations.filter { $0.destination.id == destination.id }.count > 1
     }
+
+    /// Every row the view model ranked for this recipient is blocked for a
+    /// reason no amount can lift (an Ark address of another server, the
+    /// server unreachable): the row is shown so it can say why, amount and
+    /// fee entry go, and a caption takes the button's place (DECIDED
+    /// 2026-11-04, `Features/Foreign_Server_Ark_Address.md` §10). Only the
+    /// live ranking counts; the static BIP-353 fallback rows assume viable.
+    private var nothingPayable: Bool {
+        guard isConfirmed, let sendViewModel, let destination = selectedDestination,
+              sendViewModel.rankedDestinations.contains(where: { $0.destination.id == destination.id }) else {
+            return false
+        }
+        return sendViewModel.nothingPayable
+    }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -202,8 +216,9 @@ struct ManualSendView: View {
                     formatNameOverride: originalBIP353Address,
                     selectedChoice: selectedChoice
                 )
-            } else if plainAddressHasSourceChoice, let primaryDisplay = primaryDisplayDestination {
-                // Bitcoin address: Savings or Payments, chosen here
+            } else if plainAddressHasSourceChoice || nothingPayable, let primaryDisplay = primaryDisplayDestination {
+                // Bitcoin address: Savings or Payments, chosen here. Also the
+                // one row of an address nothing can pay, so its reason shows
                 SheetDestinationDisplayView(
                     primaryDisplayDestination: primaryDisplay,
                     alternativeDisplayDestinations: alternativeDisplayDestinations,
@@ -215,44 +230,48 @@ struct ManualSendView: View {
                 )
             }
                 
-            // Amount section (shown in confirmed mode); bitcoin or fiat entry
-            SendAmountInput(
-                viewModel: sendViewModel,
-                amount: $amount,
-                maxSpendableAmount: maxSpendableAmount,
-                availableBalanceText: availableBalanceText,
-                availableBalanceName: availableBalanceName,
-                availableBalanceAmount: availableBalanceAmount,
-                isAmountLocked: isAmountLocked,
-                lockedAmountReason: lockedAmountReason,
-                minimumSendAmount: minimumSendAmount,
-                onCalculateMaxSendable: onCalculateMaxSendable,
-                isAmountFieldFocused: $isAmountFieldFocused
-            )
-            
-            FeeDisplayView(
-                state: feeState,
-                showDisclosure: shouldShowFeeDisclosure,
-                onTap: shouldShowFeeDisclosure ? {
-                    showFeeSelectionSheet = true
-                } : nil
-            )
-            
-            // Send button
-            Button {
-                onSend()
-            } label: {
-                Text(L10n.buttonSend)
-                    .font(.title2)
-                    .foregroundStyle(Color.Arke.gold4)
-                    .padding(.horizontal, 40)
+            // Nothing payable: the row above carries the one reason; amount,
+            // fee and button stay out (DECIDED 2026-11-04, plan §12)
+            if !nothingPayable {
+                // Amount section (shown in confirmed mode); bitcoin or fiat entry
+                SendAmountInput(
+                    viewModel: sendViewModel,
+                    amount: $amount,
+                    maxSpendableAmount: maxSpendableAmount,
+                    availableBalanceText: availableBalanceText,
+                    availableBalanceName: availableBalanceName,
+                    availableBalanceAmount: availableBalanceAmount,
+                    isAmountLocked: isAmountLocked,
+                    lockedAmountReason: lockedAmountReason,
+                    minimumSendAmount: minimumSendAmount,
+                    onCalculateMaxSendable: onCalculateMaxSendable,
+                    isAmountFieldFocused: $isAmountFieldFocused
+                )
+
+                FeeDisplayView(
+                    state: feeState,
+                    showDisclosure: shouldShowFeeDisclosure,
+                    onTap: shouldShowFeeDisclosure ? {
+                        showFeeSelectionSheet = true
+                    } : nil
+                )
+
+                // Send button
+                Button {
+                    onSend()
+                } label: {
+                    Text(L10n.buttonSend)
+                        .font(.title2)
+                        .foregroundStyle(Color.Arke.gold4)
+                        .padding(.horizontal, 40)
+                }
+                .buttonStyle(.glassProminent)
+                .controlSize(.large)
+                .tint(Color.Arke.gold)
+                .frame(maxWidth: .infinity)
+                .disabled(!canSend)
+                .padding(.top, 16)
             }
-            .buttonStyle(.glassProminent)
-            .controlSize(.large)
-            .tint(Color.Arke.gold)
-            .frame(maxWidth: .infinity)
-            .disabled(!canSend)
-            .padding(.top, 16)
         }
         .frame(maxWidth: 400)
         .toolbar {

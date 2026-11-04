@@ -82,7 +82,9 @@ extension SheetDestinationDisplayView {
     /// The primary destination as shown in the row, with or without a button around it
     fileprivate func primaryDestinationItem(_ primaryDisplay: DisplayDestination) -> some View {
         PaymentDestinationItem(
-            formatName: formatNameOverride ?? primaryDisplay.payFromTitle,
+            // A row nothing can pay has no balance to pay from; the item
+            // skips an empty title (DECIDED 2026-11-04, plan §12)
+            formatName: formatNameOverride ?? (primaryDisplay.unpayable ? "" : primaryDisplay.payFromTitle),
             shortAddress: primaryDisplay.destination.shortAddress,
             estimatedFee: nil, // primaryDisplay.estimatedFee
             isSelectable: false,

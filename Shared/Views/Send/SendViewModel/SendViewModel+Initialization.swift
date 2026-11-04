@@ -64,7 +64,9 @@ extension SendViewModel {
                             logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             error = nil
                         } else {
-                            error = "Cannot send to this contact - no viable payment methods"
+                            // The rows explain a request nothing can pay; the
+                            // error card would only repeat it (plan §12)
+                            error = nothingPayable ? nil : "Cannot send to this contact - no viable payment methods"
                         }
                         
                         // Pre-fill amount if embedded in the payment request
@@ -114,7 +116,7 @@ extension SendViewModel {
                             logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                             self.error = nil
                         } else {
-                            self.error = "Cannot send to this contact - no viable payment methods"
+                            self.error = self.nothingPayable ? nil : "Cannot send to this contact - no viable payment methods"
                         }
                         
                         await calculateLightningFee()
@@ -149,7 +151,7 @@ extension SendViewModel {
                     logger.debug("   → Selected optimal destination: \(optimal.destination.format.rawValue)")
                     error = nil
                 } else {
-                    error = "Cannot send to this contact - no viable payment methods"
+                    error = nothingPayable ? nil : "Cannot send to this contact - no viable payment methods"
                 }
                 
                 // Pre-fill amount if embedded in the payment request

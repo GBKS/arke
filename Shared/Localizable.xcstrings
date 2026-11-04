@@ -28288,6 +28288,17 @@
         }
       }
     },
+    "viability_ark_unreachable" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Address belongs to a different server"
+          }
+        }
+      }
+    },
     "viability_balance_unavailable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {

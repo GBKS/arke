@@ -168,6 +168,14 @@ struct QuickPaymentView: View {
         rankedDestinations.first(where: { $0.viable })
     }
 
+    /// Every row is blocked for a reason no amount can lift (an Ark address
+    /// of another server, the server unreachable): the rows say why, the
+    /// amount and fee entry go, and a caption takes the button's place
+    /// (DECIDED 2026-11-04, `Features/Foreign_Server_Ark_Address.md` §10)
+    private var nothingPayable: Bool {
+        PaymentDestinationSelector.nothingPayable(rankedDestinations)
+    }
+
     // MARK: - Unified Display Properties
 
     /// All destinations as DisplayDestination objects
@@ -309,7 +317,10 @@ struct QuickPaymentView: View {
     private var needsAmountInput: Bool {
         // Don't show if network is incompatible
         guard isCompatibleWithNetwork else { return false }
-        
+
+        // Nor when no row can be paid whatever the amount
+        guard !nothingPayable else { return false }
+
         // Don't show for Lightning invoices with fixed amounts
         if let primary = paymentRequest.primaryDestination,
            primary.format == .lightningInvoice,
@@ -507,19 +518,25 @@ struct QuickPaymentView: View {
                         )
                         .disabled(isSending)
                     }
-                    
-                    FeeDisplayView(
-                        state: feeState,
-                        showDisclosure: shouldShowFeeDisclosure,
-                        onTap: shouldShowFeeDisclosure ? {
-                            showFeeSelectionSheet = true
-                        } : nil
-                    )
+
+                    if !nothingPayable {
+                        FeeDisplayView(
+                            state: feeState,
+                            showDisclosure: shouldShowFeeDisclosure,
+                            onTap: shouldShowFeeDisclosure ? {
+                                showFeeSelectionSheet = true
+                            } : nil
+                        )
+                    }
                 }
             }
-            
+
+            // Nothing payable: the row above carries the one reason and the
+            // button slot stays empty (DECIDED 2026-11-04, plan §12)
             HStack(alignment: .center, spacing: 20) {
-                if isCompatibleWithNetwork {
+                if isCompatibleWithNetwork && nothingPayable {
+                    EmptyView()
+                } else if isCompatibleWithNetwork {
                     Button {
                         guard !isSending else { return }
                         isSending = true

@@ -453,43 +453,57 @@ struct ContactPaymentView: View {
                 )
             }
             
-            SendAmountInput(
-                viewModel: sendViewModel,
-                amount: $amount,
-                maxSpendableAmount: maxSpendableAmount,
-                availableBalanceText: availableBalanceText,
-                availableBalanceName: availableBalanceName,
-                availableBalanceAmount: availableBalanceAmount,
-                isAmountLocked: isAmountLocked,
-                lockedAmountReason: lockedAmountReason,
-                minimumSendAmount: minimumSendAmount,
-                onCalculateMaxSendable: onCalculateMaxSendable,
-                isAmountFieldFocused: $isAmountFieldFocused
-            )
-            
-            FeeDisplayView(
-                state: feeState,
-                showDisclosure: shouldShowFeeDisclosure,
-                onTap: shouldShowFeeDisclosure ? {
-                    showFeeSelectionSheet = true
-                } : nil
-            )
-            
-            // Send button
-            Button {
-                onSend()
-            } label: {
-                Text(L10n.buttonSend)
-                    .font(.title2)
-                    .foregroundStyle(Color.Arke.gold4)
-                    .padding(.horizontal, 40)
+            if PaymentDestinationSelector.nothingPayable(effectiveRankedDestinations) {
+                // Every row is blocked for a reason no amount can lift
+                // (DECIDED 2026-11-04, `Features/Foreign_Server_Ark_Address.md`
+                // §10, §12). The plain-address card above carries no reason
+                // line, so the one reason is shown here in the row's style.
+                if let reason = effectiveRankedDestinations.first?.reason {
+                    Text(reason)
+                        .font(.body)
+                        .foregroundColor(.orange)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 16)
+                }
+            } else {
+                SendAmountInput(
+                    viewModel: sendViewModel,
+                    amount: $amount,
+                    maxSpendableAmount: maxSpendableAmount,
+                    availableBalanceText: availableBalanceText,
+                    availableBalanceName: availableBalanceName,
+                    availableBalanceAmount: availableBalanceAmount,
+                    isAmountLocked: isAmountLocked,
+                    lockedAmountReason: lockedAmountReason,
+                    minimumSendAmount: minimumSendAmount,
+                    onCalculateMaxSendable: onCalculateMaxSendable,
+                    isAmountFieldFocused: $isAmountFieldFocused
+                )
+
+                FeeDisplayView(
+                    state: feeState,
+                    showDisclosure: shouldShowFeeDisclosure,
+                    onTap: shouldShowFeeDisclosure ? {
+                        showFeeSelectionSheet = true
+                    } : nil
+                )
+
+                // Send button
+                Button {
+                    onSend()
+                } label: {
+                    Text(L10n.buttonSend)
+                        .font(.title2)
+                        .foregroundStyle(Color.Arke.gold4)
+                        .padding(.horizontal, 40)
+                }
+                .buttonStyle(.glassProminent)
+                .controlSize(.large)
+                .tint(Color.Arke.gold)
+                .frame(maxWidth: .infinity)
+                .disabled(!canSend)
+                .padding(.top, 16)
             }
-            .buttonStyle(.glassProminent)
-            .controlSize(.large)
-            .tint(Color.Arke.gold)
-            .frame(maxWidth: .infinity)
-            .disabled(!canSend)
-            .padding(.top, 16)
         }
         .frame(maxWidth: 400)
         .toolbar {

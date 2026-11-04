@@ -90,10 +90,14 @@ public struct PaymentDestinationItem: View {
             
             HStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(formatName)
-                            .font(.body)
-                            .foregroundColor(.secondary)
+                    // An empty name means the row has no title line (a
+                    // destination nothing can pay from)
+                    if !formatName.isEmpty {
+                        HStack(spacing: 6) {
+                            Text(formatName)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     // The address is the payload: black whenever the destination

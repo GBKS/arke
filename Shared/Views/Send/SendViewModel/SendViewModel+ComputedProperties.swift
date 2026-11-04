@@ -65,7 +65,8 @@ extension SendViewModel {
             userPreferences: .default,
             arkServerConnected: walletManager.isArkServerReachable,
             hasLightningCapability: true, // Ark servers always provide Lightning routing
-            walletManager: walletManager
+            walletManager: walletManager,
+            arkReachability: walletManager.arkReachability
         )
     }
     
@@ -275,6 +276,12 @@ extension SendViewModel {
     /// Returns the number of viable payment destinations
     var viableDestinationCount: Int {
         rankedDestinations.filter { $0.viable }.count
+    }
+
+    /// Every row is blocked for a reason no amount can lift; the form hides
+    /// amount and fee entry (`PaymentDestinationSelector.nothingPayable`)
+    var nothingPayable: Bool {
+        PaymentDestinationSelector.nothingPayable(rankedDestinations)
     }
     
     /// Returns whether multiple viable destinations are available

@@ -156,4 +156,142 @@ struct PaymentDestinationSelectorTests {
         let rows = ranked.map { DisplayDestination(ranked: $0, matchedContact: nil) }
         #expect(rows.map(\.payFromTitle) == ["Pay from Savings", "Pay from Payments"])
     }
+
+    // MARK: - Ark addresses of another server (`Features/Foreign_Server_Ark_Address.md`)
+
+    /// A context whose reachability probe answers `verdict` for every Ark
+    /// address and records what it was asked; the same instance serves the
+    /// re-rank, as `WalletManager.arkReachability` does in the app
+    private func context(ark: Int?, bitcoin: Int?, arkVerdict verdict: Bool?, asked: Asked? = nil) -> Selector.PaymentContext {
+        Selector.PaymentContext(
+            arkBalance: ark,
+            bitcoinBalance: bitcoin,
+            networkConfig: .signet,
+            arkReachability: ArkAddressReachability { address in
+                asked?.addresses.append(address)
+                return verdict
+            }
+        )
+    }
+
+    @MainActor
+    private final class Asked {
+        var addresses: [String] = []
+    }
+
+    private let unreachableCopy = "Address belongs to a different server"
+
+    @Test("A foreign Ark address in a BIP-21 loses the Payments row to Lightning; Savings stays")
+    func foreignArkFallsThroughToLightning() async {
+        let request = PaymentRequest(destinations: [destination(.ark), destination(.lightning), destination(.bitcoin)], originalString: "bitcoin:…")
+        let ranked = await Selector.rankDestinations(from: request, context: context(ark: 10_000, bitcoin: 10_000, arkVerdict: false))
+        #expect(ranked.map(\.balanceSource) == [.arkViaServer, .bitcoin])
+        let allViable = ranked.allSatisfy { $0.viable }
+        #expect(allViable)
+    }
+
+    @Test("The typed-amount re-rank keeps the verdict even after one-row-per-balance dropped the Ark row (review finding 2026-11-04)")
+    func rerankAfterDroppedArkRowKeepsLightning() async {
+        let request = PaymentRequest(destinations: [destination(.ark), destination(.lightning), destination(.bitcoin)], originalString: "bitcoin:…")
+        let context = context(ark: 10_000, bitcoin: 10_000, arkVerdict: false)
+        let ranked = await Selector.rankDestinations(from: request, context: context)
+        #expect(ranked.map(\.balanceSource) == [.arkViaServer, .bitcoin])
+
+        // The first fee estimate re-ranks from the request, not from the rows
+        let reranked = Selector.rerankDestinations(from: request, amount: 1_000, context: context, knownFees: [:])
+        #expect(reranked.map(\.balanceSource) == [.arkViaServer, .bitcoin])
+    }
+
+    @Test("A bare foreign Ark address keeps its one row, unviable with the reason, through rank and re-rank")
+    func foreignArkAloneIsUnviable() async {
+        let request = PaymentRequest(destination: destination(.ark), amount: nil)
+        let context = context(ark: 10_000, bitcoin: 10_000, arkVerdict: false)
+        let ranked = await Selector.rankDestinations(from: request, context: context)
+        #expect(ranked.count == 1)
+        #expect(ranked.first?.viable == false)
+        #expect(ranked.first?.reason == unreachableCopy)
+
+        let reranked = Selector.rerankDestinations(from: request, amount: 1_000, context: context, knownFees: [:])
+        #expect(reranked.first?.viable == false)
+        #expect(reranked.first?.reason == unreachableCopy)
+    }
+
+    @Test("Unknown reachability never blocks, and is asked again next time")
+    func unknownReachabilityKeepsArkViable() async {
+        let asked = Asked()
+        let request = PaymentRequest(destination: destination(.ark), amount: 1_000)
+        let context = context(ark: 10_000, bitcoin: 10_000, arkVerdict: nil, asked: asked)
+        let ranked = await Selector.rankDestinations(from: request, context: context)
+        #expect(ranked.first?.viable == true)
+        _ = await Selector.rankDestinations(from: request, context: context)
+        #expect(asked.addresses.count == 2)
+    }
+
+    @Test("Only Ark destinations are asked, and a settled verdict is not asked twice")
+    func onlyArkDestinationsAreProbed() async {
+        let asked = Asked()
+        let request = PaymentRequest(destinations: [destination(.ark), destination(.lightning), destination(.bitcoin)], originalString: "bitcoin:…")
+        let context = context(ark: 1, bitcoin: 1, arkVerdict: true, asked: asked)
+        _ = await Selector.rankDestinations(from: request, context: context)
+        _ = await Selector.rankDestinations(from: request, context: context)
+        #expect(asked.addresses == ["addr-\(AddressFormat.ark.rawValue)"])
+    }
+
+    @Test("Verdicts belong to a server: a scope change forgets them")
+    func scopeChangeForgetsVerdicts() async {
+        var server = "ark.second.tech"
+        let oracle = ArkAddressReachability(scope: { server }) { _ in false }
+        await oracle.check("addr")
+        #expect(oracle.known("addr") == false)
+        server = "ark.zappin.online"
+        #expect(oracle.known("addr") == nil)
+    }
+
+    // MARK: - Nothing payable (DECIDED 2026-11-04, plan §10)
+
+    @Test("A lone foreign Ark address leaves nothing payable; its reason is typed")
+    func foreignArkAloneIsNothingPayable() async {
+        let request = PaymentRequest(destination: destination(.ark), amount: nil)
+        let ranked = await Selector.rankDestinations(from: request, context: context(ark: 10_000, bitcoin: 10_000, arkVerdict: false))
+        #expect(ranked.first?.viabilityReason == .arkUnreachable)
+        #expect(Selector.nothingPayable(ranked))
+    }
+
+    @Test("A shortfall is not nothing-payable: the amount can still change it")
+    func shortfallKeepsTheForm() async {
+        let request = PaymentRequest(destination: destination(.ark), amount: 50_000)
+        let ranked = await Selector.rankDestinations(from: request, context: context(ark: 10_000, bitcoin: 10_000))
+        #expect(ranked.first?.viable == false)
+        #expect(ranked.first?.viabilityReason == .needMore(sats: 40_000))
+        #expect(!Selector.nothingPayable(ranked))
+    }
+
+    @Test("One payable row anywhere keeps the form; an empty ranking is not a verdict")
+    func anyViableRowKeepsTheForm() async {
+        let request = PaymentRequest(destinations: [destination(.ark), destination(.lightning)], originalString: "bitcoin:…")
+        let ranked = await Selector.rankDestinations(from: request, context: context(ark: 10_000, bitcoin: 10_000, arkVerdict: false))
+        #expect(!Selector.nothingPayable(ranked))
+        #expect(!Selector.nothingPayable([]))
+    }
+
+    @Test("A transient block (server not connected) keeps the form: the row is grey, the mode does not engage")
+    func serverDownLightningKeepsTheForm() async {
+        let request = PaymentRequest(destination: destination(.lightning), amount: nil)
+        let offline = Selector.PaymentContext(arkBalance: 10_000, bitcoinBalance: 10_000, networkConfig: .signet, arkServerConnected: false)
+        let ranked = await Selector.rankDestinations(from: request, context: offline)
+        #expect(ranked.first?.viable == false)
+        #expect(ranked.first?.viabilityReason == .serverNotConnected)
+        #expect(!Selector.nothingPayable(ranked))
+    }
+
+    @Test("Typing past the Payments balance on a foreign-Ark + Lightning request keeps the fixable Lightning row, not the dead Ark row (review finding 2026-11-04)")
+    func amountAboveBalanceKeepsTheFixableRow() async {
+        let request = PaymentRequest(destinations: [destination(.ark), destination(.lightning)], originalString: "bitcoin:…")
+        let context = context(ark: 10_000, bitcoin: 0, arkVerdict: false)
+        _ = await Selector.rankDestinations(from: request, context: context)
+        let reranked = Selector.rerankDestinations(from: request, amount: 20_000, context: context, knownFees: [:])
+        #expect(reranked.map(\.balanceSource) == [.arkViaServer])
+        #expect(reranked.first?.viabilityReason == .needMore(sats: 10_000))
+        #expect(!Selector.nothingPayable(reranked))
+    }
 }

@@ -19,6 +19,11 @@ struct DisplayDestination {
     let availableBalance: Int?
     /// The balance this row pays from; nil when no ranking produced the row
     var balanceSource: PaymentDestinationSelector.BalanceSource? = nil
+    /// Blocked by the request itself, no amount can change it (an address
+    /// of another server); the collapsed row then drops its "Pay from"
+    /// title and shows address and reason only (DECIDED 2026-11-04,
+    /// `Features/Foreign_Server_Ark_Address.md` §12)
+    var unpayable: Bool = false
 
     /// What selects this row: destination plus source, since a bitcoin
     /// address appears once per balance that can pay it
@@ -61,6 +66,7 @@ struct DisplayDestination {
         self.viabilityReason = ranked.reason
         self.availableBalance = ranked.availableBalance
         self.balanceSource = ranked.balanceSource
+        self.unpayable = !ranked.viable && ranked.viabilityReason.blocksRegardlessOfAmount
     }
 
     init(
