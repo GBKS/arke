@@ -45,7 +45,7 @@ struct TransactionMetadataResolutionTests {
             PendingTagAssignment.self,
             UserProfile.self
         ])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: configuration)
     }
 

@@ -136,10 +136,13 @@ struct SwiftDataHelper {
                 print("🌥️ CloudKit enabled with automatic container")
             }
         } else {
-            // Local storage only
+            // Local storage only. The default `cloudKitDatabase` is `.automatic`,
+            // which would still attach CloudKit mirroring under the app's
+            // entitlement; `.none` is what "disabled" means.
             configuration = ModelConfiguration(
-                schema: schema, 
-                isStoredInMemoryOnly: inMemory
+                schema: schema,
+                isStoredInMemoryOnly: inMemory,
+                cloudKitDatabase: .none
             )
             print("💾 Local storage only (CloudKit disabled)")
         }
