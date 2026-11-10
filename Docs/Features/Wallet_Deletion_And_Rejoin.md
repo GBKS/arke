@@ -301,3 +301,25 @@ On-device verification (decisive; two linked devices, signet):
   mismatch clears the tombstone; normal detection for the new account.
 - **Import on a tombstoned device** → allowed; same-phrase only (hash
   validation); success clears the tombstone.
+
+## Open: deleting with an exit, invoice or board in flight (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Delete wallet with an exit in flight shows no funds warning** — also
+  no warning for an open Lightning invoice (its preimage lives only in the
+  deleted database; a paid-in HTLC times out to the payer) or a pending
+  board (not recoverable by the app); the 0.26 user procedure tells users
+  to wait these out (`Migrations/Bark-0.25.0-to-0.26.0/03-impact-analysis.md`
+  §3b, 2026-10-25) (from
+  the 2026-10-13 forfeit-warning review, PLAUSIBLE; Tier 3 confirmed by
+  Christoph 2026-10-14, no field case): the old generic box
+  fired on the grand total, which included `pendingExitSat`; the forfeit box
+  reads bark's unspent list (Spendable + Locked) and exits are not in it.
+  Whether a started, unclaimed exit is recoverable after deletion is
+  unverified — exit progression and the claim need the bark db, and
+  `recovery.rs:285` stores recovered VTXOs as `Exited` without the exit
+  state. Settle that first (bark `exit/` claim prerequisites), then either a
+  third copy ("an exit is in progress; deleting stops it on this device") or
+  nothing. The manual-backup reminder on the same screen already names the
+  wallet state file.

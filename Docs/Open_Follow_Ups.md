@@ -20,11 +20,17 @@ How to use it:
   plus at most about six lines — what, where, why that tier, and a pointer
   to the plan doc that holds the evidence (DECIDED 2026-10-19). Evidence,
   traces and history go in a `Features/*.md` plan while open and travel to
-  the Done log when closed. Cite symbols (type, function, property) rather
-  than `file:line`; line numbers rot within days. Christoph's Reminders app
-  is capture-only; sweep it into this file at the end of a session.
-  `python3 Scripts/backlog_stats.py` prints the counts and flags ticked or
-  oversize entries.
+  the Done log when closed. Amendment DECIDED 2026-11-10: a trace-shaped
+  entry with no history (no ticked sub-items, no superseded premises, no
+  chronology) may run to about fifteen lines without a plan doc; anything
+  longer, or anything carrying history, moves — and it moves by verbatim
+  relocation, never by rewriting, so labels (CONFIRMED / PLAUSIBLE /
+  PROPOSED / DECIDED + date), cross-links and "not verified" notes survive.
+  Cite symbols (type, function, property) rather than `file:line`; line
+  numbers rot within days. Christoph's Reminders app is capture-only; sweep
+  it into this file at the end of a session. `python3
+  Scripts/backlog_stats.py` prints the counts and flags ticked lines,
+  entries over fifteen lines and long entries that carry history markers.
 - **DECIDE / PROPOSAL** markers mean Christoph has not ruled; nothing below
   them is a decision until he says so.
 
@@ -138,183 +144,25 @@ needs a ruling or a sentence of reasoning before it can become work.
 ## Tier 0 — Funds or security at risk
 
 - [ ] **Backup restore is newest-wins with no wallet binding**: one
-  `Backups/db.sqlite` slot per iCloud account, written by plain file copy;
-  on launch `restoreWalletIfNeeded` (`WalletManager.swift:1339-1360`, primary
-  only) replaces the local database when the backup's modification date is
-  later. Nothing ties a backup to a wallet hash or a sequence number, so a
-  device can start from an older or foreign VTXO database (local-only state
-  is what unilateral exit depends on). Fix: bind each backup to the wallet
-  hash and a monotonic counter and refuse mismatches; binding also
-  neutralises the leftover-backup restore above. Possible field case
-  (2026-10-10): Second's hypothesis for the mainnet divergence incident
-  below is a restore from backup or a reinstall + iCloud restore, which a
-  newest-wins restore of an older `db.sqlite` would produce (the wallet
-  forgets a round it already took part in). Unconfirmed — our two log
-  exports show "Local wallet file is up to date" and earlier sessions are
-  unseen; the user has been asked. If confirmed, this becomes the
-  field-evidenced root cause and moves into Train 1. Journal question closed
-  2026-10-09: bark 0.7.1 sets no `PRAGMA journal_mode` in
-  `SqliteClient::open`, so SQLite's default rollback journal applies and
-  there are no `-wal`/`-shm` side files; the remaining copy risk is a backup
-  taken mid-transaction, which stopping the daemon first mitigates.
+  `Backups/db.sqlite` slot per iCloud account; `restoreWalletIfNeeded`
+  (primary only) replaces the local database whenever the backup is newer,
+  with nothing tying it to a wallet hash or sequence number. Fix: bind each
+  backup to the wallet hash and a monotonic counter and refuse mismatches.
+  Possible field case (2026-10-10, unconfirmed): the divergence incident
+  below. Evidence and the closed journal question: `Features/Backup_Restore.md`.
 - [ ] **Claimed exit funds invisible after seed import** (network-verified
-  2026-08-13: 8,839 sats confirmed-unspent at the claim address, absent from
-  balance — 143,041 shown vs 151,880 actual). `ExitClaimSequence.run` reveals
-  a fresh address (`getOnchainAddress()` = `reveal_next_address`) as its FIRST
-  step on every claim attempt, before `drainExits` can fail, and
-  `ExitProgressionService` auto-retries failed claims each interval, so every
-  failed attempt burns a derivation index. Claim addresses bypass
-  `AddressService` history (untracked, not gap-limited); seed import loses the
-  revealed-index state and both BDK gap-10 scans stop short. The receive
-  screen's 20-unused cap also independently exceeds gap-10. Mitigations:
-  (a) reveal the claim address only after a successful `drainExits` build, or
-  persist one claim address per exit — `ExitProgressTests.testSequenceOrder`
-  currently pins address-first and must change with it; (b) route claim
-  addresses through `AddressService`; (c) import scan stop gap ≥ unused cap
-  + margin (~50); (d) upstream — no rescan API (feedback §2.6). Also blocks
-  the exit movement from linking its claim tx (`onchain_… not found` on
-  every relink pass). Related adoption: Tier 4
-  `initialScanOnchain(birthdayHeight:)`.
+  2026-08-13: 8,839 sats at the claim address, absent from the balance).
+  `ExitClaimSequence.run` reveals a fresh address first on every claim
+  attempt and `ExitProgressionService` retries, so failed claims burn
+  derivation indexes past both gap-10 import scans; claim addresses bypass
+  `AddressService`. Mitigations (a)–(d), the test that pins address-first
+  and the related adoption: `Features/Exit_Architecture.md` "Open gap".
 - [ ] **Wallet state diverged from the server, and the app can neither see
-  it nor say so** (field incident, mainnet, build 24, logs read 2026-10-07
-  and 2026-10-09; wallet id and VTXO ids in the support thread; reframed
-  2026-10-10 after Second's answer). Second found a *successful* refresh of
-  the user's three VTXOs server-side — no funds lost — but the wallet missed
-  the mailbox message that settles the forfeit, so it still holds the
-  pre-refresh VTXOs (now spent in that round) and cannot auto-resolve. From
-  the app's side: bark's selection logs them `is expired, must be
-  refreshed`, every launch's auto-check and every "Refresh now" tap write a
-  Pending refresh movement, the server rejects it as `unusable_inputs`, the
-  movement flips to Failed, and the balance keeps showing 19,995 sats the
-  user cannot spend. Root-cause candidates, both open: Second asks whether
-  the user restored from a backup or reinstalled and restored from iCloud
-  (see "Backup restore is newest-wins" above — our two log exports show
-  "Local wallet file is up to date", earlier sessions unseen); and upstream
-  server commit `dfd425d4a` (2026-09-18, after `server-0.7.1`) fixes mailbox
-  checkpoint paging where a page boundary inside a batch "skipped the
-  remaining rows for good", in both mailboxes — a lost message with no user
-  action. Remedy per Second: recovery from seed, once bark's recovery-path
-  fixes ship; for Arké that is the bindings bump (Tier 4 "Next bump"),
-  since our 0.7.1 bindings predate every one of those fixes, so the user
-  should hold the recovery until then. Four app defects, one cluster:
-  - [x] **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
-    issued into a round"** — done 2026-10-11 (`Features/Refresh_Deduplication.md`
-    §9): verified at `server-0.7.1` that the tag fires for any unspendable
-    input (spent, exited, banned; no expiry check) and the message names the
-    ids. Now `isUnusableInputsRejection` + `RefreshRejection.classify`
-    (in flight only when the ids are in `vtxoIdsBeingRefreshed()` after the
-    refetch) + `RefreshRejectionBackoff` (24 h per id, device-local
-    `com.arke.refresh.rejectedInputs`, pruned to the spendable set, batch
-    entries yield inside the 144-block valve). Manual path returns
-    `.rejectedByServer`; the modal says "Can't refresh from this device" with
-    the recovery-phrase + contact-support hint, never "funds lost". 16 unit
-    tests (four implementation-restating ones dropped on review, 2026-10-11);
-    wipe key added. Adversarial pass 2026-10-11 fixed two CONFIRMED
-    findings in-session (a stale Pending movement on an expired VTXO passed
-    Guard C's valve and would have read as "in flight" — in-flight now means
-    *newly* locked since the pre-call read; the card's list now mirrors the
-    back-off so a partial batch cannot report success). Left open from that
-    pass, no app fix: **bark's daemon joins every round's first attempt for
-    maintenance refresh** (`join_round_for_maintenance_refresh`, bark-0.7.1
-    `daemon/mod.rs:155-160`) with the same dead VTXOs, so one Failed refresh
-    row per *round* keeps arriving regardless of the app-side back-off —
-    confirm in the next field log (bark lines "Joining round … for maintenance
-    refresh" / "Maintenance refresh rejected"); it is the bindings bump's to
-    fix; defect 4 turned out to be a log artefact, no app-side rows to prune
-    (2026-10-12), so the Failed rows that remain are bark's own. Also: a
-    `NotFound` ("input vtxo does not exist") rejection is deliberately not
-    matched and would still retry as an ordinary error — fold into the Tier 4
-    typed-errors item. **Device check owed**: no reliable repro from the app
-    (needs the server to refuse); watch the next debug export from the mainnet
-    user for the new FFI line carrying the server text with ids (confirms the
-    `{:#}` chain reaches the app — plan claim C4, derived), the warning
-    "holding them back for 24h", and one app-side Failed row per day.
-  - [x] **The balance card has no expired state at all** — done 2026-10-11
-    (`Features/Refresh_Deduplication.md` §10). The card now resolves one of
-    refreshing / refresh now / refused / too small / countdown / idle via
-    `BalanceRefreshCardState`, with the same Guard B → Guard C (valve) →
-    back-off order as the service; refused shows "Can't refresh from this
-    device" + the held-back amount, no CTA; the 330 floor is one shared
-    constant on the auto path, the manual path (`.belowMinimum`) and the
-    card; a new `refreshStatusVersion` reloads the card *after* a verdict is
-    recorded (the refetch bumped `transactionVersion` too early). Adversarial
-    pass fixed two CONFIRMED findings in-session (a dust sibling masked the
-    refusal; modal/card contradiction), 8 new tests, 34/34 scoped. Mixed case
-    (refreshable + held back) DECIDED 2026-10-11: the compact row shows the
-    primary state only; the "Held back" row lives on the full card. New
-    keys (5) wait for the next translation batch. Device check owed with defect 1's: the mainnet
-    user's next export should show the row, and a tap landing on the refused
-    screen. Headline balance untouched (DECIDED 2026-10-11, row only).
-    Original entry: The only place the app
-    labels a VTXO Expired is the X-Ray row (`VTXORowView.swift:22-48`), and
-    even there `VTXOListView_iOS` offers "Refresh all (Free)" with no expiry
-    exclusion. Both refresh-status containers hardcode `isExpired: false`
-    (`BalanceRefreshStatusContainer.swift:63`, `…Compact.swift:68`), the view
-    model has no expiry notion and says "Refresh now" whenever
-    `hasVtxosToRefresh`, and the ArkéUI `expiredContent` branch is dead
-    outside previews. Hook added 2026-10-11:
-    `VTXORefreshService.recentlyRejectedVtxoIds` is the set the service will
-    not re-submit, and `BalanceRefreshStatusViewModel` already excludes it
-    from `vtxosNeedingRefresh` — so today a rejected VTXO draws **no CTA and
-    no explanation** on the card while still counting as spendable; the honest
-    copy exists only in the refresh modal's `.refused` state (reachable now
-    only via the race). This item supplies the card's own state for that set. The balance counts expired VTXOs as spendable because
-    bark 0.7.1's `Balance` has only `spendable`/`pendingExit`; upstream master
-    adds `Balance.needs_refresh`, which keeps them out of spendable, so the
-    next bindings bump may deliver the balance half. These VTXOs need their
-    own state, and the copy must not claim "expired, funds lost" — the app
-    cannot tell a sweep from a divergence. Honest version: no refresh CTA,
-    "these coins can't be refreshed from this device; recovering the wallet
-    from your recovery phrase may restore them — contact support first", the
-    amount shown apart from spendable. Same gate, same fix: **don't show
-    "Refresh now" below the 330-sat floor** `VTXORefreshService` already
-    applies (merged from Tier 3 Refresh 2026-10-09) — the CTA should be
-    driven by what the service would actually refresh.
-  - [x] **The FFI log line loses the server message** — done 2026-10-11:
-    `BarkWalletFFI+VTXO.swift` now logs `localizedDescription` with
-    `privacy: .public` for the delegated-refresh call only (the server text
-    carries VTXO ids, which bark's own selection logger already prints). The
-    other ~160 `\(error)` FFI log lines stay for the Tier 4 typed-errors item.
-  - [x] **Every failed refresh attempt leaves an orphaned local row, and the
-    orphans are the user's "growing list of Failed refresh rows"** — closed
-    2026-10-12, premise wrong: there are no orphan rows. In the 2026-10-09 log
-    every full-list pass (41, 42, 43 movements) matched all local rows and
-    reported no orphans; all 231 "no longer exists on server" lines came from
-    `processSingleMovement`, which wraps one notification movement in an
-    array and reused the full upsert, so the orphan check ran against a
-    one-element list and named every other Balance-tagged transfer. The
-    38 → 39 step is the new Failed refresh row receiving the Balance auto-tag
-    (refresh → transfer → `autoTagInternalTransfer`), counted on the next
-    notification pass. The growing "Failed refresh" list is bark's own
-    movement list (one real Pending → Failed movement per attempt), reduced
-    by defect 1's back-off and otherwise the bindings bump's; hiding such
-    rows is the separate Tier 3 line (Christoph, 2026-10-12: own focused
-    item, not this cluster). Fix: `upsertTransactionsFromServerData(_:
-    isCompleteMovementList:)`, the notification path passes `false`; the
-    full-list path logs one summary warning per refresh instead of one line
-    per row, and only for `sourceType == "ark"` rows (Christoph's 2026-10-12
-    device log showed the one remaining "orphan" was his single onchain
-    receive, which shares the table and never matches a movement). No rows
-    are deleted on either path (unchanged). Ledger line 2026-10-12. Original
-    entry: In the 2026-10-09 log each attempt adds one bark
-    movement (41 → 42 → 43) *and* one more "tag assignment on orphaned
-    transactions" (38 → 39): a `PersistentTransaction` whose `movement_<id>`
-    txid matches no movement in the next list, kept because auto-tagging
-    gave it a tag (`TransactionService+Upsert.swift:357-369`, "let them
-    remain to preserve user tags"). 38 orphans ≈ 38 attempts. Find the id
-    mismatch first (the row created from the daemon notification in
-    `processSingleMovement` vs. the row from the list — same movement,
-    different txid?), then decide pruning (orphans with only auto-tags are
-    safe to drop), and log once per refresh at warning level instead of
-    231 ERROR lines per session.
-  Owed to the user (Christoph, support thread): the two restore questions,
-  "funds confirmed safe on the server", "hold the recovery until the next
-  Arké build". Owed to Second: was `dfd425d4a` deployed before this user's
-  refresh round, and was the successful refresh a delegated one? None of the
-  four fixes waits on the expiry safety-net DECIDE, which this incident no
-  longer evidences. Related Tier 3 lines, different trigger: "Hide failed
-  and completed refreshes that were free?" and "Surface expiry sweeps"
-  (upstream-blocked).
+  it nor say so** (mainnet field incident, build 24; reframed 2026-10-10:
+  funds safe server-side, the wallet missed the mailbox message settling a
+  refresh). The four app defects are closed (2026-10-11/12, Done log); open
+  are the remedy (recovery from seed after the bindings bump), two owed
+  answers and the field-log check. Plan: `Features/Wallet_State_Divergence.md`.
 - [ ] **Expiry-critical reminders are swallowed by a denied system
   permission**: `scheduleNextRefreshNotification`
   (`VTXORefreshService.swift:640-649`) skips the free-refresh reminder when
@@ -326,30 +174,13 @@ needs a ruling or a sentence of reasoning before it can become work.
   see which gate the user hit. Fix shape: an in-app banner when the system
   permission is denied while VTXOs approach expiry, naming the amount; a
   toggle exemption cannot help. Precondition for safety-net option (c).
-- [ ] **`checkReadOnlyMode()` infers primary** (`WalletManager.swift:530-557`):
-  a missing or unreadable device registration sets `isReadOnlyMode = false`,
-  i.e. full spend rights — contradicts Principle 2 / contract rule 15.
-  Reachable via self-unlink (`LinkedDevicesView_iOS.swift:50`, handler
-  `:225-230` → `unlinkDevice` deletes the row and the mirror entries, so
-  relaunch sees nil + `.noOpinion`). UNVERIFIED on device — needs the Tier 2
-  self-unlink → relaunch run before deciding the fix. Fix this before
-  collapsing `shouldBlockWalletAccess`'s layers (Tier 4). Sibling site
-  (read 2026-10-08): `shouldBlockWalletAccess()` itself returns `false` when
-  the device ID cannot be read (`WalletManager.swift:1247-1250`); the ID is
-  stored `WhenUnlockedThisDeviceOnly` (`DeviceRegistrationService.swift:170`)
-  while the seed is `AfterFirstUnlock`, and the headless wake path calls
-  exactly that gate (`WalletManager+Notifications.swift:127`), so on a locked
-  background wake the seed is readable and the gate is not — inferred timing,
-  same fix shape: treat "unknown" as read-only until the registry answers.
-  No test covers the nil-registration or unreadable-ID branches.
-  Folded in 2026-10-19 from Tier 4: the `device_<id>_isPrimary` KVS key
-  written by `writeOwnPrimaryFlag` has no clearer — unregister, unlink and
-  the full wipe all leave it, although `SharedStateWipeCoverage` lists
-  `device_<id>_*` as `fullWipeOnly` (`WalletDataCleanupService.swift:1087`);
-  not read by the registry scan, but layer 2 of `shouldBlockWalletAccess`
-  reads it on a reinstall whose local breadcrumb is gone. Fix with this
-  item or correct the inventory label (found 2026-10-16,
-  `Features/Wallet_Deletion_Ghost_Hardening.md` §7).
+- [ ] **`checkReadOnlyMode()` infers primary**: a missing or unreadable
+  device registration sets `isReadOnlyMode = false` (full spend rights,
+  against Principle 2 / contract rule 15), reachable via self-unlink; sibling
+  `shouldBlockWalletAccess()` answers `false` on an unreadable device ID.
+  Fix shape: unknown = read-only until the registry answers. UNVERIFIED on
+  device, needs the Tier 2 self-unlink run first. Trace, sibling and the
+  folded `device_<id>_isPrimary` key: `Features/Read_Only_Mode.md`.
 - [ ] **Security checks first**: switch `authenticateUser`
   (`SecurityService.swift:879-895`) to `.deviceOwnerAuthentication` (passcode
   fallback; biometrics-only hard-fails on Macs without Touch ID) and wire the
@@ -363,22 +194,12 @@ needs a ruling or a sentence of reasoning before it can become work.
   deletions, promote/demote/unlink, send as opt-in) and the link screen
   itself is not a gated action. Build with or after the linking scope pass.
 - [ ] **Deletion abort after Step 1 strips this device's own blocker
-  evidence** (found 2026-10-16 by the ghost-hardening review, pre-existing):
-  `performDeleteWalletData` unregisters first — mirror cleared, row delete
-  committed — and only then runs the fallible CloudKit deletion and the
-  keychain delete. If either throws, the view returns to the info screen
-  with the wallet working (`DeleteWalletSettingView.swift`, phase 1 catch)
-  and nothing re-registers until the next cold launch. In that window
-  another device's `otherDeviceReport` sees no blocker, is offered the full
-  wipe, and deletes the shared seed under a device that still spends. The
-  next launch then registers a *new* row with `isPrimaryDevice == false`
-  (detection paths never claim), so an ex-primary comes back as a secondary.
-  PROPOSED fix: move Step 1 to after the CloudKit step and before the
-  keychain step — on a full wipe Step 2 deletes every row anyway, on
-  local-only nothing fallible follows, so every abort path leaves the
-  registration intact; the keychain-failure residual in rule 17 stays.
-  Needs the refresh-gate tests' "nothing destructive reached" proof
-  re-anchored. Plan `Features/Wallet_Deletion_Ghost_Hardening.md` §7.
+  evidence** (found 2026-10-16, pre-existing): `performDeleteWalletData`
+  unregisters first, so a CloudKit or keychain throw leaves the wallet
+  working with no registration until the next cold launch; another device
+  is then offered the full wipe. PROPOSED fix: move Step 1 after the
+  CloudKit step, before the keychain step; re-anchor the refresh-gate
+  tests' proof. Detail: `Features/Wallet_Deletion_Ghost_Hardening.md` §7.
 - [ ] **Paste button accepts unverified Lightning Addresses**: in
   `SendViewModel+Clipboard`, `tryParallelResolution` (`:154`, fallback
   `:216-219`) and `tryLightningAddressFallback` (`:239`, fallback `:251-253`)
@@ -429,31 +250,12 @@ needs a ruling or a sentence of reasoning before it can become work.
   detect `ActivePrewarm` / a background launch and defer the heavy init, or
   hold a task assertion across it. Evidence: `Features/Background_Execution.md` §4.
 - [ ] **Failed boards leave onchain coins stranded on bark 0.7.1** — upstream
-  fix `f85ca92ac` ships in bark 0.8.0 (bindings v0.26.0, built 2026-10-25),
-  so this becomes a Tier 2 verification once build 26 is on a phone: a
-  board refused after signing leaves the onchain wallet untouched (surfaced
-  by the 2026-10-05 Second server incident: an attacker registered boards
-  with only his own signatures via `BoardBuilder::new_from_vtxo`, a lib
-  function only the server's register-board handler calls, so our client
-  never ran the vulnerable code and user VTXOs stayed on pre-signed exit
-  paths; Second lost ~0.75 BTC of its own funds). The client-side fallout is
-  upstream `f85ca92ac` (2026-10-07, after our bark 0.7.1): the board flow
-  stored the signed funding tx in the onchain wallet *before* the server
-  cosigned, so a board refused after signing (cosign refused, below the
-  minimum, network error) leaves no movement or checkpoint, the coins read
-  as spent, and every sync rebroadcasts a funding tx no VTXO tracks — a
-  2-of-2 output with no cosigned exit. **Derived** from the commit message,
-  not reproduced. The server now also rejects register-board above
-  `max_vtxo_amount` (`8fab49706`), and `BoardingModalView.swift:32` caps the
-  form only by `minBoardAmount` although `ArkInfo.maxVtxoAmount` is parsed
-  (`BarkWalletFFI+Configuration.swift:192`; `BoardingModalFormView` has no
-  maximum parameter while `OffboardingModalFormView` does), so a user can
-  trigger exactly that refusal. Now: pass the maximum into the boarding form
-  and refuse client-side; disable boarding while the server is unreachable
-  (also on the Tier 1 offline feature's disable list). Real fix: the
-  bindings bump that carries `f85ca92ac` (Tier 4 "Bindings adoption"). Both
-  upstream commits are only on `origin/master`; the local `~/workspace/bark`
-  checkout is at `8adc8e7` (2026-09-30), so `git fetch` before quoting more.
+  `f85ca92ac` ships in bark 0.8.0 (bindings v0.26.0), so this becomes a
+  Tier 2 verification once build 26 is on a phone (**derived** from the
+  commit message, not reproduced). Still app-side: pass `ArkInfo.maxVtxoAmount`
+  into `BoardingModalFormView` and refuse client-side (the server rejects
+  above it since `8fab49706`); disable boarding while the server is
+  unreachable (Tier 1 offline list). Evidence: `Features/Board_And_Offboard.md`.
 
 - [ ] **A device-ID keychain read failure makes the delete override appear**
   — `otherDeviceReport` calls `getOrCreateDeviceId()` before reading either
@@ -505,54 +307,12 @@ needs a ruling or a sentence of reasoning before it can become work.
 ### Exits
 
 - [ ] **Replace the hand-rolled exit cost estimate with
-  `estimateEmergencyExitFee`** (DECIDED 2026-10-19 as a Train 2 Tier 1
-  item, Christoph: "do it"; supersedes the Tier 3 "exit pre-flight" line,
-  which was an addition — this is a replacement). **Premises changed at
-  bark 0.8.0 (bindings v0.26.0, 2026-10-25): `fundable` is deprecated and
-  no longer computed from confirmed coins, the estimate never syncs or reads
-  the onchain wallet, `exitBroadcastFeeSats` already includes a `feeMargin`
-  (default 1.2). Rewrite the build steps below per
-  `Migrations/Bark-0.25.0-to-0.26.0/01-api-changes.md` §1.4 before
-  building: compare `exitBroadcastFeeSats` against the confirmed onchain
-  balance in the app; the "unconfirmed funds pass our check" argument is
-  moot.** The 0.7.1 description follows for the record. Today
-  `ExitView_iOS.calculateExitCost` (`:285-358`) prices a forced move
-  itself: no tree-tx deduplication, guessed depth 1–3, a 1.5–2.0× CPFP
-  multiplier, a 10–15 % margin, three scenarios rendered as a range by
-  `ExitCostEstimateCard`, and `canAfford` checked against
-  `manager.onchainBalance?.totalSat` (`:115-116`). Bark's estimator at
-  `bark-0.7.1` (`bark/src/exit/estimate.rs`, read at the tag 2026-10-19)
-  resolves each VTXO's real exit chain, skips confirmed txs, dedupes shared
-  txids, prices in-mempool packages as RBF replacements, simulates the
-  serial CPFP walk against **confirmed** coins to produce `fundable`, and
-  signs a real claim tx for its weight; it returns
-  `exitBroadcastFeeSats` / `claimFeeSats` / `txsToBroadcast` separately.
-  So this is a correctness fix as well: unconfirmed onchain funds pass our
-  check and stall bark's walk. Build: (1) protocol method + `MockBarkWallet`
-  stub (`estimateEmergencyExitFee(vtxoIds:feeRateSatPerVb:destination:)`,
-  on `WalletProtocol` at v0.25.0, `Bark.swift:2183`); (2) map
-  `EmergencyExitFeeEstimate` into the ArkéUI model — show the two legs as
-  bark splits them (broadcast paid now from Savings, claim deducted later
-  from the recovered amount), `fundable` replaces `canAfford`, the
-  low/mid/high scenarios and min/max transaction counts go; (3) same
-  fee-rate rule as `ExitProgressionService.exitFeeRateOverride`: nil on
-  mainnet, capped fast rate off mainnet (with an explicit rate bark prices
-  both legs at it, matching today's approximation); (4) delete the
-  weight-formula comment block at the top of `ExitView_iOS.swift`.
-  **Error rule DECIDED 2026-10-19:** when the estimate throws (unknown /
-  already-exited / spent / non-standard VTXO, or an FFI error) the exit is
-  **not** blocked — a forced move is a recovery action; show "cost could
-  not be estimated" and keep Start enabled with the warning. Today the
-  estimate never fails, so this is new behaviour. Preconditions verified:
-  the app passes bark's BDK-backed `OnchainWallet.default` at `Wallet.open`
-  (`BarkWalletFFI+WalletLifecycle.swift:262`), which the binding requires
-  (callback-backed wallets error). Caveats: slow — the binding doc says it
-  syncs the onchain wallet first (doc claim, not traced in the Rust);
-  latency on device not measured. Review: adversarial pass (exit money
-  path), then a signet forced move on device with one unconfirmed onchain
-  input to see `fundable == false` behave. Sibling sites that keep their
-  own rate logic and are *not* touched: `ExitProgressionService:170-173`,
-  `UnilateralExitListView_iOS:239`.
+  `estimateEmergencyExitFee`** (DECIDED 2026-10-19, Train 2 Tier 1,
+  Christoph: "do it"; replaces `ExitView_iOS.calculateExitCost`). Premises
+  rewritten at bark 0.8.0: compare `exitBroadcastFeeSats` (margin included)
+  against the confirmed onchain balance; `fundable` deprecated. Error rule
+  DECIDED: a thrown estimate never blocks the exit. Build steps, fee-rate
+  rule, sibling sites and the 0.7.1 record: `Features/Exit_Cost_Estimate.md`.
 
 ### Data safety
 
@@ -575,22 +335,11 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 - [ ] **The transaction upsert deletes duplicate `PersistentTransaction`
   rows itself** (`TransactionService+Upsert.swift`,
-  `buildExistingTransactionDictionary`: `modelContext.delete` + save on a
-  repeated txid, on both the full-list and the notification path). The row
-  is CloudKit-mirrored and cascades to tag and contact assignments, so the
-  dedupe silently drops one side's assignments; contract rule 23 reserves
-  mirrored-row deletion for `WalletDataCleanupService`. Where duplicates
-  come from: (a) `processSingleMovement` is not routed through
-  `taskManager`, so a notification upsert can insert `movement_N` inside one
-  of the full-list upsert's suspension points and the full pass, working from
-  its pre-suspension snapshot, inserts `movement_N` again (PLAUSIBLE, not
-  reproduced; the 2026-10-09 log shows "0 new" on every full pass); (b) two
-  devices each creating the same movement row and CloudKit merging both.
-  Fix shape: merge assignments onto the survivor before deleting, or route
-  the notification path through the same task key and keep the first row.
-  Found by the 2026-10-12 adversarial pass on the orphan-log fix; test that
-  would settle (a): interleave a single-movement upsert inside a full-list
-  upsert at its first `await`.
+  `buildExistingTransactionDictionary`): a repeated txid is deleted and
+  saved on both upsert paths; the row is CloudKit-mirrored and cascades to
+  tag and contact assignments, against contract rule 23. Sources (a)
+  notification/full-list interleave (PLAUSIBLE), (b) two-device merge. Fix
+  shape, settling test: `Features/Transaction_Upsert_Duplicates.md`.
 - [ ] **`SwiftDataHelper` deletes the store on any load error**
   (`SwiftDataHelper.swift:158-194`): any `SwiftDataError` (`:163-166`) or
   Cocoa codes 134110/134100/134060 (`:168-173`) delete every `*.store`,
@@ -612,24 +361,12 @@ needs a ruling or a sentence of reasoning before it can become work.
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
 
 - [ ] **CloudKit Production schema was never deployed — no TestFlight build
-  has ever synced a SwiftData row** (found 2026-10-26 in the CloudKit
-  Console while preparing build 26: Production holds only Apple's `Users`
-  type, Development has every `CD_` type; builds run from Xcode use
-  Development, where types are created on first use, TestFlight and App
-  Store builds use Production, which never auto-creates). Consequences:
-  on TestFlight builds, secondary read-only data, tag / contact / note sync,
-  `DeviceRegistration` rows, `BackupStatus` and the balance mirror never
-  left the device; the iCloud KVS registration mirror, the wallet hash and
-  the iCloud Drive backup are unaffected. Remedy: Christoph deploys the
-  schema once (Deploy Schema Changes… in the Console) — then existing
-  TestFlight installs upload their local stores on the next launch; watch
-  for duplicate default tags / contacts where two of Christoph's own
-  TestFlight devices merge (singleton rows already read `lastUpdated desc`).
-  Process fix: `Development/Release_Train.md` Release stage now requires a
-  Debug run + schema deploy after any `@Model` change. (Not the cause of the
-  Tier 1 "secondary's balance" entry: there tags and activity did sync, so
-  that was an Xcode build.) The Tier 2 two-device checklist needs one run
-  on a TestFlight build after the deploy.
+  has ever synced a SwiftData row** (found 2026-10-26 in the Console:
+  Production holds only `Users`, Development every `CD_` type). Remedy:
+  Christoph deploys once ("Deploy Schema Changes…"), then watches for
+  duplicate default tags / contacts as his TestFlight devices merge; the
+  Tier 2 two-device checklist needs one TestFlight run after. Consequences
+  and the process fix: `Architecture/CloudKit_Realtime_Sync.md` "Production schema".
 
 Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 2026-09-24; full S7, S5 and the security-check matrix await decisions above.
@@ -688,76 +425,19 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 ### Connectivity and offline
 
 - [ ] **The activity screen shows "no Ark connection" for the whole launch
-  refresh although the server answered in 1 s** (Christoph's unattached
-  log 2026-10-12, icon visible ~19–23 s): `connectionStatus.isConnected`
-  is written only in Step 4 of `performRefresh`
-  (`refreshProcessStates(isConnected: anyServerCallSucceeded)`), after the
-  two onchain syncs above; the Activity view's 4 s grace period expires
-  long before that, so the crossed-out antenna is the normal launch state
-  on every device. Fix: mark connected right after Step 1 succeeds, leave
-  Step 4 unchanged. Small, no device step beyond watching the icon on one
-  launch. DECIDED 2026-10-12: pulled into Train 1 (visible on every launch
-  for every user). Built 2026-10-12: `refreshServer()` now returns its
-  outcome (the old `error != nil` check also misread a stale error from an
-  earlier refresh as a Step 1 failure), Step 1 success calls
-  `updateConnectionStatus(connected: true)`. Adversarial pass 2026-10-12:
-  the early write is sound (single dedup'd `performRefresh`, in-memory
-  observable store, all readers live); it refuted the rationale first
-  written here for keeping the disconnected side at Step 4 — see the next
-  item — and noted that a Step 1 slower than the 4 s grace still shows the
-  icon until the server answers, which is the correct reading. No unit
-  test: pinning "flag is true before Step 3 ends" needs a mid-refresh
-  WalletManager harness that does not exist. Device check owed: one
-  launch, icon must not appear.
-- [ ] **Ark data waits for the onchain sync on every refresh** (Christoph's
-  unattached export 2026-10-14 13:01, anchor-relative: Step 2 onchain BDK
-  sync 2.9→5.4 s, Ark sync 5.4→5.6 s, movements saved and the new row shown
-  at 6.0 s, Ark balance read at 5.8 s but published at 10.2 s when the
-  onchain balance returned; wallet ready 13.3 s. On the 2026-10-12 wallet
-  the same onchain sync was 11.6 s.) Two causes, both app-side: (1) the FFI
-  `sync()` wrapper runs `onchainWallet.sync()` before `wallet.sync()`, and
-  Step 3's movement and balance reads come after both; (2)
-  `BalanceService.refreshAllBalances` awaits the Ark and onchain reads as
-  one tuple, and the onchain balance call sits behind the BDK lock of the
-  Step 3 history sync (4.4 s today, 6.3 s on 10-12). The Activity list is a
-  SwiftData query and shows rows at the upsert save, so no list re-publish
-  is needed. Verified at source: bark 0.7.1 `Wallet::sync` (local checkout
-  `8adc8e7`, `bark/src/lib.rs:1951`) "will not refresh VTXOs or sync the
-  onchain wallet" — mailbox, pending rounds/boards/offboards/sends, lightning
-  claims, fee rates; the bark-ffi wrapper (`v0.25.0` tag,
-  `src/core/wallet.rs:234`) only calls it and logs. So the Ark sync has no
-  dependency on our onchain sync and can go first. Fix: split the wrapper
-  into Ark and onchain sync methods (two FFI calls, mirrored as two protocol
-  methods; the composed `sync()` stays for its four UI callers), Step 2
-  becomes Ark sync → early movements + Ark balance read → onchain sync,
-  Step 3 unchanged; the balance service publishes the Ark balance when it
-  arrives and the onchain figure when that arrives, with separate error
-  handling. Expected: row and Ark balance at ≈3.5 s on today's launch.
-  Pull-to-refresh gains the same. Plan with labelled claims and the sibling
-  sweep: `Features/Launch_Ark_First_Refresh.md`. DECIDED 2026-10-14: Tier 1,
-  Train 1; the five UI `sync()` callers stay as they are; the second
-  onchain sync round and the Train 2 launch-timing item are untouched.
-  Built 2026-10-14 (uncommitted): `syncArk()` / `syncOnchain()` on the FFI,
-  protocol, mock and manager; `performRefresh` Steps 2a/2b/2c; balance
-  service publishes each side on arrival; `⏱️ Newest inserted row is X s
-  old at save` log line; contract rule 7c. Adversarial pass the same day:
-  no confirmed defect on the money or startup paths; two plausible items
-  fixed (Step 2b uses the read-your-own-writes movements read and
-  republishes the unified merge), two accepted with device looks owed
-  (Ark-only interim total when the in-memory onchain figure is nil; the
-  Ark balance row saved twice per refresh), citation and plan-text errors
-  corrected — record in the plan's §9, ledger line written. Device check
-  owed: one unattached cold launch with a mailbox payment waiting, export
-  after a minute; expect `Step 2b … after launch anchor` within ~0.5 s of
-  Step 2a and the row age under 1 s. First field result, export 2026-10-14
-  17:53 (pull-to-refresh, 305 movements, no new payment): refresh start
-  46.816, Ark sync done 46.931, Step 2b done 47.180 (movements + Ark
-  balance published 0.36 s in), onchain sync 1.9 s, Step 3 done 49.47 —
-  the Ark data is on screen before the onchain sync starts, as designed;
-  Christoph: "pretty quick". The cold launch in the same export is not
-  readable: the device store had evicted every info line before 42 s after
-  the anchor (see the Tier 2 export item), so the launch-with-waiting-payment
-  check is still owed and needs the export fix or Console.app first.
+  refresh although the server answered in 1 s** (2026-10-12; DECIDED
+  2026-10-12 Train 1; built the same day: Step 1 success now calls
+  `updateConnectionStatus(connected: true)`, `refreshServer()` returns its
+  outcome; adversarial pass found the early write sound, no unit test
+  possible without a mid-refresh harness). Device check owed: one launch,
+  icon must not appear. Build and review record: `Features/Offline_Experience.md`.
+- [ ] **Ark data waits for the onchain sync on every refresh** (DECIDED
+  2026-10-14, Tier 1, Train 1; BUILT and REVIEWED the same day: `syncArk()`
+  / `syncOnchain()`, Steps 2a/2b/2c, balance published per side). First
+  field result 2026-10-14 17:53: Ark data on screen 0.36 s into a
+  pull-to-refresh, before the onchain sync. Still owed: one unattached cold
+  launch with a mailbox payment waiting (needs the export fix or Console.app).
+  Plan, review record and the entry's trace: `Features/Launch_Ark_First_Refresh.md`.
 - [ ] **Open-time server connection fails on a cold start** (same export,
   1.4 s after the anchor): bark-ffi's `open` probes `ark_info()` once and
   logs `[OPEN] Server connection FAILED - Lightning and Ark operations will
@@ -771,44 +451,19 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   offline/server-down feature's "is the server reachable" signal, and
   consider telling Second the message overstates a transient failure.
 - [ ] **The app can never show "disconnected" once the wallet is open**
-  (CONFIRMED by the 2026-10-12 adversarial pass, pre-existing): Step 2's
-  `sync()` returns `()` in bark 0.7.1 (`bark/src/lib.rs:1980`, every
-  sub-sync is `if let Err … warn!`) and the FFI wrapper returns `Ok(())`
-  unconditionally, so the Swift `sync()` can only throw
-  `walletNotInitialized`, which `performRefresh` already guards. Hence
-  `anyServerCallSucceeded` is true for every refresh that reaches Step 2,
-  Step 4 always writes connected / excellent / `lastError = nil`, and with
-  the server down the Activity icon hides, the Connection Info sheet says
-  "Connected", its red error row is unreachable, `isArkServerReachable`
-  stays true so Lightning routing stays enabled, and
-  `hasEverSyncedSuccessfully` flips on the same flag. Fix shape: Step 2
-  must not count as a server success (only Step 1's handshake does), and
-  Step 4 then writes the disconnected verdict with Step 1's error — which
-  makes a transient Step 1 failure visible until the next refresh, so
-  decide the retry cadence with it. Belongs to the offline / server-down
-  feature below; build it first, the rest of that feature assumes the
-  signal works.
+  (CONFIRMED by the 2026-10-12 adversarial pass, pre-existing): bark's
+  `sync()` returns `()` and the FFI wrapper `Ok(())` unconditionally, so
+  `anyServerCallSucceeded` is true for every refresh reaching Step 2 and
+  Step 4 always writes connected. Fix shape: only Step 1's handshake counts;
+  decide the retry cadence with it. Build this first, the offline feature
+  below assumes the signal works. Trace: `Features/Offline_Experience.md`.
 - [ ] **Offline / server-down experience** (one feature, merged from eight
-  Reminders items: "stunningly designed no-connection state", server-down
-  and no-internet messages with disabled functionality, server-offline tip to
-  withdraw funds, disable send when offline, animate the connection icon
-  while connecting, track and surface the disconnect reason, and a Settings
-  disconnect button?). Corrected 2026-10-09: the last service error *is*
-  shown, as a red row in the Connection Info sheet while disconnected
-  (`ConnectionInfoSheet.swift:178-182`, fed via
-  `refreshProcessStates(isConnected:)` → `markDisconnected(error:)`), but
-  nowhere inline, not in read-only mode, and it is the generic last
-  refresh-service error, not a classified reason (offline vs server down).
-  Design the states (offline vs server down vs connecting), decide what each
-  disables (boarding while the server is unreachable belongs on the list —
-  Tier 0 "Failed boards"), classify the reason, build. **In scope since the
-  2026-10-10 ruling on operator dependence:** the server-down state must
-  leave unilateral exit reachable while Second's chain source is down too —
-  pick a fallback Esplora per network (a third-party trust call), decide
-  automatic fallback vs. a recipe, and whether an Esplora setting appears in
-  Settings; exercise the exit path once against an unreachable server
-  before shipping. Related dead code: connection quality is binary in
-  practice (Tier 4).
+  Reminders items): design the states (offline vs server down vs
+  connecting), decide what each disables (boarding while unreachable, send
+  offline), classify the reason, build. In scope since the 2026-10-10
+  operator-dependence ruling: unilateral exit must stay reachable with
+  Second's chain source down (fallback Esplora per network, a trust call).
+  Item list, what exists today, related dead code: `Features/Offline_Experience.md`.
 - [ ] **Invoice request timeout**: unknown how long `getLightningInvoice`
   takes to fail with no connectivity (bark's timeout, unmeasured). If minutes,
   users give up before Try Again / Share Addresses Instead appear. Measure
@@ -817,24 +472,12 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   ~5 s; say "offline" right away when the wallet knows; VoiceOver
   announcement for "Creating invoice".
 - [ ] **A stuck Lightning receive is invisible, and cannot be cancelled or
-  exited**: Second's 2026-10-06 disclosure says the follow-on denial of
-  service "could degrade Lightning receives on Bark-based wallets" (server
-  fixes `9111622f9`, `6fd9834ff`). Corrected 2026-10-09: **the app has no
-  claim loop at all.** `LightningClaimService` has been disabled since
-  commit a894888 (2026-04-10, constructor commented out at
-  `WalletManager.swift:390-391`; every `lightningClaimService?.start()` is a
-  no-op on nil), so its 30 s poll / `htlcs-ready` / swallowed-error code is
-  dead. Receives are claimed inside bark's own `sync()`
-  (`try_claim_all_lightning_receives` at tag bark-0.7.1, `lib.rs:1980,2012`),
-  which only `warn!`-logs failures — the app sees neither state nor error.
-  `cancelLightningReceive`, `attemptLightningReceiveExit`,
-  `lightningReceiveState`, `tryClaimLightningReceive`,
-  `pendingLightningReceives` exist on `BarkWalletFFI+Lightning.swift` with
-  zero live callers. Decide whether to delete the service or revive it as
-  the state source for the UI; then surface pending receives with their
-  state on the invoice sheet and in Activity, show the last claim error when
-  it repeats, and offer cancel / exit for a receive that never settles. Pair
-  with "Invoice request timeout" above.
+  exited**: the app has no claim loop (`LightningClaimService` disabled
+  since a894888, 2026-04-10); bark's own `sync()` claims receives and only
+  warn-logs failures, so the app sees neither state nor error. Decide
+  delete-or-revive for the service, then surface pending receives with
+  state, show a repeating claim error, offer cancel / exit. Pair with
+  "Invoice request timeout" above. Trace: `Features/Lightning_Receive_State.md`.
 
 - [ ] **Relay renewal timer wipes the stored registration before the mint**
   — `RelayRegistrationService.scheduleAuthRefresh` sets `registration =
@@ -973,46 +616,12 @@ names the fix it verifies; the write-ups are in the Done log.
 ### Diagnostics and notification path
 
 - [ ] **Debug export can come back empty or miss the first seconds**
-  (2026-10-14, iPhone 17 on iOS 27.0.1, build 24): an export taken 18 s
-  after a cold launch had `Entries: 0`; one taken 51 s after the next launch
-  had 199 entries, but its first info-level lines start 5.4 s after the
-  anchor while error-level lines are present from 1.4 s, so the Step 1 and
-  Step 2 markers and `refresh() CALLED` are missing. The exporter itself is
-  sound: a Swift Testing probe on the iPhone 17 Pro (26.5) and iPhone 17
-  (27.0) simulators saw its own info/notice/error lines (debug is never
-  persisted). Third export 17:53 the same day refutes the lag reading: it
-  was taken 63 s after the anchor, contains info lines from 42 s after the
-  anchor onwards (the pull-to-refresh, 17 s before the export) and none
-  from the launch itself, while error and notice lines from 1.4 s on are
-  present. PLAUSIBLE, revised: on device, info-level entries live in a
-  bounded per-process memory buffer and the oldest are evicted as the
-  buffer fills; the launch is the noisiest window (the debug-level dump of
-  every movement, one "Establishing links" line per movement, the VTXO
-  list), so the launch is exactly what gets evicted. The 12:16 export with
-  zero entries fits a buffer that had just turned over. Until fixed:
-  launch-step timings cannot be read from exports at all; use Console.app
-  with the phone on a cable. Fix shape: mirror the app's own `Logger` lines
-  into an in-process ring buffer the export reads first, with OSLogStore
-  for bark's bridged lines; and cut the launch log volume (the full
-  movements JSON at debug level, per-movement linking lines). The export is
-  the support-case path (2026-10-11), so this gates every unattached
-  measurement. CONFIRMED by the `OSLogType` docs (read 2026-10-14): "the
-  system stores info-level messages in memory buffers and, without a
-  configuration change, purges the oldest messages as those buffers fill
-  up", while default/notice and above are written to the data store. Fix
-  built 2026-10-14 (DECIDED, uncommitted), the documented route rather
-  than a mirror: the launch skeleton now logs at notice — `Launch
-  verdict`, `Existing wallet opened`, `Wallet opened`, `refresh() CALLED`,
-  every `[Refresh] Step` marker incl. `Step 2b … after launch anchor`,
-  `Wallet synced`, `Onchain wallet synced`, `Retrieved N movements`,
-  `Successfully saved`, `Newest inserted row`, `Balance retrieved`,
-  `Onchain balance retrieved`, `Onchain history stabilized`, `DataVersion
-  incremented` (20 lines, no private interpolations). The export header
-  now lists entries per level and states that info is best-effort. Detail
-  lines stay at info and may still be missing from the start of a session;
-  the ring-buffer mirror stays here as the follow-up if that proves
-  limiting. Device check owed: one export after a cold launch must show the
-  `Step 1`…`Step 4` markers.
+  (2026-10-14; CONFIRMED by the `OSLogType` docs: info-level entries live
+  in a purged memory buffer, the noisy launch is what gets evicted). Fix
+  built 2026-10-14 (DECIDED): the twenty launch-skeleton lines log at
+  notice; the header lists entries per level. Device check owed: one export
+  after a cold launch must show the `Step 1`…`Step 4` markers. Ring-buffer
+  mirror stays the follow-up. Evidence: `Features/Debug_Log_Export.md`.
 - [ ] **Notification listener starts after the launch refresh, so
   launch-time movements never arrive through it** (attached run 2026-10-14:
   `Starting notification listener` 9.8 s after `refresh()` was called, after
@@ -1144,66 +753,12 @@ log).
   `TransactionDetailView_iOS`, and already diverge (only the card carries
   the dark colour-scheme workaround). One property on `TransactionModel`.
 - [ ] **Activity rows are dated by when the wallet processed the movement,
-  not when it happened** (Christoph, 2026-10-19; Train 1 cosmetic pass).
-  Related, not a fix: bark 0.8.0 (#2610, feedback ask 11) stops finished
-  exits from re-stamping `completed_at` on every sync, which removes one
-  cause of old cancelled exits floating to the top; the date-freeze
-  workaround in the upsert can go once a build-26 export shows no churn.
-  Traced: the row date is `parseDate(movement.completedAt ?? movement.createdAt)`
-  (`TransactionService+Parsing.swift:320`), and bark's `MovementTimestamp`
-  (`bark/src/movement/mod.rs:326-334`) has only `created_at`, `updated_at`,
-  `completed_at`, all stamped with the wallet's local clock when *it* acted.
-  For a sent payment that is the real time. For anything discovered at a
-  sync — a received Ark payment claimed from the mailbox, a board or an
-  onchain receive found by the chain scan, a round refresh — it is the
-  sync time, which on a phone that was closed for a day is a day late.
-  Bark offers no counterparty time, so the fix is per source: (a) onchain
-  rows already have the block time (`OnchainTransactionModel.confirmationTime.timestamp`)
-  and the movement ↔ onchain link (`Movement_Onchain_Linking.md`) — show
-  the block time when linked; (b) received Ark payments that arrive by
-  push are processed within seconds (`processSingleMovement`), so they are
-  already right; only the catch-up sync case is late, and for it the
-  honest display is bark's time — or an "around" prefix / "received by"
-  wording, ruling needed; (c) the upsert must not re-date an existing row
-  when a later refresh reports a later `completed_at` for the same
-  movement (`TransactionUpsertDateFreezeTests` pins the cancelled case
-  only; check whether a re-sync bumps dates of settled rows, which would be
-  the "when the app loaded it" effect on *every* refresh). Start with (c):
-  if settled rows are re-dated on refresh, that is the bug; (a) is the
-  improvement; (b) needs a ruling.
-  **(c) executed 2026-10-19 — no re-dating.** Read at bark tag 0.7.1 (the
-  deployed library): `movement/manager.rs` sets `completed_at` only in
-  `new_finished_movement` / `finish_movement*`; `movement/update.rs:217`
-  (`MovementUpdate::apply_to`) moves `updated_at` only; `exit/mod.rs:788-797`
-  re-finishes an exit movement only on a fresh state change (the §2a bump
-  on every tip advance is gone at this tag, the app-side freeze stays as
-  belt and braces). The upsert rewrites `date` only when bark's value
-  differs, and `updated_at` never feeds it — pinned by
-  `settledDateIgnoresUpdatedAt` in `TransactionUpsertDateFreezeTests` (4/4
-  green). **(a) is largely moot:** onchain rows already take the block time
-  (`UnifiedTransactionService.swift:398-404`), and the movements linked to
-  them — boards, offboards, exits — are this wallet's own actions, stamped
-  when they happened. **(b) — the real time exists, bark drops it**
-  (traced 2026-10-19, Christoph: "is there really no date on when the
-  payment actually happened?"). Incoming payments reach the phone through
-  the server mailbox (`mailbox_server.proto`: Ark payments, incoming
-  Lightning payments, round completions). Every mailbox message carries a
-  `checkpoint`, and the server builds it from its clock at deposit time
-  (`V21__blinded_mailbox.sql`: upper 44 bits = milliseconds since epoch,
-  lower 20 a same-millisecond counter). So the server-side arrival time of
-  each received payment is on the wire. The bark client keeps only the
-  highest checkpoint as its read cursor (`store_mailbox_checkpoint(u64)`)
-  and stamps the movement with the phone's clock when it processes the
-  message — that is the "when the app loaded it" date. Nothing in the
-  bindings exposes the per-message time, so there is no app-side fix.
-  DECIDED 2026-10-19 (Christoph): filed as an upstream ask —
-  `Bark_Bindings_Feedback.md` §1.10 / ask 20: stamp mailbox-delivered
-  movements with the checkpoint's time (or expose it as a `received_at`
-  on the movement). On adoption, the parser uses it as the row date for
-  received rows and keeps `completed_at` for everything the wallet did
-  itself. Until then the row date is honest about one thing only: when
-  this phone learned of the payment. Stays open as the adoption item,
-  blocked on upstream.
+  not when it happened** (Christoph, 2026-10-19). Traced: (c) no re-dating
+  on refresh (executed at bark 0.7.1, `settledDateIgnoresUpdatedAt`); (a)
+  onchain rows already take the block time; (b) the server-side arrival time
+  is on the wire as the mailbox checkpoint and bark drops it. DECIDED
+  2026-10-19: upstream ask `Bark_Bindings_Feedback.md` §1.10 / ask 20; stays
+  open as the adoption item. Trace: `Features/Activity_Row_Dating.md`.
 - [ ] **Tag amounts — do they include fees, should they? Balance tag must
   include onchain child-tx fees**.
 - [ ] **Transaction details**: show the invoice description when present
@@ -1232,19 +787,12 @@ log).
   `balanceAccessibilityValue` in `ActivityView_iOS.swift`; read the flag
   directly, the 1 s arming guard is a flash guard and does not apply to a
   value read on focus.
-- [ ] **Onboard modal**: ~~minimum value only shows after X-Ray was
-  visited~~ (done 2026-10-19 — root cause: `CacheManager.arkInfo` expires
-  after five minutes and is not observable, so the modal read an empty
-  cache and showed "Loading minimum amount…" until a refresh or an X-Ray
-  visit refilled it; `BoardingModalView` now calls
-  `WalletManager.cacheArkInfoIfNeeded()` on open and holds the minimum in
-  view state. Not screenshotted: the modal is gated on a savings balance
-  the simulator wallet lacks — device check owed, together with the image
-  line below);
-  add fee info; success message with duration; test the error state.
-  **Offboard modal**: add fee info; add data to success (claim required?);
-  test the error state. **Boarding**: calculate and display the network fee;
-  adjust the amount input to the unit setting; offboard takes a long time.
+- [ ] **Onboard modal**: add fee info; success message with duration; test
+  the error state. **Offboard modal**: add fee info; add data to success
+  (claim required?); test the error state. **Boarding**: calculate and
+  display the network fee; adjust the amount input to the unit setting;
+  offboard takes a long time. (The "minimum only after X-Ray" half closed
+  2026-10-19, Done log; its device check is owed with the image line below.)
 - [ ] **Fee summary — move to savings showed up as a send**.
 - [ ] **Full bitcoin format — add satcomma spacing** (nothing in
   `BitcoinFormatter` does it).
@@ -1331,23 +879,13 @@ log).
   (`ProcessInfo.processInfo.isiOSAppOnMac` → "Mac (iPhone app)", Mac icon)
   and add the identifier to the map. Such a row counts as a live device for
   the deletion strategy and the forfeit-warning copy until it is unlinked.
-- [ ] **Delete wallet with an exit in flight shows no funds warning** — also
-  no warning for an open Lightning invoice (its preimage lives only in the
-  deleted database; a paid-in HTLC times out to the payer) or a pending
-  board (not recoverable by the app); the 0.26 user procedure tells users
-  to wait these out (`Migrations/Bark-0.25.0-to-0.26.0/03-impact-analysis.md`
-  §3b, 2026-10-25) (from
-  the 2026-10-13 forfeit-warning review, PLAUSIBLE; Tier 3 confirmed by
-  Christoph 2026-10-14, no field case): the old generic box
-  fired on the grand total, which included `pendingExitSat`; the forfeit box
-  reads bark's unspent list (Spendable + Locked) and exits are not in it.
-  Whether a started, unclaimed exit is recoverable after deletion is
-  unverified — exit progression and the claim need the bark db, and
-  `recovery.rs:285` stores recovered VTXOs as `Exited` without the exit
-  state. Settle that first (bark `exit/` claim prerequisites), then either a
-  third copy ("an exit is in progress; deleting stops it on this device") or
-  nothing. The manual-backup reminder on the same screen already names the
-  wallet state file.
+- [ ] **Delete wallet with an exit in flight shows no funds warning** — nor
+  for an open Lightning invoice or a pending board (the 0.26 user procedure
+  says wait these out, `Migrations/Bark-0.25.0-to-0.26.0/03-impact-analysis.md`
+  §3b). PLAUSIBLE from the 2026-10-13 forfeit-warning review, Tier 3
+  confirmed by Christoph 2026-10-14. Settle first whether an unclaimed exit
+  survives deletion (bark `exit/` claim prerequisites), then a third copy or
+  nothing. Trace: `Features/Wallet_Deletion_And_Rejoin.md` "Open: in flight".
 - [ ] **Savings deposits don't show up automatically** — note in the
   notifications explainer until Background Execution Phase 2 (Tier 4) lands.
 - [ ] **Network mismatch on import**: importing a signet wallet in the
@@ -1390,22 +928,12 @@ log).
   and `shouldShowBackupReminder` exist unwired, see Tier 4 process state).
 - [ ] **Import — autocomplete for seed words** (`EnglishWordListProvider`).
 - [ ] **Import — validate the phrase before handing it to bark** (moved
-  down from Tier 0 2026-10-09 after execution: `MnemonicChecksumTests`
-  shows bark's `OnchainWallet.default` throws `invalid mnemonic: the
-  mnemonic has an invalid checksum` / `mnemonic contains an unknown word`
-  before any network I/O, so a typo never opens a different wallet). The
-  live pre-check `SecurityService.isValidBIP39` (`:864-873`) tests word count
-  only; the two validators with the checksum TODO
-  (`BarkWalletFFI+Mnemonic.swift:47-70`, `BIP39Usage.swift:52-73`) have no
-  callers. Fix: call the binding's `validateMnemonic(mnemonic:)` (returns
-  `false` for both cases, verified) in the pre-check and show "phrase has a
-  typo" before the import UI starts; delete the two dead validators. Note
-  `importWalletWithBackup` writes the seed to the keychain before bark sees
-  it (`WalletManager+Wallet.swift:102-104`, rollback follows) — the
-  pre-check also closes that window. Note (2026-10-10): the import path
-  does run bark's recovery scan (single `Wallet.open` with `skipRecovery:
-  false`, `openImportedWallet`), but with the 0.7.1 reader — recovery of a
-  diverged wallet depends on the Tier 4 bindings bump.
+  down from Tier 0 2026-10-09: `MnemonicChecksumTests` shows bark rejects a
+  bad checksum or unknown word before any network I/O). Fix: call the
+  binding's `validateMnemonic(mnemonic:)` in `SecurityService.isValidBIP39`
+  (word count only today), show "phrase has a typo" before the import UI
+  starts, delete the two dead checksum-TODO validators. Also closes the
+  seed-written-before-bark-sees-it window. Detail: `Features/BIP39.md` "Open".
 
 ### X-Ray and Tilt
 
@@ -1434,24 +962,13 @@ log).
   the de / ja / zh-Hant values still say "optional". The button's second
   line (`backup_file_not_selected`) was removed. Retranslate through
   `Scripts/apply_translations.py` with the next batch.
-- [ ] **Translation debt — 128 user-facing keys have no de or ja value,
-  112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
-  `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`
-  excluded; plus one ArkéUI key, `accessibility_decimal_separator`, per
-  language). Groups: deletion strings (`settings_delete_warning_*`,
-  `settings_delete_override*`, `button_delete_*_anyway`,
-  `error_delete_scope_changed`), `metadata_*` export/import, ~28 X-Ray
-  `data_bg_*` plus `data_background_*` / `action_*_background_events`, the 5
-  `ManualRefreshOutcome` keys (now extracted, `en` only), `rejoin_*` and
-  `error_wallet_already_on_account`, `linked_devices_unsynced_*` +
-  `settings_unsynced_devices`, `transaction_list_syncing_*`,
-  `data_fiat_rates*`, `settings_currency*`, `fiat_approx*`, the fiat-entry
-  `receive_*` / `send_switch_to_*` strings, and ~13 format-only keys
-  (`%@ UTC`, `%llu sat/vB`, `Block %u`, `Round %u`, `Invoice #%lld`, …). All
-  render English `defaultValue` (no raw keys) — cosmetic, the whole Phase 3
-  debt in one number. `apply_translations.py` then `translation_lint.py`
-  (the lint checks empty values and format specifiers, not missing
-  languages, so it is not the counter).
+- [ ] **Translation debt — 222 user-facing keys have no de or ja value,
+  206 no zh-Hant** (recounted 2026-11-10 over `Shared/Localizable.xcstrings`,
+  1,116 keys after `shouldTranslate=false`; 128 / 112 of 1,029 on
+  2026-10-09). All render the English `defaultValue`, cosmetic. Route:
+  `apply_translations.py` then `translation_lint.py` (the lint does not count
+  missing languages). Key groups as of 2026-10-09:
+  `Localization/Translation_Rollout_Plan.md` "Translation debt".
 
 ## Tier 4 — Tech debt and deferred by design
 
@@ -1690,71 +1207,20 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
   calls the clear). Delete the three methods and the model, or register the
   model if the cache across launches is wanted.
 
-- [ ] **Field cold launches run 10–20s, one at 74s** (background event
-  journal of the mainnet user, 2026-10-04..09; the 2026-10-07 export caught
-  the launch refresh still inside Step 3 at 11s, no "Step 3.1" yet). Which
-  Step 3 task is the long pole — `refreshAllBalances`, the onchain sync, or
-  the block-height fetch? Add per-task timings to the Step 3 task group
-  before guessing. Same timings answer the older **18s gap between
-  `initialize()` called and executed** (device log 2026-09-08, suspect the
-  dedup/queueing layer; merged 2026-10-09). Related: the CoreData error
-  flood and the whole-app background launch below.
-  Measured 2026-10-12 on Christoph's phone (mainnet, 26 VTXOs, 250
-  movements, 1 onchain tx), two launches of the same build: attached to
-  Xcode, wallet ready at 48 s with a 20 s call→execute gap; unattached,
-  27.7 s with a 61 ms gap — so the call→execute gap is a debugger artefact,
-  not the dedup layer. Unattached breakdown: open 0.3 s, server connect
-  1.0 s, Step 2 11.9 s of which the BDK onchain sync inside `sync()`
-  (`BarkWalletFFI+Server.swift`, runs before the Ark sync) is 11.6 s and
-  the Ark sync 0.1 s; Step 3 13.5 s, movements done after 0.4 s, the rest
-  is the onchain balance read (6.3 s) and "Onchain history stabilized after
-  2 sync round(s)" (6.7 s). About 25 of 27.7 s are esplora/BDK syncs, run
-  twice per launch. Long pole answered; the lever is one onchain sync per
-  refresh instead of two, or the Step 2 onchain sync off the launch path.
-  DECIDED 2026-10-12: Train 2 candidate, not Train 1 — the second sync is
-  the 2026-08-13 balance-overcount guard ("history stabilised"), so the
-  restructuring needs its own design pass. DECIDED 2026-10-13: once this
-  has landed, revisit whether the balance card's load wave should end when
-  the Ark data is fresh instead of at the end of the full refresh (today
-  that would only halve the window, because Step 2's onchain sync precedes
-  the Ark sync); until then the wave stays honest to the full refresh.
-  Data points 2026-10-14 evening (journal, unattached, same build as the
-  Ark-first change): cold launches of 26.5 s and 32.6 s four seconds apart,
-  no step breakdown because the export had evicted the launch's info lines;
-  the pull-to-refresh a minute later took 2.65 s with a 1.9 s onchain sync,
-  so esplora was not slow at that moment. Christoph saw the balance and
-  list refresh quickly and the load wave run about 12 s — if the wave
-  ended at 12 s, `refresh()` returned then and the remaining ~20 s to
-  "Wallet ready" sat in the post-refresh part of `initializePrimaryMode`
-  (exit cache, default-data seeding, arkInfo, service starts), which took
-  80 ms in the 13:01 export. Unexplained; needs a Console.app launch.
-  DECIDED 2026-10-14 (evening): the wave stays honest to the full refresh
-  for now, even though the Ark-first change made "end it at Step 2b"
-  possible; Christoph wants to watch the new launch behaviour for a few
-  days first. Revisit after that.
-  2026-10-14: the Step 2 reorder (Ark sync first, early Ark publish) was
-  split out as the Tier 1 Connectivity item "Ark data waits for the onchain
-  sync on every refresh" (DECIDED, Train 1); what stays here is the
-  one-onchain-sync-per-refresh restructuring and the "Ark-fresh ends the
-  wave" revisit.
+- [ ] **Field cold launches run 10–20 s, one at 74 s** (mainnet user journal
+  2026-10-04..09). Long pole answered 2026-10-12 on Christoph's phone: about
+  25 of 27.7 s are Esplora/BDK syncs run twice per launch; the call→execute
+  gap is a debugger artefact. What stays here: one onchain sync per refresh
+  instead of two (DECIDED 2026-10-12 Train 2, needs its own design pass
+  because the second sync is the balance-overcount guard) and the
+  "Ark-fresh ends the wave" revisit (DECIDED 2026-10-14: wait). `Initialization/Launch_Performance.md`.
 - [ ] **Explicit daemon start is redundant and logs a bark error** (B6
-  re-verified at bark 0.8.0, 2026-10-25: `Wallet::open` calls
-  `start_daemon()` when `WalletOpenArgs.run_daemon` is set, and the Swift
-  `WalletOpenArgs` has had `runDaemon: Bool = true` all along — so the fix is
-  either dropping the launch `runDaemon()` call or opening with
-  `runDaemon: false` where the app wants to own the start): bark
-  0.7.1's `Wallet::open` starts the daemon itself (`Starting daemon for
-  wallet …` is logged before `Existing wallet opened successfully` on every
-  launch, 2026-10-14), so `initializePrimaryMode`'s `runDaemon()` call
-  produces `Called Wallet::start_daemon while daemon was already running` at
-  error level on every launch, and the FFI wrapper still logs "Wallet daemon
-  started successfully". Check the bindings for whether `runDaemon` is
-  still needed on any path (create/import, after `stopDaemonWait`), then
-  drop or guard the launch call and fix the misleading success line. Also
-  counts toward the "four BDK syncs per launch" observation: the daemon's
-  own esplora sync at open, Step 2's, and the two Step 3 history rounds.
-  (The Tier 4 concurrency line "Daemon auto-start on `Wallet.open()` (bark
-  0.7.0)" said the same thing and was merged here 2026-10-19.)
+  re-verified at bark 0.8.0, 2026-10-25): `Wallet::open` starts the daemon
+  when `WalletOpenArgs.runDaemon` is set, and the Swift default is `true`, so
+  `initializePrimaryMode`'s `runDaemon()` logs "already running" at error
+  level on every launch while the wrapper claims success. Fix: drop or guard
+  the launch call, or open with `runDaemon: false`; check create/import and
+  post-`stopDaemonWait` paths. Detail: `Initialization/Launch_Performance.md`.
 - [ ] **Startup wallet detection review follow-ups**: 8 items in
   `Initialization/Startup_Wallet_Detection_Plan.md`; optional Phase 5
   refactor. **Next pure-logic extraction**: wallet-detection decisions

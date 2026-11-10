@@ -109,3 +109,26 @@ Open, mirroring de/ja:
       line breaking) — fold into Phase D.
 - [ ] `knownRegions` gains `"zh-Hant"` in Xcode (user — pbxproj is not edited
       by tooling while Xcode is open); catalog entries exist regardless.
+
+## Translation debt (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Translation debt — 128 user-facing keys have no de or ja value,
+  112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
+  `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`
+  excluded; plus one ArkéUI key, `accessibility_decimal_separator`, per
+  language). Groups: deletion strings (`settings_delete_warning_*`,
+  `settings_delete_override*`, `button_delete_*_anyway`,
+  `error_delete_scope_changed`), `metadata_*` export/import, ~28 X-Ray
+  `data_bg_*` plus `data_background_*` / `action_*_background_events`, the 5
+  `ManualRefreshOutcome` keys (now extracted, `en` only), `rejoin_*` and
+  `error_wallet_already_on_account`, `linked_devices_unsynced_*` +
+  `settings_unsynced_devices`, `transaction_list_syncing_*`,
+  `data_fiat_rates*`, `settings_currency*`, `fiat_approx*`, the fiat-entry
+  `receive_*` / `send_switch_to_*` strings, and ~13 format-only keys
+  (`%@ UTC`, `%llu sat/vB`, `Block %u`, `Round %u`, `Invoice #%lld`, …). All
+  render English `defaultValue` (no raw keys) — cosmetic, the whole Phase 3
+  debt in one number. `apply_translations.py` then `translation_lint.py`
+  (the lint checks empty values and format specifiers, not missing
+  languages, so it is not the counter).

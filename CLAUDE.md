@@ -49,10 +49,15 @@ is history and loses to a living doc.
   inline; closing an item means ticking it with the date **and moving it to
   `Docs/Open_Follow_Ups_Done.md` in the same commit**, so the open file
   never holds ticked lines; cite symbols (type, function, property), not
-  `file:line`, because line numbers rot within days. `python3
-  Scripts/backlog_stats.py` prints open counts per section and flags ticked
-  lines and oversize entries. His Reminders app is capture-only; sweep new
-  entries into the backlog.
+  `file:line`, because line numbers rot within days. Amendment (DECIDED
+  2026-11-10): a trace-shaped entry with no history may run to about
+  fifteen lines; anything longer or carrying history (ticked sub-items,
+  superseded premises, chronology) moves to a plan doc by **verbatim
+  relocation, never by rewriting**, keeping its verdict labels, dates,
+  cross-links and "not verified" notes. `python3 Scripts/backlog_stats.py`
+  prints open counts per section and flags ticked lines, entries over
+  fifteen lines and long entries with history markers. His Reminders app is
+  capture-only; sweep new entries into the backlog.
 - **Every confirmed rework** (generated code that had to be revisited) gets
   one line in `Docs/Development/Rework_Ledger.md` with its fault class.
 

@@ -2112,3 +2112,177 @@ active", which cluster 4 touches.
   full device list on his phone including the cold offline launch, all
   good 2026-11-04. Not yet in a TestFlight build. Plan and evidence:
   `Features/Foreign_Server_Ark_Address.md`.
+
+## Moved from the open list 2026-11-10
+
+Backlog hygiene pass 2026-11-10, relocation only. Rule DECIDED 2026-11-10
+(Christoph: "do as you recommend", on the proposal of the same day): evidence
+leaves the open file by verbatim move into a plan doc, never by rewriting; an
+entry stays at a title plus about six lines, except a trace-shaped entry with
+no history (no ticked sub-items, no superseded premises, no chronology), which
+may run to about fifteen lines without a plan doc. Twenty entries over fifteen
+lines and one history-bearing shorter one moved; the DECIDED fee-schedule
+deletion (sixteen lines) was left in place because it closes with the next
+hygiene commit. No `file:line` citation was converted to a symbol in the pass;
+they travel as they stood. The stubs keep every verdict label (CONFIRMED,
+PLAUSIBLE, PROPOSED, DECIDED + date), every cross-link and every pointer.
+
+| Entry | Destination |
+|---|---|
+| Backup restore is newest-wins with no wallet binding | `Features/Backup_Restore.md` |
+| Claimed exit funds invisible after seed import | `Features/Exit_Architecture.md` → Open gap: claim addresses after a seed import (moved from the backlog 2026-11-10) |
+| Wallet state diverged from the server | `Features/Wallet_State_Divergence.md` |
+| `checkReadOnlyMode()` infers primary | `Features/Read_Only_Mode.md` → Open finding: `checkReadOnlyMode()` infers primary (moved from the backlog 2026-11-10) |
+| Deletion abort after Step 1 | `Features/Wallet_Deletion_Ghost_Hardening.md` → 7.1 Backlog entry text for the abort-after-Step-1 residual (moved 2026-11-10) |
+| Failed boards leave onchain coins stranded on bark 0.7.1 | `Features/Board_And_Offboard.md` |
+| Replace the hand-rolled exit cost estimate | `Features/Exit_Cost_Estimate.md` |
+| The transaction upsert deletes duplicate rows | `Features/Transaction_Upsert_Duplicates.md` |
+| CloudKit Production schema was never deployed | `Architecture/CloudKit_Realtime_Sync.md` → Production schema deployment (moved from the backlog 2026-11-10) |
+| The activity screen shows "no Ark connection" | `Features/Offline_Experience.md` |
+| Ark data waits for the onchain sync on every refresh | `Features/Launch_Ark_First_Refresh.md` → 10. The backlog entry and the first field result (moved 2026-11-10) |
+| The app can never show "disconnected" once the wallet is open | `Features/Offline_Experience.md` |
+| Offline / server-down experience | `Features/Offline_Experience.md` |
+| A stuck Lightning receive is invisible | `Features/Lightning_Receive_State.md` |
+| Debug export can come back empty or miss the first seconds | `Features/Debug_Log_Export.md` |
+| Activity rows are dated by when the wallet processed the movement | `Features/Activity_Row_Dating.md` |
+| Onboard modal (closed half) | `Open_Follow_Ups_Done.md` → Moved from the open list 2026-11-10 |
+| Delete wallet with an exit in flight shows no funds warning | `Features/Wallet_Deletion_And_Rejoin.md` → Open: deleting with an exit, invoice or board in flight (moved from the backlog 2026-11-10) |
+| Import — validate the phrase before handing it to bark | `Features/BIP39.md` → Open: pre-check the phrase before bark sees it (moved from the backlog 2026-11-10) |
+| Translation debt | `Localization/Translation_Rollout_Plan.md` → Translation debt (moved from the backlog 2026-11-10) |
+| Field cold launches run 10–20s, one at 74s | `Initialization/Launch_Performance.md` |
+| Explicit daemon start is redundant and logs a bark error | `Initialization/Launch_Performance.md` |
+
+The ticked text below sat inside open entries and moves here verbatim.
+
+### Tier 0 — Wallet state diverged from the server: the four app defects
+
+Closed 2026-10-11 and 2026-10-12 inside the open cluster; moved here verbatim on 2026-11-10. The open remainder lives in `Features/Wallet_State_Divergence.md`.
+
+- [x] **`isAlreadyIssuedRejection` treats every `unusable_inputs` as "already
+  issued into a round"** — done 2026-10-11 (`Features/Refresh_Deduplication.md`
+  §9): verified at `server-0.7.1` that the tag fires for any unspendable
+  input (spent, exited, banned; no expiry check) and the message names the
+  ids. Now `isUnusableInputsRejection` + `RefreshRejection.classify`
+  (in flight only when the ids are in `vtxoIdsBeingRefreshed()` after the
+  refetch) + `RefreshRejectionBackoff` (24 h per id, device-local
+  `com.arke.refresh.rejectedInputs`, pruned to the spendable set, batch
+  entries yield inside the 144-block valve). Manual path returns
+  `.rejectedByServer`; the modal says "Can't refresh from this device" with
+  the recovery-phrase + contact-support hint, never "funds lost". 16 unit
+  tests (four implementation-restating ones dropped on review, 2026-10-11);
+  wipe key added. Adversarial pass 2026-10-11 fixed two CONFIRMED
+  findings in-session (a stale Pending movement on an expired VTXO passed
+  Guard C's valve and would have read as "in flight" — in-flight now means
+  *newly* locked since the pre-call read; the card's list now mirrors the
+  back-off so a partial batch cannot report success). Left open from that
+  pass, no app fix: **bark's daemon joins every round's first attempt for
+  maintenance refresh** (`join_round_for_maintenance_refresh`, bark-0.7.1
+  `daemon/mod.rs:155-160`) with the same dead VTXOs, so one Failed refresh
+  row per *round* keeps arriving regardless of the app-side back-off —
+  confirm in the next field log (bark lines "Joining round … for maintenance
+  refresh" / "Maintenance refresh rejected"); it is the bindings bump's to
+  fix; defect 4 turned out to be a log artefact, no app-side rows to prune
+  (2026-10-12), so the Failed rows that remain are bark's own. Also: a
+  `NotFound` ("input vtxo does not exist") rejection is deliberately not
+  matched and would still retry as an ordinary error — fold into the Tier 4
+  typed-errors item. **Device check owed**: no reliable repro from the app
+  (needs the server to refuse); watch the next debug export from the mainnet
+  user for the new FFI line carrying the server text with ids (confirms the
+  `{:#}` chain reaches the app — plan claim C4, derived), the warning
+  "holding them back for 24h", and one app-side Failed row per day.
+- [x] **The balance card has no expired state at all** — done 2026-10-11
+  (`Features/Refresh_Deduplication.md` §10). The card now resolves one of
+  refreshing / refresh now / refused / too small / countdown / idle via
+  `BalanceRefreshCardState`, with the same Guard B → Guard C (valve) →
+  back-off order as the service; refused shows "Can't refresh from this
+  device" + the held-back amount, no CTA; the 330 floor is one shared
+  constant on the auto path, the manual path (`.belowMinimum`) and the
+  card; a new `refreshStatusVersion` reloads the card *after* a verdict is
+  recorded (the refetch bumped `transactionVersion` too early). Adversarial
+  pass fixed two CONFIRMED findings in-session (a dust sibling masked the
+  refusal; modal/card contradiction), 8 new tests, 34/34 scoped. Mixed case
+  (refreshable + held back) DECIDED 2026-10-11: the compact row shows the
+  primary state only; the "Held back" row lives on the full card. New
+  keys (5) wait for the next translation batch. Device check owed with defect 1's: the mainnet
+  user's next export should show the row, and a tap landing on the refused
+  screen. Headline balance untouched (DECIDED 2026-10-11, row only).
+  Original entry: The only place the app
+  labels a VTXO Expired is the X-Ray row (`VTXORowView.swift:22-48`), and
+  even there `VTXOListView_iOS` offers "Refresh all (Free)" with no expiry
+  exclusion. Both refresh-status containers hardcode `isExpired: false`
+  (`BalanceRefreshStatusContainer.swift:63`, `…Compact.swift:68`), the view
+  model has no expiry notion and says "Refresh now" whenever
+  `hasVtxosToRefresh`, and the ArkéUI `expiredContent` branch is dead
+  outside previews. Hook added 2026-10-11:
+  `VTXORefreshService.recentlyRejectedVtxoIds` is the set the service will
+  not re-submit, and `BalanceRefreshStatusViewModel` already excludes it
+  from `vtxosNeedingRefresh` — so today a rejected VTXO draws **no CTA and
+  no explanation** on the card while still counting as spendable; the honest
+  copy exists only in the refresh modal's `.refused` state (reachable now
+  only via the race). This item supplies the card's own state for that set. The balance counts expired VTXOs as spendable because
+  bark 0.7.1's `Balance` has only `spendable`/`pendingExit`; upstream master
+  adds `Balance.needs_refresh`, which keeps them out of spendable, so the
+  next bindings bump may deliver the balance half. These VTXOs need their
+  own state, and the copy must not claim "expired, funds lost" — the app
+  cannot tell a sweep from a divergence. Honest version: no refresh CTA,
+  "these coins can't be refreshed from this device; recovering the wallet
+  from your recovery phrase may restore them — contact support first", the
+  amount shown apart from spendable. Same gate, same fix: **don't show
+  "Refresh now" below the 330-sat floor** `VTXORefreshService` already
+  applies (merged from Tier 3 Refresh 2026-10-09) — the CTA should be
+  driven by what the service would actually refresh.
+- [x] **The FFI log line loses the server message** — done 2026-10-11:
+  `BarkWalletFFI+VTXO.swift` now logs `localizedDescription` with
+  `privacy: .public` for the delegated-refresh call only (the server text
+  carries VTXO ids, which bark's own selection logger already prints). The
+  other ~160 `\(error)` FFI log lines stay for the Tier 4 typed-errors item.
+- [x] **Every failed refresh attempt leaves an orphaned local row, and the
+  orphans are the user's "growing list of Failed refresh rows"** — closed
+  2026-10-12, premise wrong: there are no orphan rows. In the 2026-10-09 log
+  every full-list pass (41, 42, 43 movements) matched all local rows and
+  reported no orphans; all 231 "no longer exists on server" lines came from
+  `processSingleMovement`, which wraps one notification movement in an
+  array and reused the full upsert, so the orphan check ran against a
+  one-element list and named every other Balance-tagged transfer. The
+  38 → 39 step is the new Failed refresh row receiving the Balance auto-tag
+  (refresh → transfer → `autoTagInternalTransfer`), counted on the next
+  notification pass. The growing "Failed refresh" list is bark's own
+  movement list (one real Pending → Failed movement per attempt), reduced
+  by defect 1's back-off and otherwise the bindings bump's; hiding such
+  rows is the separate Tier 3 line (Christoph, 2026-10-12: own focused
+  item, not this cluster). Fix: `upsertTransactionsFromServerData(_:
+  isCompleteMovementList:)`, the notification path passes `false`; the
+  full-list path logs one summary warning per refresh instead of one line
+  per row, and only for `sourceType == "ark"` rows (Christoph's 2026-10-12
+  device log showed the one remaining "orphan" was his single onchain
+  receive, which shares the table and never matches a movement). No rows
+  are deleted on either path (unchanged). Ledger line 2026-10-12. Original
+  entry: In the 2026-10-09 log each attempt adds one bark
+  movement (41 → 42 → 43) *and* one more "tag assignment on orphaned
+  transactions" (38 → 39): a `PersistentTransaction` whose `movement_<id>`
+  txid matches no movement in the next list, kept because auto-tagging
+  gave it a tag (`TransactionService+Upsert.swift:357-369`, "let them
+  remain to preserve user tags"). 38 orphans ≈ 38 attempts. Find the id
+  mismatch first (the row created from the daemon notification in
+  `processSingleMovement` vs. the row from the list — same movement,
+  different txid?), then decide pruning (orphans with only auto-tags are
+  safe to drop), and log once per refresh at warning level instead of
+  231 ERROR lines per session.
+
+### Tier 3 — Onboard modal: the closed half
+
+The whole entry as it stood, moved here verbatim on 2026-11-10; the struck-through half closed 2026-10-19 and the open half stays in the open file as a shorter entry.
+
+- [ ] **Onboard modal**: ~~minimum value only shows after X-Ray was
+  visited~~ (done 2026-10-19 — root cause: `CacheManager.arkInfo` expires
+  after five minutes and is not observable, so the modal read an empty
+  cache and showed "Loading minimum amount…" until a refresh or an X-Ray
+  visit refilled it; `BoardingModalView` now calls
+  `WalletManager.cacheArkInfoIfNeeded()` on open and holds the minimum in
+  view state. Not screenshotted: the modal is gated on a savings balance
+  the simulator wallet lacks — device check owed, together with the image
+  line below);
+  add fee info; success message with duration; test the error state.
+  **Offboard modal**: add fee info; add data to success (claim required?);
+  test the error state. **Boarding**: calculate and display the network fee;
+  adjust the amount input to the unit setting; offboard takes a long time.

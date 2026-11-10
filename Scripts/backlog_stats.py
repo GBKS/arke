@@ -4,8 +4,12 @@
 Prints open-item counts per top-level section, then flags the three things
 the backlog rules (CLAUDE.md, DECIDED 2026-10-19) say should not be there:
 ticked lines still in the open file, entries longer than the size cap, and
-`file:line` citations. Exit status is 0 regardless; this is a report, not a
-gate. Run from the repo root:
+`file:line` citations. Since the 2026-11-10 amendment the cap is fifteen
+lines for a trace-shaped entry with no history; entries of 8-15 lines are
+listed separately when they carry a history marker (ticked sub-item,
+strikethrough, "for the record", "supersede"), because those must move to a
+plan doc regardless of length. Exit status is 0 regardless; this is a
+report, not a gate. Run from the repo root:
 
     python3 Scripts/backlog_stats.py [--max-lines N] [--quiet]
 """
@@ -17,8 +21,10 @@ from collections import OrderedDict
 from pathlib import Path
 
 BACKLOG = Path("Docs/Open_Follow_Ups.md")
-DEFAULT_MAX_LINES = 7  # title line + about six lines of body
+DEFAULT_MAX_LINES = 15  # trace-shaped entry with no history (DECIDED 2026-11-10)
+SHORT_LINES = 7  # title line + about six lines of body (DECIDED 2026-10-19)
 FILE_LINE = re.compile(r"`[A-Za-z0-9_+./-]+\.swift:\d")
+HISTORY = re.compile(r"- \[x\]|~~|for the record|supersede", re.IGNORECASE)
 
 
 def parse(lines):
@@ -62,7 +68,7 @@ def main():
     lines = BACKLOG.read_text(encoding="utf-8").split("\n")
 
     counts = OrderedDict()
-    ticked, oversize, file_line = [], [], []
+    ticked, oversize, long_history, file_line = [], [], [], []
     for section, start, block in parse(lines):
         is_open = block[0].startswith("- [ ]")
         if is_open:
@@ -71,6 +77,9 @@ def main():
             ticked.append((start + 1, title(block)))
         if is_open and len(block) > args.max_lines:
             oversize.append((start + 1, len(block), title(block)))
+        elif (is_open and len(block) > SHORT_LINES
+              and any(HISTORY.search(l) for l in block)):
+            long_history.append((start + 1, len(block), title(block)))
         if is_open and any(FILE_LINE.search(l) for l in block):
             file_line.append((start + 1, title(block)))
 
@@ -94,6 +103,10 @@ def main():
          ticked, lambda ln, t: f"L{ln}: {t}")
     flag(f"Entries over {args.max_lines} lines (evidence belongs in a plan doc)",
          sorted(oversize, key=lambda r: -r[1]),
+         lambda ln, n, t: f"L{ln} ({n} lines): {t}")
+    flag(f"Entries of {SHORT_LINES + 1}-{args.max_lines} lines carrying history markers "
+         "(ticked sub-item, strikethrough, superseded premise: move to a plan doc)",
+         sorted(long_history, key=lambda r: -r[1]),
          lambda ln, n, t: f"L{ln} ({n} lines): {t}")
     flag("Entries citing file:line (cite symbols instead)",
          file_line, lambda ln, t: f"L{ln}: {t}")

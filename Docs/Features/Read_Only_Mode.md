@@ -63,3 +63,32 @@ Manual two-step migration via Settings → Linked Devices (`LinkedDevicesView_iO
 - `../Archive/Implementations/DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` (archived; superseded by `../Architecture/Multi_Device_Design.md`) — emergency takeover and hardening (planned)
 - `Device_Registry_Reference.md` — device registration API
 - `../Archive/Implementations/LINKED_DEVICES_AND_VTXO_SYNC_ANALYSIS.md` (archived) — original multi-device analysis
+
+## Open finding: `checkReadOnlyMode()` infers primary (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **`checkReadOnlyMode()` infers primary** (`WalletManager.swift:530-557`):
+  a missing or unreadable device registration sets `isReadOnlyMode = false`,
+  i.e. full spend rights — contradicts Principle 2 / contract rule 15.
+  Reachable via self-unlink (`LinkedDevicesView_iOS.swift:50`, handler
+  `:225-230` → `unlinkDevice` deletes the row and the mirror entries, so
+  relaunch sees nil + `.noOpinion`). UNVERIFIED on device — needs the Tier 2
+  self-unlink → relaunch run before deciding the fix. Fix this before
+  collapsing `shouldBlockWalletAccess`'s layers (Tier 4). Sibling site
+  (read 2026-10-08): `shouldBlockWalletAccess()` itself returns `false` when
+  the device ID cannot be read (`WalletManager.swift:1247-1250`); the ID is
+  stored `WhenUnlockedThisDeviceOnly` (`DeviceRegistrationService.swift:170`)
+  while the seed is `AfterFirstUnlock`, and the headless wake path calls
+  exactly that gate (`WalletManager+Notifications.swift:127`), so on a locked
+  background wake the seed is readable and the gate is not — inferred timing,
+  same fix shape: treat "unknown" as read-only until the registry answers.
+  No test covers the nil-registration or unreadable-ID branches.
+  Folded in 2026-10-19 from Tier 4: the `device_<id>_isPrimary` KVS key
+  written by `writeOwnPrimaryFlag` has no clearer — unregister, unlink and
+  the full wipe all leave it, although `SharedStateWipeCoverage` lists
+  `device_<id>_*` as `fullWipeOnly` (`WalletDataCleanupService.swift:1087`);
+  not read by the registry scan, but layer 2 of `shouldBlockWalletAccess`
+  reads it on a reinstall whose local breadcrumb is gone. Fix with this
+  item or correct the inventory label (found 2026-10-16,
+  `Features/Wallet_Deletion_Ghost_Hardening.md` §7).

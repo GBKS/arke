@@ -229,3 +229,27 @@ deinit {
 
 **Created**: December 3, 2025
 **Last Updated**: December 3, 2025
+
+## Production schema deployment (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **CloudKit Production schema was never deployed — no TestFlight build
+  has ever synced a SwiftData row** (found 2026-10-26 in the CloudKit
+  Console while preparing build 26: Production holds only Apple's `Users`
+  type, Development has every `CD_` type; builds run from Xcode use
+  Development, where types are created on first use, TestFlight and App
+  Store builds use Production, which never auto-creates). Consequences:
+  on TestFlight builds, secondary read-only data, tag / contact / note sync,
+  `DeviceRegistration` rows, `BackupStatus` and the balance mirror never
+  left the device; the iCloud KVS registration mirror, the wallet hash and
+  the iCloud Drive backup are unaffected. Remedy: Christoph deploys the
+  schema once (Deploy Schema Changes… in the Console) — then existing
+  TestFlight installs upload their local stores on the next launch; watch
+  for duplicate default tags / contacts where two of Christoph's own
+  TestFlight devices merge (singleton rows already read `lastUpdated desc`).
+  Process fix: `Development/Release_Train.md` Release stage now requires a
+  Debug run + schema deploy after any `@Model` change. (Not the cause of the
+  Tier 1 "secondary's balance" entry: there tags and activity did sync, so
+  that was an Xcode build.) The Tier 2 two-device checklist needs one run
+  on a TestFlight build after the deploy.

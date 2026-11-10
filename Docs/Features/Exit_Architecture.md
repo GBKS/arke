@@ -147,3 +147,26 @@ parts.
   Refreshes never prune `PersistentExitCache`; wallet deletion clears it
   (`WalletDataCleanupService.deleteExitHistory`) — without that, a new
   wallet would show the previous wallet's completed exits.
+
+## Open gap: claim addresses after a seed import (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Claimed exit funds invisible after seed import** (network-verified
+  2026-08-13: 8,839 sats confirmed-unspent at the claim address, absent from
+  balance — 143,041 shown vs 151,880 actual). `ExitClaimSequence.run` reveals
+  a fresh address (`getOnchainAddress()` = `reveal_next_address`) as its FIRST
+  step on every claim attempt, before `drainExits` can fail, and
+  `ExitProgressionService` auto-retries failed claims each interval, so every
+  failed attempt burns a derivation index. Claim addresses bypass
+  `AddressService` history (untracked, not gap-limited); seed import loses the
+  revealed-index state and both BDK gap-10 scans stop short. The receive
+  screen's 20-unused cap also independently exceeds gap-10. Mitigations:
+  (a) reveal the claim address only after a successful `drainExits` build, or
+  persist one claim address per exit — `ExitProgressTests.testSequenceOrder`
+  currently pins address-first and must change with it; (b) route claim
+  addresses through `AddressService`; (c) import scan stop gap ≥ unused cap
+  + margin (~50); (d) upstream — no rescan API (feedback §2.6). Also blocks
+  the exit movement from linking its claim tx (`onchain_… not found` on
+  every relink pass). Related adoption: Tier 4
+  `initialScanOnchain(birthdayHeight:)`.

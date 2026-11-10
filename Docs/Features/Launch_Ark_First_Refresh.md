@@ -272,3 +272,57 @@ or startup paths. Dispositions:
 Reviewer did not verify: build/tests (run after the pass, see below), the
 bark revision inside the shipped xcframework, the device looks above, and
 concurrent daemon syncs during Step 2a/2b.
+
+## 10. The backlog entry and the first field result (moved 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Ark data waits for the onchain sync on every refresh** (Christoph's
+  unattached export 2026-10-14 13:01, anchor-relative: Step 2 onchain BDK
+  sync 2.9→5.4 s, Ark sync 5.4→5.6 s, movements saved and the new row shown
+  at 6.0 s, Ark balance read at 5.8 s but published at 10.2 s when the
+  onchain balance returned; wallet ready 13.3 s. On the 2026-10-12 wallet
+  the same onchain sync was 11.6 s.) Two causes, both app-side: (1) the FFI
+  `sync()` wrapper runs `onchainWallet.sync()` before `wallet.sync()`, and
+  Step 3's movement and balance reads come after both; (2)
+  `BalanceService.refreshAllBalances` awaits the Ark and onchain reads as
+  one tuple, and the onchain balance call sits behind the BDK lock of the
+  Step 3 history sync (4.4 s today, 6.3 s on 10-12). The Activity list is a
+  SwiftData query and shows rows at the upsert save, so no list re-publish
+  is needed. Verified at source: bark 0.7.1 `Wallet::sync` (local checkout
+  `8adc8e7`, `bark/src/lib.rs:1951`) "will not refresh VTXOs or sync the
+  onchain wallet" — mailbox, pending rounds/boards/offboards/sends, lightning
+  claims, fee rates; the bark-ffi wrapper (`v0.25.0` tag,
+  `src/core/wallet.rs:234`) only calls it and logs. So the Ark sync has no
+  dependency on our onchain sync and can go first. Fix: split the wrapper
+  into Ark and onchain sync methods (two FFI calls, mirrored as two protocol
+  methods; the composed `sync()` stays for its four UI callers), Step 2
+  becomes Ark sync → early movements + Ark balance read → onchain sync,
+  Step 3 unchanged; the balance service publishes the Ark balance when it
+  arrives and the onchain figure when that arrives, with separate error
+  handling. Expected: row and Ark balance at ≈3.5 s on today's launch.
+  Pull-to-refresh gains the same. Plan with labelled claims and the sibling
+  sweep: `Features/Launch_Ark_First_Refresh.md`. DECIDED 2026-10-14: Tier 1,
+  Train 1; the five UI `sync()` callers stay as they are; the second
+  onchain sync round and the Train 2 launch-timing item are untouched.
+  Built 2026-10-14 (uncommitted): `syncArk()` / `syncOnchain()` on the FFI,
+  protocol, mock and manager; `performRefresh` Steps 2a/2b/2c; balance
+  service publishes each side on arrival; `⏱️ Newest inserted row is X s
+  old at save` log line; contract rule 7c. Adversarial pass the same day:
+  no confirmed defect on the money or startup paths; two plausible items
+  fixed (Step 2b uses the read-your-own-writes movements read and
+  republishes the unified merge), two accepted with device looks owed
+  (Ark-only interim total when the in-memory onchain figure is nil; the
+  Ark balance row saved twice per refresh), citation and plan-text errors
+  corrected — record in the plan's §9, ledger line written. Device check
+  owed: one unattached cold launch with a mailbox payment waiting, export
+  after a minute; expect `Step 2b … after launch anchor` within ~0.5 s of
+  Step 2a and the row age under 1 s. First field result, export 2026-10-14
+  17:53 (pull-to-refresh, 305 movements, no new payment): refresh start
+  46.816, Ark sync done 46.931, Step 2b done 47.180 (movements + Ark
+  balance published 0.36 s in), onchain sync 1.9 s, Step 3 done 49.47 —
+  the Ark data is on screen before the onchain sync starts, as designed;
+  Christoph: "pretty quick". The cold launch in the same export is not
+  readable: the device store had evicted every info line before 42 s after
+  the anchor (see the Tier 2 export item), so the launch-with-waiting-payment
+  check is still owed and needs the export fix or Console.app first.

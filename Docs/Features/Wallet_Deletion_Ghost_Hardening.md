@@ -443,6 +443,28 @@ Also seen, recorded rather than fixed:
 - KVS removals are handed to `synchronize()`; whether they reach iCloud when
   the app is killed right after the deletion is the same reliance as before.
 
+### 7.1 Backlog entry text for the abort-after-Step-1 residual (moved 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Deletion abort after Step 1 strips this device's own blocker
+  evidence** (found 2026-10-16 by the ghost-hardening review, pre-existing):
+  `performDeleteWalletData` unregisters first — mirror cleared, row delete
+  committed — and only then runs the fallible CloudKit deletion and the
+  keychain delete. If either throws, the view returns to the info screen
+  with the wallet working (`DeleteWalletSettingView.swift`, phase 1 catch)
+  and nothing re-registers until the next cold launch. In that window
+  another device's `otherDeviceReport` sees no blocker, is offered the full
+  wipe, and deletes the shared seed under a device that still spends. The
+  next launch then registers a *new* row with `isPrimaryDevice == false`
+  (detection paths never claim), so an ex-primary comes back as a secondary.
+  PROPOSED fix: move Step 1 to after the CloudKit step and before the
+  keychain step — on a full wipe Step 2 deletes every row anyway, on
+  local-only nothing fallible follows, so every abort path leaves the
+  registration intact; the keychain-failure residual in rule 17 stays.
+  Needs the refresh-gate tests' "nothing destructive reached" proof
+  re-anchored. Plan `Features/Wallet_Deletion_Ghost_Hardening.md` §7.
+
 ## 8. Rulings (Christoph, 2026-10-16) — all four DECIDED as recommended
 
 1. **Unregister failure during a deletion: continue and record, or abort

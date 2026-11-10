@@ -112,3 +112,25 @@ The 12-word test phrase is also what `BarkWalletFFI.getMnemonic()` returns in Sw
 
 - **"No such module 'BIP39'"** — the package isn't linked to the target. Check Project → Package Dependencies for `https://github.com/anquii/BIP39`, and the target's Frameworks list. Then clean build (Shift+Cmd+K); resetting package caches (File → Packages → Reset Package Caches) fixes most SPM cache issues.
 - **"Cannot find 'Mnemonic'/'Entropy' in scope"** — those types don't exist in this library; you're looking at examples for a different BIP39 package. Use the protocol-based API above.
+
+## Open: pre-check the phrase before bark sees it (moved from the backlog 2026-11-10)
+
+Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
+
+- [ ] **Import — validate the phrase before handing it to bark** (moved
+  down from Tier 0 2026-10-09 after execution: `MnemonicChecksumTests`
+  shows bark's `OnchainWallet.default` throws `invalid mnemonic: the
+  mnemonic has an invalid checksum` / `mnemonic contains an unknown word`
+  before any network I/O, so a typo never opens a different wallet). The
+  live pre-check `SecurityService.isValidBIP39` (`:864-873`) tests word count
+  only; the two validators with the checksum TODO
+  (`BarkWalletFFI+Mnemonic.swift:47-70`, `BIP39Usage.swift:52-73`) have no
+  callers. Fix: call the binding's `validateMnemonic(mnemonic:)` (returns
+  `false` for both cases, verified) in the pre-check and show "phrase has a
+  typo" before the import UI starts; delete the two dead validators. Note
+  `importWalletWithBackup` writes the seed to the keychain before bark sees
+  it (`WalletManager+Wallet.swift:102-104`, rollback follows) — the
+  pre-check also closes that window. Note (2026-10-10): the import path
+  does run bark's recovery scan (single `Wallet.open` with `skipRecovery:
+  false`, `openImportedWallet`), but with the 0.7.1 reader — recovery of a
+  diverged wallet depends on the Tier 4 bindings bump.
