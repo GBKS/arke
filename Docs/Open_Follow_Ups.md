@@ -738,6 +738,12 @@ log).
 - [ ] **Test scanning from a laptop camera; ensure amount and memo input
   interactions work properly**.
 - [ ] **QR network indicators not showing?**
+- [ ] **Onchain receives do not play the received-payment sound** (filed
+  2026-11-07): `ReceivePaymentFeedbackModifier` listens to bark's movement
+  stream, which carries Ark and Lightning receives only. A payment to the
+  onchain address shown on the Receive tab surfaces when a refresh pulls it
+  from the BDK wallet, so there is no event to chime on. Needs a
+  new-incoming-onchain signal from `OnchainTransactionService`.
 
 - [ ] **QR brightness: `boost()` during a restore ramp saves the mid-ramp
   level** — `ScreenBrightnessBooster.boost` reads `screen.brightness` while a
@@ -1420,3 +1426,6 @@ Moved from Tier 3 on 2026-10-19 as ideas, not scheduled work:
   Arké users)**.
 - [ ] **Move relay to DigitalOcean**; **Arke.me domain?** (external).
 - [ ] **Switch send button to a slider for larger amounts**.
+- [ ] **"Payment sounds" toggle in Settings › General** — deferred
+  2026-11-07 until users ask; the ring switch already silences
+  `PaymentFeedback`, haptics stay on regardless.
