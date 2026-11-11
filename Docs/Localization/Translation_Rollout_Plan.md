@@ -164,5 +164,12 @@ October. Closed in one batch:
   `needs_review`) and Phase D QA. Terms
   the batch had to coin are listed in `Translation_Glossary.md` under
   "Terms added 2026-11-11", all ⚠️.
-- Stale entries (8 in Shared, e.g. `settings_delete_warning_local_only`)
-  were skipped; purge them in Xcode's catalog editor.
+- Follow-up the same day: the 8 stale Shared entries were purged (none
+  referenced in code, none constructed dynamically; an IDE build did not
+  re-add them); translator `comment:` added at the eleven call sites the
+  drafting agents flagged as ambiguous (`linked_devices_unsynced_device_registered %@`,
+  `label_held_back` in both modules, `button_verify`, `metadata_import_exported`,
+  `metadata_import_network_mismatch`, `data_bg_event_timer`,
+  `server_sheet_by_second`, `Waiting`, `send_switch_to_fiat_entry`,
+  `receive_switch_to_fiat_entry`), extracted into the catalogs on build; the
+  two InfoPlist catalogs re-serialized once into Xcode's format.
