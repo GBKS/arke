@@ -15,7 +15,8 @@ struct TagsGraph: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text(String(localized: "tags_tag_transaction_amounts", defaultValue: "Tag Transaction Amounts"))
+            Text(String(localized: "tags_tag_transaction_amounts", defaultValue: "Tag Transaction Amounts",
+                               comment: "Chart title: transaction amounts grouped by tag; not an imperative"))
                 .font(.title2)
                 .fontWeight(.semibold)
             

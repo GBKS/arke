@@ -34,7 +34,8 @@ struct ProximityDebugView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "dot.radiowaves.left.and.right")
                                 .font(.caption2)
-                            Text(String(localized: "activity_advertising", defaultValue: "Advertising"))
+                            Text(String(localized: "activity_advertising", defaultValue: "Advertising",
+                                               comment: "MultipeerConnectivity state on the debug screen: this device is discoverable; not marketing"))
                                 .font(.caption2)
                         }
                     }
@@ -42,7 +43,8 @@ struct ProximityDebugView: View {
                         HStack(spacing: 3) {
                             Image(systemName: "magnifyingglass")
                                 .font(.caption2)
-                            Text(String(localized: "activity_browsing", defaultValue: "Browsing"))
+                            Text(String(localized: "activity_browsing", defaultValue: "Browsing",
+                                               comment: "MultipeerConnectivity state on the debug screen: searching for nearby devices"))
                                 .font(.caption2)
                         }
                     }

@@ -88,7 +88,8 @@ struct AddressListItem: View {
             
             if isEditable && !address.isPrimary {
                 Button(action: onSetPrimary) {
-                    Label(String(localized: "button_set_primary", defaultValue: "Set as Primary"), systemImage: "star.fill")
+                    Label(String(localized: "button_set_primary", defaultValue: "Set as Primary",
+                                 comment: "Makes this address the contact's primary address; not about devices"), systemImage: "star.fill")
                 }
             }
         }

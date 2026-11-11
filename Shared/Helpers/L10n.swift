@@ -163,7 +163,8 @@ enum L10n {
         String(localized: "label_amount", defaultValue: "Amount")
     }
     static var labelChange: String {
-        String(localized: "label_change", defaultValue: "Change")
+        String(localized: "label_change", defaultValue: "Change",
+               comment: "Button verb: change the assigned tag, contact or destination; not change as in coins")
     }
     static var labelDetails: String {
         String(localized: "label_details", defaultValue: "Details")

@@ -191,7 +191,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Arké は Nearby Interaction を使用して、シームレスな支払い情報交換のために、別のユーザーに近いときを検出します。"
+            "value" : "Arké は Nearby Interaction を使用して、支払い情報をスムーズに交換できるよう、他のユーザーの近くにいることを検出します。"
           }
         },
         "zh-Hant" : {

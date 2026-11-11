@@ -391,7 +391,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Lightning インボイスをクリップボードにコピー"
+            "value" : "ライトニングインボイスをクリップボードにコピー"
           }
         },
         "zh-Hant" : {
@@ -475,7 +475,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "金額を最大使用可能残高に設定します。再度アクティブにしてクリア。"
+            "value" : "金額を使用可能な最大残高に設定します。もう一度操作するとクリアされます。"
           }
         },
         "zh-Hant" : {
@@ -750,13 +750,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "needs_review",
-                  "value" : "%1$@, verfällt in %2$lld Tag"
+                  "value" : "%1$@, läuft in %2$lld Tag ab"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "needs_review",
-                  "value" : "%1$@, verfällt in %2$lld Tagen"
+                  "value" : "%1$@, läuft in %2$lld Tagen ab"
                 }
               }
             }
@@ -771,7 +771,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%1$@、%2$lld日で有効期限切れ"
+            "value" : "%1$@、%2$lld日後に期限切れ"
           }
         },
         "zh-Hant" : {
@@ -799,7 +799,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "有効期限切れ"
+            "value" : "期限切れ"
           }
         },
         "zh-Hant" : {
@@ -1219,7 +1219,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "埋め込み支払い詳細を含むBitcoin URI"
+            "value" : "支払い情報を埋め込んだBitcoin URI"
           }
         },
         "zh-Hant" : {
@@ -1275,7 +1275,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "DNSを使用した人間が読める形式のBitcoinアドレス"
+            "value" : "DNSを使用した人間が読める形式のビットコインアドレス"
           }
         },
         "zh-Hant" : {
@@ -1331,7 +1331,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "標準Bitcoinアドレス（P2PKH、P2SH、Bech32）"
+            "value" : "標準的なビットコインアドレス（P2PKH、P2SH、Bech32）"
           }
         },
         "zh-Hant" : {
@@ -1359,7 +1359,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bitcoinアドレス"
+            "value" : "ビットコインアドレス"
           }
         },
         "zh-Hant" : {
@@ -1544,7 +1544,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Eine erzwungene Verschiebung ermöglicht dir, dein Bitcoin ohne den Server allein zum Erspartes zu ziehen. Das ist nur für Notfälle."
+            "value" : "Eine erzwungene Verschiebung ermöglicht dir, deine Bitcoin eigenständig und ohne den Server zu Erspartes zu holen. Das ist nur für Notfälle."
           }
         },
         "en" : {
@@ -1674,7 +1674,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "目前有一筆待完成的更新。如果現在開始強制轉移，可能會被更新取消。最好先等待。"
+            "value" : "目前有一筆待處理的更新。如果現在開始強制轉移，可能會被更新取消。最好先等待。"
           }
         }
       }
@@ -1712,7 +1712,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Es gibt einen schnelleren und billigeren Weg, zum Erspartes zu verschieben – in der Ansicht deiner Guthaben."
+            "value" : "Es gibt einen schnelleren und günstigeren Weg, zu Erspartes zu verschieben — in der Guthaben-Ansicht."
           }
         },
         "en" : {
@@ -1724,7 +1724,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "残高ビューで貯蓄に移動するより速く、より安い方法があります。"
+            "value" : "残高画面には、貯蓄に移動するためのより速くて安い方法があります。"
           }
         },
         "zh-Hant" : {
@@ -1796,7 +1796,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Du hast kein Bitcoin in deinem Zahlungen-Guthaben zum Verschieben."
+            "value" : "Du hast keine Bitcoin in deinem Zahlungen-Guthaben, die du verschieben könntest."
           }
         },
         "en" : {
@@ -2231,7 +2231,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "優秀"
+            "value" : "非常に良好"
           }
         },
         "zh-Hant" : {
@@ -2259,7 +2259,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "良好です"
+            "value" : "良好"
           }
         },
         "zh-Hant" : {
@@ -2287,7 +2287,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "不良です"
+            "value" : "不良"
           }
         },
         "zh-Hant" : {
@@ -2343,7 +2343,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "iCloud経由でデータを同期中"
+            "value" : "iCloud経由でデータを同期済み"
           }
         },
         "zh-Hant" : {
@@ -2387,7 +2387,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wallet-Schlüssel werden über iCloud Keychain synchronisiert"
+            "value" : "Wallet-Schlüssel wird über den iCloud-Schlüsselbund synchronisiert"
           }
         },
         "en" : {
@@ -2399,7 +2399,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ウォレットキーがiCloud Keychain経由で同期中です"
+            "value" : "ウォレットキーがiCloud キーチェーン経由で同期中です"
           }
         },
         "zh-Hant" : {
@@ -2443,7 +2443,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Zeige nur synchronisierte Daten an"
+            "value" : "Zeigt nur synchronisierte Daten an"
           }
         },
         "en" : {
@@ -2471,7 +2471,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dieses Gerät zeigt Wallet-Daten an, die über iCloud synchronisiert wurden. Dein Wallet-Schlüssel ist auf diesem Gerät noch nicht angekommen – er synchronisiert sich normalerweise selbst über iCloud Keychain."
+            "value" : "Dieses Gerät zeigt Wallet-Daten an, die über iCloud synchronisiert wurden. Dein Wallet-Schlüssel ist auf diesem Gerät noch nicht angekommen — er synchronisiert sich normalerweise von selbst über den iCloud-Schlüsselbund."
           }
         },
         "en" : {
@@ -2483,7 +2483,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このデバイスはiCloud経由で同期されたウォレットデータを表示しています。ウォレットキーはまだこのデバイスに到着していません。通常はiCloud Keychain経由で自動的に同期されます。"
+            "value" : "このデバイスはiCloud経由で同期されたウォレットデータを表示しています。ウォレットキーはまだこのデバイスに届いていません。通常はiCloud キーチェーン経由で自動的に同期されます。"
           }
         },
         "zh-Hant" : {
@@ -2987,7 +2987,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "注：ネットワークサポートはメインネット、テストネット、Signet、および該当する場合はレグテストを含みます。"
+            "value" : "注：ネットワークサポートには、メインネット、テストネット、Signet、および該当する場合は Regtest が含まれます。"
           }
         },
         "zh-Hant" : {
@@ -3031,7 +3031,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Diese Ansicht zeigt, wie Bitcoin-Beträge basierend auf deinem gewählten Formatierungspräferenz und Systemgebietsschema formatiert werden."
+            "value" : "Diese Ansicht zeigt, wie Bitcoin-Beträge basierend auf deiner gewählten Formatpräferenz und deinem Systemgebietsschema formatiert werden."
           }
         },
         "en" : {
@@ -3043,7 +3043,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このビューは、選択した形式設定と システムロケールに基づいて、ビットコイン金額がどのようにフォーマットされるかを示しています。"
+            "value" : "このビューは、選択した形式設定とシステムロケールに基づいて、ビットコイン金額がどのようにフォーマットされるかを示しています。"
           }
         },
         "zh-Hant" : {
@@ -3324,7 +3324,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "申し訳ございません"
+            "value" : "申し訳ありません"
           }
         },
         "zh-Hant" : {
@@ -3409,7 +3409,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "迅速な承認のための高い手数料です"
+            "value" : "手数料は高めですが、承認が速くなります"
           }
         },
         "zh-Hant" : {
@@ -3521,7 +3521,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "低い手数料で長い承認時間です"
+            "value" : "手数料は低めですが、承認に時間がかかります"
           }
         },
         "zh-Hant" : {
@@ -3652,7 +3652,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dein gesamtes Bitcoin ist bereits auf dem Weg zu deinem Erspartes-Guthaben. Du kannst den Fortschritt in deiner Aktivität verfolgen."
+            "value" : "Deine gesamten Bitcoin sind bereits auf dem Weg zu deinem Erspartes-Guthaben. Du kannst den Fortschritt in deiner Aktivität verfolgen."
           }
         },
         "en" : {
@@ -3664,7 +3664,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "あなたの Bitcoin はすべて既に貯蓄残高に向かっています。アクティビティで進捗を確認できます。"
+            "value" : "あなたのビットコインはすべて、既に貯蓄残高に向かっています。アクティビティで進捗を確認できます。"
           }
         },
         "zh-Hant" : {
@@ -3680,7 +3680,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nach Abschluss wird das Bitcoin automatisch zu deinem Erspartes-Guthaben hinzugefügt."
+            "value" : "Nach Abschluss werden die Bitcoin automatisch zu deinem Erspartes-Guthaben hinzugefügt."
           }
         },
         "en" : {
@@ -3692,7 +3692,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "完了すると、Bitcoin は自動的に貯蓄残高に追加されます。"
+            "value" : "完了すると、ビットコインは自動的に貯蓄残高に追加されます。"
           }
         },
         "zh-Hant" : {
@@ -3748,7 +3748,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "チェックインの時間になったらお知らせします。"
+            "value" : "アプリを開く時間になったらお知らせします。"
           }
         },
         "zh-Hant" : {
@@ -3764,7 +3764,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dein Bitcoin ist auf dem Weg zu deinem Erspartes-Guthaben."
+            "value" : "Deine Bitcoin sind auf dem Weg zu deinem Erspartes-Guthaben."
           }
         },
         "en" : {
@@ -3776,7 +3776,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bitcoin は貯蓄残高に向かっています。"
+            "value" : "ビットコインは貯蓄残高に向かっています。"
           }
         },
         "zh-Hant" : {
@@ -3872,7 +3872,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Weniger als 1 Stunde verbleibend."
+            "value" : "Noch weniger als 1 Stunde."
           }
         },
         "en" : {
@@ -3956,7 +3956,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Erinnerungen sind deaktiviert. Aktiviere Benachrichtigungen, damit du keinen Besuch verpasst."
+            "value" : "Erinnerungen sind deaktiviert. Aktiviere Benachrichtigungen, damit du nicht vergisst vorbeizuschauen."
           }
         },
         "en" : {
@@ -3968,7 +3968,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "通知がオフになっています。チェックインを見逃さないよう通知をオンにしてください。"
+            "value" : "リマインダーがオフになっています。アプリを開くタイミングを見逃さないよう、通知をオンにしてください。"
           }
         },
         "zh-Hant" : {
@@ -3984,7 +3984,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Erste Schritte. Schau in etwa einer Stunde vorbei."
+            "value" : "Es geht los. Schau in etwa einer Stunde wieder vorbei."
           }
         },
         "en" : {
@@ -4349,7 +4349,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ändern in Einstellungen, um verschiedene Formate zu sehen"
+            "value" : "In den Einstellungen ändern, um andere Formate zu sehen"
           }
         },
         "en" : {
@@ -4405,7 +4405,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Betrag-Beispiele"
+            "value" : "Betragsbeispiele"
           }
         },
         "en" : {
@@ -4631,7 +4631,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Beschriftung:"
+            "value" : "Bezeichnung:"
           }
         },
         "en" : {
@@ -5023,7 +5023,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Du musst stündlich vorbei schauen, bis der Vorgang abgeschlossen ist"
+            "value" : "Du musst bis zum Abschluss einmal pro Stunde vorbeischauen"
           }
         },
         "en" : {
@@ -5079,7 +5079,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Eine erzwungene Verschiebung kann 10+ Stunden dauern"
+            "value" : "Eine erzwungene Verschiebung kann über 10 Stunden dauern"
           }
         },
         "en" : {
@@ -5265,7 +5265,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "新增備註（選填）"
+            "value" : "加入備註（選填）"
           }
         }
       }
@@ -5624,7 +5624,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "接続解除"
+            "value" : "切断"
           }
         },
         "zh-Hant" : {
@@ -5658,7 +5658,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "已過期"
+            "value" : "已到期"
           }
         }
       }
@@ -5752,7 +5752,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Lädt"
+            "value" : "Wird geladen"
           }
         },
         "en" : {
@@ -5904,7 +5904,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "未確認"
+            "value" : "未承認"
           }
         },
         "zh-Hant" : {
@@ -6101,7 +6101,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "已過期"
+            "value" : "已到期"
           }
         }
       }

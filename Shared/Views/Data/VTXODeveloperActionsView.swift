@@ -98,7 +98,8 @@ struct VTXODeveloperActionsView: View {
                                 .controlSize(.small)
                                 .foregroundStyle(Color.Arke.goldLabel)
                         }
-                        Text(String(localized: "button_exit", defaultValue: "Exit"))
+                        Text(String(localized: "button_exit", defaultValue: "Exit",
+                                           comment: "Developer action: start an Ark unilateral exit for this VTXO; keep the jargon, not quit"))
                             .fontWeight(.medium)
                             .foregroundStyle(Color.Arke.goldLabel)
                     }
