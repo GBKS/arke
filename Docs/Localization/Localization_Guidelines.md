@@ -133,6 +133,8 @@ Any string containing `%lld`/`%u`/`%llu` that describes a quantity must use plur
 
 Strings where the number is an identifier, not a quantity ("Block %u", "Invoice #%lld"), do not need variations.
 
+A translation may need plural forms where English has none, or two where English has one (German inflects "%lld expiring soon", English does not). Give that language its own `substitutions` dictionary under its localization, with `%#@name@` tokens in the value; `LocalizationCatalogTests.specifierParity` and `Scripts/translation_lint.py` count substitution arguments for every language. A value that references `%#@name@` without a substitution in the same language renders the token literally — `balance_vtxos_expired_and_expiring %lld %lld` (de) is the worked example.
+
 ### 4. Mark non-translatable strings
 
 Set `"shouldTranslate" : false` on entries that must never be translated: `app_name`, `symbol_*` keys, and pure format strings like `"%@"` or `"~%@"`. This prevents wasted translator effort once other languages are added.

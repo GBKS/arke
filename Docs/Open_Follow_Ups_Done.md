@@ -11,6 +11,45 @@ same commit, under a matching header or a dated "Moved from the open list"
 section; the open file never holds ticked lines.
 
 ## Localization
+- [x] **`balance_vtxos_expired_and_expiring %lld %lld` needs plural
+  substitutions in de — fixed 2026-11-11** — English uses a `%#@expired@` substitution plus a
+  count; German is a flat `%1$lld abgelaufen, %2$lld läuft in Kürze ab`,
+  singular for any count. Needs `%#@…@` substitution pairs in the catalog
+  (ja/zh collapse correctly). Found by the 2026-11-11 review pass.
+- [x] **Concatenation keys the translations cannot honour — fixed 2026-11-11** — `label_ago`
+  ("ago"), `label_this_will` ("This will"), `suffix_minimum` (" minimum."),
+  `firstuse_welcome_to` ("Welcome to"), `accessibility_last_seen` ("last
+  seen" + relative time): fragments joined in code, so German „vor" and
+  Japanese word order come out wrong (`Localization_Guidelines.md` rule 5).
+  Replace each with one full-sentence key with a specifier.
+- [x] **English copy nits from the review pass — fixed 2026-11-11** — `backup_syncing`
+  "Syncing.." (two dots); double space in `balance_emergency_move_help`;
+  `transaction_explainer_exit` says "A recovery moves bitcoin" where every
+  other string says forced move; `message_takes_24_hours` key says 24 h but
+  the value says "10+ hours", and `settings_forced_move_duration_warning`
+  hedges twice ("about 10+ hours"); `accessibility_no_primary_device_alert`,
+  `linked_devices_no_active_wallet_description`, `settings_make_primary_help`
+  say "primary/active wallet" for the primary device; `button_offboard`
+  "Offboard" and `maintenance_offboarding` "Move to Savings" label the same
+  action. English lives in code (`defaultValue:`); the translations follow.
+  Closure 2026-11-11 (one commit): German got its own `expired` / `expiring`
+  substitutions with one/other forms, and the zh-Hant value, which referenced
+  `%#@expired@` without a substitution of its own, was flattened;
+  `LocalizationCatalogTests.specifierParity` and `translation_lint.py` now
+  read substitutions for every language. Concatenations: `label_ago` replaced
+  by Foundation's relative date format (carries its own "ago"/"vor"),
+  `suffix_minimum` → `boarding_minimum_amount %@`, `accessibility_last_seen`
+  → `accessibility_last_seen %@`, `label_this_will` →
+  `contacts_assignment_preview_heading` "What will happen" (a heading, not a
+  fragment); `firstuse_welcome_to` kept — it is a layout line above the large
+  app name, now with a translator comment. Copy: "Syncing…", double space
+  removed, exit explainer says forced move, `message_takes_24_hours` renamed
+  `message_forced_move_duration` with its translations carried over, "about
+  10+ hours" → "10+ hours", the three device strings say "the primary
+  device", `button_offboard` kept as developer jargon with a comment.
+  Translations updated where the English changed meaning. Build green,
+  lint 0, guard suite green.
+
 - [x] **German "aktualisieren" for the VTXO refresh in five older keys — fixed 2026-11-11**
   (`action_refresh_payments`, `action_refresh_with_fee %@`,
   `status_refresh_started`, `status_refresh_successful`, `status_refreshing`),

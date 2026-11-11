@@ -197,7 +197,9 @@ were rewritten by hand in the desktop catalog (the apply script writes a key
 to every catalog that holds it). Terms the reviewers had to decide are in
 `Translation_Glossary.md` under "Terms added 2026-11-11 (review pass)".
 English-side findings (copy nits, concatenation keys, the
-`balance_vtxos_expired_and_expiring` substitution gap) are filed in
-`Open_Follow_Ups.md`, Tier 3. Still not done: native-speaker sign-off (every
+`balance_vtxos_expired_and_expiring` substitution gap) were fixed the same
+day; write-up in the Done log under Localization. Per-language
+`substitutions` are now a supported pattern: the guard test and the lint read
+them for every language, not only English. Still not done: native-speaker sign-off (every
 value stays `needs_review`) and the Phase D layout pass.
 
