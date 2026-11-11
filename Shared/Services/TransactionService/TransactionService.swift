@@ -16,7 +16,7 @@ import OSLog
 // MARK: Address Object Model
 
 /// Address object as returned by the API (JSON-encoded within the address arrays)
-struct AddressObject: Codable {
+struct AddressObject: nonisolated Codable {
     let type: String   // "ark", "bitcoin", "lightning", etc.
     let value: String  // The actual address/invoice/identifier
     

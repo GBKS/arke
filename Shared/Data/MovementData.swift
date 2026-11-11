@@ -86,8 +86,10 @@ struct MovementData: Codable {
         receivedOnAddresses = Self.decodeAddressObjects(from: receivedStrings)
     }
     
-    /// Decode JSON-encoded address strings into AddressObject array
-    private static func decodeAddressObjects(from jsonStrings: [String]) -> [AddressObject] {
+    /// Decode JSON-encoded address strings into AddressObject array.
+    /// The FFI sends every `sentToAddresses` / `receivedOnAddresses` entry as
+    /// `{"type":"ark","value":"ark1…"}`, never as a bare address.
+    nonisolated static func decodeAddressObjects(from jsonStrings: [String]) -> [AddressObject] {
         return jsonStrings.compactMap { jsonString in
             guard let data = jsonString.data(using: .utf8) else {
                 print("⚠️ Failed to convert address string to data: \(jsonString)")

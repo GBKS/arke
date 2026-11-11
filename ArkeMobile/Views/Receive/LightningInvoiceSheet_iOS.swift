@@ -733,7 +733,7 @@ struct LightningInvoiceSheet_iOS: View {
         subscriptionId = service.onMovementCreated { [arkAddress, paymentHash] movement in
             // Check if this movement is for our payment request
             if self.isPaymentForUs(movement, arkAddress: arkAddress, paymentHash: paymentHash) {
-                self.handlePaymentReceived()
+                self.handlePaymentReceived(movement)
             }
         }
     }
@@ -746,7 +746,7 @@ struct LightningInvoiceSheet_iOS: View {
         guard movement.effectiveBalanceSats > 0 else { return false }
         
         // Option 1: Check if payment was received on our Ark address
-        if movement.receivedOnAddresses.contains(arkAddress) {
+        if Self.receivedOnArkAddress(movement.receivedOnAddresses, arkAddress) {
             return true
         }
         
@@ -762,12 +762,19 @@ struct LightningInvoiceSheet_iOS: View {
         return false
     }
     
-    private func handlePaymentReceived() {
+    /// `receivedOnAddresses` entries arrive as JSON payment-method objects
+    /// from the FFI, so a plain `contains(arkAddress)` never matches.
+    nonisolated static func receivedOnArkAddress(_ entries: [String], _ arkAddress: String) -> Bool {
+        guard !arkAddress.isEmpty else { return false }
+        return MovementData.decodeAddressObjects(from: entries)
+            .contains { $0.type.lowercased() == "ark" && $0.value == arkAddress }
+    }
+
+    private func handlePaymentReceived(_ movement: Movement) {
         guard !paymentReceived else { return }
         
-        // Haptic feedback
-        let notification = UINotificationFeedbackGenerator()
-        notification.notificationOccurred(.success)
+        // Sound and haptic; deduplicated per movement with the Receive tab underneath
+        PaymentFeedback.shared.paymentReceived(movementId: movement.id)
         
         // Update UI with animation
         withAnimation(.easeInOut(duration: 0.4)) {

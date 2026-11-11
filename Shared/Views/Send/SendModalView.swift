@@ -51,11 +51,13 @@ struct SendModalView: View {
             await enforceMinimumSendingDuration()
             
             state = .success
+            PaymentFeedback.shared.paymentSent()
         } catch {
             // Ensure minimum display time for "sending" state
             await enforceMinimumSendingDuration()
             
             state = .error(error.localizedDescription)
+            PaymentFeedback.shared.paymentFailed()
         }
     }
     

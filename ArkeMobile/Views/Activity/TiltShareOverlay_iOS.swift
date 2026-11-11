@@ -93,6 +93,8 @@ struct TiltShareOverlay_iOS: View {
             .animation(.smooth(duration: isVisible ? 0.4 : 0.3), value: isVisible)
         }
         .ignoresSafeArea(.all)
+        // Both pages show a QR the other person pays; chime while it is up
+        .receivePaymentFeedback(isActive: isVisible)
         .task {
             generateQRCode()
         }

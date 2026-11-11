@@ -397,6 +397,8 @@ struct WalletView_iOS: View {
                     doubleTapTrigger: receiveTabDoubleTapTrigger
                 )
             }
+            // Received-payment sound and haptic only while the user is on this tab
+            .receivePaymentFeedback(isActive: selectedTab == .receive)
             .tabItem {
                 Label {
                     Text(String(localized: "accessibility_tab_receive", defaultValue: "Receive"))
@@ -504,6 +506,7 @@ struct WalletView_iOS: View {
             if selectedTab == .activity {
                 motionManager.startMonitoring()
             }
+            PaymentFeedback.shared.preload()
         }
         .onDisappear {
             motionManager.stopMonitoring()
