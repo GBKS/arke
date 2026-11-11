@@ -56,7 +56,7 @@ struct VTXODeveloperActionsView: View {
                                         .foregroundStyle(Color.Arke.goldLabel)
                                 }
                             } else {
-                                Text(String(localized: "button_refresh", defaultValue: "Refresh"))
+                                Text(String(localized: "maintenance_refresh", defaultValue: "Refresh"))
                                     .fontWeight(.medium)
                                     .foregroundStyle(Color.Arke.goldLabel)
                             }

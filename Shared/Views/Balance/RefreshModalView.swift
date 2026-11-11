@@ -169,12 +169,12 @@ struct RefreshModalView: View {
                 // between the modal's load and the service's own check.
                 state = .noChange(
                     title: String(localized: "status_refresh_not_needed", defaultValue: "Nothing to refresh"),
-                    message: String(localized: "balance_refresh_not_needed", defaultValue: "These VTXOs are either still fresh or already part of a refresh. Nothing new was scheduled.")
+                    message: String(localized: "balance_refresh_not_needed", defaultValue: "These coins are either still fresh or already part of a refresh. Nothing new was scheduled.")
                 )
             case .alreadyInProgress:
                 state = .noChange(
                     title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
-                    message: String(localized: "balance_refresh_already_underway", defaultValue: "A refresh check is already running and covers these VTXOs. Nothing new was scheduled.")
+                    message: String(localized: "balance_refresh_already_underway", defaultValue: "A refresh check is already running and covers these coins. Nothing new was scheduled.")
                 )
             case .alreadyIssuedByServer:
                 // The server rejected the request because the refresh is
@@ -182,7 +182,7 @@ struct RefreshModalView: View {
                 // it reads as success, not "Refresh Failed".
                 state = .noChange(
                     title: String(localized: "status_refresh_already_underway", defaultValue: "Already refreshing"),
-                    message: String(localized: "balance_refresh_already_scheduled", defaultValue: "These VTXOs are already part of a refresh the server has scheduled. It will complete on its own.")
+                    message: String(localized: "balance_refresh_already_scheduled", defaultValue: "These coins are already part of a refresh the server has scheduled. It will complete on its own.")
                 )
             case .rejectedByServer:
                 // The server considers these inputs spent, exited or banned

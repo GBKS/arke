@@ -5,7 +5,26 @@
       "shouldTranslate" : false
     },
     "…%@" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "…%@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "…%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "…%@"
+          }
+        }
+      }
     },
     "(%@)" : {
       "shouldTranslate" : false
@@ -46,6 +65,18 @@
     },
     "%@ ago" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "vor %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ 前"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -55,7 +86,26 @@
       }
     },
     "%@ UTC" : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ UTC"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ UTC"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ UTC"
+          }
+        }
+      }
     },
     "%@...%@" : {
       "localizations" : {
@@ -653,6 +703,18 @@
     },
     "%llu sat/vB" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%llu sat/vB"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%llu sat/vB"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -928,10 +990,28 @@
     "accessibility_balance_with_fiat" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@、%2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@，%2$@"
           }
         }
       }
@@ -939,10 +1019,28 @@
     "accessibility_choose_server" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Server und Netzwerk"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Server and network"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーとネットワーク"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器與網路"
           }
         }
       }
@@ -950,10 +1048,28 @@
     "accessibility_choose_server_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Öffnet die Serverauswahl für das neue Wallet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Opens the server choice for the new wallet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいウォレットのサーバー選択を開きます"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開啟新錢包的伺服器選擇"
           }
         }
       }
@@ -1438,10 +1554,28 @@
     "accessibility_hint_share_addresses_instead" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zeigt eine Anfrage ohne Lightning-Rechnung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Shows a request without a Lightning invoice"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ライトニングインボイスなしのリクエストを表示します"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "顯示不含閃電網路付款請求的收款資訊"
           }
         }
       }
@@ -2822,10 +2956,28 @@
     "action_clear_background_events" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ereignisse löschen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Clear events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "イベントをクリア"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "清除事件"
           }
         }
       }
@@ -3060,7 +3212,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Alle aktualisieren"
+            "value" : "Alle erneuern"
           }
         },
         "en" : {
@@ -3088,7 +3240,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Alle aktualisieren (%@)"
+            "value" : "Alle erneuern (%@)"
           }
         },
         "en" : {
@@ -3228,7 +3380,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Zahlungsguthaben aktualisieren"
+            "value" : "Zahlungsguthaben erneuern"
           }
         },
         "en" : {
@@ -3256,7 +3408,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aktualisieren (%@)"
+            "value" : "Erneuern (%@)"
           }
         },
         "en" : {
@@ -3646,10 +3798,28 @@
     "action_view_background_events" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ereignisse anzeigen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "View events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "イベントを表示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檢視事件"
           }
         }
       }
@@ -4651,6 +4821,18 @@
     },
     "Address: %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adresse: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アドレス：%@"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4916,6 +5098,18 @@
     },
     "All %lld steps complete" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alle %lld Schritte abgeschlossen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全 %lld ステップ完了"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5080,7 +5274,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Füge optional deine Wallet-Backup-Datei hinzu, um deinen Transaktionsverlauf und deine Wallet-Daten wiederherzustellen. Ohne sie werden deine Mittel aus dem Netzwerk wiederhergestellt, aber der lokale Verlauf geht verloren."
+            "value" : "Empfohlen, falls du eine hast. Sie stellt deinen Zahlungsverlauf und alles noch Laufende wieder her. Ohne sie werden deine Mittel aus dem Netzwerk wiederhergestellt und der Verlauf beginnt neu."
           }
         },
         "en" : {
@@ -5092,13 +5286,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "オプションでウォレットバックアップファイルを追加して、取引履歴とウォレットデータを復元できます。これがなくても資金はネットワークから復元されますが、ローカル履歴は復元されません。"
+            "value" : "お持ちの場合は推奨です。支払い履歴と進行中の内容を復元します。なくても資金はネットワークから復元されますが、履歴は新しく始まります。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "可選擇加入錢包備份檔案，以復原你的交易記錄和錢包資料。若沒有備份檔案，資金會從網路中復原，但本機記錄不會復原。"
+            "value" : "若有備份檔案，建議使用。它會復原你的付款記錄和所有進行中的項目。若沒有，資金會從網路中復原，但記錄會重新開始。"
           }
         }
       }
@@ -6246,10 +6440,28 @@
     "balance_refresh_already_scheduled" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Bitcoin sind bereits Teil einer Erneuerung, die der Server geplant hat. Sie wird von selbst abgeschlossen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "These VTXOs are already part of a refresh the server has scheduled. It will complete on its own."
+            "value" : "These coins are already part of a refresh the server has scheduled. It will complete on its own."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このビットコインは、サーバーがすでに予定している更新に含まれています。更新は自動的に完了します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這些比特幣已包含在伺服器排定的更新中，會自行完成。"
           }
         }
       }
@@ -6257,10 +6469,28 @@
     "balance_refresh_already_underway" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eine Erneuerungsprüfung läuft bereits und umfasst diese Bitcoin. Es wurde nichts Neues geplant."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "A refresh check is already running and covers these VTXOs. Nothing new was scheduled."
+            "value" : "A refresh check is already running and covers these coins. Nothing new was scheduled."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新チェックはすでに実行中で、このビットコインも対象に含まれています。新たに予定されたものはありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新檢查已在進行中，且涵蓋這些比特幣。沒有排定新的更新。"
           }
         }
       }
@@ -6324,10 +6554,28 @@
     "balance_refresh_not_needed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Bitcoin sind entweder noch frisch oder bereits Teil einer Erneuerung. Es wurde nichts Neues geplant."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "These VTXOs are either still fresh or already part of a refresh. Nothing new was scheduled."
+            "value" : "These coins are either still fresh or already part of a refresh. Nothing new was scheduled."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このビットコインはまだ新しいか、すでに更新に含まれています。新たに予定されたものはありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這些比特幣若非仍然有效，就是已包含在更新中。沒有排定新的更新。"
           }
         }
       }
@@ -6363,10 +6611,28 @@
     "balance_refresh_refused" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Server hat diese Bitcoin abgelehnt: Er hält sie für unbrauchbar, meist weil sie bereits in einer Runde verwendet wurden, die dieses Wallet nicht gesehen hat, oder weil sie vorübergehend gesperrt sind. Das Wallet aus deiner Wiederherstellungsphrase wiederherzustellen kann sie zurückbringen — wende dich vorher an den Support. Die App versucht es 24 Stunden lang nicht erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The server refused these coins: it considers them unusable, usually because they were already used in a round this wallet didn't see, or they are temporarily blocked. Recovering the wallet from your recovery phrase may restore them — contact support before you do. The app won't retry for 24 hours."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーはこのビットコインを拒否しました。このウォレットが把握していないラウンドですでに使用されたか、一時的にブロックされているため、使用できないと判断されています。リカバリーフレーズからウォレットを復元すると戻る可能性がありますが、その前にサポートにお問い合わせください。アプリは 24 時間再試行しません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器拒絕了這些比特幣：伺服器認為它們無法使用，通常是因為它們已在這個錢包未察覺的回合中被使用，或暫時遭到封鎖。從復原片語復原錢包或許能找回它們，但請先聯絡客服。App 在 24 小時內不會重試。"
           }
         }
       }
@@ -6374,10 +6640,28 @@
     "balance_refresh_refused_card" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Server hat diese Bitcoin abgelehnt, daher können sie von diesem Gerät aus nicht erneuert werden. Das Wallet aus deiner Wiederherstellungsphrase wiederherzustellen kann sie zurückbringen — wende dich zuerst an den Support."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The server refused these coins, so they can't be refreshed from this device. Recovering the wallet from your recovery phrase may restore them — contact support first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーがこのビットコインを拒否したため、このデバイスからは更新できません。リカバリーフレーズからウォレットを復元すると戻る可能性があります。まずサポートにお問い合わせください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器拒絕了這些比特幣，因此無法從此裝置更新。從復原片語復原錢包或許能找回它們，但請先聯絡客服。"
           }
         }
       }
@@ -6385,10 +6669,28 @@
     "balance_refresh_too_small %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Bitcoin ergeben zusammen %1$@ und liegen damit unter den %2$@, die eine Erneuerung braucht. Es wurde nichts geplant."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "These coins total %1$@, below the %2$@ a refresh needs. Nothing was scheduled."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このビットコインの合計は %1$@ で、更新に必要な %2$@ を下回っています。何も予定されませんでした。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這些比特幣總計 %1$@，低於更新所需的 %2$@。沒有排定任何更新。"
           }
         }
       }
@@ -6396,10 +6698,28 @@
     "balance_refresh_too_small_detail %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eine Erneuerung braucht insgesamt mindestens %@."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "A refresh needs at least %@ in total."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新には合計で少なくとも %@ が必要です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新總計至少需要 %@。"
           }
         }
       }
@@ -6689,7 +7009,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Deine Münzen werden zu deinem Zahlungen-Guthaben transferiert und sind gleich einsatzbereit."
+            "value" : "Deine Bitcoin werden in dein Zahlungen-Guthaben verschoben und sind gleich einsatzbereit."
           }
         },
         "en" : {
@@ -6701,13 +7021,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "あなたのコインが支払い残高に転送されており、すぐに使用できるようになります。"
+            "value" : "あなたのビットコインが支払い残高に移動されており、すぐに使用できるようになります。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "你的資金正在轉移到支付餘額，很快就可以使用。"
+            "value" : "你的比特幣正在轉移到支付餘額，很快就可以使用。"
           }
         }
       }
@@ -6829,7 +7149,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Deine Münzen werden zu deinem Erspartes-Guthaben transferiert. Dieser Prozess kann einen Moment dauern."
+            "value" : "Deine Bitcoin werden in dein Erspartes-Guthaben verschoben. Das kann einen Moment dauern."
           }
         },
         "en" : {
@@ -6841,13 +7161,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "あなたのコインが貯蓄残高に転送されています。このプロセスは完了するまでに少し時間がかかる場合があります。"
+            "value" : "あなたのビットコインが貯蓄残高に移動されています。このプロセスは完了するまでに少し時間がかかる場合があります。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "你的資金正在轉移到儲蓄餘額。這個過程可能需要一點時間才能完成。"
+            "value" : "你的比特幣正在轉移到儲蓄餘額。這個過程可能需要一點時間才能完成。"
           }
         }
       }
@@ -7436,6 +7756,18 @@
     },
     "Block %u" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Block %u"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ブロック %u"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7811,10 +8143,28 @@
     "button_continue" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Fortfahren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Continue"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "続行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "繼續"
           }
         }
       }
@@ -8046,10 +8396,28 @@
     "button_delete_everywhere_anyway" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Trotzdem überall löschen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Delete Everywhere Anyway"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "それでもすべての場所から削除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "仍要從各處刪除"
           }
         }
       }
@@ -8057,10 +8425,28 @@
     "button_delete_from_account_anyway" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Trotzdem aus dem Konto löschen…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Delete from the account anyway…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "それでもアカウントから削除…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "仍要從帳號中刪除…"
           }
         }
       }
@@ -8461,10 +8847,28 @@
     "button_hide_words" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alle Wörter verbergen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Hide All Words"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてのワードを非表示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "隱藏所有字詞"
           }
         }
       }
@@ -9392,10 +9796,28 @@
     "button_verify" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Überprüfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Verify"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "驗證"
           }
         }
       }
@@ -9538,6 +9960,18 @@
     },
     "Contact '%@' assigned" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontakt „%@“ zugewiesen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先「%@」を割り当てました"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10381,10 +10815,28 @@
     "data_background_activity" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hintergrundaktivität"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Background Activity"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックグラウンドアクティビティ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "背景活動"
           }
         }
       }
@@ -10392,10 +10844,28 @@
     "data_background_events_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hintergrundereignisse"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Background Events"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックグラウンドイベント"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "背景事件"
           }
         }
       }
@@ -10431,10 +10901,28 @@
     "data_bg_auth_expires_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Relay-Auth läuft ab"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Relay auth expires"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リレー認証の期限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "中繼授權到期"
           }
         }
       }
@@ -10442,10 +10930,28 @@
     "data_bg_check_relay" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Relay-Registrierung prüfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Check relay registration"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リレー登録を確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檢查中繼註冊"
           }
         }
       }
@@ -10453,10 +10959,28 @@
     "data_bg_checking_relay" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Relay wird abgefragt…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Asking the relay…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リレーに問い合わせ中…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在詢問中繼…"
           }
         }
       }
@@ -10464,10 +10988,28 @@
     "data_bg_clear_confirm_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alle Hintergrundereignisse löschen?"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Clear all background events?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてのバックグラウンドイベントをクリアしますか？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "要清除所有背景事件嗎？"
           }
         }
       }
@@ -10475,10 +11017,28 @@
     "data_bg_event_bgtask_scheduled" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hintergrundaufgabe angefordert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Background task requested"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックグラウンドタスクをリクエスト"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已請求背景任務"
           }
         }
       }
@@ -10486,10 +11046,28 @@
     "data_bg_event_bgtask_wake" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hintergrundaufgabe ausgeführt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Background task ran"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックグラウンドタスクを実行"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "背景任務已執行"
           }
         }
       }
@@ -10497,10 +11075,28 @@
     "data_bg_event_cold_launch" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "App gestartet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "App launched"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アプリを起動"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "App 已啟動"
           }
         }
       }
@@ -10508,10 +11104,28 @@
     "data_bg_event_mailbox_push" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mailbox-Push"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Mailbox push"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "メールボックスプッシュ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "信箱推播"
           }
         }
       }
@@ -10519,10 +11133,28 @@
     "data_bg_event_registration" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Relay-Registrierung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Relay registration"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リレー登録"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "中繼註冊"
           }
         }
       }
@@ -10530,10 +11162,28 @@
     "data_bg_event_stale_unregister" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Veraltete Mailbox abgemeldet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Stale mailbox unregistered"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "古いメールボックスの登録を解除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已解除過時信箱的註冊"
           }
         }
       }
@@ -10541,10 +11191,28 @@
     "data_bg_event_timer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aktualisierungs-Timer ausgelöst"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Refresh timer fired"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新タイマーが作動"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "重新整理計時器已觸發"
           }
         }
       }
@@ -10552,10 +11220,28 @@
     "data_bg_event_wake_push" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auth-Aufwach-Push"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Auth wake push"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "認証ウェイクプッシュ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "授權喚醒推播"
           }
         }
       }
@@ -10563,10 +11249,28 @@
     "data_bg_last_bg_wake_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Letztes Hintergrund-Aufwachen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last background wake"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最後のバックグラウンドウェイク"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上次背景喚醒"
           }
         }
       }
@@ -10574,10 +11278,28 @@
     "data_bg_last_registration_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Letzte Registrierung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last registration"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最終登録"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上次註冊"
           }
         }
       }
@@ -10585,10 +11307,28 @@
     "data_bg_last_wake_push_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Letzter Aufwach-Push"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last wake push"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最後のウェイクプッシュ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上次喚醒推播"
           }
         }
       }
@@ -10596,10 +11336,28 @@
     "data_bg_next_bgtask_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nächste Hintergrundaufgabe"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Next background task"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次のバックグラウンドタスク"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "下一個背景任務"
           }
         }
       }
@@ -10607,10 +11365,28 @@
     "data_bg_next_renewal_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nächste Auth-Verlängerung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Next auth renewal"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次回の認証更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "下次授權續期"
           }
         }
       }
@@ -10618,10 +11394,28 @@
     "data_bg_no_events" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Noch keine Hintergrundereignisse"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No background events yet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだバックグラウンドイベントがありません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尚無背景事件"
           }
         }
       }
@@ -10629,10 +11423,28 @@
     "data_bg_notifications_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Benachrichtigungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Notifications"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "通知"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "通知"
           }
         }
       }
@@ -10640,10 +11452,28 @@
     "data_bg_push_token_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Push-Token"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Push token"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プッシュトークン"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "推播 Token"
           }
         }
       }
@@ -10651,10 +11481,28 @@
     "data_bg_relay_registrations_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Relay-Registrierungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Relay registrations"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リレー登録数"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "中繼註冊數"
           }
         }
       }
@@ -10662,10 +11510,28 @@
     "data_bg_relay_unavailable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wallet oder Relay-Dienst nicht verfügbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Wallet or relay service not available"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットまたはリレーサービスが利用できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包或中繼服務無法使用"
           }
         }
       }
@@ -10673,10 +11539,28 @@
     "data_bg_value_missing" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Fehlt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Missing"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "なし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "缺少"
           }
         }
       }
@@ -10684,10 +11568,28 @@
     "data_bg_value_never" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nie"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Never"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "一度もなし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從未"
           }
         }
       }
@@ -10695,9 +11597,27 @@
     "data_bg_value_none" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "—"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "—"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "—"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "—"
           }
         }
@@ -10706,10 +11626,28 @@
     "data_bg_value_none_scheduled" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keine geplant"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "None scheduled"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "予定なし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未排程"
           }
         }
       }
@@ -10717,10 +11655,28 @@
     "data_bg_value_off" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aus"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Off"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オフ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "關閉"
           }
         }
       }
@@ -10728,10 +11684,28 @@
     "data_bg_value_on" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "An"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "On"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オン"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開啟"
           }
         }
       }
@@ -10739,10 +11713,28 @@
     "data_bg_value_present" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Vorhanden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Present"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "あり"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "存在"
           }
         }
       }
@@ -10750,10 +11742,28 @@
     "data_bg_value_system_discretion" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nach Ermessen des Systems"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "At system discretion"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "システムの判断次第"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "由系統決定"
           }
         }
       }
@@ -11659,10 +12669,28 @@
     "data_fiat_rates" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wechselkurse"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Exchange Rates"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "為替レート"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯率"
           }
         }
       }
@@ -11670,10 +12698,28 @@
     "data_fiat_rates_currencies" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Währungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Currencies"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "通貨"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貨幣"
           }
         }
       }
@@ -11681,10 +12727,28 @@
     "data_fiat_rates_file_time" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dateizeit"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "File time"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイル時刻"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檔案時間"
           }
         }
       }
@@ -11692,10 +12756,28 @@
     "data_fiat_rates_last_checked" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zuletzt geprüft"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last checked"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最終確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上次檢查"
           }
         }
       }
@@ -11703,10 +12785,28 @@
     "data_fiat_rates_last_result" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Letztes Ergebnis"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last result"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最終結果"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上次結果"
           }
         }
       }
@@ -11714,10 +12814,28 @@
     "data_fiat_rates_outcome_decode_failed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Datei nicht dekodierbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "File did not decode"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルをデコードできませんでした"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檔案無法解碼"
           }
         }
       }
@@ -11725,9 +12843,27 @@
     "data_fiat_rates_outcome_http" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "HTTP %lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "HTTP %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "HTTP %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "HTTP %lld"
           }
         }
@@ -11736,10 +12872,28 @@
     "data_fiat_rates_outcome_network" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Netzwerkfehler: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Network error: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ネットワークエラー: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "網路錯誤：%@"
           }
         }
       }
@@ -11747,10 +12901,28 @@
     "data_fiat_rates_outcome_not_modified" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nicht geändert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Not modified"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "変更なし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未修改"
           }
         }
       }
@@ -11758,10 +12930,28 @@
     "data_fiat_rates_outcome_rejected" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abgelehnt: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Rejected: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "拒否: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已拒絕：%@"
           }
         }
       }
@@ -11769,10 +12959,28 @@
     "data_fiat_rates_outcome_updated" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aktualisiert (%lld Währungen)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Updated (%lld currencies)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新済み（%lld 通貨）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已更新 (%lld 種貨幣)"
           }
         }
       }
@@ -11780,10 +12988,28 @@
     "data_fiat_rates_usd" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1 BTC in USD"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "1 BTC in USD"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1 BTC の USD 価格"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1 BTC 的 USD 價格"
           }
         }
       }
@@ -12250,10 +13476,28 @@
     "data_no_fiat_rates" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Noch keine Wechselkurse zwischengespeichert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No exchange rates cached yet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "為替レートはまだキャッシュされていません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尚未快取任何匯率"
           }
         }
       }
@@ -13331,10 +14575,28 @@
     "error_backup_other_server" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Backup gehört zu einem anderen Ark-Server als dem ausgewählten. Wähle den Server, mit dem das Wallet erstellt wurde, und versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created with and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このバックアップは、選択したものとは別のArkサーバーのものです。ウォレットを作成したサーバーを選択して、もう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此備份屬於另一個 Ark 伺服器，而非目前所選的伺服器。請選擇建立該錢包時使用的伺服器，然後再試一次。"
           }
         }
       }
@@ -13426,10 +14688,28 @@
     "error_custom_server_pending" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein iCloud-Konto nutzt den Server %@, aber seine Details wurden noch nicht auf dieses Gerät synchronisiert. Warte einen Moment und versuche es erneut, oder gib diesen Server unter „Eigener Server“ ein."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "お使いの iCloud アカウントはサーバー %@ を使用していますが、その詳細はまだこのデバイスに同期されていません。しばらく待ってからもう一度お試しいただくか、「カスタムサーバー」でそのサーバーを入力してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你的 iCloud 帳號使用伺服器 %@，但其詳細資料尚未同步到這部裝置。請稍候再試，或在「自訂伺服器」中輸入該伺服器。"
           }
         }
       }
@@ -13437,10 +14717,28 @@
     "error_delete_refresh_in_progress" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Während deiner Bestätigung hat eine Erneuerung begonnen. Es wurde nichts gelöscht — versuche es gleich noch einmal."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "A refresh started while you were confirming. Nothing was deleted — try again in a moment."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認中に更新が開始されました。何も削除されていません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在你確認時開始了一次更新。沒有刪除任何內容，請稍後再試。"
           }
         }
       }
@@ -13448,10 +14746,28 @@
     "error_delete_scope_changed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Geräteliste hat sich während deiner Bestätigung geändert. Es wurde nichts gelöscht — sieh dir die aktualisierte Liste an und versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The device list changed while you were confirming. Nothing was deleted — review the updated list and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認中にデバイス一覧が変更されました。何も削除されていません。最新の一覧を確認してから、もう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在你確認時裝置清單已變更。沒有刪除任何內容，請檢視最新的清單後再試一次。"
           }
         }
       }
@@ -13815,10 +15131,28 @@
     "error_recovery_phrase_too_short" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die gespeicherte Wiederherstellungsphrase ist unvollständig."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The stored recovery phrase is incomplete."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存されているリカバリーフレーズが不完全です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "儲存的復原片語不完整。"
           }
         }
       }
@@ -13828,7 +15162,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aktualisierung fehlgeschlagen"
+            "value" : "Erneuerung fehlgeschlagen"
           }
         },
         "en" : {
@@ -13995,10 +15329,22 @@
     "error_wallet_already_on_account" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses iCloud-Konto hat bereits ein Wallet. Tritt ihm wieder bei oder importiere seine Wiederherstellungsphrase – ein zweites Wallet zu erstellen würde das bestehende überschreiben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This iCloud account already has a wallet. Rejoin it or import its recovery phrase — creating a second wallet would overwrite the existing one."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントにはすでにウォレットがあります。そのウォレットに再参加するか、リカバリーフレーズをインポートしてください。2つ目のウォレットを作成すると、既存のウォレットが上書きされます。"
           }
         },
         "zh-Hant" : {
@@ -14964,9 +16310,27 @@
     "fiat_approx" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "≈ %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "≈ %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "≈ %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "≈ %@"
           }
         }
@@ -14975,10 +16339,28 @@
     "fiat_approx_spoken" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ungefähr %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "approximately %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "約 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "約 %@"
           }
         }
       }
@@ -14986,9 +16368,27 @@
     "fiat_approx_stale" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "≈ %1$@ · %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "≈ %1$@ · %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "≈ %1$@ · %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "≈ %1$@ · %2$@"
           }
         }
@@ -14997,10 +16397,28 @@
     "fiat_approx_stale_spoken" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ungefähr %1$@, Stand %2$@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "approximately %1$@, as of %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "約 %1$@、%2$@ 時点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "約 %1$@，截至 %2$@"
           }
         }
       }
@@ -15366,6 +16784,18 @@
     },
     "From %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@から"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15377,10 +16807,28 @@
     "funding_source_payments" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Payments"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払い"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支付"
           }
         }
       }
@@ -15388,10 +16836,28 @@
     "funding_source_savings" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Erspartes"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Savings"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貯蓄"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "儲蓄"
           }
         }
       }
@@ -15454,6 +16920,18 @@
     },
     "Invoice #%lld" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rechnung #%lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インボイス #%lld"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15745,10 +17223,28 @@
     "label_held_back" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zurückgehalten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Held back"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保留分"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保留"
           }
         }
       }
@@ -16371,6 +17867,18 @@
     },
     "Last synced %@" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zuletzt synchronisiert %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最後に同期したのは %@ です"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16494,10 +18002,28 @@
     "linked_devices_unsynced_device" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Unbekanntes Gerät"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Unrecognized device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "不明なデバイス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法辨識的裝置"
           }
         }
       }
@@ -16505,10 +18031,28 @@
     "linked_devices_unsynced_device_description" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "In diesem iCloud-Konto für dieses Wallet registriert. Seine Details sind noch nicht auf diesem Gerät angekommen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Registered to this wallet on this iCloud account. Its details haven't reached this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントでこのウォレットに登録されています。詳細はまだこのデバイスに届いていません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已在此 iCloud 帳號中註冊到這個錢包，但其詳細資料尚未同步到這部裝置。"
           }
         }
       }
@@ -16516,10 +18060,28 @@
     "linked_devices_unsynced_device_registered %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Registriert %@. Seine Details sind noch nicht auf diesem Gerät angekommen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Registered %@. Its details haven't reached this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ に登録されました。詳細はまだこのデバイスに届いていません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "註冊於 %@。其詳細資料尚未同步到這部裝置。"
           }
         }
       }
@@ -17059,10 +18621,28 @@
     "metadata_backup_description" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Exportiert deine Kontakte, Tags, Transaktionsnotizen und dein Profil als Datei oder importiert eine zuvor exportierte Datei. Die Datei enthält keine Schlüssel und kein Guthaben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Exports your contacts, tags, transaction notes, and profile as a file, or imports one exported earlier. The file contains no keys and no funds."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先、タグ、取引メモ、プロフィールをファイルとしてエクスポートするか、以前にエクスポートしたファイルをインポートします。ファイルには鍵も資金も含まれません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將你的聯絡人、標籤、交易備註和個人檔案匯出為檔案，或匯入先前匯出的檔案。檔案不包含任何金鑰或資金。"
           }
         }
       }
@@ -17070,10 +18650,28 @@
     "metadata_import_annotations" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Transaktionsnotizen & Tags"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Transaction notes & tags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "取引メモとタグ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "交易備註與標籤"
           }
         }
       }
@@ -17081,10 +18679,28 @@
     "metadata_import_button" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importieren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Import"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インポート"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯入"
           }
         }
       }
@@ -17092,10 +18708,28 @@
     "metadata_import_confirm" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importieren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Import"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インポート"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯入"
           }
         }
       }
@@ -17103,10 +18737,28 @@
     "metadata_import_contacts" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontakte"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Contacts"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "聯絡人"
           }
         }
       }
@@ -17114,10 +18766,28 @@
     "metadata_import_error_invalid" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Datei ist kein Arké-Datenexport."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This file is not an Arké data export."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このファイルは Arké のデータエクスポートではありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個檔案不是 Arké 的資料匯出檔。"
           }
         }
       }
@@ -17125,10 +18795,28 @@
     "metadata_import_error_version" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Exportdatei (Version %lld) wurde mit einer neueren App-Version erstellt. Aktualisiere die App, um sie zu importieren."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This export file (version %lld) was created by a newer app version. Update the app to import it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このエクスポートファイル（バージョン %lld）は新しいバージョンのアプリで作成されました。インポートするにはアプリをアップデートしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個匯出檔案（版本 %lld）是由較新版本的 App 建立的。請更新 App 後再匯入。"
           }
         }
       }
@@ -17136,10 +18824,28 @@
     "metadata_import_exported" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Exportiert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Exported"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "エクスポート日時"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯出日期"
           }
         }
       }
@@ -17147,10 +18853,28 @@
     "metadata_import_network_mismatch" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Datei wurde aus einem %@-Wallet exportiert."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This file was exported from a %@ wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このファイルは %@ ウォレットからエクスポートされました。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個檔案是從 %@ 錢包匯出的。"
           }
         }
       }
@@ -17158,10 +18882,28 @@
     "metadata_import_new_merged" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld neu, %2$lld zusammengeführt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$lld new, %2$lld merged"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新規 %1$lld 件、統合 %2$lld 件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld 筆新增，%2$lld 筆合併"
           }
         }
       }
@@ -17169,10 +18911,28 @@
     "metadata_import_preview_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importvorschau"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Import Preview"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インポートのプレビュー"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯入預覽"
           }
         }
       }
@@ -17180,10 +18940,28 @@
     "metadata_import_profile" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Profil"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Profile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プロフィール"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "個人檔案"
           }
         }
       }
@@ -17191,10 +18969,28 @@
     "metadata_import_profile_applied" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wird übernommen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Will be applied"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "適用されます"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將套用"
           }
         }
       }
@@ -17202,10 +18998,28 @@
     "metadata_import_success" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld Kontakte, %2$lld Tags und %3$lld Transaktionsanmerkungen importiert."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Imported %1$lld contacts, %2$lld tags, %3$lld transaction annotations."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先 %1$lld 件、タグ %2$lld 件、取引の注釈 %3$lld 件をインポートしました。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已匯入 %1$lld 位聯絡人、%2$lld 個標籤、%3$lld 筆交易註記。"
           }
         }
       }
@@ -17213,10 +19027,28 @@
     "metadata_import_tags" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tags"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Tags"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "タグ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "標籤"
           }
         }
       }
@@ -17224,10 +19056,28 @@
     "metadata_import_unmatched" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld Anmerkungen verweisen auf Transaktionen, die noch nicht in diesem Wallet sind. Importiere erneut, sobald sie synchronisiert wurden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%lld annotations reference transactions not in this wallet yet. Import again after they sync."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 件の注釈は、このウォレットにまだ存在しない取引を参照しています。同期が完了してから、もう一度インポートしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 筆註記所參照的交易尚未出現在這個錢包中。請在同步完成後再次匯入。"
           }
         }
       }
@@ -17347,10 +19197,28 @@
     "nav_title_pay_from" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlen von"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Pay from"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払い元"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "付款來源"
           }
         }
       }
@@ -17667,10 +19535,28 @@
     "network_name_bitcoin" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bitcoin"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Bitcoin"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ビットコイン"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "比特幣"
           }
         }
       }
@@ -17678,10 +19564,28 @@
     "network_name_regtest" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regtest (Testnetzwerk)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Regtest (test network)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regtest（テストネットワーク）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regtest（測試網路）"
           }
         }
       }
@@ -17689,10 +19593,28 @@
     "network_name_signet" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet (Testnetzwerk)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Signet (test network)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet（テストネットワーク）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet（測試網路）"
           }
         }
       }
@@ -17700,10 +19622,28 @@
     "network_name_testnet" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Testnet (Testnetzwerk)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Testnet (test network)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Testnet（テストネットワーク）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Testnet（測試網路）"
           }
         }
       }
@@ -17769,10 +19709,28 @@
     "notification_error_server_not_served" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlungsbenachrichtigungen sind für diesen Server nicht verfügbar. Auf diesem Gerät geplante Erinnerungen funktionieren weiterhin."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Payment notifications are not available for this server. Reminders scheduled on this device still work."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このサーバーでは支払い通知を利用できません。このデバイスで設定されたリマインダーは引き続き機能します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此伺服器無法使用付款通知。在這部裝置上排定的提醒仍可正常運作。"
           }
         }
       }
@@ -17866,10 +19824,28 @@
     "offboard_error_pending" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Verschiebung ist noch nicht abgeschlossen. Das Wallet versucht es bei der nächsten Synchronisierung erneut; bis dahin wird der Betrag als ausstehend angezeigt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The transfer did not complete yet. The wallet retries it on the next sync; until then the amount shows as pending."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "移動はまだ完了していません。次回の同期時にウォレットが再試行します。それまで金額は保留中として表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "轉移尚未完成。錢包會在下次同步時重試；在此之前，金額會顯示為待處理。"
           }
         }
       }
@@ -18353,10 +20329,28 @@
     "onboarding_restore_custom_server" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verbindet sich mit %@. Nur Mittel auf diesem Ark-Server werden wiederhergestellt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Connects to %@. Only funds on that Ark server are recovered."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ に接続します。そのArkサーバー上の資金のみが復元されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連線至 %@。只會復原該 Ark 伺服器上的資金。"
           }
         }
       }
@@ -19428,9 +21422,27 @@
     "rail_ark" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ark"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "Ark"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ark"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "Ark"
           }
         }
@@ -19439,10 +21451,28 @@
     "rail_lightning" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lightning"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Lightning"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ライトニング"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "閃電網路"
           }
         }
       }
@@ -19450,10 +21480,28 @@
     "rail_onchain" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "On-Chain"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "onchain"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オンチェーン"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鏈上"
           }
         }
       }
@@ -19573,10 +21621,28 @@
     "receive_amount_entered" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Amount: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額：%@"
           }
         }
       }
@@ -19668,10 +21734,28 @@
     "receive_invoice_amount_too_large" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag zu hoch. Dieser Server erlaubt bis zu %@ pro Rechnung."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Amount too large. This server allows up to %@ per invoice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額が大きすぎます。このサーバーではインボイス 1 件あたり %@ までです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額過大。這個伺服器每筆付款請求最多允許 %@。"
           }
         }
       }
@@ -19679,10 +21763,28 @@
     "receive_invoice_creation_failed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rechnung konnte nicht erstellt werden. Prüfe deine Verbindung und versuche es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Couldn't create the invoice. Check your connection and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インボイスを作成できませんでした。接続を確認して、もう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法建立付款請求。請檢查你的連線後再試一次。"
           }
         }
       }
@@ -19830,10 +21932,28 @@
     "receive_share_addresses_instead" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stattdessen Adressen teilen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Share Addresses Instead"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代わりにアドレスを共有"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "改為分享地址"
           }
         }
       }
@@ -19981,10 +22101,28 @@
     "receive_swap_unit_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Doppeltippen, um den Betrag in der anderen Währung einzugeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Double-tap to enter the amount in the other currency"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ダブルタップで金額をもう一方の通貨で入力します"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "點兩下以改用另一種貨幣輸入金額"
           }
         }
       }
@@ -20020,10 +22158,28 @@
     "receive_switch_to_bitcoin_entry" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag stattdessen in Bitcoin eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in bitcoin instead"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代わりにビットコインで金額を入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "改以比特幣輸入金額"
           }
         }
       }
@@ -20031,10 +22187,28 @@
     "receive_switch_to_fiat_entry" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag stattdessen in %@ eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in %@ instead"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代わりに%@で金額を入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "改以%@輸入金額"
           }
         }
       }
@@ -20042,10 +22216,28 @@
     "recovery_phrase_covered" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiederherstellungsphrase verborgen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Recovery phrase hidden"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズは非表示です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "復原片語已隱藏"
           }
         }
       }
@@ -20081,10 +22273,22 @@
     "rejoin_button" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diesem Wallet wieder beitreten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Rejoin This Wallet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このウォレットに再参加"
           }
         },
         "zh-Hant" : {
@@ -20098,10 +22302,22 @@
     "rejoin_message %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses iCloud-Konto hat ein Wallet auf %@. Du kannst ihm auf diesem Gerät wieder beitreten. Ein zweites Wallet ist nicht möglich – jedes iCloud-Konto hält genau ein Wallet."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This iCloud account has a wallet on %@. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントには %@ 上にウォレットがあります。このデバイスでそのウォレットに再参加できます。2つ目のウォレットは作成できません。iCloud アカウントごとに保持できるウォレットは1つです。"
           }
         },
         "zh-Hant" : {
@@ -20115,10 +22331,28 @@
     "rejoin_message_no_primary" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses iCloud-Konto hat ein Wallet, aber derzeit ist kein Gerät eingerichtet, um daraus zu bezahlen. Du kannst ihm auf diesem Gerät wieder beitreten. Ein zweites Wallet ist nicht möglich – jedes iCloud-Konto hält genau ein Wallet."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This iCloud account has a wallet, but no device is currently set up to spend from it. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントにはウォレットがありますが、現在そこから支払えるように設定されたデバイスはありません。このデバイスでそのウォレットに再参加できます。2つ目のウォレットは作成できません。iCloud アカウントごとに保持できるウォレットは1つです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此 iCloud 帳號已有一個錢包，但目前沒有任何裝置設定為可從中付款。你可以在這部裝置上重新加入。無法建立第二個錢包，因為每個 iCloud 帳號只能持有一個錢包。"
           }
         }
       }
@@ -20126,10 +22360,22 @@
     "rejoin_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Wallet ist noch aktiv"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your wallet is still active"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットはまだ有効です"
           }
         },
         "zh-Hant" : {
@@ -20143,10 +22389,28 @@
     "relay_error_server_not_served" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Benachrichtigungen sind für diesen Server nicht verfügbar."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Notifications are not available for this server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このサーバーでは通知を利用できません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此伺服器無法使用通知。"
           }
         }
       }
@@ -20181,6 +22445,18 @@
     },
     "Round %u" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Runde %u"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ラウンド %u"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20361,10 +22637,28 @@
     "send_error_payments_onchain_failed %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Senden aus deinem Zahlungen-Guthaben nicht möglich: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Could not send from your Payments balance: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払い残高から送金できませんでした：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法從你的支付餘額傳送：%@"
           }
         }
       }
@@ -20372,10 +22666,28 @@
     "send_error_payments_onchain_unsettled %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Zahlung aus deinem Zahlungen-Guthaben ist noch nicht abgeschlossen: %@ Falls der Server sie bereits angenommen hat, schließt das Wallet sie bei der nächsten Synchronisierung ab; bis dahin wird der Betrag als ausstehend angezeigt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The payment from your Payments balance did not complete yet: %@ If the server already accepted it, the wallet finishes it on the next sync and the amount shows as pending until then."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払い残高からの支払いはまだ完了していません：%@ サーバーが既に受け付けている場合、次回の同期時にウォレットが完了させます。それまで金額は保留中として表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從你的支付餘額發出的付款尚未完成：%@ 如果伺服器已接受這筆付款，錢包會在下次同步時完成它；在此之前，金額會顯示為待處理。"
           }
         }
       }
@@ -20467,10 +22779,28 @@
     "send_pay_from_source %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlen von %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Pay from %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@から支払う"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從%@付款"
           }
         }
       }
@@ -20642,10 +22972,28 @@
     "send_switch_to_bitcoin_entry" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag stattdessen in Bitcoin eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in bitcoin instead"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代わりにビットコインで金額を入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "改以比特幣輸入金額"
           }
         }
       }
@@ -20653,10 +23001,28 @@
     "send_switch_to_fiat_entry" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Betrag stattdessen in %@ eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the amount in %@ instead"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "代わりに%@で金額を入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "改以%@輸入金額"
           }
         }
       }
@@ -20664,10 +23030,28 @@
     "server_form_address_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Serveradresse"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Server address"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーアドレス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器位址"
           }
         }
       }
@@ -20675,9 +23059,27 @@
     "server_form_address_placeholder" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ark.example.com"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "ark.example.com"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ark.example.com"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "ark.example.com"
           }
         }
@@ -20686,10 +23088,28 @@
     "server_form_check" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verbindung prüfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Check connection"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続を確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檢查連線"
           }
         }
       }
@@ -20697,10 +23117,28 @@
     "server_form_check_again" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Erneut prüfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Check again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "もう一度確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再次檢查"
           }
         }
       }
@@ -20708,10 +23146,28 @@
     "server_form_check_passed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ark-Server gefunden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Ark server found"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arkサーバーが見つかりました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已找到 Ark 伺服器"
           }
         }
       }
@@ -20719,10 +23175,28 @@
     "server_form_checking" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wird geprüft…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Checking…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認中…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "檢查中…"
           }
         }
       }
@@ -20730,10 +23204,28 @@
     "server_form_esplora_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Block-Explorer-Adresse"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Block explorer address"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ブロックエクスプローラーのアドレス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "區塊瀏覽器位址"
           }
         }
       }
@@ -20741,9 +23233,27 @@
     "server_form_esplora_placeholder" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "esplora.example.com/api"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "esplora.example.com/api"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "esplora.example.com/api"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "esplora.example.com/api"
           }
         }
@@ -20752,10 +23262,28 @@
     "server_form_intro" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gib die Adresse eines Ark-Servers ein. Die Prüfung bestätigt, dass er kompatibel ist, und ermittelt, auf welchem Netzwerk er läuft. Verbindungen nutzen HTTPS."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter the address of an Ark server. The check confirms it is compatible and finds out which network it runs on. Connections use HTTPS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arkサーバーのアドレスを入力してください。確認では、互換性があることと、どのネットワークで稼働しているかを調べます。接続には HTTPS を使用します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "輸入 Ark 伺服器的位址。檢查會確認它是否相容，並找出它運行於哪個網路。連線使用 HTTPS。"
           }
         }
       }
@@ -20763,10 +23291,28 @@
     "server_form_name_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Anzeigename"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Display name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "表示名"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "顯示名稱"
           }
         }
       }
@@ -20774,10 +23320,28 @@
     "server_form_name_placeholder" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Optional"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Optional"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オプション"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選填"
           }
         }
       }
@@ -20785,10 +23349,28 @@
     "server_form_network_label" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Netzwerk"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Network"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ネットワーク"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "網路"
           }
         }
       }
@@ -20796,10 +23378,28 @@
     "server_form_section_esplora" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Block-Explorer (Esplora)"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Block explorer (Esplora)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ブロックエクスプローラー（Esplora）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "區塊瀏覽器（Esplora）"
           }
         }
       }
@@ -20807,10 +23407,28 @@
     "server_form_section_esplora_footer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wird für On-Chain-Daten wie Gebühren und Bestätigungen verwendet. Vorausgefüllt mit dem Explorer von Second für dieses Netzwerk; ändere ihn, wenn der Serverbetreiber einen eigenen bereitstellt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Used for on-chain data such as fees and confirmations. Prefilled with Second's explorer for this network; change it if the server operator provides one."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "手数料や承認などのオンチェーンデータに使用します。このネットワーク用の Second のエクスプローラーがあらかじめ入力されています。サーバー運営者が独自のものを提供している場合は変更してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "用於手續費和確認等鏈上資料。已預先填入 Second 在此網路的瀏覽器；若伺服器營運者提供自己的瀏覽器，可加以更改。"
           }
         }
       }
@@ -20818,10 +23436,28 @@
     "server_form_section_name" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Name"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Name"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "名前"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "名稱"
           }
         }
       }
@@ -20829,10 +23465,28 @@
     "server_form_terms_footer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Nutzungsbedingungen legt der Serverbetreiber fest."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Terms of use are set by the server operator."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "利用規約はサーバー運営者が定めます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "使用條款由伺服器營運者制定。"
           }
         }
       }
@@ -20840,10 +23494,28 @@
     "server_form_test_network_footer" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies ist ein Testnetzwerk. Coins darauf haben keinen Wert."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This is a test network. Coins on it have no value."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これはテストネットワークです。そのコインに価値はありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這是測試網路，上面的幣沒有價值。"
           }
         }
       }
@@ -20851,10 +23523,28 @@
     "server_form_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eigener Server"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Custom Server"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カスタムサーバー"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自訂伺服器"
           }
         }
       }
@@ -20862,10 +23552,28 @@
     "server_probe_invalid_url" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gib eine Serveradresse wie ark.example.com ein."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter a server address like ark.example.com."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ark.example.com のようなサーバーアドレスを入力してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請輸入像 ark.example.com 這樣的伺服器位址。"
           }
         }
       }
@@ -20873,10 +23581,28 @@
     "server_probe_timed_out" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Server hat nicht rechtzeitig geantwortet."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The server did not answer in time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバーが時間内に応答しませんでした。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器未在時限內回應。"
           }
         }
       }
@@ -20884,10 +23610,28 @@
     "server_probe_unreachable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Unter dieser Adresse konnte keine Verbindung zu einem Ark-Server hergestellt werden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Could not connect to an Ark server at this address."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このアドレスではArkサーバーに接続できませんでした。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法連線至此位址的 Ark 伺服器。"
           }
         }
       }
@@ -20895,10 +23639,28 @@
     "server_sheet_by_second" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von Second"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "By Second"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Second 提供"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "由 Second 提供"
           }
         }
       }
@@ -20906,10 +23668,28 @@
     "server_sheet_coins_no_value" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Coins haben keinen Wert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Coins have no value"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コインに価値はありません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這些幣沒有價值"
           }
         }
       }
@@ -20917,10 +23697,28 @@
     "server_sheet_custom" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eigener Server"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Custom server"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カスタムサーバー"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自訂伺服器"
           }
         }
       }
@@ -20928,10 +23726,28 @@
     "server_sheet_custom_enter" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adresse eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter an address"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アドレスを入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "輸入位址"
           }
         }
       }
@@ -20939,10 +23755,28 @@
     "server_sheet_default" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Standard"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Default"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "デフォルト"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "預設"
           }
         }
       }
@@ -20950,10 +23784,28 @@
     "server_sheet_development" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entwicklung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Development"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開発"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開發"
           }
         }
       }
@@ -20961,10 +23813,28 @@
     "server_sheet_intro" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Für Zahlungen ist eine Verbindung zu einem Ark-Server erforderlich. Dein Wallet ist an den gewählten Server gebunden und kann später nicht auf einen anderen umziehen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "A connection to an Ark server is required to make payments. Your wallet is tied to the server you choose and cannot be moved to another one later."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払いを行うにはArkサーバーへの接続が必要です。ウォレットは選択したサーバーに紐づけられ、後から別のサーバーに移すことはできません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "進行付款需要連線至 Ark 伺服器。你的錢包會綁定所選的伺服器，之後無法移至其他伺服器。"
           }
         }
       }
@@ -20972,10 +23842,28 @@
     "server_sheet_options" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Optionen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Options"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オプション"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選項"
           }
         }
       }
@@ -20983,10 +23871,28 @@
     "server_sheet_signet_test_network" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet-Testnetzwerk"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Signet test network"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet テストネットワーク"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet 測試網路"
           }
         }
       }
@@ -20994,10 +23900,28 @@
     "server_sheet_terms_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Öffnet die Nutzungsbedingungen des Serverbetreibers im Browser"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Opens the server operator's terms in the browser"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバー運営者の利用規約をブラウザで開きます"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在瀏覽器中開啟伺服器營運者的使用條款"
           }
         }
       }
@@ -21005,10 +23929,28 @@
     "server_sheet_terms_link" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nutzungsbedingungen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Terms of use"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "利用規約"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "使用條款"
           }
         }
       }
@@ -21016,10 +23958,28 @@
     "server_sheet_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Server"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Server"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サーバー"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "伺服器"
           }
         }
       }
@@ -21027,10 +23987,28 @@
     "server_summary_default" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bitcoin, Second"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Bitcoin, Second"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ビットコイン、Second"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "比特幣、Second"
           }
         }
       }
@@ -21038,10 +24016,28 @@
     "server_summary_second_signet" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet, Second"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Signet, Second"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet、Second"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet、Second"
           }
         }
       }
@@ -21049,9 +24045,27 @@
     "server_summary_signet_short" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "Signet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Signet"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "Signet"
           }
         }
@@ -21400,10 +24414,28 @@
     "settings_currency" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Währung"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Currency"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "通貨"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "貨幣"
           }
         }
       }
@@ -21411,9 +24443,27 @@
     "settings_currency_column_header" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1 BTC ≈"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
+            "value" : "1 BTC ≈"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1 BTC ≈"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "1 BTC ≈"
           }
         }
@@ -21422,10 +24472,28 @@
     "settings_currency_credit" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kurse von Exchange Rate API"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Rates by Exchange Rate API"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "レート提供：Exchange Rate API"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯率由 Exchange Rate API 提供"
           }
         }
       }
@@ -21433,10 +24501,28 @@
     "settings_currency_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wähle die Währung, in der der Wert deiner Bitcoin angezeigt wird. Beträge sind immer in Bitcoin; die Umrechnung dient nur zur Orientierung."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Choose the currency for showing the value of your bitcoin. Amounts are always in bitcoin; the conversion is for reference only."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ビットコインの価値を表示する通貨を選択します。金額は常にビットコインで表示され、換算は参考値です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選擇用來顯示你比特幣價值的貨幣。金額一律以比特幣計算，換算僅供參考。"
           }
         }
       }
@@ -21444,10 +24530,28 @@
     "settings_currency_none" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keine"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "None"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "なし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無"
           }
         }
       }
@@ -21455,10 +24559,28 @@
     "settings_currency_none_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nur Bitcoin-Beträge anzeigen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Show bitcoin amounts only"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ビットコイン金額のみ表示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "僅顯示比特幣金額"
           }
         }
       }
@@ -21466,10 +24588,28 @@
     "settings_currency_rates_as_of" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kurse Stand %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Rates as of %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "レート：%@ 時点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯率截至 %@"
           }
         }
       }
@@ -21477,10 +24617,28 @@
     "settings_currency_rates_pending" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wechselkurse sind noch nicht geladen. Weitere Währungen erscheinen, sobald sie da sind."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Exchange rates haven't loaded yet. More currencies appear once they do."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "為替レートがまだ読み込まれていません。読み込まれると、さらに多くの通貨が表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "匯率尚未載入。載入完成後會顯示更多貨幣。"
           }
         }
       }
@@ -21574,10 +24732,28 @@
     "settings_delete_forfeit_last_device %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Zahlungen-Guthaben von %1$@ verfällt in etwa %2$@, sofern dieses Wallet nicht vorher aus seiner Wiederherstellungsphrase wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your Payments balance of %1$@ is forfeited in about %2$@ unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ の支払い残高は、それまでにリカバリーフレーズからこのウォレットを復元して更新しない限り、約 %2$@ 後に失われます。可能であれば先に送金してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "除非在到期前以復原片語復原這個錢包並完成更新，否則你 %1$@ 的支付餘額將在約 %2$@ 後喪失。可以的話，請先把它傳送出去。"
           }
         }
       }
@@ -21585,10 +24761,28 @@
     "settings_delete_forfeit_last_device_no_time %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Zahlungen-Guthaben von %@ verfällt bei Ablauf, sofern dieses Wallet nicht vorher aus seiner Wiederherstellungsphrase wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your Payments balance of %@ is forfeited at expiry unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ の支払い残高は、期限までにリカバリーフレーズからこのウォレットを復元して更新しない限り、期限切れ時に失われます。可能であれば先に送金してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "除非在到期前以復原片語復原這個錢包並完成更新，否則你 %@ 的支付餘額將在到期時喪失。可以的話，請先把它傳送出去。"
           }
         }
       }
@@ -21596,10 +24790,28 @@
     "settings_delete_forfeit_other_devices %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Zahlungen-Guthaben von %1$@ muss innerhalb von etwa %2$@ erneuert werden. Öffne das Wallet nach dem Löschen hier auf einem anderen Gerät, damit es rechtzeitig erneuert werden kann."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your Payments balance of %1$@ needs a refresh within about %2$@. After deleting here, open the wallet on another device so it can refresh in time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ の支払い残高は、約 %2$@ 以内に更新が必要です。ここで削除した後、別のデバイスでウォレットを開いて、期限内に更新できるようにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你 %1$@ 的支付餘額需要在約 %2$@ 內更新。在此裝置刪除後，請在另一部裝置上開啟錢包，讓它能及時更新。"
           }
         }
       }
@@ -21607,10 +24819,28 @@
     "settings_delete_forfeit_other_devices_no_time %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Zahlungen-Guthaben von %@ muss vor seinem Ablauf erneuert werden. Öffne das Wallet nach dem Löschen hier auf einem anderen Gerät, damit es rechtzeitig erneuert werden kann."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your Payments balance of %@ needs a refresh before it expires. After deleting here, open the wallet on another device so it can refresh in time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ の支払い残高は、期限切れになる前に更新が必要です。ここで削除した後、別のデバイスでウォレットを開いて、期限内に更新できるようにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你 %@ 的支付餘額需要在到期前更新。在此裝置刪除後，請在另一部裝置上開啟錢包，讓它能及時更新。"
           }
         }
       }
@@ -21618,10 +24848,28 @@
     "settings_delete_override_acknowledge" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ich habe meine Wiederherstellungsphrase aufgeschrieben. Mir ist klar, dass jedes Gerät in diesem iCloud-Konto dieses Wallet verliert."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "I have my recovery phrase written down. I understand every device on this iCloud account loses this wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを書き留めてあります。この iCloud アカウントのすべてのデバイスからこのウォレットが失われることを理解しています。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "我已抄寫好復原片語。我瞭解此 iCloud 帳號上的每部裝置都會失去這個錢包。"
           }
         }
       }
@@ -21629,10 +24877,28 @@
     "settings_delete_override_blockers %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Noch für dieses Wallet registriert: %@. Wenn du sie nicht mehr hast, entfernt das Fortfahren das Wallet trotzdem aus dem Konto."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Still registered to this wallet: %@. If you no longer have them, continuing removes the wallet from the account anyway."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このウォレットにまだ登録されているデバイス：%@。それらがもう手元にない場合でも、続行するとウォレットはアカウントから削除されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "仍註冊到這個錢包的裝置：%@。如果你已不再擁有這些裝置，繼續操作仍會將錢包從帳號中移除。"
           }
         }
       }
@@ -21640,10 +24906,28 @@
     "settings_delete_override_blockers_unnamed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ein weiteres Gerät in diesem iCloud-Konto ist noch für dieses Wallet registriert, aber seine Details sind nie auf diesem Gerät angekommen. Wenn es dieses Gerät nicht mehr gibt, entfernt das Fortfahren das Wallet trotzdem aus dem Konto."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Another device on this iCloud account is still registered to this wallet, but its details never reached this device. If that device is gone, continuing removes the wallet from the account anyway."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントの別のデバイスがまだこのウォレットに登録されていますが、その詳細はこのデバイスに届いていません。そのデバイスがもう手元にない場合でも、続行するとウォレットはアカウントから削除されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此 iCloud 帳號上還有另一部裝置仍註冊到這個錢包，但其詳細資料從未同步到這部裝置。如果該裝置已不在，繼續操作仍會將錢包從帳號中移除。"
           }
         }
       }
@@ -21709,10 +24993,28 @@
     "settings_delete_permanent_warning_override" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies entfernt das Wallet von diesem Gerät, aus iCloud und von jedem anderen Gerät in diesem iCloud-Konto — einschließlich der Wiederherstellungsphrase im iCloud-Schlüsselbund. Nur eine von dir aufgeschriebene Phrase kann es wiederherstellen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This removes the wallet from this device, from iCloud, and from every other device on this iCloud account — including the recovery phrase in iCloud Keychain. Only a phrase you wrote down can restore it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これにより、このデバイス、iCloud、そしてこの iCloud アカウントの他のすべてのデバイスからウォレットが削除されます。iCloud キーチェーン内のリカバリーフレーズも含まれます。復元できるのは、書き留めたフレーズだけです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這會將錢包從此裝置、iCloud 以及此 iCloud 帳號上的每部其他裝置中移除，包括 iCloud 鑰匙圈中的復原片語。只有你抄寫下來的片語才能將它復原。"
           }
         }
       }
@@ -21720,10 +25022,28 @@
     "settings_delete_phrase_body" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zwei Wörter deiner Wiederherstellungsphrase bestätigen, dass du sie aufgeschrieben hast, bevor sie entfernt wird."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Two words of your recovery phrase confirm you have it written down before it is removed."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "削除する前に、リカバリーフレーズの 2 つのワードを入力して、書き留めてあることを確認します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在移除復原片語之前，請輸入其中兩個字詞，確認你已將它抄寫下來。"
           }
         }
       }
@@ -21731,10 +25051,28 @@
     "settings_delete_phrase_body_positions %lld %lld" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gib Wort %1$lld und Wort %2$lld ein, um zu bestätigen, dass du sie aufgeschrieben hast."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter words %1$lld and %2$lld to confirm you have it written down."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld 番目と %2$lld 番目のワードを入力して、書き留めてあることを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請輸入第 %1$lld 個和第 %2$lld 個字詞，確認你已將它抄寫下來。"
           }
         }
       }
@@ -21742,10 +25080,28 @@
     "settings_delete_phrase_mismatch" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das stimmt nicht mit deiner Wiederherstellungsphrase überein."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "That doesn't match your recovery phrase."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズと一致しません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這與你的復原片語不符。"
           }
         }
       }
@@ -21753,10 +25109,28 @@
     "settings_delete_phrase_missing" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auf diesem Gerät ist keine Wiederherstellungsphrase gespeichert, also gibt es nichts zu bestätigen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No recovery phrase is stored on this device, so there is nothing to confirm."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスにはリカバリーフレーズが保存されていないため、確認するものがありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這部裝置上沒有儲存復原片語，因此沒有可確認的內容。"
           }
         }
       }
@@ -21764,10 +25138,28 @@
     "settings_delete_phrase_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bestätige deine Wiederherstellungsphrase"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Confirm your recovery phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認你的復原片語"
           }
         }
       }
@@ -21775,10 +25167,28 @@
     "settings_delete_phrase_unreadable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Deine Wiederherstellungsphrase konnte gerade nicht gelesen werden, deshalb kann das Löschen nicht fortgesetzt werden. Versuche es gleich noch einmal."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your recovery phrase couldn't be read right now, so the deletion can't continue. Try again in a moment."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在リカバリーフレーズを読み取れないため、削除を続行できません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "目前無法讀取你的復原片語，因此無法繼續刪除。請稍後再試。"
           }
         }
       }
@@ -21786,10 +25196,28 @@
     "settings_delete_phrase_word_label %lld" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wort %lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Word %lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 番目のワード"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "第 %lld 個字詞"
           }
         }
       }
@@ -21825,10 +25253,28 @@
     "settings_delete_warning_check_failed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Deine anderen Geräte konnten nicht geprüft werden, deshalb bleibt das Wallet im Konto."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This will permanently delete your wallet from this device. Your other devices couldn't be checked, so the wallet stays on the account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。他のデバイスを確認できなかったため、ウォレットはアカウントに残ります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這將從此裝置永久刪除你的錢包。由於無法檢查你的其他裝置，錢包會保留在帳號中。"
           }
         }
       }
@@ -21865,10 +25311,28 @@
     "settings_delete_warning_everywhere_intro" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät und aus iCloud, einschließlich der Wiederherstellungsphrase.\n\nNur eine von dir aufgeschriebene Kopie kann es zurückbringen, und der nächste Schritt fragt nach zwei ihrer Wörter. Um auch deinen Verlauf wiederherzustellen, sichere zuerst die Wallet-Zustandsdatei."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nOnly a copy you wrote down can bring it back, and the next step asks for two of its words. To restore your history as well, back up the wallet state file first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これにより、このデバイスと iCloud からウォレットが永続的に削除されます。リカバリーフレーズも含まれます。\n\n元に戻せるのは、書き留めた控えだけです。次のステップでは、そのうち 2 つのワードの入力を求められます。履歴も復元したい場合は、先にウォレットの状態ファイルをバックアップしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這將從此裝置和 iCloud 永久刪除你的錢包，包括復原片語。\n\n只有你抄寫下來的副本才能將它找回，下一步會要求輸入其中兩個字詞。若也想復原交易記錄，請先備份錢包狀態檔案。"
           }
         }
       }
@@ -21934,10 +25398,28 @@
     "settings_delete_warning_local_only_named %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Noch anderswo registriert: %@."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This will permanently delete your wallet from this device. Still registered elsewhere: %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。他にまだ登録されているデバイス：%@。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這將從此裝置永久刪除你的錢包。其他仍註冊的裝置：%@。"
           }
         }
       }
@@ -21945,10 +25427,28 @@
     "settings_delete_warning_local_only_unnamed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Ein weiteres Gerät in diesem iCloud-Konto ist noch für das Wallet registriert, seine Details sind aber noch nicht auf diesem Gerät angekommen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。この iCloud アカウントの別のデバイスがまだウォレットに登録されていますが、その詳細はまだこのデバイスに届いていません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這將從此裝置永久刪除你的錢包。此 iCloud 帳號上還有另一部裝置仍註冊到這個錢包，但其詳細資料尚未同步到這部裝置。"
           }
         }
       }
@@ -22597,10 +26097,28 @@
     "settings_metadata_backup" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontakte & Metadaten"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Contacts & Metadata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先とメタデータ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "聯絡人與中繼資料"
           }
         }
       }
@@ -22608,10 +26126,28 @@
     "settings_metadata_backup_subtitle" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kontakte, Tags, Notizen und Profil"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Contacts, tags, notes, and profile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連絡先、タグ、メモ、プロフィール"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "聯絡人、標籤、備註與個人檔案"
           }
         }
       }
@@ -22876,10 +26412,28 @@
     "settings_notifications_server_not_served" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlungsbenachrichtigungen sind für diesen Server nicht verfügbar. Auf diesem Gerät geplante Erinnerungen funktionieren weiterhin."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Payment notifications are not available for this server. Reminders scheduled on this device still work."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このサーバーでは支払い通知を利用できません。このデバイスで設定されたリマインダーは引き続き機能します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此伺服器無法使用付款通知。在這部裝置上排定的提醒仍可正常運作。"
           }
         }
       }
@@ -23422,10 +26976,28 @@
     "settings_unsynced_devices" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Noch nicht synchronisiert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Not Yet Synced"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未同期"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尚未同步"
           }
         }
       }
@@ -23629,10 +27201,28 @@
     "status_delete_waiting_for_refresh" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aktuelle Erneuerung wird abgeschlossen…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Finishing the current refresh…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在の更新を完了しています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在完成目前的更新…"
           }
         }
       }
@@ -24088,10 +27678,28 @@
     "status_loading_recovery_phrase" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiederherstellungsphrase wird geladen…"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Loading recovery phrase..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを読み込み中…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在載入復原片語…"
           }
         }
       }
@@ -24519,10 +28127,28 @@
     "status_refresh_already_underway" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wird bereits erneuert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Already refreshing"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すでに更新中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已在更新中"
           }
         }
       }
@@ -24530,10 +28156,28 @@
     "status_refresh_not_needed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nichts zu erneuern"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Nothing to refresh"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新するものはありません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無需更新"
           }
         }
       }
@@ -24541,10 +28185,28 @@
     "status_refresh_refused" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von diesem Gerät nicht erneuerbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Can't refresh from this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスからは更新できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法從此裝置更新"
           }
         }
       }
@@ -24554,7 +28216,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aktualisierung gestartet"
+            "value" : "Erneuerung gestartet"
           }
         },
         "en" : {
@@ -24582,7 +28244,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aktualisierung erfolgreich"
+            "value" : "Erneuerung erfolgreich"
           }
         },
         "en" : {
@@ -24608,10 +28270,28 @@
     "status_refresh_too_small" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zu klein zum Erneuern"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Too small to refresh"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "更新するには少額すぎます"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額過小，無法更新"
           }
         }
       }
@@ -24621,7 +28301,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wird aktualisiert…"
+            "value" : "Wird erneuert…"
           }
         },
         "en" : {
@@ -24649,7 +28329,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dein Guthaben wird aktualisiert"
+            "value" : "Dein Guthaben wird erneuert"
           }
         },
         "en" : {
@@ -25335,10 +29015,28 @@
     "tags_no_fees_paid" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keine Gebühren gezahlt"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No fees paid"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "手数料の支払いなし"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未支付手續費"
           }
         }
       }
@@ -26157,6 +29855,18 @@
     },
     "This will cancel round %u and release the locked VTXOs." : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dadurch wird Runde %u abgebrochen und die gesperrten VTXOs werden freigegeben."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ラウンド %u をキャンセルし、ロックされた VTXO を解放します。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -27793,10 +31503,28 @@
     "transaction_list_syncing_message" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Guthaben und deine Aktivität sind von deinem anderen Gerät unterwegs. Beim ersten Mal kann das ein paar Minuten dauern."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your balance and activity are on their way from your other device. This can take a few minutes the first time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "残高とアクティビティは、他のデバイスから送られてくる途中です。初回は数分かかることがあります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你的餘額和活動正從你的另一部裝置傳送過來。第一次可能需要幾分鐘。"
           }
         }
       }
@@ -27804,10 +31532,28 @@
     "transaction_list_syncing_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synchronisierung aus iCloud"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Syncing from iCloud"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud から同期中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在從 iCloud 同步"
           }
         }
       }
@@ -28291,10 +32037,28 @@
     "viability_ark_unreachable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adresse gehört zu einem anderen Server"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Address belongs to a different server"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アドレスは別のサーバーのものです"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "地址屬於其他伺服器"
           }
         }
       }
@@ -28302,10 +32066,28 @@
     "viability_balance_unavailable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Guthaben nicht verfügbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Balance unavailable"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "残高を取得できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法取得餘額"
           }
         }
       }
@@ -28313,10 +32095,28 @@
     "viability_large_amount_onchain" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hoher Betrag: On-Chain empfohlen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Large amount: on-chain preferred"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "高額：オンチェーン推奨"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "大額：建議使用鏈上"
           }
         }
       }
@@ -28324,10 +32124,28 @@
     "viability_lightning_unavailable" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lightning nicht verfügbar"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Lightning not available"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ライトニングは利用できません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "閃電網路無法使用"
           }
         }
       }
@@ -28335,10 +32153,28 @@
     "viability_need_more %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Noch %@ nötig"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Need %@ more"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "あと %@ 必要です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還需要 %@"
           }
         }
       }
@@ -28346,10 +32182,28 @@
     "viability_no_amount" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kein Betrag angegeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No amount specified"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金額が指定されていません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未指定金額"
           }
         }
       }
@@ -28357,10 +32211,28 @@
     "viability_server_not_connected" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ark-Server nicht verbunden"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Ark server not connected"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arkサーバーに未接続"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未連線至 Ark 伺服器"
           }
         }
       }
@@ -28368,16 +32240,46 @@
     "viability_sufficient" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ausreichendes Guthaben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Sufficient balance"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "残高は十分です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "餘額充足"
           }
         }
       }
     },
     "Waiting" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wartet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "待機中"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
