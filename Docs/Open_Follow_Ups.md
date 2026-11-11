@@ -960,22 +960,6 @@ log).
   no plural and no translation (seen 2026-10-21). One catalog key with a
   plural variation, both copies.
 
-### Localization
-
-- [ ] **Import screen: `backup_file_section_description` changed meaning on
-  2026-10-26** (the backup file is now "recommended if you have one" and
-  restores payment history and in-progress activity, funds either way);
-  the de / ja / zh-Hant values still say "optional". The button's second
-  line (`backup_file_not_selected`) was removed. Retranslate through
-  `Scripts/apply_translations.py` with the next batch.
-- [ ] **Translation debt — 222 user-facing keys have no de or ja value,
-  206 no zh-Hant** (recounted 2026-11-10 over `Shared/Localizable.xcstrings`,
-  1,116 keys after `shouldTranslate=false`; 128 / 112 of 1,029 on
-  2026-10-09). All render the English `defaultValue`, cosmetic. Route:
-  `apply_translations.py` then `translation_lint.py` (the lint does not count
-  missing languages). Key groups as of 2026-10-09:
-  `Localization/Translation_Rollout_Plan.md` "Translation debt".
-
 ## Tier 4 — Tech debt and deferred by design
 
 (2026-10-19 sweep: the daemon auto-start duplicate merged into "Explicit

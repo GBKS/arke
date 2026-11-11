@@ -198,3 +198,49 @@ One meaning, one term.
    prefix for context (`button_` = action, `label_` = noun, `status_` = state).
    If still ambiguous, flag it — we add a translator `comment:` in code rather
    than guessing.
+
+---
+
+## Terms added 2026-11-11 (debt batch first pass — all ⚠️ pending native review)
+
+Coined while translating the 236-key debt batch (server selection, deletion,
+fiat currency, metadata import, X-Ray background activity, send viability).
+Recorded so later batches reuse them; a native reviewer may overrule any row.
+
+| English | German (du) | Japanese | zh-Hant | Notes |
+|---|---|---|---|---|
+| iCloud account | iCloud-Konto | iCloud アカウント | iCloud 帳號 | |
+| iCloud Keychain | iCloud-Schlüsselbund | iCloud キーチェーン | iCloud 鑰匙圈 | Apple's own terms. |
+| custom server | Eigener Server | カスタムサーバー | 自訂伺服器 | Not „Benutzerdefinierter". |
+| server / explorer address | Serveradresse / Block-Explorer-Adresse | サーバーアドレス | 位址 | zh: networking term; 地址 stays the payment address. |
+| block explorer | Block-Explorer | ブロックエクスプローラー | 區塊瀏覽器 | |
+| test network (explanatory) | Testnetzwerk | テストネットワーク | 測試網路 | Network identifiers Signet/Testnet/Regtest stay Latin. |
+| rejoin (a wallet) | wieder beitreten | 再参加 | 重新加入 | |
+| server operator / terms of use | Serverbetreiber / Nutzungsbedingungen | サーバー運営者 / 利用規約 | 伺服器營運者 / 使用條款 | |
+| By Second (operator credit) | Von Second | Second 提供 | 由 Second 提供 | Second is a brand. |
+| Default (server row) | Standard | デフォルト | 預設 | |
+| reminders (local notifications) | Erinnerungen | リマインダー | 提醒 | |
+| funds | Mittel | 資金 | 資金 | de catalog is split Mittel/Guthaben/Geld; Mittel follows the recent strings. |
+| payment history | Zahlungsverlauf | 支払い履歴 | 付款記錄 | |
+| forfeited (expired VTXOs) | verfällt | 失われます | 喪失 | |
+| registered (to a wallet) | registriert | 登録 | 註冊 | |
+| written down (phrase) | aufgeschrieben | 書き留めてあります | 抄寫下來 | |
+| unrecognized device | Unbekanntes Gerät | 不明なデバイス | 無法辨識的裝置 | |
+| relay | Relay | リレー | 中繼 | |
+| push (noun) / push token | Push / Push-Token | プッシュ / プッシュトークン | 推播 / 推播 Token | |
+| mailbox | Mailbox | メールボックス | 信箱 | |
+| relay auth / renewal | Auth / Verlängerung | 認証 / 更新 | 授權 / 續期 | de avoids „Erneuerung" (VTXO refresh). |
+| wake (push) | Aufwachen / Aufwach-Push | ウェイク | 喚醒 | |
+| background task (BGTask) | Hintergrundaufgabe | バックグラウンドタスク | 背景任務 | |
+| exchange rates / cached | Wechselkurse / zwischengespeichert | 為替レート / キャッシュ | 匯率 / 快取 | |
+| currency (setting) / None | Währung / Keine | 通貨 / なし | 貨幣 / 無 | |
+| as of (rate staleness) | Stand | 時点 | 截至 | |
+| decimal separator | Dezimaltrennzeichen | 小数点 | 小數點 | |
+| held back (balance portion) | Zurückgehalten | 保留分 | 保留 | Deliberately not the "pending" words. |
+| estimating / unreliable (fee) | Wird geschätzt / unzuverlässig | 推定中 / 信頼できない | 估算中 / 不可靠 | |
+| metadata | Metadaten | メタデータ | 中繼資料 | Apple TW. |
+| annotations (notes + tags) | Anmerkungen | 注釈 | 註記 | Counters: 件 / 筆. |
+| merged (import) | zusammengeführt | 統合 | 合併 | |
+| contact support | wende dich an den Support | サポートにお問い合わせください | 聯絡客服 | |
+| coins (user-facing refresh and transfer copy) | Bitcoin | ビットコイン | 比特幣 | DECIDED 2026-11-11: English keeps the idiomatic "these coins" (never "VTXOs" in user-facing copy); the translations say Bitcoin, de „Münzen" is never used. Test-network copy keeps Coins / Test-Coins. |
+

@@ -80,6 +80,7 @@ knownRegions gained de/ja; the build also enriched the InfoPlist catalogs
 | Phase C | done 2026-08-18 | 1,090 entries × de+ja, needs_review; guard green; native review pending |
 | Phase D | not started | per-language QA: App Language runs, German expansion layout pass, ja typography |
 | zh-Hant | done 2026-08-23 | 1,088 entries, needs_review; see section below |
+| Debt batch | done 2026-11-11 | 236 keys × de+ja+zh-Hant, needs_review; missing count 0; see "Debt batch" below |
 
 ---
 
@@ -114,8 +115,8 @@ Open, mirroring de/ja:
 
 Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
 
-- [ ] **Translation debt — 128 user-facing keys have no de or ja value,
-  112 no zh-Hant** (moved down from Tier 1 and recounted 2026-10-09 over
+- [x] **Translation debt — 128 user-facing keys have no de or ja value,
+  112 no zh-Hant — closed 2026-11-11** (moved down from Tier 1 and recounted 2026-10-09 over
   `Shared/Localizable.xcstrings`, 1,029 keys, 17 `shouldTranslate=false`
   excluded; plus one ArkéUI key, `accessibility_decimal_separator`, per
   language). Groups: deletion strings (`settings_delete_warning_*`,
@@ -132,3 +133,36 @@ Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, re
   debt in one number. `apply_translations.py` then `translation_lint.py`
   (the lint checks empty values and format specifiers, not missing
   languages, so it is not the counter).
+
+### Debt batch — DONE 2026-11-11
+
+Recounted on 2026-11-10: 222 Shared keys without de/ja (206 without zh-Hant)
+plus 14 ArkéUI keys, grown by the server-selection, deletion, fiat-currency,
+metadata-import, X-Ray background-activity and send-viability work since
+October. Closed in one batch:
+
+- 236 keys translated into de, ja and zh-Hant (the 14 keys that already had
+  zh-Hant kept it), including `backup_file_section_description`, whose
+  English changed meaning on 2026-10-26. Five glossary-bound drafting agents
+  by feature family (server/onboarding, deletion/recovery, X-Ray + rates +
+  plain-English format keys, fiat/send/receive/fees incl. ArkéUI, refresh
+  outcomes + metadata); flagged placeholder ambiguities were checked against
+  the call sites before applying.
+- `Scripts/apply_translations.py` writer fixed to reproduce Xcode's catalog
+  format (key order preserved, `" : "` separators, three-line empty objects,
+  no trailing newline); the Shared diff is additive (`git diff --minimal`:
+  3,907 insertions, 5 deletions — the three replaced "optional" values).
+- Verified: `translation_lint.py` 0 issues; `LocalizationCatalogTests` 5/5
+  green on the `Arke Tests` simulator; ICU `Hans-Hant` transform 0 hits
+  (one 了解 normalised to 瞭解 to keep the guard at zero); missing count
+  0 / 0 / 0 in both catalogs, recounted after an IDE build so re-extraction
+  is known to leave the values in place.
+- Same day: the German „aktualisieren" vs „erneuern" inconsistency in the
+  older VTXO-refresh keys was fixed (ten values; `VTXODeveloperActionsView`
+  repointed from the two-meaning `button_refresh` to `maintenance_refresh`),
+  see the Done log. Not done: native-speaker review (all values
+  `needs_review`) and Phase D QA. Terms
+  the batch had to coin are listed in `Translation_Glossary.md` under
+  "Terms added 2026-11-11", all ⚠️.
+- Stale entries (8 in Shared, e.g. `settings_delete_warning_local_only`)
+  were skipped; purge them in Xcode's catalog editor.

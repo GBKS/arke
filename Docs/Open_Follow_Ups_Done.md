@@ -11,6 +11,64 @@ same commit, under a matching header or a dated "Moved from the open list"
 section; the open file never holds ticked lines.
 
 ## Localization
+- [x] **German "aktualisieren" for the VTXO refresh in five older keys — fixed 2026-11-11**
+  (`action_refresh_payments`, `action_refresh_with_fee %@`,
+  `status_refresh_started`, `status_refresh_successful`, `status_refreshing`),
+  against the glossary term „erneuern" that the other 39 German refresh
+  values use (found 2026-11-11 while translating the `status_refresh_*`
+  chips). Tier 3: cosmetic, de is `needs_review` anyway. Fix in the catalog
+  editor during the German native review; check each `ktualisier` hit is a
+  VTXO refresh, not a UI refresh, before changing it.
+  Fix 2026-11-11: each `ktualisier` hit classified by call site. Ten German
+  values changed to „erneuern/Erneuerung" (`action_get_new_ones`,
+  `action_get_new_ones_with_fee %@`, `action_refresh_payments`,
+  `action_refresh_with_fee %@`, `error_refresh_failed`, `status_refresh_started`,
+  `status_refresh_successful`, `status_refreshing`, `status_refreshing_balance`,
+  plus ArkéUI `accessibility_hint_start_refresh`, `status_refreshing`,
+  `error_refresh_failed`). `button_refresh` served two meanings (contact-link
+  UI refresh and the VTXO developer action), so `VTXODeveloperActionsView`
+  now uses the existing VTXO key `maintenance_refresh` and `button_refresh`
+  stays „Aktualisieren". Kept as UI refresh: `data_bg_event_timer`,
+  `accessibility_reload_all_data_hint`, `connection_troubleshooting_row_refresh`,
+  the "Updated" labels. ja/zh already used 更新 throughout. Lint 0,
+  `LocalizationCatalogTests` green, build green.
+- [x] **"Coins" wording in the refresh modal — DECIDED 2026-11-11**:
+  Christoph flagged de „Münzen" in the new refresh-outcome strings; the
+  English itself was split (three siblings said "These VTXOs", two "these
+  coins") on a user-facing screen. All six `balance_refresh_*` outcome
+  strings now say "these coins" in English (code `defaultValue` edits in
+  `RefreshModalView` and `BalanceRefreshStatusViewModel`, ArkéUI preview
+  aligned; a "this bitcoin" variant was tried and reverted the same day),
+  while the translations say de „Diese Bitcoin", ja このビットコイン, zh
+  這些比特幣, since "coins" is idiomatic in English but „Münzen" is not; the
+  two old `balance_transfer_*_progress` de values dropped „Münzen" and
+  „transferiert" for „Bitcoin" / „verschoben". Test-network copy keeps
+  Coins / Test-Coins. Glossary row updated.
+
+- [x] **Import screen: `backup_file_section_description` changed meaning on
+  2026-10-26 — retranslated 2026-11-11** (the backup file is now "recommended if you have one" and
+  restores payment history and in-progress activity, funds either way);
+  the de / ja / zh-Hant values still say "optional". The button's second
+  line (`backup_file_not_selected`) was removed. Retranslate through
+  `Scripts/apply_translations.py` with the next batch.
+- [x] **Translation debt — 222 user-facing keys have no de or ja value,
+  206 no zh-Hant — closed 2026-11-11** (recounted 2026-11-10 over `Shared/Localizable.xcstrings`,
+  1,116 keys after `shouldTranslate=false`; 128 / 112 of 1,029 on
+  2026-10-09). All render the English `defaultValue`, cosmetic. Route:
+  `apply_translations.py` then `translation_lint.py` (the lint does not count
+  missing languages). Key groups as of 2026-10-09:
+  `Localization/Translation_Rollout_Plan.md` "Translation debt".
+  Closure 2026-11-11: 236 keys (222 Shared + 14 ArkéUI, plus the
+  backup-file key above) translated into all three languages in one batch
+  (five glossary-bound drafting agents by feature family, applied with
+  `apply_translations.py`, whose writer now reproduces Xcode's format so the
+  diff is additive). `translation_lint.py` 0 issues, `LocalizationCatalogTests`
+  5/5 green on the `Arke Tests` simulator, ICU `Hans-Hant` leakage check 0
+  hits, missing count 0 / 0 / 0 across both catalogs. All values are
+  `needs_review`; native review stays open in
+  `Localization/Translation_Rollout_Plan.md`. New terms the batch had to
+  decide are in the glossary's 2026-11-11 section, ⚠️ pending review.
+
 - [x] **zh-Hant in `knownRegions` — done 2026-08-23** (user, in Xcode);
   verified: build green, `zh-Hant.lproj` present in ArkeMobile.app, the ArkéUI
   bundle, and the widgets extension.
