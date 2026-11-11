@@ -90,18 +90,23 @@ defaults. Keep a simulator selected when testing.
 
 ## Test
 
-The authoritative runner is `xcodebuild` against a simulator; the
+The authoritative runner is `xcodebuild` against the dedicated `Arke Tests`
+simulator (an iPhone 17 device type; recreate it with
+`xcrun simctl create "Arke Tests" "iPhone 17"` if it is missing); the
 `Arke mobile` test plan runs the `ArkeMobileTests` target (Swift Testing).
+The signet test wallet lives on the `iPhone 17e` simulator, which is never
+a test destination. `-parallel-testing-enabled NO` is required: the clone
+service hub hangs the run otherwise.
 
 ```bash
 # scoped suite while working
 xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=Arke Tests' -parallel-testing-enabled NO \
   -only-testing:ArkeMobileTests/<SuiteName>
 
 # whole mobile suite before a commit plan
 xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+  -destination 'platform=iOS Simulator,name=Arke Tests' -parallel-testing-enabled NO
 ```
 
 Xcode previews and the code-snippet runner fail on the bark static

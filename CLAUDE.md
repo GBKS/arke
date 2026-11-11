@@ -105,7 +105,7 @@ is history and loses to a living doc.
 
   ```bash
   xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
-    -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+    -destination 'platform=iOS Simulator,name=Arke Tests' -parallel-testing-enabled NO \
     -only-testing:ArkeMobileTests/<Suite>
   ```
 
@@ -114,6 +114,11 @@ is history and loses to a living doc.
   state-touching test once left a tombstone in the real app's defaults.
   Switch the destination to a simulator before any MCP test run, and only
   trust MCP results for pure-logic suites.
+- **Simulator roles (DECIDED 2026-11-09).** The signet test wallet lives on
+  the `iPhone 17e` simulator. Tests run on the `Arke Tests` simulator (an
+  iPhone 17 device type, recreate with `xcrun simctl create "Arke Tests"
+  "iPhone 17"`) and never on the wallet simulator or the phone. Other
+  simulators are for layout checks only.
 - **Desktop is parked.** No desktop builds or test runs unless asked. The
   macOS suite fails ~68 tests flakily on a clean tree, so a red desktop run
   proves nothing; the same Shared tests are green on iOS.

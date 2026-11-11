@@ -62,9 +62,15 @@ same offenders by key.
 ## Patterns
 
 **In-memory SwiftData.** Persistence tests build a `ModelContainer` with
-the full schema and `isStoredInMemoryOnly: true` (ten suites do this; see
-`TransactionBridgingEquivalenceTests.makeContainer()`). Use the full schema,
-not a subset; relationship resolution depends on it. Two-context tests
+the full schema, `isStoredInMemoryOnly: true` **and `cloudKitDatabase:
+.none`** (eleven suites do this; see
+`TransactionBridgingEquivalenceTests.makeContainer()`). The CloudKit
+argument is not optional: `ModelConfiguration` defaults it to `.automatic`,
+which attaches CloudKit mirroring under the app entitlement even to an
+in-memory store, and on a simulator with no iCloud account every container
+then waits about 100 s at teardown (the `PFCloudKitStoreMonitor` log line).
+That turned a five-minute full run into an hour on 2026-11-10. Use the full
+schema, not a subset; relationship resolution depends on it. Two-context tests
 (`TransactionMetadataWritePathTests`) delete through a second context to
 reproduce what a CloudKit import does to cached relationship arrays.
 
@@ -110,14 +116,16 @@ isolated. Model types in `Shared/` that cross actors carry explicit
 ```bash
 # one suite
 xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -destination 'platform=iOS Simulator,name=Arke Tests' -parallel-testing-enabled NO \
   -only-testing:ArkeMobileTests/DefaultDataSeedingDecisionTests
 
 # everything, before a commit plan
 xcodebuild test -project Arke.xcodeproj -scheme "Arke mobile" \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+  -destination 'platform=iOS Simulator,name=Arke Tests' -parallel-testing-enabled NO
 ```
 
-Scope runs while working and batch the full suite once at the end. Pure
+Scope runs while working and batch the full suite once at the end. The
+`Arke Tests` simulator exists for this; the wallet simulator (`iPhone 17e`)
+and the phone are never test destinations. Pure
 logic suites also run fine through the MCP runner; anything touching the
 filesystem, SwiftData or the catalogs fails bogusly there.
