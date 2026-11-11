@@ -9,9 +9,15 @@ with state "needs_review".
 
 Keys marked shouldTranslate:false are skipped. Existing entries for the given
 languages are overwritten (later batches / correction overlays win).
+
+The writer reproduces Xcode's serialization (key order preserved, `" : "`
+separators, empty objects spread over three lines, no trailing newline), so
+the resulting diff shows only the changed entries. Verified 2026-11-11: a
+load/dump round trip of both Localizable catalogs is byte-identical.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -22,6 +28,15 @@ UNITS: dict = {}
 for _rel in CATALOGS:
     for _key in json.loads((REPO / _rel).read_text())["strings"]:
         UNITS.setdefault(_key, []).append(_rel)
+
+
+def serialize(data) -> str:
+    """Serialize like Xcode's catalog editor so the diff stays reviewable."""
+    text = json.dumps(data, ensure_ascii=False, indent=2, separators=(",", " : "))
+    # Xcode writes empty objects as "{", a blank line, and the closing brace.
+    return re.sub(r'^(\s*)("[^"\n]*" : )\{\}',
+                  lambda m: f"{m.group(1)}{m.group(2)}{{\n\n{m.group(1)}}}",
+                  text, flags=re.M)
 
 
 def unit(value):
@@ -53,11 +68,12 @@ def main():
             loc = entry.setdefault("localizations", {})
             for lang, value in langs.items():
                 loc[lang] = unit(value)
+            # Xcode keeps the language codes sorted inside each entry.
+            entry["localizations"] = dict(sorted(loc.items()))
             applied += 1
 
     for rel, data in catalogs.items():
-        (REPO / rel).write_text(
-            json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+        (REPO / rel).write_text(serialize(data))
 
     print(f"applied {applied} key-catalog writes across {len(catalogs)} catalogs")
     if skipped:
