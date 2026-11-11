@@ -208,7 +208,7 @@ struct ExitView_iOS: View {
                     This takes about 24 hours and cannot be cancelled.
                     """)
                     */
-                    Text(String(localized: "settings_forced_move_duration_warning", defaultValue: "This takes about 10+ hours and cannot be cancelled."))
+                    Text(String(localized: "settings_forced_move_duration_warning", defaultValue: "This takes 10+ hours and cannot be cancelled."))
                 } else {
                     Text("""
                     ⚠️ Insufficient onchain balance

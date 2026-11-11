@@ -1550,7 +1550,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only."
+            "value" : "A forced move lets you pull your bitcoin to Savings on your own, without the server. It’s for emergencies only."
           }
         },
         "ja" : {
@@ -5018,6 +5018,34 @@
         }
       }
     },
+    "message_forced_move_duration" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eine erzwungene Verschiebung kann über 10 Stunden dauern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A forced move can take 10+ hours"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "強制移動には 10 時間以上かかる場合があります"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "強制轉移可能需要 10 小時以上"
+          }
+        }
+      }
+    },
     "message_hourly_checkin_required" : {
       "localizations" : {
         "de" : {
@@ -5070,34 +5098,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "餘額為空時不需要"
-          }
-        }
-      }
-    },
-    "message_takes_24_hours" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Eine erzwungene Verschiebung kann über 10 Stunden dauern"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A forced move can take 10+ hours"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "強制移動には 10 時間以上かかる場合があります"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "強制轉移可能需要 10 小時以上"
           }
         }
       }

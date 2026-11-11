@@ -146,8 +146,9 @@ struct LocalizationCatalogTests {
                 }
                 // Substitution tokens (`%#@name@`) hide an argument from the plain
                 // value; surface it as a synthetic specifier so parity sees it.
-                if language == "en",
-                   let subs = loc["substitutions"] as? [String: Any] {
+                // Translations may carry their own substitutions (German needs two
+                // plural forms where English has one), so read them for every language.
+                if let subs = loc["substitutions"] as? [String: Any] {
                     for sub in subs.values {
                         guard let sub = sub as? [String: Any],
                               let argNum = sub["argNum"] as? Int,

@@ -114,7 +114,7 @@ struct BackupStatusSectionView: View {
                     }
                 } label: {
                     if isBackingUp {
-                        Label(String(localized: "backup_syncing", defaultValue: "Syncing.."), systemImage: "arrow.clockwise.icloud")
+                        Label(String(localized: "backup_syncing", defaultValue: "Syncing…"), systemImage: "arrow.clockwise.icloud")
                     } else {
                         Label(String(localized: "backup_sync_now", defaultValue: "Sync Now"), systemImage: "arrow.clockwise.icloud")
                     }

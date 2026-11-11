@@ -113,7 +113,7 @@ struct PromoteDeviceSheet: View {
                     .font(.system(.title, design: .serif))
 
                 // Explanation
-                Text(String(localized: "settings_make_primary_help", defaultValue: "This device will become your active wallet, able to send and receive payments."))
+                Text(String(localized: "settings_make_primary_help", defaultValue: "This device will become the primary device, able to send and receive payments."))
                     .font(.title3)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)

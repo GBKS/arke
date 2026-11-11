@@ -29,7 +29,8 @@ struct ContactAssignmentPreview: View {
     
     private func assignmentChangePreview(pendingContact: ContactModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "label_this_will", defaultValue: "This will"))
+            Text(String(localized: "contacts_assignment_preview_heading", defaultValue: "What will happen",
+                        comment: "Heading above the list of changes an assignment will make"))
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 6) {
@@ -65,7 +66,8 @@ struct ContactAssignmentPreview: View {
     
     private func removalPreview(currentContact: ContactModel) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(String(localized: "label_this_will", defaultValue: "This will"))
+            Text(String(localized: "contacts_assignment_preview_heading", defaultValue: "What will happen",
+                        comment: "Heading above the list of changes an assignment will make"))
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 6) {

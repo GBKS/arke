@@ -86,7 +86,7 @@ struct LinkedDevicesView_iOS: View {
                                         defaultValue: "No Active Wallet"))
                                 .font(.headline)
                             Text(String(localized: "linked_devices_no_active_wallet_description",
-                                        defaultValue: "Make this device your primary wallet to send and receive."))
+                                        defaultValue: "Make this device the primary device to send and receive."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -97,7 +97,7 @@ struct LinkedDevicesView_iOS: View {
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel(String(localized: "accessibility_no_primary_device_alert",
-                                               defaultValue: "Warning: No active wallet. Make this device your primary wallet to send and receive."))
+                                               defaultValue: "Warning: No active wallet. Make this device the primary device to send and receive."))
                     .accessibilityAddTraits(.isStaticText)
                 }
             }
@@ -389,7 +389,7 @@ struct DeviceRow_iOS: View {
         parts.append(device.platformDisplayName)
 
         // Last seen
-        parts.append(String(localized: "accessibility_last_seen", defaultValue: "last seen") + " \(device.lastSeenRelative)")
+        parts.append(String(localized: "accessibility_last_seen %@", defaultValue: "last seen \(device.lastSeenRelative)"))
 
         // Primary/Secondary status
         if device.isPrimaryDevice {

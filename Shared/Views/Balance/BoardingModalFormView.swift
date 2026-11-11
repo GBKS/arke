@@ -103,7 +103,7 @@ struct BoardingModalFormView: View {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             if let minimum = minimumAmount {
-                                Text(BitcoinFormatter.shared.formatAmount(minimum) + String(localized: "suffix_minimum", defaultValue: " minimum."))
+                                Text(String(localized: "boarding_minimum_amount %@", defaultValue: "\(BitcoinFormatter.shared.formatAmount(minimum)) minimum."))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                             } else {

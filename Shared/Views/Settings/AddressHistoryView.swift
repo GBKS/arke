@@ -226,9 +226,9 @@ struct AddressHistoryRowView: View {
 
                 // Additional info row
                 HStack(spacing: 4) {
-                    Text(address.generatedAt, style: .relative)
-                        .font(.caption)
-                    Text(String(localized: "label_ago", defaultValue: "ago"))
+                    // Foundation's relative style carries its own localized "ago" / "vor",
+                    // so no fragment is appended in code.
+                    Text(address.generatedAt, format: .relative(presentation: .numeric))
                         .font(.caption)
 
                     if let index = address.derivationIndex {

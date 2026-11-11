@@ -1607,30 +1607,31 @@
         }
       }
     },
-    "accessibility_last_seen" : {
+    "accessibility_last_seen %@" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "zuletzt gesehen"
+            "value" : "zuletzt gesehen %@"
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "last seen"
+            "state" : "new",
+            "value" : "last seen %@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "最終確認"
+            "value" : "最終確認 %@"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "上次上線"
+            "value" : "上次上線 %@"
           }
         }
       }
@@ -1842,7 +1843,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Warning: No active wallet. Make this device your primary wallet to send and receive."
+            "value" : "Warning: No active wallet. Make this device the primary device to send and receive."
           }
         },
         "ja" : {
@@ -1854,7 +1855,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "警告：沒有使用中的錢包。將此裝置設為你的主要錢包，即可傳送與接收。"
+            "value" : "警告：沒有使用中的錢包。將此裝置設為主要裝置，即可傳送與接收。"
           }
         }
       }
@@ -5419,7 +5420,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Syncing.."
+            "value" : "Syncing…"
           }
         },
         "ja" : {
@@ -7260,7 +7261,49 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%1$lld abgelaufen, %2$lld läuft in Kürze ab"
+            "value" : "%#@expired@, %#@expiring@"
+          },
+          "substitutions" : {
+            "expired" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg VTXO abgelaufen"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg VTXOs abgelaufen"
+                    }
+                  }
+                }
+              }
+            },
+            "expiring" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg läuft in Kürze ab"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "needs_review",
+                      "value" : "%arg laufen in Kürze ab"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en" : {
@@ -7300,7 +7343,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%#@expired@，%2$lld 個即將到期"
+            "value" : "%1$lld 個 VTXO 已到期，%2$lld 個即將到期"
           }
         }
       }
@@ -7687,6 +7730,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "區塊 %u"
+          }
+        }
+      }
+    },
+    "boarding_minimum_amount %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mindestens %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ minimum."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ 以上必要です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最少 %@。"
           }
         }
       }
@@ -9014,6 +9086,7 @@
       }
     },
     "button_offboard" : {
+      "comment" : "Developer-screen label for the same action the Fees screen calls Move to Savings; keep the jargon here",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -10006,6 +10079,36 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "已指派給這筆交易"
+          }
+        }
+      }
+    },
+    "contacts_assignment_preview_heading" : {
+      "comment" : "Heading above the list of changes an assignment will make",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das passiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "What will happen"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "変更内容"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將會進行的變更"
           }
         }
       }
@@ -16915,34 +17018,6 @@
         }
       }
     },
-    "label_ago" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "vor"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ago"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "前"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "前"
-          }
-        }
-      }
-    },
     "label_amount" : {
       "localizations" : {
         "de" : {
@@ -17534,34 +17609,6 @@
         }
       }
     },
-    "label_this_will" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies wird"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This will"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "これは"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "這將會"
-          }
-        }
-      }
-    },
     "label_total" : {
       "localizations" : {
         "de" : {
@@ -17875,7 +17922,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Make this device your primary wallet to send and receive."
+            "value" : "Make this device the primary device to send and receive."
           }
         },
         "ja" : {
@@ -17887,7 +17934,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "將此裝置設為主要錢包，即可傳送和接收款項。"
+            "value" : "將此裝置設為主要裝置，即可傳送和接收款項。"
           }
         }
       }
@@ -25411,19 +25458,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This takes about 10+ hours and cannot be cancelled."
+            "value" : "This takes 10+ hours and cannot be cancelled."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "これには約10時間以上かかり、キャンセルできません。"
+            "value" : "これには10時間以上かかり、キャンセルできません。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "此程序約需 10 小時以上，且無法取消。"
+            "value" : "此程序需要 10 小時以上，且無法取消。"
           }
         }
       }
@@ -25573,25 +25620,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dieses Gerät wird dein aktives Wallet und kann Zahlungen senden und empfangen."
+            "value" : "Dieses Gerät wird zum Hauptgerät und kann Zahlungen senden und empfangen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This device will become your active wallet, able to send and receive payments."
+            "value" : "This device will become the primary device, able to send and receive payments."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このデバイスはアクティブなウォレットになり、支払いを送受信できます。"
+            "value" : "このデバイスはメインデバイスになり、支払いを送受信できます。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "此裝置將成為你使用中的錢包，可以傳送和接收款項。"
+            "value" : "此裝置將成為主要裝置，可以傳送和接收款項。"
           }
         }
       }
@@ -28526,34 +28573,6 @@
         }
       }
     },
-    "suffix_minimum" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : " Minimum."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : " minimum."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : " 以上必要です。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : " 起。"
-          }
-        }
-      }
-    },
     "symbol_bullet" : {
       "localizations" : {
         "en" : {
@@ -30620,7 +30639,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A recovery moves bitcoin from your payments balance to your savings balance without the involvement of the server that typically facilitates this."
+            "value" : "A forced move takes bitcoin from your Payments balance to your Savings balance without the server that normally handles this."
           }
         },
         "ja" : {

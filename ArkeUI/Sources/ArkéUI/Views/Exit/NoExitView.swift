@@ -61,7 +61,7 @@ public struct NoExitView<Media: View>: View {
                 Text(String(localized: "action_start_forced_move", defaultValue: "Start a forced move", bundle: .module))
                     .font(.system(.title, design: .serif))
 
-                Text(String(localized: "balance_emergency_move_help", defaultValue: "A forced move lets you pull your bitcoin to Savings on your own, without the server.  It’s for emergencies only.", bundle: .module))
+                Text(String(localized: "balance_emergency_move_help", defaultValue: "A forced move lets you pull your bitcoin to Savings on your own, without the server. It’s for emergencies only.", bundle: .module))
                     .font(.title3)
                     .foregroundColor(.secondary)
                     .lineSpacing(6)
@@ -170,7 +170,7 @@ public struct NoExitView<Media: View>: View {
                     VStack(alignment: .leading, spacing: 8) {
                         CheckableWarningItem(
                             isChecked: $acknowledgedTakesTime,
-                            text: String(localized: "message_takes_24_hours", defaultValue: "A forced move can take 10+ hours", bundle: .module)
+                            text: String(localized: "message_forced_move_duration", defaultValue: "A forced move can take 10+ hours", bundle: .module)
                         )
                         
                         CheckableWarningItem(

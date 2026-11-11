@@ -29,10 +29,10 @@ def values_by_language(entry):
             vals.append(loc["stringUnit"].get("value", ""))
         for form in loc.get("variations", {}).get("plural", {}).values():
             vals.append(form.get("stringUnit", {}).get("value", ""))
-        # substitution tokens hide an argument from the plain value
-        if lang == "en":
-            for sub in loc.get("substitutions", {}).values():
-                vals.append(f"%{sub['argNum']}${sub['formatSpecifier']}")
+        # substitution tokens hide an argument from the plain value; any
+        # language may define its own (German needs two where English has one)
+        for sub in loc.get("substitutions", {}).values():
+            vals.append(f"%{sub['argNum']}${sub['formatSpecifier']}")
         langs[lang] = vals
     return langs
 

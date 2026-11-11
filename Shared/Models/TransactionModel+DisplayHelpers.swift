@@ -579,7 +579,7 @@ extension TransactionModel {
             return String(localized: "transaction_explainer_refresh", defaultValue: "A refresh is a maintenance operation that extends the lifetime of your payments balance. No bitcoin was sent or received.")
             
         case .exit:
-            return String(localized: "transaction_explainer_exit", defaultValue: "A recovery moves bitcoin from your payments balance to your savings balance without the involvement of the server that typically facilitates this.")
+            return String(localized: "transaction_explainer_exit", defaultValue: "A forced move takes bitcoin from your Payments balance to your Savings balance without the server that normally handles this.")
             
         //case .onchainTransaction:
         //    return "This is a native Bitcoin transaction managed by your onchain wallet. These transactions are settled directly on the Bitcoin blockchain."

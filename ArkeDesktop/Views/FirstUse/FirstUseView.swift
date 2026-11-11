@@ -31,7 +31,8 @@ struct FirstUseView: View {
             // Right column - Existing content
             VStack(spacing: 30) {
                 VStack(spacing: 8) {
-                    Text(String(localized: "firstuse_welcome_to", defaultValue: "Welcome to"))
+                    Text(String(localized: "firstuse_welcome_to", defaultValue: "Welcome to",
+                               comment: "Small line shown above the large app name on its own line; translate as a standalone greeting if the word order differs"))
                         .font(.system(size: 15))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)

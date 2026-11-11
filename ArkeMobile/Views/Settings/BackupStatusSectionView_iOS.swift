@@ -85,7 +85,7 @@ struct BackupStatusSectionView_iOS: View {
                                     .font(.system(size: 18, weight: .semibold))
                                     .foregroundStyle(.primary)
                             }
-                            Text(isBackingUp ? String(localized: "backup_syncing", defaultValue: "Syncing..") : String(localized: "backup_sync_now", defaultValue: "Sync Now"))
+                            Text(isBackingUp ? String(localized: "backup_syncing", defaultValue: "Syncing…") : String(localized: "backup_sync_now", defaultValue: "Sync Now"))
                                 .font(.system(size: 21, weight: .semibold))
                                 .foregroundStyle(.primary)
                         }

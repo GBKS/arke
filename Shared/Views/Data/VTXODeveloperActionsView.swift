@@ -78,7 +78,8 @@ struct VTXODeveloperActionsView: View {
                                 .controlSize(.small)
                                 .foregroundStyle(Color.Arke.goldLabel)
                         }
-                        Text(String(localized: "button_offboard", defaultValue: "Offboard"))
+                        Text(String(localized: "button_offboard", defaultValue: "Offboard",
+                                           comment: "Developer-screen label for the same action the Fees screen calls Move to Savings; keep the jargon here"))
                             .fontWeight(.medium)
                             .foregroundStyle(Color.Arke.goldLabel)
                     }
