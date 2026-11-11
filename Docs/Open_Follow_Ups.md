@@ -960,6 +960,30 @@ log).
   no plural and no translation (seen 2026-10-21). One catalog key with a
   plural variation, both copies.
 
+### Localization
+
+- [ ] **`balance_vtxos_expired_and_expiring %lld %lld` needs plural
+  substitutions in de** — English uses a `%#@expired@` substitution plus a
+  count; German is a flat `%1$lld abgelaufen, %2$lld läuft in Kürze ab`,
+  singular for any count. Needs `%#@…@` substitution pairs in the catalog
+  (ja/zh collapse correctly). Found by the 2026-11-11 review pass.
+- [ ] **Concatenation keys the translations cannot honour** — `label_ago`
+  ("ago"), `label_this_will` ("This will"), `suffix_minimum` (" minimum."),
+  `firstuse_welcome_to` ("Welcome to"), `accessibility_last_seen` ("last
+  seen" + relative time): fragments joined in code, so German „vor" and
+  Japanese word order come out wrong (`Localization_Guidelines.md` rule 5).
+  Replace each with one full-sentence key with a specifier.
+- [ ] **English copy nits from the review pass** — `backup_syncing`
+  "Syncing.." (two dots); double space in `balance_emergency_move_help`;
+  `transaction_explainer_exit` says "A recovery moves bitcoin" where every
+  other string says forced move; `message_takes_24_hours` key says 24 h but
+  the value says "10+ hours", and `settings_forced_move_duration_warning`
+  hedges twice ("about 10+ hours"); `accessibility_no_primary_device_alert`,
+  `linked_devices_no_active_wallet_description`, `settings_make_primary_help`
+  say "primary/active wallet" for the primary device; `button_offboard`
+  "Offboard" and `maintenance_offboarding` "Move to Savings" label the same
+  action. English lives in code (`defaultValue:`); the translations follow.
+
 ## Tier 4 — Tech debt and deferred by design
 
 (2026-10-19 sweep: the daemon auto-start duplicate merged into "Explicit

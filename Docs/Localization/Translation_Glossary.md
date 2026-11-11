@@ -244,3 +244,35 @@ Recorded so later batches reuse them; a native reviewer may overrule any row.
 | contact support | wende dich an den Support | サポートにお問い合わせください | 聯絡客服 | |
 | coins (user-facing refresh and transfer copy) | Bitcoin | ビットコイン | 比特幣 | DECIDED 2026-11-11: English keeps the idiomatic "these coins" (never "VTXOs" in user-facing copy); the translations say Bitcoin, de „Münzen" is never used. Test-network copy keeps Coins / Test-Coins. |
 
+## Terms added 2026-11-11 (review pass — all ⚠️ pending native review)
+
+Decided by the per-language consistency reviewers while aligning sibling keys.
+
+| English | German (du) | Japanese | zh-Hant | Notes |
+|---|---|---|---|---|
+| Erspartes / Zahlungen with prepositions | zu / von / in Erspartes (article-less, balance name as label) | — | — | Never „zum Ersparten"; compound `Zahlungen-Guthaben`, not `Zahlungsguthaben`. |
+| bitcoin (number) | plural: „deine Bitcoin sind" | — | — | No „das Bitcoin". |
+| offboard / transfer to Savings | Verschiebung | 移動 | 轉移 | „Übertrag" stays boarding-only. |
+| expire / expired (VTXO lifetime) | ablaufen / abgelaufen | 期限切れ | 到期 | „verfallen" stays forfeited-only. |
+| assign / unassign (contact or tag) | zuweisen / Zuweisung aufheben | 割り当て | 指派 | |
+| label (address or contact label) | Bezeichnung | ラベル | 標籤名稱 | |
+| share sheet | Teilen-Menü | 共有シート | 分享表單 | |
+| Nearby Sharing (feature) | Teilen in der Nähe | 近くでの共有 | 鄰近分享 | |
+| view-only (adjective) | nur lesend | 閲覧専用 | 唯讀 | Noun form stays Nur-Lesen-Modus. |
+| Pay from (balance) | Zahlen aus | %@から支払う | 從%@付款 | |
+| Change (button verb) | Ändern | 変更 | 變更 | Never Wechselgeld / おつり. |
+| Exit (Ark exit action, developer screens) | Exit | エグジット | Exit | Never Beenden / 終了. |
+| recovery words | Wörter | 単語 (count 語, 12語) | 字詞 | ja never ワード. |
+| primary address (of a contact) | primäre Adresse | プライマリアドレス | 主要地址 | Distinct from primary device. |
+| exited / exiting (Data screens) | — | エグジット済み / エグジット中 | 已 Exit / Exit 中 | |
+| confirming / unconfirmed | wird bestätigt / unbestätigt | 承認中 / 未承認 | 確認中 / 未確認 | |
+| connection quality scale | Sehr gut / Gut / Schlecht / Getrennt | 非常に良好 / 良好 / 不良 / 切断 | 極佳 / 良好 / 不佳 / 已中斷 | |
+| claim transaction (exit steps) | Einlöse-Transaktion | 回収取引 (Data: 回収TX) | 領取交易 | |
+| pending | ausstehend | 保留中 | 待處理 | |
+| cannot be undone | kann nicht rückgängig gemacht werden | 元に戻せません | 此操作無法復原 | ⚠️ zh: Apple TW uses 還原 for Undo; native call. |
+| view (verb) | anzeigen | 表示 | 查看 (action labels) / 檢視 (VoiceOver hints, prose) | DECIDED 2026-11-11: keep the split; it mirrors Apple TW usage (檢視 as the menu term). |
+| add (button) / New … (title) | Hinzufügen / Neu | 追加 / 新規 | 加入 / 新增 | |
+| X-Ray (developer screen title) | X-Ray | X-Ray | X-Ray | DECIDED 2026-11-11: Latin in every language; the 光 pun does not carry. |
+| VoiceOver hints register | — | plain form for single-clause hints, です・ます for multi-sentence hints | — | PROPOSED ruling; the catalog currently follows it. |
+| Data-screen colons | — | half-width `: ` in key-value rows, full-width `：` in sentences | full-width `：` throughout | |
+

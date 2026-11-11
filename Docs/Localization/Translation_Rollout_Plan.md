@@ -81,6 +81,7 @@ knownRegions gained de/ja; the build also enriched the InfoPlist catalogs
 | Phase D | not started | per-language QA: App Language runs, German expansion layout pass, ja typography |
 | zh-Hant | done 2026-08-23 | 1,088 entries, needs_review; see section below |
 | Debt batch | done 2026-11-11 | 236 keys × de+ja+zh-Hant, needs_review; missing count 0; see "Debt batch" below |
+| Review pass | done 2026-11-11 | 147 / 145 / 28 corrections (de / ja / zh-Hant); see "Consistency review pass" below |
 
 ---
 
@@ -173,3 +174,30 @@ October. Closed in one batch:
   `server_sheet_by_second`, `Waiting`, `send_switch_to_fiat_entry`,
   `receive_switch_to_fiat_entry`), extracted into the catalogs on build; the
   two InfoPlist catalogs re-serialized once into Xcode's format.
+
+### Consistency review pass — DONE 2026-11-11
+
+One fresh-context reviewer per language read all 1,330 entries of every
+catalog against the English and the glossary (meaning, glossary term, sibling
+drift, grammar, specifiers, plurals/counters, spacing and punctuation). A
+mechanical pre-scan (formal register, banned vocabulary, simplified
+characters, CJK spacing) was clean beforehand. Results, applied through
+`apply_translations.py` and re-verified (lint 0, `LocalizationCatalogTests`
+green, ICU Hans-Hant 0 hits, build green):
+
+| Language | Corrections | Meaning errors | Notable |
+|---|---|---|---|
+| de | 147 + 4 | 14 | `backup_file_not_selected` said „optional" (English: recommended, emergency recovery otherwise); `settings_make_secondary_step_3` named the wrong device; unlink rendered three ways; `Zahlungsguthaben` → `Zahlungen-Guthaben`; `label_change` was „Wechselgeld" for a Change button; `button_exit` was „Beenden" for the Ark exit |
+| ja | 145 + 1 | ~20 | `label_change` おつり → 変更; `balance_refresh_in %@` read "refresh with X"; 確認 → 承認 for confirmations; ワード → 単語; 転送 → 移動 |
+| zh-Hant | 28 + 1 | 3 | `backup_file_not_selected` 選填; `button_refresh` → 重新整理 (UI refresh at its only call site); `button_set_primary` said primary *device* for a contact address; forfeit strings restructured |
+
+The ArkeDesktop `NSContactsUsageDescription` shares its key with ArkeMobile
+but has different English; all three languages carried the Mobile text and
+were rewritten by hand in the desktop catalog (the apply script writes a key
+to every catalog that holds it). Terms the reviewers had to decide are in
+`Translation_Glossary.md` under "Terms added 2026-11-11 (review pass)".
+English-side findings (copy nits, concatenation keys, the
+`balance_vtxos_expired_and_expiring` substitution gap) are filed in
+`Open_Follow_Ups.md`, Tier 3. Still not done: native-speaker sign-off (every
+value stays `needs_review`) and the Phase D layout pass.
+
