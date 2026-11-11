@@ -132,7 +132,8 @@ struct BalanceRefreshStatusCompact: View {
                 // may wrap; this pair keeps its width.
                 if data.isRefused, let heldBack = data.heldBackAmount {
                     HStack(spacing: 4) {
-                        Text(String(localized: "label_held_back", defaultValue: "Held back"))
+                        Text(String(localized: "label_held_back", defaultValue: "Held back",
+                                    comment: "Label for the part of the balance the server refused to refresh; it is not spendable, not pending"))
                             .font(.body)
                             .foregroundStyle(data.urgencyForegroundColor)
                         Text(BitcoinFormatter.shared.formatAmount(heldBack))

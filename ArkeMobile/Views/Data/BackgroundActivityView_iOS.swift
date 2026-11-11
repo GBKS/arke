@@ -404,7 +404,8 @@ struct BackgroundEventRow: View {
         case .bgTaskScheduled:
             String(localized: "data_bg_event_bgtask_scheduled", defaultValue: "Background task requested")
         case .foregroundTimerFired:
-            String(localized: "data_bg_event_timer", defaultValue: "Refresh timer fired")
+            String(localized: "data_bg_event_timer", defaultValue: "Refresh timer fired",
+                   comment: "The app's periodic foreground data-refresh timer, not the VTXO refresh")
         case .coldLaunch:
             String(localized: "data_bg_event_cold_launch", defaultValue: "App launched")
         }

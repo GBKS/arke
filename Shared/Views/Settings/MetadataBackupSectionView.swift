@@ -209,7 +209,8 @@ private struct MetadataImportPreviewSheet: View {
                 .font(.system(size: 24, design: .serif))
 
             VStack(alignment: .leading, spacing: 8) {
-                row(label: String(localized: "metadata_import_exported", defaultValue: "Exported"),
+                row(label: String(localized: "metadata_import_exported", defaultValue: "Exported",
+                                  comment: "Row label; the value is the date and time the file was exported"),
                     value: preview.file.exportedAt.formatted(date: .abbreviated, time: .shortened))
 
                 row(label: String(localized: "metadata_import_contacts", defaultValue: "Contacts"),
@@ -238,7 +239,8 @@ private struct MetadataImportPreviewSheet: View {
 
             if isNetworkMismatch {
                 Label(String(localized: "metadata_import_network_mismatch",
-                             defaultValue: "This file was exported from a \(preview.file.network) wallet."),
+                             defaultValue: "This file was exported from a \(preview.file.network) wallet.",
+                             comment: "The placeholder is a network name such as Signet or Bitcoin"),
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.callout)
                     .foregroundColor(.Arke.orange)

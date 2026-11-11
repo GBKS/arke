@@ -294,7 +294,8 @@ struct ServerRow: View {
         guard let config else {
             return [.text(String(localized: "server_sheet_custom_enter", defaultValue: "Enter an address"))]
         }
-        let bySecond = Line.text(String(localized: "server_sheet_by_second", defaultValue: "By Second"))
+        let bySecond = Line.text(String(localized: "server_sheet_by_second", defaultValue: "By Second",
+                                         comment: "Operator credit for the default Ark server; Second is a company name"))
         let testNetwork: [Line] = [
             .text(String(localized: "server_sheet_signet_test_network", defaultValue: "Signet test network")),
             .text(String(localized: "server_sheet_coins_no_value", defaultValue: "Coins have no value")),

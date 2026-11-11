@@ -1298,35 +1298,6 @@
         }
       }
     },
-    "accessibility_device_options_hint" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Doppeltippe, um Optionen für dieses Gerät anzuzeigen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Double tap to view options for this device"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ダブルタップしてこのデバイスのオプションを表示"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "點兩下以檢視此裝置的選項"
-          }
-        }
-      }
-    },
     "accessibility_device_stale_warning" : {
       "localizations" : {
         "de" : {
@@ -3006,35 +2977,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "清除聯絡人"
-          }
-        }
-      }
-    },
-    "action_clear_payment_request" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zahlungsanforderung löschen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear payment request"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "支払いリクエストをクリア"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "清除付款請求"
           }
         }
       }
@@ -4893,35 +4835,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "確定要刪除此標籤嗎？此動作無法還原。"
-          }
-        }
-      }
-    },
-    "alert_device_lose_access" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dieses Gerät hat keinen Zugriff mehr auf das Wallet. Es muss die Wiederherstellungsphrase erneut importieren, um Zugriff zu erhalten."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This device will no longer have access to the wallet. It will need to re-import the recovery phrase to regain access."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このデバイスはウォレットにアクセスできなくなります。アクセスを再度有効にするにはリカバリーフレーズを再度インポートする必要があります。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "此裝置將不再擁有錢包的存取權，需要重新匯入復原片語才能重新取得存取權。"
           }
         }
       }
@@ -9794,6 +9707,7 @@
       }
     },
     "button_verify" : {
+      "comment" : "Button that checks the two typed recovery-phrase words before deletion",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -11189,6 +11103,7 @@
       }
     },
     "data_bg_event_timer" : {
+      "comment" : "The app's periodic foreground data-refresh timer, not the VTXO refresh",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -17221,6 +17136,7 @@
       }
     },
     "label_held_back" : {
+      "comment" : "Label for the part of the balance the server refused to refresh; it is not spendable, not pending",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -18058,6 +17974,7 @@
       }
     },
     "linked_devices_unsynced_device_registered %@" : {
+      "comment" : "%@ is the registration date (abbreviated), not a device name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -18822,6 +18739,7 @@
       }
     },
     "metadata_import_exported" : {
+      "comment" : "Row label; the value is the date and time the file was exported",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -18851,6 +18769,7 @@
       }
     },
     "metadata_import_network_mismatch" : {
+      "comment" : "The placeholder is a network name such as Signet or Bitcoin",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -19247,35 +19166,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "接收比特幣"
-          }
-        }
-      }
-    },
-    "nav_title_select_payment_method" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zahlungsmethode wählen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select Payment Method"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "支払い方法を選択"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "選擇付款方式"
           }
         }
       }
@@ -22185,6 +22075,7 @@
       }
     },
     "receive_switch_to_fiat_entry" : {
+      "comment" : "The placeholder is a localized currency name such as Euro",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -22999,6 +22890,7 @@
       }
     },
     "send_switch_to_fiat_entry" : {
+      "comment" : "The placeholder is a localized currency name such as Euro",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -23637,6 +23529,7 @@
       }
     },
     "server_sheet_by_second" : {
+      "comment" : "Operator credit for the default Ark server; Second is a company name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
@@ -24671,64 +24564,6 @@
         }
       }
     },
-    "settings_delete_backup_reminder" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Hast du ein manuelles Backup abgeschlossen? Du brauchst sowohl deine Wiederherstellungsphrase als auch die Wallet-Zustandsdatei, um dein Wallet vollständig wiederherzustellen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Have you completed a manual backup? You need both your recovery phrase and wallet state file to fully restore your wallet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "手動バックアップを完了しましたか。ウォレットを完全に復元するには、リカバリーフレーズと状態ファイルの両方が必要です。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "你完成手動備份了嗎？要完整復原錢包，需要同時擁有復原片語和錢包狀態檔案。"
-          }
-        }
-      }
-    },
-    "settings_delete_balance_warning" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Du hast noch Mittel in deinem Wallet. Stelle sicher, dass du sie vor dem Löschen überweist, oder akzeptiere, dass kleine Beträge unter Mindestgebühren möglicherweise nicht wiederhergestellt werden können."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "You still have funds in your wallet. Make sure to transfer them out before deleting, or accept that small amounts below minimum fees may not be recoverable."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ウォレットにはまだ資金があります。削除する前に転送するか、最小手数料以下の少量の金額は回収できないことを受け入れてください。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "你的錢包中仍有資金。刪除前請務必先將資金轉出，否則低於最低手續費的小額資金可能無法取回。"
-          }
-        }
-      }
-    },
     "settings_delete_forfeit_last_device %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -25333,64 +25168,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "這將從此裝置和 iCloud 永久刪除你的錢包，包括復原片語。\n\n只有你抄寫下來的副本才能將它找回，下一步會要求輸入其中兩個字詞。若也想復原交易記錄，請先備份錢包狀態檔案。"
-          }
-        }
-      }
-    },
-    "settings_delete_warning_icloud" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät und iCloud. Alle verknüpften Geräte verlieren Zugriff."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This will permanently delete your wallet from this device and iCloud. All linked devices will lose access."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "これにより、このデバイスと iCloud からウォレットが永続的に削除されます。すべての連携済みデバイスはアクセスを失います。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "這將從此裝置和 iCloud 永久刪除你的錢包。所有已連結的裝置將失去存取權。"
-          }
-        }
-      }
-    },
-    "settings_delete_warning_local_only" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Deine anderen Geräte behalten Zugriff auf das Wallet."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This will permanently delete your wallet from this device. Your other devices keep access to the wallet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。他のデバイスはウォレットへのアクセスを保持します。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "這將從此裝置永久刪除你的錢包。其他裝置仍可存取這個錢包。"
           }
         }
       }
@@ -32267,6 +32044,7 @@
       }
     },
     "Waiting" : {
+      "comment" : "Exit step state: the transaction waits for its input to confirm",
       "localizations" : {
         "de" : {
           "stringUnit" : {

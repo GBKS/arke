@@ -4569,6 +4569,7 @@
       }
     },
     "label_held_back" : {
+      "comment" : "Label for the part of the balance the server refused to refresh; it is not spendable, not pending",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {

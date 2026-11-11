@@ -242,7 +242,8 @@ struct SendAmountInput: View {
             }
             .buttonStyle(.plain)
             .disabled(fiatRate == nil)
-            .accessibilityLabel(String(localized: "send_switch_to_fiat_entry", defaultValue: "Enter the amount in \(FiatCurrencyPreference.localizedName(for: currency)) instead"))
+            .accessibilityLabel(String(localized: "send_switch_to_fiat_entry", defaultValue: "Enter the amount in \(FiatCurrencyPreference.localizedName(for: currency)) instead",
+                                      comment: "The placeholder is a localized currency name such as Euro"))
         }
     }
 }

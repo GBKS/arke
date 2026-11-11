@@ -193,7 +193,8 @@ struct DeletePhraseConfirmationView: View {
         if case .missing = loadState {
             return String(localized: "button_continue", defaultValue: "Continue")
         }
-        return String(localized: "button_verify", defaultValue: "Verify")
+        return String(localized: "button_verify", defaultValue: "Verify",
+                      comment: "Button that checks the two typed recovery-phrase words before deletion")
     }
 
     private var canContinue: Bool {

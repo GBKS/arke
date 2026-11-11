@@ -70,7 +70,8 @@ struct UnsyncedDeviceRow: View {
         // "Registered", never "last seen": the mirror's timestamp is written at
         // registration and heartbeats never refresh it
         return String(format: String(localized: "linked_devices_unsynced_device_registered %@",
-                                     defaultValue: "Registered %@. Its details haven't reached this device."),
+                                     defaultValue: "Registered %@. Its details haven't reached this device.",
+                                     comment: "%@ is the registration date (abbreviated), not a device name"),
                       registeredAt.formatted(date: .abbreviated, time: .omitted))
     }
 }

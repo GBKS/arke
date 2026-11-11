@@ -291,7 +291,8 @@ public struct BalanceRefreshStatus: View {
     @ViewBuilder
     private func heldBackRow(_ amount: Int) -> some View {
         HStack(alignment: .center, spacing: 4) {
-            Text(String(localized: "label_held_back", defaultValue: "Held back", bundle: .module)).font(.body).foregroundStyle(.secondary)
+            Text(String(localized: "label_held_back", defaultValue: "Held back", bundle: .module,
+                        comment: "Label for the part of the balance the server refused to refresh; it is not spendable, not pending")).font(.body).foregroundStyle(.secondary)
             Spacer()
             Text(BitcoinFormatter.shared.formatAmount(amount)).font(.body).fontWeight(.medium)
         }

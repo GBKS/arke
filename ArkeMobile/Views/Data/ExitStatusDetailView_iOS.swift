@@ -643,7 +643,8 @@ private struct ExitStepRow: View {
         case .broadcastWithCpfp:
             return Text(String(localized: "exit_tx_status_broadcast", defaultValue: "Confirming"))
         case .awaitingInputConfirmation:
-            return Text("Waiting")
+            return Text(String(localized: "Waiting", defaultValue: "Waiting",
+                               comment: "Exit step state: the transaction waits for its input to confirm"))
         case .confirmed:
             return Text(L10n.statusConfirmed)
         case .unparsed:
