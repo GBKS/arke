@@ -30,3 +30,9 @@ Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, re
   `SqliteClient::open`, so SQLite's default rollback journal applies and
   there are no `-wal`/`-shm` side files; the remaining copy risk is a backup
   taken mid-transaction, which stopping the daemon first mitigates.
+  Addendum 2026-11-12: the delete flow's export step
+  (`Features/Wallet_Deletion_Export_Step.md`) copies the live file the same
+  way while the daemon may be running, as the background hook does; only
+  the shutdown backup stops the daemon first. A `PRAGMA quick_check` on the
+  copy before the row shows "Saved" would make the tick honest; noted, not
+  built (review F6).

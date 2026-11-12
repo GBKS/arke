@@ -8,7 +8,9 @@ on copy and layout the same day (§4.4). Adversarial pass in §11: one
 CONFIRMED finding (pre-existing, new trigger) and two PLAUSIBLE ones fixed
 in-session; full mobile suite green on the iPhone 17 Pro simulator after
 the fixes (9 new test cases). Left for the Device stage: the two-device
-override route (§9, second paragraph).**
+override route (§9, second paragraph). Amended 2026-11-12 (§3 item 6, §4.1,
+§4.4, §4.5, §12): the four-letter rule and the export step in front of this
+screen, built in `Wallet_Deletion_Export_Step.md`.**
 
 Backlog entry: `Open_Follow_Ups.md`, Decisions, "phrase confirmation on
 full wipe", and the Current train block, deletion cluster. Area doc:
@@ -62,6 +64,12 @@ stake but cannot tell a user with no written phrase from one with it.
      (copywriting is the Tier 3 deletion-copy line).
   5. **Random positions** per presentation, so a screenshot of the phrase
      screen does not pre-answer the check.
+  6. DECIDED 2026-11-12 (Christoph): **multiple choice declined** (three
+     options per word is nine enumerable combinations and tests recognition,
+     not possession); **the first four letters of each word are accepted**
+     instead (BIP39 English four-letter uniqueness; words under four
+     letters match whole). An **export step** precedes this screen on the
+     full-wipe path. Both in `Wallet_Deletion_Export_Step.md`.
 
 ## 4. Design
 
@@ -82,7 +90,9 @@ One decision type next to `DeletionForfeitWarning`:
   (`split(separator: " ")`), so 12 and 24 both work.
 - `func matches(_ answers: [String]) -> Bool` — trims whitespace and
   newlines, lowercases, exact compare per position. No prefix matching, no
-  BIP39 word-list lookup, no hint which word failed.
+  BIP39 word-list lookup, no hint which word failed. *Superseded
+  2026-11-12 (§3 item 6):* whole word **or** the first four letters, via
+  `wordMatches(answer:expected:)`; still no word-list lookup and no hint.
 - An injectable generator parameter on the factory for tests only.
 
 ### 4.2 The new screen: `DeletePhraseConfirmationView` (Shared)
@@ -170,7 +180,10 @@ after the first closes is **assumed**, not executed.
 
 The gold "manual backup" box is gone (Christoph: it repeated the intro).
 The intro paragraph carries the whole message, and the "Back up Wallet"
-link sits under it as a plain gold link:
+link sits under it as a plain gold link (*the link was replaced on
+2026-11-12 by the export step pushed from Continue, and the intro moved to
+`settings_delete_warning_everywhere_intro_steps`; see
+`Wallet_Deletion_Export_Step.md` §3.3*):
 
 - Last device (new key `settings_delete_warning_everywhere_intro`; the old
   `settings_delete_warning_icloud` had manual translations, so the catalog
@@ -226,7 +239,7 @@ New keys, all `defaultValue:` at the call site (Shared view, no
 | `settings_delete_phrase_mismatch` | That doesn't match your recovery phrase. |
 | `settings_delete_phrase_unreadable` | Your recovery phrase couldn't be read right now, so the deletion can't continue. Try again in a moment. |
 | `settings_delete_phrase_missing` | No recovery phrase is stored on this device, so there is nothing to confirm. |
-| `settings_delete_warning_everywhere_intro` | the last-device intro (§4.4); replaces `settings_delete_warning_icloud`, which goes stale with its de/ja/zh-Hant |
+| `settings_delete_warning_everywhere_intro` | the last-device intro (§4.4); replaces `settings_delete_warning_icloud`, which goes stale with its de/ja/zh-Hant. *Itself replaced 2026-11-12 by `settings_delete_warning_everywhere_intro_steps` (export step), stale with its translations* |
 | `settings_delete_backup_reminder` | orphaned with the box (and its three translations) |
 | `button_continue` | Continue (no existing key; added; info-screen button and the phrase screen's no-phrase state) |
 | `status_loading_recovery_phrase` | Loading recovery phrase... |
@@ -375,3 +388,15 @@ iOS runtime behaviour above, macOS, the two-device override route from a
 seed-not-synced secondary, and whether iCloud Keychain can return
 `errSecItemNotFound` transiently for a synced item (the app already treats
 it as definitive at launch; this change inherits that).
+
+## 12. Amendments 2026-11-12
+
+Christoph asked whether the two words should be multiple choice (three
+options each) and whether a download screen belongs in the flow. Rulings
+and build in `Wallet_Deletion_Export_Step.md`: multiple choice declined,
+four-letter prefix accepted (`PhraseConfirmation.wordMatches`, tests
+extended, premise pinned against the BIP39 package list), export step
+pushed between the info screen and this one, with the phrase screen now a
+destination nested on the export step and the override lifecycle keyed to
+the export flag. §4.1, §4.4 and §4.5 above carry inline notes; the device
+check for the amendments is §8 of that doc.

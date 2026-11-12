@@ -215,6 +215,18 @@ awaiting Christoph's call — the items below assume acceptance:
   (`log show --info --debug`, or the info lines vanish).
 
 ## Wallet Deletion & Device Registry
+- [x] **Deletion export step + four-letter rule — DONE 2026-11-12**
+  (Christoph, one phone, "works well", after four rounds of rulings the
+  same day): required wallet backup file export (newer of live `db.sqlite`
+  and iCloud slot) and optional metadata export before the two-word check;
+  three-step intro list; tab bar hidden in the sub-flow; first four letters
+  of each word accepted; metadata row only with user-added data. Plan and
+  review record: `Features/Wallet_Deletion_Export_Step.md`. Still owed to
+  the deletion set's Device stage: the two-device half (override route
+  shows the step; a demoted device exports the newer slot copy). Also from
+  the same session: swipe-down guard on the slider sheet during the wipe
+  (§9.1, DECIDED and applied, not device-run). Open: autocomplete on the
+  verification screen (Tier 3, DECIDED, own session).
 - [x] **Two-device on-device verify of the deletion override — DONE
   2026-09-26** (Christoph, two linked devices, against the 2026-09-25 build
   with the recency gate, pre-wipe recheck and seed-last ordering): the flow

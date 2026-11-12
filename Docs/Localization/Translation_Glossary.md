@@ -276,3 +276,11 @@ Decided by the per-language consistency reviewers while aligning sibling keys.
 | VoiceOver hints register | — | plain form for single-clause hints, です・ます for multi-sentence hints | — | PROPOSED ruling; the catalog currently follows it. |
 | Data-screen colons | — | half-width `: ` in key-value rows, full-width `：` in sentences | full-width `：` throughout | |
 
+
+## Terms added 2026-11-12 (deletion export step — ⚠️ pending native review)
+
+| English | German (du) | Japanese | zh-Hant | Notes |
+|---|---|---|---|---|
+| wallet backup file | Wallet-Backup-Datei | ウォレットのバックアップファイル | 錢包備份檔案 | The bark `db.sqlite` export. Replaces "wallet state file" / „Wallet-Zustandsdatei" (DECIDED 2026-11-12: phrase + file is the normal restore, phrase alone is the emergency path). `settings_backup_file` "Backup File" / „Backup-Datei" stays as the short form. |
+| optional (export row) | Optional | 任意 | 選用 | Row-leading label with a full stop. The backup-file row is required since the third round and carries no label. |
+| Delete permanently (step) | Endgültig löschen | 永久に削除する | 永久刪除 | Matches `message_delete_permanently` "Delete Permanently?". |
