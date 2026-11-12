@@ -10,6 +10,7 @@
 
 import Foundation
 import SwiftData
+import ArkeUI
 
 // MARK: - File Format (versioned envelope)
 
@@ -95,6 +96,35 @@ struct ExportedContactAssignment: Codable {
 
 @MainActor
 struct MetadataExportService {
+
+    /// Whether the store holds anything the user added, as opposed to what
+    /// the app provisions on its own: a configured profile, a standard
+    /// contact (not the faucet or developer ones), a tag that is not a
+    /// system tag, or a transaction note. Assignments are not counted on
+    /// their own: auto-tagging assigns system tags and auto-assign links
+    /// app contacts without the user doing anything, while a user-made
+    /// assignment presupposes a user tag or contact that already counts.
+    /// Drives whether the delete flow's export step shows the metadata row
+    /// at all (DECIDED 2026-11-12). Four counted fetches, no row walking.
+    static func hasUserAddedMetadata(context: ModelContext) throws -> Bool {
+        let standard = ContactType.standard.rawValue
+
+        var profiles = FetchDescriptor<UserProfile>(predicate: #Predicate { !$0.name.isEmpty || $0.avatarData != nil })
+        profiles.fetchLimit = 1
+        if try context.fetchCount(profiles) > 0 { return true }
+
+        var contacts = FetchDescriptor<PersistentContact>(predicate: #Predicate { $0.contactType == standard })
+        contacts.fetchLimit = 1
+        if try context.fetchCount(contacts) > 0 { return true }
+
+        var tags = FetchDescriptor<PersistentTag>(predicate: #Predicate { $0.isSystemTag == false })
+        tags.fetchLimit = 1
+        if try context.fetchCount(tags) > 0 { return true }
+
+        var notes = FetchDescriptor<PersistentTransaction>(predicate: #Predicate { $0.notes != nil && $0.notes != "" })
+        notes.fetchLimit = 1
+        return try context.fetchCount(notes) > 0
+    }
 
     /// Gather all user-added metadata from the store into the file DTOs.
     static func buildExportFile(context: ModelContext) throws -> MetadataExportFile {

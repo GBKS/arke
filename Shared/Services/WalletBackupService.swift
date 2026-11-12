@@ -476,11 +476,63 @@ class WalletBackupService {
         return allRemoved
     }
 
-    /// Creates a temporary shareable copy of the backup file for export/sharing
+    /// Creates a temporary shareable copy of the iCloud backup file for export/sharing
     /// - Returns: URL of the temporary copy, or nil if backup unavailable
     func getShareableBackupFileURL() -> URL? {
         guard let backupFile = existingBackupFile else { return nil }
+        return shareableCopy(of: backupFile)
+    }
 
+    /// A temporary shareable copy of the wallet database for the export step
+    /// of a full wipe: the newer of the live local file and the iCloud
+    /// backup file, by modification date, the local file on a tie or when
+    /// a date cannot be read. On an open primary that is the live file,
+    /// which may postdate the slot by a payment and needs no iCloud. On a
+    /// demoted device the local file is frozen at demotion while the
+    /// promoted device keeps writing the slot, so the slot wins there
+    /// (review 2026-11-12; the same newest-wins rule the launch restore
+    /// applies). A secondary that never opened a wallet has only the slot.
+    /// Same plain file copy as the automatic backup, with the same caveat
+    /// that a copy taken mid-write is not consistent
+    /// (`Features/Backup_Restore.md`).
+    /// - Returns: URL of the temporary copy, or nil if no database exists anywhere
+    func getShareableWalletFileURL() -> URL? {
+        let localFile = Self.existingDatabaseURL(in: walletDirectory)
+        guard let source = Self.newerFile(preferred: localFile, other: existingBackupFile) else {
+            Self.logger.info("No wallet database to export, locally or in the iCloud backup slot")
+            return nil
+        }
+        if source != localFile {
+            Self.logger.info("Exporting the iCloud backup file: it is newer than the local database, or there is no local database")
+        }
+        return shareableCopy(of: source)
+    }
+
+    /// Picks `other` only when both exist and `other` is strictly newer by
+    /// modification date; `preferred` otherwise, including when either date
+    /// is unreadable. Nil when neither exists.
+    static func newerFile(preferred: URL?, other: URL?) -> URL? {
+        guard let preferred else { return other }
+        guard let other,
+              let preferredDate = modificationDate(of: preferred),
+              let otherDate = modificationDate(of: other) else { return preferred }
+        return otherDate > preferredDate ? other : preferred
+    }
+
+    private static func modificationDate(of file: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: file.path))?[.modificationDate] as? Date
+    }
+
+    /// `getShareableWalletFileURL()` for callers without a wallet handle
+    /// (the delete flow on a read-only secondary).
+    static func shareableWalletFileURL() -> URL? {
+        WalletBackupService(walletDirectory: getWalletDirectory()).getShareableWalletFileURL()
+    }
+
+    /// Copies a database file into the temp directory under a timestamped
+    /// name the share sheet can hand out. The copy stays in the app's temp
+    /// directory until the system purges it, as before.
+    private func shareableCopy(of sourceFile: URL) -> URL? {
         // Create temp directory for shareable backup
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent("ArkeBackups", isDirectory: true)
@@ -500,13 +552,13 @@ class WalletBackupService {
             try? FileManager.default.removeItem(at: tempFile)
         }
         
-        // Copy backup to temp location
+        // Copy to temp location
         do {
-            try FileManager.default.copyItem(at: backupFile, to: tempFile)
-            Self.logger.debug("Created shareable backup at: \(tempFile.path)")
+            try FileManager.default.copyItem(at: sourceFile, to: tempFile)
+            Self.logger.debug("Created shareable copy of \(sourceFile.lastPathComponent) at: \(tempFile.path)")
             return tempFile
         } catch {
-            Self.logger.error("Failed to create shareable backup: \(error.localizedDescription)")
+            Self.logger.error("Failed to create shareable copy: \(error.localizedDescription)")
             return nil
         }
     }

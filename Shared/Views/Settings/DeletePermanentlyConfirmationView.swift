@@ -226,6 +226,12 @@ struct DeletePermanentlyConfirmationView: View {
                 .padding(.bottom, 30)
             }
         }
+        // A drag down must not do what the disabled Cancel refuses: the
+        // wipe itself would continue (its task does not belong to this
+        // sheet), but the user would land on the Delete wallet page with
+        // no way back in and the commitment framing gone (DECIDED
+        // 2026-11-12, trace in Features/Wallet_Deletion_Export_Step.md §9.1).
+        .interactiveDismissDisabled(isDeleting)
     }
     
     /// The override's consequence, named devices and all, plus the one

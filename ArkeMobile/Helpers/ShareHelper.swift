@@ -14,8 +14,10 @@ struct ShareHelper {
     /// Presents the share sheet with multiple items
     /// - Parameters:
     ///   - items: The items to share (can be String, URL, Data, etc.)
-    ///   - completion: Optional completion handler
-    static func share(items: [Any], from viewController: UIViewController? = nil, completion: (() -> Void)? = nil) {
+    ///   - completion: Optional completion handler; `true` when the user
+    ///     finished an activity (saved, sent, copied), `false` when the sheet
+    ///     was dismissed or the activity failed. Called on the main thread.
+    static func share(items: [Any], from viewController: UIViewController? = nil, completion: ((Bool) -> Void)? = nil) {
         guard !items.isEmpty else { return }
         
         let activityViewController = UIActivityViewController(
@@ -42,8 +44,8 @@ struct ShareHelper {
             popover.permittedArrowDirections = []
         }
         
-        activityViewController.completionWithItemsHandler = { _, _, _, _ in
-            completion?()
+        activityViewController.completionWithItemsHandler = { _, completed, _, error in
+            completion?(completed && error == nil)
         }
         
         presentingVC?.present(activityViewController, animated: true)

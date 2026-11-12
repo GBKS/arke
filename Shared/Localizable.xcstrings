@@ -2252,6 +2252,35 @@
         }
       }
     },
+    "accessibility_step_number %lld %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Schritt %1$lld: %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Step %1$lld: %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ステップ %1$lld: %2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "步驟 %1$lld：%2$@"
+          }
+        }
+      }
+    },
     "accessibility_switch_to_mainnet" : {
       "localizations" : {
         "de" : {
@@ -9002,6 +9031,7 @@
       }
     },
     "button_manual_backup" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -24616,31 +24646,205 @@
         }
       }
     },
+    "settings_delete_export_body" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alles zu löschen entfernt auch das iCloud-Backup des Wallets. Sichere zuerst deine eigene Kopie."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Deleting everything also removes the wallet's iCloud backup. Save your own copy first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてを削除すると、ウォレットの iCloud バックアップも削除されます。先に自分用のコピーを保存してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "刪除所有內容也會移除錢包的 iCloud 備份。請先儲存你自己的副本。"
+          }
+        }
+      }
+    },
+    "settings_delete_export_metadata_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Optional. Kontakte, Tags, Notizen und Profil."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Optional. Contacts, tags, notes, and profile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "任意。連絡先、タグ、メモ、プロフィール。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選用。聯絡人、標籤、備註與個人檔案。"
+          }
+        }
+      }
+    },
+    "settings_delete_export_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nimm deine Daten mit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Take your data with you"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "データを持ち出す"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "帶走你的資料"
+          }
+        }
+      }
+    },
+    "settings_delete_export_wallet_file" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wallet-Backup-Datei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Wallet backup file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットのバックアップファイル"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包備份檔案"
+          }
+        }
+      }
+    },
+    "settings_delete_export_wallet_file_missing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auf diesem Gerät ist keine Wallet-Backup-Datei verfügbar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No wallet backup file is available on this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスにはウォレットのバックアップファイルがありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置上沒有可用的錢包備份檔案。"
+          }
+        }
+      }
+    },
+    "settings_delete_export_wallet_file_subtitle" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nötig, um das Wallet mit deiner Wiederherstellungsphrase wiederherzustellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Needed to restore the wallet with your recovery phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズと合わせてウォレットを復元するために必要"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "與復原片語搭配復原錢包時所需"
+          }
+        }
+      }
+    },
     "settings_delete_forfeit_last_device %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dein Zahlungen-Guthaben von %1$@ verfällt in etwa %2$@, sofern dieses Wallet nicht vorher aus seiner Wiederherstellungsphrase wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
+            "value" : "Dein Zahlungen-Guthaben von %1$@ verfällt in etwa %2$@, sofern dieses Wallet nicht vorher wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Your Payments balance of %1$@ is forfeited in about %2$@ unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+            "value" : "Your Payments balance of %1$@ is forfeited in about %2$@ unless this wallet is recovered and refreshed before then. Send it out first if you can."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%1$@ の支払い残高は、それまでにリカバリーフレーズからこのウォレットを復元して更新しない限り、約 %2$@ 後に失われます。可能であれば先に送金してください。"
+            "value" : "%1$@ の支払い残高は、それまでにこのウォレットを復元して更新しない限り、約 %2$@ 後に失われます。可能であれば先に送金してください。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "除非在到期前以復原片語復原這個錢包並完成更新，否則你的支付餘額 %1$@ 將在約 %2$@ 後喪失。可以的話，請先把它傳送出去。"
+            "value" : "除非在到期前復原這個錢包並完成更新，否則你的支付餘額 %1$@ 將在約 %2$@ 後喪失。可以的話，請先把它傳送出去。"
           }
         }
       }
@@ -24651,25 +24855,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dein Zahlungen-Guthaben von %@ verfällt bei Ablauf, sofern dieses Wallet nicht vorher aus seiner Wiederherstellungsphrase wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
+            "value" : "Dein Zahlungen-Guthaben von %@ verfällt bei Ablauf, sofern dieses Wallet nicht vorher wiederhergestellt und erneuert wird. Sende es vorher weg, wenn du kannst."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Your Payments balance of %@ is forfeited at expiry unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can."
+            "value" : "Your Payments balance of %@ is forfeited at expiry unless this wallet is recovered and refreshed before then. Send it out first if you can."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%@ の支払い残高は、期限までにリカバリーフレーズからこのウォレットを復元して更新しない限り、期限切れ時に失われます。可能であれば先に送金してください。"
+            "value" : "%@ の支払い残高は、期限までにこのウォレットを復元して更新しない限り、期限切れ時に失われます。可能であれば先に送金してください。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "除非在到期前以復原片語復原這個錢包並完成更新，否則你的支付餘額 %@ 將在到期時喪失。可以的話，請先把它傳送出去。"
+            "value" : "除非在到期前復原這個錢包並完成更新，否則你的支付餘額 %@ 將在到期時喪失。可以的話，請先把它傳送出去。"
           }
         }
       }
@@ -25109,6 +25313,93 @@
         }
       }
     },
+    "settings_delete_step_confirm_words" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bestätige zwei Wörter deiner Wiederherstellungsphrase"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Confirm two words of your recovery phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズの2つの単語を確認する"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "確認復原片語中的兩個字詞"
+          }
+        }
+      }
+    },
+    "settings_delete_step_delete_permanently" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Endgültig löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Delete permanently"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "永久に削除する"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "永久刪除"
+          }
+        }
+      }
+    },
+    "settings_delete_step_save_backup" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sichere deine Wallet-Backup-Datei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Save your wallet backup file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットのバックアップファイルを保存する"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "儲存你的錢包備份檔案"
+          }
+        }
+      }
+    },
     "settings_delete_wallet_title" : {
       "localizations" : {
         "de" : {
@@ -25196,7 +25487,7 @@
       }
     },
     "settings_delete_warning_everywhere_intro" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25220,6 +25511,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "這將從此裝置和 iCloud 永久刪除你的錢包，包括復原片語。\n\n只有你抄寫下來的副本才能將它找回，下一步會要求輸入其中兩個字詞。若也想復原交易記錄，請先備份錢包狀態檔案。"
+          }
+        }
+      }
+    },
+    "settings_delete_warning_everywhere_intro_recovery" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät und aus iCloud, einschließlich der Wiederherstellungsphrase.\n\nUm es später wiederherzustellen, brauchst du deine Wiederherstellungsphrase und die Wallet-Backup-Datei. Die Phrase allein ist für Notfälle."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nTo restore it later you need your recovery phrase and the wallet backup file. The phrase alone is for emergencies."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これにより、このデバイスと iCloud からウォレットが永続的に削除されます。リカバリーフレーズも含まれます。\n\n後で復元するには、リカバリーフレーズとウォレットのバックアップファイルが必要です。フレーズだけでの復元は緊急時用です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這將從此裝置和 iCloud 永久刪除你的錢包，包括復原片語。\n\n之後若要復原，你需要復原片語和錢包備份檔案。僅靠片語復原只適用於緊急情況。"
           }
         }
       }
@@ -28261,6 +28581,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在解析地址…"
+          }
+        }
+      }
+    },
+    "status_saved" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gesichert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Saved"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "保存済み"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已儲存"
           }
         }
       }

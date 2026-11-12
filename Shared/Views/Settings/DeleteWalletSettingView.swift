@@ -21,9 +21,13 @@ struct DeleteWalletSettingView: View {
     /// Set when the user takes the informed override. Reset on sheet dismissal so
     /// it can never leak into a subsequent, ordinary deletion.
     @State private var overrideRequested = false
-    /// The two-word phrase check, pushed in front of the slider sheet on a
-    /// full wipe (DECIDED 2026-10-15). The sheet, the deletion call and the
-    /// abort handling stay here; the pushed screen only reports a pass.
+    /// The full-wipe sub-flow, pushed in front of the slider sheet: the
+    /// optional export step (DECIDED 2026-11-12) and, from it, the two-word
+    /// phrase check (DECIDED 2026-10-15). The sheet, the deletion call and
+    /// the abort handling stay here; the pushed screens only report a
+    /// Continue and a pass. Both flags live here so the abort can pop the
+    /// whole sub-flow and the override lifecycle has one root to watch.
+    @State private var showingExportStep = false
     @State private var showingPhraseConfirmation = false
     @State private var isCheckingDevices = true
     @State private var deletionSummary: DeletionSummary?
@@ -53,32 +57,47 @@ struct DeleteWalletSettingView: View {
                         .lineSpacing(6)
                         .foregroundColor(.secondary)
 
-                    // Manual export, full-wipe path only, right under the
-                    // sentence that asks for it: the wipe empties the iCloud
+                    // The three steps ahead as a list (Christoph, 2026-11-12:
+                    // a second paragraph gets skipped). Last-device path only;
+                    // the override route reaches the same steps but its intro
+                    // is the local-only copy, so no list under it.
+                    if deletionStrategy == .promptForCloudData {
+                        // Same size as the intro (Christoph, 2026-11-12: callout
+                        // read as a footnote to the paragraph it replaces)
+                        VStack(alignment: .leading, spacing: 14) {
+                            ForEach(Array(fullWipeSteps.enumerated()), id: \.offset) { index, step in
+                                HStack(alignment: .firstTextBaseline, spacing: 14) {
+                                    Text(verbatim: "\(index + 1)")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(Color.Arke.gold4)
+                                        .frame(width: 28, height: 28)
+                                        .background(Color.Arke.gold)
+                                        .clipShape(Circle())
+                                        .accessibilityHidden(true)
+                                    Text(step)
+                                        .font(.title3)
+                                        .foregroundColor(.primary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .accessibilityElement(children: .combine)
+                                .accessibilityLabel(String(format: String(localized: "accessibility_step_number %lld %@", defaultValue: "Step %lld: %@"), Int64(index + 1), step))
+                            }
+                        }
+                        .padding(.top, 10)
+
+                        // Process above, consequence below
+                        Divider()
+                            .padding(.top, 12)
+                    }
+
+                    // The manual-export link that sat here until 2026-11-12
+                    // became the export step of the full-wipe sub-flow
+                    // (`DeleteExportStepView`): the wipe empties the iCloud
                     // backup slot and the mirrored history, so the user's own
                     // file is the only way to restore history. A local-only
                     // deletion writes its final state file to the slot itself
                     // and the other devices keep the mirrored rows (Christoph,
-                    // 2026-10-15), so there is nothing to ask for.
-                    #if os(iOS)
-                    if isFullWipePath {
-                        NavigationLink {
-                            ManualBackupView_iOS()
-                                .navigationTitle(L10n.settingsManualBackup)
-                                .navigationBarTitleDisplayMode(.large)
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text(String(localized: "button_manual_backup", defaultValue: "Back up Wallet"))
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundColor(.Arke.gold2)
-                    }
-                    #endif
+                    // 2026-10-15), so that path gets no export step.
 
                     if let deleteError = deleteError {
                         ErrorBox(errorMessage: deleteError)
@@ -202,29 +221,41 @@ struct DeleteWalletSettingView: View {
             await loadForfeitInputs()
         }
         #if os(iOS)
-        .navigationDestination(isPresented: $showingPhraseConfirmation) {
-            phraseConfirmationScreen
+        .navigationDestination(isPresented: $showingExportStep) {
+            exportStepScreen
         }
         #else
-        .sheet(isPresented: $showingPhraseConfirmation) {
-            phraseConfirmationScreen
+        .sheet(isPresented: $showingExportStep) {
+            exportStepScreen
                 .frame(minWidth: 420, minHeight: 420)
         }
         #endif
-        .onChange(of: showingPhraseConfirmation) { _, isShowing in
-            // Leaving the phrase screen without passing drops the override,
-            // so it can never leak into a later, ordinary deletion. A pass
-            // that is handing over to the slider sheet (macOS closes the
-            // phrase sheet first, see `phraseConfirmationScreen`) keeps it.
+        .onChange(of: showingExportStep) { _, isShowing in
+            // Leaving the sub-flow at its root without passing drops the
+            // override, so it can never leak into a later, ordinary
+            // deletion. Popping from the phrase screen back to the export
+            // step keeps it: the user is still inside the flow they chose
+            // and can continue to the words again. A pass that is handing
+            // over to the slider sheet (macOS closes both sheets first, see
+            // `phraseConfirmationScreen`) keeps it too.
             if !isShowing && !showingDeletionConfirmation {
                 overrideRequested = false
             }
+            // The phrase flag is a destination nested in the export step. A
+            // long-press back jump pops both levels at once, and whether
+            // SwiftUI resets the nested binding then is not something to
+            // rely on: a stale true would push the words straight over the
+            // next export step (review 2026-11-12).
+            if !isShowing {
+                showingPhraseConfirmation = false
+            }
         }
         .sheet(isPresented: $showingDeletionConfirmation, onDismiss: {
-            // The override survives a cancelled sheet only while the phrase
-            // screen is still up: the user can slide again from there, and
-            // the scope they confirmed on it must be the one that runs
-            if !showingPhraseConfirmation {
+            // The override survives a cancelled sheet only while the
+            // sub-flow is still up: the user can slide again from the phrase
+            // screen, and the scope they confirmed on it must be the one
+            // that runs
+            if !showingExportStep {
                 overrideRequested = false
             }
             // Re-check on every dismissal: the user may have backed out after
@@ -252,26 +283,52 @@ struct DeleteWalletSettingView: View {
         }
     }
 
+    /// The export step, with the phrase check as its own destination so a
+    /// back gesture from the words lands on the exports, not on this screen.
+    private var exportStepScreen: some View {
+        DeleteExportStepView {
+            showingPhraseConfirmation = true
+        }
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        // A focused flow from here on: the tabs would park the sub-flow
+        // with the override held and age any file already downloaded
+        // (DECIDED 2026-11-12). The Delete wallet page keeps them.
+        .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $showingPhraseConfirmation) {
+            phraseConfirmationScreen
+        }
+        #else
+        .sheet(isPresented: $showingPhraseConfirmation) {
+            phraseConfirmationScreen
+                .frame(minWidth: 420, minHeight: 420)
+        }
+        #endif
+    }
+
     private var phraseConfirmationScreen: some View {
         DeletePhraseConfirmationView {
             showingDeletionConfirmation = true
             #if os(macOS)
-            // Both are sheets on this view and SwiftUI presents one at a
-            // time: close the phrase sheet so the queued slider can appear.
-            // The flag order keeps the override (see the onChange above).
+            // The slider is a sheet on this view and the sub-flow is two
+            // nested sheets on it; SwiftUI presents one chain at a time, so
+            // close the sub-flow for the queued slider to appear. The flag
+            // order keeps the override (see the onChange above).
             showingPhraseConfirmation = false
+            showingExportStep = false
             #endif
         }
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         #endif
     }
 
     /// Both delete buttons land here. A full wipe (last device, or the
-    /// informed override) goes through the two-word phrase check first;
-    /// local-only deletion keeps the seed on the account and opens the
-    /// slider sheet directly. The override flag is set explicitly on every
-    /// tap so no earlier state can carry over.
+    /// informed override) goes through the export step and the two-word
+    /// phrase check first; local-only deletion keeps the seed on the
+    /// account and opens the slider sheet directly. The override flag is
+    /// set explicitly on every tap so no earlier state can carry over.
     private func startDeletion(override: Bool) {
         overrideRequested = override
         deleteError = nil
@@ -282,14 +339,18 @@ struct DeleteWalletSettingView: View {
             return
         }
 
-        showingPhraseConfirmation = true
+        showingExportStep = true
     }
 
-    /// Whether a full wipe is reachable from this screen: the last-device
-    /// strategy, or a `.localOnly` verdict while the override is offered
-    /// (same rule as the forfeit warning). Drives the manual-export link.
-    private var isFullWipePath: Bool {
-        deletionStrategy == .promptForCloudData || showsOverrideOption
+    /// The three steps of a full wipe, in order, for the list under the
+    /// last-device intro.
+    private var fullWipeSteps: [String] {
+        [
+            String(localized: "settings_delete_step_save_backup", defaultValue: "Save your wallet backup file"),
+            String(localized: "settings_delete_step_confirm_words", defaultValue: "Confirm two words of your recovery phrase"),
+            // Names the act and the sheet's title, not the gesture
+            String(localized: "settings_delete_step_delete_permanently", defaultValue: "Delete permanently"),
+        ]
     }
 
     /// Whether to offer the informed override — see
@@ -330,9 +391,12 @@ struct DeleteWalletSettingView: View {
             // registry rows haven't arrived, or never will
             return String(localized: "settings_delete_warning_local_only_unnamed", defaultValue: "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet.")
         case .promptForCloudData:
-            // Last device: carries the phrase and backup message too, so the
-            // screen has one paragraph instead of an intro plus a reminder box
-            return String(localized: "settings_delete_warning_everywhere_intro", defaultValue: "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nOnly a copy you wrote down can bring it back, and the next step asks for two of its words. To restore your history as well, back up the wallet state file first.")
+            // Last device: the consequence and the recommended way back
+            // (phrase + wallet backup file; the phrase alone is the emergency
+            // path, Christoph 2026-11-12). The three steps follow as a list.
+            // New key 2026-11-12: the old key had translations and would have
+            // kept its English value over a changed default.
+            return String(localized: "settings_delete_warning_everywhere_intro_recovery", defaultValue: "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nTo restore it later you need your recovery phrase and the wallet backup file. The phrase alone is for emergencies.")
         case nil:
             return String(localized: "settings_delete_warning_device", defaultValue: "This will permanently delete your wallet from this device.")
         }
@@ -363,9 +427,9 @@ struct DeleteWalletSettingView: View {
 
         switch (warning.scope, time) {
         case (.lastDevice, let time?):
-            return String(localized: "settings_delete_forfeit_last_device %@ %@", defaultValue: "Your Payments balance of \(amount) is forfeited in about \(time) unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can.")
+            return String(localized: "settings_delete_forfeit_last_device %@ %@", defaultValue: "Your Payments balance of \(amount) is forfeited in about \(time) unless this wallet is recovered and refreshed before then. Send it out first if you can.")
         case (.lastDevice, nil):
-            return String(localized: "settings_delete_forfeit_last_device_no_time %@", defaultValue: "Your Payments balance of \(amount) is forfeited at expiry unless this wallet is recovered from its recovery phrase and refreshed before then. Send it out first if you can.")
+            return String(localized: "settings_delete_forfeit_last_device_no_time %@", defaultValue: "Your Payments balance of \(amount) is forfeited at expiry unless this wallet is recovered and refreshed before then. Send it out first if you can.")
         case (.otherDevices, let time?):
             return String(localized: "settings_delete_forfeit_other_devices %@ %@", defaultValue: "Your Payments balance of \(amount) needs a refresh within about \(time). After deleting here, open the wallet on another device so it can refresh in time.")
         case (.otherDevices, nil):
@@ -515,14 +579,16 @@ struct DeleteWalletSettingView: View {
         onWalletDeleted?()
         showingDeletionConfirmation = false
         showingPhraseConfirmation = false
+        showingExportStep = false
     }
 
     /// The one response to every pre-seed failure: close the slider sheet,
-    /// pop the phrase screen, drop the override, show the error here.
+    /// pop the whole sub-flow, drop the override, show the error here.
     private func returnToInfoScreen(error: Swift.Error) {
         overrideRequested = false
         showingDeletionConfirmation = false
         showingPhraseConfirmation = false
+        showingExportStep = false
         deleteError = error.localizedDescription
     }
 }
