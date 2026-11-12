@@ -106,38 +106,16 @@ struct PhraseConfirmationTests {
         #expect(!Self.fixed.matches(["about"]))
     }
 
-    // The four-letter rule (DECIDED 2026-11-12): the first four letters of a
-    // BIP39 English word identify it, so they are accepted in place of the
-    // whole word and letters after the fourth are not checked.
+    // Whole words only (DECIDED 2026-11-12, after a four-letter prefix rule
+    // was accepted and removed the same day): a partial word being accepted
+    // reads as a broken check, and a longer word must not pass on its stem.
 
-    @Test("The first four letters pass, three do not")
-    func fourLetterPrefixPasses() {
-        #expect(Self.fixed.matches(["abou", "absu"]))
-        #expect(Self.fixed.matches(["ABOU ", "absurd"]))
-        #expect(!Self.fixed.matches(["abo", "absurd"]))
-        #expect(!Self.fixed.matches(["about", "abs"]))
-    }
-
-    @Test("A typo after the fourth letter is forgiven, one inside it is not")
-    func tailTypoForgiven() {
-        #expect(Self.fixed.matches(["abouy", "absurdd"]))
-        #expect(!Self.fixed.matches(["abuot", "absurd"]))
-    }
-
-    @Test("The four-letter rule rests on the word list: every English word is unique in its first four letters")
-    func fourLettersIdentifyEveryWord() {
-        let words = BIP39Examples.englishWordList
-        #expect(words.count == 2048)
-        let prefixes = Set(words.map { String($0.prefix(PhraseConfirmation.identifyingPrefixLength)) })
-        #expect(prefixes.count == words.count)
-    }
-
-    @Test("Words shorter than four letters must match whole")
-    func shortWordsMatchWhole() {
+    @Test("A prefix of the word, a trailing typo and a longer word on the same stem all fail")
+    func partialWordsFail() {
+        #expect(!Self.fixed.matches(["abou", "absurd"]))
+        #expect(!Self.fixed.matches(["about", "absurdd"]))
         let short = PhraseConfirmation.Challenge(positions: [1, 2], expected: ["act", "add"])
-        #expect(short.matches(["act", "add"]))
         #expect(!short.matches(["actor", "add"]))
-        #expect(!short.matches(["ac", "add"]))
-        #expect(!short.matches(["act", "addict"]))
+        #expect(short.matches(["act", "add"]))
     }
 }
