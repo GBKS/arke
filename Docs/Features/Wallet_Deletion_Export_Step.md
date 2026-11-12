@@ -1,12 +1,13 @@
 # Delete Everywhere: Export Step and the Four-Letter Rule
 
-**Status: DONE 2026-11-12 (Tier 2 export step, Tier 3 four-letter rule;
+**Status: DONE 2026-11-12 (Tier 2 export step, Tier 3 four-letter rule, the
+latter REMOVED 2026-11-12 (Christoph, same day: an unannounced shortcut reads as a broken check when a partial word is accepted; whole-word matching restored, `Phrase_Entry_Autocomplete.md` §8);
 both DECIDED by Christoph 2026-11-12 in one message, multiple choice for
 the two words declined the same message). One-phone device check passed
 the same afternoon (§8.1, "works well"); the two-device half stays on the
 deletion set's Device-stage checklist. Fourth round the same day: metadata
 row hidden when nothing user-added exists (§11, DECIDED and built),
-autocomplete on the verification screen DECIDED for its own session. Adversarial
+autocomplete on the verification screen DECIDED for its own session, then declined there (2026-11-12, `Phrase_Entry_Autocomplete.md`). Adversarial
 pass in §9: one CONFIRMED finding fixed in-session (newest-wins between the
 local file and the iCloud slot), one PLAUSIBLE closed defensively (nested
 flag reset), the rest owed to the device step. Scoped suites 17/17; full
@@ -31,6 +32,9 @@ on; its §3 and §4 carry the 2026-11-12 amendments). Area doc:
    guess gains nothing and a typo after the fourth letter is forgiven).
    The 2026-10-15 ruling against per-field word-list checking stands; the
    prefix rule is invisible to the user and is not a second mechanism.
+   **Reversed the same day:** the invisibility is the problem; a user who
+   sees four letters accepted wonders why the check passed. Whole-word
+   matching is back (`Phrase_Entry_Autocomplete.md` §8).
 2. A screen in the flow to download the backup file, instead of the "Back
    up Wallet" link into the three-page manual backup section and back?
    **Yes**, as an optional step before the phrase check, exporting the
@@ -70,6 +74,7 @@ recovery phrase" / "Optional. Contacts, tags, notes, and profile.");
 (Settings, devices, deletion) with the recommendation against; never
 decided before, distinct from the 2026-10-15 ruling on per-field
 word-list checking and from the Tier 3 import-screen autocomplete item.
+Declined the same day after the plan (`Phrase_Entry_Autocomplete.md`).
 
 ## 2. Trace (all **verified**, read 2026-11-12)
 
@@ -87,7 +92,10 @@ word-list checking and from the Tier 3 import-screen autocomplete item.
 
 ## 3. Design
 
-### 3.1 Four-letter rule (`PhraseConfirmation`)
+### 3.1 Four-letter rule (`PhraseConfirmation`) — removed the same day
+
+*History; `matches` is an exact compare again and `wordMatches`,
+`identifyingPrefixLength` and the premise test are gone.*
 
 `wordMatches(answer:expected:)`: whole-word equality, or both at least
 `identifyingPrefixLength` (4) letters and equal in their first four. Words
@@ -168,7 +176,7 @@ compile-only, nothing executed (§9 F5).
 ## 4. Claims the design rests on
 
 - **verified** BIP39 English four-letter uniqueness (test executed against
-  the package's list).
+  the package's list; the test was deleted with the rule the same day).
 - **verified** the slot export is a copy of the ubiquity-container file and
   the restore path is newest-wins (trace steps 3, 9).
 - **verified** rule 17's suspension starts inside `deleteWallet`, after the
@@ -218,7 +226,8 @@ sign-off pending with the rest); glossary row for "wallet backup file".
 
 `PhraseConfirmationTests`: four letters pass and three fail; a typo after
 the fourth letter passes and one inside fails; words under four letters
-match whole; the word-list uniqueness premise. `WalletFileExportTests`:
+match whole; the word-list uniqueness premise (all four replaced by one
+test that partial words fail when the rule was removed the same day). `WalletFileExportTests`:
 the live file is copied, not handed out; the legacy name is exported; live
 beats legacy; the newest-wins rule between local and slot (strictly newer
 wins, tie and unreadable date keep local, missing side yields the other).
@@ -240,7 +249,7 @@ One phone, primary, wallet with a phrase, mainnet or signet:
 4. Phrase screen → long-press Back → Delete wallet → Continue → the export
    step again, not the words (§9 F3).
 5. Type the first four letters of each word → Verify passes; three letters
-   → refused.
+   → refused. *(Rule removed after this check ran; whole words again.)*
 6. Right words → slider → Cancel → back on the words; pop twice → the
    device re-check runs; Continue → export step → Continue → words.
 7. Right words → slide → full wipe completes, onboarding.

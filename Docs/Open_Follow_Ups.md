@@ -90,9 +90,9 @@ Ark address detection with the nothing-payable send form, built, twice
 reviewed and device-checked 2026-11-04
 (`Features/Foreign_Server_Ark_Address.md`), not yet in a build. These
 four make the custom-server release (DECIDED 2026-11-04, Tier 0 does not
-gate it). Also since: the deletion export step and the four-letter rule on
-the two-word check, built, reviewed and device-checked 2026-11-12
-(`Features/Wallet_Deletion_Export_Step.md`), not yet in a build.
+gate it). Also since: the deletion export step, built, reviewed and
+device-checked 2026-11-12 (`Features/Wallet_Deletion_Export_Step.md`), not
+yet in a build; its four-letter rule was removed again the same day.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -952,15 +952,6 @@ log).
   a stale row is listed but is not a blocker; and `checkForPrimaryDevice`
   calls `getPrimaryDevice()` unscoped while `checkForNoPrimaryDevice` is
   wallet-scoped. `Development/Contract_Audit_2026_11.md` A.10–11.
-- [ ] **Autocomplete on the phrase verification screen** — DECIDED
-  2026-11-12 (Christoph), own session: word suggestions while typing the
-  two words on `DeletePhraseConfirmationView`. Design constraint to settle
-  in that session: suggestions move the check toward recognition for
-  anyone who remembers a first letter (why multiple choice was declined),
-  so the plan should say how many typed letters precede a suggestion and
-  whether the import screen's item (Tier 3 First use, "Import —
-  autocomplete for seed words", `EnglishWordListProvider`) shares the
-  component. `Features/Wallet_Deletion_Export_Step.md` §1.2.
 - [ ] **DECIDE — recovery phrase on a seed-synced secondary**: the matrix
   says ✓, but the Settings entry is hidden whenever `isReadOnlyMode`
   (`SettingsView_iOS`, desktop `SettingsView`). Fix the row or show the
@@ -998,6 +989,10 @@ log).
   once there are funds** (no such flag exists; `BackupStatus.reminderMessage`
   and `shouldShowBackupReminder` exist unwired, see Tier 4 process state).
 - [ ] **Import — autocomplete for seed words** (`EnglishWordListProvider`).
+  Christoph's intent (2026-11-12, not yet scheduled): first split the import
+  screen into a recovery-phrase screen and a wallet-backup-file screen; the
+  phrase screen then takes the suggestions. Engine design, prefix arithmetic
+  and the cached-list note: `Features/Phrase_Entry_Autocomplete.md` §3, §6.
 - [ ] **Import — validate the phrase before handing it to bark** (moved
   down from Tier 0 2026-10-09: `MnemonicChecksumTests` shows bark rejects a
   bad checksum or unknown word before any network I/O). Fix: call the

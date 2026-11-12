@@ -215,6 +215,25 @@ awaiting Christoph's call — the items below assume acceptance:
   (`log show --info --debug`, or the info lines vanish).
 
 ## Wallet Deletion & Device Registry
+- [x] **Autocomplete on the phrase verification screen — declined 2026-11-12** — was DECIDED
+  2026-11-12 (Christoph) for its own session: word suggestions while typing the
+  two words on `DeletePhraseConfirmationView`. Design constraint to settle
+  in that session: suggestions move the check toward recognition for
+  anyone who remembers a first letter (why multiple choice was declined),
+  so the plan should say how many typed letters precede a suggestion and
+  whether the import screen's item (Tier 3 First use, "Import —
+  autocomplete for seed words", `EnglishWordListProvider`) shares the
+  component. `Features/Wallet_Deletion_Export_Step.md` §1.2. Plan with
+  the four rulings owed: `Features/Phrase_Entry_Autocomplete.md`
+  (PROPOSED 2026-11-12).
+  Closure 2026-11-12: planned, then declined by Christoph on the plan's
+  arithmetic (`Features/Phrase_Entry_Autocomplete.md` §3–§4): the four-letter
+  rule already caps typing at four letters per word; a single-candidate
+  completion saves one or two keystrokes for 31% of words, any list mode
+  reintroduces the recognition menu declined with multiple choice and the
+  per-field validity signal declined 2026-10-15. Nothing built. Autocomplete
+  moves to the import screen's own Tier 3 item (First use), which inherits
+  the engine design.
 - [x] **Deletion export step + four-letter rule — DONE 2026-11-12**
   (Christoph, one phone, "works well", after four rounds of rulings the
   same day): required wallet backup file export (newer of live `db.sqlite`
@@ -225,8 +244,11 @@ awaiting Christoph's call — the items below assume acceptance:
   the deletion set's Device stage: the two-device half (override route
   shows the step; a demoted device exports the newer slot copy). Also from
   the same session: swipe-down guard on the slider sheet during the wipe
-  (§9.1, DECIDED and applied, not device-run). Open: autocomplete on the
-  verification screen (Tier 3, DECIDED, own session).
+  (§9.1, DECIDED and applied, not device-run). Later the same day: the
+  four-letter rule was removed again (Christoph: hidden shortcut reads as a
+  broken check), whole-word matching restored, scoped suite green; and the
+  verification-screen autocomplete item was planned and declined (entry
+  above).
 - [x] **Two-device on-device verify of the deletion override — DONE
   2026-09-26** (Christoph, two linked devices, against the 2026-09-25 build
   with the recency gate, pre-wipe recheck and seed-last ordering): the flow

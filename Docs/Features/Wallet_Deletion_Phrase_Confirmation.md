@@ -10,7 +10,8 @@ in-session; full mobile suite green on the iPhone 17 Pro simulator after
 the fixes (9 new test cases). Left for the Device stage: the two-device
 override route (§9, second paragraph). Amended 2026-11-12 (§3 item 6, §4.1,
 §4.4, §4.5, §12): the four-letter rule and the export step in front of this
-screen, built in `Wallet_Deletion_Export_Step.md`.**
+screen, built in `Wallet_Deletion_Export_Step.md`; the four-letter rule was
+removed again the same day (§3 item 6), whole-word matching stands.**
 
 Backlog entry: `Open_Follow_Ups.md`, Decisions, "phrase confirmation on
 full wipe", and the Current train block, deletion cluster. Area doc:
@@ -69,7 +70,8 @@ stake but cannot tell a user with no written phrase from one with it.
      not possession); **the first four letters of each word are accepted**
      instead (BIP39 English four-letter uniqueness; words under four
      letters match whole). An **export step** precedes this screen on the
-     full-wipe path. Both in `Wallet_Deletion_Export_Step.md`.
+     full-wipe path. Both in `Wallet_Deletion_Export_Step.md`. **Four-letter
+     rule REMOVED 2026-11-12 (Christoph, same day: an unannounced shortcut reads as a broken check when a partial word is accepted; whole-word matching restored, `Phrase_Entry_Autocomplete.md` §8).** Multiple choice stays declined; the export step stays.
 
 ## 4. Design
 
@@ -93,6 +95,7 @@ One decision type next to `DeletionForfeitWarning`:
   BIP39 word-list lookup, no hint which word failed. *Superseded
   2026-11-12 (§3 item 6):* whole word **or** the first four letters, via
   `wordMatches(answer:expected:)`; still no word-list lookup and no hint.
+  *Reinstated the same day:* exact compare only, `wordMatches` deleted.
 - An injectable generator parameter on the factory for tests only.
 
 ### 4.2 The new screen: `DeletePhraseConfirmationView` (Shared)
@@ -395,7 +398,10 @@ Christoph asked whether the two words should be multiple choice (three
 options each) and whether a download screen belongs in the flow. Rulings
 and build in `Wallet_Deletion_Export_Step.md`: multiple choice declined,
 four-letter prefix accepted (`PhraseConfirmation.wordMatches`, tests
-extended, premise pinned against the BIP39 package list), export step
+extended, premise pinned against the BIP39 package list; **removed again
+later that day**, see §3 item 6, with `wordMatches`, the premise test and
+the `englishWordList` accessor deleted and one test pinning that partial
+words fail), export step
 pushed between the info screen and this one, with the phrase screen now a
 destination nested on the export step and the override lifecycle keyed to
 the export flag. §4.1, §4.4 and §4.5 above carry inline notes; the device
