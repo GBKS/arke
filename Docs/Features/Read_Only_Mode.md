@@ -92,3 +92,40 @@ Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, re
   reads it on a reinstall whose local breadcrumb is gone. Fix with this
   item or correct the inventory label (found 2026-10-16,
   `Features/Wallet_Deletion_Ghost_Hardening.md` §7).
+
+### Reachability re-read and device recipe (2026-11-12)
+
+Self-unlink is no longer offered on either platform. The state is reached
+when another device unlinks this one: `unlinkDevice` deletes the row and the
+`com.arke.device.registered.*` mirror keys but not this device's
+`device_<id>_isPrimary` flag. Static trace of the relaunch (second review,
+`Development/Contract_Audit_2026_11.md` A.1, not run): detection finds no
+row and returns `walletWithSeed`; `MainView_iOS` calls `initialize()`
+without `forceReadOnly`; `shouldBlockWalletAccess` passes all three layers
+(no `wasDemoted`, mirror flag still true, no row for layer 3);
+`checkReadOnlyMode` assumes primary. The wallet opens with spend rights for
+that whole session. `registerDeviceIfNeeded` then writes a secondary row and
+`writeOwnPrimaryFlag(false)`, which nothing in the running session observes,
+so only the *next* launch is blocked at layer 2. The window is one session.
+
+**Device recipe** (two phones, signet; the simulator does not count for
+anything seed-touching):
+
+1. A is primary, B a secondary with the seed synced; wait until Devices on B
+   lists A.
+2. On B, touch and hold A's row, confirm "Unlink A". B's log:
+   `Unlinked device … (registry row existed: true, …)`.
+3. Wait until the row deletion has reached A (A's own row gone from Devices
+   on A). Do not relaunch A before that or the run is void.
+4. Force-quit A, launch once. This first session is the one under test:
+   Send offered, a signet send to B succeeds, and the log holds
+   `ℹ️ [WalletManager] No device registration found, assuming primary device`
+   with no read-only line.
+5. Force-quit A, launch again. Expected read-only:
+   `🔒 [WalletManager] Device is in read-only mode (not primary device)`.
+   This is why a casual repro misses the bug.
+
+Falsified if the first relaunch already lands read-only; then something in
+`performInitialization` reads the missing row or the KVS flag differently
+from the trace and the item drops to "reachable only in theory". Cleanup:
+promote A on A (allowed, no primary row visible) or re-import.

@@ -7,7 +7,7 @@ feature or fix lands, update the scenario's status column; when a new user
 journey emerges, add it here FIRST and derive the work from it.
 
 Related: `Features/Read_Only_Mode.md`, `Features/Wallet_Deletion_And_Rejoin.md`,
-`Initialization/Launch_Sequence_Contract.md` (rules 14–20),
+`Initialization/Launch_Sequence_Contract.md` (rules 14–24),
 `Initialization/Startup_Wallet_Detection_Plan.md`.
 
 ## Principles (the physics of the system)
@@ -52,11 +52,28 @@ routes: wallet (spendable), read-only, rejoin, onboarding.
 | View balance/history/contacts/tags | ✓ | ✓ | ✓ |
 | Receive (show addresses) | ✓ | ✓ | ✓ |
 | Send / participate in rounds / exits | ✓ | — | — |
-| Show recovery phrase | ✓ | ✓ | — |
-| Promote self to primary | n/a | ✓ | — (needs seed first) |
+| Show recovery phrase | ✓ | — today (intended ✓) | — |
+| Promote self to primary | n/a | ✓ when no primary row exists | should be —; not enforced today |
 | Unlink another device | ✓ | ✓ | ✓ |
 | Delete from this device | ✓ | ✓ | ✓ |
-| Delete everything (full wipe) | last device only | last device only | last device only |
+| Delete everything (full wipe) | last device only, or the informed override | same | same |
+
+Where the code differs from the row (audit 2026-11-12,
+`Development/Contract_Audit_2026_11.md`):
+
+- *Send / exits:* Send is hidden in the UI, but no manager-level role guard
+  exists; what stops a secondary is the closed bark handle. The Exit screen
+  is reachable on secondaries (the read-only guard in `SettingsView_iOS` is
+  commented out) and inert for the same reason.
+- *Recovery phrase:* the Settings entry is hidden whenever `isReadOnlyMode`,
+  so a seed-synced secondary cannot show the phrase. The block is UI-only;
+  `getMnemonic()` has no role guard.
+- *Promote:* neither the button nor `promoteThisDeviceToPrimary` checks for
+  the seed, so a seedless device can promote into the seed-missing branch
+  (filed, Tier 1 Multi-device). Promotion is refused while any primary row
+  is visible, see S3.
+- *Unlink:* desktop has no unlink for mirror-only rows; desktop also has
+  "Unlink All Other Devices".
 
 (If a row is wrong, fix the row or file the bug — this table is the contract
 UI copy should reflect.)
@@ -115,7 +132,11 @@ Status: shipped, in daily use.
 User installs the app on a second device signed into the same iCloud account.
 Detection finds the KVS hash; the device registers as secondary
 (`allowPrimaryClaim: false`) and opens read-only. When iCloud Keychain
-delivers the seed, it becomes a full secondary (still not primary).
+delivers the seed, it becomes a full secondary (still not primary). In code
+that is the same read-only mode with a different reason (`seedNotSynced` →
+`notPrimary`), noticed on the next foreground return, not live; typing the
+phrase instead goes through import, which may claim primary when no active
+primary row is visible (audit 2026-11-12).
 Sub-case: seed not synced yet (iCloud Keychain off/lagging) → read-only with
 `seedNotSynced` explanation and manual phrase entry as fallback.
 
@@ -136,6 +157,17 @@ User promotes the secondary; the old primary observes the KVS
 `device_<id>_isPrimary` flip, demotes itself, and drops to read-only.
 Exposed via Settings → Linked Devices (promote/demote sheets on iOS).
 
+**Corrected 2026-11-12: the one-sided swap above is not what the code
+does.** `promoteThisDeviceToPrimary` throws `primaryDeviceAlreadyExists`
+while a primary row is visible and the promote button is hidden. No device
+writes another device's `device_<id>_isPrimary` (`writeOwnPrimaryFlag` is
+the sole writer), so there is no remote flip to observe. Today's swap is
+two steps: "Make Device Secondary" on the primary, then "Make Device
+Primary" on the secondary. DECIDED 2026-11-12: this is not ruled on its
+own; the swap becomes a guided step-by-step flow designed in the explicit
+device linking scope pass (see "Open questions" there). The walkthrough
+below still describes the one-sided design until that pass rewrites it.
+
 Walkthrough:
 - **Does (on the secondary):** Settings → Linked Devices → "Make This Device Primary", confirms (proposed: security check).
 - **Sees:** confirmation, then sending unlocks on this device.
@@ -144,8 +176,9 @@ Walkthrough:
 - **If both promoted at once:** reconciliation picks one deterministic winner; the loser self-demotes — no user action needed.
 
 Status: service + iOS UI shipped; two-primary races covered by reconciliation
-(`PrimaryDeviceReconciliationTests`). Gaps: desktop promote/demote UI parity;
-on-device verify of the live demotion handoff.
+(`PrimaryDeviceReconciliationTests`, the pure winner rule only). Gaps: the
+one-sided swap itself (see the correction above); desktop promote/demote UI
+parity; on-device verify of the demotion handoff.
 
 ### S4 — Lost primary: take over on the secondary, remove the lost device ⚠️/◻
 User lost the phone that was primary. On the secondary: promote self
@@ -155,10 +188,24 @@ the row's touch-and-hold context menu, deliberately undiscoverable until the
 S7 design lands). The lost device, if it ever comes back, observes its
 demotion and drops to read-only.
 
+**Corrected 2026-11-12: the order is the reverse, and the return case is
+not guaranteed.** While the lost primary's row exists the no-primary
+warning and the promote button stay hidden, and nothing ages a stale
+primary out, so the working order is unlink first, then promote. Unlink
+deletes the row and the registered-device mirror keys but leaves the lost
+device's own `device_<id>_isPrimary` flag untouched; a returning device
+with no row falls into `checkReadOnlyMode`'s "assume primary" branch.
+Traced the same day: detection returns `walletWithSeed`, every layer of
+`shouldBlockWalletAccess` passes, and the device opens with spend rights for
+one full session; the secondary row it then registers makes only the next
+launch read-only. "It cannot spend" below is therefore wrong for that first
+session (read from code, not run; Tier 0, "`checkReadOnlyMode()` infers
+primary").
+
 Walkthrough:
 - **Does (on the surviving secondary):** opens Settings → Linked Devices.
 - **Sees:** warning that no primary device is active (today only visible here — the proposed banner would surface it on the main view).
-- **Does:** taps "Make This Device Primary"; then unlinks the lost phone, confirming "I no longer have this device".
+- **Does:** unlinks the lost phone (the dialog's button is "Unlink \<device\>"), then taps "Make Device Primary". (Corrected 2026-11-12: order reversed, labels as shipped.)
 - **Behind the scenes:** this device becomes primary; the lost device's registration is removed.
 - **If the lost phone resurfaces:** it sees it was demoted and opens read-only — it cannot spend.
 - **Security note:** unlinking does not protect funds. If the lost device may be unlocked in someone else's hands, its keychain still holds the seed — the safe response is moving funds to a fresh wallet.
@@ -202,8 +249,9 @@ Walkthrough (proposed):
 - **Sees (old device):** "Done — iPhone 17 is now your main device. Remove the wallet from this device?" → one tap runs the S6 local delete.
 - **End state:** new device is primary; old device is wallet-free (or read-only if kept as-is).
 
-Implementation note: prefer `promoteThisDeviceToPrimary()` and **delete
-`migrateToThisDevice()`** — it force-grabs primary by writing
+Implementation note (`migrateToThisDevice()` was deleted 2026-10-16, so
+this is history): prefer `promoteThisDeviceToPrimary()` and **delete
+`migrateToThisDevice()`** — it force-grabbed primary by writing
 `isPrimaryDevice` directly without the `becamePrimaryAt` bookkeeping the
 two-primary reconciliation tiebreak depends on (contract rule 15), so using
 it could produce conflicts the reconciler resolves wrongly.
@@ -220,9 +268,9 @@ rejoin screen instead of onboarding, and rejoining is one tap.
 
 Walkthrough:
 - **Does:** Settings → Delete Wallet.
-- **Sees:** "Other devices have this wallet. It will be removed from this device only." Confirms.
+- **Sees:** "This will permanently delete your wallet from this device. Still registered elsewhere: \<devices\>." Confirms. (Copy as shipped, 2026-11-12.)
 - **Behind the scenes:** local data wiped, device unregistered; seed, iCloud data, and backups untouched; the install is tombstoned.
-- **Sees (afterwards, and on every relaunch):** the rejoin screen — "Your wallet is still active on \<device\>" — never onboarding, so no way to accidentally create a second wallet.
+- **Sees (afterwards, and on every relaunch):** the rejoin screen — "Your wallet is still active", naming the device — never onboarding, so no way to accidentally create a second wallet.
 - **If they change their mind:** one tap rejoins; the wallet restores from the preserved iCloud backup.
 
 Status: shipped 2026-08-19 (`Wallet_Deletion_And_Rejoin.md`); the two-device
@@ -238,17 +286,20 @@ User wants the wallet gone from all devices and iCloud.
 **The stale-ghost question (Christoph): "you lost or sold your old phone and
 forgot to deregister it — could that stale registration block the full
 deletion?"** Answer, since 2026-09-21: yes, indefinitely, and that is now
-deliberate. `hasOtherActiveDevices(walletHash:)` consults the fast iCloud KVS
-registry before the CloudKit-backed SwiftData one, and KVS entries carry no
+deliberate. `otherDeviceReport(walletHash:)` (which replaced
+`hasOtherActiveDevices`, now an uncalled wrapper) lets the fast iCloud KVS
+registry stand on its own beside the CloudKit-backed SwiftData one, and KVS entries carry no
 staleness filter — their timestamp is "last registered", not "last seen"
 (heartbeats never refresh it), so ageing them out would drop live devices. The
 SwiftData side still applies the 30-day `isStale` cutoff. Net: a KVS ghost
 blocks the full wipe until it is unlinked. That is the conservative direction
 and it is exactly what the blockers list below is for; the cost of the old
 30-day-timeout behaviour was the reverse failure, which is unrecoverable (see
-Our-code faults §D, 2026-09-21). In the meantime the strategy still downgrades
-to local-only silently — no device names, no explanation, no unlink path in
-the delete flow.
+Our-code faults §D, 2026-09-21). Since 2026-09-24 the downgrade to
+local-only is no longer silent: the delete screen names the blockers and
+explains (see "Built in response" below), and the override is a second way
+out when every blocker is doubtful. Still missing: an unlink path inside
+the delete flow (corrected 2026-11-12).
 
 **Proposal:** replace the timeout with recognition. An *active* registered
 device blocks the full wipe — but every blocker is shown by name and
@@ -263,7 +314,8 @@ forgotten ghost costs a ten-second recognition step instead of a 30-day
 wait. Design details:
 
 - *Active* = heartbeat within the staleness threshold (currently 30 days).
-  Stale registrations don't block (already true today) but are listed for
+  Stale registrations don't block (true today only for a stale row with no
+  mirror entry; one the mirror corroborates still blocks) but are listed for
   cleanup. With unlink-in-flow as the primary remedy, the exact threshold
   matters much less — recognition replaces waiting either way.
 - *Override valve:* "Delete everything anyway" stays available behind the
@@ -288,7 +340,9 @@ Walkthrough (proposed):
 - **Other devices (override case):** show "This wallet was deleted on another device" and *offer* local cleanup — nothing is destroyed remotely without a tap.
 
 Status: **partially built 2026-09-24** — the disclosure and the override valve
-shipped; the unlink-first flow did not.
+shipped; the unlink-first flow did not. Since then also shipped: the
+two-word phrase confirmation (2026-10-15) and unlink of mirror-only entries
+from Linked Devices on iPhone (2026-10-16); status re-read 2026-11-12.
 
 The warning above stopped being hypothetical on 2026-09-23: a mirror ghost
 blocked the full wipe with no way out, so **the wallet could not be removed from
@@ -302,8 +356,8 @@ the account at all**, and each reinstall re-adopted it. Built in response
   again. A third "couldn't check" state replaced the copy that asserted other
   devices exist when the registry was unreadable.
 - *The override valve exists, and stays rare.* `.localOnly` reaches a full wipe
-  only via "Delete from the account anyway…", gated on a recovery-phrase
-  acknowledgement, and `includesCloudData(strategy:overrideConfirmed:)` is
+  only via "Delete from the account anyway…", gated on the two-word phrase
+  check and then a recovery-phrase acknowledgement, and `includesCloudData(strategy:overrideConfirmed:)` is
   test-pinned as the sole route. It is *offered* only where EVERY blocker is
   doubtful — a mirror-only entry older than the 48h settle window, a stale row
   the mirror keeps alive, or an unreadable registry
@@ -322,18 +376,22 @@ the account at all**, and each reinstall re-adopted it. Built in response
   deleted nothing, and the screen resurfaces the new blockers. The
   keychain-seed delete also moved to the END of the wipe sequence
   (2026-09-25), so any earlier step's failure leaves the seed intact and the
-  retry is idempotent. Clock-skew note: `registeredAt` is stamped by the
+  retry is idempotent (it is the last fallible step of the cleanup service;
+  the manager's local file teardown still runs after it). Clock-skew note: `registeredAt` is stamped by the
   other device's clock; future skew reads as young → healthy → no override
   (safe direction), past skew reads as aged → override offered, same residual
   as before, still behind the acknowledgement. No skew silently unlocks a
   wipe. The periodic KVS cleanup (`cleanupKVStoreRegistry`) was deleted
   2026-09-25 — any future mirror pruning must go through the per-blocker
   unlink flow.
-- *Not built:* unlink-in-flow. It needs `forgetUnsyncedDevice(_:)` because
-  `unlinkDevice` can't touch a row-less mirror entry, and it adds a second,
-  gentler-looking door to the same irreversible outcome — deferred to the full
-  build with per-blocker confirmation. Also not built: the phrase-confirmation
-  proposal below, and the "wallet deleted elsewhere" cleanup-offer state.
+- *Not built:* unlink-in-flow. It adds a second, gentler-looking door to the
+  same irreversible outcome — deferred to the full build with per-blocker
+  confirmation. (Corrected 2026-11-12: the text used to say it needs
+  `forgetUnsyncedDevice(_:)`; no such function exists, and `unlinkDevice`
+  has cleared row-less mirror entries since `unlinkVerdict`, 2026-10-16.)
+  Also not built: the "wallet deleted elsewhere" cleanup-offer state. The
+  phrase confirmation is built (`PhraseConfirmation`, wired in
+  `DeleteWalletSettingView`, `PhraseConfirmationTests`).
 
 If accepted in full, it supersedes the old "bless device-by-device vs remote
 wipe" question — the answer would be device-by-device with visibility,
@@ -399,15 +457,16 @@ Walkthrough (decided design):
 - **On signing back in:** the app re-detects and returns to the previous role.
 
 Status: decided; not built. Today's behavior is the low-confidence detection
-fallback; KVS account-change notifications are observed but only re-run
-detection.
+fallback; KVS account-change notifications are observed but only logged
+(detection re-runs only when the wallet-hash key changed; 2026-11-12).
 
 ### S11 — Device sold/erased without saying goodbye (stale registrations) ⚠️
 A device that was wiped externally never unregisters; its heartbeat goes
-stale. Any surviving device can unlink it (S4). `cleanupStaleDevices(30d)`
-exists but has **zero call sites** (verified 2026-09-21) — nothing prunes
-ghosts automatically, and since the full-wipe check now consults the KVS
-mirror without a staleness cutoff, unlink is the only way to clear a blocker.
+stale. Any surviving device can unlink it (S4). `cleanupStaleDevices` was
+deleted 2026-10-16 — nothing prunes ghosts automatically, by decision, and
+since the full-wipe check consults the KVS mirror without a staleness
+cutoff, unlink is the way to clear a blocker (the override covers the case
+where every blocker is doubtful).
 
 Walkthrough:
 - **Sees:** an old device lingering in Settings → Linked Devices ("last seen 3 months ago").
@@ -415,8 +474,9 @@ Walkthrough:
 - **Behind the scenes:** the registration is removed from the registry.
 - **Worth knowing:** unlink is bookkeeping, not revocation — a device that still has the app and seed will simply re-register the next time it launches. Truly removing a device means deleting the wallet there (S6) or erasing the device.
 
-Status: service shipped; open items — devices-list scoping to the current
-wallet, and whether stale cleanup runs automatically anywhere.
+Status: service shipped. Both former open items are settled in code
+(2026-11-12): the devices list is scoped to the current wallet
+(`accountWalletHash`), and automatic stale cleanup was rejected.
 
 ### S12 — Two devices claim primary under sync lag ✓
 Both create/import/promote near-simultaneously before CloudKit converges.
@@ -479,8 +539,8 @@ written to do — but it read as the app having decided something on its own.
    | Activity-list launch crash | rows mutating mid-import while the list rendered | fetch-resolved relationships |
    | 0 balance, empty receive address | rows not imported yet | CloudKit observers on the read-only services |
    | 18 tags, 3 contacts | "no tags exist", true only because the import had not landed | primary-only seeding |
-   | Whole session on mainnet | UserDefaults config read before the KVS reconciliation | still open |
-   | Route churn | detection ran before the KVS demotion arrived | re-detection a minute later |
+   | Whole session on mainnet | UserDefaults config read before the KVS reconciliation | `reconcileNetworkConfigBeforeWalletOpen`, step 0-pre (contract rule 22; this row said "still open" until 2026-11-12) |
+   | Route churn | detection ran before the KVS demotion arrived | re-detection on foreground or protected-data-available |
 
    The compensation is visible in one launch of the reinstall log:
    `Initialized AddressService for primary mode` *and*
@@ -550,9 +610,11 @@ version is not re-proposed.
   a 0 balance for as long as the CloudKit import takes (over a minute observed
   2026-09-23).
 
-**Vocabulary: "link", not "join".** The app already says "Unlink Device",
-"Linked Devices", "All linked devices will lose access"; "join" appears nowhere,
-and it implies joining someone else's thing rather than adding another of your
+**Vocabulary: "link", not "join".** The app already says "Unlink Device"
+and "All other devices will lose access to the wallet"; the settings title
+is "Devices", and "rejoin" is established copy on the rejoin screen
+("Rejoin This Wallet"), so the claim that "join" appears nowhere held only
+for the bare word (corrected 2026-11-12). "Join" implies joining someone else's thing rather than adding another of your
 own devices to your own wallet.
 
 ### Trigger, and why it retires the tombstone problem
@@ -583,6 +645,24 @@ screen.
   covered it.
 - Must a background or push wake refuse to initialise the wallet on an unlinked
   install? Needs checking — the BGTask handler registers regardless of route.
+- **Primary swap and lost-primary takeover as guided flows (S3, S4; folded in
+  2026-11-12).** Direction (Christoph): explicit steps instead of one button —
+  ask whether to demote the current primary, say that demoting on the primary
+  itself is preferable, wait. PROPOSED shape, to be ruled in the scope pass:
+  1. Branch first on "do you still have the primary device?". Yes is the
+     deliberate swap (S3): demote there, then promote here. No is the lost
+     primary (S4): unlink it, then promote, with the move-funds warning.
+  2. Whether a secondary can *request* a demotion. Today no device writes
+     another device's primary flag. Either send the user to the primary (no
+     new protocol; recommended first) or add a request record the primary
+     honours on its next run (new shared state).
+  3. Wait on a condition, not a fixed time: promotion unlocks when the
+     primary's row stops being primary, with a timeout that explains what to
+     do, the same shape as the first-import wait.
+
+  Prerequisites, both open: the Tier 0 `checkReadOnlyMode()` item (an
+  unlinked ex-primary that returns assumes primary, which is exactly the S4
+  branch) and the seed check before promotion (Tier 1).
 
 ### On acceptance
 
@@ -605,13 +685,13 @@ what happens → impact → mitigation → status.
   the wallet everywhere, or expects deletion on the last device to be
   recoverable. → Confusion or unintended data loss. → Strategy-aware copy
   (shipped 2026-08-12) + the S7 blocking UX making scope visible. Status:
-  copy shipped; S7 proposed.
+  copy shipped; blockers are named on the delete screen since 2026-09-24.
 - **Full wipe without a written phrase.** The last-device full wipe destroys
   the only seed copies (iCloud Keychain + devices); if the user never wrote
   the phrase down, funds are unrecoverable the moment they confirm. →
   Permanent fund loss. → DECIDED 2026-10-10: the final confirmation asks for two words
   of the recovery phrase (e.g. words 4 and 9) — consent check and
-  backup-existence proof in one. Status: decided, build pending (see Derived work).
+  backup-existence proof in one. Status: built 2026-10-15 (`PhraseConfirmation`).
 - **"Deleting the app deletes the wallet"** — false in both directions:
   reinstall silently resurrects (S9), and app deletion never unregisters. →
   Surprise resurrection, ghost registrations. → S9/S11 walkthrough copy;
@@ -641,7 +721,8 @@ what happens → impact → mitigation → status.
 - **Registry staleness.** CloudKit lag makes heartbeats and the S7 blockers
   list stale. → Wrong blocking decisions, stale device lists. → Blocking
   threshold shorter than the 30-day staleness cutoff; override valve.
-  Status: S7 proposed; thresholds undecided.
+  Status: the override valve is built with a 48 h mirror settle window; no
+  shorter blocking threshold exists (2026-11-12).
 - **Clock skew.** `becamePrimaryAt` and heartbeats are device-clock-based;
   skew can flip reconciliation tiebreaks or heartbeat freshness. → Wrong
   reconciliation winner (rare; needs near-simultaneous claims + skew). →
@@ -673,7 +754,8 @@ list) inside them.
   already exists. Status: checks proposed, nothing gated today.
 - **iCloud account compromise.** Attacker signs into their own device with
   the victim's account → joins as a silent secondary (S2 works for them,
-  seed included) → can self-promote and spend. → Client cannot prevent this;
+  seed included) → can self-promote and spend (only while no primary row is
+  visible to their device; otherwise promotion is refused). → Client cannot prevent this;
   it can expose it: PROPOSED "new device joined your wallet" notification on
   existing devices (also useful for honest S2/S5 flows), plus the promote
   security check on... the attacker's own device, which they pass — so
@@ -688,7 +770,8 @@ list) inside them.
   blockers list doubles as a detector — a device showing "active 2 hours
   ago" that the user knows they sold is a compromise indicator; unlink
   confirmation copy echoes the S4/S13 advice to move funds. Status: S7
-  proposed; today this case both blocks deletion and goes unnoticed.
+  proposed; today this case still blocks deletion (a fresh registry-backed
+  blocker gets no override), but the delete screen now names the device.
 - **Registry vandalism.** Any same-account device can unlink others or write
   KVS primary flags. → Same-account only (inside the boundary); the
   reconciler resists accidents, not adversaries. → Server-side arbitration
@@ -712,7 +795,7 @@ offline — and was told it was alone, so the delete flow offered "Delete
 Everything" and would have removed the synchronizable seed account-wide.
 Detection has always routed launch on the *fast* KVS hash; only the
 irreversible decision read the slow store. Two fixes, both test-pinned:
-`hasOtherActiveDevices(walletHash:)` consults the KVS mirror first (which
+`hasOtherActiveDevices(walletHash:)` (today `otherDeviceReport`) consults the KVS mirror first (which
 until then was written on every registration and never read by anything), and
 an unreadable registry resolves to local-only instead of full wipe.
 **Generalised rule: a decision whose wrong answer destroys account-scoped
@@ -727,15 +810,16 @@ reinstall. Two surfaces reading different stores ("1 device" vs "other devices
 keep access") made it undiagnosable. A sixth, found in the same code: the mirror
 cleanup in `unregisterCurrentDevice()` was nested inside a successful row fetch,
 so a device whose row hadn't imported left a ghost that no later deletion could
-clear. **Generalised rule: a conservative guard on an irreversible action needs
+clear. (Both are fixed: the override shipped 2026-09-24 and the clear runs
+before the fetch since 2026-10-16.) **Generalised rule: a conservative guard on an irreversible action needs
 an escape hatch and a name for what it is blocking on, or it converts a
 recoverable failure into a permanent one** (contract rule 24).
 
 Defenses live elsewhere and are referenced, not
-duplicated: launch contract rules 14–21 (invariants with incident history),
+duplicated: launch contract rules 14–24 (invariants with incident history),
 `WalletWipeCoverageTests` (SwiftData schema drift), `SharedStateWipeCoverage`
-(keychain/KVS keys with declared deletion scopes), `WalletDeletionRejoinTests`
-(routing + inventory consistency), the `SecItemDelete` owner sweep, and the
+(keychain/KVS keys with declared deletion scopes), the suites in
+`WalletDeletionRejoinTests.swift` (routing + inventory consistency), the `SecItemDelete` owner sweep, and the
 two-device on-device verification matrix as the gate for seed-touching
 changes.
 
@@ -762,39 +846,43 @@ before it:
    (`.deviceOwnerAuthentication`), wire the gated-actions table. Small,
    touches every sensitive flow — do before the flows below so they're born
    gated.
-4. S7 build: blocking full-wipe UX (blockers list, unlink-first paths,
-   informed override), flip the `getDeletionStrategy()` error fallback to
-   conservative, "wallet deleted elsewhere" cleanup-offer state. PROPOSED
-   addition from Failure modes §A: phrase-confirmation (two words) on the
-   final full-wipe confirmation as a backup-existence proof.
+4. S7 build. Done as of 2026-11-12: blockers list, informed override,
+   conservative `getDeletionStrategy()` fallback, two-word phrase
+   confirmation. Open: unlink-first paths inside the delete flow and the
+   "wallet deleted elsewhere" cleanup-offer state.
 5. PROPOSED (Failure modes §C): "new device joined your wallet" notification
    on existing devices — the visibility mitigation for account compromise,
    also useful feedback in honest S2/S5 flows.
 6. S4 entry point: the active "no primary device" banner (deferred
    2026-08-12) — reframe it as the "lost primary" journey's front door.
+   `.showNoPrimaryDeviceBanner` is posted with no observer; only the passive
+   notice in Linked Devices exists.
 7. S5 build: migration assistant (orchestration + copy over existing
-   primitives); delete `migrateToThisDevice()` (bypasses `becamePrimaryAt`,
-   breaks the reconciliation tiebreak).
+   primitives). `migrateToThisDevice()` was deleted 2026-10-16.
 8. S10 build: read-only reasons for signed-out / account-changed, safe-exit
    copy.
 9. Desktop parity for promote/demote UI (S3).
-10. Devices-list scoping + automatic stale cleanup (S11).
+10. ~~Devices-list scoping + automatic stale cleanup (S11)~~ — scoping
+    built; automatic cleanup rejected 2026-10-16 (see S11).
 11. ~~Device-backup-twin identity problem~~ — DROPPED 2026-09-21, the premise
     was wrong (Failure modes §B).
-12. Blocked-strategy copy (from the 2026-09-21 fix): an unreadable registry
+12. DONE (the "couldn't be checked" state shipped; re-read 2026-11-12).
+    Blocked-strategy copy (from the 2026-09-21 fix): an unreadable registry
     now yields `.localOnly`, whose UI copy claims "Other devices have this
     wallet" — true in the normal case, a guess in the error case. Needs a
     third user-facing state ("couldn't check — try again"), which means new
     strings across de/ja/zh-Hant, so it was not bundled with the fix. S7's
     blockers list supersedes it if built first.
-13. `checkReadOnlyMode()` infers primary (`WalletManager.swift:503-514`): a
+13. `checkReadOnlyMode()` infers primary (`WalletManager.checkReadOnlyMode`): a
     missing or unreadable device registration sets `isReadOnlyMode = false`,
     i.e. full spend rights. That contradicts Principle 2 and contract rule 15
     — registration correctly refuses to infer primary, but the spend gate
-    does it anyway. Reachable via self-unlink, which
-    `LinkedDevicesView_iOS.swift:46` offers and the capability matrix doesn't
-    model. UNVERIFIED: needs a self-unlink → relaunch run to confirm a device
-    can spend while the registry says it is secondary.
-14. Nothing calls `cleanupStaleDevices()` (S11), and `migrateToThisDevice()`
-    has zero call sites — delete it (item 7 above) rather than leaving a
-    reconciliation-bypassing method available.
+    does it anyway. Self-unlink is no longer offered on either platform
+    (2026-11-12); the same state is reachable when another device unlinks
+    this one (S4's returning lost primary); the static trace says it opens
+    as primary for one session and is read-only from the next launch.
+    UNVERIFIED: needs an unlink-by-other-device → relaunch run, checking
+    the first session after the unlink, to confirm a device can spend while
+    the registry has no row for it.
+14. ~~Delete `cleanupStaleDevices()` and `migrateToThisDevice()`~~ — both
+    deleted 2026-10-16.

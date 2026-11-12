@@ -60,6 +60,7 @@ Welcome to the project documentation. It is organized to help you understand the
 
 - [Setup Guide](Development/Setup.md), [Testing Patterns](Development/Testing_Patterns.md) — both rewritten 2026-10-07 from the project as it is
 - [Change Review Playbook](Development/Change_Review_Playbook.md) — how review passes are run and recorded
+- [Contract Audit, November 2026](Development/Contract_Audit_2026_11.md) — claims audit of the launch contract and the multi-device design against the code, 2026-11-12
 - [Release Train](Development/Release_Train.md) — one release per train through six stage-gated steps (Decide → Build → Review → Device → Release → Soak), Build with a soft two-week budget
 - [Exploration Season](Development/Exploration_Season.md) — PROPOSED: a four-phase season of trains favouring features over stability, starting with scope docs; the floor, flags and the sorted roadmap features
 - [Platform Porting Rules](Development/Platform_Porting_Rules.md) — PROPOSED: how a view moves between ArkeMobile and ArkeDesktop (layout, input, API shims, lifecycle, verification) so an agent can run a port from a checklist

@@ -34,7 +34,15 @@ decision in `ImportRecoveryLogic`). Test: `ImportRecoveryLogicTests`
 **3. Wallet existence is `db.sqlite` OR `bark.sqlite` — never recreate-from-seed on a "missing" database.**
 bark 0.11+ creates `db.sqlite`; a `bark.sqlite`-only probe false-detected "no
 wallet" and restored a stale backup over a fresh wallet.
-Enforced: `WalletBackupService.swift`. Test: none.
+Enforced: `WalletBackupService.swift` (`hasLocalWalletFile`, the two-name
+probe only). The "never recreate" half is **not enforced** at the launch
+open: with no local file and no backup, `restoreWalletIfNeeded` logs "wallet
+will start fresh" and `tryOpenExistingWallet` opens with the bindings'
+default `createIfNotExists: true`; its own guard tests directory existence,
+which `getWalletDirectory()` guarantees from the first init on, so a
+missing database on a device that ran once reaches the create (audit
+2026-11-12; open item in Tier 1 Data safety, "The regular wallet open
+relies on…"). Test: none.
 
 **4. Backup restore runs only when no wallet is open.**
 An open wallet is authoritative; restoring over it pairs the keychain
@@ -63,7 +71,10 @@ The rule orders the bark *reveal*, not the display: since 2026-10-27
 `AddressService` publishes the saved `PersistentAddress` rows at init (a
 local read in `setModelContext`, before the open), so the receive screen no
 longer waits behind the onchain sync; the Step 3 call stays and overwrites
-those values when the sync marked the onchain address used.
+those values when the sync marked the onchain address used. The Step 3
+reveal is conditional: `getCurrentReceiveAddress` returns a saved unused row
+without calling bark, so a device with saved or synced rows does no bark
+reveal there (audit 2026-11-12).
 Enforced: `WalletManager.swift` (`performRefresh`, addresses-first step),
 `AddressService.init` (history-first read). Test: `ReadOnlySyncedDataTests`
 (`primaryServiceReadsHistoryAtInit`) for the init read; the reveal ordering
@@ -74,9 +85,11 @@ has none.
 exclusion reads `WalletManager.transactions` — the unified service's
 *stored* merge, populated by `performRefresh()`. Start the service first and
 the launch-time check sees an empty transaction list, so Guard C is silently
-inert. That matters more than it sounds: the immediate check is the service's
-**only** trigger besides the hourly timer (nothing restarts it on
-foreground), so the launch check is a large share of all checks ever run.
+inert. The launch check is one of four triggers: the hourly timer,
+`checkAndRescheduleAfterForeground()` on every foreground return (since
+2026-09-27) and `triggerImmediateCheck()` are the others, and all of them
+run after the first refresh (corrected 2026-11-12; the text used to call the
+launch check the only trigger besides the timer).
 The same dependency is why `refreshAfterVTXOChange()` must call
 `mergeTransactions()` and not just the Ark-only refetch (2026-09-21,
 `Features/Refresh_Deduplication.md` §§1, 3.2).
@@ -85,7 +98,8 @@ the `start()` block). Test: none — ordering is positional.
 
 **7b. No `refresh()` work before bark's database is open.**
 The `BarkWalletFFI` object exists from `WalletManager` init, but its handle
-is only set once `openWalletIfNeeded()` returns in `initializePrimaryMode()`.
+is only set once `openWalletIfNeeded()` returns in `initializePrimaryMode()`
+(launch; create, import and the background wake set it on their own paths).
 Refresh triggers aren't gated on launch progress — the mailbox push observer
 is installed at init, pull-to-refresh only checks read-only mode — so a
 refresh in that window ran every FFI read against a nil handle and
@@ -103,12 +117,14 @@ Enforced: `WalletManager.performRefresh()` (open-handle guard);
 `BalanceRefreshStatusViewModel.loadData()` + every view that owns one —
 both status containers and `BalanceRefreshTag` (`onChange(of: isInitialized)`).
 A new owner of that view model needs the same reload hook, or it sits in the
-loading state for the session. Test: none.
+loading state for the session. `RefreshModalView` is a fourth owner without
+the hook (audit 2026-11-12, filed in Tier 3 Refresh). Test: none.
 
 **7c. Ark sync and the Ark reads come before the onchain BDK sync in every
 full refresh.** bark's `Wallet::sync` does not touch the onchain wallet
 (tag `bark-0.7.1`, `bark/src/lib.rs:1980`; also true at `bark-0.6.2`,
-`lib.rs:1857`; verified 2026-10-14), while the onchain
+`lib.rs:1857`; verified 2026-10-14; still true at the deployed
+`bark-0.8.0`, `lib.rs:2014`, read 2026-11-12), while the onchain
 sync is the long pole of a refresh (2.5–11.6 s in field exports). Ordering
 it first held every new movement and the Ark balance behind it: field
 export 2026-10-14, row shown at 6.0 s and Ark balance at 10.2 s after the
@@ -160,7 +176,7 @@ Test: `ExitProgressTests` (`testSequenceOrder`).
 bark re-finishes cancelled exits on every sync where the tip advanced,
 bumping `completed_at`; only the first transition into cancelled may set the
 date (feedback §1.4).
-Enforced: `WalletManager+Transactions.swift` (upsert).
+Enforced: `TransactionService+Upsert.swift` (`updateExistingTransaction`).
 Test: `TransactionUpsertDateFreezeTests`.
 
 **13. Check-in reminders re-arm on every launch/backgrounding while exits are in flight, and clear when none are — after the first progression pass.**
@@ -168,13 +184,18 @@ Reminders used to be scheduled only at exit start and cancelled on launch,
 so any relaunch mid-exit permanently disarmed them; re-arming before the
 first pass arms them for replayed already-finished exits.
 Enforced: `ExitProgressionService+LiveActivity.swift`
-(`rescheduleCheckInRemindersIfNeeded`), `ArkeMobile.swift` (scene phase). Test: none.
+(`rescheduleCheckInRemindersIfNeeded`), `ArkeMobile.swift` (scene phase).
+Not covered: `NotificationsSettingView_iOS` arms the sequence on `isActive`,
+`userCheckedIn` re-arms unconditionally, and its foreground gate
+`hasActiveExits()` tests for a Live Activity, not an exit (audit
+2026-11-12, filed in Tier 3 Exits). Test: none.
 
 **13a. The exit path depends on the same operator as the Ark server (known limit, DECIDED 2026-10-10).**
 Exit progression reads the chain through the configured Esplora, and on
 both networks that is Second's (`mempool.second.tech`, `esplora.signet.2nd.dev`)
-alongside Second's Ark server. There is no second chain source and no
-Settings entry, so a Second-wide outage takes the exit path down with the
+alongside Second's Ark server (a custom server set up at first use carries
+its own Esplora field, prefilled with Second's). There is no second chain
+source and no Settings entry, so a Second-wide outage takes the exit path down with the
 server; the pre-signed exit protection holds only while the chain source
 answers. Accepted for now rather than patched: the fallback chain source
 (automatic or a recipe, which third party to trust) is designed as part of
@@ -196,16 +217,23 @@ demoted ex-primary with a leftover local db must not open bark on every wake,
 and the new primary owns the mailbox, so retrying would never succeed.
 Enforced: `WalletManager.swift` (`performInitialization`,
 `shouldBlockWalletAccess`), `WalletManager+Notifications.swift`
-(`refreshRelayAuthInBackground`, headless open). Test: none (reconciliation
-half is tested, see 15).
+(`refreshRelayAuthInBackground`, headless open). Test:
+`MirrorPrimaryVerdictTests` pins layer 2 of `shouldBlockWalletAccess`; the
+check-before-open ordering on both paths has none.
 
 **15. Primary status is claimed only by explicit create/import — never inferred by detection paths.**
 "First device" inference under sync lag created two primaries; detection
 paths pass `allowPrimaryClaim: false`, and duplicates converge via
 deterministic self-demoting reconciliation (earliest `becamePrimaryAt`,
-deviceId tiebreak).
+falling back to `registeredAt`, deviceId tiebreak). Two other paths make a
+device primary: the explicit `promoteThisDeviceToPrimary` (refused while a
+primary row is visible) and `dedupeOwnRecords`, which keeps a pre-reinstall
+primary row over a fresh secondary one and rewrites the KVS flag to match
+(audit 2026-11-12).
 Enforced: `DeviceRegistrationService.swift` (`registerCurrentDevice`,
-`reconcilePrimaryConflicts`). Test: `PrimaryDeviceReconciliationTests`.
+`reconcilePrimaryConflicts`). Test: `PrimaryDeviceReconciliationTests` (the
+pure winner rule only; the `allowPrimaryClaim` gate and the self-demotion
+side effects have none).
 
 **16. The device ID keychain item is non-synchronizable.**
 It distinguishes "this device was wiped" from "the seed arrived on a new
@@ -230,7 +258,9 @@ local file restores.
 Enforced: `WalletManager+Wallet.swift` (`deleteWallet(scope:)`),
 `BarkWalletFFI+WalletLifecycle.swift` (`shutdownWallet(backingUp:)`),
 `ExitProgressionService+LiveActivity.swift` (`endLiveActivityImmediately`).
-Test: `WalletDeletionRejoinTests` pins the inventory entry and that merging
+Test: `WalletWipeCoverageTests` (in the file `WalletDeletionRejoinTests.swift`;
+no suite has the file's name, so `-only-testing` needs the suite name) pins
+the inventory entry and that merging
 sub-summaries cannot narrow the scope; the writer → reader link
 (`performDeleteWalletData` → the delete view → `deleteWallet(scope:)`) and
 the ordering itself are traced by hand and proven on device, not by a test.
@@ -243,7 +273,8 @@ merge wrote the deleted wallet's onchain row into the next wallet created
 in the same process (2026-10-14). **Deletion does not start while wallet
 data is loading** (`WalletManager.isLoadingWalletData` = refreshing or
 initializing): the delete screen hides its button and says so, the cleanup
-service re-checks the signal at its first step and aborts with
+service re-checks the signal as its last pre-destructive check (after the
+full-wipe scope guard, pinned by `scopeAbortWinsOverRefreshGate`) and aborts with
 `refreshInProgress` having deleted nothing, and `refresh()` skips while
 `isDeletionInProgress` is set, as do the seeding funnels and detection-path
 device registration (rule 24 (d)). Chosen over
@@ -253,7 +284,9 @@ unstructured task with no cancellation point, and a visible wait before
 committing is simpler than a pause, a resume and a timeout after. Inside
 the cleanup service the fallible CloudKit row deletion runs before the
 infallible KVS/backup writes, with a context rollback on failure, so every
-failure before the seed step leaves a working wallet; a failure in the
+failure before the seed step leaves a working wallet (minus this device's
+registration: `unregisterCurrentDevice` has already run and is not rolled
+back; a retry or the next registration repeats it); a failure in the
 manager's local teardown after the cleanup returned logs, clears the local
 evidence, marks the leftover directory stale (`SecurityService`; the next
 create or import removes it, since bark refuses to open a database for a
@@ -268,7 +301,12 @@ wipe, but without it the next cold launch reconciles to `.noUsableConfig`.
 **18. `includeCloudData` is strategy-derived; the seed is deleted only on a last-device full wipe.**
 A fixed value either orphaned secondaries or destroyed the only seed copy
 (fixed 2026-08-12).
-Enforced: `WalletManager+Wallet.swift` (deletion strategy). Test: none.
+Enforced: `WalletDataCleanupService.swift` (`deletionStrategy(for:)`,
+`includesCloudData`, `fullWipeStillJustified`; the seed delete sits behind
+`includeCloudData`). Test: `DeletionStrategyTests`, `FullWipeOverrideTests`,
+`FullWipeRevalidationTests`, `DeletionAssessmentOrchestrationTests`; that the
+keychain delete itself is skipped on local-only is not pinned (corrected
+2026-11-12).
 
 **19. Only `WalletDataCleanupService` may delete the mnemonic keychain item.**
 A second deletion site inside `BarkWalletFFI.deleteWallet()` deleted the
@@ -291,7 +329,8 @@ account-level wallet signal exists (`Wallet_Deletion_And_Rejoin.md`).
 Enforced: `SecurityService.swift` (`tombstoneRouting`, detection step 0),
 `MainView_iOS.swift` / `MainView.swift` (`onWalletDeleted`),
 `WalletManager+Wallet.swift` (`accountHasWalletSignals` guard).
-Test: `WalletDeletionRejoinTests`.
+Test: `TombstoneRoutingTests`, `AccountWalletSignalsTests` (the pure
+decisions; the detection re-run and the tombstone write have none).
 
 **21. Account-shared key-value state (KVS network config, KVS wallet hash, keychain seed) is deleted only by WalletDataCleanupService on a full wipe — never by device-scoped deletion paths.**
 `WalletManager.deleteWallet()` used to call `NetworkConfigPersistence.clear()`
@@ -305,10 +344,14 @@ of shared keys and their scopes lives in `SharedStateWipeCoverage`. Since
 JSON (custom Ark servers resolve only through the latter); both have the same
 owner and scope and are cleared by the same two calls. Related:
 rule 22 reconciles the wallet's network against that shared config before the
-first open instead of silently defaulting to mainnet.
+first open instead of silently defaulting to mainnet. One exception, the
+counterpart of rule 19's `removeMnemonic()`: the import rollback calls
+`SecurityService.deleteHashFromUbiquitousStore()` when no hash existed
+before the import; the cleanup service uses a private copy of the same
+delete rather than that method (audit 2026-11-12).
 Enforced: `NetworkConfigPersistence.swift`, `WalletDataCleanupService.swift`
 (`SharedStateWipeCoverage`), `WalletManager.swift` (step 0-pre).
-Test: `WalletDeletionRejoinTests` (inventory consistency).
+Test: `WalletWipeCoverageTests` (inventory consistency).
 
 **22. Every path that opens the wallet reconciles its network against the account first — and no path reconciles after.**
 The wallet object is built in `WalletManager.init` from the UserDefaults
@@ -345,7 +388,8 @@ guard and the call-before-open ordering are code-only — sweep: grep
 `openWalletIfNeeded`, every call site must reconcile first).
 
 **23. Only `WalletDataCleanupService` deletes CloudKit-mirrored rows; every service-level reset is in-memory.**
-`WalletManager.deleteWallet()` takes no strategy parameter, so its
+`WalletManager.deleteWallet()` took no strategy parameter (it is
+`deleteWallet(scope:)` today), so its
 `resetManagerState()` ran identically for a local-only delete and a full wipe
 — and it called `TransactionService.clearTransactionModels()` plus
 `BalanceService.resetBalancesAndDeletePersisted()`. Those models are in
@@ -374,13 +418,22 @@ user-initiated bulk action. The sweep as of 2026-09-23 has two of the last
 kind, both currently unwired: `TagService.deleteAllTags()` and
 `ContactService.deleteAllContacts()`. Account-wide is *correct* for those —
 the user is asking to delete their tags everywhere — but neither may ever be
-called from a deletion, reset, or migration path.)
+called from a deletion, reset, or migration path. The 2026-11-12 sweep adds
+hits the list above does not name: the dedups `dedupeOwnRecords`,
+`buildExistingTransactionDictionary` (duplicate-txid transactions, every
+upsert) and `BackupStatus.getSingleton`; `cleanupOldPendingMetadata`
+(age-based multi-row delete of a mirrored model); the replace-all-assignments
+loops for one transaction; and the dead
+`OnchainTransactionService.clearPersistedTransactions` and
+`SwiftDataHelper.cleanupDuplicateBackupStatus`; filed in Tier 4.)
 
 **24. Evidence that blocks an irreversible action must be nameable on screen and overridable by the user.**
 The counterpart to rule 23's lesson: rule 23 keeps a device-scoped action from
 destroying account-scoped state, and this one keeps the *guard* against that
-from becoming a cage. `hasOtherActiveDevices(walletHash:)` reads the fast iCloud
-KVS mirror before the CloudKit registry — correct and load-bearing, since a
+from becoming a cage. `otherDeviceReport(walletHash:)` lets fast iCloud KVS
+mirror evidence stand on its own, ahead of the CloudKit registry (precedence,
+not read order; `hasOtherActiveDevices` is now an uncalled wrapper over it)
+— correct and load-bearing, since a
 joining secondary reading the slower store would be told it was the last device
 and would wipe the account's shared seed. But the mirror has no staleness cutoff
 (its timestamp is written at registration and heartbeats never refresh it), so a
@@ -398,20 +451,25 @@ unnameable blocker is the case the override exists for. (c) `.localOnly` reaches
 a full wipe only through an explicit, acknowledged override
 (`includesCloudData(strategy:overrideConfirmed:)`); no error, timeout or retry
 may reach one — and that override is *offered* only where the block is doubtful
-(`shouldOfferOverride(strategy:report:)`: a mirror-only blocker, a stale row the
-mirror keeps alive, or an unreadable registry). Gating it on `.localOnly` alone
+(`shouldOfferOverride(strategy:report:)`: every blocker must be doubtful — a
+mirror-only entry older than the 48 h `mirrorSettleWindow`, a stale row the
+mirror keeps alive — or the registry unreadable with no fresh mirror entry;
+one healthy blocker removes the offer). Gating it on `.localOnly` alone
 shipped it onto healthy two-device accounts, which inverts the rule: an
 escape hatch presented as a routine option is its own hazard. Also fixed here: `unregisterCurrentDevice()` cleared the mirror
 only inside `if let registration`, so a device whose row hadn't imported (fresh
 adopt) or had already been deduped left a permanent ghost that each reinstall
 re-wrote. (d) **This device's mirror entry is cleared before any step that
 can fail.** `unregisterCurrentDevice` and `unlinkDevice` remove the KVS
-entries first and only then touch the row; a retained row is reported as a
+entries first and only then touch the row (one gap: in
+`unregisterCurrentDevice` the device-ID read can still throw ahead of the
+clear, audit 2026-11-12); a retained row is reported as a
 typed outcome (`UnregistrationOutcome` → `DeletionSummary.deviceUnregistration`,
 error-level log) and never stops the deletion, because a row is a named
 blocker that ages out after 30 days and that the other devices can unlink
-(desktop today; the iOS row menu is hidden until the Tier 1 "forget this
-device" item) while a mirror entry has no remedy at all. The
+(button on desktop, touch-and-hold on iPhone). A mirror-only entry can be
+unlinked on iPhone since `unlinkVerdict` (2026-10-16); desktop has no
+unlink for it (corrected 2026-11-12). The
 2026-09-24 "unconditional" clear still sat behind a nil-context guard, the
 device-ID read and the row's `save()`, and the cleanup service swallowed the
 throw (2026-10-16, `Features/Wallet_Deletion_Ghost_Hardening.md`). Detection-path
@@ -427,9 +485,10 @@ Enforced: `DeviceRegistrationService.swift`
 (`setWalletDeletionInProgress`),
 `DeleteWalletSettingView.swift` / `DeletePermanentlyConfirmationView.swift`
 (named blockers, acknowledged override), `LinkedDevicesView*.swift`
-(mirror-only rows, wallet-hash scoping).
+(mirror-only rows, wallet-hash scoping; the registry-backed row list is
+still built by the views themselves, without the 30-day filter).
 Test: `OtherDeviceReportTests`, `FullWipeOverrideTests`,
-`MirrorKeySelectionTests`, `UnlinkVerdictTests`,
+`OverrideAvailabilityTests`, `MirrorKeySelectionTests`, `UnlinkVerdictTests`,
 `DeletionAssessmentOrchestrationTests` (Step 1 record, non-fatal). The
 clear-first ordering and the in-task skip are traced by hand, not tested.
 
@@ -452,7 +511,10 @@ for the launch half is lazy wallet construction, deliberately deferred.
 Enforced: `BackgroundActivityAssertion.swift`,
 `DeviceRegistrationService.swift` (`registerCurrentDevice`),
 `WalletManager+Notifications.swift` (background wallet open),
-`BarkWalletFFI.swift` (`getWalletDirectory`).
+`BarkWalletFFI.swift` (`getWalletDirectory`). Narrower than the title
+(audit 2026-11-12): the assertion has exactly those two call sites, and
+`getWalletDirectory` still creates the directory and runs the `.test` probe
+in init when the directory is missing.
 Test: none — the failure is a system kill, only observable in Organizer.
 
 **26. Default data is seeded only after the first CloudKit import pass completes, or when provably nothing can import — device role alone is not the guard.**
@@ -492,7 +554,8 @@ route through `mintAndRegisterWithRelay`, which consults
 UserDefaults (`com.arke.relay.*`): renew only when no registration is
 known, the device token changed, the registration was for another wallet's
 mailbox, or the token is past the midpoint of its actual life. The
-solicited paths (timer, BGTask, wake push) `forceRefresh()` first and are
+solicited paths (BGTask and wake push `forceRefresh()` first; the timer
+resets the registration directly, to the same effect) are
 exempt — they run because something asked for a refresh. Wallet deletion
 and unregister clear the persisted state so a new wallet cannot inherit
 "not due". Added 2026-09-26 (`Migrations/Bark-0.24.0-to-0.25.0/`).
@@ -503,12 +566,16 @@ Enforced: `WalletManager+Notifications.swift` (`mintAndRegisterWithRelay`),
 
 ## Test gaps
 
-Rules with no pinning test, roughly by risk: 1, 3, 4, 14, 17, 22 (decision
+Rules with no pinning test, roughly by risk: 1, 3, 4, 14 (layer 2 covered,
+ordering not), 17 (inventory and pre-destructive gates covered, ordering
+not), 22 (decision
 covered, ordering not), 23 (blast radius covered, call sites not), 25 (not
 testable in-process — a system kill), 26 (decision covered; the gate's wiring
 to real import events is on-device only). Covered since
 2026-08-14: rule 8 (`LaunchSequence`, `ExitProgressionLogic.swift`) and
 rule 2's decision matrix (`ImportRecoveryLogic`,
 `BarkWalletFFI+WalletCreation.swift`) — the pattern to follow for the rest.
+Also "Test: none" in their own rule and missing from this list until
+2026-11-12: 5, 7a, 7b, 7c, 9, 10, 13, 16, 19.
 Next candidate: wallet-detection decisions (rules 3/4/14, overlaps the
 optional startup-detection Phase 5 refactor).

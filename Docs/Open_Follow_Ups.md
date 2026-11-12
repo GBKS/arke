@@ -176,11 +176,19 @@ needs a ruling or a sentence of reasoning before it can become work.
   toggle exemption cannot help. Precondition for safety-net option (c).
 - [ ] **`checkReadOnlyMode()` infers primary**: a missing or unreadable
   device registration sets `isReadOnlyMode = false` (full spend rights,
-  against Principle 2 / contract rule 15), reachable via self-unlink; sibling
+  against Principle 2 / contract rule 15); sibling
   `shouldBlockWalletAccess()` answers `false` on an unreadable device ID.
-  Fix shape: unknown = read-only until the registry answers. UNVERIFIED on
-  device, needs the Tier 2 self-unlink run first. Trace, sibling and the
-  folded `device_<id>_isPrimary` key: `Features/Read_Only_Mode.md`.
+  Reachability re-read 2026-11-12: self-unlink is no longer offered, but
+  `unlinkDevice` from another device deletes the row and leaves this
+  device's own primary flag, so an unlinked ex-primary lands here (S4).
+  Traced 2026-11-12: on that relaunch every layer of `shouldBlockWalletAccess`
+  passes and the wallet opens with spend rights for the whole session; the
+  secondary row `registerDeviceIfNeeded` then writes makes only the *next*
+  launch read-only. Fix shape: unknown = read-only until the registry
+  answers. UNVERIFIED on device: unlink from device B, relaunch A once and
+  check that first session, since the second launch looks fixed. Trace,
+  sibling and the folded `device_<id>_isPrimary` key:
+  `Features/Read_Only_Mode.md`; `Development/Contract_Audit_2026_11.md` A.1.
 - [ ] **Security checks first**: switch `authenticateUser`
   (`SecurityService.swift:879-895`) to `.deviceOwnerAuthentication` (passcode
   fallback; biometrics-only hard-fails on Macs without Touch ID) and wire the
@@ -358,6 +366,18 @@ needs a ruling or a sentence of reasoning before it can become work.
   inserting their own; the dedupe then drops the only copy. PLAUSIBLE,
   code-review 2026-10-21; key the fetch on `persistentModelID`.
 
+- [ ] **The regular wallet open relies on the bindings' `createIfNotExists: true`
+  default** (`WalletOpenArgs` in `BarkWalletFFI+WalletLifecycle`
+  `tryOpenExistingWallet`): with a schema-only or missing `db.sqlite` plus a
+  keychain mnemonic, the launch open *creates* a wallet instead of failing,
+  the recreate-from-seed contract rule 3 forbids. Moved from Tier 4 on
+  2026-11-12: the guard in `tryOpenExistingWallet` tests directory existence
+  and `BarkWalletFFI.getWalletDirectory()` creates the directory in every
+  init, so a missing database reaches the create on any device that ran
+  once (read, not run). Pre-existing, surfaced by the 2026-10-29 adversarial
+  pass on `Features/Ark_Server_Selection.md`. Pass `createIfNotExists: false`
+  there and decide what the error path shows. `Development/Contract_Audit_2026_11.md` A.4.
+
 ### Multi-device (guiding doc: `Architecture/Multi_Device_Design.md`)
 
 - [ ] **CloudKit Production schema was never deployed — no TestFlight build
@@ -421,6 +441,20 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   devices?** (Reminders) → part of the rest of full S7, designed after
   explicit device linking lands (DECIDED 2026-10-10); extend the scenario
   catalog first. (Desktop promote/demote parity is in Parked.)
+- [ ] **A device without the seed can be promoted to primary** (tier
+  DECIDED 2026-11-12): the promote button in `LinkedDevicesView_iOS` and
+  `promoteThisDeviceToPrimary` check only "not primary" and "no other
+  primary", never the mnemonic; the device then runs
+  `initialize(forceReadOnly: false)` into the seed-missing branch. The
+  capability matrix says "needs seed first". Read from code, not run. `Development/Contract_Audit_2026_11.md` A.2.
+- [ ] **S3 swap and S4 lost-primary flows differ from the code**: promotion
+  is refused while a primary row is visible and no device writes another's
+  primary flag, so S3 is really demote-then-promote and S4
+  unlink-then-promote. DECIDED 2026-11-12: not ruled on its own; it becomes
+  a guided step-by-step swap designed in the explicit device linking scope
+  pass (`Architecture/Multi_Device_Design.md`, "Open questions"). Needs the
+  Tier 0 `checkReadOnlyMode()` fix and the seed check before promotion
+  first. `Development/Contract_Audit_2026_11.md` A.3.
 
 ### Connectivity and offline
 
@@ -831,6 +865,10 @@ log).
   running.
 
   Tier 0 divergence cluster.
+- [ ] **`RefreshModalView` lacks the `isInitialized` reload hook** (contract
+  rule 7b): it owns a `BalanceRefreshStatusViewModel` and loads once in
+  `.task`, so opened before the wallet handle is set it stays empty. Low
+  exposure, user-opened modal. `Development/Contract_Audit_2026_11.md` A.9.
 
 ### Exits
 
@@ -857,6 +895,12 @@ log).
   broadcast; round-replacement VTXO fails signature validation. Both are
   written up in `Bark_Bindings_Feedback.md` §1.6 — tick once Christoph
   confirms that doc reached Second.
+- [ ] **Check-in reminders armed on `isActive`, not `isInFlight`**:
+  `NotificationsSettingView_iOS` schedules the sequence when any exit
+  `isActive` (cancelled ones included), and `userCheckedIn` re-arms without
+  an in-flight check; its foreground gate `hasActiveExits()` only tests
+  whether a Live Activity exists. Contract rules 9 and 13 require
+  `isInFlight`. Cleared by the next launch or backgrounding pass. `Development/Contract_Audit_2026_11.md` A.6.
 
 ### Settings, devices, deletion
 
@@ -900,6 +944,16 @@ log).
   db instead of the stored setting (needs a bindings check for reading the
   db network without a chain source); the overlay copy is the fallback when
   self-heal is not possible (two lines merged 2026-10-09).
+- [ ] **Linked Devices reads the registry itself** (contract rule 24 (a)):
+  both platform views take only `mirrorOnly` from `otherDeviceReport` and
+  build the row list from `registeredDevices` without the 30-day filter, so
+  a stale row is listed but is not a blocker; and `checkForPrimaryDevice`
+  calls `getPrimaryDevice()` unscoped while `checkForNoPrimaryDevice` is
+  wallet-scoped. `Development/Contract_Audit_2026_11.md` A.10–11.
+- [ ] **DECIDE — recovery phrase on a seed-synced secondary**: the matrix
+  says ✓, but the Settings entry is hidden whenever `isReadOnlyMode`
+  (`SettingsView_iOS`, desktop `SettingsView`). Fix the row or show the
+  entry when the seed is present. `Development/Contract_Audit_2026_11.md` C.
 
 ### Contacts
 
@@ -969,14 +1023,6 @@ Tier 1 banner item; the dead device-registry entry rewritten to its two
 survivors.)
 
 ### Concurrency and the FFI boundary
-
-- [ ] **The regular wallet open relies on the bindings' `createIfNotExists: true`
-  default** (`WalletOpenArgs` in `BarkWalletFFI+WalletLifecycle`
-  `tryOpenExistingWallet`): with a schema-only `db.sqlite` (a create that died
-  after the schema write) plus a keychain mnemonic, the launch open would
-  *create* a wallet instead of failing. Pre-existing, surfaced by the
-  2026-10-29 adversarial pass on `Features/Ark_Server_Selection.md`. Pass
-  `createIfNotExists: false` there and decide what the error path shows.
 
 - [ ] **Export noise from the 2026-10-19 mainnet device check** (not
   caused by the ceiling; filed so the next reader does not chase them):
@@ -1072,6 +1118,24 @@ survivors.)
 - [ ] **Multi_Device_Design S7 note**: a deleted wallet's 30-day mailbox
   authorization stays valid on the Ark server (cannot be revoked); read-only
   and the mailbox holds nothing new, but worth a sentence.
+- [ ] **`unregisterCurrentDevice` can throw before the mirror clear**:
+  `getOrCreateDeviceId()` still precedes `removeMirrorEntries`, the one
+  fallible step left ahead of it (contract rule 24 (d)); the cleanup
+  service records it as `.failed`. `Development/Contract_Audit_2026_11.md` A.7.
+- [ ] **Rule 23 sweep: multi-row deletes outside the cleanup service**:
+  `TransactionService.cleanupOldPendingMetadata` (age-based, a mirrored
+  model), the dedups `dedupeOwnRecords`,
+  `buildExistingTransactionDictionary` (duplicate-txid rows, every upsert)
+  and `BackupStatus.getSingleton`, the dead
+  `OnchainTransactionService.clearPersistedTransactions` and
+  `SwiftDataHelper.cleanupDuplicateBackupStatus`, and `TagService.deleteAllTags`
+  whose comment claims a deletion-path use it does not have. Rule each as
+  exempt or fix. `Development/Contract_Audit_2026_11.md` A.8.
+- [ ] **Stale comments repeat "unlink needs a row / iOS menu hidden"**:
+  doc comments on `unregisterCurrentDevice`, `otherDeviceReport`,
+  `OtherDeviceReport.mirrorOnly`, `shouldOfferOverride`,
+  `deviceUnregistrationRecord`, the `rowRetained` case, and the desktop
+  `LinkedDevicesView` mirror-only comment. `Development/Contract_Audit_2026_11.md` A.13.
 
 ### Code findings from the 2026-09-27 doc rewrites (unverified beyond a grep)
 
@@ -1228,6 +1292,11 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
   pass. Relay stays dumb except the auth-expiry wake. Also carries
   "payment notification → navigate to that payment" and "notifications on
   onchain deposits" from Reminders.
+- [ ] **Contract rule 25 is narrower in code than its title**:
+  `BarkWalletFFI.getWalletDirectory()` still creates the directory and runs
+  the `.test` write probe inside init when the directory is missing, and
+  `withBackgroundActivityAssertion` wraps two call sites only
+  (`updateHeartbeat` and `unregisterCurrentDevice` saves are bare). `Development/Contract_Audit_2026_11.md` A.12.
 
 ### UI components, refactors, tooling
 
