@@ -37,13 +37,35 @@ nonisolated enum PhraseConfirmation {
         /// The expected words, normalized, in the same order as `positions`.
         let expected: [String]
 
-        /// Exact match per position after normalization. No prefix
-        /// matching and no word-list lookup: the point is to prove a written
-        /// copy, not to help complete one.
+        /// Match per position after normalization: the whole word, or its
+        /// first four letters (DECIDED 2026-11-12). Every word of the BIP39
+        /// English list is unique in its first four letters, so the four
+        /// letters identify the word as surely as the whole of it and a
+        /// guess gains nothing; what the rule forgives is a typo after the
+        /// fourth letter, or stopping early. Words shorter than four
+        /// letters must match whole. No word-list lookup and no hint which
+        /// word failed: the point is to prove a written copy, not to help
+        /// complete one.
         func matches(_ answers: [String]) -> Bool {
             guard answers.count == expected.count else { return false }
-            return zip(answers, expected).allSatisfy { PhraseConfirmation.normalize($0) == $1 }
+            return zip(answers, expected).allSatisfy { answer, word in
+                PhraseConfirmation.wordMatches(answer: PhraseConfirmation.normalize(answer), expected: word)
+            }
         }
+    }
+
+    /// How many leading letters identify a BIP39 English word on their own.
+    static let identifyingPrefixLength = 4
+
+    /// One word against its expected value, both normalized. Whole-word
+    /// equality, or an answer of at least four letters whose first four
+    /// equal the expected word's first four (which requires the expected
+    /// word itself to have at least four).
+    static func wordMatches(answer: String, expected: String) -> Bool {
+        if answer == expected { return true }
+        guard answer.count >= identifyingPrefixLength,
+              expected.count >= identifyingPrefixLength else { return false }
+        return answer.prefix(identifyingPrefixLength) == expected.prefix(identifyingPrefixLength)
     }
 
     /// Builds a challenge from the phrase with random positions. Nil when

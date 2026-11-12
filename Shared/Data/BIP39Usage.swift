@@ -17,6 +17,10 @@ enum BIP39Examples {
     private static let wordListProvider: WordListProviding = EnglishWordListProvider()
     private static let mnemonicConstructor: MnemonicConstructing = MnemonicConstructor()
     private static let seedDerivator: SeedDerivating = SeedDerivator()
+
+    /// The English word list, for checks that rest on its properties (the
+    /// phrase check's four-letter rule is pinned against it in tests).
+    static var englishWordList: [String] { wordListProvider.wordList }
     
     // MARK: - Basic Usage
     

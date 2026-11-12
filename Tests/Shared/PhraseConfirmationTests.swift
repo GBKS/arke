@@ -98,12 +98,46 @@ struct PhraseConfirmationTests {
         #expect(Self.fixed.matches([" About ", "ABSURD\n"]))
     }
 
-    @Test("A wrong word, swapped order, an empty answer or a prefix fail")
+    @Test("A wrong word, swapped order, an empty answer or a missing answer fail")
     func mismatchesFail() {
         #expect(!Self.fixed.matches(["about", "abuse"]))
         #expect(!Self.fixed.matches(["absurd", "about"]))
         #expect(!Self.fixed.matches(["about", ""]))
-        #expect(!Self.fixed.matches(["abou", "absurd"]))
         #expect(!Self.fixed.matches(["about"]))
+    }
+
+    // The four-letter rule (DECIDED 2026-11-12): the first four letters of a
+    // BIP39 English word identify it, so they are accepted in place of the
+    // whole word and letters after the fourth are not checked.
+
+    @Test("The first four letters pass, three do not")
+    func fourLetterPrefixPasses() {
+        #expect(Self.fixed.matches(["abou", "absu"]))
+        #expect(Self.fixed.matches(["ABOU ", "absurd"]))
+        #expect(!Self.fixed.matches(["abo", "absurd"]))
+        #expect(!Self.fixed.matches(["about", "abs"]))
+    }
+
+    @Test("A typo after the fourth letter is forgiven, one inside it is not")
+    func tailTypoForgiven() {
+        #expect(Self.fixed.matches(["abouy", "absurdd"]))
+        #expect(!Self.fixed.matches(["abuot", "absurd"]))
+    }
+
+    @Test("The four-letter rule rests on the word list: every English word is unique in its first four letters")
+    func fourLettersIdentifyEveryWord() {
+        let words = BIP39Examples.englishWordList
+        #expect(words.count == 2048)
+        let prefixes = Set(words.map { String($0.prefix(PhraseConfirmation.identifyingPrefixLength)) })
+        #expect(prefixes.count == words.count)
+    }
+
+    @Test("Words shorter than four letters must match whole")
+    func shortWordsMatchWhole() {
+        let short = PhraseConfirmation.Challenge(positions: [1, 2], expected: ["act", "add"])
+        #expect(short.matches(["act", "add"]))
+        #expect(!short.matches(["actor", "add"]))
+        #expect(!short.matches(["ac", "add"]))
+        #expect(!short.matches(["act", "addict"]))
     }
 }
