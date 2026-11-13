@@ -330,11 +330,11 @@ struct ActivityView_iOS: View {
             )
         }
         .sheet(isPresented: $showImportWalletSheet) {
-            ImportWalletView_iOS(
+            ImportWalletSheet_iOS(
                 // Seed entry on a device that already runs the wallet: the
                 // server and chain are the wallet's own, including a custom server
                 networkConfig: manager.networkConfig ?? .mainnet,
-                onBack: {
+                onCancel: {
                     showImportWalletSheet = false
                 },
                 onWalletImported: {

@@ -1917,6 +1917,7 @@
       }
     },
     "accessibility_recovery_phrase_field" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1945,6 +1946,7 @@
       }
     },
     "accessibility_recovery_phrase_hint" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -14624,6 +14626,17 @@
         }
       }
     },
+    "error_backup_other_phrase" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This backup file belongs to a different recovery phrase. Check the file, or go back and check the phrase."
+          }
+        }
+      }
+    },
     "error_backup_other_server" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -16966,6 +16979,94 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "傳送給 %@"
+          }
+        }
+      }
+    },
+    "import_phrase_checksum_failed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every word is in the list, but one is wrong or out of order. Check each word against your written phrase."
+          }
+        }
+      }
+    },
+    "import_phrase_paste_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Fills the grid with a recovery phrase from the clipboard"
+          }
+        }
+      }
+    },
+    "import_phrase_paste_not_a_phrase" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The clipboard doesn't hold a recovery phrase."
+          }
+        }
+      }
+    },
+    "import_phrase_switch_to_12" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to 12 words"
+          }
+        }
+      }
+    },
+    "import_phrase_switch_to_24" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to 24 words"
+          }
+        }
+      }
+    },
+    "import_phrase_word_invalid_value %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@, not in the recovery word list"
+          }
+        }
+      }
+    },
+    "import_phrase_word_label %lld %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Word %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "import_phrase_word_not_in_list %lld" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Word %lld isn't in the recovery word list."
           }
         }
       }
@@ -20126,6 +20227,105 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "如何取得測試比特幣"
+          }
+        }
+      }
+    },
+    "onboarding_import_backup_body" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose the backup file you exported from Arké. It restores your payment history and anything still in progress."
+          }
+        }
+      }
+    },
+    "onboarding_import_backup_without" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Without it, your funds are recovered from the network and the history starts fresh."
+          }
+        }
+      }
+    },
+    "onboarding_import_change_file_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Choose a different backup file"
+          }
+        }
+      }
+    },
+    "onboarding_import_phrase_body" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter your recovery phrase, one word per field, in order."
+          }
+        }
+      }
+    },
+    "onboarding_import_phrase_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recovery Phrase"
+          }
+        }
+      }
+    },
+    "onboarding_import_skip_confirm" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restore without file"
+          }
+        }
+      }
+    },
+    "onboarding_import_skip_hint" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restores the wallet from the recovery phrase alone"
+          }
+        }
+      }
+    },
+    "onboarding_import_skip_message" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your funds are recovered from the network, but your payment history and anything still in progress are not. If the file exists on another device or in Files, go back and choose it."
+          }
+        }
+      }
+    },
+    "onboarding_import_skip_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restore without the backup file?"
           }
         }
       }

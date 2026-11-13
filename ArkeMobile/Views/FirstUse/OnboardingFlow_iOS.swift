@@ -15,8 +15,9 @@ Create wallet sequence
  
 Import wallet sequence
 1. firstUse
-2. importWallet
-3. walletImported
+2. importWallet (recovery phrase grid)
+3. importBackupFile (backup file, Skip for phrase-only; runs the import)
+4. walletImported
  
  */
 
@@ -28,6 +29,7 @@ enum OnboardingState {
     case firstUse
     case introVideos
     case importWallet
+    case importBackupFile
     case walletImported
     case usagePattern
     case selectServer
@@ -47,6 +49,9 @@ struct OnboardingFlow_iOS: View {
     /// cover screen's sheet sets it; create/import consume it and persist it
     /// once the wallet exists.
     @State private var networkConfig: NetworkConfig = .mainnet
+    /// The validated recovery phrase, carried from the phrase step to the
+    /// backup-file step and back; cleared when the import branch is left.
+    @State private var importPhrase: [String] = []
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
     
@@ -114,15 +119,46 @@ struct OnboardingFlow_iOS: View {
                         .tag("introVideos")
                         
                     case .importWallet:
-                        ImportWalletView_iOS(
+                        ImportPhraseView_iOS(
                             networkConfig: networkConfig,
+                            initialWords: importPhrase,
                             onBack: {
+                                importPhrase = []
                                 navigationDirection = .backward
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .firstUse
                                 }
                             },
+                            onContinue: { words in
+                                importPhrase = words
+                                navigationDirection = .forward
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    currentState = .importBackupFile
+                                }
+                            }
+                        )
+                        .transition(.asymmetric(
+                            insertion: navigationDirection == .forward ?
+                                .move(edge: .trailing).combined(with: .opacity) :
+                                    .move(edge: .leading).combined(with: .opacity),
+                            removal: navigationDirection == .forward ?
+                                .move(edge: .leading).combined(with: .opacity) :
+                                    .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                        .tag("importWallet")
+
+                    case .importBackupFile:
+                        ImportBackupFileView_iOS(
+                            networkConfig: networkConfig,
+                            phrase: importPhrase.joined(separator: " "),
+                            onBack: {
+                                navigationDirection = .backward
+                                withAnimation(.smooth(duration: 0.4)) {
+                                    currentState = .importWallet
+                                }
+                            },
                             onWalletImported: {
+                                importPhrase = []
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .walletImported
@@ -137,7 +173,7 @@ struct OnboardingFlow_iOS: View {
                                 .move(edge: .leading).combined(with: .opacity) :
                                     .move(edge: .trailing).combined(with: .opacity)
                         ))
-                        .tag("importWallet")
+                        .tag("importBackupFile")
                         
                     case .walletImported:
                         WalletImportedView_iOS(
