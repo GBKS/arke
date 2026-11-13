@@ -88,14 +88,16 @@ struct MnemonicChecksumTests {
 
     // MARK: - (b) App pre-check
 
-    @Test("SecurityService.isValidBIP39 only checks word count: passes all three phrases")
+    @Test("SecurityService.isValidBIP39 refuses a bad checksum and an unknown word (2026-11-12, was word count only)")
     @MainActor
-    func appValidatorIsWordCountOnly() {
+    func appValidatorChecksChecksumAndWordList() {
         let service = SecurityService(taskManager: TaskDeduplicationManager())
         #expect(service.isValidBIP39(Self.validPhrase) == true)
-        // Pinned gap: the app pre-check does NOT catch a bad checksum or an unknown word.
-        #expect(service.isValidBIP39(Self.badChecksumPhrase) == true)
-        #expect(service.isValidBIP39(Self.nonWordlistPhrase) == true)
+        #expect(service.isValidBIP39(Self.badChecksumPhrase) == false)
+        #expect(service.isValidBIP39(Self.nonWordlistPhrase) == false)
+        // Fifteen-word phrases were accepted by the old count check; bark's
+        // import accepts 12 or 24 only, so the pre-check matches it.
+        #expect(service.isValidBIP39(Self.validPhrase + " abandon abandon abandon") == false)
     }
 
     // MARK: - (c) OnchainWallet.default with invalid phrases only

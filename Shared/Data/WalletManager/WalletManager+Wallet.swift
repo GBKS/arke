@@ -72,7 +72,7 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Invalid mnemonic phrase - doesn't match your wallet")
             
         case .invalidFormat:
-            throw BarkErrorArke.commandFailed("Invalid mnemonic format - must be 12, 15, 18, 21, or 24 words")
+            throw BarkErrorArke.commandFailed("Invalid recovery phrase - a word is misspelled or out of order, or the count is not 12 or 24")
         }
         
         // Before any mutation: never write another config over an account
@@ -122,11 +122,20 @@ extension WalletManager {
             // Step 6: Import the wallet (it will now open the restored database).
             // A network mismatch here means the backup file belongs to another
             // network than the user selected - surface it, never wipe the restore.
-            let result = try await wallet.importWallet(
-                network: config.networkType,
-                arkServer: config.arkServerBaseURL,
-                mnemonic: trimmedMnemonic
-            )
+            let result: String
+            do {
+                result = try await wallet.importWallet(
+                    network: config.networkType,
+                    arkServer: config.arkServerBaseURL,
+                    mnemonic: trimmedMnemonic
+                )
+            } catch BarkWalletFFIError.mnemonicMismatch(let message) {
+                // The restored database was created from another phrase. The
+                // rollback below removes it; the user picked the wrong file or
+                // typed the wrong phrase, and the screen says which to check.
+                Self.logger.error("❌ Restored backup belongs to another recovery phrase: \(message)")
+                throw BarkErrorArke.backupBelongsToAnotherPhrase
+            }
 
             // Step 6b: Opening a restored database never contacts the server;
             // bark compares its pinned server key on the first server call.
@@ -281,7 +290,7 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Invalid mnemonic phrase - doesn't match your wallet")
             
         case .invalidFormat:
-            throw BarkErrorArke.commandFailed("Invalid mnemonic format - must be 12, 15, 18, 21, or 24 words")
+            throw BarkErrorArke.commandFailed("Invalid recovery phrase - a word is misspelled or out of order, or the count is not 12 or 24")
         }
         
         // Use provided networkConfig or fall back to wallet's current config

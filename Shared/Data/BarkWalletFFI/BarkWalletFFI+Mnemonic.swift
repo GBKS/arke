@@ -19,8 +19,6 @@ extension BarkWalletFFI {
     /// Generate a new BIP39 mnemonic (12 words)
     private func generateMnemonic() throws -> String {
         // Use BIP39 library components
-        // let entropyGenerator = EntropyGenerator()
-        let wordListProvider = EnglishWordListProvider()
         let mnemonicConstructor = MnemonicConstructor()
         
         // Generate 16 bytes (128 bits) of cryptographically secure random entropy
@@ -36,37 +34,11 @@ extension BarkWalletFFI {
         let entropy = Data(randomBytes)
         
         // Generate mnemonic from entropy
-        let phrase = mnemonicConstructor.mnemonic(entropy: entropy, wordList: wordListProvider.wordList)
+        let phrase = mnemonicConstructor.mnemonic(entropy: entropy, wordList: BIP39WordSuggestions.words)
         
         Self.logger.info("Generated secure 12-word BIP39 mnemonic, Entropy: \(randomBytes.count * 8) bits, Words: \(phrase.split(separator: " ").count)")
         
         return phrase
-    }
-    
-    /// Validate a BIP39 mnemonic phrase
-    private func validateMnemonic(_ phrase: String) -> Bool {
-        // Check if all words are in the wordlist
-        let words = phrase.split(separator: " ").map(String.init)
-        let wordListProvider = EnglishWordListProvider()
-        let wordList = wordListProvider.wordList
-        
-        // Verify all words exist in wordlist
-        for word in words {
-            if !wordList.contains(word) {
-                Self.logger.warning("Invalid mnemonic: word '\(word)' not in BIP39 wordlist")
-                return false
-            }
-        }
-        
-        // Verify word count (must be 12, 15, 18, 21, or 24)
-        let validCounts = [12, 15, 18, 21, 24]
-        guard validCounts.contains(words.count) else {
-            Self.logger.warning("Invalid mnemonic: word count \(words.count) is not valid (must be 12, 15, 18, 21, or 24)")
-            return false
-        }
-        
-        // TODO: Add checksum validation if the library provides it
-        return true
     }
     
     // MARK: - Mnemonic Storage & Retrieval

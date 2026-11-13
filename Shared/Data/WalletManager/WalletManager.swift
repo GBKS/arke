@@ -1595,6 +1595,9 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
     /// A restored backup database belongs to a different Ark server than the
     /// one selected; bark pins the server key in the database.
     case backupBelongsToAnotherServer
+    /// A restored backup database was created from a different recovery
+    /// phrase than the one typed; bark compares the seed fingerprint on open.
+    case backupBelongsToAnotherPhrase
 
     var errorDescription: String? {
         switch self {
@@ -1608,6 +1611,8 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
             return String(format: String(localized: "error_custom_server_pending", defaultValue: "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."), host)
         case .backupBelongsToAnotherServer:
             return String(localized: "error_backup_other_server", defaultValue: "This backup belongs to a different Ark server than the one selected. Choose the server the wallet was created with and try again.")
+        case .backupBelongsToAnotherPhrase:
+            return String(localized: "error_backup_other_phrase", defaultValue: "This backup file belongs to a different recovery phrase. Check the file, or go back and check the phrase.")
         }
     }
 }

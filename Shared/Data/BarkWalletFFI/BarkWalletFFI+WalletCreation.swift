@@ -578,6 +578,12 @@ extension BarkWalletFFI {
             if String(describing: error).contains("Network mismatch") {
                 throw BarkWalletFFIError.networkMismatch(error.localizedDescription)
             }
+            // A restored backup (or leftover data) whose seed fingerprint is
+            // not the typed phrase's: bark bails "incorrect mnemonic" before
+            // any chain or server call.
+            if String(describing: error).contains("incorrect mnemonic") {
+                throw BarkWalletFFIError.mnemonicMismatch(error.localizedDescription)
+            }
             throw BarkWalletFFIError.configurationError("Failed to import wallet: \(error.localizedDescription)")
         } catch {
             print("❌ Error importing wallet: \(error)")

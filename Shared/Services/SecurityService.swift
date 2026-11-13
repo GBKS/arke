@@ -892,16 +892,11 @@ class SecurityService {
     }
     
     /// Validates BIP39 format (basic check - enhance as needed)
+    /// Word count, word list and checksum through bark's binding, so the
+    /// seed is never written for a phrase bark would refuse to open
+    /// (Import_Screen_Split.md §3; pinned by MnemonicChecksumTests).
     func isValidBIP39(_ mnemonic: String) -> Bool {
-        let words = mnemonic.components(separatedBy: " ")
-        
-        // Check word count (12, 15, 18, 21, or 24 words)
-        guard [12, 15, 18, 21, 24].contains(words.count) else {
-            return false
-        }
-        
-        // All words should be non-empty and lowercase
-        return words.allSatisfy { !$0.isEmpty }
+        RecoveryPhraseInput.isValidPhrase(mnemonic)
     }
     
     // MARK: - Biometric Authentication

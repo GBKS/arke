@@ -14,7 +14,6 @@ enum BIP39Examples {
     // MARK: - Dependencies
     
     private static let entropyGenerator: EntropyGenerating = EntropyGenerator()
-    private static let wordListProvider: WordListProviding = EnglishWordListProvider()
     private static let mnemonicConstructor: MnemonicConstructing = MnemonicConstructor()
     private static let seedDerivator: SeedDerivating = SeedDerivator()
 
@@ -23,21 +22,21 @@ enum BIP39Examples {
     /// Generate a new 12-word mnemonic (128-bit entropy)
     static func generate12WordMnemonic() throws -> String {
         let entropy = entropyGenerator.entropy(security: .medium) // 128-bit
-        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: wordListProvider.wordList)
+        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: BIP39WordSuggestions.words)
         return mnemonic
     }
     
     /// Generate a new 24-word mnemonic (256-bit entropy)
     static func generate24WordMnemonic() throws -> String {
         let entropy = entropyGenerator.entropy(security: .strongest) // 256-bit
-        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: wordListProvider.wordList)
+        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: BIP39WordSuggestions.words)
         return mnemonic
     }
     
     /// Generate a mnemonic with specific entropy security level
     static func generateMnemonic(security: EntropySecurity = .medium) -> String {
         let entropy = entropyGenerator.entropy(security: security)
-        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: wordListProvider.wordList)
+        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: BIP39WordSuggestions.words)
         return mnemonic
     }
     
@@ -47,50 +46,9 @@ enum BIP39Examples {
         return seed
     }
     
-    // MARK: - Validation
-    
-    /// Validate a mnemonic phrase (checks word count and checksum)
-    static func validate(phrase: String) -> Bool {
-        // Check if all words are in the wordlist
-        let words = phrase.split(separator: " ").map(String.init)
-        let wordList = wordListProvider.wordList
-        
-        // Verify all words exist in wordlist
-        for word in words {
-            if !wordList.contains(word) {
-                return false
-            }
-        }
-        
-        // Verify word count (must be 12, 15, 18, 21, or 24)
-        let validCounts = [12, 15, 18, 21, 24]
-        guard validCounts.contains(words.count) else {
-            return false
-        }
-        
-        // TODO: Add checksum validation if the library exposes it
-        return true
-    }
-    
-    /// Get detailed validation error for a mnemonic phrase
-    static func validateWithError(phrase: String) throws {
-        let words = phrase.split(separator: " ").map(String.init)
-        let wordList = wordListProvider.wordList
-        
-        // Check word count
-        let validCounts = [12, 15, 18, 21, 24]
-        guard validCounts.contains(words.count) else {
-            throw MnemonicError.invalidWordCount(words.count)
-        }
-        
-        // Check if all words are valid
-        for (index, word) in words.enumerated() {
-            if !wordList.contains(word) {
-                throw MnemonicError.invalidWord(word, at: index)
-            }
-        }
-    }
-    
+    // Validation lives in `RecoveryPhraseInput.isValidPhrase` (bark's
+    // binding checks list membership and the checksum).
+
     // MARK: - Conversion
     
     /// Convert mnemonic phrase to seed bytes
@@ -100,7 +58,7 @@ enum BIP39Examples {
     
     /// Convert entropy to mnemonic phrase
     static func entropyToPhrase(_ entropy: Data) -> String {
-        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: wordListProvider.wordList)
+        let mnemonic = mnemonicConstructor.mnemonic(entropy: entropy, wordList: BIP39WordSuggestions.words)
         return mnemonic
     }
     
@@ -108,14 +66,14 @@ enum BIP39Examples {
     
     /// Get the word at a specific index from the BIP39 wordlist
     static func word(at index: Int) -> String? {
-        let wordList = wordListProvider.wordList
+        let wordList = BIP39WordSuggestions.words
         guard index >= 0 && index < wordList.count else { return nil }
         return wordList[index]
     }
     
     /// Get all words in the BIP39 wordlist
     static func allWords() -> [String] {
-        return wordListProvider.wordList
+        return BIP39WordSuggestions.words
     }
     
     // MARK: - Examples
@@ -143,16 +101,6 @@ enum BIP39Examples {
         } catch {
             print("Error generating 24-word mnemonic: \(error)\n")
         }
-        
-        // Example 3: Validate valid mnemonic
-        let validPhrase = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-        print("Validating: \(validPhrase)")
-        print("Valid: \(validate(phrase: validPhrase))\n")
-        
-        // Example 4: Validate invalid mnemonic
-        let invalidPhrase = "not a valid mnemonic phrase at all"
-        print("Validating: \(invalidPhrase)")
-        print("Valid: \(validate(phrase: invalidPhrase))\n")
         
         // Example 5: Generate seed from mnemonic
         let mnemonic = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
