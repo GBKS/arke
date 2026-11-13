@@ -337,6 +337,17 @@ questions:
    funds they may not be able to move; an explicit expired state (or
    documented client-side rule) would let us render this honestly.
 
+**Field note 2026-11-13 (bark 0.8.0 / bindings v0.26.x), same question from
+the other direction.** A mainnet wallet was restored from a three-day-old
+database backup and then caught up through the mailbox. Among the 45
+messages were 17 arkoor dust VTXOs (1–3 sats each, 45 sats in total) whose
+expiry height 975594 was already 65 blocks behind the tip; bark logged
+"keeping it, it needs a refresh" for each and now counts the 45 sats under
+"needs refresh", so our refresh reminder shows for dust that may be
+unrefreshable. Is a refresh accepted this shortly after expiry, or are these
+already swept? Either answer would let us stop nudging the user; an
+explicit expired state would let bark say so itself.
+
 ### 1.9 Recovery mailbox reports expiry-swept VTXOs as bare `Spent` — users can't be told where funds went
 
 Field case (2026-08-13, signet, `ark.signet.2nd.dev`): a seed-only import at
@@ -584,6 +595,13 @@ causes, all read in the `bark-0.8.0` source:
    checkpoint store logs the error above. (Our side adds the second walker
    by calling `sync()` while the daemon already runs one; we are fixing
    that.)
+
+   Seen again 2026-11-13 without any recovery involved: after a restore from
+   a database backup the first sync had 45 mailbox messages to catch up on
+   and logged 45 "Checkpoint not advanced" errors, one per message, each
+   message processed twice ("Ignoring already-known VTXO" on the second
+   pass). The error fires on every ordinary catch-up with two walkers, not
+   only after recovery, which is why (c) matters on its own.
 
 **Ask:** (a) check `get_wallet_vtxo` before validating a received arkoor
 VTXO; (b) let recovery skip, on the first regular sync, the arkoor

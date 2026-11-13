@@ -8,6 +8,7 @@ words"), which Christoph intends to approach after splitting the import
 screen into a recovery-phrase screen and a wallet-backup-file screen
 (intent noted 2026-11-12, not scheduled). The verification entry is in
 `Open_Follow_Ups_Done.md` under "Wallet Deletion & Device Registry".**
+Planned the same day: `Import_Screen_Split.md` (rulings in its §6).
 
 Why declined, in one paragraph: the four-letter rule already caps the
 typing at four letters per word with the tail forgiven. A

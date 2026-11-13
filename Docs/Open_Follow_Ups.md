@@ -651,6 +651,12 @@ names the fix it verifies; the write-ups are in the Done log.
 
 ### Diagnostics and notification path
 
+- [ ] **Two noise sources in log exports** (2026-11-13 deletion + import
+  export): the post-wipe link pass logs `Address not found in database` once
+  per movement (319 lines; the address history is wiped with the wallet, so
+  no link is possible, log once per pass or at debug), and CloudKit's own
+  export activity logs `BGSystemTaskSchedulerErrorDomain Code=3` a few times
+  per session (system-side, noted so it is not re-investigated).
 - [ ] **Debug export can come back empty or miss the first seconds**
   (2026-10-14; CONFIRMED by the `OSLogType` docs: info-level entries live
   in a purged memory buffer, the noisy launch is what gets evicted). Fix
@@ -988,18 +994,23 @@ log).
 - [ ] **Internal flag for "user has backed up the mnemonic" + backup reminder
   once there are funds** (no such flag exists; `BackupStatus.reminderMessage`
   and `shouldShowBackupReminder` exist unwired, see Tier 4 process state).
-- [ ] **Import — autocomplete for seed words** (`EnglishWordListProvider`).
-  Christoph's intent (2026-11-12, not yet scheduled): first split the import
-  screen into a recovery-phrase screen and a wallet-backup-file screen; the
-  phrase screen then takes the suggestions. Engine design, prefix arithmetic
-  and the cached-list note: `Features/Phrase_Entry_Autocomplete.md` §3, §6.
-- [ ] **Import — validate the phrase before handing it to bark** (moved
-  down from Tier 0 2026-10-09: `MnemonicChecksumTests` shows bark rejects a
-  bad checksum or unknown word before any network I/O). Fix: call the
-  binding's `validateMnemonic(mnemonic:)` in `SecurityService.isValidBIP39`
-  (word count only today), show "phrase has a typo" before the import UI
-  starts, delete the two dead checksum-TODO validators. Also closes the
-  seed-written-before-bark-sees-it window. Detail: `Features/BIP39.md` "Open".
+- [ ] **Import — split into a recovery-phrase screen and a backup-file
+  screen** — BUILT and simulator-checked 2026-11-12 (numbered grid,
+  suggestions, unique-prefix completion, checksum pre-check through the
+  binding, backup file as the default path with Skip + alert, Paste).
+  Device-checked 2026-11-13 with the exported file (mainnet import on the
+  latest build, log reviewed). Owed before ticking: a phrase-only import
+  and a file from another phrase (expect the mismatch alert). Plan:
+  `Features/Import_Screen_Split.md` §10, §13.
+- [ ] **Import — seed-only import against leftover data of another phrase
+  fails with the generic error** (PROPOSED 2026-11-12): the phrase-only path
+  wipes and retries on `BarkWalletFFIError.networkMismatch` but not on
+  `mnemonicMismatch`; wiping would destroy offchain state, so it needs a
+  ruling. `Features/Import_Screen_Split.md` §14.
+- [ ] **Third-party keyboards can read the phrase on every entry screen**
+  (PROPOSED 2026-11-12): only the app-wide
+  `shouldAllowExtensionPointIdentifier` delegate hook blocks keyboard
+  extensions. `Features/Import_Screen_Split.md` §14.
 
 ### X-Ray and Tilt
 
