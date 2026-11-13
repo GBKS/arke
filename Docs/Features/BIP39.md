@@ -115,7 +115,7 @@ The 12-word test phrase is also what `BarkWalletFFI.getMnemonic()` returns in Sw
 
 ## Open: pre-check the phrase before bark sees it (moved from the backlog 2026-11-10)
 
-Folded into `Import_Screen_Split.md` (DECIDED 2026-11-12, not yet built); the backlog entry now lives there.
+Folded into `Import_Screen_Split.md` and DONE 2026-11-13 (`SecurityService.isValidBIP39` calls bark's validator via `RecoveryPhraseInput`; the two dead validators are deleted).
 
 Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, relocation only; the open entry is now a stub pointing here).
 

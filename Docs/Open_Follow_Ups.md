@@ -994,14 +994,6 @@ log).
 - [ ] **Internal flag for "user has backed up the mnemonic" + backup reminder
   once there are funds** (no such flag exists; `BackupStatus.reminderMessage`
   and `shouldShowBackupReminder` exist unwired, see Tier 4 process state).
-- [ ] **Import — split into a recovery-phrase screen and a backup-file
-  screen** — BUILT and simulator-checked 2026-11-12 (numbered grid,
-  suggestions, unique-prefix completion, checksum pre-check through the
-  binding, backup file as the default path with Skip + alert, Paste).
-  Device-checked 2026-11-13 with the exported file (mainnet import on the
-  latest build, log reviewed). Owed before ticking: a phrase-only import
-  and a file from another phrase (expect the mismatch alert). Plan:
-  `Features/Import_Screen_Split.md` §10, §13.
 - [ ] **Import — seed-only import against leftover data of another phrase
   fails with the generic error** (PROPOSED 2026-11-12): the phrase-only path
   wipes and retries on `BarkWalletFFIError.networkMismatch` but not on

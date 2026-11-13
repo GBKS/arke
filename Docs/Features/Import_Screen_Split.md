@@ -1,14 +1,16 @@
 # Import: Phrase Screen and Backup-File Screen
 
-**Status:** BUILT 2026-11-12, simulator-checked the same day (§13), full
-mobile suite run noted in §13; **device check owed** (§10) before the backlog
-entry is ticked. Design rulings DECIDED 2026-11-12 (Christoph, §6). Absorbs
-the Tier 3 "First use" entries "Import — autocomplete for seed words" and
-"Import — validate the phrase before handing it to bark" (relocated verbatim
-in §12). Sibling plans: `Phrase_Entry_Autocomplete.md` (prefix arithmetic §3,
-engine §6; declined for the verification screen), `BIP39.md` (pre-check
-evidence), `Backup_Restore.md` (backup file semantics),
-`Wallet_Deletion_Export_Step.md` (the file this screen imports).
+**Status:** DONE 2026-11-13. Built 2026-11-12, simulator-checked over four
+rounds, device-checked by Christoph 2026-11-13 (mainnet import with the
+exported file, log reviewed in §13; phrase-only import; backup file from
+another phrase showing the mismatch alert). COMMITTED 9d89200 (pre-check and
+engine), eea15dd (screens), 44fdab8 (docs). Design rulings DECIDED
+2026-11-12 and 2026-11-13 (§6). Absorbed the Tier 3 "First use" entries
+"Import — autocomplete for seed words" and "Import — validate the phrase
+before handing it to bark" (relocated verbatim in §12); the closed entry is
+in `Open_Follow_Ups_Done.md` under "Startup & Initialization". Sibling plans:
+`Phrase_Entry_Autocomplete.md`, `BIP39.md`, `Backup_Restore.md`,
+`Wallet_Deletion_Export_Step.md`.
 
 ## 1. What changes
 
@@ -353,10 +355,12 @@ into the grid only, never pasted from a tracked file.
   content margin, toggling to "Switch to 12 words" and back; paste circle
   inset about 5 pt inside pill 1, pills 1 and 7 aligned; Done at the
   trailing edge with and without chips; chips clipped before Done.
+- Device (2026-11-13, Christoph, second pass): phrase-only import and a
+  backup file from another phrase, mismatch alert shown. Closes §10.
 - Not checked in the simulator: Paste with a real phrase on the clipboard
   (the simulator pasteboard mirrors the Mac clipboard, which was in use),
-  the file picker, the mismatch alert, any import. All owed to the device
-  check (§10).
+  the file picker, the mismatch alert, any import; all covered on the
+  device.
 
 ## 14. Findings filed, not built
 

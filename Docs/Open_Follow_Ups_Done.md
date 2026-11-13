@@ -523,6 +523,14 @@ green):
   refreshing"; auto path stops setting `lastError`.
 
 ## Startup & Initialization
+- [x] **Import — split into a recovery-phrase screen and a backup-file
+  screen** — DONE 2026-11-13 (COMMITTED 9d89200..44fdab8). BUILT and simulator-checked 2026-11-12 (numbered grid,
+  suggestions, unique-prefix completion, checksum pre-check through the
+  binding, backup file as the default path with Skip + alert, Paste).
+  Device-checked 2026-11-13 by Christoph: mainnet import with the exported
+  file (log reviewed), a phrase-only import, and a backup file from
+  another phrase (mismatch alert shown). Plan:
+  `Features/Import_Screen_Split.md` §10, §13.
 - [x] **Seed-recovery scan never runs on import** — fixed and field-verified:
   single `Wallet.open(createWithoutServer:)` shipped
   (`BarkWalletFFI+WalletCreation.swift`); imports on 2026-08-13 show the scan
