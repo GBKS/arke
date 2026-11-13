@@ -63,7 +63,12 @@ These are the items that may be more than doc drift. Tiering is Christoph's.
    secondary row and `writeOwnPrimaryFlag(false)`, which nothing in the
    running session observes, so the *next* launch is blocked at layer 2.
    One full primary session, then read-only. The device check must look at
-   the first relaunch.
+   the first relaunch. **Device run 2026-11-13: falsified.** The relaunch
+   flashed the primary layout and went read-only in the same session; the
+   main-actor registration in `registerDeviceIfNeeded` lands before the
+   detached initialisation reaches `checkReadOnlyMode`, which the trace
+   above did not account for. Residual is the race and the flash
+   (`Features/Read_Only_Mode.md`, "Device run 2026-11-13").
 2. ✔ **A device without the seed can be promoted to primary** (matrix L56).
    The button condition in `LinkedDevicesView_iOS` and
    `promoteThisDeviceToPrimary` check only "not primary" and "no other

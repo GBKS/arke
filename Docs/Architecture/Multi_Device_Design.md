@@ -10,6 +10,14 @@ Related: `Features/Read_Only_Mode.md`, `Features/Wallet_Deletion_And_Rejoin.md`,
 `Initialization/Launch_Sequence_Contract.md` (rules 14–24),
 `Initialization/Startup_Wallet_Detection_Plan.md`.
 
+**2026-11-13:** the explicit device linking scope pass is DECIDED and lives
+in `Features/Device_Linking.md`: a per-device state model, five flows
+(create/import, link, make primary, delete, launch check), the Devices
+screen rules, the order of work and the device matrix. The State model
+section below is the summary; the scenario walkthroughs S2–S10 still
+describe today's shipped behaviour and are rewritten when the build lands
+(step 6 of that plan).
+
 ## Principles (the physics of the system)
 
 These are invariants, not preferences — every scenario below must hold them:
@@ -38,12 +46,26 @@ Account-level state (shared): seed in iCloud Keychain (present/absent),
 wallet hash in KVS (present/absent), CloudKit data set, device registry
 (CloudKit + KVS mirror), iCloud Drive wallet-db backup.
 
-Per-device state: wallet files on disk (present/absent), seed readable
-(yes/no/keychain-unavailable), registered (yes/no), role (primary/secondary),
-local-deletion tombstone (present/absent).
+Per-device state, DECIDED 2026-11-13 (`Features/Device_Linking.md` §2):
+each install is in exactly one of five states, defined by evidence, and
+nothing that does not match a row may open bark.
 
-Detection (`SecurityService.performWalletStateDetection`) maps these to four
-routes: wallet (spendable), read-only, rejoin, onboarding.
+| State | User sees | Evidence |
+|---|---|---|
+| No wallet | Onboarding | No seed, no account hash |
+| Found, not linked | Link screen | Account hash or seed present, no valid link record |
+| Secondary | Read-only wallet | Valid link record, own row not primary |
+| Primary | Full wallet | Valid link record, own row primary |
+| Linked to a wallet the account no longer has | Launch-check screen | Record present; account hash gone with the seed definitively absent, or a different hash |
+
+The link record is per-install UserDefaults state (wallet hash, link
+date) written by create, import and the link screen; a record whose own
+registry row is missing means another device unlinked this one. The
+local-deletion tombstone and the rejoin route are removed by that plan.
+
+Today's shipped detection (`SecurityService.performWalletStateDetection`)
+still maps the raw signals to four routes: wallet (spendable), read-only,
+rejoin, onboarding.
 
 ## Capability matrix
 
@@ -200,7 +222,12 @@ Traced the same day: detection returns `walletWithSeed`, every layer of
 one full session; the secondary row it then registers makes only the next
 launch read-only. "It cannot spend" below is therefore wrong for that first
 session (read from code, not run; Tier 0, "`checkReadOnlyMode()` infers
-primary").
+primary"). **Device run 2026-11-13: not observed.** The relaunch flashed
+the primary layout and went read-only in the same session, because the
+main-actor registration lands before the detached mode check reads the
+row (`Features/Read_Only_Mode.md`, "Device run 2026-11-13"). The residual
+is a race plus the flash; the evidence rule in `Features/Device_Linking.md`
+§2.3 removes both.
 
 Walkthrough:
 - **Does (on the surviving secondary):** opens Settings → Linked Devices.
@@ -502,7 +529,18 @@ Walkthrough:
 - **Behind the scenes:** registration removed; spending was never possible from the lost device (it wasn't primary).
 - **Security note:** same as S4 — if the lost device may be unlocked in someone else's hands, the recovery phrase on it is the real exposure; consider moving funds.
 
-## Cross-cutting — explicit device linking ◻ (direction DECIDED 2026-10-10; build pending a scope pass)
+## Cross-cutting — explicit device linking ◻ (direction DECIDED 2026-10-10; scope pass DECIDED 2026-11-13 in `Features/Device_Linking.md`; build pending)
+
+**Scope pass outcome (2026-11-13).** The single screen became a per-device
+state model with five flows; every open question below is answered there
+(§4.2 rulings), and the guided primary swap folded in from S3/S4 is flow
+4.3. Three further rulings widened the scope: the "Left" state and the
+rejoin screen are removed (local delete routes to the link screen), the
+fast KVS entries carry device identity so the Devices screen shows no sync
+state, and the delete flow's blocked case gets a per-blocker unlink. The
+2026-10-10 clause "retires the pre-open network reconcile patch" was wrong
+(rule 22 runs on every open) and is withdrawn. The text below is the
+proposal as accepted on 2026-10-10, kept for its rationale.
 
 Christoph accepted the direction on 2026-10-10: no install adopts the
 account's wallet silently. The four open questions below are answered in a
@@ -511,7 +549,8 @@ S2, S6 and S9 walkthroughs still describe today's silent behaviour. The
 tombstone follow-up ("reinstall after a local delete silently rejoins") is
 closed as superseded.
 
-Touches S2, S6 and S9.
+Touches S2, S6 and S9 directly; via `Features/Device_Linking.md` also S3,
+S4, S5, S7 and S10.
 
 **The question (Christoph): "I am wondering if any install should ever just
 join a wallet. Maybe it's nicer for the user to see a message about how they
@@ -634,7 +673,14 @@ doesn't. Fail-safe by construction, and it makes "move the tombstone into the
 keychain" unnecessary: the reinstall-after-delete case falls out of the same
 screen.
 
-### Open questions (decide before building)
+### Open questions (all DECIDED 2026-11-13; answers in `Features/Device_Linking.md` §4.2–4.3)
+
+Answers in one line each: a primary reinstall sees the screen with its own
+copy; no decline button; a late seed is not a second acknowledgement;
+background and push wakes refuse to open bark on an unlinked install
+(evidence rule, §2.3 there); the swap is the three-branch flow 4.3 with the
+wait on the old primary's flag **and** its synced backup. The original
+questions follow.
 
 - Does a **primary** device reinstalling see the same screen? Recommend yes,
   same copy minus the read-only line.
@@ -831,6 +877,10 @@ changes.
 - Widgets/watch surfaces are projections of their host device, not devices.
 
 ## Derived work (gaps surfaced by this catalog)
+
+**2026-11-13:** items 4 (rest of S7), 6, 7, 8 and 13 below are absorbed by
+`Features/Device_Linking.md`; item 3 (security checks) is unchanged and
+the linking flows leave its presence-check slots.
 
 Priority-ordered; tracked in `Open_Follow_Ups.md`. Status as of 2026-08-19:
 S10 is DECIDED (read-only + explain); the S7 blocking design, the S5

@@ -2425,3 +2425,47 @@ The whole entry as it stood, moved here verbatim on 2026-11-10; the struck-throu
   **Offboard modal**: add fee info; add data to success (claim required?);
   test the error state. **Boarding**: calculate and display the network fee;
   adjust the amount input to the unit setting; offboard takes a long time.
+
+## Moved from the open list 2026-11-13
+
+- [x] **DECIDED 2026-11-13 — explicit device linking scope pass: state
+  model and five flows, build pending.** Plan: `Features/Device_Linking.md`.
+  Rulings, all Christoph's in one session: (1) a per-device state model
+  replaces the inferred six-signal detection, with the evidence rule "no
+  path opens bark without a valid link record and a primary own row;
+  unknown is read-only"; (2) order of work: evidence rule and link record,
+  link screen, fast entries with identity plus the Devices screen,
+  make-primary flow, delete-flow remedy and launch-check screen, docs;
+  (3) link screen: a primary reinstall sees it with its own copy, no
+  decline button, a late seed is not a second acknowledgement, the action
+  enables on the first CloudKit import or after about 30 s, existing
+  installs self-heal silently; (4) the "Left" state, the tombstone and the
+  rejoin screen are removed, a local delete routes to the link screen with
+  a "you removed this wallet" variant, and a surviving breadcrumb covers
+  the KVS-transient case; (5) make-primary is a three-branch guided flow:
+  handover waits on the old primary's flag and its synced backup, takeover
+  warns and unlinks then promotes with a plain confirm, direct promotion
+  when no primary row exists; demote stays standalone and waits for its
+  upload; the link-screen entry (S5) comes after the flow; (6) removal
+  stays allowed on the primary with one explanatory line; (7) vocabulary
+  is Primary / Secondary only; (8) fast KVS entries carry name and
+  platform, the Devices list shows no sync state and no "Unrecognized
+  device"; (9) the delete flow's blocked case gets a per-blocker unlink;
+  (10) the launch check shows one view for deleted-elsewhere, signed-out
+  and different-account, two safe exits, never automatic, and detection
+  re-runs on the KVS account-change reason; (11) the hash-gone,
+  seed-present window stays as today, documented. Correction: the
+  2026-10-10 record's clause "retires the pre-open network reconcile
+  patch" was wrong, rule 22 runs on every open; withdrawn. Five assumed
+  facts (ubiquity identity token, metadata query and download for the
+  backup, CloudKit-toggle detectability, bark's view of a stale restored
+  backup, keychain deletion propagation) block the steps that rest on them
+  until checked (§7 there).
+- [x] **Unlink-by-other → relaunch run — done 2026-11-13 (Christoph, two
+  phones).** Recipe in `Features/Read_Only_Mode.md`. Result: the traced
+  session-long spend window did not occur; the first relaunch flashed the
+  primary layout and went read-only in the same session, because the
+  main-actor registration lands before the detached mode check reads the
+  row. The Tier 0 entry carries the residual (race, UI flash, headless
+  BGTask path) and a PROPOSED move to Tier 1; the fix stays the evidence
+  rule in `Features/Device_Linking.md` §2.3.

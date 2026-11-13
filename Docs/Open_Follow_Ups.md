@@ -69,7 +69,7 @@ summarised in one line under "Past trains".
 | Build | 0.26 Track A built 2026-10-25; dependency bump (bark v0.26.1, bdk-swift 3.1.1, qrcode 28.1.0, BIP39 pinned) and the send-fee cluster in two batches built 2026-10-27 (`Features/Send_Fee_Quotes.md`) |
 | Review | 0.26 Track A adversarial pass 2026-10-25; fee cluster two adversarial passes 2026-10-27, every confirmed finding fixed the same day, rework ledger updated |
 | Device | 0.26 recovery scenarios (Christoph, before the upload); fee cluster device look 2026-10-27 (§8.8–8.9), two states unreachable on the phone and waived or left to their entries |
-| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). Owed before upload: device re-check of "backup from another server refused", build number bump |
+| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). **Shipped 2026-11-04** (Christoph); the device re-check of "backup from another server refused" stays in Tier 2 |
 | Soak | from 2026-10-27, Christoph's daily use |
 
 Delivered from Train 1's deferral list: the Tier 1 gate on onchain sends at
@@ -176,21 +176,6 @@ needs a ruling or a sentence of reasoning before it can become work.
   see which gate the user hit. Fix shape: an in-app banner when the system
   permission is denied while VTXOs approach expiry, naming the amount; a
   toggle exemption cannot help. Precondition for safety-net option (c).
-- [ ] **`checkReadOnlyMode()` infers primary**: a missing or unreadable
-  device registration sets `isReadOnlyMode = false` (full spend rights,
-  against Principle 2 / contract rule 15); sibling
-  `shouldBlockWalletAccess()` answers `false` on an unreadable device ID.
-  Reachability re-read 2026-11-12: self-unlink is no longer offered, but
-  `unlinkDevice` from another device deletes the row and leaves this
-  device's own primary flag, so an unlinked ex-primary lands here (S4).
-  Traced 2026-11-12: on that relaunch every layer of `shouldBlockWalletAccess`
-  passes and the wallet opens with spend rights for the whole session; the
-  secondary row `registerDeviceIfNeeded` then writes makes only the *next*
-  launch read-only. Fix shape: unknown = read-only until the registry
-  answers. UNVERIFIED on device: unlink from device B, relaunch A once and
-  check that first session, since the second launch looks fixed. Trace,
-  sibling and the folded `device_<id>_isPrimary` key:
-  `Features/Read_Only_Mode.md`; `Development/Contract_Audit_2026_11.md` A.1.
 - [ ] **Security checks first**: switch `authenticateUser`
   (`SecurityService.swift:879-895`) to `.deviceOwnerAuthentication` (passcode
   fallback; biometrics-only hard-fails on Macs without Touch ID) and wire the
@@ -390,8 +375,35 @@ needs a ruling or a sentence of reasoning before it can become work.
   Tier 2 two-device checklist needs one TestFlight run after. Consequences
   and the process fix: `Architecture/CloudKit_Realtime_Sync.md` "Production schema".
 
-Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
-2026-09-24; full S7, S5 and the security-check matrix await decisions above.
+Status: explicit device linking scope pass DECIDED 2026-11-13
+(`Features/Device_Linking.md`): state model, five flows, order of work. It
+absorbs S3/S4 (flow 4.3), S5 (link-screen entry, after the flow), the rest
+of S7 (per-blocker unlink, aftermath screen) and the S10 build (launch
+check). The security-check matrix is still its own Tier 0 item.
+
+- [ ] **Explicit device linking — build** (DECIDED 2026-11-13, plan
+  `Features/Device_Linking.md` §8): six steps, each with its own adversarial
+  pass; step 1 is the evidence rule that closes the Tier 0
+  `checkReadOnlyMode()` item, step 2 the link screen and the tombstone /
+  rejoin removal, step 3 fast entries with identity and the Devices screen,
+  step 4 the make-primary flow, step 5 the delete-flow remedy and the
+  launch-check screen, step 6 docs and translations. The five assumed
+  facts were checked 2026-11-13 (§7 there); open: one optional device
+  check (per-app iCloud toggle) and whether `recoverVtxos` marks spent
+  VTXOs (step 4).
+- [ ] **`checkReadOnlyMode()` infers primary**: a missing or unreadable
+  device registration sets `isReadOnlyMode = false`, against Principle 2 /
+  contract rule 15; sibling `shouldBlockWalletAccess()` answers `false` on
+  an unreadable device ID. Reached when another device unlinks this one
+  (S4). **Device run 2026-11-13: no spend window.** The relaunch flashed
+  the primary layout and went read-only in the same session, because the
+  main-actor registration lands before the detached mode check reads the
+  row. Residual: a race with no ordering guarantee, the UI flash, and the
+  headless BGTask path where nothing registers. Fix DECIDED 2026-11-13: the
+  evidence rule, build step 1 of `Features/Device_Linking.md` §2.3.
+  Moved here from Tier 0 (DECIDED 2026-11-13) as part of that step. Trace,
+  result and recipe: `Features/Read_Only_Mode.md`;
+  `Development/Contract_Audit_2026_11.md` A.1.
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read
@@ -404,7 +416,8 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   (deferred 2026-08-12): `checkForNoPrimaryDevice()`
   (`DeviceRegistrationService.swift:1123`) runs only from
   `LinkedDevicesView_iOS.reload()`; run it on launch/foreground, callout
-  deep-linking to `PromoteDeviceSheet`. The dead `showNoPrimaryDeviceBanner`
+  into the make-primary flow (`Features/Device_Linking.md` §4.3, DECIDED
+  2026-11-13 as that flow's third entry). The dead `showNoPrimaryDeviceBanner`
   NotificationCenter post (Tier 4) is the hook this would use — decide
   together. Also the recovery path for **an account with no primary can
   never get default tags/contacts** (2026-09-25; deliberately not patched by
@@ -415,7 +428,8 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   `demoteThisDevice`.)
 - [ ] **S10 build**: read-only reasons for signed-out / account-changed +
   safe-exit copy (sign back in, or local-only delete). Never auto-wipe, never
-  pair local files with a foreign account.
+  pair local files with a foreign account. Designed 2026-11-13 as the
+  launch-check screen, `Features/Device_Linking.md` §4.5 (build step 5).
 - [ ] **Fresh secondary: balance card still reads 0 during the initial
   CloudKit import** (activity list got the `.syncingFromCloud` state
   2026-09-24; the card renders a substituted zero model). Decide whether it
@@ -435,6 +449,9 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   undiscoverable; the current device is excluded. Remaining: the delete
   screen's blocker-list surface, the discoverability call, the two-device
   ghost verify. History: `Features/Wallet_Deletion_Ghost_Hardening.md` §10.
+  DECIDED 2026-11-13: the blocker surface is the per-blocker "I no longer
+  have this device" (`Features/Device_Linking.md` §4.4, build step 5);
+  discoverability is settled by the Devices screen rework there (§5).
 - [ ] **Deletion-flow copywriting** (2026-09-26 session, cosmetic): strategy
   intro, blockers copy, override acknowledgement, scope-changed banner
   (`error_delete_scope_changed`) — then de/ja/zh-Hant. The amount-warning
@@ -442,13 +459,16 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
 - [ ] **Devices: plan forced promotion; allow deletion / renaming of
   devices?** (Reminders) → part of the rest of full S7, designed after
   explicit device linking lands (DECIDED 2026-10-10); extend the scenario
-  catalog first. (Desktop promote/demote parity is in Parked.)
+  catalog first. (Desktop promote/demote parity is in Parked.) Forced
+  promotion designed 2026-11-13 as flow 4.3 of `Features/Device_Linking.md`
+  (branch B, takeover); deletion and renaming of devices remain undesigned.
 - [ ] **A device without the seed can be promoted to primary** (tier
   DECIDED 2026-11-12): the promote button in `LinkedDevicesView_iOS` and
   `promoteThisDeviceToPrimary` check only "not primary" and "no other
   primary", never the mnemonic; the device then runs
   `initialize(forceReadOnly: false)` into the seed-missing branch. The
   capability matrix says "needs seed first". Read from code, not run. `Development/Contract_Audit_2026_11.md` A.2.
+  Fix: flow 4.3 step 0 of `Features/Device_Linking.md` (build step 4).
 - [ ] **S3 swap and S4 lost-primary flows differ from the code**: promotion
   is refused while a primary row is visible and no device writes another's
   primary flag, so S3 is really demote-then-promote and S4
@@ -456,7 +476,9 @@ Status: S10 DECIDED (read-only + explain). S7 reduced version shipped
   a guided step-by-step swap designed in the explicit device linking scope
   pass (`Architecture/Multi_Device_Design.md`, "Open questions"). Needs the
   Tier 0 `checkReadOnlyMode()` fix and the seed check before promotion
-  first. `Development/Contract_Audit_2026_11.md` A.3.
+  first. `Development/Contract_Audit_2026_11.md` A.3. DECIDED 2026-11-13:
+  flow 4.3 of `Features/Device_Linking.md`, three branches (handover with a
+  wait on the old primary's flag and synced backup, takeover, direct).
 
 ### Connectivity and offline
 
@@ -570,7 +592,10 @@ names the fix it verifies; the write-ups are in the Done log.
   `Features/Ark_Server_Selection.md` §7.
 
 - [ ] **Deletion + rejoin** (fix 2026-08-19, `Features/Wallet_Deletion_And_Rejoin.md`
-  definition of done): local-only delete keeps the seed everywhere (phrase
+  definition of done). Retired with linking build step 2
+  (`Features/Device_Linking.md` §6.4): the tombstone and the rejoin screen
+  are removed; until then the shipped behaviour stands unverified. Original
+  checklist: local-only delete keeps the seed everywhere (phrase
   still displays on the other device); deleted device shows the rejoin
   screen and relaunch does NOT resurrect the wallet; Rejoin restores from the
   preserved iCloud backup; create-wallet refused while the account has a
@@ -597,9 +622,6 @@ names the fix it verifies; the write-ups are in the Done log.
   launch during the initial CloudKit import (the crash repro), assign/unassign
   a tag from the detail and confirm the list label updates (`dataVersion`
   moved from row to list), check a tag-filtered and a contact-filtered list.
-- [ ] **Self-unlink → relaunch** run to settle the `checkReadOnlyMode()`
-  finding in Tier 0 before choosing its fix.
-
 ### Exits and refresh
 
 - [ ] **Exit blocked state**: on-device verify + WalletManager tests
@@ -957,7 +979,9 @@ log).
   build the row list from `registeredDevices` without the 30-day filter, so
   a stale row is listed but is not a blocker; and `checkForPrimaryDevice`
   calls `getPrimaryDevice()` unscoped while `checkForNoPrimaryDevice` is
-  wallet-scoped. `Development/Contract_Audit_2026_11.md` A.10–11.
+  wallet-scoped. `Development/Contract_Audit_2026_11.md` A.10–11. Absorbed
+  by the Devices screen rework, `Features/Device_Linking.md` §5 (DECIDED
+  2026-11-13, build step 3).
 - [ ] **DECIDE — recovery phrase on a seed-synced secondary**: the matrix
   says ✓, but the Settings entry is hidden whenever `isReadOnlyMode`
   (`SettingsView_iOS`, desktop `SettingsView`). Fix the row or show the

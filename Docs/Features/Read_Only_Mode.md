@@ -93,6 +93,33 @@ Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, re
   item or correct the inventory label (found 2026-10-16,
   `Features/Wallet_Deletion_Ghost_Hardening.md` §7).
 
+### Fix decided (2026-11-13)
+
+The evidence rule in `Device_Linking.md` §2.3: no path opens bark without a
+valid link record and a primary own row, and "unknown" is read-only. Build
+step 1 of that plan. The device recipe below still runs first, to confirm
+the one-session window exists as traced.
+
+### Device run 2026-11-13: the session window does not occur
+
+Christoph ran the recipe below on two phones. Step 4's first relaunch showed
+the primary layout for a split second and switched to read-only in the same
+session. Explanation (derived from the code, consistent with the
+observation): `MainView_iOS` sets `hasWallet = true` and spawns
+`initialize()` detached, then awaits `registerDeviceIfNeeded()` on the main
+actor. The registration's SwiftData insert and save complete before the
+detached task reaches `checkReadOnlyMode` (its first steps are the network
+reconcile and the off-main KVS read), so layer 3 of `shouldBlockWalletAccess`
+finds a fresh secondary row and the wallet initialises read-only. The trace
+of 2026-11-12 was wrong about ordering: "nothing in the running session
+observes the row" ignored that the mode check itself runs after it. What
+remains true: the ordering is a race with no guarantee, the route is chosen
+before the mode is known (hence the flash), and the headless BGTask path has
+no registration to win the race. The evidence rule (`Device_Linking.md`
+§2.3) closes all three. The log lines were not captured; if the console is
+still available, the expected line is `🛑 [WalletManager] Blocked: CloudKit
+cache indicates demotion`, not the "assuming primary" line.
+
 ### Reachability re-read and device recipe (2026-11-12)
 
 Self-unlink is no longer offered on either platform. The state is reached
