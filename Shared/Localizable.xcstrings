@@ -18173,6 +18173,52 @@
         }
       }
     },
+    "linked_devices_device_linked_earlier" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Device linked earlier"
+          }
+        }
+      }
+    },
+    "linked_devices_device_linked_on %@" : {
+      "comment" : "%@ is a date (abbreviated)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Device linked %@"
+          }
+        }
+      }
+    },
+    "linked_devices_linked_earlier" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Linked earlier"
+          }
+        }
+      }
+    },
+    "linked_devices_linked_on %@" : {
+      "comment" : "%@ is a date (abbreviated)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Linked %@"
+          }
+        }
+      }
+    },
     "linked_devices_multiple_devices_description" : {
       "localizations" : {
         "de" : {
@@ -18286,7 +18332,7 @@
       }
     },
     "linked_devices_unsynced_device" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18315,7 +18361,7 @@
       }
     },
     "linked_devices_unsynced_device_description" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18345,7 +18391,7 @@
     },
     "linked_devices_unsynced_device_registered %@" : {
       "comment" : "%@ is the registration date (abbreviated), not a device name",
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

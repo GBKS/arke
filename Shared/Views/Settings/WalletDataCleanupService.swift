@@ -1182,6 +1182,11 @@ enum SharedStateWipeCoverage {
         // blocks every remaining device's full wipe forever (2026-09-23;
         // ordering 2026-10-16, Wallet_Deletion_Ghost_Hardening.md).
         Entry(key: "com.arke.device.registered.<hash>.<id>", store: "iCloud KVS",    scope: .fullWipeOnly),
+        // The registration entry's identity sibling (name, platform; Device
+        // Linking step 3, 2026-11-14). Decoration only: a device is a device
+        // by its `registered.` key. Removed together with it by unlink,
+        // unregister and the full wipe.
+        Entry(key: "com.arke.device.identity.<hash>.<id>",  store: "iCloud KVS",    scope: .fullWipeOnly),
         // The wallet database backup (current slot + timestamped copies).
         // Emptied by deleteAllBackups on the full wipe, and the FFI shutdown
         // that follows must not refill it (WalletManager.deleteWallet(scope:),

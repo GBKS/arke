@@ -62,15 +62,16 @@ struct LinkedDevicesView_iOS: View {
                     }
                 }
 
-                // Devices the fast mirror knows about but this device's registry
-                // copy does not. The same unlink applies: `unlinkDevice` clears
-                // the mirror entries first and treats a row-less ID as success.
+                // Devices known from the fast mirror whose registry row has not
+                // reached this device (or never will). Drawn like any other
+                // device from the entry's own identity (Device_Linking.md §5.2);
+                // the same unlink applies, since `unlinkDevice` clears the
+                // mirror entries first and treats a row-less ID as success.
                 ForEach(otherDeviceReport?.mirrorOnly ?? []) { device in
                     UnsyncedDeviceRow(device: device, onUnlink: {
                         deviceToUnlink = UnlinkTarget(
                             deviceId: device.deviceId,
-                            displayName: device.deviceName
-                                ?? String(localized: "linked_devices_unsynced_device", defaultValue: "Unrecognized device")
+                            displayName: UnsyncedDeviceRow.title(for: device)
                         )
                         showingUnlinkConfirmation = true
                     })
@@ -282,8 +283,10 @@ struct LinkedDevicesView_iOS: View {
     
     private func checkForPrimaryDevice() async {
         do {
-            let primaryDevice = try await deviceService.getPrimaryDevice()
-            hasPrimaryDevice = primaryDevice != nil
+            // The exact inverse of the notice's check, same wallet scope (the
+            // own row's hash): the promote button and the notice can no longer
+            // disagree (audit A.10)
+            hasPrimaryDevice = try await !deviceService.checkForNoPrimaryDevice()
         } catch {
             print("Error checking for primary device: \(error)")
             hasPrimaryDevice = false

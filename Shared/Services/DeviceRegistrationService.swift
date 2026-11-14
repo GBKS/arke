@@ -46,6 +46,13 @@ class DeviceRegistrationService {
     /// Key prefix for the fast device registry in iCloud KVS. Static so the pure
     /// key-parsing helper (`otherRegisteredDeviceIds`) can share it with the writers.
     nonisolated static let registeredDevicesPrefix = "com.arke.device.registered."
+    /// Sibling of the registration entry carrying the device's identity
+    /// (Device_Linking.md §5.2). A separate key, not a new value shape under
+    /// the old one: the deployed build reads the registration value as a
+    /// bare Double and treats anything else as a timestamp-less, doubtful
+    /// blocker, which would offer it the full-wipe override during a live
+    /// device's import window (adversarial pass 2026-11-14, F1).
+    nonisolated static let deviceIdentityPrefix = "com.arke.device.identity."
     
     // MARK: - Cached Values
     
@@ -443,7 +450,7 @@ class DeviceRegistrationService {
                 // Otherwise isPrimaryDevice is preserved - detection-path updates never change it
 
                 // Ensure device is registered in KV store with current primary status
-                self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash)
+                self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash, deviceName: deviceName, platform: platform)
 
                 self.writeOwnPrimaryFlag(existing.isPrimaryDevice, deviceId: deviceId)
 
@@ -455,7 +462,7 @@ class DeviceRegistrationService {
                 let shouldBePrimary = allowPrimaryClaim && !self.activePrimaryExists(for: walletHash, excludingDeviceId: deviceId, in: modelContext)
 
                 // Register device in KV store registry (used for cleanup bookkeeping)
-                self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash)
+                self.registerDeviceInKVStore(deviceId: deviceId, walletHash: walletHash, deviceName: deviceName, platform: platform)
 
                 // Store primary status in KV store (read by shouldBlockWalletAccess and
                 // the MainView demotion/promotion observers)
@@ -989,6 +996,7 @@ class DeviceRegistrationService {
     ) -> OtherDeviceReport {
         let mirrorIds: Set<String>
         var registeredAt: [String: Date] = [:]
+        var fastEntries: [String: FastRegistryEntry] = [:]
 
         if let walletHash, !walletHash.isEmpty {
             mirrorIds = otherRegisteredDeviceIds(
@@ -997,13 +1005,18 @@ class DeviceRegistrationService {
                 currentDeviceId: currentDeviceId
             )
             let prefix = "\(registeredDevicesPrefix)\(walletHash)."
+            let identityPrefix = "\(deviceIdentityPrefix)\(walletHash)."
             for deviceId in mirrorIds {
-                // Written as a timeIntervalSince1970 Double; anything else is not
-                // ours to interpret, and a missing timestamp must not drop the
-                // entry — it still blocks
-                if let seconds = kvsEntries["\(prefix)\(deviceId)"] as? Double {
-                    registeredAt[deviceId] = Date(timeIntervalSince1970: seconds)
-                }
+                // The registration value is a timeIntervalSince1970 Double;
+                // the identity sits under its sibling key (Device_Linking.md
+                // §5.2). Anything unreadable parses to an empty entry, and a
+                // missing timestamp must not drop the entry — it still blocks
+                let entry = FastRegistryEntry.parse(
+                    registered: kvsEntries["\(prefix)\(deviceId)"],
+                    identity: kvsEntries["\(identityPrefix)\(deviceId)"]
+                )
+                fastEntries[deviceId] = entry
+                registeredAt[deviceId] = entry.registeredAt
             }
         } else {
             mirrorIds = []
@@ -1045,14 +1058,21 @@ class DeviceRegistrationService {
             // hasn't landed (seconds to never, offline) or it never will, because
             // the row was deleted without its mirror entry. `unlinkDevice` cannot
             // clear these — there is no row to delete.
-            let name = namesByDeviceId[deviceId]
+            // A row that knows the name wins; otherwise the entry's own
+            // identity (written since 2026-11-14) draws the row
+            let rowName = namesByDeviceId[deviceId].flatMap { $0.isEmpty ? nil : $0 }
+            let entry = fastEntries[deviceId]
             others.append(OtherWalletDevice(
                 deviceId: deviceId,
-                deviceName: (name?.isEmpty ?? true) ? nil : name,
+                deviceName: rowName ?? entry?.deviceName,
                 lastSeenAt: nil,
                 registeredAt: registeredAt[deviceId],
                 isStale: false,      // unknowable: the mirror has no heartbeat
-                source: .kvsOnly
+                source: .kvsOnly,
+                platform: entry?.platform,
+                // The device's own flag, which any device in the account may
+                // read (only writing another device's flag is forbidden)
+                isPrimary: kvsEntries[primaryFlagKey(deviceId: deviceId)] as? Bool
             ))
         }
 
@@ -1485,12 +1505,19 @@ class DeviceRegistrationService {
 
     /// Registers a device in the fast KV store registry
     /// This syncs much faster than CloudKit and prevents race conditions during app reinstall
-    private func registerDeviceInKVStore(deviceId: String, walletHash: String) {
+    private func registerDeviceInKVStore(deviceId: String, walletHash: String, deviceName: String, platform: DevicePlatform) {
         let kvStore = NSUbiquitousKeyValueStore.default
         let key = "\(Self.registeredDevicesPrefix)\(walletHash).\(deviceId)"
         
-        // Store timestamp when device was registered
+        // Store timestamp when device was registered ("last registered").
+        // Unchanged shape: every deployed build reads this as a Double.
         kvStore.set(Date().timeIntervalSince1970, forKey: key)
+
+        // The identity beside it lets other devices draw a complete row before
+        // (or without) the CloudKit row arriving (Device_Linking.md §5.2).
+        // Old builds never read this key; they only scan the prefix above.
+        let identity = FastRegistryEntry(registeredAt: nil, deviceName: deviceName, platform: platform)
+        kvStore.set(identity.encodedIdentity(), forKey: "\(Self.deviceIdentityPrefix)\(walletHash).\(deviceId)")
         kvStore.synchronize()
         
         Self.logger.debug("Registered device in KV store: \(deviceId)")
@@ -1504,7 +1531,9 @@ class DeviceRegistrationService {
     /// reasoning `otherRegisteredDeviceIds` relies on from the other end.
     nonisolated static func mirrorKeys(forDeviceId deviceId: String, in kvsKeys: [String]) -> [String] {
         guard !deviceId.isEmpty else { return [] }
-        return kvsKeys.filter { $0.hasPrefix(registeredDevicesPrefix) && $0.hasSuffix(".\(deviceId)") }
+        return kvsKeys.filter {
+            ($0.hasPrefix(registeredDevicesPrefix) || $0.hasPrefix(deviceIdentityPrefix)) && $0.hasSuffix(".\(deviceId)")
+        }
     }
 
     /// The KVS key of a device's own primary flag (`writeOwnPrimaryFlag`).
@@ -1540,11 +1569,12 @@ class DeviceRegistrationService {
         let kvStore = NSUbiquitousKeyValueStore.default
         let allKeys = kvStore.dictionaryRepresentation.keys
         let prefix = "\(Self.registeredDevicesPrefix)\(walletHash)."
+        let identityPrefix = "\(Self.deviceIdentityPrefix)\(walletHash)."
         
-        // Find and remove all keys for this wallet, plus every device's
-        // primary flag: this runs on the last-device full wipe, after which no
-        // device holds primary for anything (contract rule 28)
-        let keysToRemove = allKeys.filter { $0.hasPrefix(prefix) }
+        // Find and remove all keys for this wallet (registration and identity),
+        // plus every device's primary flag: this runs on the last-device full
+        // wipe, after which no device holds primary for anything (rule 28)
+        let keysToRemove = allKeys.filter { $0.hasPrefix(prefix) || $0.hasPrefix(identityPrefix) }
         let flagKeys = allKeys.filter { $0.hasPrefix("device_") && $0.hasSuffix("_isPrimary") }
         
         for key in keysToRemove + flagKeys {
@@ -1615,9 +1645,9 @@ nonisolated struct OtherWalletDevice: Equatable, Identifiable, Sendable {
     }
 
     let deviceId: String
-    /// `nil` when no registry row anywhere carries a name for this device — the
-    /// honest state for a mirror entry whose row never arrived. A `.kvsOnly`
-    /// device can still be named if an inactive or foreign-wallet row knows it.
+    /// `nil` when neither a registry row nor the device's own fast entry
+    /// carries a name — the pre-2026-11-14 ghost. A `.kvsOnly` device is
+    /// named from its entry, or from an inactive or foreign-wallet row.
     let deviceName: String?
     /// Last heartbeat. Registry-backed devices only.
     let lastSeenAt: Date?
@@ -1629,8 +1659,66 @@ nonisolated struct OtherWalletDevice: Equatable, Identifiable, Sendable {
     /// `.kvsOnly`, where staleness is unknowable rather than known to be false.
     let isStale: Bool
     let source: Source
+    /// From the fast entry (Device_Linking.md §5.2). Nil for registry-backed
+    /// entries, which the views draw from the model, and for old entries.
+    let platform: DevicePlatform?
+    /// The device's own `device_<id>_isPrimary` flag. Nil when unknown.
+    let isPrimary: Bool?
+
+    init(
+        deviceId: String,
+        deviceName: String?,
+        lastSeenAt: Date?,
+        registeredAt: Date?,
+        isStale: Bool,
+        source: Source,
+        platform: DevicePlatform? = nil,
+        isPrimary: Bool? = nil
+    ) {
+        self.deviceId = deviceId
+        self.deviceName = deviceName
+        self.lastSeenAt = lastSeenAt
+        self.registeredAt = registeredAt
+        self.isStale = isStale
+        self.source = source
+        self.platform = platform
+        self.isPrimary = isPrimary
+    }
 
     var id: String { deviceId }
+}
+
+/// What the fast mirror knows about a device: the registration timestamp
+/// under `com.arke.device.registered.<hash>.<id>` (a bare Double, unchanged
+/// since the mirror exists) and, since 2026-11-14, the device's identity
+/// under the sibling `com.arke.device.identity.<hash>.<id>` (a dictionary of
+/// `name` and `platform`), so another device can draw a complete row before
+/// its CloudKit row arrives, or when it never does (Device_Linking.md §5.2).
+/// Unreadable values yield empty fields, never nothing: the registration key
+/// alone still blocks a wipe.
+nonisolated struct FastRegistryEntry: Equatable, Sendable {
+    static let nameKey = "name"
+    static let platformKey = "platform"
+
+    let registeredAt: Date?
+    let deviceName: String?
+    let platform: DevicePlatform?
+
+    static func parse(registered: Any?, identity: Any?) -> FastRegistryEntry {
+        let registeredAt = (registered as? Double).map { Date(timeIntervalSince1970: $0) }
+        let dictionary = identity as? [String: Any]
+        let name = (dictionary?[nameKey] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let platform = (dictionary?[platformKey] as? String).flatMap(DevicePlatform.init(rawValue:))
+        return FastRegistryEntry(registeredAt: registeredAt, deviceName: name, platform: platform)
+    }
+
+    /// Property-list shape of the identity key for `NSUbiquitousKeyValueStore`
+    func encodedIdentity() -> [String: Any] {
+        var dictionary: [String: Any] = [:]
+        if let deviceName, !deviceName.isEmpty { dictionary[Self.nameKey] = deviceName }
+        if let platform { dictionary[Self.platformKey] = platform.rawValue }
+        return dictionary
+    }
 }
 
 /// The answer to "is this really the last device?", with its reasons intact.

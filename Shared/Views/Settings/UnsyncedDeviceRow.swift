@@ -8,42 +8,73 @@
 import SwiftUI
 import ArkeUI
 
-/// A device the account's fast iCloud KVS mirror knows about, but the
-/// CloudKit-backed registry does not.
+/// A device known from the account's fast iCloud KVS entry whose CloudKit
+/// registry row has not reached this device, or never will.
 ///
-/// These used to be invisible, which is what made the 2026-09-23 dead end
-/// undiagnosable: Linked Devices read the registry and said "1 device" while the
-/// delete flow read the mirror and refused the full wipe, with nothing on screen
-/// to reconcile the two. An entry the user cannot see is an entry they cannot
-/// act on. Since the 2026-10-16 ghost hardening `unlinkDevice` clears the
-/// mirror entries before looking for a row, so a mirror-only entry can be
-/// unlinked like any other device.
-///
-/// Deliberately not a `DeviceRow`: there is no platform, no primary status and
-/// no heartbeat to show, and borrowing that row's shape would imply we know more
-/// than we do.
+/// These used to render as "Unrecognized device" with a warning icon and an
+/// explainer about stores, which read as an intruder and gave the user
+/// nothing to do. Since 2026-11-14 the fast entry carries the device's name
+/// and platform, and its own primary flag is readable, so the row is drawn
+/// like any other device (Device_Linking.md §5.2–5.3). The one honest
+/// difference is the date line: "Linked …" from the entry's registration
+/// timestamp, where a registry-backed row says "Last seen …". Sync state is
+/// spoken only where it gates an action: the delete flow's blocker list.
 struct UnsyncedDeviceRow: View {
     let device: OtherWalletDevice
     /// Offered in the row's context menu (touch and hold) when non-nil.
     var onUnlink: (() -> Void)? = nil
 
     var body: some View {
-        Label {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.headline)
-
-                Text(subtitle)
-                    .font(.caption)
+        HStack(spacing: 12) {
+            // The store did not say which kind of device an old entry is, so
+            // the row must not assert one
+            if let platform = device.platform {
+                Text(platform.icon)
+                    .font(.system(size: 32))
+                    .accessibilityHidden(true)
+            } else {
+                Image(systemName: "square.dashed")
+                    .font(.system(size: 28))
                     .foregroundStyle(.secondary)
+                    .frame(width: 36)
+                    .accessibilityHidden(true)
             }
-        } icon: {
-            Image(systemName: "questionmark.circle.fill")
-                .foregroundStyle(.orange)
-                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Self.title(for: device))
+                    .font(.system(size: 16, weight: .medium))
+
+                // An unnamed entry's title already carries the date
+                if device.deviceName != nil {
+                    HStack(spacing: 4) {
+                        if let platform = device.platform {
+                            Text(platform.displayName)
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                            Text(L10n.symbolBullet)
+                                .foregroundColor(.secondary)
+                        }
+                        Text(dateLine)
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                if let isPrimary = device.isPrimary {
+                    MirrorRoleBadge(
+                        text: isPrimary ? L10n.statusFullWallet : L10n.statusMetadataOnly,
+                        color: isPrimary ? .Arke.blue : .Arke.orange
+                    )
+                    .padding(.top, 4)
+                }
+            }
+
+            Spacer()
         }
+        .padding(.vertical, 4)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
         .contextMenu {
             if let onUnlink {
                 Button(role: .destructive, action: onUnlink) {
@@ -54,42 +85,75 @@ struct UnsyncedDeviceRow: View {
         }
     }
 
-    /// A mirror entry carries no name of its own. One is shown only when some
-    /// other registry row happens to know this device id.
-    private var title: String {
-        device.deviceName
-            ?? String(localized: "linked_devices_unsynced_device", defaultValue: "Unrecognized device")
+    /// The entry's name, or for a pre-2026-11-14 entry without one, when it
+    /// linked. Never "unrecognized": the user can act on it either way. Also
+    /// the name the unlink dialog uses, so "Unlink Device linked 3 November"
+    /// never becomes "Unlink this device", which names the phone in hand.
+    static func title(for device: OtherWalletDevice) -> String {
+        if let name = device.deviceName { return name }
+        guard let registeredAt = device.registeredAt else {
+            return String(localized: "linked_devices_device_linked_earlier", defaultValue: "Device linked earlier")
+        }
+        return String(format: String(localized: "linked_devices_device_linked_on %@", defaultValue: "Device linked %@",
+                                     comment: "%@ is a date (abbreviated)"),
+                      registeredAt.formatted(date: .abbreviated, time: .omitted))
     }
 
-    private var subtitle: String {
+    /// "Linked", never "last seen": the entry's timestamp is written at
+    /// registration and heartbeats never refresh it
+    private var dateLine: String {
         guard let registeredAt = device.registeredAt else {
-            return String(localized: "linked_devices_unsynced_device_description",
-                          defaultValue: "Registered to this wallet on this iCloud account. Its details haven't reached this device.")
+            return String(localized: "linked_devices_linked_earlier", defaultValue: "Linked earlier")
         }
-
-        // "Registered", never "last seen": the mirror's timestamp is written at
-        // registration and heartbeats never refresh it
-        return String(format: String(localized: "linked_devices_unsynced_device_registered %@",
-                                     defaultValue: "Registered %@. Its details haven't reached this device.",
-                                     comment: "%@ is the registration date (abbreviated), not a device name"),
+        return String(format: String(localized: "linked_devices_linked_on %@", defaultValue: "Linked %@",
+                                     comment: "%@ is a date (abbreviated)"),
                       registeredAt.formatted(date: .abbreviated, time: .omitted))
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [Self.title(for: device)]
+        if let platform = device.platform { parts.append(platform.displayName) }
+        if device.deviceName != nil { parts.append(dateLine) }
+        if let isPrimary = device.isPrimary {
+            parts.append(isPrimary ? L10n.statusFullWallet : L10n.statusMetadataOnly)
+        }
+        return parts.joined(separator: ", ")
     }
 }
 
-#Preview("Named") {
+/// Role badge for the mirror-drawn row. The two app targets each have their
+/// own badge view, so this file carries a private one.
+private struct MirrorRoleBadge: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundColor(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.15))
+            .cornerRadius(4)
+    }
+}
+
+#Preview("Identity from the entry") {
     List {
         UnsyncedDeviceRow(device: OtherWalletDevice(
             deviceId: "22222222-2222-2222-2222-222222222222",
-            deviceName: "Old iPhone",
+            deviceName: "iPhone 17",
             lastSeenAt: nil,
             registeredAt: Date(timeIntervalSince1970: 1_756_000_000),
             isStale: false,
-            source: .kvsOnly
+            source: .kvsOnly,
+            platform: .iOS,
+            isPrimary: false
         ))
     }
 }
 
-#Preview("Unnamed, no timestamp") {
+#Preview("Old entry, no identity") {
     List {
         UnsyncedDeviceRow(device: OtherWalletDevice(
             deviceId: "22222222-2222-2222-2222-222222222222",
