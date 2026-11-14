@@ -491,23 +491,23 @@ class WalletDataCleanupService {
         clearUserDefaults()
         summary.userDefaultsCleared = true
 
-        // Step 4b: This install no longer links the account's wallet, whatever
-        // the scope (Device_Linking.md §2.1). Device-local, like the tombstone.
+        // Step 5: This install no longer links the account's wallet, whatever
+        // the scope (Device_Linking.md §2.1). On a local-only deletion the
+        // seed stays in iCloud Keychain (shared property of the other
+        // devices), so the next launch finds the account wallet with no link
+        // record and shows the link screen's "you removed this wallet" copy,
+        // never onboarding. The left breadcrumb carries the date and routes a
+        // launch with an unreadable keychain and a blank KVS to that screen's
+        // waiting variant instead of onboarding. Set AFTER clearUserDefaults
+        // so it can't be wiped by that step.
         DeviceLinkStore.clearLink()
-
-        // Step 5: Record or clear the local-deletion tombstone. Local-only
-        // deletion leaves the seed in iCloud Keychain (shared property of the
-        // other devices), so without a tombstone the next launch would silently
-        // resurrect the wallet. Detection routes a tombstoned install to the
-        // rejoin screen instead (Wallet_Deletion_And_Rejoin.md). Set AFTER
-        // clearUserDefaults so it can't be wiped by that step.
         if includeCloudData {
-            SecurityService.clearLocalDeletionTombstone()
+            DeviceLinkStore.clearLeft()
         } else if let walletHash = getHashFromUbiquitousStore() {
-            SecurityService.recordLocalDeletionTombstone(walletHash: walletHash)
+            DeviceLinkStore.recordLeft(walletHash: walletHash)
         } else {
             #if DEBUG
-            print("⚠️ [WalletDataCleanupService] No wallet hash readable — skipping local-deletion tombstone (next launch falls back to normal detection)")
+            print("⚠️ [WalletDataCleanupService] No wallet hash readable — no left breadcrumb (next launch falls back to normal detection)")
             #endif
         }
 
@@ -1189,11 +1189,15 @@ enum SharedStateWipeCoverage {
         // purpose: it is the newest copy a promoted secondary restores from.
         Entry(key: "Backups/db.sqlite (+ timestamped copies)", store: "iCloud Drive", scope: .fullWipeOnly),
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
-        Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
         // This install's link to the account wallet (DeviceLinkStore, Device
         // Linking step 1, 2026-11-13); cleared on every deletion so the next
         // launch asks again
         Entry(key: "com.arke.link.* (walletHash, linkedAt)", store: "UserDefaults",  scope: .deviceLocal),
+        // Written by the local-only deletion, cleared by the full wipe and by
+        // every link (replaced the UserDefaults tombstone in step 2,
+        // 2026-11-14): the link screen's "you removed this wallet" copy and
+        // the unreadable-keychain routing
+        Entry(key: "com.arke.link.left* (leftWalletHash, leftAt)", store: "UserDefaults", scope: .deviceLocal),
         Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),
         // Written only by the delete view when the account-side deletion
         // completed but the bark directory could not be removed; consumed

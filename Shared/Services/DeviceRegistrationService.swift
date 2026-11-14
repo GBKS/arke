@@ -60,6 +60,16 @@ class DeviceRegistrationService {
     /// compares it against the next load: a primary whose own row vanished
     /// was unlinked or wiped by another device and must stop running bark.
     private var ownRowWasPrimary = false
+
+    /// Whether the last registry load found this device's own row at all.
+    /// A secondary whose row vanishes has no bark to close but must leave
+    /// the wallet UI for the link screen (device run 2026-11-14).
+    private var ownRowWasPresent = false
+
+    /// Other devices' ids seen by the previous load, for the "new device
+    /// linked" notification (Device_Linking.md §12.1). Nil until the first
+    /// load of the session, which only takes stock.
+    private var knownOtherDeviceIds: Set<String>?
     
     /// Pending registration (for lazy registration pattern)
     private var pendingRegistration: (hash: String, hasSeed: Bool)?
@@ -470,11 +480,14 @@ class DeviceRegistrationService {
             
             try modelContext.save()
 
-            // This install has linked the account's wallet (Device_Linking.md
-            // §2.1). One choke point for create, import and the detection
-            // paths on both platforms; the detection-path write is the
-            // stand-in for the link screen until step 2 narrows it.
-            DeviceLinkStore.recordLink(walletHash: walletHash)
+            // Registration never re-points an install at another wallet: the
+            // record is written here only when none exists or the hash
+            // matches. Create, import and the link screen write it explicitly
+            // with replacement (Device_Linking.md §12.1).
+            if !DeviceLinkStore.recordLink(walletHash: walletHash, replacingExisting: false),
+               let existing = DeviceLinkStore.record(), existing.walletHash != walletHash {
+                Self.logger.error("🔗 Registered under a wallet hash that differs from this install's link record — record left untouched")
+            }
 
             // Update last heartbeat timestamp
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: self.lastHeartbeatKey)
@@ -551,6 +564,7 @@ class DeviceRegistrationService {
         let deviceId = try getOrCreateDeviceId()
         // This device is leaving on purpose; its row vanishing is not an unlink
         ownRowWasPrimary = false
+        ownRowWasPresent = false
 
         // Cleared across every wallet hash — this device is leaving, so none
         // of its entries are valid, including one under a hash that disagrees
@@ -676,29 +690,72 @@ class DeviceRegistrationService {
             if let deviceId = try? getOrCreateDeviceId() {
                 let ownRow = devices.first { $0.deviceId == deviceId }
                 let evidence: OwnRowEvidence = ownRow.map { $0.isPrimaryDevice ? .primary : .secondary } ?? .absent
-                if Self.liveDemotionVerdict(ownRowWasPrimary: ownRowWasPrimary, ownRow: evidence, deletionInProgress: registrationSuspended) {
+                switch Self.liveUnlinkVerdict(
+                    ownRowWasPresent: ownRowWasPresent,
+                    ownRowWasPrimary: ownRowWasPrimary,
+                    ownRow: evidence,
+                    deletionInProgress: registrationSuspended
+                ) {
+                case .closeWalletAndReroute:
                     ownRowWasPrimary = false
+                    ownRowWasPresent = false
                     Self.logger.warning("🔒 Own registration row is gone while this device was primary — closing the wallet (unlinked or wiped by another device)")
                     NotificationCenter.default.post(name: .deviceUnlinkedWhileRunning, object: nil)
-                } else if let ownRow {
-                    ownRowWasPrimary = ownRow.isPrimaryDevice
+                case .reroute:
+                    ownRowWasPresent = false
+                    Self.logger.warning("🔗 Own registration row is gone while this device was a secondary — leaving the wallet for the link screen (unlinked by another device)")
+                    NotificationCenter.default.post(name: .walletClosedAfterUnlink, object: nil)
+                case .none:
+                    if let ownRow {
+                        ownRowWasPrimary = ownRow.isPrimaryDevice
+                        ownRowWasPresent = true
+                    }
                 }
+
+                // "New device linked": a row for another device that this
+                // session has not seen and that registered within the last
+                // day. The first load only takes stock, so a launch does not
+                // announce every long-standing device.
+                let others = Set(devices.filter { $0.deviceId != deviceId && $0.isActive }.map(\.deviceId))
+                if let known = knownOtherDeviceIds, let record = DeviceLinkStore.record(), !registrationSuspended {
+                    // Only devices that registered after this install linked:
+                    // a freshly linked device must not announce the primary
+                    // that was there before it (adversarial pass 2026-11-14, F4)
+                    let recentCutoff = max(Date().addingTimeInterval(-24 * 60 * 60), record.linkedAt)
+                    for device in devices where !known.contains(device.deviceId) && others.contains(device.deviceId) && device.registeredAt > recentCutoff {
+                        let name = device.deviceName
+                        Self.logger.notice("🔗 New device linked to this wallet: \(name, privacy: .public)")
+                        Task { await DeviceLinkNotifications.notifyDeviceLinked(deviceName: name) }
+                    }
+                }
+                knownOtherDeviceIds = others
             }
         }
     }
 
+    /// What a vanished own row means for the running session.
+    nonisolated enum LiveUnlinkAction: Equatable, Sendable {
+        case none
+        /// This device ran as primary: close bark (no backup), then re-route
+        case closeWalletAndReroute
+        /// This device was a secondary: nothing to close, re-route to the
+        /// link screen
+        case reroute
+    }
+
     /// Pure decision behind the live-unlink check, extracted for testability.
-    /// Demotes only on a *known* absence after a *known* primary; an
+    /// Acts only on a *known* absence after a *known* presence; an
     /// unavailable registry is not evidence (the F3 lesson), and a deletion
     /// in progress deletes the row itself and must not trigger a second
     /// shutdown with a backup the full wipe forbids (contract rule 17).
-    nonisolated static func liveDemotionVerdict(
+    nonisolated static func liveUnlinkVerdict(
+        ownRowWasPresent: Bool,
         ownRowWasPrimary: Bool,
         ownRow: OwnRowEvidence,
         deletionInProgress: Bool
-    ) -> Bool {
-        guard ownRowWasPrimary, !deletionInProgress else { return false }
-        return ownRow == .absent
+    ) -> LiveUnlinkAction {
+        guard ownRowWasPresent, !deletionInProgress, ownRow == .absent else { return .none }
+        return ownRowWasPrimary ? .closeWalletAndReroute : .reroute
     }
     
     /// Gets all active devices (excluding inactive and stale devices)

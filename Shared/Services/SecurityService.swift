@@ -172,64 +172,6 @@ class SecurityService {
             }
     }
 
-    // MARK: - Local Deletion Tombstone
-
-    /// UserDefaults key marking that the wallet was deliberately deleted from this
-    /// install while it still lives on other devices. Stores the wallet hash the
-    /// deletion applied to (not a Bool) so staleness is detectable: if the account's
-    /// current KVS hash is missing or different, the tombstone is obsolete.
-    /// Device-local on purpose — it describes this install's choice, never synced.
-    /// See Wallet_Deletion_And_Rejoin.md.
-    private nonisolated static let localDeletionTombstoneKey = "com.arke.wallet.deletedLocally"
-
-    /// Records that this install deliberately deleted the wallet with the given hash
-    nonisolated static func recordLocalDeletionTombstone(walletHash: String) {
-        UserDefaults.standard.set(walletHash, forKey: localDeletionTombstoneKey)
-        logger.info("Recorded local deletion tombstone")
-    }
-
-    /// Clears the tombstone (rejoin, create/import success, full wipe, or staleness)
-    nonisolated static func clearLocalDeletionTombstone() {
-        UserDefaults.standard.removeObject(forKey: localDeletionTombstoneKey)
-        logger.info("Cleared local deletion tombstone")
-    }
-
-    /// The wallet hash this install's deletion applied to, if a tombstone exists
-    nonisolated static func localDeletionTombstoneHash() -> String? {
-        UserDefaults.standard.string(forKey: localDeletionTombstoneKey)
-    }
-
-    /// How a tombstone routes wallet detection
-    enum TombstoneRouting: Equatable {
-        case none    // no tombstone — normal detection
-        case rejoin  // tombstone matches the account's current wallet — offer rejoin
-        case stale   // tombstone refers to a wallet that no longer exists — clear it
-    }
-
-    /// Pure routing decision for the local-deletion tombstone, extracted for testability.
-    ///
-    /// A missing KVS hash alone is NOT proof the account wallet is gone — KVS can
-    /// be transiently blank (fresh cache after iCloud sign-out/in, pre-initial-
-    /// sync), and wrongly clearing the tombstone would silently resurrect the
-    /// wallet. Hash absence only counts when the keychain corroborates it with a
-    /// definitive `.notFound`: a full wipe elsewhere removes both signals, a KVS
-    /// glitch leaves the synced seed readable. On `.unavailable` the answer is
-    /// unknown — keep the tombstone (Multi_Device_Design.md, Failure modes §B).
-    nonisolated static func tombstoneRouting(
-        tombstoneHash: String?,
-        currentAccountHash: String?,
-        mnemonicStatus: MnemonicKeychainStatus
-    ) -> TombstoneRouting {
-        guard let tombstoneHash else { return .none }
-        guard let currentAccountHash else {
-            if case .notFound = mnemonicStatus {
-                return .stale  // both signals definitively gone — wallet fully wiped
-            }
-            return .rejoin     // KVS transient or unreadable keychain — never resurrect
-        }
-        return currentAccountHash == tombstoneHash ? .rejoin : .stale
-    }
-
     // MARK: - Wallet State Detection
 
     /// Detects if user has a wallet on another device
@@ -341,41 +283,52 @@ class SecurityService {
         defer {
             Self.logger.info("⏱️ Wallet state detection took \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
         }
-        // 0. Local deletion tombstone: this install deliberately deleted the wallet
-        // while it lives on other devices. Checked before any wallet signal so that
-        // neither the still-synced seed nor a low-confidence keychain read can
-        // silently resurrect the wallet (Wallet_Deletion_And_Rejoin.md).
-        if let tombstoneHash = Self.localDeletionTombstoneHash() {
-            let accountHash = getUbiquitousHash()
-            // A missing hash needs keychain corroboration before the tombstone may
-            // be cleared — use the retrying resolver so a transiently unreadable
-            // keychain doesn't masquerade as evidence either way
-            let mnemonicStatus: MnemonicKeychainStatus = accountHash == nil
-                ? await resolveMnemonicStatus()
-                : Self.mnemonicKeychainStatus()
-
-            switch Self.tombstoneRouting(
-                tombstoneHash: tombstoneHash,
-                currentAccountHash: accountHash,
-                mnemonicStatus: mnemonicStatus
-            ) {
-            case .rejoin:
-                lastDetectionWasDefinitive = true
-                let deviceName = await lookupPrimaryDeviceName(walletHash: accountHash ?? tombstoneHash)
-                Self.logger.info("Local deletion tombstone active — routing to rejoin (primary: \(deviceName ?? "none registered"), kvsHashPresent: \(accountHash != nil))")
-                return .walletAvailableToRejoin(deviceName: deviceName)
-            case .stale:
-                Self.logger.info("Local deletion tombstone stale (account wallet definitively gone or replaced) — clearing")
-                Self.clearLocalDeletionTombstone()
-            case .none:
-                break
+        // 0. The link record decides whether this install may adopt the
+        // account's wallet at all (Device_Linking.md §12.1, contract rule 28).
+        // The keychain is resolved first because the route needs it; the
+        // retrying resolver turns a transiently unreadable keychain into
+        // "unknown", never into "no wallet".
+        let mnemonicStatus = await resolveMnemonicStatus()
+        let accountHash = getUbiquitousHash()
+        let seedFound = mnemonicStatus == .found
+        var seedUnreadable = false
+        if case .unavailable = mnemonicStatus { seedUnreadable = true }
+        let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(fallbackContainer: nil)
+        let route = DeviceLinkStore.launchRoute(
+            record: DeviceLinkStore.record(),
+            left: DeviceLinkStore.left(),
+            accountHash: accountHash,
+            seedFound: seedFound,
+            seedUnreadable: seedUnreadable,
+            ownRow: ownRow
+        )
+        switch route {
+        case .awaitingLink(let reason):
+            // A keychain or registry that could not be read is re-checked when
+            // protected data becomes available; every other reason is settled
+            lastDetectionWasDefinitive = !seedUnreadable && ownRow != .unavailable
+            Self.logger.notice("🔗 Account wallet awaiting link on this install (\(String(describing: reason), privacy: .public))")
+            return .accountWalletAwaitingLink(reason: reason)
+        case .selfHeal:
+            // An install from before the link record existed: its own
+            // registry row is the proof it linked. Write the record silently.
+            let hash = accountHash ?? (try? loadMnemonic()).flatMap { $0 }.map(hashMnemonic)
+            if let hash {
+                DeviceLinkStore.recordLink(walletHash: hash, replacingExisting: true)
+                Self.logger.notice("🔗 Link record written for an existing install (own registry row present)")
             }
+        case .noAccountWallet:
+            // The breadcrumb must not outlive the wallet it remembers: left
+            // behind after a wipe elsewhere it would refuse creation forever
+            if DeviceLinkStore.leftBreadcrumbIsStale(left: DeviceLinkStore.left(), accountHash: accountHash, seedFound: seedFound, seedUnreadable: seedUnreadable) {
+                DeviceLinkStore.clearLeft()
+                Self.logger.notice("🔗 Left breadcrumb cleared: the account wallet it remembered is gone")
+            }
+        case .linked:
+            break
         }
 
         Self.logger.debug("Wallet state detection: checking local keychain...")
-
-        // 1. Check local keychain first (retries briefly if the keychain is unavailable)
-        let mnemonicStatus = await resolveMnemonicStatus()
 
         switch mnemonicStatus {
         case .found:
@@ -976,9 +929,11 @@ enum WalletState: Equatable {
     // secondary and hid the one state whose remedy is promoting *this* device.
     // Callers that display it must handle nil rather than substitute a name.
     case walletActiveElsewhere(deviceName: String?)
-    // This install deliberately deleted the wallet locally; the account still has
-    // it — offer rejoin, never onboarding/create. Same nil semantics as above.
-    case walletAvailableToRejoin(deviceName: String?)
+    // The account has a wallet this install has not linked (no link record,
+    // or a record whose own registry row is gone): show the link screen, never
+    // onboarding, which would offer creating a second wallet
+    // (Device_Linking.md §4.2).
+    case accountWalletAwaitingLink(reason: LinkPromptReason)
 }
 
 enum MnemonicValidationResult {

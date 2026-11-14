@@ -78,19 +78,38 @@ struct DeviceLinkValidityTests {
         #expect(DeviceLinkStore.record(defaults: defaults) == nil)
 
         let first = Date(timeIntervalSince1970: 1_760_000_000)
-        DeviceLinkStore.recordLink(walletHash: "hash-A", now: first, defaults: defaults)
+        #expect(DeviceLinkStore.recordLink(walletHash: "hash-A", replacingExisting: true, now: first, defaults: defaults))
         #expect(DeviceLinkStore.record(defaults: defaults) == DeviceLinkRecord(walletHash: "hash-A", linkedAt: first))
 
         // A repeat registration for the same wallet keeps the original date
-        DeviceLinkStore.recordLink(walletHash: "hash-A", now: first.addingTimeInterval(3_600), defaults: defaults)
+        #expect(!DeviceLinkStore.recordLink(walletHash: "hash-A", replacingExisting: false, now: first.addingTimeInterval(3_600), defaults: defaults))
         #expect(DeviceLinkStore.record(defaults: defaults)?.linkedAt == first)
 
-        // A different wallet replaces the record
+        // Registration must never re-point the install at another wallet
+        #expect(!DeviceLinkStore.recordLink(walletHash: "hash-B", replacingExisting: false, now: first, defaults: defaults))
+        #expect(DeviceLinkStore.record(defaults: defaults)?.walletHash == "hash-A")
+
+        // An explicit link (create, import, link screen) does replace it
         let second = first.addingTimeInterval(86_400)
-        DeviceLinkStore.recordLink(walletHash: "hash-B", now: second, defaults: defaults)
+        #expect(DeviceLinkStore.recordLink(walletHash: "hash-B", replacingExisting: true, now: second, defaults: defaults))
         #expect(DeviceLinkStore.record(defaults: defaults) == DeviceLinkRecord(walletHash: "hash-B", linkedAt: second))
 
         DeviceLinkStore.clearLink(defaults: defaults)
         #expect(DeviceLinkStore.record(defaults: defaults) == nil)
+    }
+
+    @Test("The left breadcrumb survives a local delete and is cleared by a link")
+    func leftBreadcrumbRoundTrip() throws {
+        let suite = "com.arke.test.left.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let leftAt = Date(timeIntervalSince1970: 1_761_000_000)
+        DeviceLinkStore.recordLeft(walletHash: "hash-A", now: leftAt, defaults: defaults)
+        #expect(DeviceLinkStore.left(defaults: defaults) == DeviceLeftRecord(walletHash: "hash-A", leftAt: leftAt))
+
+        // Linking again supersedes the memory of having left
+        DeviceLinkStore.recordLink(walletHash: "hash-A", replacingExisting: true, defaults: defaults)
+        #expect(DeviceLinkStore.left(defaults: defaults) == nil)
     }
 }

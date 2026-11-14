@@ -17986,6 +17986,193 @@
         }
       }
     },
+    "link_button" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Link This Device"
+          }
+        }
+      }
+    },
+    "link_button_check_again" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Check Again"
+          }
+        }
+      }
+    },
+    "link_button_enter_phrase" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Enter Recovery Phrase"
+          }
+        }
+      }
+    },
+    "link_message_mismatch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet on this device is no longer the one on this iCloud account. It may have been deleted from another device, or this device is signed in to a different account. Sign back in to the wallet's account, or remove the wallet from this device in Settings."
+          }
+        }
+      }
+    },
+    "link_message_new_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This iCloud account has a wallet. This device will show it; spending stays on the primary device until you move it here."
+          }
+        }
+      }
+    },
+    "link_message_new_device %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This iCloud account has a wallet. Its primary device is %@. This device will show the wallet; spending stays on the primary device until you move it here."
+          }
+        }
+      }
+    },
+    "link_message_removed_elsewhere" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device was removed from the wallet's device list on another device. Link it again to keep viewing the wallet."
+          }
+        }
+      }
+    },
+    "link_message_removed_here %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You removed this wallet from this device on %@. Link it again to keep viewing it."
+          }
+        }
+      }
+    },
+    "link_message_waiting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device held a wallet before. iCloud hasn't answered yet; the wallet appears as soon as it does."
+          }
+        }
+      }
+    },
+    "link_message_was_primary" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device was the primary device for this wallet. Link it to continue as before."
+          }
+        }
+      }
+    },
+    "link_seed_missing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet key hasn't reached this device through iCloud Keychain yet. You can enter the recovery phrase instead."
+          }
+        }
+      }
+    },
+    "link_status_slow" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "iCloud is slow right now. You can continue; details fill in later."
+          }
+        }
+      }
+    },
+    "link_status_syncing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Syncing with iCloud…"
+          }
+        }
+      }
+    },
+    "link_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Link this device to your wallet"
+          }
+        }
+      }
+    },
+    "link_title_again" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Link this device again"
+          }
+        }
+      }
+    },
+    "link_title_mismatch" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This wallet is not on this iCloud account"
+          }
+        }
+      }
+    },
+    "link_title_waiting" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for iCloud"
+          }
+        }
+      }
+    },
     "linked_devices_multiple_devices_description" : {
       "localizations" : {
         "de" : {
@@ -19717,6 +19904,28 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Testnet（測試網路）"
+          }
+        }
+      }
+    },
+    "notification_device_linked_body %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@ now shows your wallet. If that wasn't you, check Settings › Devices."
+          }
+        }
+      }
+    },
+    "notification_device_linked_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "New device linked"
           }
         }
       }
@@ -22444,7 +22653,7 @@
       }
     },
     "rejoin_button" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22473,7 +22682,7 @@
       }
     },
     "rejoin_message %@" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22502,7 +22711,7 @@
       }
     },
     "rejoin_message_no_primary" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22531,7 +22740,7 @@
       }
     },
     "rejoin_title" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -22662,6 +22871,61 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "裝置角色"
+          }
+        }
+      }
+    },
+    "seed_entry_error_format" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This is not a valid recovery phrase."
+          }
+        }
+      }
+    },
+    "seed_entry_error_no_reference" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "iCloud hasn't delivered the wallet's details yet. Try again in a moment."
+          }
+        }
+      }
+    },
+    "seed_entry_error_other_wallet" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This recovery phrase belongs to a different wallet than the one on this iCloud account."
+          }
+        }
+      }
+    },
+    "seed_entry_error_save %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The recovery phrase could not be saved: %@"
+          }
+        }
+      }
+    },
+    "seed_entry_error_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Recovery phrase not saved"
           }
         }
       }

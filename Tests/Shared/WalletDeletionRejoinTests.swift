@@ -17,74 +17,6 @@ import Foundation
 @testable import ArkeDesktop
 #endif
 
-// MARK: - Tombstone Routing
-
-@Suite("Tombstone Routing")
-struct TombstoneRoutingTests {
-
-    @Test("No tombstone routes to normal detection regardless of other signals")
-    func noTombstone() {
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: nil, currentAccountHash: nil, mnemonicStatus: .notFound) == .none)
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: nil, currentAccountHash: "abc", mnemonicStatus: .found) == .none)
-    }
-
-    @Test("Tombstone matching the account hash offers rejoin")
-    func matchingTombstone() {
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: "abc", currentAccountHash: "abc", mnemonicStatus: .found) == .rejoin)
-    }
-
-    @Test("Tombstone is stale only when hash AND seed are definitively gone")
-    func staleTombstoneWalletFullyWiped() {
-        // Full wipe elsewhere removes both the KVS hash and the synced seed
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: "abc", currentAccountHash: nil, mnemonicStatus: .notFound) == .stale)
-    }
-
-    @Test("Missing hash with the seed still present is a KVS transient — keep rejoining")
-    func kvsTransientDoesNotClearTombstone() {
-        // KVS cache can be momentarily blank (post sign-out/in, pre-initial-sync);
-        // the still-synced seed proves the wallet exists — never resurrect, never clear
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: "abc", currentAccountHash: nil, mnemonicStatus: .found) == .rejoin)
-    }
-
-    @Test("Missing hash with an unreadable keychain keeps the tombstone")
-    func unreadableKeychainDoesNotClearTombstone() {
-        // Unknown is not evidence — low confidence must never clear or resurrect
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: "abc", currentAccountHash: nil, mnemonicStatus: .unavailable(-25308)) == .rejoin)
-    }
-
-    @Test("Tombstone is stale when the account wallet was replaced")
-    func staleTombstoneDifferentWallet() {
-        // A different hash is affirmative evidence of a new wallet (KVS transients
-        // produce nil, not wrong values) — clear regardless of keychain state
-        #expect(SecurityService.tombstoneRouting(tombstoneHash: "abc", currentAccountHash: "def", mnemonicStatus: .found) == .stale)
-    }
-}
-
-// MARK: - Tombstone Persistence
-
-@Suite("Tombstone Persistence", .serialized)
-struct TombstonePersistenceTests {
-
-    @Test("Record, read, and clear roundtrip")
-    func roundtrip() {
-        // Preserve any real tombstone on the developer's machine
-        let original = SecurityService.localDeletionTombstoneHash()
-        defer {
-            if let original {
-                SecurityService.recordLocalDeletionTombstone(walletHash: original)
-            } else {
-                SecurityService.clearLocalDeletionTombstone()
-            }
-        }
-
-        SecurityService.recordLocalDeletionTombstone(walletHash: "test-hash-123")
-        #expect(SecurityService.localDeletionTombstoneHash() == "test-hash-123")
-
-        SecurityService.clearLocalDeletionTombstone()
-        #expect(SecurityService.localDeletionTombstoneHash() == nil)
-    }
-}
-
 // MARK: - Wallet Creation Guard
 
 @Suite("Account Wallet Signals (creation guard)")
@@ -93,33 +25,34 @@ struct AccountWalletSignalsTests {
     @Test("Clean account allows creation")
     func cleanAccount() {
         #expect(!WalletManager.accountHasWalletSignals(
-            kvsHashPresent: false, mnemonicStatus: .notFound, tombstonePresent: false))
+            kvsHashPresent: false, mnemonicStatus: .notFound, leftBreadcrumbPresent: false))
     }
 
     @Test("KVS hash alone refuses creation")
     func kvsHash() {
         #expect(WalletManager.accountHasWalletSignals(
-            kvsHashPresent: true, mnemonicStatus: .notFound, tombstonePresent: false))
+            kvsHashPresent: true, mnemonicStatus: .notFound, leftBreadcrumbPresent: false))
     }
 
     @Test("Synced mnemonic alone refuses creation")
     func mnemonicFound() {
         #expect(WalletManager.accountHasWalletSignals(
-            kvsHashPresent: false, mnemonicStatus: .found, tombstonePresent: false))
+            kvsHashPresent: false, mnemonicStatus: .found, leftBreadcrumbPresent: false))
     }
 
-    @Test("Tombstone alone refuses creation")
-    func tombstone() {
+    @Test("Left breadcrumb alone refuses creation")
+    func leftBreadcrumb() {
+        // This install removed a wallet locally; the account still has it
         #expect(WalletManager.accountHasWalletSignals(
-            kvsHashPresent: false, mnemonicStatus: .notFound, tombstonePresent: true))
+            kvsHashPresent: false, mnemonicStatus: .notFound, leftBreadcrumbPresent: true))
     }
 
     @Test("Unreadable keychain alone does NOT refuse creation")
     func unavailableKeychainIsNoSignal() {
         // A transiently broken keychain on a genuinely fresh install must not
-        // brick onboarding; KVS hash and tombstone still guard dangerous cases
+        // brick onboarding; KVS hash and breadcrumb still guard dangerous cases
         #expect(!WalletManager.accountHasWalletSignals(
-            kvsHashPresent: false, mnemonicStatus: .unavailable(-25308), tombstonePresent: false))
+            kvsHashPresent: false, mnemonicStatus: .unavailable(-25308), leftBreadcrumbPresent: false))
     }
 }
 

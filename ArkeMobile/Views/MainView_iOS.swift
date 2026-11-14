@@ -19,6 +19,7 @@ struct MainView_iOS: View {
     @State private var isCheckingWallet: Bool = true
     @State private var walletState: WalletState = .unknown
     @State private var lateServicesActivated: Bool = false
+    @State private var isLinkingDevice: Bool = false
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.securityService) private var securityService
@@ -44,11 +45,13 @@ struct MainView_iOS: View {
     
     /// Registers the current device after wallet detection or creation
     /// Should be called AFTER ServiceContainer has been configured with ModelContext
-    private func registerDeviceIfNeeded() async {
-        // Get hash from SecurityService (no side effects)
-        guard let hash = securityService.getWalletHashForRegistration() else {
+    /// - Returns: whether a registration was written (false when skipped or failed)
+    @discardableResult
+    private func registerDeviceIfNeeded() async -> Bool {
+        // Hash from KVS, or from the seed in hand when KVS has not synced yet
+        guard let hash = securityService.getWalletHashForRegistration() ?? seedDerivedWalletHash() else {
             Self.logger.debug("No wallet hash available for device registration")
-            return
+            return false
         }
 
         // Determine if this device has the seed
@@ -66,12 +69,54 @@ struct MainView_iOS: View {
             )
 
             Self.logger.info("Device registered with hasSeed=\(hasSeed) in \(String(format: "%.2f", CFAbsoluteTimeGetCurrent() - startTime), privacy: .public)s")
+            return true
         } catch {
             // Log but don't fail - device registration is not critical
             Self.logger.error("Device registration failed: \(error.localizedDescription)")
+            return false
         }
     }
     
+    private func seedDerivedWalletHash() -> String? {
+        guard let mnemonic = (try? securityService.loadMnemonic()) ?? nil else { return nil }
+        return securityService.hashMnemonic(mnemonic)
+    }
+
+    /// The link screen's one action (Device_Linking.md §4.2): record the
+    /// link, register this device without a primary claim, and route again.
+    /// A reinstalled primary regains its role through the registry's dedupe
+    /// of its old row; everyone else becomes a secondary.
+    private func linkThisDevice() async {
+        isLinkingDevice = true
+        defer { isLinkingDevice = false }
+
+        // The waiting and mismatch variants have nothing to link to; their
+        // button only asks detection to look again
+        if case .accountWalletAwaitingLink(let reason) = walletState,
+           reason == .waitingForICloud || reason == .walletMismatch {
+            Self.logger.notice("🔗 Check again requested (\(String(describing: reason), privacy: .public)) — re-running detection")
+            await checkForExistingWallet()
+            return
+        }
+        guard let hash = securityService.getWalletHashForRegistration() ?? seedDerivedWalletHash() else {
+            Self.logger.notice("🔗 Link requested without a wallet hash — re-running detection")
+            await checkForExistingWallet()
+            return
+        }
+        DeviceLinkStore.recordLink(walletHash: hash, replacingExisting: true)
+        let registered = await registerDeviceIfNeeded()
+        if !registered {
+            // Without a row the record would route to "removed by another
+            // device"; roll it back so the screen keeps its reason and the
+            // user can try again
+            DeviceLinkStore.clearLink()
+            Self.logger.error("🔗 Link failed: device registration did not complete — link record rolled back")
+        } else {
+            Self.logger.notice("🔗 This install linked the account wallet")
+        }
+        await checkForExistingWallet()
+    }
+
     // MARK: - View Body
     
     var body: some View {
@@ -80,16 +125,17 @@ struct MainView_iOS: View {
                 // Show loading state while checking for wallet
                 LoadingView_iOS()
                     .transition(.opacity)
-            } else if case .walletAvailableToRejoin(let primaryDeviceName) = walletState {
-                // This install deliberately deleted the wallet locally; the account
-                // still has it. Offer rejoin — never onboarding, which would allow
-                // creating a second wallet (Wallet_Deletion_And_Rejoin.md)
-                RejoinWalletView(primaryDeviceName: primaryDeviceName) {
-                    SecurityService.clearLocalDeletionTombstone()
+            } else if case .accountWalletAwaitingLink(let reason) = walletState {
+                // The account has a wallet this install has not linked: a new
+                // device, a reinstall, a local removal, or an unlink by another
+                // device. Never onboarding, which would offer creating a second
+                // wallet (Device_Linking.md §4.2)
+                LinkWalletView(reason: reason, isLinking: isLinkingDevice) {
                     Task {
-                        await checkForExistingWallet()
+                        await linkThisDevice()
                     }
                 }
+                .environment(walletManager)
                 .transition(.opacity)
             } else if case .walletActiveElsewhere = walletState {
                 // Secondary device: Show wallet in read-only mode instead of blocking screen
@@ -190,6 +236,11 @@ struct MainView_iOS: View {
             }
         }
         .animation(.smooth(duration: 0.4), value: hasWallet)
+        .onReceive(NotificationCenter.default.publisher(for: .walletClosedAfterUnlink)) { _ in
+            // Another device unlinked this one while it ran; the wallet is
+            // closed, and detection now routes to the link screen
+            Task { await checkForExistingWallet() }
+        }
         .task {
             Self.logger.debug(".task started")
             
@@ -450,10 +501,10 @@ struct MainView_iOS: View {
                     await walletManager.initialize()
                     Self.logger.info("✅ Read-only wallet initialization complete")
                 }
-            } else if case .walletAvailableToRejoin = state {
-                // This install deleted the wallet locally — show the rejoin screen.
-                // No initialization, no device registration (it unregistered itself)
-                Self.logger.info("📵 Local deletion tombstone active - showing rejoin screen (cached detection path)")
+            } else if case .accountWalletAwaitingLink = state {
+                // Not linked: show the link screen. No initialization and no
+                // registration until the user links (Device_Linking.md §4.2)
+                Self.logger.info("🔗 Account wallet awaiting link - showing link screen (cached detection path)")
                 hasWallet = false
 
                 var transaction = Transaction()
@@ -561,10 +612,12 @@ struct MainView_iOS: View {
                     Self.logger.info("✅ Read-only wallet initialization complete")
                 }
 
-            case .walletAvailableToRejoin:
-                // This install deleted the wallet locally — show the rejoin screen.
-                // No initialization, no device registration (it unregistered itself)
-                Self.logger.info("📵 Local deletion tombstone active - showing rejoin screen")
+            case .accountWalletAwaitingLink:
+                // Not linked: show the link screen. No initialization and no
+                // registration until the user links. CloudKit sync starts now so
+                // the first import can land behind the screen
+                Self.logger.info("🔗 Account wallet awaiting link - showing link screen")
+                activateLateDetectedWalletServices()
                 hasWallet = false
 
                 var transaction = Transaction()
@@ -603,8 +656,8 @@ struct MainView_iOS: View {
         let route: String
         if case .walletActiveElsewhere = walletState {
             route = "read-only"
-        } else if case .walletAvailableToRejoin = walletState {
-            route = "rejoin"
+        } else if case .accountWalletAwaitingLink = walletState {
+            route = "link"
         } else if hasWallet {
             route = "wallet"
         } else {

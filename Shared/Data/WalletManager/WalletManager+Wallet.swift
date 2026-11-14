@@ -161,8 +161,9 @@ extension WalletManager {
             freshWalletOrigin = .imported
             Self.logger.info("🌱 Fresh wallet origin: imported (with backup) - transaction list shows skeleton until first sync completes")
 
-            // A successful import supersedes any local-deletion tombstone
-            SecurityService.clearLocalDeletionTombstone()
+            // A successful import is this install's link to the wallet
+            // (Device_Linking.md §4.1); it supersedes any memory of having left
+            DeviceLinkStore.recordLink(walletHash: securityService.hashMnemonic(trimmedMnemonic), replacingExisting: true)
 
             // Step 8: Register device after wallet import. The hash is computed
             // from the phrase in hand, not read back from KVS: a KVS read-back
@@ -347,8 +348,9 @@ extension WalletManager {
         freshWalletOrigin = .imported
         Self.logger.info("🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes")
 
-        // A successful import supersedes any local-deletion tombstone
-        SecurityService.clearLocalDeletionTombstone()
+        // A successful import is this install's link to the wallet
+        // (Device_Linking.md §4.1); it supersedes any memory of having left
+        DeviceLinkStore.recordLink(walletHash: securityService.hashMnemonic(trimmedMnemonic), replacingExisting: true)
 
         // Register device after wallet import (handleSeedImport saves the mnemonic
         // but leaves device registration to the coordinator). Hash computed from
@@ -385,14 +387,15 @@ extension WalletManager {
     /// Pure decision: does any account-level signal indicate an existing wallet?
     /// An `.unavailable` keychain read counts as NO signal on its own — a
     /// transiently unreadable keychain on a genuinely fresh install must not
-    /// brick onboarding; the KVS hash and tombstone still guard the dangerous
-    /// cases. Extracted for testability (Wallet_Deletion_And_Rejoin.md).
+    /// brick onboarding; the KVS hash and the left breadcrumb (this install
+    /// removed a wallet locally, Device_Linking.md §2.1) still guard the
+    /// dangerous cases. Extracted for testability.
     nonisolated static func accountHasWalletSignals(
         kvsHashPresent: Bool,
         mnemonicStatus: MnemonicKeychainStatus,
-        tombstonePresent: Bool
+        leftBreadcrumbPresent: Bool
     ) -> Bool {
-        if kvsHashPresent || tombstonePresent {
+        if kvsHashPresent || leftBreadcrumbPresent {
             return true
         }
         if case .found = mnemonicStatus {
@@ -438,12 +441,12 @@ extension WalletManager {
         // One wallet per iCloud account: refuse creation when any account-level
         // wallet signal exists. Creating would overwrite the synchronizable seed
         // in iCloud Keychain account-wide — unrecoverable without a written-down
-        // recovery phrase. Rejoin or import are the only valid paths here
-        // (Wallet_Deletion_And_Rejoin.md).
+        // recovery phrase. Linking or import are the only valid paths here
+        // (Device_Linking.md).
         if Self.accountHasWalletSignals(
             kvsHashPresent: securityService.getUbiquitousHash() != nil,
             mnemonicStatus: SecurityService.mnemonicKeychainStatus(),
-            tombstonePresent: SecurityService.localDeletionTombstoneHash() != nil
+            leftBreadcrumbPresent: DeviceLinkStore.left() != nil
         ) {
             Self.logger.error("❌ createWallet refused: this iCloud account already has a wallet")
             throw BarkErrorArke.walletAlreadyOnAccount
@@ -503,6 +506,9 @@ extension WalletManager {
             self.isInitialized = true
             self.freshWalletOrigin = .created
             Self.logger.info("🌱 Fresh wallet origin: created - transaction list will skip the initial-sync skeleton")
+
+            // Creation is this install's link to the wallet (Device_Linking.md §4.1)
+            DeviceLinkStore.recordLink(walletHash: self.securityService.hashMnemonic(mnemonic), replacingExisting: true)
 
             // Register this device for the new wallet. Creation is the explicit user
             // action that claims primary - detection paths never do, so this must not

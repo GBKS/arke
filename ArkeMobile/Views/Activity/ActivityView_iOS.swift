@@ -330,19 +330,19 @@ struct ActivityView_iOS: View {
             )
         }
         .sheet(isPresented: $showImportWalletSheet) {
-            ImportWalletSheet_iOS(
-                // Seed entry on a device that already runs the wallet: the
-                // server and chain are the wallet's own, including a custom server
+            // Seed-only entry on a linked device whose key has not synced: the
+            // phrase is checked against the account's wallet and saved to the
+            // keychain, never run through bark's import, which would create a
+            // local database and claim primary (Device_Linking.md §4.2)
+            SeedEntrySheet_iOS(
                 networkConfig: manager.networkConfig ?? .mainnet,
                 onCancel: {
                     showImportWalletSheet = false
                 },
-                onWalletImported: {
+                onSeedSaved: {
                     showImportWalletSheet = false
                     Task {
-                        // This device now holds the seed - record it in the registry and
-                        // re-derive the wallet mode (stays read-only unless primary)
-                        try? await ServiceContainer.shared.deviceRegistrationService.updateCurrentDeviceHasSeed(true)
+                        // Re-derive the wallet mode (stays read-only unless primary)
                         await manager.initialize()
                     }
                 }

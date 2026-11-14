@@ -13,6 +13,7 @@ struct MainView: View {
     @State private var hasWallet: Bool = false
     @State private var isCheckingWallet: Bool = true
     @State private var walletState: WalletState = .unknown
+    @State private var isLinkingDevice: Bool = false
     @State private var lateServicesActivated: Bool = false
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
@@ -25,15 +26,17 @@ struct MainView: View {
             if isCheckingWallet {
                 // Show loading state while checking for wallet
                 LoadingView()
-            } else if case .walletAvailableToRejoin(let primaryDeviceName) = walletState {
-                // This install deliberately deleted the wallet locally; the account
-                // still has it. Offer rejoin — never onboarding, which would allow
-                // creating a second wallet (Wallet_Deletion_And_Rejoin.md)
-                RejoinWalletView(primaryDeviceName: primaryDeviceName) {
-                    SecurityService.clearLocalDeletionTombstone()
+            } else if case .accountWalletAwaitingLink(let reason) = walletState {
+                // The account has a wallet this install has not linked — show the
+                // link screen, never onboarding (Device_Linking.md §4.2)
+                LinkWalletView(reason: reason, isLinking: isLinkingDevice) {
                     Task {
-                        await checkForExistingWallet()
+                        await linkThisDevice()
                     }
+                }
+                .environment(walletManager)
+                .onReceive(NotificationCenter.default.publisher(for: .walletClosedAfterUnlink)) { _ in
+                    Task { await checkForExistingWallet() }
                 }
             } else if case .walletActiveElsewhere = walletState {
                 // Secondary device: Show wallet in read-only mode instead of blocking screen
@@ -154,11 +157,36 @@ struct MainView: View {
 
     // MARK: - Device Registration Coordination
 
+    private func seedDerivedWalletHash() -> String? {
+        guard let mnemonic = (try? securityService.loadMnemonic()) ?? nil else { return nil }
+        return securityService.hashMnemonic(mnemonic)
+    }
+
+    /// The link screen's one action (Device_Linking.md §4.2); mirrors MainView_iOS
+    private func linkThisDevice() async {
+        isLinkingDevice = true
+        defer { isLinkingDevice = false }
+        if case .accountWalletAwaitingLink(let reason) = walletState,
+           reason == .waitingForICloud || reason == .walletMismatch {
+            await checkForExistingWallet()
+            return
+        }
+        guard let hash = securityService.getWalletHashForRegistration() ?? seedDerivedWalletHash() else {
+            print("🔗 [MainView] Link requested without a wallet hash — re-running detection")
+            await checkForExistingWallet()
+            return
+        }
+        DeviceLinkStore.recordLink(walletHash: hash, replacingExisting: true)
+        print("🔗 [MainView] This install linked the account wallet")
+        await registerDeviceIfNeeded()
+        await checkForExistingWallet()
+    }
+
     /// Registers the current device after wallet detection or creation
     /// Should be called AFTER ServiceContainer has been configured with ModelContext
     private func registerDeviceIfNeeded() async {
-        // Get hash from SecurityService (no side effects)
-        guard let hash = securityService.getWalletHashForRegistration() else {
+        // Hash from KVS, or from the seed in hand when KVS has not synced yet
+        guard let hash = securityService.getWalletHashForRegistration() ?? seedDerivedWalletHash() else {
             print("ℹ️ [MainView] No wallet hash available for device registration")
             return
         }
@@ -329,10 +357,10 @@ struct MainView: View {
                     await walletManager.initialize(forceReadOnly: true)
                     print("✅ Read-only wallet initialization complete")
                 }
-            } else if case .walletAvailableToRejoin = state {
-                // This install deleted the wallet locally — show the rejoin screen.
-                // No initialization, no device registration (it unregistered itself)
-                print("📵 Local deletion tombstone active - showing rejoin screen (cached detection path)")
+            } else if case .accountWalletAwaitingLink = state {
+                // Not linked: show the link screen, no initialization or
+                // registration until the user links
+                print("🔗 Account wallet awaiting link - showing link screen (cached detection path)")
                 hasWallet = false
                 isCheckingWallet = false
             } else if case .noWallet = state {
@@ -368,10 +396,11 @@ struct MainView: View {
             print("🔍 [MainView] detectWalletState returned: \(state) at \(Date())")
             
             switch state {
-            case .walletAvailableToRejoin:
-                // This install deleted the wallet locally — show the rejoin screen.
-                // No initialization, no device registration (it unregistered itself)
-                print("📵 Local deletion tombstone active - showing rejoin screen")
+            case .accountWalletAwaitingLink:
+                // Not linked: show the link screen; CloudKit sync starts so the
+                // first import can land behind it
+                print("🔗 Account wallet awaiting link - showing link screen")
+                activateLateDetectedWalletServices()
                 hasWallet = false
                 isCheckingWallet = false
 
@@ -437,8 +466,8 @@ struct MainView: View {
         let route: String
         if case .walletActiveElsewhere = walletState {
             route = "read-only"
-        } else if case .walletAvailableToRejoin = walletState {
-            route = "rejoin"
+        } else if case .accountWalletAwaitingLink = walletState {
+            route = "link"
         } else if hasWallet {
             route = "wallet"
         } else {

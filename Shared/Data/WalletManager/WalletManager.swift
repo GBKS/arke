@@ -1392,6 +1392,12 @@ class WalletManager {
         walletNotificationService = nil
         
         Self.logger.info("✅ Wallet closed successfully for migration (SwiftData preserved)")
+
+        if !backingUp {
+            // Removed by another device: the main view re-runs detection and
+            // lands on the link screen (Device_Linking.md §12.1)
+            NotificationCenter.default.post(name: .walletClosedAfterUnlink, object: nil)
+        }
     }
     
     /// Observe migration notifications
