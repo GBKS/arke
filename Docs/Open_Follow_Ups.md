@@ -383,7 +383,10 @@ check). The security-check matrix is still its own Tier 0 item.
 
 - [ ] **Explicit device linking — build** (DECIDED 2026-11-13, plan
   `Features/Device_Linking.md` §8): six steps, each with its own adversarial
-  pass; step 1 is the evidence rule that closes the Tier 0
+  pass. **Step 1 built, reviewed and unit-tested 2026-11-13/14** (§11.5
+  and §11.6 there; every device check passed 2026-11-14, nothing owed;
+  commit pending). Next: step 2, the link screen.
+  Step 1 is the evidence rule that closed the
   `checkReadOnlyMode()` item, step 2 the link screen and the tombstone /
   rejoin removal, step 3 fast entries with identity and the Devices screen,
   step 4 the make-primary flow, step 5 the delete-flow remedy and the
@@ -391,19 +394,6 @@ check). The security-check matrix is still its own Tier 0 item.
   facts were checked 2026-11-13 (§7 there); open: one optional device
   check (per-app iCloud toggle) and whether `recoverVtxos` marks spent
   VTXOs (step 4).
-- [ ] **`checkReadOnlyMode()` infers primary**: a missing or unreadable
-  device registration sets `isReadOnlyMode = false`, against Principle 2 /
-  contract rule 15; sibling `shouldBlockWalletAccess()` answers `false` on
-  an unreadable device ID. Reached when another device unlinks this one
-  (S4). **Device run 2026-11-13: no spend window.** The relaunch flashed
-  the primary layout and went read-only in the same session, because the
-  main-actor registration lands before the detached mode check reads the
-  row. Residual: a race with no ordering guarantee, the UI flash, and the
-  headless BGTask path where nothing registers. Fix DECIDED 2026-11-13: the
-  evidence rule, build step 1 of `Features/Device_Linking.md` §2.3.
-  Moved here from Tier 0 (DECIDED 2026-11-13) as part of that step. Trace,
-  result and recipe: `Features/Read_Only_Mode.md`;
-  `Development/Contract_Audit_2026_11.md` A.1.
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read

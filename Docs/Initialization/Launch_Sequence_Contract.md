@@ -210,7 +210,10 @@ Enforced: nothing — this rule records a limit, not a guard. Test: none.
 **14. Check demotion before opening the wallet.**
 A demoted device must fall back to read-only mode without touching the seed;
 the layered check (UserDefaults → iCloud KV → CloudKit cache) runs as step 0
-of initialization. Since 2026-09-25 the background wake path honors it too:
+of initialization. Since 2026-11-13 the layers feed one pure verdict
+(`WalletManager.accessVerdict`, rule 28): an unreadable device ID, a
+missing row, or an unavailable registry with no positive mirror answer all
+block, where they used to pass. Since 2026-09-25 the background wake path honors it too:
 its headless open (`refreshRelayAuthInBackground`) checks
 `shouldBlockWalletAccess()` before opening and answers `.nothingToDo` — a
 demoted ex-primary with a leftover local db must not open bark on every wake,
@@ -237,8 +240,14 @@ side effects have none).
 
 **16. The device ID keychain item is non-synchronizable.**
 It distinguishes "this device was wiped" from "the seed arrived on a new
-device" — syncing it would collapse that distinction.
-Enforced: `DeviceRegistrationService.swift` (`getOrCreateDeviceId`). Test: none.
+device" — syncing it would collapse that distinction. Its class is
+`AfterFirstUnlockThisDeviceOnly` since 2026-11-13 (migrated from
+`WhenUnlockedThisDeviceOnly` on first read): still never migrates to another
+device, but readable on a locked phone, which the headless gate in rule 28
+needs.
+Enforced: `DeviceRegistrationService.swift` (`getOrCreateDeviceId`). Test:
+`DeviceIdAccessibilityMigrationTests` (the migration; the non-sync property
+itself has none).
 
 ## Deletion
 
@@ -563,6 +572,49 @@ Enforced: `WalletManager+Notifications.swift` (`mintAndRegisterWithRelay`),
 `RelayRegistrationService.swift` (`needsRenewal`, `PersistedRegistration`),
 `WalletDataCleanupService.swift` (`clearUserDefaults`). Tests:
 `RelayRegistrationRenewalTests`, `RelayRegistrationPersistenceTests`.
+
+**28. No path opens bark without positive evidence that this device is primary; "unknown" is read-only.**
+Primary is claimed by explicit actions that write this device's row and
+mirror flag first (create, import, promote; rule 15), so the gate before
+every open asks for that evidence and treats its absence as read-only: an
+unreadable device-ID item, a registry row that says secondary or does not
+exist, or a registry that cannot be asked while the KV mirror has no
+`primary` answer. The launch path turns every block into read-only
+initialisation; the headless background open maps settled blocks
+(demoted, secondary) to `.nothingToDo` and unknown ones to `.failed` so the
+wake chain retries after the phone unlocks. Before 2026-11-13 the gate
+returned "pass" on an unreadable ID and on a missing row, and
+`checkReadOnlyMode` assumed primary on a nil row; the device run of that day
+showed only a race and a UI flash rather than a spend window, and the rule
+removes the race. The evidence is what this device has received: a
+device that was offline when another device unlinked or wiped it still
+holds its old row and flag until a sync arrives, and its first foreground
+launch settles it. To keep that window to sync lag, unlink, unregister
+and the full wipe remove the affected device's KVS primary flag, and the
+headless launch reads the row through `WalletManager.headlessModelContainer`
+rather than trusting the flag alone. Companion state: the per-install link
+record (`DeviceLinkStore`, `com.arke.link.*`), written by every successful
+registration and cleared by the deletion's Step 4 (after the fallible
+CloudKit and keychain steps, like the tombstone, so a deletion that throws
+earlier leaves a working, still-linked wallet); the headless path refuses
+to open bark for an install whose record is missing or names another
+wallet (`Features/Device_Linking.md` §2, §11). The rule also holds for a
+running session: a primary whose own registry row disappears (another
+device's unlink or wipe, or a store reset) closes bark at once, without a
+final backup, via `DeviceRegistrationService.liveDemotionVerdict` →
+`.deviceUnlinkedWhileRunning` → `closeWalletForMigration(backingUp: false)`
+(§11.6 there); and `initializePrimaryMode` re-checks the mode after the
+FFI open so a demotion landing mid-open does not leave the daemon running.
+Enforced: `WalletManager.swift` (`accessVerdict`, `walletAccessVerdict`,
+`checkReadOnlyMode`, `performInitialization`, `initializePrimaryMode`,
+`closeWalletForMigration`), `DeviceRegistrationService.swift`
+(`loadRegisteredDevices`, `liveDemotionVerdict`),
+`WalletManager+Notifications.swift` (`refreshRelayAuthInBackground`),
+`DeviceRegistrationService.swift` (`registerCurrentDevice` writes the
+record), `WalletDataCleanupService.swift` (clears it). Test:
+`WalletAccessVerdictTests`, `DeviceLinkValidityTests`, `OwnRowEvidenceTests`,
+`LiveUnlinkDemotionTests`; the wiring of the verdict into the two open paths
+and of the live unlink into the shutdown is traced by hand.
 
 ## Test gaps
 

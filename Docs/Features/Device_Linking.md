@@ -134,8 +134,12 @@ in-wallet phrase sheet stops using this path, see 4.2.
 **Trigger.** Any launch where the account has a wallet, by KVS hash or
 synced seed, and this install holds no valid link record. Also when the
 hash appears while the user sits in onboarding; `MainView_iOS`'s KVS
-observer already re-runs detection on that key (verified). Never on a
-launch with a valid record, so set-up devices keep the fast path.
+observer already re-runs detection on that key (verified). Also when a
+running session is live-unlinked (§11.6): the closure ends by re-running
+detection, so the device goes from the open wallet to the link screen's
+"removed by another device" variant instead of sitting read-only until
+relaunch (DECIDED 2026-11-14, Christoph's question). Never on a launch
+with a valid record, so set-up devices keep the fast path.
 
 **One screen, one action, four copy variants** on the same view:
 
@@ -556,3 +560,259 @@ Two phones on signet, never the simulator for anything seed-touching.
    screen (self-heal line in the log).
 8. BGTask on an unlinked install: back-grounded link screen, forced BGTask
    run from Xcode, log shows the refusal and no bark open.
+
+## 11. Step 1 build plan (2026-11-13)
+
+Scope: the evidence rule and the link record, nothing visible. The link
+screen, the tombstone removal and the route changes are step 2. Claims
+labelled as in §7; everything below was read at `cca502d`.
+
+### 11.1 Two facts that shape the design
+
+- **The headless background path has no registry.** A BGTask or wake-push
+  launch runs `App.init`, which wires only the BGTask coordinator; nothing
+  on that path calls `configureServices` (verified; its callers are the two
+  `MainView` `.task` bodies, `onWalletReady`, `WalletManager.setModelContext`,
+  `setPreviewContext` and the unused `ServiceConfigurationView`, none
+  headless). Layer 3 of the old gate threw `noModelContext` there, which
+  `try?` turned into "no row" and read as "pass". Fix: `App.init` also
+  hands the model container to `WalletManager.headlessModelContainer`, and
+  `DeviceRegistrationService.ownRowEvidence` reads the row through a fresh
+  context on it when no context is configured. Only when even that is
+  missing (desktop) does the gate fall back to the KVS mirror's own
+  `primary` flag, and that flag is now removed by unlink, unregister and
+  the full wipe, so it can only be as stale as the device's last KVS sync
+  (adversarial pass 2026-11-13, F1). A device that was offline when it was
+  unlinked still holds its old row and flag until a sync arrives; no local
+  rule can know better, and the first foreground launch settles it.
+- **The device-ID keychain item is `WhenUnlockedThisDeviceOnly`**
+  (verified, `getOrCreateDeviceId`), while the seed is `AfterFirstUnlock`.
+  On a locked phone the headless gate cannot read the ID; today that
+  returns "pass", under the rule it must block, and that would end
+  background refresh while locked. Step 1 migrates the item to
+  `AfterFirstUnlockThisDeviceOnly` through the existing
+  `migrateItemToAfterFirstUnlock` helper, generalised for a
+  non-synchronizable item and a target class. The `ThisDeviceOnly` half
+  is unchanged, so contract rule 16 holds (Apple: items of that class "do
+  not migrate to a new device", checked 2026-11-13).
+
+### 11.2 Changes
+
+1. **`DeviceLinkStore`** (new, `Shared/Services/DeviceLinkStore.swift`):
+   UserDefaults record `com.arke.link.walletHash` + `com.arke.link.linkedAt`;
+   `recordLink(walletHash:)`, `clearLink()`, `record()`. Pure
+   `validity(record:accountHash:seedPresent:ownRow:) -> LinkValidity`
+   with `.valid`, `.noRecord`, `.walletChanged`, `.ownRowMissing`, and the
+   §2.2 rule that a blank KVS with the seed present is still valid. Written
+   by `registerCurrentDevice` after its save (one choke point for create,
+   import, both platforms' detection paths; the detection write is the
+   step-1 stand-in for the link screen and is narrowed to the upgrade
+   self-heal in step 2). Cleared by the cleanup service on every deletion.
+   Inventory entry in `SharedStateWipeCoverage`, scope `deviceLocal`.
+2. **Access verdict** (`WalletManager`): the three layers become a pure
+   `accessVerdict(deviceId:wasDemoted:mirror:ownRow:) -> AccessVerdict`
+   with `.allow` and `.block(reason)`, reasons `demoted`, `secondary`,
+   `noRegistration`, `deviceIdUnreadable`, `registryUnavailable`. Rules:
+   unreadable ID blocks; demotion flag blocks; mirror not-primary blocks;
+   own row secondary or absent blocks; registry unavailable blocks unless
+   the mirror says primary. `shouldBlockWalletAccess` returns the verdict;
+   the launch path treats every block as read-only, the headless path maps
+   `demoted` / `secondary` to `.nothingToDo` and the unknowns to `.failed`
+   so the wake chain retries once the phone is unlocked.
+3. **`checkReadOnlyMode`**: nil row or error → read-only, with the log
+   line "no device registration yet, read-only until this device
+   registers". The "assuming primary" line goes away.
+4. **Headless gate**: `refreshRelayAuthInBackground` adds the link-record
+   check before the access check: no valid record → `.nothingToDo` with
+   its own log line (nothing to refresh for an install that never linked).
+5. **Device-ID migration**: run once per launch where the keychain is
+   readable, from `getOrCreateDeviceId` after a successful read.
+6. **Tests** (`Tests/Shared`): `DeviceLinkValidityTests` (matrix),
+   `WalletAccessVerdictTests` (every reason, the unavailable + primary
+   mirror exception, the fresh-primary case where mirror and row agree),
+   `DeviceIdAccessibilityMigrationTests` for the non-synchronizable item
+   migrating to `AfterFirstUnlockThisDeviceOnly` with the re-add fallback
+   disabled (F5: a lost device ID would split the device's identity).
+7. **Docs**: contract rule 28 added, rule 14 and 16 amended; the Tier 1
+   "`checkReadOnlyMode()` infers primary" entry closes to the Done log.
+
+### 11.3 Known step-1 interim behaviour
+
+- **Reinstalled primary (S9):** the first launch after a reinstall finds no
+  own row, registers a *secondary* row with the flag false, and is a
+  settled secondary (headless wakes return `.nothingToDo`) until CloudKit
+  imports the old primary row and `dedupeOwnRecords` runs from the CloudKit
+  observer or a heartbeat; the next launch is then primary. If the import
+  never arrives, the user promotes from Devices. Today it opens as primary
+  immediately by assumption. Step 2's link screen hosts that import and
+  shows "this device before". Accepted for the interim.
+- **Create or import whose registration threw:** the row is missing, the
+  wallet opens read-only; the launch path's detection registration then
+  writes a secondary row, after which the Devices screen offers promotion
+  (no primary row visible). Two steps, not one; promotion with no row at
+  all throws `deviceNotFound`. The registrations in create and import now
+  hash the phrase in hand instead of reading the hash back from KVS, so a
+  nil KVS read (no iCloud account) no longer skips them (F4).
+- **Account switch (S10):** until step 2 narrows the detection-path write,
+  a device signed into a different account registers under that account's
+  hash and the link record follows, so `.walletChanged` is not reachable
+  in step 1. Step 5 owns this case.
+- **The UI flash** (route chosen before the mode is known) stays until
+  step 2 decides route and mode together.
+
+### 11.4 Sweep
+
+`shouldBlockWalletAccess` callers: `performInitialization`,
+`refreshRelayAuthInBackground` (both covered). `checkReadOnlyMode`: one
+caller (covered). `getOrCreateDeviceId`: the registration service and the
+duplicate reader `SecurityService.getDeviceIdFromKeychain` (reads by
+service and account, class-agnostic; exempt). Registration writers: all
+through `registerCurrentDeviceUnprotected` (covered by the single write).
+Deletion: `performDeleteWalletData` Step 5 area (covered), `clearUserDefaults`
+(covered, same call). Desktop `MainView.swift`: no change needed, the
+record write sits in the Shared service.
+
+### 11.5 Build record (2026-11-13)
+
+Built as planned in §11.2 with four review-driven additions. Changes:
+`DeviceLinkStore` (new), `DeviceRegistrationService` (record write,
+`ownRowEvidence`, `getCurrentDevice` propagates, `primaryFlagKey`, flag
+removal in `removeMirrorEntries` and `clearDeviceRegistrationsFromKVStore`,
+device-ID migration), `SecurityService.migrateItemToAfterFirstUnlock`
+(parametrised, `allowReaddFallback`), `WalletManager` (`AccessVerdict`,
+`accessVerdict`, `walletAccessVerdict`, `headlessModelContainer`,
+`checkReadOnlyMode` fails closed), `WalletManager+Notifications`
+(link-record check, verdict mapping), `WalletManager+Wallet` (three
+registrations hash the phrase), `WalletDataCleanupService` (clear record,
+inventory), `ArkeMobile.swift` (container wiring), contract rules 14, 16,
+28.
+
+**Adversarial pass** (fault-class-reviewer, uncommitted diff): seven
+findings, dispositions:
+
+- F1 CONFIRMED: headless exception trusted the self-written, never-cleared
+  mirror flag → registry read through the app container on headless
+  launches; unlink, unregister and full wipe remove the flag; rule 28 and
+  §2.3 reworded to evidence as received. Ledger row.
+- F2 CONFIRMED: `clearLink()` sits after the fallible deletion steps →
+  kept there deliberately, consistent with the tombstone and the
+  2026-10-16 partial-failure decision (a throwing deletion leaves a
+  working, still-linked wallet); rule 28 says so instead of "every".
+- F3 CONFIRMED: fetch error read as "no row" → `getCurrentDevice`
+  propagates, `ownRowEvidence` maps to `.unavailable`. Ledger row.
+- F4 CONFIRMED (doc) + PLAUSIBLE (lockout): promote with no row throws,
+  nil KVS read-back skipped the primary registration → registrations hash
+  the phrase in hand; §11.3 corrected. Ledger row.
+- F5 PLAUSIBLE: device-ID loss on the re-add fallback → fallback disabled
+  for that item. Ledger row.
+- F6 CONFIRMED: §11.1 caller list → corrected.
+- F7 PLAUSIBLE-low: S9 interim wording → §11.3 corrected.
+
+**Tests:** `DeviceLinkValidityTests` (9), `WalletAccessVerdictTests` (10),
+`DeviceIdAccessibilityMigrationTests` (2), `OwnRowEvidenceTests` (5),
+`LiveUnlinkDemotionTests` (5), plus the neighbouring suites on the `Arke
+Tests` simulator; full mobile suite after §11.6: 694 tests, 689 passed, 5
+skipped (live probes), 0 failed (2026-11-14).
+
+**Device checks done (2026-11-14, Christoph):** an existing primary's first
+launch on this build migrated the device-ID item and opened as primary; a
+plain create-wallet run registered and opened as primary.
+
+**Device checks (2026-11-14).** Christoph ran the unlink-then-forced-BGTask
+recipe on two phones. The unlink arrived (A's log shows "Loaded 1 registered
+devices" twice after B's unlink), but the forced pass ran inside the
+foreground-launched process whose wallet was already open, and
+`refreshRelayAuthInBackground` only runs the gate on its headless open
+branch (`if !isInitialized`). The pass minted and reported `refreshed`,
+which is the expected behaviour for a live primary session and says
+nothing about the gate. Lesson: `_simulateLaunchForTaskWithIdentifier`
+exercises the handler, not a cold background launch, so the headless gate
+cannot be forced from Xcode. Two consequences:
+
+- The headless registry read is covered by `OwnRowEvidenceTests` instead:
+  a service with no configured context reads its own row through the
+  fallback container (primary, secondary, absent) and reports
+  `.unavailable` only when there is no container either.
+- The remaining device evidence is passive: after an unlink, leave A
+  backgrounded (not force-quit) for a day; the Background Activity screen's
+  BGTask entries must then show `nothingToDo` or `failed`, never
+  `refreshed`.
+
+**Residual surfaced by the run, DECIDED and built 2026-11-14:** a running
+primary session was not re-evaluated when its own row disappeared, so an
+unlinked device kept bark open until relaunch. Built as §11.6.
+
+**Still owed on device:** an existing primary's first launch on this build
+logs "Device ID accessibility migration: migrated" and opens as primary; a
+plain create-wallet run registers and opens as primary.
+
+### 11.6 Live unlink: a running primary whose own row disappears (built 2026-11-14, DECIDED by Christoph the same day)
+
+**Why.** The 2026-11-14 device run showed the gap: after B unlinked A, A's
+running session kept bark open and syncing until relaunch. In flow 4.3
+branch B the surviving device unlinks the lost primary and promotes itself
+in one step, so a lost device that is in fact alive leaves two wallets open
+against the server, the hazard contract rule 14 exists to prevent.
+
+**What.** `DeviceRegistrationService.loadRegisteredDevices` remembers
+whether the last load found this device's own row primary
+(`ownRowWasPrimary`). When a later load finds no own row, and no deletion
+of this device is in progress, the pure `liveDemotionVerdict` says demote
+and the service posts `.deviceUnlinkedWhileRunning`. `WalletManager`
+answers with `closeWalletForMigration(backingUp: false)`: manager state
+reset, read-only, push unregistered, bark shut down **without** the final
+backup. No local demotion breadcrumb is written: the row is already absent
+locally, so the next launch is blocked by the gate (`noRegistration`) and
+registers as a secondary.
+
+**Why no backup.** A removed device must not write into the account's
+backup slot: a takeover's new primary restores from that slot and would
+pick up the lost device's state over its own, and a full wipe elsewhere
+may just have emptied it (rule 17 by proxy, review F5).
+
+**Why only the registry row, not the KVS flag.** A first build also acted
+on the removal of this device's KVS primary flag as a fast signal. The
+adversarial pass (2026-11-14) showed three faults in that branch: it left
+no trace, so a relaunch before the row deletion arrived reopened bark as
+primary and re-wrote the flag (CONFIRMED); KVS reports absent keys on
+initial sync and account change too, which would have demoted a healthy
+fresh primary and backed its database up into another account's iCloud
+Drive on an account switch (PLAUSIBLE); and the two hooks could run two
+overlapping shutdowns (PLAUSIBLE). The branch was removed. The registry
+row arrives within about a minute, which is what the flow promises.
+
+**Row deletion is never import lag.** Rows are deleted by explicit actions
+(another device's unlink, this device's own deletion flow, the reinstall
+dedupe that keeps one) or by a store reset (CloudKit zone reset, possibly
+iCloud sign-out). A reset demotes a running primary to read-only until the
+user promotes again, which is the safe direction and the S10 decision.
+Whether NSPersistentCloudKitContainer purges the local store on sign-out
+was not verified; both outcomes are acceptable.
+
+**Also fixed (review F2):** `initializePrimaryMode` re-checks
+`isReadOnlyMode` right after the FFI open. A demotion that lands while the
+open is awaiting finds no handle to shut down and only flips the mode;
+without the re-check the daemon would start under a read-only UI. Now the
+handle is shut down again without a backup and initialisation stops.
+
+**Guards.** `registrationSuspended` (the deletion switch) suppresses the
+check, because the deletion deletes its own row and `runBackupNow`
+bypasses the backup suspension; `unregisterCurrentDevice` clears
+`ownRowWasPrimary` before its fetch. Promote and demote keep the flag in
+step; a failed promote save is corrected by the next load.
+
+**Tests:** `LiveUnlinkDemotionTests` (five cases: demote on known absence
+after known primary; present rows, unavailable registry, never-primary and
+deletion-in-progress all refuse).
+
+**Device check (2026-11-14, Christoph):** B unlinked A while A was in the
+foreground; A's log showed the "Own registration row is gone" line, A
+dropped to read-only with no backup after it, and the relaunch was blocked
+with `Wallet access blocked (secondary)`: the detection-path registration
+won the launch race again and had already written a secondary row, so the
+gate blocked one layer earlier than `noRegistration`. Same outcome, both
+settled blocks. The F2 race was hit on the first try the same day: A
+force-quit, B's unlink, A launched within ten seconds; the log showed
+"Wallet opened successfully", then "Own registration row is gone", then
+"Mode changed to read-only during the open — shutting the wallet down
+again", no daemon start, A read-only. Step 1 has no open device checks.

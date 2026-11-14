@@ -93,6 +93,11 @@ Moved verbatim from `Open_Follow_Ups.md` on 2026-11-10 (backlog hygiene pass, re
   item or correct the inventory label (found 2026-10-16,
   `Features/Wallet_Deletion_Ghost_Hardening.md` §7).
 
+### Fixed (2026-11-13, linking step 1)
+
+Built the same day as the decision below: `Device_Linking.md` §11.5 is the
+build record. The entry is in the Done log; the device checks are owed.
+
 ### Fix decided (2026-11-13)
 
 The evidence rule in `Device_Linking.md` §2.3: no path opens bark without a

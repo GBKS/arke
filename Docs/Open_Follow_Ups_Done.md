@@ -2469,3 +2469,30 @@ The whole entry as it stood, moved here verbatim on 2026-11-10; the struck-throu
   row. The Tier 0 entry carries the residual (race, UI flash, headless
   BGTask path) and a PROPOSED move to Tier 1; the fix stays the evidence
   rule in `Features/Device_Linking.md` §2.3.
+- [x] **`checkReadOnlyMode()` infers primary — fixed 2026-11-13 (linking step 1, not yet device-checked):** a missing or unreadable
+  device registration sets `isReadOnlyMode = false`, against Principle 2 /
+  contract rule 15; sibling `shouldBlockWalletAccess()` answers `false` on
+  an unreadable device ID. Reached when another device unlinks this one
+  (S4). **Device run 2026-11-13: no spend window.** The relaunch flashed
+  the primary layout and went read-only in the same session, because the
+  main-actor registration lands before the detached mode check reads the
+  row. Residual: a race with no ordering guarantee, the UI flash, and the
+  headless BGTask path where nothing registers. Fix DECIDED 2026-11-13: the
+  evidence rule, build step 1 of `Features/Device_Linking.md` §2.3.
+  Moved here from Tier 0 (DECIDED 2026-11-13) as part of that step. Trace,
+  result and recipe: `Features/Read_Only_Mode.md`;
+  `Development/Contract_Audit_2026_11.md` A.1.
+  Build record: `Features/Device_Linking.md` §11.5. `checkReadOnlyMode` and
+  the access gate fail closed; the gate reads the own row on headless
+  launches through the app container; unlink, unregister and the full wipe
+  clear the KVS primary flag; create/import register with the hash they
+  computed; device-ID item migrated to AfterFirstUnlockThisDeviceOnly.
+  Adversarial pass: five findings, all fixed the same day (ledger rows).
+  2026-11-14: Christoph confirmed the upgrade self-heal and a plain create
+  on device; the forced-BGTask check cannot reach the headless gate (plan
+  §11.5), covered by `OwnRowEvidenceTests` instead. Live unlink added the
+  same day (§11.6, second adversarial pass, KVS fast path removed, no-backup
+  closure, post-open mode re-check; three ledger rows). Tests: full mobile
+  suite 694 (689 passed, 5 skipped, 0 failed). Two-phone live-unlink check
+  and the mid-open race both passed on device 2026-11-14 (§11.6). Nothing
+  owed; commit pending.
