@@ -951,3 +951,77 @@ re-run passed the same day. Not run: the iCloud-Keychain-off seed entry
 (`SeedEntrySheet_iOS`); Christoph has no device set-up for it, so it is
 filed as Tier 2 verification debt rather than counted as done. Step 2
 otherwise has no open device checks.
+
+## 13. Step 3 build plan and record (2026-11-14)
+
+Scope (§5.2, §5.3): the fast KVS entry carries the device's identity, and the
+Devices list draws every row from whichever store answers, with no sync
+state spoken. The screen's "one action by role" shape (§5.1) lands with
+step 4, which replaces the promote and demote sheets by the guided flow;
+until then the current buttons and the no-primary notice stay, with their
+visibility check fixed to the wallet scope (audit A.10).
+
+### 13.1 Changes
+
+1. **`FastRegistryEntry`** (pure, in `DeviceRegistrationService.swift`): the
+   value under `com.arke.device.registered.<hash>.<id>` becomes a dictionary
+   `registeredAt`, `name`, `platform`. `parse` accepts the old `Double`
+   (timestamp only) and the new shape; anything else parses to an entry
+   with no fields, so an unreadable value still blocks (unchanged rule).
+   `registerDeviceInKVStore` writes the new shape with this device's name
+   and platform.
+2. **`OtherWalletDevice`** gains `platform` and `isPrimary` (optional, nil
+   for registry-backed entries, which the views draw from the model). The
+   report fills them for mirror-only entries from the parsed entry and the
+   device's own `device_<id>_isPrimary` flag, which any device may read.
+3. **`UnsyncedDeviceRow`** is redrawn as an ordinary device row: platform
+   icon, name, platform, "Linked 3 November", Primary or Secondary badge
+   when the flag is known. No warning colour, no "Unrecognized device", no
+   explainer. A pre-fix entry without a name reads "Device linked 3
+   November" or "Device linked earlier". Unlink stays in the context menu.
+4. **Devices list (iOS)**: the unlink dialog names the device from the row;
+   `checkForPrimaryDevice` is wallet-scoped like its sibling.
+5. **Tests**: `FastRegistryEntryTests` (parse both shapes, garbage, round
+   trip, identity through `otherDeviceReport`).
+
+Desktop (parked) keeps its "Not Yet Synced" header and orange frame around
+the redrawn row; its parity pass removes them.
+
+### 13.2 Build record (2026-11-14)
+
+**Correction to §13.1 item 1 and §5.2 after the adversarial pass.** The
+identity does **not** replace the value under the registration key. The
+deployed build (27) reads that value `as? Double`; a dictionary there would
+read as a timestamp-less entry, which `isDoubtfulBlocker` treats as doubtful
+at once, so an old-build device would have been *offered* the full-wipe
+override during a live new-build device's import window, the exact case the
+48 h settle window exists for (F1, CONFIRMED, class 2; ledger row). The
+identity now lives under a sibling key, `com.arke.device.identity.<hash>.<id>`,
+a dictionary of `name` and `platform`. Old builds never read it (their scans
+match the `registered.` prefix only); `mirrorKeys` removes both keys on
+unlink and unregister, the full wipe clears both prefixes, and an identity
+key alone never counts as a device (`FastRegistryEntryTests.identityKeysAreMirrorState`).
+`FastRegistryEntry.parse(registered:identity:)` merges the two. §5.2's
+"readers accept both value shapes" is withdrawn: there is one shape per key.
+
+Other findings: F2 PLAUSIBLE, the role badge reads the device's per-device
+flag while entries are per-wallet, so a multi-wallet *test* device can show
+the badge of its other wallet; accepted, test devices only. F3 the unlink
+dialog said "Unlink this device" for an unnamed entry → it now uses the
+row's title ("Device linked 3 November"). F4 the promote-button check used
+the KVS hash while the notice used the own row's hash → both now call the
+same `checkForNoPrimaryDevice`. F5 an old entry without a platform showed
+an iPhone icon → neutral placeholder. Also: an unnamed entry's title carries
+the date, so its date line is omitted.
+
+**Tests:** `FastRegistryEntryTests` (8), the registry report, scan, override
+and mirror-key suites; full mobile suite 709 tests, 704 passed, 5 skipped,
+0 failed.
+
+**Owed on device** (two phones): after both update, B's row on A shows
+name, platform and role while B's CloudKit row is still importing (fresh
+reinstall of B is the easiest way to see a mirror-only row); the delete
+screen on A names B by that name during the same window; unlinking B from A
+removes both of B's keys (A's Devices list shows no B after B's row and
+entry are gone). Not reproducible on device: the old-build reader (F1) — it
+is settled by reading build 27's code.

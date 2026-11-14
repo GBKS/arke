@@ -388,11 +388,13 @@ check). The security-check matrix is still its own Tier 0 item.
   Step 2 (link screen, tombstone and rejoin removal, seed-only phrase entry,
   new-device notification) built, reviewed and unit-tested 2026-11-14
   (§12.3; six findings fixed; device-checked 2026-11-14, Keychain-off seed
-  entry filed as Tier 2 debt; 701 tests green), commit pending. Next: step
-  3 (fast entries with identity, Devices
-  screen), then 4 (make primary), 5 (delete remedy, launch check), 6 (docs,
-  translations). Open checks: per-app iCloud toggle (optional), whether
-  `recoverVtxos` marks spent VTXOs (step 4).
+  entry filed as Tier 2 debt; committed 3632551 + 8925b7c). **Step 3
+  built, reviewed and unit-tested 2026-11-14** (§13.2; identity moved to a
+  sibling KVS key after the pass found the old build would misread a new
+  value shape; 709 tests green); owed: the two-phone look in §13.2, then
+  commit. Next: step 4 (make primary), then 5 (delete remedy, launch
+  check), 6 (docs, translations). Open checks: per-app iCloud toggle
+  (optional), whether `recoverVtxos` marks spent VTXOs (step 4).
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read
