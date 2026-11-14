@@ -177,7 +177,9 @@ switches to the same seed-only save.
 **Rulings (DECIDED 2026-11-13):**
 
 - A primary device reinstalling sees the screen, with the "this device
-  before" copy once its row has imported.
+  before" copy once its row has imported. If that row has already imported
+  before the first detection runs, the install self-heals silently instead
+  (same predicate as the upgrade cohort; noted 2026-11-14, F6).
 - No decline button. One wallet per account means there is nothing to
   decline into; closing the app is "not now".
 - A seed arriving later is not a second acknowledgement.
@@ -801,9 +803,20 @@ bypasses the backup suspension; `unregisterCurrentDevice` clears
 `ownRowWasPrimary` before its fetch. Promote and demote keep the flag in
 step; a failed promote save is corrected by the next load.
 
-**Tests:** `LiveUnlinkDemotionTests` (five cases: demote on known absence
-after known primary; present rows, unavailable registry, never-primary and
-deletion-in-progress all refuse).
+**Every role, not only the primary (device run 2026-11-14).** Christoph's
+step 2 checks showed a live-unlinked *secondary* staying in the wallet UI:
+the first build watched only a vanished primary row, because its job was
+closing bark. `liveUnlinkVerdict` now acts on any known-present own row
+that vanishes: `.closeWalletAndReroute` for a primary (close bark without
+backup, then `.walletClosedAfterUnlink`), `.reroute` for a secondary
+(nothing to close, `.walletClosedAfterUnlink` at once). The main view
+re-runs detection on that notification and lands on the link screen.
+Ledger row (class 1, found on device).
+
+**Tests:** `LiveUnlinkDemotionTests` (six cases: close-and-reroute for a
+vanished primary, reroute for a vanished secondary; present rows,
+unavailable registry, never-present row and deletion-in-progress all do
+nothing).
 
 **Device check (2026-11-14, Christoph):** B unlinked A while A was in the
 foreground; A's log showed the "Own registration row is gone" line, A
@@ -816,3 +829,125 @@ force-quit, B's unlink, A launched within ten seconds; the log showed
 "Wallet opened successfully", then "Own registration row is gone", then
 "Mode changed to read-only during the open — shutting the wallet down
 again", no daemon start, A read-only. Step 1 has no open device checks.
+
+## 12. Step 2 build plan (2026-11-14)
+
+Scope: the link screen and everything the state model needs for it to be
+the only way an install adopts the account's wallet. Read at `1e89039`.
+
+### 12.1 Changes
+
+1. **Launch route** (`DeviceLinkStore.launchRoute`, pure, matrix-tested):
+   inputs record, left-breadcrumb, account hash, mnemonic status, own row.
+   Outcomes: `.noAccountWallet` (onboarding), `.awaitingLink(reason)` with
+   reasons `newDevice`, `removedHere(date)`, `removedByAnotherDevice`,
+   `waitingForICloud` (keychain unreadable, KVS blank, breadcrumb present),
+   `.selfHeal` (no record but own row present: an install from before the
+   record existed, written silently), `.linked`, and `.walletChanged`
+   (record names another wallet; step 5 owns its screen, step 2 logs and
+   falls through to today's detection). `SecurityService.performWalletStateDetection`
+   evaluates it first; `WalletState` gains `.accountWalletAwaitingLink(reason)`
+   and loses `.walletAvailableToRejoin`.
+2. **Link screen** (`LinkWalletView`, Shared, replaces `RejoinWalletView`):
+   one action, copy by reason, waits on `CloudKitFirstImportGate` or 30 s,
+   then re-reads the own row (→ "this device before" when the old row is
+   primary) and the primary device's name. When the seed is absent it says
+   so and offers "Enter recovery phrase" (iOS island). Acknowledging writes
+   the record (replacing any), clears the breadcrumb, registers with
+   `allowPrimaryClaim: false`, re-runs detection. Both main views call
+   `activateLateDetectedWalletServices()` on this route so the import can
+   land behind the screen.
+3. **Seed-only phrase entry** (`SeedEntrySheet_iOS`): `ImportPhraseView_iOS`
+   plus validate-against-account-hash (`.valid` only), `handleSeedImport`,
+   `updateCurrentDeviceHasSeed(true)`, then `initialize()`. Replaces the
+   bark import in the read-only sheet; `ImportWalletSheet_iOS` is deleted.
+4. **Record ownership**: `registerCurrentDevice` writes the record only
+   when none exists or the hash matches (never re-points an install at
+   another wallet); create, import and the link screen write it explicitly
+   with replacement.
+5. **Tombstone and rejoin removed**: `SecurityService` tombstone functions
+   and `tombstoneRouting`, the rejoin route and view, both main views'
+   rejoin branches, the two tombstone test suites. The creation guard takes
+   `leftBreadcrumbPresent` instead of `tombstonePresent`. The left
+   breadcrumb (`com.arke.link.left*`) is written by the local-only deletion
+   and cleared by the full wipe and by every link write.
+6. **New-device notification**: the registry's load diffs other devices'
+   ids; a row first seen this session and registered within the last day
+   posts a local notification "iPhone 17 linked to your wallet" through
+   `DeviceLinkNotifications` (skips when notifications are not authorised).
+7. **Live unlink ends on the link screen**: `closeWalletForMigration(backingUp: false)`
+   posts `.walletClosedAfterUnlink`; the main view re-runs detection, which
+   now routes to `.awaitingLink(.removedByAnotherDevice)`.
+8. **Docs**: contract rule 20 reworded, `Wallet_Deletion_And_Rejoin.md`
+   Phase 2 superseded, `SharedStateWipeCoverage` entries, README.
+
+### 12.2 Interim and risks
+
+- Desktop (parked) gets the Shared screen without the phrase island and
+  must compile.
+- `.walletChanged` keeps today's behaviour until step 5.
+- The rejoin strings and their translations are dropped by the build; the
+  new keys ship in English until the next translation batch.
+
+### 12.3 Build record (2026-11-14)
+
+Built as §12.1 with three review-driven changes. Files: `DeviceLinkStore`
+(left breadcrumb, `launchRoute`, `leftBreadcrumbIsStale`, replacing flag on
+`recordLink`), `SecurityService` (detection step 0; tombstone section,
+`tombstoneRouting` and `.walletAvailableToRejoin` removed;
+`.accountWalletAwaitingLink(reason:)` added), `LinkWalletView` (new, Shared;
+`RejoinWalletView` deleted), `SeedEntrySheet_iOS` (new;
+`ImportWalletSheet_iOS` deleted), `DeviceLinkNotifications` (new),
+`DeviceRegistrationService` (non-replacing record write, new-device
+notification), `WalletManager` (`.walletClosedAfterUnlink`),
+`WalletManager+Wallet` (explicit record writes, `leftBreadcrumbPresent`),
+`WalletDataCleanupService` (Step 5 breadcrumb, inventory), both main views
+(`linkThisDevice`, routes, loading state), `ActivityView_iOS` (seed-only
+sheet), contract rule 20, `Wallet_Deletion_And_Rejoin.md` superseded note.
+
+**Adversarial pass** (fault-class-reviewer, uncommitted diff): six findings.
+
+- F1 CONFIRMED: the left breadcrumb was never cleared when the account
+  wallet was definitively gone, so the creation guard would refuse forever
+  after a wipe elsewhere → `leftBreadcrumbIsStale` and a clear at detection
+  step 0, tested. Ledger row.
+- F2 CONFIRMED: the screen's own `isLinking` never reset after a failed
+  registration, and the record written before it re-routed to "removed by
+  another device" → loading state owned by the main view; record rolled
+  back when registration does not complete; the waiting and mismatch
+  variants only re-run detection. Ledger row.
+- F3 CONFIRMED: `.walletChanged` fell through to detection, registering the
+  device under the account's new wallet while the record kept the old
+  hash, which froze the headless path and silently adopted a replaced
+  wallet → new `.awaitingLink(.walletMismatch)` blocks with its own copy
+  and a "Check Again" button; step 5 adds the exits. Ledger row.
+- F4 PLAUSIBLE: a freshly linked device could announce the long-standing
+  primary when the import landed after the link → notification cutoff is
+  the later of 24 h ago and this install's link date.
+- F5 PLAUSIBLE: a primary whose device-ID item alone is unreadable would
+  see the link screen for one session → detection marks that launch
+  non-definitive so the protected-data event re-runs it; residual needs a
+  keychain fault on one item only.
+- F6: the "primary reinstall sees the screen" ruling holds only when its
+  row has not imported before detection; §4.2 amended.
+
+Pre-existing, not changed: the breadcrumb is written only when the KVS
+hash is readable at deletion time; `"Another Device"` hard-coded in
+`checkDevicePrimaryStatus`.
+
+**Tests:** `LinkLaunchRouteTests` (12), `DeviceLinkValidityTests` (10),
+`AccountWalletSignalsTests` (renamed parameter), the two tombstone suites
+removed; full mobile suite 700 tests, 695 passed, 5 skipped, 0 failed.
+Catalog after the build: 22 new keys extracted with their default values,
+the four `rejoin_*` keys dropped.
+
+**Device checks (2026-11-14, Christoph, two phones):** the upgrade
+self-heal, the fresh-install link screen, the local removal and the live
+unlink of the primary all behaved as designed ("generally works well and
+feels right as a user"). One gap: a live-unlinked *secondary* stayed in
+the wallet UI, fixed the same day (§11.6, `.reroute`; full suite after the
+fix 701 tests, 696 passed, 5 skipped, 0 failed). The secondary live unlink
+re-run passed the same day. Not run: the iCloud-Keychain-off seed entry
+(`SeedEntrySheet_iOS`); Christoph has no device set-up for it, so it is
+filed as Tier 2 verification debt rather than counted as done. Step 2
+otherwise has no open device checks.

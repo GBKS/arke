@@ -1,7 +1,11 @@
 # Wallet Deletion & Rejoin
 
 Status: IMPLEMENTED (Phases 1–4) — 2026-08-19; on-device verification pending
-(see Definition of done). Implementation notes: the wipe-coverage inventory
+(see Definition of done). **Phase 2 superseded 2026-11-14** by device linking
+step 2 (`Device_Linking.md` §6.4, §12): the UserDefaults tombstone, the
+`tombstoneRouting` helper, the rejoin route and `RejoinWalletView` are
+removed; a local-only deletion now clears the install's link record and the
+next launch shows the link screen. Phases 1, 3 and 4 stand. Implementation notes: the wipe-coverage inventory
 immediately caught two more schema/wipe drift victims (`PendingPaymentMetadata`,
 `PendingTagAssignment` — now wiped); the app schema is canonicalized in
 `SwiftDataHelper.appSchemaModels` and both app targets build their container

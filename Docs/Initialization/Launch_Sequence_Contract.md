@@ -328,18 +328,26 @@ migration's delete-and-re-add fallback.
 Enforced: `BarkWalletFFI+WalletCreation.swift` (comment),
 `BarkWalletProtocol.swift` (contract). Test: none (sweep: grep `SecItemDelete`).
 
-**20. Post-deletion routing re-runs full detection; a local-only deletion routes to the rejoin screen, never onboarding.**
+**20. Post-deletion routing re-runs full detection; a local-only deletion routes to the link screen, never onboarding.**
 `onWalletDeleted` used to set `hasWallet = false` blindly, exposing
 onboarding's Create path — which overwrites the account's synchronizable
-seed. The local-deletion tombstone (UserDefaults, stores the wallet hash)
-suppresses seed-based resurrection at relaunch and routes to
-`.walletAvailableToRejoin`; `createWallet` independently refuses when any
-account-level wallet signal exists (`Wallet_Deletion_And_Rejoin.md`).
-Enforced: `SecurityService.swift` (`tombstoneRouting`, detection step 0),
-`MainView_iOS.swift` / `MainView.swift` (`onWalletDeleted`),
-`WalletManager+Wallet.swift` (`accountHasWalletSignals` guard).
-Test: `TombstoneRoutingTests`, `AccountWalletSignalsTests` (the pure
-decisions; the detection re-run and the tombstone write have none).
+seed. Since 2026-11-14 (device linking step 2) no install adopts the
+account's wallet without a link record: detection step 0 evaluates
+`DeviceLinkStore.launchRoute` and routes an unlinked install to
+`.accountWalletAwaitingLink`, whose screen is the only way in. A local-only
+deletion clears the record and writes the left breadcrumb
+(`com.arke.link.left*`), so the next launch shows the link screen's "you
+removed this wallet" copy; the breadcrumb also keeps a launch with an
+unreadable keychain and a blank KVS off onboarding. The UserDefaults
+tombstone and the rejoin screen are gone. `createWallet` independently
+refuses when any account-level wallet signal exists.
+Enforced: `SecurityService.swift` (detection step 0), `DeviceLinkStore.swift`
+(`launchRoute`), `LinkWalletView.swift`, `MainView_iOS.swift` /
+`MainView.swift` (`linkThisDevice`, `onWalletDeleted`),
+`WalletDataCleanupService.swift` (Step 5), `WalletManager+Wallet.swift`
+(`accountHasWalletSignals` guard).
+Test: `LinkLaunchRouteTests`, `AccountWalletSignalsTests` (the pure
+decisions; the detection re-run and the breadcrumb write have none).
 
 **21. Account-shared key-value state (KVS network config, KVS wallet hash, keychain seed) is deleted only by WalletDataCleanupService on a full wipe — never by device-scoped deletion paths.**
 `WalletManager.deleteWallet()` used to call `NetworkConfigPersistence.clear()`

@@ -383,17 +383,16 @@ check). The security-check matrix is still its own Tier 0 item.
 
 - [ ] **Explicit device linking — build** (DECIDED 2026-11-13, plan
   `Features/Device_Linking.md` §8): six steps, each with its own adversarial
-  pass. **Step 1 built, reviewed and unit-tested 2026-11-13/14** (§11.5
-  and §11.6 there; every device check passed 2026-11-14, nothing owed;
-  commit pending). Next: step 2, the link screen.
-  Step 1 is the evidence rule that closed the
-  `checkReadOnlyMode()` item, step 2 the link screen and the tombstone /
-  rejoin removal, step 3 fast entries with identity and the Devices screen,
-  step 4 the make-primary flow, step 5 the delete-flow remedy and the
-  launch-check screen, step 6 docs and translations. The five assumed
-  facts were checked 2026-11-13 (§7 there); open: one optional device
-  check (per-app iCloud toggle) and whether `recoverVtxos` marks spent
-  VTXOs (step 4).
+  pass. Step 1 (evidence rule, link record, live unlink) built,
+  device-checked and committed f7e11a9 + 1e89039 on 2026-11-14 (§11.5–11.6).
+  Step 2 (link screen, tombstone and rejoin removal, seed-only phrase entry,
+  new-device notification) built, reviewed and unit-tested 2026-11-14
+  (§12.3; six findings fixed; device-checked 2026-11-14, Keychain-off seed
+  entry filed as Tier 2 debt; 701 tests green), commit pending. Next: step
+  3 (fast entries with identity, Devices
+  screen), then 4 (make primary), 5 (delete remedy, launch check), 6 (docs,
+  translations). Open checks: per-app iCloud toggle (optional), whether
+  `recoverVtxos` marks spent VTXOs (step 4).
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read
@@ -572,6 +571,14 @@ names the fix it verifies; the write-ups are in the Done log.
 
 ### Two-device
 
+- [ ] **Seed-only phrase entry on a linked device without its key**
+  (`SeedEntrySheet_iOS`, device linking step 2, 2026-11-14): with iCloud
+  Keychain off on B, a fresh install shows the link screen's key-missing
+  line, "Enter Recovery Phrase" saves the seed after the account-hash check,
+  B's log has no bark import line, and B stays a secondary. Not run on
+  2026-11-14 (no device set-up for Keychain off); the path reuses the
+  validated phrase grid and the existing keychain save.
+  `Features/Device_Linking.md` §12.3.
 - [ ] **Backup import rolled back for a server mismatch leaves the FFI handle
   open on an unlinked database** (`WalletManager.importWalletWithBackup`
   → `BarkErrorArke.backupBelongsToAnotherServer`; same shape as the older
