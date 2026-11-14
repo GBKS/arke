@@ -401,6 +401,12 @@ struct MainView_iOS: View {
                     // Trigger re-initialization as primary
                     NotificationCenter.default.post(name: .devicePromotedToPrimary, object: nil)
                 }
+                // A removed flag (unlink or wipe by another device, since
+                // 2026-11-13) is deliberately NOT acted on here: KVS reports
+                // absent keys on initial sync and account change too, and a
+                // demotion from this branch would leave no trace for the next
+                // launch. The registry observer handles the live unlink from
+                // the row deletion (DeviceRegistrationService.loadRegisteredDevices).
             }
         }
     }

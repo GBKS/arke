@@ -70,6 +70,9 @@ struct Arke_mobile: App {
         // Wire the manager to the BGTask coordinator before any background
         // wake can fire (a BGTask launch runs this init but never the UI flow)
         BackgroundTaskCoordinator.walletManager = manager
+        // Same reason: the access gate's registry read needs a container on a
+        // launch that never calls configureServices (contract rule 28)
+        WalletManager.headlessModelContainer = modelContainer
 
         if hasWallet {
             Self.logger.info("Wallet detected - services will be activated")

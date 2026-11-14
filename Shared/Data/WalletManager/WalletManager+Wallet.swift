@@ -164,19 +164,18 @@ extension WalletManager {
             // A successful import supersedes any local-deletion tombstone
             SecurityService.clearLocalDeletionTombstone()
 
-            // Step 8: Register device after wallet import
+            // Step 8: Register device after wallet import. The hash is computed
+            // from the phrase in hand, not read back from KVS: a KVS read-back
+            // can be nil without an iCloud account, and under contract rule 28
+            // a wallet whose primary registration never ran opens read-only.
             do {
-                // Get wallet hash from ubiquitous store (set during mnemonic save)
-                if let walletHash = securityService.getUbiquitousHash() {
-                    let deviceService = ServiceContainer.shared.deviceRegistrationService
+                let walletHash = securityService.hashMnemonic(trimmedMnemonic)
+                let deviceService = ServiceContainer.shared.deviceRegistrationService
 
-                    // Import is a deliberate user action - it may claim primary
-                    // if no other device currently holds it
-                    try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
-                    Self.logger.info("✅ Device registered after wallet import")
-                } else {
-                    Self.logger.warning("⚠️ Could not get wallet hash for device registration")
-                }
+                // Import is a deliberate user action - it may claim primary
+                // if no other device currently holds it
+                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
+                Self.logger.info("✅ Device registered after wallet import")
             } catch {
                 Self.logger.warning("⚠️ Failed to register device (non-critical): \(error)")
                 // Continue anyway - device registration can be retried
@@ -352,17 +351,16 @@ extension WalletManager {
         SecurityService.clearLocalDeletionTombstone()
 
         // Register device after wallet import (handleSeedImport saves the mnemonic
-        // but leaves device registration to the coordinator)
+        // but leaves device registration to the coordinator). Hash computed from
+        // the phrase, not read back from KVS (contract rule 28: a wallet whose
+        // primary registration never ran opens read-only).
         do {
-            if let walletHash = securityService.getUbiquitousHash() {
-                let deviceService = ServiceContainer.shared.deviceRegistrationService
-                // Import is a deliberate user action - it may claim primary
-                // if no other device currently holds it
-                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
-                Self.logger.info("✅ Device registered after wallet import")
-            } else {
-                Self.logger.warning("⚠️ Could not get wallet hash for device registration")
-            }
+            let walletHash = securityService.hashMnemonic(trimmedMnemonic)
+            let deviceService = ServiceContainer.shared.deviceRegistrationService
+            // Import is a deliberate user action - it may claim primary
+            // if no other device currently holds it
+            try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
+            Self.logger.info("✅ Device registered after wallet import")
         } catch {
             Self.logger.warning("⚠️ Failed to register device (non-critical): \(error)")
             // Continue anyway - device registration can be retried
@@ -509,14 +507,15 @@ extension WalletManager {
             // Register this device for the new wallet. Creation is the explicit user
             // action that claims primary - detection paths never do, so this must not
             // be left to the view layer's registerDeviceIfNeeded()
+            // Hash computed from the new phrase, not read back from KVS
+            // (contract rule 28: a wallet whose primary registration never
+            // ran opens read-only, so this registration must not depend on
+            // a store read that can be nil without an iCloud account)
             do {
-                if let walletHash = self.securityService.getUbiquitousHash() {
-                    let deviceService = ServiceContainer.shared.deviceRegistrationService
-                    try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
-                    Self.logger.info("✅ Device registered as primary after wallet creation")
-                } else {
-                    Self.logger.warning("⚠️ Could not get wallet hash for device registration")
-                }
+                let walletHash = self.securityService.hashMnemonic(mnemonic)
+                let deviceService = ServiceContainer.shared.deviceRegistrationService
+                try await deviceService.registerCurrentDevice(walletHash: walletHash, hasSeed: true, allowPrimaryClaim: true)
+                Self.logger.info("✅ Device registered as primary after wallet creation")
             } catch {
                 Self.logger.warning("⚠️ Failed to register device (non-critical): \(error)")
                 // Continue anyway - the view layer's registerDeviceIfNeeded() retries,

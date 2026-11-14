@@ -491,6 +491,10 @@ class WalletDataCleanupService {
         clearUserDefaults()
         summary.userDefaultsCleared = true
 
+        // Step 4b: This install no longer links the account's wallet, whatever
+        // the scope (Device_Linking.md §2.1). Device-local, like the tombstone.
+        DeviceLinkStore.clearLink()
+
         // Step 5: Record or clear the local-deletion tombstone. Local-only
         // deletion leaves the seed in iCloud Keychain (shared property of the
         // other devices), so without a tombstone the next launch would silently
@@ -1163,10 +1167,12 @@ enum SharedStateWipeCoverage {
         // Full config JSON beside the id (custom Ark servers, 2026-10-29); same
         // owner and scope as the id, cleared by the same two calls
         Entry(key: "com.arke.wallet.networkConfig",        store: "iCloud KVS",      scope: .fullWipeOnly),
-        // The per-device primary flag. Labelled fullWipeOnly as policy, but no
-        // path clears it today — not unregister, unlink or the full wipe
-        // (found 2026-10-16, Tier 4 backlog item). Harmless for the registry
-        // scan, which reads only the `registered.` keys below.
+        // The per-device primary flag. Since 2026-11-13 the device's own
+        // unregister and an unlink by another device remove that device's
+        // flag with its mirror entries, and the full wipe removes every
+        // device's flag (contract rule 28: a stale flag must not stand in as
+        // primary evidence). Scope stays fullWipeOnly for *other* devices'
+        // flags on a local-only deletion.
         Entry(key: "device_<id>_* (registration mirror)",  store: "iCloud KVS",      scope: .fullWipeOnly),
         // The fast device registry that the deletion decision reads. Listed as
         // fullWipeOnly because that is the only path that clears *other* devices'
@@ -1184,6 +1190,10 @@ enum SharedStateWipeCoverage {
         Entry(key: "Backups/db.sqlite (+ timestamped copies)", store: "iCloud Drive", scope: .fullWipeOnly),
         Entry(key: "com.arke.device / deviceId",           store: "local Keychain",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.deletedLocally",       store: "UserDefaults",    scope: .deviceLocal),
+        // This install's link to the account wallet (DeviceLinkStore, Device
+        // Linking step 1, 2026-11-13); cleared on every deletion so the next
+        // launch asks again
+        Entry(key: "com.arke.link.* (walletHash, linkedAt)", store: "UserDefaults",  scope: .deviceLocal),
         Entry(key: "com.arke.wallet.hasRunLocally",        store: "UserDefaults",    scope: .deviceLocal),
         // Written only by the delete view when the account-side deletion
         // completed but the bark directory could not be removed; consumed

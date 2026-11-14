@@ -50,6 +50,16 @@ class DeviceRegistrationService {
     // MARK: - Cached Values
     
     private var cachedDeviceId: String?
+
+    /// The device-ID item's accessibility migration runs once per process,
+    /// on the first successful read (Device_Linking.md §11.1)
+    private var deviceIdAccessibilityChecked = false
+
+    /// Whether the last registry load found this device's own row primary.
+    /// The live-unlink check (`liveDemotionVerdict`, Device_Linking.md §11.6)
+    /// compares it against the next load: a primary whose own row vanished
+    /// was unlinked or wiped by another device and must stop running bark.
+    private var ownRowWasPrimary = false
     
     /// Pending registration (for lazy registration pattern)
     private var pendingRegistration: (hash: String, hasSeed: Bool)?
@@ -162,6 +172,28 @@ class DeviceRegistrationService {
 
             Self.logger.info("Loaded existing device ID: \(deviceId)")
 
+            // The item was created WhenUnlockedThisDeviceOnly; the headless
+            // background gate reads it on a locked phone, where that class
+            // is unreadable and the gate must fail closed. Move it to
+            // AfterFirstUnlockThisDeviceOnly once; still ThisDeviceOnly, so
+            // contract rule 16 (never migrates to another device) holds.
+            if !deviceIdAccessibilityChecked {
+                deviceIdAccessibilityChecked = true
+                // In-place update only: the delete + re-add fallback the
+                // mnemonic migration keeps could lose this item if the process
+                // died between the two calls, and a lost device ID splits the
+                // device's identity (a fresh ID, the old row counting as
+                // another primary). A refused update just retries next launch.
+                let migration = SecurityService.migrateItemToAfterFirstUnlock(
+                    service: keychainService,
+                    account: deviceIdAccount,
+                    synchronizable: false,
+                    target: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+                    allowReaddFallback: false
+                )
+                Self.logger.info("Device ID accessibility migration: \(String(describing: migration), privacy: .public)")
+            }
+
             return deviceId
         }
 
@@ -181,15 +213,18 @@ class DeviceRegistrationService {
             throw DeviceRegistrationError.encodingFailed
         }
         
-        // Store in Keychain with ThisDeviceOnly
+        // Store in Keychain with ThisDeviceOnly (never syncs, never migrates
+        // to another device) but readable after first unlock, so the
+        // background gate can read it on a locked phone
         let addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: deviceIdAccount,
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecAttrSynchronizable as String: false  // NEVER sync!
         ]
+        deviceIdAccessibilityChecked = true
         
         status = SecItemAdd(addQuery as CFDictionary, nil)
         guard status == errSecSuccess else {
@@ -435,6 +470,12 @@ class DeviceRegistrationService {
             
             try modelContext.save()
 
+            // This install has linked the account's wallet (Device_Linking.md
+            // §2.1). One choke point for create, import and the detection
+            // paths on both platforms; the detection-path write is the
+            // stand-in for the link screen until step 2 narrows it.
+            DeviceLinkStore.recordLink(walletHash: walletHash)
+
             // Update last heartbeat timestamp
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: self.lastHeartbeatKey)
 
@@ -508,6 +549,8 @@ class DeviceRegistrationService {
     @discardableResult
     func unregisterCurrentDevice() async throws -> UnregistrationOutcome {
         let deviceId = try getOrCreateDeviceId()
+        // This device is leaving on purpose; its row vanishing is not an unlink
+        ownRowWasPrimary = false
 
         // Cleared across every wallet hash — this device is leaving, so none
         // of its entries are valid, including one under a hash that disagrees
@@ -618,7 +661,44 @@ class DeviceRegistrationService {
             registeredDevices = devices
             
             Self.logger.debug("Loaded \(devices.count) registered devices")
+
+            // Live-unlink check (contract rule 28, applied to the running
+            // session): a row is deleted only by an explicit action — another
+            // device's unlink, this device's own deletion, the reinstall
+            // dedupe that keeps one — or by a store reset (zone reset, sign
+            // out); an import never deletes it on its own. So a primary whose
+            // own row is gone is no longer primary. WalletManager closes bark
+            // without a final backup: a removed device must not write into
+            // the account's slot (a wipe elsewhere may just have emptied it,
+            // and a takeover's new primary restores from it). No local
+            // demotion breadcrumb: the row is already absent locally, so the
+            // next launch is blocked by the gate and registers as a secondary.
+            if let deviceId = try? getOrCreateDeviceId() {
+                let ownRow = devices.first { $0.deviceId == deviceId }
+                let evidence: OwnRowEvidence = ownRow.map { $0.isPrimaryDevice ? .primary : .secondary } ?? .absent
+                if Self.liveDemotionVerdict(ownRowWasPrimary: ownRowWasPrimary, ownRow: evidence, deletionInProgress: registrationSuspended) {
+                    ownRowWasPrimary = false
+                    Self.logger.warning("🔒 Own registration row is gone while this device was primary — closing the wallet (unlinked or wiped by another device)")
+                    NotificationCenter.default.post(name: .deviceUnlinkedWhileRunning, object: nil)
+                } else if let ownRow {
+                    ownRowWasPrimary = ownRow.isPrimaryDevice
+                }
+            }
         }
+    }
+
+    /// Pure decision behind the live-unlink check, extracted for testability.
+    /// Demotes only on a *known* absence after a *known* primary; an
+    /// unavailable registry is not evidence (the F3 lesson), and a deletion
+    /// in progress deletes the row itself and must not trigger a second
+    /// shutdown with a backup the full wipe forbids (contract rule 17).
+    nonisolated static func liveDemotionVerdict(
+        ownRowWasPrimary: Bool,
+        ownRow: OwnRowEvidence,
+        deletionInProgress: Bool
+    ) -> Bool {
+        guard ownRowWasPrimary, !deletionInProgress else { return false }
+        return ownRow == .absent
     }
     
     /// Gets all active devices (excluding inactive and stale devices)
@@ -943,7 +1023,41 @@ class DeviceRegistrationService {
             predicate: #Predicate { $0.deviceId == deviceId }
         )
         
-        return try? modelContext.fetch(descriptor).first
+        // A fetch error propagates: callers that must tell "no row" from
+        // "could not ask" (the access gate, contract rule 28) rely on it
+        return try modelContext.fetch(descriptor).first
+    }
+
+    /// This device's own row as evidence for the access gate (contract rule
+    /// 28). Uses the configured context, or a fresh context on
+    /// `fallbackContainer` when none is configured — the headless background
+    /// launch never calls `configureServices`, and without this the gate
+    /// could only consult the KVS mirror, whose own `primary` flag goes stale
+    /// when another device unlinks or wipes this one.
+    func ownRowEvidence(fallbackContainer: ModelContainer?) async -> OwnRowEvidence {
+        do {
+            if let device = try await getCurrentDevice() {
+                return device.isPrimaryDevice ? .primary : .secondary
+            }
+            return .absent
+        } catch DeviceRegistrationError.noModelContext {
+            guard let fallbackContainer else { return .unavailable }
+            do {
+                let deviceId = try getOrCreateDeviceId()
+                let context = ModelContext(fallbackContainer)
+                let descriptor = FetchDescriptor<DeviceRegistration>(
+                    predicate: #Predicate { $0.deviceId == deviceId }
+                )
+                guard let device = try context.fetch(descriptor).first else { return .absent }
+                return device.isPrimaryDevice ? .primary : .secondary
+            } catch {
+                Self.logger.warning("Own-row evidence: fallback container fetch failed (\(error.localizedDescription, privacy: .public))")
+                return .unavailable
+            }
+        } catch {
+            Self.logger.warning("Own-row evidence: registry fetch failed (\(error.localizedDescription, privacy: .public))")
+            return .unavailable
+        }
     }
     
     /// Gets stale devices (not seen in specified number of days)
@@ -1089,6 +1203,7 @@ class DeviceRegistrationService {
         // 4. Update current device to be secondary
         currentDevice.isPrimaryDevice = false
         currentDevice.demotedAt = Date()
+        ownRowWasPrimary = false
 
         // 5. Save to CloudKit
         try modelContext?.save()
@@ -1130,6 +1245,7 @@ class DeviceRegistrationService {
         // 4. Update current device to be primary
         currentDevice.isPrimaryDevice = true
         currentDevice.becamePrimaryAt = Date()
+        ownRowWasPrimary = true
 
         // 5. Save to CloudKit
         try modelContext?.save()
@@ -1334,6 +1450,11 @@ class DeviceRegistrationService {
         return kvsKeys.filter { $0.hasPrefix(registeredDevicesPrefix) && $0.hasSuffix(".\(deviceId)") }
     }
 
+    /// The KVS key of a device's own primary flag (`writeOwnPrimaryFlag`).
+    nonisolated static func primaryFlagKey(deviceId: String) -> String {
+        "device_\(deviceId)_isPrimary"
+    }
+
     /// Removes a device's fast-mirror entries for every wallet hash.
     /// - Returns: how many entries were removed, for logging.
     @discardableResult
@@ -1344,9 +1465,14 @@ class DeviceRegistrationService {
         for key in keys {
             kvStore.removeObject(forKey: key)
         }
-        if !keys.isEmpty {
-            kvStore.synchronize()
-        }
+
+        // The device's primary flag is mirror state too. Left behind, it is
+        // the one piece of "evidence" an unlinked ex-primary could still
+        // present to the headless access gate (adversarial pass 2026-11-13,
+        // F1). Removing it is the only write to another device's flag, and it
+        // only ever removes; `writeOwnPrimaryFlag` stays the sole setter.
+        kvStore.removeObject(forKey: Self.primaryFlagKey(deviceId: deviceId))
+        kvStore.synchronize()
 
         return keys.count
     }
@@ -1358,16 +1484,19 @@ class DeviceRegistrationService {
         let allKeys = kvStore.dictionaryRepresentation.keys
         let prefix = "\(Self.registeredDevicesPrefix)\(walletHash)."
         
-        // Find and remove all keys for this wallet
+        // Find and remove all keys for this wallet, plus every device's
+        // primary flag: this runs on the last-device full wipe, after which no
+        // device holds primary for anything (contract rule 28)
         let keysToRemove = allKeys.filter { $0.hasPrefix(prefix) }
+        let flagKeys = allKeys.filter { $0.hasPrefix("device_") && $0.hasSuffix("_isPrimary") }
         
-        for key in keysToRemove {
+        for key in keysToRemove + flagKeys {
             kvStore.removeObject(forKey: key)
         }
         
         kvStore.synchronize()
         
-        Self.logger.debug("Cleared \(keysToRemove.count) device registration(s) from KV store for wallet")
+        Self.logger.debug("Cleared \(keysToRemove.count) device registration(s) and \(flagKeys.count) primary flag(s) from KV store for wallet")
     }
     
     // `cleanupKVStoreRegistry()` was deleted 2026-09-25. It removed any OTHER

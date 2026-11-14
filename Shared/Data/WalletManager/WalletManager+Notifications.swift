@@ -106,6 +106,22 @@ extension WalletManager {
             return .failed
         }
 
+        // An install that never linked the account's wallet has nothing to
+        // refresh: no registration, no mailbox of its own, and bark must not be
+        // opened on its behalf (Device_Linking.md §2.3, contract rule 28). The
+        // seed is known present here, so a blank KVS hash does not invalidate
+        // the record; the registry is not asked on this path.
+        let linkValidity = DeviceLinkStore.validity(
+            record: DeviceLinkStore.record(),
+            accountHash: securityService.getUbiquitousHash(),
+            seedPresent: true,
+            ownRow: .unavailable
+        )
+        guard linkValidity == .valid else {
+            Self.logger.notice("Background relay auth refresh: this install has no valid link to the account wallet (\(String(describing: linkValidity), privacy: .public)) - not opening the wallet")
+            return .nothingToDo
+        }
+
         // A background launch skips the UI flow that normally calls initialize().
         // Minting a mailbox authorization only needs the wallet database open,
         // not the full refresh pipeline - so open it directly. Reconcile the
@@ -117,14 +133,20 @@ extension WalletManager {
             // means a 0xdead10cc kill, so hold an assertion across it — the
             // BGTask's own window doesn't cover a wake push, and neither
             // window survives the system deciding to suspend us early.
-            enum HeadlessOpen { case opened, demoted, failed }
+            enum HeadlessOpen { case opened, demoted, unknown, failed }
             let outcome = await withBackgroundActivityAssertion("background-wallet-open") { () -> HeadlessOpen in
-                // Rule 14: check demotion BEFORE opening — a demoted ex-primary
-                // with a leftover local db must not open bark from a headless
-                // wake (the two-open-wallets hazard step 0a exists to prevent).
-                // Inside the assertion because the check's KVS layer can block
-                // on first access, same cost as the launch path.
-                if await shouldBlockWalletAccess() { return .demoted }
+                // Rules 14 and 28: check the access evidence BEFORE opening — a
+                // demoted ex-primary with a leftover local db must not open bark
+                // from a headless wake (the two-open-wallets hazard step 0a
+                // exists to prevent), and neither may an install with no
+                // evidence of primary. Inside the assertion because the check's
+                // KVS layer can block on first access, same cost as the launch path.
+                switch await walletAccessVerdict() {
+                case .allow: break
+                case .block(let reason):
+                    Self.logger.notice("Background relay auth refresh: wallet access blocked (\(String(describing: reason), privacy: .public))")
+                    return reason.isSettled ? .demoted : .unknown
+                }
                 await reconcileNetworkConfigBeforeWalletOpen()
                 return await ffiWallet.openWalletIfNeeded() ? .opened : .failed
             }
@@ -132,8 +154,13 @@ extension WalletManager {
             case .demoted:
                 // .nothingToDo, not .failed: the new primary owns the mailbox,
                 // so retrying this wake chain would never succeed
-                Self.logger.notice("Background relay auth refresh: device demoted - not opening the wallet")
+                Self.logger.notice("Background relay auth refresh: device is not primary - not opening the wallet")
                 return .nothingToDo
+            case .unknown:
+                // The evidence could not be read (device ID locked, registry
+                // unavailable with no mirror answer): retry on a later wake
+                Self.logger.warning("Background relay auth refresh: primary evidence unreadable - not opening the wallet, retrying on a later wake")
+                return .failed
             case .failed:
                 Self.logger.error("Background relay auth refresh: wallet failed to open")
                 return .failed

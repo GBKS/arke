@@ -643,16 +643,21 @@ class WalletManager {
                     Self.logger.info("✅ [WalletManager] Device is primary - full wallet mode")
                 }
             } else {
-                // No device registration yet - assume primary (first device)
-                isReadOnlyMode = false
-                processStateService?.updateReadOnlyMode(isReadOnly: false)
-                Self.logger.info("ℹ️ [WalletManager] No device registration found, assuming primary device")
+                // No row for this device. Primary is claimed by an explicit
+                // action that writes the row first (create, import, promote),
+                // so a missing row is "unknown", and unknown is read-only
+                // (Device_Linking.md §2.3, contract rule 28). Recovery when
+                // this is wrong: the Devices screen offers promotion while no
+                // primary row is visible.
+                isReadOnlyMode = true
+                processStateService?.updateReadOnlyMode(isReadOnly: true, reason: currentReadOnlyReason())
+                Self.logger.error("🔒 [WalletManager] No device registration yet — read-only until this device registers")
             }
         } catch {
-            // On error, assume primary to avoid blocking access
-            isReadOnlyMode = false
-            processStateService?.updateReadOnlyMode(isReadOnly: false)
-            Self.logger.warning("⚠️ [WalletManager] Failed to check device status: \(error). Assuming primary device")
+            // Same rule: an unreadable registry is not evidence of primary
+            isReadOnlyMode = true
+            processStateService?.updateReadOnlyMode(isReadOnly: true, reason: currentReadOnlyReason())
+            Self.logger.error("🔒 [WalletManager] Failed to check device status: \(error). Read-only until the registry answers")
         }
     }
     
@@ -746,9 +751,12 @@ class WalletManager {
         // anything opens the wallet (contract rule 22).
         await reconcileNetworkConfigBeforeWalletOpen()
 
-        // Step 0a: CRITICAL - Check demotion status BEFORE opening wallet
-        if await shouldBlockWalletAccess() {
-            Self.logger.warning("⚠️ [WalletManager] Device has been demoted - switching to read-only mode")
+        // Step 0a: CRITICAL - Check the access evidence BEFORE opening wallet
+        // (contract rules 14 and 28): demotion, a secondary row, or no
+        // evidence at all each keep bark closed
+        let access = await walletAccessVerdict()
+        if case .block(let reason) = access {
+            Self.logger.warning("🔒 [WalletManager] Wallet access blocked (\(String(describing: reason), privacy: .public)) - switching to read-only mode")
             isReadOnlyMode = true
             processStateService?.updateReadOnlyMode(isReadOnly: true, reason: currentReadOnlyReason())
             
@@ -807,6 +815,17 @@ class WalletManager {
                 return
             }
             Self.logger.notice("✅ Wallet opened successfully")
+
+            // A demotion or live unlink can land while the open was awaiting
+            // the FFI; `closeWalletForMigration` then found no handle to shut
+            // and only flipped the mode. Honour it here, or the daemon would
+            // run under a read-only UI for the rest of the session.
+            if isReadOnlyMode {
+                Self.logger.warning("🔒 [WalletManager] Mode changed to read-only during the open — shutting the wallet down again")
+                await ffiWallet.shutdownWallet(backingUp: false)
+                isInitialized = false
+                return
+            }
             
             // Start the daemon for background operations (syncs, exit progression, etc.)
             do {
@@ -1320,7 +1339,11 @@ class WalletManager {
     /// 
     /// Unlike closeWallet(), this does NOT clear transaction history
     /// because secondary devices need to display synced transaction data
-    func closeWalletForMigration() async throws {
+    /// - Parameter backingUp: pass `false` when this device was removed from
+    ///   the wallet by another device (`.deviceUnlinkedWhileRunning`): its
+    ///   state must not land in the account's backup slot, which a takeover's
+    ///   new primary restores from and a wipe elsewhere may have emptied.
+    func closeWalletForMigration(backingUp: Bool = true) async throws {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
@@ -1348,9 +1371,9 @@ class WalletManager {
         try? await Task.sleep(nanoseconds: 500_000_000) // 500ms
 
         // Step 5: Shutdown wallet (FFI cleanup, backup, resource release)
-        Self.logger.info("Step 5: Shutting down wallet FFI...")
+        Self.logger.info("Step 5: Shutting down wallet FFI (backup: \(backingUp))...")
         if let ffiWallet = wallet as? BarkWalletFFI {
-            await ffiWallet.shutdownWallet()
+            await ffiWallet.shutdownWallet(backingUp: backingUp)
         } else {
             // Mock wallet - just clear the reference
             Self.logger.debug("Mock wallet detected - skipping FFI shutdown")
@@ -1384,6 +1407,18 @@ class WalletManager {
             }
         }
         
+        // Unlinked or wiped by another device while running (registry
+        // observer, Device_Linking.md §11.6): close like a demotion, no backup
+        NotificationCenter.default.addObserver(
+            forName: .deviceUnlinkedWhileRunning,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                try? await self?.closeWalletForMigration(backingUp: false)
+            }
+        }
+
         // Promotion notification
         NotificationCenter.default.addObserver(
             forName: .devicePromotedToPrimary,
@@ -1452,17 +1487,93 @@ class WalletManager {
         return .notPrimary(selfWritten: selfWroteValue == false)
     }
 
-    /// Multi-layered check if device has been demoted
-    /// This runs BEFORE wallet initialization to prevent race conditions
-    func shouldBlockWalletAccess() async -> Bool {
-        guard let deviceId = try? ServiceContainer.shared.deviceRegistrationService.getOrCreateDeviceId() else {
+    /// Why bark stays closed on this launch, if it does (contract rule 28).
+    nonisolated enum AccessBlockReason: Equatable, Sendable {
+        /// The local demotion flag is set, or the mirror says another device's
+        /// state demoted this one
+        case demoted
+        /// This device's own row (or its own mirror write) says secondary
+        case secondary
+        /// The registry answered and has no row for this device
+        case noRegistration
+        /// The device-ID keychain item could not be read (locked keychain,
+        /// I/O). Not evidence either way, so not primary.
+        case deviceIdUnreadable
+        /// The registry could not be asked (no model context on a headless
+        /// launch, or a fetch error) and the mirror had no positive answer
+        case registryUnavailable
+
+        /// Blocks that describe a settled role, where retrying later cannot
+        /// change the answer. The others are "unknown right now".
+        var isSettled: Bool {
+            switch self {
+            case .demoted, .secondary: return true
+            case .noRegistration, .deviceIdUnreadable, .registryUnavailable: return false
+            }
+        }
+    }
+
+    nonisolated enum AccessVerdict: Equatable, Sendable {
+        case allow
+        case block(AccessBlockReason)
+
+        var blocks: Bool {
+            if case .block = self { return true }
             return false
+        }
+    }
+
+    /// Pure decision behind `walletAccessVerdict`, extracted for testability
+    /// (Device_Linking.md §11.2). Unknown is read-only: the only path to
+    /// `.allow` is positive evidence that this device holds primary. When the
+    /// registry cannot be asked at all (headless background launch), the KVS
+    /// mirror's own `primary` write stands in for the row; every registration
+    /// writes it before its row, so an existing primary always has it.
+    nonisolated static func accessVerdict(
+        deviceIdReadable: Bool,
+        wasDemoted: Bool,
+        mirror: MirrorPrimaryVerdict,
+        ownRow: OwnRowEvidence
+    ) -> AccessVerdict {
+        guard deviceIdReadable else { return .block(.deviceIdUnreadable) }
+        if wasDemoted { return .block(.demoted) }
+        switch mirror {
+        case .notPrimary(selfWritten: true): return .block(.secondary)
+        case .notPrimary(selfWritten: false): return .block(.demoted)
+        case .primary, .noOpinion: break
+        }
+        switch ownRow {
+        case .primary: return .allow
+        case .secondary: return .block(.secondary)
+        case .absent: return .block(.noRegistration)
+        case .unavailable: return mirror == .primary ? .allow : .block(.registryUnavailable)
+        }
+    }
+
+    /// The app's model container, for registry reads on launches that never
+    /// configure the services (BGTask and wake-push launches). Set once in
+    /// `App.init`, next to `BackgroundTaskCoordinator.walletManager`; nil on
+    /// desktop, where the gate then falls back to the KV mirror.
+    nonisolated(unsafe) static var headlessModelContainer: ModelContainer?
+
+    /// Multi-layered check whether this device may open bark. Runs BEFORE
+    /// wallet initialization on the launch path and before the headless
+    /// background open (contract rules 14 and 28).
+    func shouldBlockWalletAccess() async -> Bool {
+        await walletAccessVerdict().blocks
+    }
+
+    func walletAccessVerdict() async -> AccessVerdict {
+        guard let deviceId = try? ServiceContainer.shared.deviceRegistrationService.getOrCreateDeviceId() else {
+            Self.logger.warning("🔒 [WalletManager] Blocked: device ID keychain item unreadable — not evidence of primary")
+            return .block(.deviceIdUnreadable)
         }
         
         // Layer 1: Check local UserDefaults (instant, <1ms)
-        if UserDefaults.standard.bool(forKey: "device_\(deviceId)_wasDemoted") {
+        let wasDemoted = UserDefaults.standard.bool(forKey: "device_\(deviceId)_wasDemoted")
+        if wasDemoted {
             Self.logger.info("🛑 [WalletManager] Blocked: UserDefaults indicates demotion")
-            return true
+            return .block(.demoted)
         }
         
         // Layer 2: Check iCloud KV store (local cache).
@@ -1493,18 +1604,36 @@ class WalletManager {
             default:
                 Self.logger.info("🛑 [WalletManager] Blocked: iCloud KV mirror says this device is not primary, and this device didn't write that")
             }
-            return true
         }
         
-        // Layer 3: Check CloudKit via device registration (no network call, uses local cache)
-        if let device = try? await ServiceContainer.shared.deviceRegistrationService.getCurrentDevice(),
-           !device.isPrimaryDevice {
-            Self.logger.info("🛑 [WalletManager] Blocked: CloudKit cache indicates demotion")
-            return true
+        // Layer 3: this device's own row (no network call, local SwiftData
+        // store). "No row" and "could not ask" are different answers. The
+        // headless background launch never configures the registry's model
+        // context, so the service falls back to a fresh context on the app's
+        // container, wired in App.init next to the BGTask coordinator.
+        let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(
+            fallbackContainer: Self.headlessModelContainer
+        )
+        if ownRow == .unavailable {
+            Self.logger.info("ℹ️ [WalletManager] Registry unavailable for the access check; relying on the KV mirror")
         }
-        
-        // All checks passed - allow wallet access
-        return false
+
+        let verdict = Self.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: mirrorVerdict, ownRow: ownRow)
+        switch verdict {
+        case .allow:
+            break
+        case .block where mirrorVerdict.blocksWalletAccess:
+            break  // already logged by the mirror layer above
+        case .block(.secondary):
+            Self.logger.info("🔒 [WalletManager] Read-only: this device's registration says secondary")
+        case .block(.noRegistration):
+            Self.logger.error("🔒 [WalletManager] Blocked: no registration row for this device — read-only until it registers (contract rule 28)")
+        case .block(.registryUnavailable):
+            Self.logger.warning("🔒 [WalletManager] Blocked: registry unavailable and the KV mirror has no primary answer — not opening bark on no evidence")
+        case .block(let reason):
+            Self.logger.info("🛑 [WalletManager] Blocked: \(String(describing: reason), privacy: .public)")
+        }
+        return verdict
     }
     
     /// Restores wallet from iCloud backup if needed

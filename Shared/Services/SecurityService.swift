@@ -527,13 +527,22 @@ class SecurityService {
     }
 
     /// Core of the accessibility migration, parametrized so tests can run it against a
-    /// scratch item instead of the real mnemonic.
-    nonisolated static func migrateItemToAfterFirstUnlock(service: String, account: String) -> KeychainAccessibilityMigrationResult {
+    /// scratch item instead of the real mnemonic, and so the non-synchronizable
+    /// device-ID item can move to `AfterFirstUnlockThisDeviceOnly` the same way
+    /// (Device_Linking.md §11.1).
+    nonisolated static func migrateItemToAfterFirstUnlock(
+        service: String,
+        account: String,
+        synchronizable: Bool = true,
+        target: CFString = kSecAttrAccessibleAfterFirstUnlock,
+        allowReaddFallback: Bool = true
+    ) -> KeychainAccessibilityMigrationResult {
+        let targetClass = target as String
         let baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: true
+            kSecAttrSynchronizable as String: synchronizable
         ]
 
         // Attributes-only read first: the (usual) already-migrated path never pulls
@@ -555,13 +564,12 @@ class SecurityService {
             return .keychainUnavailable(attributesStatus)
         }
 
-        if let attributes = attributesResult as? [String: Any],
-           let accessible = attributes[kSecAttrAccessible as String] as? String,
-           accessible == kSecAttrAccessibleAfterFirstUnlock as String {
+        let originalClass = (attributesResult as? [String: Any])?[kSecAttrAccessible as String] as? String
+        if originalClass == targetClass {
             // Info-level on purpose: on a secondary device this line vs "item now..."
             // distinguishes "attribute change arrived via iCloud Keychain sync" from
             // "this device migrated its own copy locally".
-            logger.info("Accessibility migration: item already kSecAttrAccessibleAfterFirstUnlock")
+            logger.info("Accessibility migration: item already \(targetClass, privacy: .public)")
             return .alreadyMigrated
         }
 
@@ -580,12 +588,18 @@ class SecurityService {
 
         // Preferred path: atomic in-place update — the item never leaves the keychain.
         let update: [String: Any] = [
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+            kSecAttrAccessible as String: target,
             kSecValueData as String: data
         ]
         let updateStatus = SecItemUpdate(baseQuery as CFDictionary, update as CFDictionary)
 
         if updateStatus != errSecSuccess {
+            guard allowReaddFallback else {
+                // Caller would rather keep the old class than risk the item
+                // (the device ID: losing it splits the device's identity)
+                logger.warning("Accessibility migration: in-place update failed (OSStatus \(updateStatus)); fallback disabled, retrying next launch")
+                return .failed(updateStatus)
+            }
             // Fallback for OS versions that reject in-place accessibility changes on
             // synchronizable items: delete + re-add, with the value held in memory.
             logger.warning("Accessibility migration: in-place update failed (OSStatus \(updateStatus)), falling back to delete + re-add")
@@ -597,13 +611,13 @@ class SecurityService {
             }
 
             var addQuery = baseQuery
-            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            addQuery[kSecAttrAccessible as String] = target
             addQuery[kSecValueData as String] = data
             let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
 
             if addStatus != errSecSuccess {
                 // Put the item back under its original class rather than leave none.
-                addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+                addQuery[kSecAttrAccessible as String] = originalClass ?? (kSecAttrAccessibleWhenUnlocked as String)
                 let restoreStatus = SecItemAdd(addQuery as CFDictionary, nil)
                 logger.error("Accessibility migration: re-add failed (OSStatus \(addStatus)); restore with original class returned OSStatus \(restoreStatus)")
                 return .failed(addStatus)
@@ -622,12 +636,12 @@ class SecurityService {
         guard verifyStatus == errSecSuccess,
               let verified = verifyResult as? [String: Any],
               verified[kSecValueData as String] as? Data == data,
-              verified[kSecAttrAccessible as String] as? String == kSecAttrAccessibleAfterFirstUnlock as String else {
+              verified[kSecAttrAccessible as String] as? String == targetClass else {
             logger.error("Accessibility migration: post-migration verification failed (OSStatus \(verifyStatus))")
             return .failed(verifyStatus)
         }
 
-        logger.info("Accessibility migration: item now kSecAttrAccessibleAfterFirstUnlock")
+        logger.info("Accessibility migration: item now \(targetClass, privacy: .public)")
         return .migrated
     }
 
