@@ -69,7 +69,7 @@ summarised in one line under "Past trains".
 | Build | 0.26 Track A built 2026-10-25; dependency bump (bark v0.26.1, bdk-swift 3.1.1, qrcode 28.1.0, BIP39 pinned) and the send-fee cluster in two batches built 2026-10-27 (`Features/Send_Fee_Quotes.md`) |
 | Review | 0.26 Track A adversarial pass 2026-10-25; fee cluster two adversarial passes 2026-10-27, every confirmed finding fixed the same day, rework ledger updated |
 | Device | 0.26 recovery scenarios (Christoph, before the upload); fee cluster device look 2026-10-27 (§8.8–8.9), two states unreachable on the phone and waived or left to their entries |
-| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). **Shipped 2026-11-04** (Christoph); the device re-check of "backup from another server refused" stays in Tier 2 |
+| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). **Shipped 2026-11-04** (Christoph); the device re-check of "backup from another server refused" stays in Tier 2. **Range review `22829b1..HEAD` 2026-11-16:** four fault-class passes by area, 24 findings (8 CONFIRMED), record in `Features/Device_Linking.md` §17; fix set pending Christoph's ruling, full suite after the fixes |
 | Soak | from 2026-10-27, Christoph's daily use |
 
 Delivered from Train 1's deferral list: the Tier 1 gate on onchain sends at
@@ -345,6 +345,19 @@ needs a ruling or a sentence of reasoning before it can become work.
   anything in a local-only container. Still a wipe on a transient error.
   Narrow the condition to confirmed migration failures, or back up the store
   files before deleting them.
+- [ ] **A full wipe can leave payment rows on the server that the next
+  wallet imports** (Christoph, 2026-11-16 device run): a wallet created on
+  A right after the signet wallet's full wipe showed the old wallet's
+  activity at a zero balance. `PersistentTransaction` carries no wallet
+  hash, `WalletDataCleanupService.deleteCloudKitData` deletes and saves
+  locally, and nothing waits for the CloudKit export of those deletions, so
+  rows still on the server (export cut short, or rows another device held
+  that this one never imported) attach to whichever wallet opens next.
+  Read from code, not reproduced; the run is in
+  `Features/Device_Linking.md` §11.5. Fix shape needs a ruling: wait for
+  the export event before the store is torn down, scope rows by wallet hash
+  (a new `@Model` field, permanent once deployed), or purge on the next
+  open when the hash differs.
 
 - [ ] **Tag and contact lookups answer by txid, not by row** —
   `liveTagAssignments` / `liveContactAssignments` fetch
@@ -380,6 +393,19 @@ Status: explicit device linking scope pass DECIDED 2026-11-13
 absorbs S3/S4 (flow 4.3), S5 (link-screen entry, after the flow), the rest
 of S7 (per-blocker unlink, aftermath screen) and the S10 build (launch
 check). The security-check matrix is still its own Tier 0 item.
+
+- [ ] **Range-wide review `22829b1..HEAD` (2026-11-16): 24 findings, 8
+  CONFIRMED, none fixed yet** — four fault-class passes by area over
+  everything since the 2026-11-04 release. Most severe: `launchRoute`'s
+  self-heal is unscoped by wallet and runs before the left breadcrumb
+  (undoes a local deletion, mis-links the upgrade cohort); the launch-check
+  Restore exit's default backup-file path deletes the database it promises
+  to keep; re-promotion rebuilds services without a model context; the FFI
+  import backs up to the account slot before the server-key check. Record
+  with all findings: `Features/Device_Linking.md` §17, import extras in
+  `Features/Import_Screen_Split.md` §15, export copy in
+  `Features/Wallet_Deletion_Export_Step.md` §12. Fix set needs a ruling;
+  unfixed findings then get their own entries.
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read
@@ -966,6 +992,17 @@ log).
   wallet-scoped. `Development/Contract_Audit_2026_11.md` A.10–11. Absorbed
   by the Devices screen rework, `Features/Device_Linking.md` §5 (DECIDED
   2026-11-13, build step 3).
+- [ ] **The Devices list re-reads only on appear and pull-to-refresh**
+  (Christoph, 2026-11-16 device run): a freshly linked B appeared on A only
+  after leaving and re-entering the screen several times.
+  `LinkedDevicesView_iOS.reload` is the only reader of
+  `currentOtherDeviceReport` (the mirror-only rows); the service re-reads
+  `registeredDevices` on `.cloudKitDataDidChange` but nothing re-reads the
+  report, and no surface observes
+  `NSUbiquitousKeyValueStore.didChangeExternallyNotification`, so a step-3
+  fast entry arrives and sits unread until the next appear. Observe both in
+  the view, or move the report into the service, per the read-only-observer
+  rule.
 - [ ] **DECIDE — recovery phrase on a seed-synced secondary**: the matrix
   says ✓, but the Settings entry is hidden whenever `isReadOnlyMode`
   (`SettingsView_iOS`, desktop `SettingsView`). Fix the row or show the
@@ -1011,6 +1048,18 @@ log).
   (PROPOSED 2026-11-12): only the app-wide
   `shouldAllowExtensionPointIdentifier` delegate hook blocks keyboard
   extensions. `Features/Import_Screen_Split.md` §14.
+- [ ] **Launch-check screen blames "a different iCloud account" when the
+  account's wallet was replaced** (Christoph, 2026-11-16 device run): after
+  a wallet was created on A, B's record named the old wallet and
+  `DeviceLinkStore.launchCheckCase` returned `.differentAccount` on the
+  hash mismatch alone; `LaunchCheckView` titles that "This device is signed
+  in to a different iCloud account" though no account changed. Give the
+  replaced-wallet state its own copy (the identity token already tells the
+  two apart), and make the route log in
+  `SecurityService.performWalletStateDetection` print the record hash, the
+  KVS hash and the identity verdict; today both routes log the same
+  `walletMismatch(differentAccount)` line, which is why the 2026-11-16 run
+  could not be read from the log.
 
 ### X-Ray and Tilt
 

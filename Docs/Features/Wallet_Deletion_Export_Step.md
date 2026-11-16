@@ -365,3 +365,21 @@ row starts hidden and appears from the screen's `.task`; a thrown check
 shows the row (fail toward offering). `MetadataPresenceTests`: empty
 store false; faucet contact + system tag + blank profile + note-less
 transactions false; each user-added kind true on its own.
+
+## 12. Range-wide review finding (2026-11-16, `fault-class-reviewer`, `22829b1..HEAD`)
+
+From the four-pass range review recorded in `Device_Linking.md` §17.
+Sharpens §9 F6. Not fixed.
+
+- **D3 PLAUSIBLE, class 4, SQLite.** The export step copies the live
+  `db.sqlite` with bark's daemon running and no integrity check, and this
+  one copy is the file the user is told is needed to restore the wallet,
+  taken once right before destruction. Verified at the deployed tag with
+  `git show bark-0.8.0:bark/src/persist/sqlite/mod.rs`: rusqlite is opened
+  with no PRAGMA, so the database is in the default DELETE journal mode and
+  a copy taken during a write transaction has no hot journal beside it and
+  is corrupt. The periodic backup shares the caveat but repeats; the export
+  does not. Settle on the signet simulator: trigger a refresh and tap
+  Download repeatedly, run `PRAGMA integrity_check` on each copy. Fix
+  shapes: stop the daemon for the copy, or run `quick_check` on the copy
+  before showing the Saved tick (§9 F6 already named it).

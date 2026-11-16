@@ -374,3 +374,39 @@ into the grid only, never pasted from a tracked file.
   extension on any phrase-entry screen; the only lever is the app-wide
   `application(_:shouldAllowExtensionPointIdentifier:)` hook. PROPOSED,
   Tier 3 "First use".
+
+## 15. Range-wide review findings (2026-11-16, `fault-class-reviewer`, `22829b1..HEAD`)
+
+Import-area findings from the four-pass range review recorded in
+`Device_Linking.md` §17. The restore-exit finding (I1) and the phrase-only
+wipe guard (I3) are there; the rest is here. Nothing fixed yet.
+
+- **I2 CONFIRMED, classes 1 and 5, pre-existing.** `BarkWalletFFI.importWallet`
+  ends with `backupWallet()`, which replaces the account's iCloud slot and
+  writes a timestamped copy whenever bytes differ; `importWalletWithBackup`
+  runs `refreshServer()` and the `backupBelongsToAnotherServer` check only
+  after that. A backup file of the same phrase from another Ark server
+  passes `Wallet.open`, overwrites the slot, then rolls back locally; the
+  slot and the copy keep the wrong-server database for the next
+  `restoreWalletIfNeeded` or handover. The rollback comment "no backup on
+  the way out" is true of the shutdown, not of the import. Contract S1/S2.
+- **I4 PLAUSIBLE (low), class 3.** Phrase-only `importWallet` has no rollback
+  after the FFI opened: `handleSeedImport` throwing leaves the handle open,
+  the config persisted and an unmarked directory; a later import of a
+  different phrase then hits `mnemonicMismatch` every time because
+  `removeStaleWalletDirectoryIfMarked` touches marked directories only.
+  Pre-range ordering, only the error text changed.
+- **I5 PLAUSIBLE (low), class 3.** `SeedEntrySheet_iOS.save` wraps
+  `updateCurrentDeviceHasSeed(true)` in `try?`; from the link screen the
+  row does not exist yet (harmless, the link registers with `hasMnemonic()`),
+  from `ActivityView_iOS` a failure leaves `hasSeed` false until relaunch.
+- **I6 PLAUSIBLE (low), desktop.** `RecoveryPhraseInput.isValidPhrase`
+  lowercases, the hash and the FFI receive the raw string; every iOS caller
+  passes lowercase joined words, the desktop import view passes raw text.
+  Confusing error, no corruption. Parked.
+- Verified at the bindings and bark-0.8.0: `validate_mnemonic` is
+  `Mnemonic::parse(trim)` with `Ok(false)` on any error; `Wallet.open`
+  splits on any whitespace; the fingerprint bail precedes any chain or
+  server call. Not verified: rust-bip39 case handling, uniffi's error
+  description carrying "incorrect mnemonic", the BIP39 package's word list
+  being a computed property.

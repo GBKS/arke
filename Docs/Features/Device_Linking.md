@@ -752,6 +752,17 @@ unlinked device kept bark open until relaunch. Built as §11.6.
 logs "Device ID accessibility migration: migrated" and opens as primary; a
 plain create-wallet run registers and opens as primary.
 
+**Device run 2026-11-16 (Christoph), both passed, reported in aggregate:**
+the upgraded primary opened as primary, and a create-wallet run registered
+and opened as primary. The §10 scenario 8 passive check (BGTask entries on
+a backgrounded unlinked device) also passed as reported. Side effect of the
+create check: run on A under the shared Apple ID after the signet wallet's
+wipe, it replaced the account's wallet (new KVS hash, new synchronizable
+seed), and the new wallet showed the old wallet's activity at a zero
+balance (backlog Tier 1 Data safety, leftover payment rows). The signet
+wallet was re-imported on A and B relinked the same day. Step 1 has no
+open device checks.
+
 ### 11.6 Live unlink: a running primary whose own row disappears (built 2026-11-14, DECIDED by Christoph the same day)
 
 **Why.** The 2026-11-14 device run showed the gap: after B unlinked A, A's
@@ -1029,6 +1040,16 @@ screen on A names B by that name during the same window; unlinking B from A
 removes both of B's keys (A's Devices list shows no B after B's row and
 entry are gone). Not reproducible on device: the old-build reader (F1) — it
 is settled by reading build 27's code.
+
+**Device run 2026-11-16 (Christoph): inconclusive.** B listed A and B while
+A listed only itself, and B's launch after a local deletion landed on the
+launch-check screen's "different account" case. The account had been
+switched to a wallet created on A for the step-1 create check, so B's
+record and the KVS hash named different wallets and the two lists were
+filtered by different hashes; the run says nothing about the mirror-only
+window. Also seen: A's list picked B up only after re-entering the screen
+(backlog Tier 3 Settings, devices, deletion). Re-run owed after the reset
+to the shared signet wallet (done the same day).
 
 ## 14. Step 4 build plan (2026-11-14)
 
@@ -1367,3 +1388,202 @@ entry without identity) is a generic device glyph in both rows. Pinned by
   the same purge caught). New terms in the glossary.
 - Not done here: native review of the new translations (open in the
   translation rollout); desktop parity of the guided flow (desktop parked).
+
+## 17. Range-wide adversarial pass (2026-11-16, `fault-class-reviewer` ×4, `22829b1..HEAD`)
+
+Four fresh-context passes over everything since the 2026-11-04 release, one
+per area (access gate and link record; handover and takeover; deletion;
+import and seed entry), each told to look for interactions between steps
+and with pre-existing code, which the per-step passes could not see. Items
+filed earlier the same day (launch-check copy for a replaced wallet, the
+Devices list re-read, leftover payment rows after a full wipe) were
+excluded. Every CONFIRMED claim below was re-read in the source by the
+session before it was recorded; nothing was built or run. Import-only
+findings are in `Import_Screen_Split.md` §15, the export-copy finding in
+`Wallet_Deletion_Export_Step.md` §12.
+
+**Rulings (DECIDED 2026-11-16, Christoph, delegated to the session's
+recommendation):** fix order G1/D1 → I1 → H1 → I2, one session each, the
+PLAUSIBLE set after. H2: conflict losers (`reconcilePrimaryConflicts`
+self-demotion) close with `backingUp: false`; only the guided demote writes
+the handover backup. D2: the per-blocker unlink keeps its designed flow, no
+settle window; the hazard is closed in the restore path instead, which
+must never replace a local database with a slot copy without keeping the
+local file until the open succeeds (covers the I1 backup-file path too).
+Fix status is tracked per finding below as fixes land.
+
+### 17.1 Access gate, link record, launch route (steps 1, 2, 3, 5)
+
+- **G1 CONFIRMED, class 2 (also found independently by the deletion pass
+  as D1).** `DeviceLinkStore.launchRoute` returns `.selfHeal` whenever an
+  own registry row is present and no record exists, *before* the left
+  breadcrumb is consulted, and the own-row lookup (`getCurrentDevice`,
+  `ownRowEvidence`) matches `deviceId` only, never `walletHash`. The
+  self-heal then writes a record with the *account's* hash
+  (`SecurityService.performWalletStateDetection`) and `recordLink` clears
+  the breadcrumb. Two scenarios. (a) Upgrade cohort, every install from
+  before the record: device B holds wallet X and is offline; A wipes X and
+  creates Y; B launches on the new build before the row deletion imports →
+  self-heal writes {Y}, the gate passes on X's primary row, bark refuses Y's
+  seed on X's db, the live unlink then lands B on the link screen as a
+  secondary of Y with X's database still on disk; the launch-check screen
+  built for exactly this cohort never shows. (b) A local-only deletion
+  whose step 1 unregister retained the row (`.rowRetained` / `.failed` is
+  tolerated by design) is undone on the next cold launch: record rewritten,
+  breadcrumb gone, wallet restored from the final backup the deletion wrote.
+  `LinkLaunchRouteTests` pins self-heal and the breadcrumb separately; no
+  case has both. The shared root is the unscoped own row, which also feeds
+  `walletAccessVerdict` layer 3.
+- **G2 CONFIRMED, class 2, desktop.** `ArkeDesktop` `MainView` attaches
+  `.walletClosedAfterUnlink` only inside the link-screen branch, so a Mac
+  unlinked while running closes bark correctly but stays on the wallet view
+  read-only until relaunch. iOS listens at the root. Desktop is parked;
+  recorded for parity.
+- **G3 CONFIRMED, class 2, desktop.** Desktop `linkThisDevice` has no
+  record rollback on a failed registration; the next detection reads
+  "removed by another device". Parked.
+- **G4 PLAUSIBLE, classes 1 and 5.** Apple ID switch with a stale KVS
+  cache: `accountChangeMayAlterRoute` returns false while KVS still holds
+  the old hash, and the CloudKit store purge, `CKAccountChanged` and the KVS
+  account-change notification have no ordering guarantee. If the purge
+  lands first, the live unlink re-detects as `.linked`, backfills the *new*
+  account's identity token into the old record (every pre-step-5 record has
+  none), and `registerDeviceIfNeeded` can write a row for X into the new
+  account's store; when KVS flips, the launch check reads
+  `.deletedElsewhere` and offers Restore, which would pair X with account B.
+  Device-only to settle: two Apple IDs, log order of the three signals.
+- **G5 CONFIRMED (low), class 3.** `onWalletDeleted` on iOS calls
+  `stopCloudKitSync`; the link path never restarts it and
+  `activateLateDetectedWalletServices` is guarded off after a launch that
+  had a wallet. After delete-from-this-device → link in one session, the
+  registry observer is dead until relaunch (live unlink, duplicate-primary
+  reconcile, new-device notification). Desktop does not stop it.
+- **G6 PLAUSIBLE (low), class 2.** A reinstalled primary that links before
+  its old row imports gets a fresh secondary row; `dedupeOwnRecords` later
+  keeps the primary row and rewrites the flag but posts nothing, so the
+  device stays read-only until relaunch unless the import landed inside the
+  30 s wait.
+- Sound, checked: the registration choke point cannot re-create a record
+  after the cleanup without the link tap (`registrationSuspended`, no
+  callers of `schedulePendingRegistration`); headless opens refuse on
+  `noRecord` / `walletChanged`; the launch-check Remove writes no backup
+  with or without an open handle; a different phrase over X's db is
+  refused by bark, not wiped; `initializePrimaryMode` re-checks the mode
+  after the open.
+
+### 17.2 Handover, takeover, demotion, re-promotion (step 4)
+
+- **H1 CONFIRMED, class 2, contract P1.** `closeWalletForMigration` nils
+  the unified and onchain transaction services; `buildWalletScopedServices`
+  rebuilds them on re-promotion but never re-applies the model context,
+  which only `setModelContext` wires, called once at launch. After demote
+  → promote in one session the activity list is empty or stale and onchain
+  transactions are neither persisted nor loaded until relaunch. The
+  2026-11-16 device run checked X-Ray only. Same shape, pre-existing:
+  `addressService` is created only in `setModelContext` when not read-only,
+  so a device that started the session as a secondary and is promoted has
+  no address service; `arkAddress` / `onchainAddress` return empty
+  (PLAUSIBLE for the visible symptom).
+- **H2 PLAUSIBLE, class 1.** `reconcilePrimaryConflicts` makes the loser
+  self-demote through `.deviceDemotedFromPrimary`, whose handler closes
+  *with* backup; the range's stamp makes that slot write "newer". Two
+  secondaries promoting within the CloudKit lag: the loser's db lands in
+  the slot, and the winner's next relaunch restores it over its own
+  (offchain state between the two restores lost). Same shape for a lost
+  primary that is alive and backs up on backgrounding until its row
+  deletion arrives. Needs a ruling: conflict losers close with
+  `backingUp: false`?
+- **H3 PLAUSIBLE, class 4, iCloud Drive.** The idle-primary fix stamps the
+  slot without changing bytes; whether an mtime-only change propagates to
+  the other device's `NSMetadataItemFSContentChangeDateKey` is unverified.
+  If not, B times out at 240 s and is steered into a takeover that unlinks
+  a healthy A. The "A idle for an hour" check in §14.3 has no recorded run.
+- **H4 PLAUSIBLE, class 4, bark.** `recoverVtxos` at `lib-0.8.0`:
+  `InFlight` states other than unclaimed → `db.remove_vtxo`. The takeover
+  reconcile passes every locally spendable id; a VTXO the lost primary put
+  into a round after the backup is removed from B's db, and if the round
+  fails it is spendable on the server but gone locally with no rescan.
+  Window = one round. Also: the lib's `not_found` bucket has no counterpart
+  in the FFI `RecoveryReport`; the mapping lives in the bark-ffi crate, not
+  readable in DerivedData.
+- **H5 PLAUSIBLE, class 3.** A self-demotion landing while the promote's
+  `initialize` is in flight joins it via `TaskDeduplicationManager` and
+  does nothing; the open hits the re-check and leaves `isInitialized`
+  false, so a secondary-started device sits on the loading screen (the
+  2026-11-15 symptom by another trigger). Narrow.
+- **H6 PLAUSIBLE, class 3.** If the promote's `initialize` joins a
+  still-running launch initialize, the flow's wait times out at 90 s with
+  the row and flag already primary; retry throws `alreadyPrimary`. The copy
+  says relaunch, so a known dead end rather than a hidden one.
+- **H7 PLAUSIBLE (low), class 4.** Branch B/C copy derives the backup date
+  from a local `fileExists`, false for an undownloaded placeholder: "no
+  backup has reached iCloud" while `promote()` then downloads and restores
+  it. Wrong statement, right outcome.
+- Minor, class 3: `MakeSecondaryView` waits for upload from `startedAt`
+  minus five seconds, so a periodic backup in that window can satisfy the
+  wait before the final backup. B's own `demotedAt` gate covers it.
+- Verified at the bindings: `recoverVtxos(vtxoIds:gapLimit:) -> RecoveryReport`
+  at `v0.26.1+bark-0.8.0`; spent → stored as spent (the §14.1 claim holds).
+  The simulator db header reads rollback journal, not WAL (device db not
+  read).
+
+### 17.3 Deletion (export step, per-blocker unlink, launch-check remove)
+
+- **D1 = G1(b).**
+- **D2 PLAUSIBLE, classes 1 and 4, rule 17 shape.** The per-blocker unlink
+  lets A clear a live, backgrounded primary B and full-wipe at once; the
+  override route had the 48 h settle window, the unlink row has none. B's
+  background backup hook is gated only by B's own suspension flag, so B
+  can refill the slot A just emptied before B's import closes it. If A then
+  creates Y, A's next cold launch sees slot X stamped newer, bytes differ,
+  and `restoreFromBackup(overwriteExisting: true)` replaces Y's database
+  with X's, no safety copy. Two-phone check listed in the report.
+- **D3** → `Wallet_Deletion_Export_Step.md` §12.
+- **D4 PLAUSIBLE (low), class 3.** `LaunchCheckView.remove` closes an open
+  handle through `closeWalletForMigration(backingUp: false)`, which posts
+  `.walletClosedAfterUnlink`; the main view re-runs detection on it
+  concurrently with the removal and can tear the screen down mid-flight.
+  The file deletion still completes.
+- Sound, checked: the launch-check remove and the normal local deletion
+  run the same cleanup with the same scope, no backup; `unlinkDevice`
+  clears mirror first; `PhraseConfirmation.isRequired` is literally
+  `includesCloudData`. Inventory gap: `com.arke.device.lastHeartbeat` is
+  cleared by no deletion (harmless, 24 h skip); the wipe-coverage test
+  checks uniqueness and three keys, not completeness.
+
+### 17.4 Import and seed entry, the linking-relevant part (step 5 restore exit)
+
+- **I1 CONFIRMED, classes 2 and 5.** `restoreFromLaunchCheck` promises
+  "the import opens the existing database for the same phrase and keeps
+  its state", and the `.deletedElsewhere` copy says the data is still on
+  the device. The phrase step then hands over to `ImportBackupFileView`,
+  where choosing a file is the default: `restoreFromUserBackup` removes the
+  existing `db.sqlite` unconditionally before copying, no newest-wins, no
+  copy kept, and a failure after that (another phrase, network or server
+  mismatch, keychain) runs `removeRestoredDatabase` and leaves no database
+  at all, with the account slot already gone. Only Skip, styled as the
+  emergency path, keeps the state (`createIfNotExists: false`). The copy is
+  inverted for this entry.
+- **I3 PLAUSIBLE, class 2.** The phrase-only import's network-mismatch
+  retry removes the wallet directory with no `DeviceLinkStore.record()`
+  guard (`createWallet` got one). Reachable with a record only through the
+  restore exit, whose network comes from the local cache; a `custom:*` id
+  without its JSON (older builds wrote the id alone) falls back to mainnet,
+  so a custom-server signet wallet would be opened as mainnet, mismatch,
+  directory wiped, fresh mainnet wallet created.
+- Sound, checked: the seed-only save cannot overwrite the account seed
+  (`.valid` needs hash equality, `.validNoReference` refused, update-then-add
+  on the same item) and writes no record; rollback runs before `recordLink`
+  and registration; bark's validator semantics and the 12/24 guard hold.
+
+### 17.5 Not verified by the four passes
+
+No build, no test, no device or simulator run. Device-only: the signal
+order on an Apple ID switch (G4); two simultaneous promotions (H2); the
+idle-primary handover (H3); a takeover with a round in flight (H4); the
+slot refill after a per-blocker unlink (D2); whether the rebuilt activity
+list is visibly empty on device (H1). Boundary facts still assumed:
+mtime-only propagation in iCloud Drive, the bark-ffi bucket for
+`not_found`, the `VtxoSpendState` the server reports for a round input,
+rust-bip39 case handling, uniffi's error description carrying "incorrect
+mnemonic". Desktop paths were read only where the sweep touched them.
