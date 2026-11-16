@@ -41,23 +41,25 @@ struct ContactCollageButton_iOS: View {
             }
         }
         .buttonStyle(ScaleButtonStyle())
-        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 4)
         .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint(String(localized: "send_contact_picker_hint", defaultValue: "Opens contact picker to select a recipient"))
     }
     
     // MARK: - Empty State
     
+    // Matches the paste button: a blurred dark disc so the glyph reads
+    // on both bright and dark camera scenes (same recipe as the system Camera app).
     @ViewBuilder
     private var emptyStateView: some View {
         ZStack {
             Circle()
-                .fill(Color.gray.opacity(0.2))
+                .fill(.ultraThinMaterial)
+                .environment(\.colorScheme, .dark)
                 .frame(width: buttonSize, height: buttonSize)
             
-            Image(systemName: "person.2")
-                .font(.system(size: 24))
-                .foregroundStyle(.secondary)
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(.white)
                 .symbolRenderingMode(.hierarchical)
         }
     }

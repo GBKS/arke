@@ -18,16 +18,22 @@ struct PasteButton_iOS: View {
     var body: some View {
         Button(action: action) {
             ZStack {
+                // Blurred dark disc so the glyph reads on both bright and
+                // dark camera scenes (same recipe as the system Camera app and the
+                // empty contact button).
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .environment(\.colorScheme, .dark)
+                
                 // Icon
                 Image(systemName: "doc.on.clipboard.fill")
-                    .font(.system(size: 26))
+                    .font(.system(size: 22))
                     .foregroundStyle(.white)
                     .symbolRenderingMode(.hierarchical)
             }
             .frame(width: buttonSize, height: buttonSize)
         }
         .buttonStyle(ScaleButtonStyle())
-        .shadow(color: .black.opacity(0.2), radius: 12, x: 0, y: 4)
         .accessibilityLabel(String(localized: "action_paste_clipboard", defaultValue: "Paste from clipboard"))
         .accessibilityHint(String(localized: "send_paste_hint", defaultValue: "Pastes payment address or invoice from clipboard"))
     }
