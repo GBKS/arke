@@ -59,6 +59,10 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     
     func allVtxos() async throws -> [Vtxo]
     func spendableVtxos() async throws -> [Vtxo]
+    /// Re-fetches the given VTXO ids from the server and stores each in the
+    /// state the server reports, spent included (bark `recover_candidates`).
+    /// Used after a primary takeover from a stale backup (Device_Linking.md §14).
+    func recoverVtxos(vtxoIds: [String], gapLimit: UInt32?) async throws -> RecoveryReport
     func getExpiringVtxos(thresholdBlocks: UInt32) async throws -> [Vtxo]
     func getVtxosToRefresh() async throws -> [Vtxo]
     func getVtxoById(vtxoId: String) async throws -> Vtxo

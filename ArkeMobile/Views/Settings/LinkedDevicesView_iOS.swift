@@ -18,8 +18,6 @@ struct LinkedDevicesView_iOS: View {
     @State private var errorMessage: String?
     @State private var showDemoteSheet = false
     @State private var showPromoteSheet = false
-    @State private var noPrimaryDeviceDetected = false
-    @State private var hasPrimaryDevice = false
     /// The merged two-store view. Read for the mirror-only entries the registry
     /// can't show, and for the wallet hash that scopes this list.
     @State private var otherDeviceReport: OtherDeviceReport?
@@ -78,36 +76,13 @@ struct LinkedDevicesView_iOS: View {
                 }
             }
             
-            // Show banner if no primary device exists
-            if noPrimaryDeviceDetected {
+            // One action by role (Device_Linking.md §5.1). A secondary always
+            // sees "Make Device Primary": the flow itself asks whether the
+            // current primary is still at hand and walks the handover, the
+            // takeover, or the direct promotion (flow 4.3).
+            if let currentDevice {
                 Section {
-                    Label {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(String(localized: "linked_devices_no_active_wallet",
-                                        defaultValue: "No Active Wallet"))
-                                .font(.headline)
-                            Text(String(localized: "linked_devices_no_active_wallet_description",
-                                        defaultValue: "Make this device the primary device to send and receive."))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .accessibilityHidden(true)
-                    }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel(String(localized: "accessibility_no_primary_device_alert",
-                                               defaultValue: "Warning: No active wallet. Make this device the primary device to send and receive."))
-                    .accessibilityAddTraits(.isStaticText)
-                }
-            }
-            
-            // Device Role Management - only show if at least one button is visible
-            if currentDevice?.isPrimaryDevice == true || (currentDevice?.isPrimaryDevice == false && !hasPrimaryDevice) {
-                Section {
-                    // Show "Make This Device Secondary" if this is primary
-                    if currentDevice?.isPrimaryDevice == true {
+                    if currentDevice.isPrimaryDevice {
                         Button(action: { showDemoteSheet = true }) {
                             Label(String(localized: "button_make_device_secondary",
                                          defaultValue: "Make Device Secondary"),
@@ -116,10 +91,7 @@ struct LinkedDevicesView_iOS: View {
                         }
                         .accessibilityHint(String(localized: "accessibility_make_secondary_hint",
                                                   defaultValue: "Converts this device to view-only mode. You won't be able to spend from this device."))
-                    }
-                    
-                    // Show "Make This Device Primary" if this is secondary and no primary exists
-                    if currentDevice?.isPrimaryDevice == false && !hasPrimaryDevice {
+                    } else {
                         Button(action: { showPromoteSheet = true }) {
                             Label(String(localized: "button_make_device_primary",
                                          defaultValue: "Make Device Primary"),
@@ -148,13 +120,13 @@ struct LinkedDevicesView_iOS: View {
         .navigationTitle(L10n.settingsLinkedDevices)
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showDemoteSheet) {
-            DemoteDeviceSheet(isPresented: $showDemoteSheet, onSuccess: {
+            MakeSecondaryView_iOS(isPresented: $showDemoteSheet, onSuccess: {
                 // Navigate back to Activity view after successful demotion
                 onNavigateToActivity?()
             })
         }
         .sheet(isPresented: $showPromoteSheet) {
-            PromoteDeviceSheet(isPresented: $showPromoteSheet, onSuccess: {
+            MakePrimaryFlowView_iOS(isPresented: $showPromoteSheet, onSuccess: {
                 // Navigate back to Activity view after successful promotion
                 onNavigateToActivity?()
             })
@@ -268,29 +240,6 @@ struct LinkedDevicesView_iOS: View {
         // Mirror entries are the ones the delete flow blocks on, so this list
         // has to read the same merged report the delete flow does
         otherDeviceReport = try? await deviceService.currentOtherDeviceReport()
-
-        await checkForNoPrimaryDevice()
-        await checkForPrimaryDevice()
-    }
-
-    private func checkForNoPrimaryDevice() async {
-        do {
-            noPrimaryDeviceDetected = try await deviceService.checkForNoPrimaryDevice()
-        } catch {
-            print("Error checking for no primary device: \(error)")
-        }
-    }
-    
-    private func checkForPrimaryDevice() async {
-        do {
-            // The exact inverse of the notice's check, same wallet scope (the
-            // own row's hash): the promote button and the notice can no longer
-            // disagree (audit A.10)
-            hasPrimaryDevice = try await !deviceService.checkForNoPrimaryDevice()
-        } catch {
-            print("Error checking for primary device: \(error)")
-            hasPrimaryDevice = false
-        }
     }
 }
 

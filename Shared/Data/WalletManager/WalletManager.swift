@@ -466,8 +466,18 @@ class WalletManager {
         )
         // AddressService requires ModelContext, so it will be initialized later in setModelContext()
         addressService = nil
-        walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)
         processStateService = ProcessStateService()
+
+        buildWalletScopedServices(wallet: wallet)
+    }
+
+    /// The services `closeWalletForMigration` tears down. Built once at init
+    /// and again when a device demoted in this session is promoted again:
+    /// the re-promotion reopens bark but, without this, left every one of
+    /// them nil, so X-Ray showed "Wallet operations service not initialized"
+    /// until a relaunch (device run 2026-11-15, Device_Linking.md §14.3).
+    private func buildWalletScopedServices(wallet: BarkWalletProtocol) {
+        walletOperationsService = WalletOperationsService(wallet: wallet, taskManager: taskManager)
         
         // Initialize exit progression service
         exitProgressionService = ExitProgressionService(wallet: wallet)
@@ -797,6 +807,13 @@ class WalletManager {
         }
         
         Self.logger.info("🔧 [WalletManager] Initializing in PRIMARY mode (full wallet access)")
+
+        // A demotion earlier in this session tore the wallet-scoped services
+        // down; a re-promotion needs them back before anything below uses them
+        if walletOperationsService == nil {
+            Self.logger.notice("🔧 [WalletManager] Rebuilding wallet services after a migration close")
+            buildWalletScopedServices(wallet: wallet)
+        }
         
         // Step 1: Explicitly open the wallet if it exists (FFI only)
         if let ffiWallet = wallet as? BarkWalletFFI {
@@ -1410,6 +1427,14 @@ class WalletManager {
         ) { [weak self] _ in
             Task { @MainActor in
                 try? await self?.closeWalletForMigration()
+                // The close resets `isInitialized`; a device that started this
+                // session as a secondary is shown by the main view's secondary
+                // branch, which displays the loading screen until the manager
+                // is initialised again. Re-enter read-only mode so the wallet
+                // UI comes back (device run 2026-11-15: a hand-over-and-back
+                // left the phone on "Hi"). The live-unlink closure does not do
+                // this: the main view re-routes to the link screen instead.
+                await self?.initialize(forceReadOnly: true)
             }
         }
         
@@ -1556,6 +1581,34 @@ class WalletManager {
         }
     }
 
+    /// After a primary takeover from another device's backup (flow 4.3 branch
+    /// B), the restored database may still list VTXOs the lost device spent.
+    /// bark's recovery pass re-fetches each id and stores the server's spend
+    /// state, spent included (verified at lib-0.8.0, Device_Linking.md §14.1),
+    /// so one pass over the locally spendable ids stops the balance from
+    /// overstating. Non-fatal: a failure leaves today's behaviour, where the
+    /// server rejects the stale inputs at spend time.
+    func reconcileAfterTakeover() async {
+        guard let wallet, isInitialized, !isReadOnlyMode else {
+            Self.logger.info("Takeover reconcile skipped — wallet not open as primary")
+            return
+        }
+        do {
+            let ids = try await wallet.spendableVtxos().map(\.id)
+            guard !ids.isEmpty else {
+                Self.logger.info("Takeover reconcile: no spendable VTXOs to check")
+                return
+            }
+            let report = try await wallet.recoverVtxos(vtxoIds: ids, gapLimit: nil)
+            Self.logger.notice("Takeover reconcile over \(ids.count) VTXO(s): \(report.skipped.vtxoIds.count) no longer spendable, \(report.failed.vtxoIds.count) undecided")
+            if !report.skipped.vtxoIds.isEmpty || !report.recovered.vtxoIds.isEmpty {
+                await refresh()
+            }
+        } catch {
+            Self.logger.warning("Takeover reconcile failed (non-fatal): \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
     /// The app's model container, for registry reads on launches that never
     /// configure the services (BGTask and wake-push launches). Set once in
     /// `App.init`, next to `BackgroundTaskCoordinator.walletManager`; nil on
@@ -1689,7 +1742,13 @@ class WalletManager {
             if let localDate = localDate,
                let backupDate = backupInfo?.lastBackupDate {
                 
-                if backupDate > localDate {
+                if backupDate > localDate, await ffiWallet.backupMatchesLocal() {
+                    // The slot's date is the backup time (stamped on write), so
+                    // this device's own last backup always reads newer than
+                    // the file it was copied from. Identical bytes: nothing to
+                    // restore (Device_Linking.md §14.3).
+                    Self.logger.info("✅ [WalletManager] Backup is newer by date but identical to the local file - no restore")
+                } else if backupDate > localDate {
                     Self.logger.warning("⚠️ [WalletManager] Backup is newer than local file")
                     Self.logger.warning("   Local:  \(localDate)")
                     Self.logger.warning("   Backup: \(backupDate)")

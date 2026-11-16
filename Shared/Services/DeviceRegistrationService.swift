@@ -1208,19 +1208,23 @@ class DeviceRegistrationService {
         let descriptor = FetchDescriptor<DeviceRegistration>(
             predicate: #Predicate { $0.deviceId == deviceId }
         )
-        let registration = try? modelContext.fetch(descriptor).first
+        // Every row for the id: a device that reinstalled before its own
+        // dedupe ran can hold two, and leaving one would make the takeover's
+        // promote refuse with "another primary exists" (review 2026-11-14, F8)
+        let registrations = (try? modelContext.fetch(descriptor)) ?? []
 
-        try Self.unlinkVerdict(rowExisted: registration != nil, mirrorEntriesRemoved: mirrorEntriesRemoved)
+        try Self.unlinkVerdict(rowExisted: !registrations.isEmpty, mirrorEntriesRemoved: mirrorEntriesRemoved)
 
-        if let registration {
-            // Delete the registration (could also set isActive = false to keep history)
-            modelContext.delete(registration)
+        if !registrations.isEmpty {
+            for registration in registrations {
+                modelContext.delete(registration)
+            }
             // No rollback on failure (shared main context); the queued
             // delete is the user's intent and may commit on a later save
             try modelContext.save()
         }
 
-        Self.logger.info("Unlinked device \(deviceId) (registry row existed: \(registration != nil), mirror entries removed: \(mirrorEntriesRemoved))")
+        Self.logger.info("Unlinked device \(deviceId) (registry rows deleted: \(registrations.count), mirror entries removed: \(mirrorEntriesRemoved))")
 
         await loadRegisteredDevices()
     }
@@ -1346,6 +1350,24 @@ class DeviceRegistrationService {
         NotificationCenter.default.post(name: .devicePromotedToPrimary, object: nil)
 
         Self.logger.info("Device promoted to primary")
+    }
+
+    /// Flow 4.3 branch B: the lost primary is unlinked, then this device
+    /// promotes. One call so the two steps cannot be separated by a dismissed
+    /// sheet. The promote re-fetches the registry, so a primary row that
+    /// appeared meanwhile still refuses.
+    func takeOver(lostDeviceId: String) async throws {
+        try await unlinkDevice(lostDeviceId)
+        try await promoteThisDeviceToPrimary()
+    }
+
+    /// Another device's own primary flag in iCloud KVS, the fast signal that
+    /// its demotion has started (any device may read it; only the device
+    /// itself sets it). Nil when the key is absent.
+    nonisolated func otherDevicePrimaryFlag(deviceId: String) -> Bool? {
+        let store = NSUbiquitousKeyValueStore.default
+        guard store.object(forKey: Self.primaryFlagKey(deviceId: deviceId)) != nil else { return nil }
+        return store.bool(forKey: Self.primaryFlagKey(deviceId: deviceId))
     }
 
     /// Check if there is currently no primary device

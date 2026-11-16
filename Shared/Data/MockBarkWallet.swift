@@ -475,6 +475,11 @@ class MockBarkWallet: BarkWalletProtocol {
         print("🔄 Mock: Returning VTXOs needing refresh")
         return []
     }
+
+    func recoverVtxos(vtxoIds: [String], gapLimit: UInt32?) async throws -> RecoveryReport {
+        // The stub has no server to ask; the takeover reconcile logs and moves on
+        throw BarkWalletFFIError.walletNotInitialized
+    }
     
     func getVtxoById(vtxoId: String) async throws -> Vtxo {
         try await Task.sleep(nanoseconds: 500_000_000)

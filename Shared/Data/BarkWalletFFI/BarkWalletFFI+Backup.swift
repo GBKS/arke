@@ -49,6 +49,12 @@ extension BarkWalletFFI {
         return await backupService.performBackup()
     }
     
+    /// Whether the iCloud slot holds exactly the local database's bytes
+    func backupMatchesLocal() async -> Bool {
+        guard !isPreview else { return false }
+        return await WalletBackupService(walletDirectory: walletDir).backupMatchesLocal()
+    }
+
     // MARK: - Restore Operations
     
     /// Checks if an iCloud backup is available for restoration

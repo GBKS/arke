@@ -183,6 +183,11 @@ class WalletBackupService {
         // Check if backup already exists and is identical
         if FileManager.default.fileExists(atPath: currentBackup.path) {
             if await filesAreIdentical(sourceFile, currentBackup) {
+                // The slot is current. Still stamp it: the handover watches the
+                // slot's modification date as "a backup pass completed at T",
+                // and an idle wallet's final backup must count even when its
+                // bytes did not change (Device_Linking.md §14.3)
+                Self.stampBackupTime(currentBackup)
                 Self.logger.debug("Backup skipped - no changes detected")
                 return .alreadyUpToDate
             }
@@ -196,6 +201,13 @@ class WalletBackupService {
             
             // Copy database to iCloud
             try FileManager.default.copyItem(at: sourceFile, to: currentBackup)
+
+            // copyItem preserves the source's modification date, which is the
+            // database's last write, not the backup time. The slot's date must
+            // mean "backed up at T": the handover compares it with the old
+            // primary's demotion time, and `restoreWalletIfNeeded` guards the
+            // self-restore this would otherwise cause with an identity check.
+            Self.stampBackupTime(currentBackup)
 
             Self.logger.info("✅ Wallet backup completed")
 
@@ -563,7 +575,26 @@ class WalletBackupService {
         }
     }
     
+    /// Whether the slot holds exactly the local database's bytes. Used by
+    /// `restoreWalletIfNeeded` so a slot stamped newer than the local file
+    /// (every backup is) never triggers a restore of identical content.
+    func backupMatchesLocal() async -> Bool {
+        guard let backup = existingBackupFile,
+              let source = Self.existingDatabaseURL(in: walletDirectory) else { return false }
+        return await filesAreIdentical(source, backup)
+    }
+
     // MARK: - Private Helpers
+
+    /// Sets the slot file's modification date to now, so the date reads as
+    /// the backup time on every device that lists the slot
+    private static func stampBackupTime(_ file: URL) {
+        do {
+            try FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: file.path)
+        } catch {
+            logger.warning("Could not stamp the backup time: \(error.localizedDescription, privacy: .public)")
+        }
+    }
     
     /// Compares two files to see if they are identical
     private func filesAreIdentical(_ file1: URL, _ file2: URL) async -> Bool {

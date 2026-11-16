@@ -1833,6 +1833,7 @@
       }
     },
     "accessibility_no_primary_device_alert" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18248,6 +18249,7 @@
       }
     },
     "linked_devices_no_active_wallet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18276,6 +18278,7 @@
       }
     },
     "linked_devices_no_active_wallet_description" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18639,6 +18642,380 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "更新（%lld）"
+          }
+        }
+      }
+    },
+    "make_primary_backup_date %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet continues from the backup made %@."
+          }
+        }
+      }
+    },
+    "make_primary_direct_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No device is primary right now. This device will become the primary device, able to send and receive payments."
+          }
+        }
+      }
+    },
+    "make_primary_done" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device is now primary"
+          }
+        }
+      }
+    },
+    "make_primary_dont_have_it" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "I Don't Have It Anymore"
+          }
+        }
+      }
+    },
+    "make_primary_error_backup_download" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet backup hasn't finished downloading from iCloud. Stay online and try again."
+          }
+        }
+      }
+    },
+    "make_primary_error_open" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet did not open on this device. Relaunch Arké and check Settings › Devices."
+          }
+        }
+      }
+    },
+    "make_primary_handover_instruction %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "On %@, open Arké, go to Settings › Devices and tap Make This Device Secondary. Keep both devices online."
+          }
+        }
+      }
+    },
+    "make_primary_handover_timeout %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Still waiting. Make sure %@ is online with Arké open."
+          }
+        }
+      }
+    },
+    "make_primary_handover_title %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Hand over from %@"
+          }
+        }
+      }
+    },
+    "make_primary_have_it" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Yes, I Have It"
+          }
+        }
+      }
+    },
+    "make_primary_lost_it" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No, I Lost It"
+          }
+        }
+      }
+    },
+    "make_primary_opening" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Opening the wallet…"
+          }
+        }
+      }
+    },
+    "make_primary_question %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Do you still have %@?"
+          }
+        }
+      }
+    },
+    "make_primary_question_help %@ %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is the primary device, last seen %2$@. Spending moves to this device either way; the question is only how."
+          }
+        }
+      }
+    },
+    "make_primary_seed_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The key hasn't reached this device through iCloud Keychain. Enter the recovery phrase to continue, or wait for iCloud and try again."
+          }
+        }
+      }
+    },
+    "make_primary_seed_title" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device doesn't have the wallet key yet"
+          }
+        }
+      }
+    },
+    "make_primary_status_backup" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for the latest backup to arrive…"
+          }
+        }
+      }
+    },
+    "make_primary_status_ready" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Latest backup received."
+          }
+        }
+      }
+    },
+    "make_primary_status_started" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Handover started. Waiting for the device list to update…"
+          }
+        }
+      }
+    },
+    "make_primary_status_waiting %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Waiting for %@ to hand over…"
+          }
+        }
+      }
+    },
+    "make_primary_take_over" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Take Over"
+          }
+        }
+      }
+    },
+    "make_primary_takeover_backup %@ %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device continues from the backup %1$@ made %2$@. Payments received since then appear after the first sync; amounts sent from that device since then are reconciled with the server."
+          }
+        }
+      }
+    },
+    "make_primary_takeover_no_backup" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No backup from that device has reached iCloud. The wallet rebuilds from the server after you take over."
+          }
+        }
+      }
+    },
+    "make_primary_takeover_security %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "If someone could unlock %@, they can read this wallet's recovery phrase. Consider moving your funds to a new wallet afterwards."
+          }
+        }
+      }
+    },
+    "make_primary_takeover_title %@" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Take over from %@"
+          }
+        }
+      }
+    },
+    "make_primary_unnamed_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "the primary device"
+          }
+        }
+      }
+    },
+    "make_secondary_closing" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Closing the wallet…"
+          }
+        }
+      }
+    },
+    "make_secondary_done" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Now continue on your other device"
+          }
+        }
+      }
+    },
+    "make_secondary_done_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backup is in iCloud. On your other device, open Settings › Devices and tap Make This Device Primary."
+          }
+        }
+      }
+    },
+    "make_secondary_done_slow" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device is now secondary"
+          }
+        }
+      }
+    },
+    "make_secondary_done_slow_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The backup is still uploading. Keep this device online a little longer before making the other device primary."
+          }
+        }
+      }
+    },
+    "make_secondary_help" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device switches to view-only and writes its final backup to iCloud. Then make your other device primary; it continues from that backup. Keep this device online until the upload finishes."
+          }
+        }
+      }
+    },
+    "make_secondary_keep_online" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Keep this device online."
+          }
+        }
+      }
+    },
+    "make_secondary_uploading" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Uploading the final backup…"
           }
         }
       }
@@ -24729,6 +25106,7 @@
       }
     },
     "settings_after_confirming" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26446,6 +26824,7 @@
       }
     },
     "settings_make_primary_help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26502,6 +26881,7 @@
       }
     },
     "settings_make_secondary_help" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26530,6 +26910,7 @@
       }
     },
     "settings_make_secondary_step_1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26558,6 +26939,7 @@
       }
     },
     "settings_make_secondary_step_2" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26586,6 +26968,7 @@
       }
     },
     "settings_make_secondary_step_3" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

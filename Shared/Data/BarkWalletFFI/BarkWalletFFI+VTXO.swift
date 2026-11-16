@@ -307,6 +307,23 @@ extension BarkWalletFFI {
         }
     }
     
+    func recoverVtxos(vtxoIds: [String], gapLimit: UInt32?) async throws -> RecoveryReport {
+        guard !isPreview else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+        do {
+            let report = try await wallet.recoverVtxos(vtxoIds: vtxoIds, gapLimit: gapLimit)
+            Self.logger.info("Recovery pass over \(vtxoIds.count) VTXO id(s): recovered \(report.recovered.vtxoIds.count), skipped \(report.skipped.vtxoIds.count), foreign \(report.foreign.vtxoIds.count), failed \(report.failed.vtxoIds.count)")
+            return report
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error recovering VTXOs: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to recover VTXOs: \(error.localizedDescription)")
+        }
+    }
+
     func spendableVtxos() async throws -> [Vtxo] {
         // Get only spendable VTXOs
         
