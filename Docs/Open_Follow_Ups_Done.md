@@ -2496,3 +2496,20 @@ The whole entry as it stood, moved here verbatim on 2026-11-10; the struck-throu
   suite 694 (689 passed, 5 skipped, 0 failed). Two-phone live-unlink check
   and the mid-open race both passed on device 2026-11-14 (§11.6). Nothing
   owed; commit pending.
+
+## Moved from the open list 2026-11-16
+
+- [x] 2026-11-16 **Explicit device linking — build** (DECIDED 2026-11-13, plan
+  `Features/Device_Linking.md` §8): six steps, each with its own adversarial
+  pass. Steps 1–4 built, device-checked and committed (last 804aa72,
+  2026-11-16; records §11–§14). **Step 5 (delete-flow per-blocker unlink,
+  launch-check screen, account-change re-detection) built, reviewed and
+  unit-tested 2026-11-16** (§15.4; five findings fixed, two of them
+  confirmed); owed: the five device checks in §15.5, then commit. Next:
+  step 6 (docs, translations). Open checks: per-app iCloud toggle
+  (optional); the Keychain-off seed entry is Tier 2 debt.
+  Closed 2026-11-16: step 5 device checks passed (§15.5) and committed
+  (0e64ed8, 299f86d); step 6 docs and translations in the same session
+  (§16). Six steps, five adversarial passes, every finding fixed or filed;
+  records §11–§16. Open elsewhere: Keychain-off seed entry (Tier 2), native
+  review of the translations, desktop parity of the guided flow.

@@ -284,3 +284,19 @@ Decided by the per-language consistency reviewers while aligning sibling keys.
 | wallet backup file | Wallet-Backup-Datei | ウォレットのバックアップファイル | 錢包備份檔案 | The bark `db.sqlite` export. Replaces "wallet state file" / „Wallet-Zustandsdatei" (DECIDED 2026-11-12: phrase + file is the normal restore, phrase alone is the emergency path). `settings_backup_file` "Backup File" / „Backup-Datei" stays as the short form. |
 | optional (export row) | Optional | 任意 | 選用 | Row-leading label with a full stop. The backup-file row is required since the third round and carries no label. |
 | Delete permanently (step) | Endgültig löschen | 永久に削除する | 永久刪除 | Matches `message_delete_permanently` "Delete Permanently?". |
+
+## Terms added 2026-11-16 (device linking batch — all ⚠️ pending native review)
+
+| English | German (du) | Japanese | zh-Hant | Notes |
+|---|---|---|---|---|
+| link (this device to the wallet) | verknüpfen | 連携 | 連結 | Same stem as "linked devices" / "unlink". Button: „Dieses Gerät verknüpfen" / 「このデバイスを連携」 / 「連結此裝置」. |
+| hand over (the primary role, both devices present) | übergeben / Übergabe | 引き継ぐ / 引き継ぎ | 交接 | S3 handover. |
+| take over (from a lost primary) | übernehmen / Übernahme | 引き継ぐ | 接手 | S4 takeover. ja reuses 引き継ぐ for both; the screen title names the device, so the two never meet. |
+| wallet key (the seed, in link copy) | Wallet-Schlüssel | ウォレットの鍵 | 錢包金鑰 | Plain word for the seed where "recovery phrase" would be wrong (the phrase is the fallback). |
+| last seen (device heartbeat) | zuletzt gesehen | 最終確認 | 最後上線 | Date line on blocker rows; the Devices list already used the same forms. |
+| linked (date line) | verknüpft am … | …に連携 | 於…連結 | "Linked 3 November" from the fast entry's registration date. |
+| Settings › Devices (path in prose) | Einstellungen › Geräte | 設定 › デバイス | 設定 › 裝置 | The › separator stays. |
+| view-only (secondary's mode) | Nur-Anzeige-Modus | 表示専用 | 僅供檢視 | Make-secondary copy. |
+| Check Again | Erneut prüfen | 再確認 | 再次檢查 | |
+| Remove from This Device (launch check) | Von diesem Gerät entfernen | このデバイスから削除 | 從此裝置移除 | de and zh-Hant distinguish *remove* (entfernen / 移除) from the delete flow's *delete* (löschen / 刪除); ja has one verb, 削除. |
+| Restore with Recovery Phrase | Mit Wiederherstellungsphrase wiederherstellen | リカバリーフレーズで復元 | 用復原片語復原 | |

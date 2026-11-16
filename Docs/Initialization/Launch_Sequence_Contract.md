@@ -348,6 +348,13 @@ Enforced: `SecurityService.swift` (detection step 0), `DeviceLinkStore.swift`
 (`accountHasWalletSignals` guard).
 Test: `LinkLaunchRouteTests`, `AccountWalletSignalsTests` (the pure
 decisions; the detection re-run and the breadcrumb write have none).
+Since 2026-11-16 (device linking step 5) the breadcrumb remembers the
+link record's hash, not the KVS hash, so a removal from the launch-check
+screen never remembers another account's wallet; it is kept while CloudKit
+reports no iCloud account, because a blank KVS and a seedless keychain are
+definitive only with an account present. `createWallet` also refuses while
+a link record exists (`walletStillOnDevice`): the install still holds a
+wallet whose database may be the only copy of its offchain state.
 
 **21. Account-shared key-value state (KVS network config, KVS wallet hash, keychain seed) is deleted only by WalletDataCleanupService on a full wipe — never by device-scoped deletion paths.**
 `WalletManager.deleteWallet()` used to call `NetworkConfigPersistence.clear()`
@@ -623,6 +630,20 @@ record), `WalletDataCleanupService.swift` (clears it). Test:
 `WalletAccessVerdictTests`, `DeviceLinkValidityTests`, `OwnRowEvidenceTests`,
 `LiveUnlinkDemotionTests`; the wiring of the verdict into the two open paths
 and of the live unlink into the shutdown is traced by hand.
+Since 2026-11-16 (step 5) the record also carries the iCloud account
+identity (`com.arke.link.accountToken`, the archived
+`ubiquityIdentityToken`, backfilled on every healthy launch). A record
+that names a wallet the account no longer has, or a different one, routes
+to the launch-check screen (`LaunchCheckView`), which opens nothing and
+registers nothing: deleted elsewhere (identity matches), different account
+(identity differs or hash differs), signed out (CloudKit reports no
+account), or undetermined — the screen never says "deleted" without the
+identity match. Detection re-runs on the KVS account-change reason, on
+`CKAccountChanged` and on foreground return, guarded so a healthy linked
+wallet is not re-initialised; a mismatch reached while a wallet is open or
+opening closes bark without a backup, so its database is never written to
+another account's iCloud Drive (`closeOpenWalletOnMismatch` in both main
+views). Test: `LaunchCheckCaseTests`.
 
 ## Test gaps
 

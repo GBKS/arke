@@ -1347,3 +1347,23 @@ entry without identity) is a generic device glyph in both rows. Pinned by
 5. **Remove from this device** on any of the above: the slider sheet, then
    onboarding (or the link screen on a different account that has a
    wallet). The log must not show a backup written during the removal.
+
+## 16. Step 6: docs and translations (2026-11-16)
+
+- `Multi_Device_Design.md`: S2, S3, S4, S6, S7, S9 and S10 walkthroughs
+  rewritten to the built behaviour, pre-build paragraphs kept as history;
+  state model paragraph names the five routes and the account identity;
+  derived-work items 4, 5, 6 and 8 closed.
+- `Launch_Sequence_Contract.md`: rule 20 gains the breadcrumb-from-record
+  and signed-out hold and the `walletStillOnDevice` guard; rule 28 gains the
+  account identity, the launch-check screen and the mid-session close.
+- `Read_Only_Mode.md`: "Switching the Primary Device" rewritten for the
+  guided flow; the takeover limitation closed. `Device_Registry_Reference.md`:
+  `hasOtherActiveDevices()` examples replaced by `otherDeviceReport`.
+  `README.md` entry updated.
+- Translations: 96 keys in de/ja/zh-Hant through `apply_translations.py`
+  (`needs_review`), lint clean; 22 stale keys purged (rejoin screen, old
+  role sheets, named/unnamed delete intros, three unreferenced older keys
+  the same purge caught). New terms in the glossary.
+- Not done here: native review of the new translations (open in the
+  translation rollout); desktop parity of the guided flow (desktop parked).

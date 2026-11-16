@@ -43,19 +43,40 @@ Demotion is detected **before** wallet access via `WalletManager.shouldBlockWall
 
 ## Switching the Primary Device
 
-Manual two-step migration via Settings → Linked Devices (`LinkedDevicesView_iOS`, sheets in `DeviceAssignmentSheets_iOS.swift`):
+Rewritten 2026-11-16: the two sheets in `DeviceAssignmentSheets_iOS.swift`
+were replaced by the guided make-primary flow (device linking step 4,
+`Device_Linking.md` §4.3, §14). Settings › Devices offers one action per
+role:
 
-1. **Demote** (on current primary): `DeviceRegistrationService.demoteThisDevice()` backs up the wallet to iCloud (via `closeWallet()` shutdown), sets `isPrimaryDevice = false`, updates the iCloud KV Store and a local UserDefaults flag, and posts `.deviceDemotedFromPrimary` so WalletManager closes the wallet and drops to read-only. Safe intermediate state: *no* device is primary.
-2. **Promote** (on the new device): `promoteThisDeviceToPrimary()` flips the flags and posts `.devicePromotedToPrimary`; WalletManager re-initializes as primary, restoring the wallet from the iCloud backup if the local file is missing or older (`restoreWalletIfNeeded()` compares timestamps and always keeps the newest state).
+- **Make Secondary** (`MakeSecondaryView_iOS`, on the primary):
+  `DeviceRegistrationService.demoteThisDevice()` flips the row and the KVS
+  flag and posts `.deviceDemotedFromPrimary`; WalletManager closes bark
+  through `closeWalletForMigration()` (final backup included), then
+  re-enters read-only mode in the same session. The screen then waits, via
+  `BackupSlotMonitor`, until iCloud reports the final backup uploaded
+  before telling the user to continue on the other device.
+- **Make This Device Primary** (`MakePrimaryFlowView_iOS`, on a
+  secondary): asks whether the current primary is still at hand. *Yes* is
+  the handover (branch A): wait for the other row to flip and for a backup
+  newer than the handover to be downloaded, then
+  `promoteThisDeviceToPrimary()`. *No* is the takeover (branch B):
+  `takeOver(lostDeviceId:)` removes the lost device's rows and flag,
+  promotes, restores the newest backup and runs `reconcileAfterTakeover()`.
+  With no primary at all (branch C) it promotes directly after making the
+  backup slot local. In every branch the wait for the FFI handle to open is
+  explicit, and a device demoted and re-promoted in one session rebuilds
+  its wallet-scoped services (`buildWalletScopedServices`).
 
-`checkForNoPrimaryDevice()` drives a "No Active Wallet" banner prompting promotion. Remote demotion is picked up by `MainView_iOS.handleUbiquitousStoreChange()` watching the KV Store key.
-
-**Migration preserves SwiftData:** demotion uses `resetManagerStateForMigration()` (keeps transactions/tags/contacts for read-only display), not the full `resetManagerState()` used by wallet deletion.
+**Migration preserves SwiftData:** demotion uses
+`resetManagerStateForMigration()` (keeps transactions/tags/contacts for
+read-only display), not the full `resetManagerState()` used by wallet
+deletion. `restoreWalletIfNeeded()` compares backup and local timestamps
+and skips a backup that is byte-identical to the local database.
 
 ## Known Limitations
 
 - Balance/data on secondary devices is a snapshot from the primary's last sync; no manual force-refresh exists.
-- Emergency takeover (primary device lost) is not implemented — see `../Archive/Implementations/DEVICE_MIGRATION_IMPLEMENTATION_PLAN_REVISED.md` (archived; superseded by `../Architecture/Multi_Device_Design.md`).
+- Emergency takeover (primary device lost) is the make-primary flow's "No, I Lost It" branch since 2026-11-15 (`Device_Linking.md` §4.3 B).
 - Mock wallet can't exercise backup/restore (methods aren't on `BarkWalletProtocol`), so migration flows lack automated tests.
 
 ## Related Documentation

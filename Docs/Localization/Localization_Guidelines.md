@@ -286,3 +286,9 @@ key (state `needs_review` until natively reviewed). Rules:
   call sites (93%; the rest are plural-variation and sanctioned plain-English keys),
   per-module `L10n` accessors added, 51 dead keys purged, guard test added. See
   `Default_Value_Migration_Plan.md`.
+- **November 2026 (16th):** device linking batch — 96 keys (link screen,
+  make-primary and make-secondary flows, launch-check screen, delete-flow
+  blocker rows, phrase and backup-file import) in de/ja/zh-Hant via
+  `Scripts/apply_translations.py`, all `needs_review`; 22 stale keys purged
+  (rejoin screen, the old role sheets, the named/unnamed delete intros).
+  New terms in `Translation_Glossary.md`, "Terms added 2026-11-16".

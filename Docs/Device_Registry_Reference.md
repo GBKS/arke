@@ -50,8 +50,11 @@ let current = try await service.getCurrentDevice()
 // Get other devices (excluding current)
 let others = try await service.getOtherDevices()
 
-// Check if other devices exist
-let hasOthers = try await service.hasOtherActiveDevices()
+// Which other devices still hold the account's wallet, merged from the
+// CloudKit registry and the iCloud KVS mirror (names, dates, source).
+// `hasOtherActiveDevices()` is an uncalled wrapper kept for history.
+let report = try await service.otherDeviceReport(walletHash: service.accountWalletHash())
+let hasOthers = report.hasOthers
 
 // Get stale devices (>30 days)
 let stale = try await service.getStaleDevices(olderThan: 30)
@@ -177,8 +180,9 @@ List(service.registeredDevices) { device in
 func deleteWallet() async throws {
     let service = ServiceContainer.shared.deviceRegistrationService
     
-    // Check if other devices exist
-    let hasOthers = try await service.hasOtherActiveDevices()
+    // Check if other devices exist (the delete flow reads
+    // WalletDataCleanupService.assessDeletion(), which wraps this)
+    let hasOthers = try await service.otherDeviceReport(walletHash: service.accountWalletHash()).hasOthers
     
     if hasOthers {
         // Show alert: "Other devices have this wallet"

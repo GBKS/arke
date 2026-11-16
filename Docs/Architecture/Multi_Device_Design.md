@@ -7,16 +7,16 @@ feature or fix lands, update the scenario's status column; when a new user
 journey emerges, add it here FIRST and derive the work from it.
 
 Related: `Features/Read_Only_Mode.md`, `Features/Wallet_Deletion_And_Rejoin.md`,
-`Initialization/Launch_Sequence_Contract.md` (rules 14–24),
+`Initialization/Launch_Sequence_Contract.md` (rules 14–28),
 `Initialization/Startup_Wallet_Detection_Plan.md`.
 
 **2026-11-13:** the explicit device linking scope pass is DECIDED and lives
 in `Features/Device_Linking.md`: a per-device state model, five flows
 (create/import, link, make primary, delete, launch check), the Devices
-screen rules, the order of work and the device matrix. The State model
-section below is the summary; the scenario walkthroughs S2–S10 still
-describe today's shipped behaviour and are rewritten when the build lands
-(step 6 of that plan).
+screen rules, the order of work and the device matrix. **Built
+2026-11-14 to 2026-11-16** (steps 1–5, records in §11–§15 there); the
+walkthroughs S2–S4, S6, S7, S9 and S10 below were rewritten to the built
+behaviour on 2026-11-16, with their pre-build paragraphs kept as history.
 
 ## Principles (the physics of the system)
 
@@ -63,9 +63,12 @@ date) written by create, import and the link screen; a record whose own
 registry row is missing means another device unlinked this one. The
 local-deletion tombstone and the rejoin route are removed by that plan.
 
-Today's shipped detection (`SecurityService.performWalletStateDetection`)
-still maps the raw signals to four routes: wallet (spendable), read-only,
-rejoin, onboarding.
+Detection (`SecurityService.performWalletStateDetection`, step 0
+`DeviceLinkStore.launchRoute`) maps the signals to five routes: wallet
+(spendable), read-only, link screen, launch-check screen, onboarding. The
+link record also stores the iCloud account identity at link time
+(`com.arke.link.accountToken`), which separates "the account lost its
+wallet" from "this is another account" on the launch-check screen.
 
 ## Capability matrix
 
@@ -150,7 +153,7 @@ Walkthrough:
 
 Status: shipped, in daily use.
 
-### S2 — Add a second device → automatically secondary ⚠️
+### S2 — Add a second device → link screen, then secondary ✓ (built 2026-11-14)
 User installs the app on a second device signed into the same iCloud account.
 Detection finds the KVS hash; the device registers as secondary
 (`allowPrimaryClaim: false`) and opens read-only. When iCloud Keychain
@@ -162,19 +165,20 @@ primary row is visible (audit 2026-11-12).
 Sub-case: seed not synced yet (iCloud Keychain off/lagging) → read-only with
 `seedNotSynced` explanation and manual phrase entry as fallback.
 
-Walkthrough:
+Walkthrough (as built, device linking step 2; `Features/Device_Linking.md` §4.2, §12):
 - **Does:** installs the app on a second device (same iCloud account) and opens it.
-- **Sees:** no onboarding — the wallet appears directly, in read-only mode; balance and history fill in as iCloud syncs.
-- **Behind the scenes:** app finds the account's wallet hash, registers this device as secondary; the seed arrives via iCloud Keychain shortly after.
-- **Sees (after seed sync):** full wallet view, but sending stays disabled — copy points at the primary device.
-- **If the seed never arrives:** a sheet explains iCloud Keychain is off and offers typing the recovery phrase instead.
+- **Sees:** the link screen — "Link this device to your wallet", naming the primary device once the first CloudKit import lands (the button enables when it does, or after about 30 s). Never onboarding.
+- **Does:** taps "Link This Device".
+- **Behind the scenes:** the install writes its link record (wallet hash, date, iCloud account identity), registers as a secondary (never a primary claim), and the existing devices get a "New device linked" notification naming it.
+- **Sees:** the wallet in read-only mode; balance and history fill in as iCloud syncs. Sending stays disabled with a pointer to the primary device.
+- **If the seed never arrives:** the screen says the wallet key hasn't reached this device through iCloud Keychain and offers typing the recovery phrase (seed-only entry, no primary claim).
 - **End state:** device is a secondary; the first device remains primary.
 
-Status: shipped (`Read_Only_Mode.md`); part of the standing two-device verify.
-The "no onboarding" step is under review — see the explicit device linking
-proposal after S13.
+Status: built and device-checked (§12.3). Contract rules 20 and 28. The
+paragraphs above this walkthrough describe the pre-2026-11-14 silent
+adoption and are kept as history.
 
-### S3 — Deliberate primary swap (both devices accessible) ⚠️
+### S3 — Deliberate primary swap (both devices accessible) ✓ (guided flow built 2026-11-15)
 User promotes the secondary; the old primary observes the KVS
 `device_<id>_isPrimary` flip, demotes itself, and drops to read-only.
 Exposed via Settings → Linked Devices (promote/demote sheets on iOS).
@@ -190,19 +194,17 @@ own; the swap becomes a guided step-by-step flow designed in the explicit
 device linking scope pass (see "Open questions" there). The walkthrough
 below still describes the one-sided design until that pass rewrites it.
 
-Walkthrough:
-- **Does (on the secondary):** Settings → Linked Devices → "Make This Device Primary", confirms (proposed: security check).
-- **Sees:** confirmation, then sending unlocks on this device.
-- **Behind the scenes:** registry updates; the old primary observes the flip and demotes itself.
-- **Sees (old device):** drops to read-only with a pointer to the new primary.
+Walkthrough (as built, step 4; `Features/Device_Linking.md` §4.3 branch A, §14):
+- **Does (on the current primary):** Settings › Devices › "Make Secondary". The screen closes the wallet, writes the final backup and waits until iCloud reports it uploaded — "Now continue on your other device". A slow upload is reported, not hidden.
+- **Does (on the other device):** Settings › Devices › "Make This Device Primary". The screen asks "Do you still have <device>?"; "Yes, I Have It" shows the handover instruction and waits for the old primary's row to flip and for a backup newer than the handover to be downloaded, then promotes.
+- **Behind the scenes:** the promotion runs only once the fresh backup is local, so the new primary continues from the old primary's last state; the old primary re-enters read-only mode in the same session.
+- **Sees:** sending unlocks on the new primary; the old one shows the read-only wallet.
 - **If both promoted at once:** reconciliation picks one deterministic winner; the loser self-demotes — no user action needed.
 
-Status: service + iOS UI shipped; two-primary races covered by reconciliation
-(`PrimaryDeviceReconciliationTests`, the pure winner rule only). Gaps: the
-one-sided swap itself (see the correction above); desktop promote/demote UI
-parity; on-device verify of the demotion handoff.
+Status: built and device-checked both ways, including a hand-back in the
+same session (§14.3). The desktop keeps the service primitives only.
 
-### S4 — Lost primary: take over on the secondary, remove the lost device ⚠️/◻
+### S4 — Lost primary: take over on the secondary ✓ (built 2026-11-15)
 User lost the phone that was primary. On the secondary: promote self
 (possible because the seed is synced), then unlink the lost device from the
 registry (`unlinkDevice` — a button on the Mac; on iPhone, since 2026-10-25,
@@ -229,18 +231,16 @@ row (`Features/Read_Only_Mode.md`, "Device run 2026-11-13"). The residual
 is a race plus the flash; the evidence rule in `Features/Device_Linking.md`
 §2.3 removes both.
 
-Walkthrough:
-- **Does (on the surviving secondary):** opens Settings → Linked Devices.
-- **Sees:** warning that no primary device is active (today only visible here — the proposed banner would surface it on the main view).
-- **Does:** unlinks the lost phone (the dialog's button is "Unlink \<device\>"), then taps "Make Device Primary". (Corrected 2026-11-12: order reversed, labels as shipped.)
-- **Behind the scenes:** this device becomes primary; the lost device's registration is removed.
-- **If the lost phone resurfaces:** it sees it was demoted and opens read-only — it cannot spend.
-- **Security note:** unlinking does not protect funds. If the lost device may be unlocked in someone else's hands, its keychain still holds the seed — the safe response is moving funds to a fresh wallet.
+Walkthrough (as built, step 4; `Features/Device_Linking.md` §4.3 branch B, §14):
+- **Does (on the surviving secondary):** Settings › Devices › "Make This Device Primary", answers "No, I Lost It".
+- **Sees:** the takeover screen: which backup this device continues from (or that none reached iCloud), the note that whoever can unlock the lost device can read the recovery phrase, and "Take Over".
+- **Behind the scenes:** the lost device's registry rows and KVS primary flag are removed, this device promotes, restores the newest backup, and reconciles spent coins with the server (`reconcileAfterTakeover`).
+- **If the lost phone resurfaces:** its own row is gone, so the launch gate opens read-only and routes to the link screen (rule 28); a session already running closes bark at once when the row deletion arrives (live unlink, §11.6).
+- **Security note:** unchanged — unlinking does not protect funds. If the lost device may be unlocked in someone else's hands, its keychain still holds the seed; move the funds to a fresh wallet.
 
-Status: promote ✓, unlink ✓, demotion-on-return ⚠️. Gaps: the *discovery* of
-this path is passive (user must find Linked Devices) — the deferred active
-"no primary device" banner is exactly this scenario's entry point; there is
-no guided "I lost a device" flow tying promote + unlink together.
+Status: built and device-checked (§14.3). The passive-discovery gap is
+closed by the question on the make-primary screen; the separate "no
+primary device" banner is not built and no longer planned.
 
 ### S5 — One-device migration (old device → new device) ◻ (sketch PROPOSED 2026-08-19; DECIDED 2026-10-10: designed after explicit device linking, as an offer on the link screen; `migrateToThisDevice()` deleted independently)
 User has one device and replaces it. Every primitive exists (S2 join, S3
@@ -286,28 +286,27 @@ Status: proposed; not built. Gap: the assistant UI + delete-confirmation copy
 pointing migrating users at it. (The `migrateToThisDevice()` finding stands
 regardless of the flow design — it bypasses reconciliation bookkeeping.)
 
-### S6 — Delete the wallet on a secondary the user keeps using ⚠️
+### S6 — Delete the wallet on a secondary the user keeps using ✓ (link screen since 2026-11-14, blocker rows 2026-11-16)
 User stops using the wallet on one device (keeps the device). "Delete from
 this device": local data wiped, device unregistered, shared property (seed,
 KVS hash, CloudKit data, backups) untouched. The install is tombstoned so the
 still-synced seed can't silently resurrect the wallet; the device shows the
 rejoin screen instead of onboarding, and rejoining is one tap.
 
-Walkthrough:
+Walkthrough (as built, steps 2 and 5; `Features/Device_Linking.md` §4.4, §12, §15):
 - **Does:** Settings → Delete Wallet.
-- **Sees:** "This will permanently delete your wallet from this device. Still registered elsewhere: \<devices\>." Confirms. (Copy as shipped, 2026-11-12.)
-- **Behind the scenes:** local data wiped, device unregistered; seed, iCloud data, and backups untouched; the install is tombstoned.
-- **Sees (afterwards, and on every relaunch):** the rejoin screen — "Your wallet is still active", naming the device — never onboarding, so no way to accidentally create a second wallet.
-- **If they change their mind:** one tap rejoins; the wallet restores from the preserved iCloud backup.
+- **Sees:** "This will permanently delete your wallet from this device. The wallet stays on the account for the devices below." with one row per other device (name, last seen or linked date, "I no longer have this device") and, on a primary, the note that another device should be made primary first. Confirms on the slider sheet.
+- **Behind the scenes:** local data wiped, device unregistered, link record cleared, left breadcrumb written; seed, iCloud data and backups untouched.
+- **Sees (afterwards, and on every relaunch):** the link screen — "Link this device again. You removed this wallet from this device on <date>" — never onboarding.
+- **If they change their mind:** "Link This Device" relinks as a secondary.
 
-Status: shipped 2026-08-19 (`Wallet_Deletion_And_Rejoin.md`); the two-device
-on-device verify is the gate. Known hole: the tombstone lives in UserDefaults,
-so deleting the *app* after "delete from this device" loses it and the reinstall
-goes straight into the wallet rather than the rejoin screen (observed
-2026-09-23). The explicit device linking proposal after S13 would cover that
-case without needing a tombstone that survives app deletion.
+Status: built and device-checked (§12.3, §15.5). The tombstone and the
+rejoin screen are gone (`Wallet_Deletion_And_Rejoin.md`, Phase 2
+superseded); deleting the *app* after "delete from this device" lands on
+the link screen like any reinstall, which closes the 2026-09-23 hole. The
+intro paragraph above describes the tombstone design and is history.
 
-### S7 — Delete the wallet everywhere ◻ (reduced version shipped 2026-09-24; DECIDED 2026-10-10: only the mirror-only-ghost "forget this device" remedy is built next, the remaining pieces wait for explicit device linking)
+### S7 — Delete the wallet everywhere ✓ (reduced version 2026-09-24; per-blocker unlink and the deleted-elsewhere aftermath screen built 2026-11-16, device linking step 5)
 User wants the wallet gone from all devices and iCloud.
 
 **The stale-ghost question (Christoph): "you lost or sold your old phone and
@@ -325,8 +324,11 @@ and it is exactly what the blockers list below is for; the cost of the old
 Our-code faults §D, 2026-09-21). Since 2026-09-24 the downgrade to
 local-only is no longer silent: the delete screen names the blockers and
 explains (see "Built in response" below), and the override is a second way
-out when every blocker is doubtful. Still missing: an unlink path inside
-the delete flow (corrected 2026-11-12).
+out when every blocker is doubtful. The unlink path inside the delete
+flow was built 2026-11-16 (device linking step 5, `Features/Device_Linking.md`
+§4.4, §15): every blocker row carries "I no longer have this device", which
+runs the ordinary unlink and re-assesses; the two-word phrase check stays in
+front of the full wipe.
 
 **Proposal:** replace the timeout with recognition. An *active* registered
 device blocks the full wipe — but every blocker is shown by name and
@@ -411,14 +413,16 @@ the account at all**, and each reinstall re-adopted it. Built in response
   wipe. The periodic KVS cleanup (`cleanupKVStoreRegistry`) was deleted
   2026-09-25 — any future mirror pruning must go through the per-blocker
   unlink flow.
-- *Not built:* unlink-in-flow. It adds a second, gentler-looking door to the
-  same irreversible outcome — deferred to the full build with per-blocker
-  confirmation. (Corrected 2026-11-12: the text used to say it needs
-  `forgetUnsyncedDevice(_:)`; no such function exists, and `unlinkDevice`
-  has cleared row-less mirror entries since `unlinkVerdict`, 2026-10-16.)
-  Also not built: the "wallet deleted elsewhere" cleanup-offer state. The
-  phrase confirmation is built (`PhraseConfirmation`, wired in
-  `DeleteWalletSettingView`, `PhraseConfirmationTests`).
+- *Built 2026-11-16:* unlink-in-flow, as a per-blocker "I no longer have
+  this device" with a confirmation dialog; `unlinkDevice` clears row-less
+  mirror entries too (`unlinkVerdict`, 2026-10-16), so one remedy serves
+  both kinds of blocker. The "wallet deleted elsewhere" state is the
+  launch-check screen's aftermath case (shared with S10): the unlinked
+  device sees "This wallet was deleted from your iCloud account" with
+  "Restore with Recovery Phrase" (imports over the local files, keeping the
+  orphaned database) and "Remove from This Device". The phrase confirmation
+  is built (`PhraseConfirmation`, wired in `DeleteWalletSettingView`,
+  `PhraseConfirmationTests`).
 
 If accepted in full, it supersedes the old "bless device-by-device vs remote
 wipe" question — the answer would be device-by-device with visibility,
@@ -445,24 +449,23 @@ Walkthrough (b — iCloud account also gone):
 Status: paths exist; recovery-scan correctness has a known upstream
 sharp edge (created_now gate); no dedicated "I lost everything" guidance.
 
-### S9 — App reinstall on the same device ⚠️
+### S9 — App reinstall on the same device ✓ (link screen since 2026-11-14)
 iOS deletes the app container (wallet files gone) but the synced keychain
 survives → detection finds the seed → wallet reopens (restore from backup or
 re-derive). macOS keeps the container across reinstalls → stale-data
 handling on import applies (contract rule 5). The non-synchronizable device
 ID distinguishes "this device was wiped" from "new device" (rule 16).
 
-Walkthrough:
+Walkthrough (as built, step 2; `Features/Device_Linking.md` §4.2, §12):
 - **Does:** deletes the app, reinstalls it, opens it.
-- **Sees:** the wallet loads normally — no onboarding, no questions.
-- **Behind the scenes:** iOS lost the local files but the synced keychain kept the seed; the wallet restores from backup or rebuilds. macOS kept the files outright.
-- **Worth knowing:** deleting the app is NOT "delete from this device" — it doesn't unregister the device or remove anything from the account.
+- **Sees:** the link screen. Once the first import lands it says "This device was the primary device for this wallet. Link it to continue as before" when the old row was primary; otherwise the ordinary new-device copy.
+- **Does:** taps "Link This Device".
+- **Behind the scenes:** iOS lost the local files and the link record, but the synced keychain kept the seed and the registry kept the old row; the non-synchronizable device ID survives (rule 16), so the registry dedupes the old row and a former primary regains its role, and the wallet restores from the iCloud backup. macOS kept the files outright.
+- **Worth knowing:** deleting the app is still NOT "delete from this device" — the Devices list keeps the row until it is unlinked.
 
-Status: works via the detection/restore paths; part of startup-detection
-hardening, no dedicated verify. The "no onboarding, no questions" step is under
-review — see the explicit device linking proposal after S13.
+Status: built; the reinstall-as-primary case is device-checked (§12.3).
 
-### S10 — iCloud sign-out or Apple-ID switch on a device ◻ (decided 2026-08-19)
+### S10 — iCloud sign-out or Apple-ID switch on a device ✓ (decided 2026-08-19, built 2026-11-16)
 Signing out of iCloud removes synced keychain items and detaches KVS; the
 wallet files remain on disk. Switching to a different Apple ID could pair
 local wallet files with a foreign account's (absent or different) wallet
@@ -476,16 +479,15 @@ account"), explains that spending and sync need the original account, and
 offers only safe exits: sign back in, or explicitly delete from this device
 (S6-style local-only, security check required). Local files are never paired
 with a foreign account's data and never deleted automatically.
-Walkthrough (decided design):
+Walkthrough (as built, step 5; `Features/Device_Linking.md` §4.5, §15):
 - **Does:** signs out of iCloud (or switches Apple ID) in system settings, later opens the app.
-- **Sees:** the wallet in read-only mode with a clear reason — "You're signed out of iCloud" / "This device is on a different iCloud account".
-- **Offered:** two safe exits only — sign back in, or remove the wallet from this device (security check).
-- **Behind the scenes:** nothing is deleted automatically; local wallet files are never paired with another account's data.
-- **On signing back in:** the app re-detects and returns to the previous role.
+- **Sees:** the launch-check screen — "You are signed out of iCloud" or "This device is signed in to a different iCloud account" — with "Check Again" and "Remove from This Device…". The signed-out case comes from CloudKit's account status; the account switch from the iCloud identity stored with the link record (an Apple ID with no wallet is otherwise indistinguishable from a wipe elsewhere, §15.4 F2). When neither can be read, the screen says iCloud isn't answering and claims nothing.
+- **Behind the scenes:** nothing is deleted or opened. A wallet that was open when the account changed is closed without a backup, so its database never lands in another account's iCloud Drive. Detection re-runs on the KVS account-change reason, on `CKAccountChanged`, and when the app returns to the foreground.
+- **On signing back in:** Check Again (or the foreground return) re-detects and the device returns to its previous role.
+- **Remove:** the ordinary local-only deletion behind the slider sheet. The breadcrumb remembers the wallet this install held and is kept while signed out, so Create cannot run against an unknown account.
 
-Status: decided; not built. Today's behavior is the low-confidence detection
-fallback; KVS account-change notifications are observed but only logged
-(detection re-runs only when the wallet-hash key changed; 2026-11-12).
+Status: built; signed-out and different-account device-checked 2026-11-16
+(§15.5). The S7 aftermath ("deleted elsewhere") shares the view.
 
 ### S11 — Device sold/erased without saying goodbye (stale registrations) ⚠️
 A device that was wiped externally never unregisters; its heartbeat goes
@@ -529,7 +531,7 @@ Walkthrough:
 - **Behind the scenes:** registration removed; spending was never possible from the lost device (it wasn't primary).
 - **Security note:** same as S4 — if the lost device may be unlocked in someone else's hands, the recovery phrase on it is the real exposure; consider moving funds.
 
-## Cross-cutting — explicit device linking ◻ (direction DECIDED 2026-10-10; scope pass DECIDED 2026-11-13 in `Features/Device_Linking.md`; build pending)
+## Cross-cutting — explicit device linking ✓ (direction DECIDED 2026-10-10; scope pass DECIDED 2026-11-13 in `Features/Device_Linking.md`; steps 1–5 built 2026-11-14 to 2026-11-16)
 
 **Scope pass outcome (2026-11-13).** The single screen became a per-device
 state model with five flows; every open question below is answered there
@@ -544,8 +546,8 @@ proposal as accepted on 2026-10-10, kept for its rationale.
 
 Christoph accepted the direction on 2026-10-10: no install adopts the
 account's wallet silently. The four open questions below are answered in a
-scope pass before the build (Train 2 or later); until the build lands the
-S2, S6 and S9 walkthroughs still describe today's silent behaviour. The
+scope pass before the build (Train 2 or later); the S2, S6 and S9
+walkthroughs were rewritten to the built behaviour on 2026-11-16. The
 tombstone follow-up ("reinstall after a local delete silently rejoins") is
 closed as superseded.
 
@@ -898,19 +900,17 @@ before it:
    gated.
 4. S7 build. Done as of 2026-11-12: blockers list, informed override,
    conservative `getDeletionStrategy()` fallback, two-word phrase
-   confirmation. Open: unlink-first paths inside the delete flow and the
-   "wallet deleted elsewhere" cleanup-offer state.
-5. PROPOSED (Failure modes §C): "new device joined your wallet" notification
-   on existing devices — the visibility mitigation for account compromise,
-   also useful feedback in honest S2/S5 flows.
-6. S4 entry point: the active "no primary device" banner (deferred
-   2026-08-12) — reframe it as the "lost primary" journey's front door.
-   `.showNoPrimaryDeviceBanner` is posted with no observer; only the passive
-   notice in Linked Devices exists.
+   confirmation. The unlink-first path inside the delete flow and the
+   "wallet deleted elsewhere" state (launch-check screen) — DONE 2026-11-16.
+5. ~~"new device joined your wallet" notification~~ — DONE 2026-11-14
+   ("New device linked", device linking step 2).
+6. ~~S4 entry point: the active "no primary device" banner~~ — closed
+   2026-11-15: the make-primary screen's "Do you still have <device>?"
+   question is the lost-primary front door; no banner.
 7. S5 build: migration assistant (orchestration + copy over existing
    primitives). `migrateToThisDevice()` was deleted 2026-10-16.
-8. S10 build: read-only reasons for signed-out / account-changed, safe-exit
-   copy.
+8. ~~S10 build~~ — DONE 2026-11-16 as the launch-check screen (not a
+   read-only reason: nothing opens).
 9. Desktop parity for promote/demote UI (S3).
 10. ~~Devices-list scoping + automatic stale cleanup (S11)~~ — scoping
     built; automatic cleanup rejected 2026-10-16 (see S11).

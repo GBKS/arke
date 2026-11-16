@@ -1832,35 +1832,6 @@
         }
       }
     },
-    "accessibility_no_primary_device_alert" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Warnung: Kein aktives Wallet. Mache dieses Gerät zum Hauptgerät, um zu senden und zu empfangen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warning: No active wallet. Make this device the primary device to send and receive."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "警告：アクティブなウォレットがありません。送受信するには、このデバイスをメインデバイスにしてください。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "警告：沒有使用中的錢包。將此裝置設為主要裝置，即可傳送與接收。"
-          }
-        }
-      }
-    },
     "accessibility_payment_qr" : {
       "localizations" : {
         "de" : {
@@ -1913,64 +1884,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "點兩下以播放此影片"
-          }
-        }
-      }
-    },
-    "accessibility_recovery_phrase_field" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wiederherstellungsphrase"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recovery phrase"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "リカバリーフレーズ"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "復原片語"
-          }
-        }
-      }
-    },
-    "accessibility_recovery_phrase_hint" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Gib deine 12- oder 24-Wort-Wiederherstellungsphrase ein"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter your 12 or 24 word recovery phrase"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "12または24語のリカバリーフレーズを入力"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "輸入你的 12 或 24 個單字復原片語"
           }
         }
       }
@@ -9033,35 +8946,6 @@
         }
       }
     },
-    "button_manual_backup" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wallet sichern"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back up Wallet"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ウォレットをバックアップ"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "備份錢包"
-          }
-        }
-      }
-    },
     "button_move_to_payments" : {
       "localizations" : {
         "de" : {
@@ -14630,10 +14514,28 @@
     "error_backup_other_phrase" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Backup-Datei gehört zu einer anderen Wiederherstellungsphrase. Prüfe die Datei oder geh zurück und prüfe die Phrase."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This backup file belongs to a different recovery phrase. Check the file, or go back and check the phrase."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このバックアップファイルは別のリカバリーフレーズのものです。ファイルを確認するか、戻ってフレーズを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個備份檔案屬於另一組復原片語。請檢查檔案，或返回檢查片語。"
           }
         }
       }
@@ -15424,10 +15326,28 @@
     "error_wallet_still_on_device" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auf diesem Gerät ist noch ein Wallet. Stelle es mit seiner Wiederherstellungsphrase wieder her oder entferne es zuerst von diesem Gerät."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device still holds a wallet. Restore it with its recovery phrase, or remove it from this device first."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスにはまだウォレットがあります。リカバリーフレーズで復元するか、先にこのデバイスから削除してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置上仍有一個錢包。請用它的復原片語復原，或先將它從此裝置移除。"
           }
         }
       }
@@ -16998,10 +16918,28 @@
     "import_phrase_checksum_failed" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Jedes Wort steht in der Liste, aber eines ist falsch oder an der falschen Stelle. Vergleiche jedes Wort mit deiner notierten Phrase."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Every word is in the list, but one is wrong or out of order. Check each word against your written phrase."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべての単語はリストにありますが、1つが間違っているか順番が違います。書き留めたフレーズと各単語を照らし合わせてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "每個字都在字表中，但有一個字錯了或順序不對。請逐字對照你寫下的片語。"
           }
         }
       }
@@ -17009,10 +16947,28 @@
     "import_phrase_paste_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Füllt das Raster mit einer Wiederherstellungsphrase aus der Zwischenablage"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Fills the grid with a recovery phrase from the clipboard"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "クリップボードのリカバリーフレーズをグリッドに入力します"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "用剪貼簿中的復原片語填入格子"
           }
         }
       }
@@ -17020,10 +16976,28 @@
     "import_phrase_paste_not_a_phrase" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Zwischenablage enthält keine Wiederherstellungsphrase."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The clipboard doesn't hold a recovery phrase."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "クリップボードにリカバリーフレーズがありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "剪貼簿中沒有復原片語。"
           }
         }
       }
@@ -17031,10 +17005,28 @@
     "import_phrase_switch_to_12" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zu 12 Wörtern wechseln"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Switch to 12 words"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "12単語に切り替え"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "切換為 12 個字"
           }
         }
       }
@@ -17042,10 +17034,28 @@
     "import_phrase_switch_to_24" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zu 24 Wörtern wechseln"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Switch to 24 words"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "24単語に切り替え"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "切換為 24 個字"
           }
         }
       }
@@ -17053,10 +17063,28 @@
     "import_phrase_word_invalid_value %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@, nicht in der Wortliste"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%@, not in the recovery word list"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@、リカバリー単語リストにありません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@，不在復原字表中"
           }
         }
       }
@@ -17064,10 +17092,28 @@
     "import_phrase_word_label %lld %lld" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wort %1$lld von %2$lld"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Word %1$lld of %2$lld"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%2$lld 語中 %1$lld 語目"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "第 %1$lld 個字，共 %2$lld 個"
           }
         }
       }
@@ -17075,10 +17121,28 @@
     "import_phrase_word_not_in_list %lld" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wort %lld steht nicht in der Wortliste."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Word %lld isn't in the recovery word list."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 番目の単語はリカバリー単語リストにありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "第 %lld 個字不在復原字表中。"
           }
         }
       }
@@ -18001,10 +18065,28 @@
     "launch_check_button_remove" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von diesem Gerät entfernen …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Remove from This Device…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスから削除…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從此裝置移除…"
           }
         }
       }
@@ -18012,10 +18094,28 @@
     "launch_check_button_restore" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mit Wiederherstellungsphrase wiederherstellen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Restore with Recovery Phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズで復元"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "用復原片語復原"
           }
         }
       }
@@ -18023,10 +18123,28 @@
     "launch_check_message_deleted" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Es wurde auf einem anderen Gerät gelöscht. Seine Daten sind noch auf diesem Gerät. Stelle es mit deiner Wiederherstellungsphrase wieder her, um es hier weiter zu nutzen, oder entferne es von diesem Gerät."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "It was deleted on another device. Its data is still on this device. Restore it with your recovery phrase to keep using it here, or remove it from this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "別のデバイスで削除されました。データはまだこのデバイスにあります。ここで使い続けるにはリカバリーフレーズで復元するか、このデバイスから削除してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "它已在另一部裝置上被刪除。它的資料仍在此裝置上。若要在這裡繼續使用，請用你的復原片語復原，或將它從此裝置移除。"
           }
         }
       }
@@ -18034,10 +18152,28 @@
     "launch_check_message_different_account" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Wallet auf diesem Gerät gehört zu einem anderen iCloud-Konto. Melde dich wieder bei diesem Konto an und prüfe erneut, oder entferne das Wallet von diesem Gerät, bevor du das Wallet dieses Kontos verknüpfst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet on this device belongs to another iCloud account. Sign back in to that account and check again, or remove the wallet from this device before linking this account's wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスのウォレットは別の iCloud アカウントのものです。そのアカウントにサインインし直して再確認するか、このアカウントのウォレットを連携する前にこのデバイスからウォレットを削除してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置上的錢包屬於另一個 iCloud 帳號。請重新登入該帳號並再次檢查，或先將錢包從此裝置移除，再連結這個帳號的錢包。"
           }
         }
       }
@@ -18045,10 +18181,28 @@
     "launch_check_message_signed_out" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Senden und Synchronisieren brauchen das iCloud-Konto des Wallets. Melde dich in der Einstellungen-App wieder an und prüfe dann erneut. Oder entferne das Wallet von diesem Gerät."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Spending and sync need the wallet's iCloud account. Sign back in in the Settings app, then check again. Or remove the wallet from this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "送金と同期にはウォレットの iCloud アカウントが必要です。設定 App でサインインし直してから再確認してください。または、このデバイスからウォレットを削除してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "付款與同步需要錢包的 iCloud 帳號。請在「設定」App 中重新登入，然後再次檢查。或者將錢包從此裝置移除。"
           }
         }
       }
@@ -18056,10 +18210,28 @@
     "launch_check_message_undetermined" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Wallet auf diesem Gerät ist nicht mehr das Wallet dieses iCloud-Kontos, und iCloud hat nicht gesagt, ob du angemeldet bist. Prüfe gleich noch einmal oder entferne das Wallet von diesem Gerät."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet on this device is no longer the one on this iCloud account, and iCloud hasn't said whether you are signed in. Check again in a moment, or remove the wallet from this device."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスのウォレットはこの iCloud アカウントのものではなくなっており、サインインしているかどうかを iCloud が返していません。しばらくしてから再確認するか、このデバイスからウォレットを削除してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置上的錢包已不是這個 iCloud 帳號的錢包，而 iCloud 尚未回覆你是否已登入。請稍後再次檢查，或將錢包從此裝置移除。"
           }
         }
       }
@@ -18067,10 +18239,28 @@
     "launch_check_remove_warning_deleted" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alle Wallet-Daten werden dauerhaft von diesem Gerät gelöscht. Das Wallet wurde bereits aus iCloud gelöscht, deshalb kann es später nur noch deine Wiederherstellungsphrase wiederherstellen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "All wallet data will be permanently deleted from this device. The wallet was already deleted from iCloud, so only your recovery phrase can restore it later."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてのウォレットデータはこのデバイスから永続的に削除されます。ウォレットはすでに iCloud から削除されているため、あとで復元できるのはリカバリーフレーズだけです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "所有錢包資料將從此裝置永久刪除。這個錢包已從 iCloud 刪除，之後只能用你的復原片語復原。"
           }
         }
       }
@@ -18078,10 +18268,28 @@
     "launch_check_remove_warning_kept" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alle Wallet-Daten werden dauerhaft von diesem Gerät gelöscht. Das Wallet bleibt in seinem iCloud-Konto und auf allen damit verknüpften Geräten."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "All wallet data will be permanently deleted from this device. The wallet stays on its iCloud account and on any other device linked to it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべてのウォレットデータはこのデバイスから永続的に削除されます。ウォレットはその iCloud アカウントと、連携している他のデバイスに残ります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "所有錢包資料將從此裝置永久刪除。錢包會保留在它的 iCloud 帳號，以及所有連結到它的其他裝置上。"
           }
         }
       }
@@ -18089,10 +18297,28 @@
     "launch_check_title_deleted" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Wallet wurde aus deinem iCloud-Konto gelöscht"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This wallet was deleted from your iCloud account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このウォレットは iCloud アカウントから削除されました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個錢包已從你的 iCloud 帳號刪除"
           }
         }
       }
@@ -18100,10 +18326,28 @@
     "launch_check_title_different_account" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät ist bei einem anderen iCloud-Konto angemeldet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device is signed in to a different iCloud account"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスは別の iCloud アカウントにサインインしています"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置登入的是另一個 iCloud 帳號"
           }
         }
       }
@@ -18111,10 +18355,28 @@
     "launch_check_title_signed_out" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du bist bei iCloud abgemeldet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You are signed out of iCloud"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud からサインアウトしています"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你已登出 iCloud"
           }
         }
       }
@@ -18122,10 +18384,28 @@
     "launch_check_title_undetermined" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud antwortet nicht"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "iCloud isn't answering"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud が応答しません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud 沒有回應"
           }
         }
       }
@@ -18133,10 +18413,28 @@
     "link_button" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät verknüpfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Link This Device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスを連携"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連結此裝置"
           }
         }
       }
@@ -18144,10 +18442,28 @@
     "link_button_check_again" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Erneut prüfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Check Again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再確認"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再次檢查"
           }
         }
       }
@@ -18155,10 +18471,28 @@
     "link_button_enter_phrase" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiederherstellungsphrase eingeben"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter Recovery Phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを入力"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "輸入復原片語"
           }
         }
       }
@@ -18166,10 +18500,28 @@
     "link_message_new_device" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses iCloud-Konto hat ein Wallet. Dieses Gerät zeigt es an; Senden bleibt auf dem Hauptgerät, bis du es hierher verschiebst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This iCloud account has a wallet. This device will show it; spending stays on the primary device until you move it here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントにはウォレットがあります。このデバイスはそのウォレットを表示します。送金は、ここに移すまでメインデバイスのままです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個 iCloud 帳號有一個錢包。此裝置會顯示它；付款功能會留在主要裝置上，直到你把它移到這裡。"
           }
         }
       }
@@ -18177,10 +18529,28 @@
     "link_message_new_device %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses iCloud-Konto hat ein Wallet. Sein Hauptgerät ist %@. Dieses Gerät zeigt das Wallet an; Senden bleibt auf dem Hauptgerät, bis du es hierher verschiebst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This iCloud account has a wallet. Its primary device is %@. This device will show the wallet; spending stays on the primary device until you move it here."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "この iCloud アカウントにはウォレットがあります。メインデバイスは %@ です。このデバイスはそのウォレットを表示します。送金は、ここに移すまでメインデバイスのままです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個 iCloud 帳號有一個錢包，主要裝置是 %@。此裝置會顯示該錢包；付款功能會留在主要裝置上，直到你把它移到這裡。"
           }
         }
       }
@@ -18188,10 +18558,28 @@
     "link_message_removed_elsewhere" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät wurde auf einem anderen Gerät aus der Geräteliste des Wallets entfernt. Verknüpfe es erneut, um das Wallet weiter anzuzeigen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device was removed from the wallet's device list on another device. Link it again to keep viewing the wallet."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスは、別のデバイスからウォレットのデバイス一覧から削除されました。ウォレットの表示を続けるには、もう一度連携してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置已在另一部裝置上從錢包的裝置清單中移除。若要繼續檢視錢包，請再次連結。"
           }
         }
       }
@@ -18199,10 +18587,28 @@
     "link_message_removed_here %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Du hast dieses Wallet am %@ von diesem Gerät entfernt. Verknüpfe es erneut, um es weiter anzuzeigen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "You removed this wallet from this device on %@. Link it again to keep viewing it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ にこのウォレットをこのデバイスから削除しました。表示を続けるには、もう一度連携してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你在 %@ 將這個錢包從此裝置移除。若要繼續檢視，請再次連結。"
           }
         }
       }
@@ -18210,10 +18616,28 @@
     "link_message_waiting" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät hatte schon einmal ein Wallet. iCloud hat noch nicht geantwortet; das Wallet erscheint, sobald es so weit ist."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device held a wallet before. iCloud hasn't answered yet; the wallet appears as soon as it does."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスには以前ウォレットがありました。iCloud がまだ応答していません。応答があり次第、ウォレットが表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置先前曾有一個錢包。iCloud 尚未回應；一有回應，錢包就會出現。"
           }
         }
       }
@@ -18221,10 +18645,28 @@
     "link_message_was_primary" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät war das Hauptgerät für dieses Wallet. Verknüpfe es, um wie bisher weiterzumachen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device was the primary device for this wallet. Link it to continue as before."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスはこのウォレットのメインデバイスでした。連携すると、以前のとおり使えます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置曾是這個錢包的主要裝置。連結後即可照常繼續使用。"
           }
         }
       }
@@ -18232,10 +18674,28 @@
     "link_seed_missing" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Wallet-Schlüssel ist über den iCloud-Schlüsselbund noch nicht auf diesem Gerät angekommen. Du kannst stattdessen die Wiederherstellungsphrase eingeben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet key hasn't reached this device through iCloud Keychain yet. You can enter the recovery phrase instead."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットの鍵がまだ iCloud キーチェーン経由でこのデバイスに届いていません。代わりにリカバリーフレーズを入力できます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包金鑰尚未透過 iCloud 鑰匙圈送達此裝置。你可以改為輸入復原片語。"
           }
         }
       }
@@ -18243,10 +18703,28 @@
     "link_status_slow" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud ist gerade langsam. Du kannst fortfahren; die Details folgen später."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "iCloud is slow right now. You can continue; details fill in later."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在 iCloud の応答が遅くなっています。そのまま続行できます。詳細はあとで表示されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud 目前速度較慢。你可以繼續；詳細資料稍後會補上。"
           }
         }
       }
@@ -18254,10 +18732,28 @@
     "link_status_syncing" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Synchronisierung mit iCloud …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Syncing with iCloud…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud と同期中…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在與 iCloud 同步…"
           }
         }
       }
@@ -18265,10 +18761,28 @@
     "link_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät mit deinem Wallet verknüpfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Link this device to your wallet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスをウォレットに連携"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將此裝置連結到你的錢包"
           }
         }
       }
@@ -18276,10 +18790,28 @@
     "link_title_again" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät erneut verknüpfen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Link this device again"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスをもう一度連携"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再次連結此裝置"
           }
         }
       }
@@ -18287,10 +18819,28 @@
     "link_title_waiting" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Warten auf iCloud"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Waiting for iCloud"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud を待機中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在等待 iCloud"
           }
         }
       }
@@ -18298,10 +18848,28 @@
     "linked_devices_device_linked_earlier" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Früher verknüpftes Gerät"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Device linked earlier"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "以前に連携したデバイス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "先前連結的裝置"
           }
         }
       }
@@ -18310,10 +18878,28 @@
       "comment" : "%@ is a date (abbreviated)",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gerät verknüpft am %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Device linked %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ に連携したデバイス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "於 %@ 連結的裝置"
           }
         }
       }
@@ -18321,10 +18907,28 @@
     "linked_devices_linked_earlier" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Früher verknüpft"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Linked earlier"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "以前に連携"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "先前連結"
           }
         }
       }
@@ -18333,10 +18937,28 @@
       "comment" : "%@ is a date (abbreviated)",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Verknüpft am %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Linked %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ に連携"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "於 %@ 連結"
           }
         }
       }
@@ -18369,64 +18991,6 @@
         }
       }
     },
-    "linked_devices_no_active_wallet" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Kein aktives Wallet"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Active Wallet"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "アクティブなウォレットがありません"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "沒有使用中的錢包"
-          }
-        }
-      }
-    },
-    "linked_devices_no_active_wallet_description" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mache dieses Gerät zu deinem Hauptgerät, um zu senden und zu empfangen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Make this device the primary device to send and receive."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このデバイスをメインデバイスにして、送金と受け取りを行えるようにします。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "將此裝置設為主要裝置，即可傳送和接收款項。"
-          }
-        }
-      }
-    },
     "linked_devices_single_device_description" : {
       "localizations" : {
         "de" : {
@@ -18451,94 +19015,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "你目前只在一部裝置上使用 Arké。在另一部登入同一 iCloud 帳號的 iPhone 或 iPad 上安裝 Arké，它就會自動顯示在這裡。一開始為唯讀模式，需要時隨時可以接手。"
-          }
-        }
-      }
-    },
-    "linked_devices_unsynced_device" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Unbekanntes Gerät"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Unrecognized device"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "不明なデバイス"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "無法辨識的裝置"
-          }
-        }
-      }
-    },
-    "linked_devices_unsynced_device_description" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "In diesem iCloud-Konto für dieses Wallet registriert. Seine Details sind noch nicht auf diesem Gerät angekommen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Registered to this wallet on this iCloud account. Its details haven't reached this device."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "この iCloud アカウントでこのウォレットに登録されています。詳細はまだこのデバイスに届いていません。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "已在此 iCloud 帳號中註冊到這個錢包，但其詳細資料尚未同步到這部裝置。"
-          }
-        }
-      }
-    },
-    "linked_devices_unsynced_device_registered %@" : {
-      "comment" : "%@ is the registration date (abbreviated), not a device name",
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Registriert %@. Seine Details sind noch nicht auf diesem Gerät angekommen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Registered %@. Its details haven't reached this device."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "%@ に登録されました。詳細はまだこのデバイスに届いていません。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "註冊於 %@。其詳細資料尚未同步到這部裝置。"
           }
         }
       }
@@ -18770,10 +19246,28 @@
     "make_primary_backup_date %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Wallet macht mit dem Backup vom %@ weiter."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet continues from the backup made %@."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットは %@ に作成されたバックアップから続行します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包會從 %@ 建立的備份繼續。"
           }
         }
       }
@@ -18781,10 +19275,28 @@
     "make_primary_direct_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gerade ist kein Gerät Hauptgerät. Dieses Gerät wird zum Hauptgerät und kann Zahlungen senden und empfangen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No device is primary right now. This device will become the primary device, able to send and receive payments."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在、メインデバイスはありません。このデバイスがメインデバイスになり、支払いの送受信ができるようになります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "目前沒有主要裝置。此裝置將成為主要裝置，可以傳送與接收付款。"
           }
         }
       }
@@ -18792,10 +19304,28 @@
     "make_primary_done" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät ist jetzt das Hauptgerät"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device is now primary"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスがメインデバイスになりました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置現在是主要裝置"
           }
         }
       }
@@ -18803,10 +19333,28 @@
     "make_primary_dont_have_it" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ich habe es nicht mehr"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "I Don't Have It Anymore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "もう持っていません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "我已沒有它了"
           }
         }
       }
@@ -18814,10 +19362,28 @@
     "make_primary_error_backup_download" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Wallet-Backup ist noch nicht vollständig aus iCloud geladen. Bleib online und versuch es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet backup hasn't finished downloading from iCloud. Stay online and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットのバックアップの iCloud からのダウンロードが完了していません。オンラインのまま、もう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包備份尚未從 iCloud 下載完成。請保持連線並再試一次。"
           }
         }
       }
@@ -18825,10 +19391,28 @@
     "make_primary_error_open" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Wallet hat sich auf diesem Gerät nicht geöffnet. Starte Arké neu und sieh unter Einstellungen › Geräte nach."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The wallet did not open on this device. Relaunch Arké and check Settings › Devices."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスでウォレットを開けませんでした。Arké を再起動し、設定 › デバイスを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "錢包未能在此裝置上開啟。請重新啟動 Arké，並查看設定 › 裝置。"
           }
         }
       }
@@ -18836,10 +19420,28 @@
     "make_primary_handover_instruction %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Öffne Arké auf %@, geh zu Einstellungen › Geräte und tippe auf „Dieses Gerät zum Zweitgerät machen“. Lass beide Geräte online."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "On %@, open Arké, go to Settings › Devices and tap Make This Device Secondary. Keep both devices online."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ で Arké を開き、設定 › デバイスで「このデバイスをサブデバイスにする」をタップしてください。両方のデバイスをオンラインのままにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在 %@ 上開啟 Arké，前往設定 › 裝置，然後點一下「將此裝置設為次要裝置」。請讓兩部裝置都保持連線。"
           }
         }
       }
@@ -18847,10 +19449,28 @@
     "make_primary_handover_timeout %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Warte noch. Stell sicher, dass %@ online ist und Arké geöffnet hat."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Still waiting. Make sure %@ is online with Arké open."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだ待機中です。%@ がオンラインで Arké を開いていることを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "仍在等待。請確認 %@ 已連線且開啟了 Arké。"
           }
         }
       }
@@ -18858,10 +19478,28 @@
     "make_primary_handover_title %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Übergabe von %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Hand over from %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ から引き継ぐ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從 %@ 交接"
           }
         }
       }
@@ -18869,10 +19507,28 @@
     "make_primary_have_it" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ja, ich habe es"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Yes, I Have It"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "はい、持っています"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "是，我還有它"
           }
         }
       }
@@ -18880,10 +19536,28 @@
     "make_primary_lost_it" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nein, ich habe es verloren"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No, I Lost It"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "いいえ、紛失しました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "否，我弄丟了"
           }
         }
       }
@@ -18891,10 +19565,28 @@
     "make_primary_opening" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wallet wird geöffnet …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Opening the wallet…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットを開いています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在開啟錢包…"
           }
         }
       }
@@ -18902,10 +19594,28 @@
     "make_primary_question %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hast du %@ noch?"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Do you still have %@?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ はまだ手元にありますか？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你還有 %@ 嗎？"
           }
         }
       }
@@ -18913,10 +19623,28 @@
     "make_primary_question_help %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ ist das Hauptgerät, zuletzt gesehen %2$@. Senden wechselt so oder so auf dieses Gerät; die Frage ist nur, wie."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ is the primary device, last seen %2$@. Spending moves to this device either way; the question is only how."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ がメインデバイスです（最終確認: %2$@）。いずれにしても送金はこのデバイスに移ります。問題はその方法だけです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ 是主要裝置，最後上線於 %2$@。無論如何付款功能都會移到此裝置；問題只在於方式。"
           }
         }
       }
@@ -18924,10 +19652,28 @@
     "make_primary_seed_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Der Schlüssel ist über den iCloud-Schlüsselbund noch nicht auf diesem Gerät angekommen. Gib die Wiederherstellungsphrase ein, um fortzufahren, oder warte auf iCloud und versuch es erneut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The key hasn't reached this device through iCloud Keychain. Enter the recovery phrase to continue, or wait for iCloud and try again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "鍵がまだ iCloud キーチェーン経由でこのデバイスに届いていません。続行するにはリカバリーフレーズを入力するか、iCloud を待ってからもう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "金鑰尚未透過 iCloud 鑰匙圈送達此裝置。請輸入復原片語以繼續，或等待 iCloud 後再試一次。"
           }
         }
       }
@@ -18935,10 +19681,28 @@
     "make_primary_seed_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät hat den Wallet-Schlüssel noch nicht"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device doesn't have the wallet key yet"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスにはまだウォレットの鍵がありません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置尚未取得錢包金鑰"
           }
         }
       }
@@ -18946,10 +19710,28 @@
     "make_primary_status_backup" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Warten auf das neueste Backup …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Waiting for the latest backup to arrive…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最新のバックアップの到着を待っています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在等待最新備份送達…"
           }
         }
       }
@@ -18957,10 +19739,28 @@
     "make_primary_status_ready" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Neuestes Backup empfangen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Latest backup received."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最新のバックアップを受信しました。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已收到最新備份。"
           }
         }
       }
@@ -18968,10 +19768,28 @@
     "make_primary_status_started" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Übergabe gestartet. Warten auf die Aktualisierung der Geräteliste …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Handover started. Waiting for the device list to update…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "引き継ぎを開始しました。デバイス一覧の更新を待っています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "交接已開始。正在等待裝置清單更新…"
           }
         }
       }
@@ -18979,10 +19797,28 @@
     "make_primary_status_waiting %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Warten, bis %@ übergibt …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Waiting for %@ to hand over…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ の引き継ぎを待っています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在等待 %@ 交接…"
           }
         }
       }
@@ -18990,10 +19826,28 @@
     "make_primary_take_over" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Übernehmen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Take Over"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "引き継ぐ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接手"
           }
         }
       }
@@ -19001,10 +19855,28 @@
     "make_primary_takeover_backup %@ %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät macht mit dem Backup weiter, das %1$@ am %2$@ erstellt hat. Seitdem empfangene Zahlungen erscheinen nach der ersten Synchronisierung; seitdem von jenem Gerät gesendete Beträge werden mit dem Server abgeglichen."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device continues from the backup %1$@ made %2$@. Payments received since then appear after the first sync; amounts sent from that device since then are reconciled with the server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスは %1$@ が %2$@ に作成したバックアップから続行します。それ以降に受け取った支払いは最初の同期後に表示されます。それ以降にそのデバイスから送金された金額はサーバーと照合されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置會從 %1$@ 於 %2$@ 建立的備份繼續。此後收到的付款會在第一次同步後出現；此後從該裝置送出的金額會與伺服器核對。"
           }
         }
       }
@@ -19012,10 +19884,28 @@
     "make_primary_takeover_no_backup" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Von diesem Gerät ist kein Backup in iCloud angekommen. Das Wallet wird nach der Übernahme vom Server neu aufgebaut."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "No backup from that device has reached iCloud. The wallet rebuilds from the server after you take over."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "そのデバイスからのバックアップは iCloud に届いていません。引き継ぎ後、ウォレットはサーバーから再構築されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "該裝置沒有任何備份送達 iCloud。接手後，錢包會從伺服器重建。"
           }
         }
       }
@@ -19023,10 +19913,28 @@
     "make_primary_takeover_security %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wer %@ entsperren kann, kann die Wiederherstellungsphrase dieses Wallets lesen. Überleg dir, dein Guthaben danach in ein neues Wallet zu verschieben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "If someone could unlock %@, they can read this wallet's recovery phrase. Consider moving your funds to a new wallet afterwards."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ のロックを解除できる人は、このウォレットのリカバリーフレーズを読み取れます。引き継ぎ後、資金を新しいウォレットに移すことを検討してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "若有人能解鎖 %@，就能讀取這個錢包的復原片語。建議之後把資金移到新的錢包。"
           }
         }
       }
@@ -19034,10 +19942,28 @@
     "make_primary_takeover_title %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Übernahme von %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Take over from %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ から引き継ぐ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "從 %@ 接手"
           }
         }
       }
@@ -19045,10 +19971,28 @@
     "make_primary_unnamed_device" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "das Hauptgerät"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "the primary device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "メインデバイス"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "主要裝置"
           }
         }
       }
@@ -19056,10 +20000,28 @@
     "make_secondary_closing" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wallet wird geschlossen …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Closing the wallet…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ウォレットを閉じています…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在關閉錢包…"
           }
         }
       }
@@ -19067,10 +20029,28 @@
     "make_secondary_done" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mach jetzt auf deinem anderen Gerät weiter"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Now continue on your other device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "もう一方のデバイスで続けてください"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在請到你的另一部裝置繼續"
           }
         }
       }
@@ -19078,10 +20058,28 @@
     "make_secondary_done_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Backup ist in iCloud. Öffne auf deinem anderen Gerät Einstellungen › Geräte und tippe auf „Dieses Gerät zum Hauptgerät machen“."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The backup is in iCloud. On your other device, open Settings › Devices and tap Make This Device Primary."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックアップは iCloud にあります。もう一方のデバイスで設定 › デバイスを開き、「このデバイスをメインデバイスにする」をタップしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "備份已在 iCloud 中。請在你的另一部裝置上開啟設定 › 裝置，然後點一下「將此裝置設為主要裝置」。"
           }
         }
       }
@@ -19089,10 +20087,28 @@
     "make_secondary_done_slow" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät ist jetzt ein Zweitgerät"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device is now secondary"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスはサブデバイスになりました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置現在是次要裝置"
           }
         }
       }
@@ -19100,10 +20116,28 @@
     "make_secondary_done_slow_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das Backup wird noch hochgeladen. Lass dieses Gerät noch etwas länger online, bevor du das andere Gerät zum Hauptgerät machst."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The backup is still uploading. Keep this device online a little longer before making the other device primary."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックアップはまだアップロード中です。もう一方のデバイスをメインデバイスにする前に、このデバイスをもう少しオンラインのままにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "備份仍在上傳中。在把另一部裝置設為主要裝置之前，請讓此裝置再多保持連線一會兒。"
           }
         }
       }
@@ -19111,10 +20145,28 @@
     "make_secondary_help" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dieses Gerät wechselt in den Nur-Anzeige-Modus und schreibt sein letztes Backup in iCloud. Mach dann dein anderes Gerät zum Hauptgerät; es macht mit diesem Backup weiter. Lass dieses Gerät online, bis der Upload fertig ist."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This device switches to view-only and writes its final backup to iCloud. Then make your other device primary; it continues from that backup. Keep this device online until the upload finishes."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスは表示専用に切り替わり、最後のバックアップを iCloud に書き込みます。そのあと、もう一方のデバイスをメインデバイスにしてください。そのデバイスはこのバックアップから続行します。アップロードが完了するまで、このデバイスをオンラインのままにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "此裝置會切換為僅供檢視，並將最後一次備份寫入 iCloud。接著請把另一部裝置設為主要裝置；它會從該備份繼續。在上傳完成前，請讓此裝置保持連線。"
           }
         }
       }
@@ -19122,10 +20174,28 @@
     "make_secondary_keep_online" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lass dieses Gerät online."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Keep this device online."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスをオンラインのままにしてください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請讓此裝置保持連線。"
           }
         }
       }
@@ -19133,10 +20203,28 @@
     "make_secondary_uploading" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Letztes Backup wird hochgeladen …"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Uploading the final backup…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最後のバックアップをアップロード中…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正在上傳最後一次備份…"
           }
         }
       }
@@ -20455,10 +21543,28 @@
     "notification_device_linked_body %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ zeigt jetzt dein Wallet an. Wenn das nicht du warst, sieh unter Einstellungen › Geräte nach."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%@ now shows your wallet. If that wasn't you, check Settings › Devices."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ があなたのウォレットを表示するようになりました。心当たりがない場合は、設定 › デバイスを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ 現在會顯示你的錢包。如果這不是你本人操作，請查看設定 › 裝置。"
           }
         }
       }
@@ -20466,10 +21572,28 @@
     "notification_device_linked_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Neues Gerät verknüpft"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "New device linked"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しいデバイスが連携されました"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "已連結新裝置"
           }
         }
       }
@@ -20987,10 +22111,28 @@
     "onboarding_import_backup_body" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wähle die Backup-Datei, die du aus Arké exportiert hast. Sie stellt deinen Zahlungsverlauf und alles noch Laufende wieder her."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Choose the backup file you exported from Arké. It restores your payment history and anything still in progress."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké から書き出したバックアップファイルを選択してください。支払い履歴と進行中の処理が復元されます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請選擇你從 Arké 匯出的備份檔案。它會復原你的付款記錄以及所有仍在進行中的項目。"
           }
         }
       }
@@ -20998,10 +22140,28 @@
     "onboarding_import_backup_without" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ohne sie wird dein Guthaben aus dem Netzwerk wiederhergestellt und der Verlauf beginnt neu."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Without it, your funds are recovered from the network and the history starts fresh."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルがない場合、資金はネットワークから復元され、履歴は新しく始まります。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "若沒有它，你的資金會從網路復原，而記錄會重新開始。"
           }
         }
       }
@@ -21009,10 +22169,28 @@
     "onboarding_import_change_file_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Eine andere Backup-Datei wählen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Choose a different backup file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "別のバックアップファイルを選択"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選擇其他備份檔案"
           }
         }
       }
@@ -21020,10 +22198,28 @@
     "onboarding_import_phrase_body" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gib deine Wiederherstellungsphrase ein, ein Wort pro Feld, in der richtigen Reihenfolge."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter your recovery phrase, one word per field, in order."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを、1つの欄に1単語ずつ、順番どおりに入力してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "請依序輸入你的復原片語，每格一個字。"
           }
         }
       }
@@ -21031,10 +22227,28 @@
     "onboarding_import_phrase_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiederherstellungsphrase"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Recovery Phrase"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズ"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "復原片語"
           }
         }
       }
@@ -21042,10 +22256,28 @@
     "onboarding_import_skip_confirm" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ohne Datei wiederherstellen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Restore without file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ファイルなしで復元"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "不使用檔案復原"
           }
         }
       }
@@ -21053,10 +22285,28 @@
     "onboarding_import_skip_hint" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stellt das Wallet nur aus der Wiederherstellungsphrase wieder her"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Restores the wallet from the recovery phrase alone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズだけでウォレットを復元します"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "僅用復原片語復原錢包"
           }
         }
       }
@@ -21064,10 +22314,28 @@
     "onboarding_import_skip_message" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dein Guthaben wird aus dem Netzwerk wiederhergestellt, dein Zahlungsverlauf und alles noch Laufende aber nicht. Wenn die Datei auf einem anderen Gerät oder in „Dateien“ liegt, geh zurück und wähle sie aus."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Your funds are recovered from the network, but your payment history and anything still in progress are not. If the file exists on another device or in Files, go back and choose it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "資金はネットワークから復元されますが、支払い履歴と進行中の処理は復元されません。ファイルが別のデバイスや「ファイル」App にある場合は、戻って選択してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "你的資金會從網路復原，但付款記錄和仍在進行中的項目不會。如果檔案在另一部裝置或「檔案」App 中，請返回並選擇它。"
           }
         }
       }
@@ -21075,10 +22343,28 @@
     "onboarding_import_skip_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ohne die Backup-Datei wiederherstellen?"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Restore without the backup file?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "バックアップファイルなしで復元しますか？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "要在沒有備份檔案的情況下復原嗎？"
           }
         }
       }
@@ -23196,122 +24482,6 @@
         }
       }
     },
-    "rejoin_button" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Diesem Wallet wieder beitreten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Rejoin This Wallet"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このウォレットに再参加"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "重新加入此錢包"
-          }
-        }
-      }
-    },
-    "rejoin_message %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dieses iCloud-Konto hat ein Wallet auf %@. Du kannst ihm auf diesem Gerät wieder beitreten. Ein zweites Wallet ist nicht möglich — jedes iCloud-Konto hält genau ein Wallet."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This iCloud account has a wallet on %@. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "この iCloud アカウントには %@ 上にウォレットがあります。このデバイスでそのウォレットに再参加できます。2つ目のウォレットは作成できません。iCloud アカウントごとに保持できるウォレットは1つです。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "此 iCloud 帳號在 %@ 上已有一個錢包。你可以在這部裝置上重新加入。無法建立第二個錢包，因為每個 iCloud 帳號只能持有一個錢包。"
-          }
-        }
-      }
-    },
-    "rejoin_message_no_primary" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dieses iCloud-Konto hat ein Wallet, aber derzeit ist kein Gerät eingerichtet, um daraus zu bezahlen. Du kannst ihm auf diesem Gerät wieder beitreten. Ein zweites Wallet ist nicht möglich — jedes iCloud-Konto hält genau ein Wallet."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This iCloud account has a wallet, but no device is currently set up to spend from it. You can rejoin it on this device. Creating a second wallet is not possible — each iCloud account holds one wallet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "この iCloud アカウントにはウォレットがありますが、現在そこから支払えるように設定されたデバイスはありません。このデバイスでそのウォレットに再参加できます。2つ目のウォレットは作成できません。iCloud アカウントごとに保持できるウォレットは1つです。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "此 iCloud 帳號已有一個錢包，但目前沒有任何裝置設定為可從中付款。你可以在這部裝置上重新加入。無法建立第二個錢包，因為每個 iCloud 帳號只能持有一個錢包。"
-          }
-        }
-      }
-    },
-    "rejoin_title" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dein Wallet ist noch aktiv"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Your wallet is still active"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "ウォレットはまだ有効です"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "你的錢包仍在使用中"
-          }
-        }
-      }
-    },
     "relay_error_server_not_served" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -23422,10 +24592,28 @@
     "seed_entry_error_format" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Das ist keine gültige Wiederherstellungsphrase."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This is not a valid recovery phrase."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "有効なリカバリーフレーズではありません。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這不是有效的復原片語。"
           }
         }
       }
@@ -23433,10 +24621,28 @@
     "seed_entry_error_no_reference" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud hat die Details des Wallets noch nicht geliefert. Versuch es gleich noch einmal."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "iCloud hasn't delivered the wallet's details yet. Try again in a moment."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud からウォレットの詳細がまだ届いていません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iCloud 尚未送達錢包的詳細資料。請稍後再試。"
           }
         }
       }
@@ -23444,10 +24650,28 @@
     "seed_entry_error_other_wallet" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Diese Wiederherstellungsphrase gehört zu einem anderen Wallet als dem in diesem iCloud-Konto."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This recovery phrase belongs to a different wallet than the one on this iCloud account."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このリカバリーフレーズは、この iCloud アカウントのウォレットとは別のウォレットのものです。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這組復原片語屬於另一個錢包，而非這個 iCloud 帳號上的錢包。"
           }
         }
       }
@@ -23455,10 +24679,28 @@
     "seed_entry_error_save %@" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Wiederherstellungsphrase konnte nicht gesichert werden: %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "The recovery phrase could not be saved: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズを保存できませんでした: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "無法儲存復原片語：%@"
           }
         }
       }
@@ -23466,10 +24708,28 @@
     "seed_entry_error_title" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiederherstellungsphrase nicht gesichert"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Recovery phrase not saved"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リカバリーフレーズが保存されていません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "復原片語未儲存"
           }
         }
       }
@@ -25226,35 +26486,6 @@
         }
       }
     },
-    "settings_after_confirming" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nach Bestätigung:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After confirming:"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "確認後："
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "確認後："
-          }
-        }
-      }
-    },
     "settings_backup_file" : {
       "localizations" : {
         "de" : {
@@ -25659,10 +26890,28 @@
       "comment" : "%@ is a relative time such as '2 hours ago'",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zuletzt gesehen %@"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Last seen %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最終確認: %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最後上線：%@"
           }
         }
       }
@@ -25670,10 +26919,28 @@
     "settings_delete_blocker_no_longer_have" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ich habe dieses Gerät nicht mehr"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "I no longer have this device"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスはもう持っていません"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "我已沒有這部裝置"
           }
         }
       }
@@ -26348,10 +27615,28 @@
     "settings_delete_primary_note" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies ist das Hauptgerät. Mach zuerst ein anderes Gerät zum Hauptgerät, sonst macht das Wallet mit dem letzten Backup dieses Geräts weiter."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This is the primary device. Make another device primary first, or the wallet continues from this device's last backup."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "これはメインデバイスです。先に別のデバイスをメインデバイスにしてください。そうしない場合、ウォレットはこのデバイスの最後のバックアップから続行します。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這是主要裝置。請先把另一部裝置設為主要裝置，否則錢包會從此裝置的最後一次備份繼續。"
           }
         }
       }
@@ -26446,10 +27731,28 @@
     "settings_delete_unlink_blocker_explanation" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Entfernt dieses Gerät aus der Geräteliste des Wallets. Tu das nur bei einem Gerät, das du nicht mehr hast: Sobald kein Gerät mehr übrig ist, entfernt das Löschen hier das Wallet aus dem Konto, und ein Gerät, auf dem noch Arké läuft, verliert es."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Removes this device from the wallet's device list. Only do this for a device you no longer have: once no device is left, deleting here removes the wallet from the account, and a device that still runs Arké loses it."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このデバイスをウォレットのデバイス一覧から削除します。もう手元にないデバイスにだけ行ってください。デバイスが1つも残らなくなると、ここでの削除はウォレットをアカウントから削除し、まだ Arké が動いているデバイスはウォレットを失います。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "將此裝置從錢包的裝置清單中移除。只對你已不再擁有的裝置這麼做：一旦沒有任何裝置留下，在這裡刪除就會把錢包從帳號中移除，而仍在執行 Arké 的裝置會失去它。"
           }
         }
       }
@@ -26540,35 +27843,6 @@
         }
       }
     },
-    "settings_delete_warning_everywhere_intro" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät und aus iCloud, einschließlich der Wiederherstellungsphrase.\n\nNur eine von dir aufgeschriebene Kopie kann es zurückbringen, und der nächste Schritt fragt nach zwei ihrer Wörter. Um auch deinen Verlauf wiederherzustellen, sichere zuerst die Wallet-Zustandsdatei."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This permanently deletes your wallet from this device and from iCloud, including the recovery phrase.\n\nOnly a copy you wrote down can bring it back, and the next step asks for two of its words. To restore your history as well, back up the wallet state file first."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "これにより、このデバイスと iCloud からウォレットが永続的に削除されます。リカバリーフレーズも含まれます。\n\n元に戻せるのは、書き留めた控えだけです。次のステップでは、そのうち2つの単語の入力を求められます。履歴も復元したい場合は、先にウォレットの状態ファイルをバックアップしてください。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "這將從此裝置和 iCloud 永久刪除你的錢包，包括復原片語。\n\n只有你抄寫下來的副本才能將它找回，下一步會要求輸入其中兩個字詞。若也想復原交易記錄，請先備份錢包狀態檔案。"
-          }
-        }
-      }
-    },
     "settings_delete_warning_everywhere_intro_recovery" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -26601,68 +27875,28 @@
     "settings_delete_warning_local_only_devices_below" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Für die Geräte unten bleibt das Wallet im Konto."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "This will permanently delete your wallet from this device. The wallet stays on the account for the devices below."
           }
-        }
-      }
-    },
-    "settings_delete_warning_local_only_named %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Noch anderswo registriert: %@."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This will permanently delete your wallet from this device. Still registered elsewhere: %@."
-          }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。他にまだ登録されているデバイス：%@。"
+            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。以下のデバイスのために、ウォレットはアカウントに残ります。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "這將從此裝置永久刪除你的錢包。其他仍註冊的裝置：%@。"
-          }
-        }
-      }
-    },
-    "settings_delete_warning_local_only_unnamed" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dies löscht dein Wallet dauerhaft von diesem Gerät. Ein weiteres Gerät in diesem iCloud-Konto ist noch für das Wallet registriert, seine Details sind aber noch nicht auf diesem Gerät angekommen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "これによりウォレットがこのデバイスから永続的に削除されます。この iCloud アカウントの別のデバイスがまだウォレットに登録されていますが、その詳細はまだこのデバイスに届いていません。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "這將從此裝置永久刪除你的錢包。此 iCloud 帳號上還有另一部裝置仍註冊到這個錢包，但其詳細資料尚未同步到這部裝置。"
+            "value" : "這將從此裝置永久刪除你的錢包。錢包會為下方的裝置保留在帳號中。"
           }
         }
       }
@@ -27000,35 +28234,6 @@
         }
       }
     },
-    "settings_make_primary_help" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dieses Gerät wird zum Hauptgerät und kann Zahlungen senden und empfangen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This device will become the primary device, able to send and receive payments."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このデバイスはメインデバイスになり、支払いを送受信できます。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "此裝置將成為主要裝置，可以傳送和接收款項。"
-          }
-        }
-      }
-    },
     "settings_make_secondary" : {
       "localizations" : {
         "de" : {
@@ -27053,122 +28258,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "設為次要裝置"
-          }
-        }
-      }
-    },
-    "settings_make_secondary_help" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Dieses Gerät wechselt in den Nur-Lesen-Modus. Stelle sicher, dass dein anderes Gerät bereit ist, um es als Hauptgerät festzulegen."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This device will switch to view-only mode. Make sure you have your other device ready to make it primary."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "このデバイスは閲覧専用モードに切り替わります。もう一方のデバイスをメインデバイスにできるよう、手元に用意しておいてください。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "此裝置將切換為唯讀模式。請確認你的另一部裝置已準備好設為主要裝置。"
-          }
-        }
-      }
-    },
-    "settings_make_secondary_step_1" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1. Dieses Gerät wechselt in den Nur-Lesen-Modus"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1. This device becomes view-only"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1. このデバイスが閲覧専用になります"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "1. 此裝置變為唯讀"
-          }
-        }
-      }
-    },
-    "settings_make_secondary_step_2" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "2. Öffne dein anderes Gerät"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2. Open your other device"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "2. 他のデバイスでアプリを開きます"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "2. 開啟你的另一部裝置"
-          }
-        }
-      }
-    },
-    "settings_make_secondary_step_3" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "3. Mache das andere Gerät zum Hauptgerät"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3. Make that device primary"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "3. そのデバイスをメインデバイスにします"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "3. 將那部裝置設為主要裝置"
           }
         }
       }
