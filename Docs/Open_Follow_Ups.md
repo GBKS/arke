@@ -383,18 +383,14 @@ check). The security-check matrix is still its own Tier 0 item.
 
 - [ ] **Explicit device linking — build** (DECIDED 2026-11-13, plan
   `Features/Device_Linking.md` §8): six steps, each with its own adversarial
-  pass. Step 1 (evidence rule, link record, live unlink) built,
-  device-checked and committed f7e11a9 + 1e89039 on 2026-11-14 (§11.5–11.6).
-  Step 2 (link screen, tombstone and rejoin removal, seed-only phrase entry,
-  new-device notification) built, reviewed and unit-tested 2026-11-14
-  (§12.3; six findings fixed; device-checked 2026-11-14, Keychain-off seed
-  entry filed as Tier 2 debt; committed 3632551 + 8925b7c). **Step 3
-  built, reviewed and unit-tested 2026-11-14** (§13.2; identity moved to a
-  sibling KVS key after the pass found the old build would misread a new
-  value shape; 709 tests green); owed: the two-phone look in §13.2, then
-  commit. Next: step 4 (make primary), then 5 (delete remedy, launch
-  check), 6 (docs, translations). Open checks: per-app iCloud toggle
-  (optional), whether `recoverVtxos` marks spent VTXOs (step 4).
+  pass. Steps 1–3 built, device-checked and committed (last 6c1aa69,
+  2026-11-14; records §11–§13). **Step 4 (make-primary flow) built,
+  reviewed and unit-tested 2026-11-15** (§14.3; eight findings fixed, the
+  confirmed one a post-promote wait that passed at once; 717 tests green);
+  owed: the two-phone handover, timeout, takeover and direct checks in
+  §14.3, then commit. Next: step 5 (delete remedy, launch check), 6 (docs,
+  translations). Open checks: per-app iCloud toggle (optional); the
+  Keychain-off seed entry is Tier 2 debt.
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read

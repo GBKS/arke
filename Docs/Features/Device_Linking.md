@@ -1025,3 +1025,161 @@ screen on A names B by that name during the same window; unlinking B from A
 removes both of B's keys (A's Devices list shows no B after B's row and
 entry are gone). Not reproducible on device: the old-build reader (F1) — it
 is settled by reading build 27's code.
+
+## 14. Step 4 build plan (2026-11-14)
+
+Scope: flow 4.3, "Make this device primary", replacing the promote and
+demote sheets; the Devices screen takes its §5.1 shape (one action by
+role). Read at `6c1aa69`.
+
+### 14.1 Facts settled for this step
+
+- **`recoverVtxos` reconciles spent state** (verified at bark `lib-0.8.0`,
+  `bark/src/recovery.rs` `recover_candidates` → `store_recovered_vtxos`):
+  the ids are fetched from the server regardless of local state, the
+  server's spend state is "final", and a VTXO it reports spent is stored
+  `Spent` and `mark_vtxos_as_spent`. So after a takeover the app can pass
+  every locally spendable id once and the balance stops overstating.
+  Bound to the bindings' `recoverVtxos(vtxoIds:gapLimit:)` (bark-ffi
+  `4a1c1c0`, already used by the import scan). The takeover copy therefore
+  says payments received since the backup appear after the first sync and
+  amounts sent since then are reconciled with the server.
+- **Backup slot observation**: `NSMetadataQuery` with
+  `NSMetadataQueryUbiquitousDataScope` on the slot file; `NSMetadataUbiquitousItemIsUploadedKey`
+  for the demoting side, `NSMetadataUbiquitousItemDownloadingStatusKey`
+  plus `NSMetadataItemFSContentChangeDateKey` for the promoting side, with
+  `startDownloadingUbiquitousItem` when the item is not local (Apple docs,
+  checked 2026-11-13; first exercised in this step).
+- **The old primary writes its flag before its backup**: `demoteThisDevice`
+  saves the row, writes the flag, then posts; `closeWalletForMigration`
+  then shuts bark down with the final backup (verified). So "backup newer
+  than the moment the flag flipped" is the right second condition.
+
+### 14.2 Changes
+
+1. **`BackupSlotMonitor`** (new, Shared): one-shot metadata gathers polled
+   every few seconds; `waitForUpload(after:timeout:)` and
+   `waitForDownloadedBackup(newerThan:timeout:)`; pure predicates over a
+   `Snapshot` for tests.
+2. **`MakePrimaryFlowView_iOS`** (new): step 0 seed check with the
+   seed-only entry; branch question when a primary row exists; branch A
+   instruction and two-condition wait with a timeout that offers branch B;
+   branch B warning and one-tap take-over (unlink then promote); branch C
+   direct. After promotion it waits for the wallet to open as primary and,
+   on a takeover, runs `WalletManager.reconcileAfterTakeover()`.
+3. **`MakeSecondaryView_iOS`** (new): demotes, then waits for the final
+   backup's upload before saying "Now continue on your other device".
+4. **Devices screen**: one action by role, always visible; the no-primary
+   notice and `DeviceAssignmentSheets_iOS` go.
+5. **`DeviceRegistrationService.takeOver(lostDeviceId:)`**: unlink then
+   promote; `otherDevicePrimaryFlag(deviceId:)` for the fast signal.
+6. **`BarkWalletProtocol.recoverVtxos`** mirrors the binding;
+   `WalletManager.reconcileAfterTakeover()` passes the spendable ids and
+   logs the report's buckets.
+7. **Tests**: `HandoverReadinessTests` (the wait's state machine),
+   `BackupSlotMonitorTests` (snapshot predicates).
+
+Security-check slots: the three confirmations (demote, promote, take over)
+each sit behind one tap today; the gated-actions item adds the presence
+check in front of that tap.
+
+### 14.3 Build record (2026-11-14/15)
+
+Built as §14.2. The adversarial pass (fault-class-reviewer, cut off once by
+a rate limit and resumed) returned eight findings; dispositions:
+
+- F1 CONFIRMED: the post-promote wait polled `isInitialized && !isReadOnlyMode`,
+  which a secondary already satisfies the instant the mode flips, before the
+  restore and the open; the takeover reconcile then ran against a closed
+  handle and "done" showed early → the wait now requires the FFI handle to
+  be present, the mode flipped, and no initialisation in flight, and a
+  timeout surfaces an error instead of "done". Ledger row.
+- F2 PLAUSIBLE (strong): `copyItem` preserves the database's modification
+  date, so the slot's date was the last db write, not the backup time; an
+  idle primary's final backup would never have read as newer than the
+  handover, stalling a correct handover into a takeover → `performBackup`
+  stamps the slot's date with the backup time on every pass, including the
+  byte-identical one; `restoreWalletIfNeeded` skips a "newer" backup whose
+  bytes equal the local file, so the stamp cannot cause a self-restore.
+  Ledger row.
+- F3 PLAUSIBLE: the predicate accepted iCloud's `Downloaded`, a stale local
+  copy → `Current` only, and a download is requested for missing and stale
+  copies. Ledger row (with F4).
+- F4 PLAUSIBLE: branches B and C had no download gate, so a never-downloaded
+  slot read as "no backup" and the open would have created from the seed →
+  both branches make the slot local before promoting when a slot item
+  exists; no item means nothing to restore.
+- F5 PLAUSIBLE: a 120 s skew tolerance let a periodic backup from before the
+  demotion count → the reference is now the old primary's `demotedAt`,
+  written by the same clock that stamps its backup; no tolerance.
+- F6 PLAUSIBLE: the promote-triggered `initialize` could join an in-flight
+  one → covered by F1's fix: a joined run that does not end with the handle
+  open times out into the error state.
+- F7 PLAUSIBLE: the primary lookup used the KVS hash (nil → unscoped) while
+  promote used the own row's → the flow uses the own row's hash first.
+- F8 PLAUSIBLE: `unlinkDevice` deleted one row for the id; a reinstalled
+  lost device can hold two and the takeover's promote would refuse → every
+  row for the id is deleted.
+- Minor: a metadata gather that never finishes now times out after ten
+  seconds instead of parking the flow's task.
+
+Not verified by the pass and still open as assumptions: `FileManager.copyItem`
+mtime preservation (now moot, the stamp overrides it); iOS placeholder
+semantics for a never-downloaded slot; `NSMetadataItemFSContentChangeDateKey`
+for `Downloaded` items (now moot, `Downloaded` is rejected).
+
+**Tests:** `HandoverReadinessTests` (5), `BackupSlotMonitorTests` (3); full
+mobile suite 717 tests, 712 passed, 5 skipped, 0 failed.
+
+**Owed on device** (two phones, A primary, B secondary, the §10 scenario 3
+and 4 set):
+
+1. Handover: on B, Devices › Make Device Primary → "Do you still have A?" →
+   Yes. On A, Devices › Make Device Secondary → confirm; A shows "Closing
+   the wallet…", "Uploading the final backup…", then "Now continue on your
+   other device" (log: `Backup slot wait` lines, no timeout). B's status
+   moves through "Waiting for A to hand over…", "Handover started…",
+   "Waiting for the latest backup…", "Latest backup received." and the
+   button enables; tap; B opens as primary with A's latest state (send a
+   small signet payment on A before the handover and check it shows on B).
+   Repeat once with A idle for an hour before the handover: the same path,
+   no timeout (F2).
+2. Timeout path: start the handover on B and do nothing on A for four
+   minutes; "I Don't Have It Anymore" appears.
+3. Takeover: unlink-free start, B on "No, I Lost It" → warning copy names A
+   and the backup date; Take Over; B opens as primary; log shows the
+   `Takeover reconcile` line with counts; A, when relaunched, lands on the
+   link screen (step 2).
+4. Direct: with no primary row (A demoted, B not yet promoted), B's flow
+   skips the question and shows the direct confirmation.
+
+**Device run 2026-11-15 (Christoph):** handover A → B worked; handing back
+B → A left B on the loading screen. B's log showed the demotion, the close
+and "Backup skipped - no changes detected", then nothing: the close resets
+`isInitialized`, and the main view's secondary branch (B had started the
+session as a secondary) shows the loading view until the manager is
+initialised. The demotion handler now re-enters read-only mode after the
+close. Pre-existing on the old demote sheet for any device promoted in the
+same session; the guided flow made it routine. Ledger row. Re-check owed:
+hand over A → B, wait, hand back B → A; B must show the read-only wallet.
+
+**Device run 2026-11-15, second finding:** after A became primary again,
+X-Ray showed "Wallet operations service not initialized" and no
+configuration, while the activity screen reported a live server connection.
+`closeWalletForMigration` nils the wallet-scoped services and the
+re-promotion's `initializePrimaryMode` reopened bark without rebuilding
+them. Fixed by extracting their construction into
+`buildWalletScopedServices(wallet:)` and running it again on re-promotion
+when they are nil. Pre-existing for any device demoted and promoted in one
+session. Ledger row. Re-check owed with the hand-over-and-back: afterwards
+X-Ray on the re-promoted device shows VTXOs, Ark info and configuration
+without a relaunch. The missing no-connection icon was not a second
+defect: the activity icon reads `connectionStatus` off `processStateService`,
+which the migration close keeps, and the refresh's server calls run through
+`transactionService` and `balanceService`, also kept, so the server really
+was reachable. Only the components behind `walletOperationsService` were
+gone.
+
+**Device run 2026-11-16 (Christoph, two phones):** hand over A → B, hand
+back B → A, X-Ray on A populated without a relaunch. PASSED. Step 4 device
+checks complete.
