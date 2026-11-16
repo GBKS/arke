@@ -77,10 +77,36 @@ nonisolated enum LinkPromptReason: Equatable, Sendable {
     /// before: wait for iCloud instead of offering onboarding
     case waitingForICloud
     /// The record names a wallet the account no longer holds, or a different
-    /// one: the wallet was deleted from another device, or this device is
-    /// signed in to another iCloud account. No adoption, no registration, no
-    /// bark; step 5 splits the two cases and adds the exits.
-    case walletMismatch
+    /// one. No adoption, no registration, no bark: the launch-check screen
+    /// (Device_Linking.md §4.5) shows the case and its two safe exits.
+    case walletMismatch(LaunchCheckCase)
+}
+
+/// Whether the device has an iCloud account, as far as the launch check
+/// could tell (Device_Linking.md §15.1).
+nonisolated enum ICloudAccountPresence: Equatable, Sendable {
+    case present
+    case absent
+    /// Restricted, temporarily unavailable, could not determine, or the
+    /// status call failed. Not evidence either way.
+    case unknown
+}
+
+/// Which launch-check screen a mismatched link record gets (Device_Linking.md
+/// §4.5). Three cases share one view; the fourth is the honest fallback
+/// when iCloud would not say whether an account is present.
+nonisolated enum LaunchCheckCase: Equatable, Sendable {
+    /// Record X, no account hash, seed definitively absent, account present:
+    /// the wallet was wiped from the account on another device after this
+    /// one was unlinked (S7 aftermath). Local files are still here.
+    case deletedElsewhere
+    /// Record X, no account hash, seed absent, no iCloud account (S10)
+    case signedOut
+    /// Record X, account hash Y (S10): another Apple ID, or the account's
+    /// wallet was replaced
+    case differentAccount
+    /// No hash, seed absent, and the account status could not be read
+    case undetermined
 }
 
 /// The launch decision over the link record (Device_Linking.md §12.1).
@@ -99,6 +125,10 @@ nonisolated enum LinkLaunchRoute: Equatable, Sendable {
 nonisolated enum DeviceLinkStore {
     static let walletHashKey = "com.arke.link.walletHash"
     static let linkedAtKey = "com.arke.link.linkedAt"
+    /// The iCloud account identity (archived `ubiquityIdentityToken`) at
+    /// link time, so the launch check can tell "the account lost its wallet"
+    /// from "this is another account" (Device_Linking.md §4.5, §15.4 F2)
+    static let accountTokenKey = "com.arke.link.accountToken"
     static let leftWalletHashKey = "com.arke.link.leftWalletHash"
     static let leftAtKey = "com.arke.link.leftAt"
 
@@ -132,6 +162,7 @@ nonisolated enum DeviceLinkStore {
         }
         defaults.set(walletHash, forKey: walletHashKey)
         defaults.set(now.timeIntervalSince1970, forKey: linkedAtKey)
+        recordAccountToken(ICloudAccountIdentity.currentTokenData(), defaults: defaults)
         // A link supersedes any memory of having left
         clearLeft(defaults: defaults)
         return true
@@ -140,6 +171,20 @@ nonisolated enum DeviceLinkStore {
     static func clearLink(defaults: UserDefaults = .standard) {
         defaults.removeObject(forKey: walletHashKey)
         defaults.removeObject(forKey: linkedAtKey)
+        defaults.removeObject(forKey: accountTokenKey)
+    }
+
+    // MARK: Account identity
+
+    static func accountToken(defaults: UserDefaults = .standard) -> Data? {
+        defaults.data(forKey: accountTokenKey)
+    }
+
+    /// Nil leaves any stored token alone: a signed-out moment must not erase
+    /// the identity the record was linked under
+    static func recordAccountToken(_ token: Data?, defaults: UserDefaults = .standard) {
+        guard let token else { return }
+        defaults.set(token, forKey: accountTokenKey)
     }
 
     // MARK: Left breadcrumb
@@ -192,18 +237,55 @@ nonisolated enum DeviceLinkStore {
         return .valid
     }
 
+    /// Which launch-check screen a mismatched record gets (§4.5, §15.2).
+    /// Only called once `validity` said `.walletChanged`, so either the
+    /// account hash differs or there is no hash and no seed.
+    ///
+    /// A blank account with a seedless keychain has two causes that no
+    /// account-level signal separates: the wallet was wiped elsewhere, or
+    /// this device moved to an Apple ID that has no wallet (adversarial pass
+    /// 2026-11-16, F2). Only the account identity stored at link time does:
+    /// `accountIdentityMatches` true is the aftermath, false is another
+    /// account, nil (no stored token, no current token, or unreadable) falls
+    /// back to the account status, which can still say "signed out" but
+    /// never "deleted".
+    static func launchCheckCase(
+        recordHash: String,
+        accountHash: String?,
+        seedFound: Bool,
+        iCloudAccount: ICloudAccountPresence,
+        accountIdentityMatches: Bool? = nil
+    ) -> LaunchCheckCase {
+        if let accountHash, !accountHash.isEmpty, accountHash != recordHash {
+            return .differentAccount
+        }
+        switch accountIdentityMatches {
+        case true?: return .deletedElsewhere
+        case false?: return .differentAccount
+        case nil: break
+        }
+        switch iCloudAccount {
+        case .absent: return .signedOut
+        case .present, .unknown: return .undetermined
+        }
+    }
+
     /// The launch decision (Device_Linking.md §12.1), pure.
     ///
     /// - Parameters:
     ///   - seedFound / seedUnreadable: the two non-"not found" outcomes of the
     ///     keychain probe. Unreadable means "unknown", never "no wallet".
+    ///   - iCloudAccount: only consulted for the mismatch case; detection
+    ///     passes `.unknown` first and resolves the status when needed.
     static func launchRoute(
         record: DeviceLinkRecord?,
         left: DeviceLeftRecord?,
         accountHash: String?,
         seedFound: Bool,
         seedUnreadable: Bool,
-        ownRow: OwnRowEvidence
+        ownRow: OwnRowEvidence,
+        iCloudAccount: ICloudAccountPresence = .unknown,
+        accountIdentityMatches: Bool? = nil
     ) -> LinkLaunchRoute {
         let hashPresent = !(accountHash ?? "").isEmpty
         let accountHasWallet = hashPresent || seedFound
@@ -233,8 +315,14 @@ nonisolated enum DeviceLinkStore {
         case .walletChanged:
             // Never fall through to detection here: it would register this
             // device under the account's new wallet and pair local files with
-            // it (S10). The screen blocks until step 5 adds the exits.
-            return .awaitingLink(.walletMismatch)
+            // it (S10). The launch-check screen offers the exits.
+            return .awaitingLink(.walletMismatch(launchCheckCase(
+                recordHash: record.walletHash,
+                accountHash: accountHash,
+                seedFound: seedFound,
+                iCloudAccount: iCloudAccount,
+                accountIdentityMatches: accountIdentityMatches
+            )))
         case .noRecord:
             return .awaitingLink(.newDevice)  // unreachable: record is non-nil
         }

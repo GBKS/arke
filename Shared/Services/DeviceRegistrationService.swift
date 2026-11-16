@@ -962,7 +962,8 @@ class DeviceRegistrationService {
             deviceName: device.deviceName,
             walletHash: device.walletHash,
             lastSeenAt: device.lastSeenAt,
-            isActive: device.isActive
+            isActive: device.isActive,
+            platform: DevicePlatform(rawValue: device.platform)
         )
     }
 
@@ -1049,7 +1050,10 @@ class DeviceRegistrationService {
                 lastSeenAt: device.lastSeenAt,
                 registeredAt: registeredAt[device.deviceId],
                 isStale: isStale,
-                source: .registry
+                source: .registry,
+                // The row's platform, else the fast entry's, so the delete
+                // screen can draw the device like the Devices list does
+                platform: device.platform ?? fastEntries[device.deviceId]?.platform
             ))
         }
 
@@ -1645,6 +1649,8 @@ nonisolated struct RegistryDeviceSnapshot: Equatable, Sendable {
     let walletHash: String
     let lastSeenAt: Date
     let isActive: Bool
+    /// From the row's platform string; nil for an unknown value
+    var platform: DevicePlatform? = nil
 }
 
 /// Another device that the account says still holds this wallet.
@@ -1681,8 +1687,8 @@ nonisolated struct OtherWalletDevice: Equatable, Identifiable, Sendable {
     /// `.kvsOnly`, where staleness is unknowable rather than known to be false.
     let isStale: Bool
     let source: Source
-    /// From the fast entry (Device_Linking.md §5.2). Nil for registry-backed
-    /// entries, which the views draw from the model, and for old entries.
+    /// From the registry row or the fast entry (Device_Linking.md §5.2).
+    /// Nil only for an old entry without identity.
     let platform: DevicePlatform?
     /// The device's own `device_<id>_isPrimary` flag. Nil when unknown.
     let isPrimary: Bool?

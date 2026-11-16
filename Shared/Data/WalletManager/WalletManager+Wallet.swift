@@ -438,6 +438,14 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
 
+        // This install still links a wallet (the launch-check screen's cases,
+        // Device_Linking.md §4.5): its database may be the only copy of that
+        // wallet's offchain state after a wipe elsewhere, and the FFI create
+        // removes the directory. Remove or restore first.
+        if DeviceLinkStore.record() != nil {
+            Self.logger.error("❌ createWallet refused: this install still holds a linked wallet")
+            throw BarkErrorArke.walletStillOnDevice
+        }
         // One wallet per iCloud account: refuse creation when any account-level
         // wallet signal exists. Creating would overwrite the synchronizable seed
         // in iCloud Keychain account-wide — unrecoverable without a written-down

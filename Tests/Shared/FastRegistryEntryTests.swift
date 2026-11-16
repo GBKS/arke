@@ -103,6 +103,32 @@ struct FastRegistryEntryTests {
         #expect(report.mirrorOnly.first?.deviceName == "Christoph's iPhone")
     }
 
+    @Test("A registry-backed device carries its row's platform, else the entry's")
+    func registryPlatform() {
+        // The delete screen's blocker rows drew every registry-backed device
+        // with the unknown-kind glyph because the merge dropped the platform
+        // (Christoph, 2026-11-16)
+        let withPlatform = RegistryDeviceSnapshot(deviceId: Self.other, deviceName: "Christoph's Mac", walletHash: Self.hash,
+                                                  lastSeenAt: Self.now, isActive: true, platform: .macOS)
+        let fromRow = DeviceRegistrationService.otherDeviceReport(
+            kvsEntries: [:], walletHash: Self.hash, registryDevices: [withPlatform],
+            currentDeviceId: Self.me, registryError: nil, now: Self.now
+        )
+        #expect(fromRow.unlinkable.first?.platform == .macOS)
+
+        let withoutPlatform = RegistryDeviceSnapshot(deviceId: Self.other, deviceName: "Christoph's Mac", walletHash: Self.hash,
+                                                     lastSeenAt: Self.now, isActive: true)
+        let entries: [String: Any] = [
+            Self.mirrorKey(Self.other): 1_699_000_000.0,
+            Self.identityKey(Self.other): ["name": "Christoph's Mac", "platform": "macOS"]
+        ]
+        let fromEntry = DeviceRegistrationService.otherDeviceReport(
+            kvsEntries: entries, walletHash: Self.hash, registryDevices: [withoutPlatform],
+            currentDeviceId: Self.me, registryError: nil, now: Self.now
+        )
+        #expect(fromEntry.unlinkable.first?.platform == .macOS)
+    }
+
     @Test("An old entry without identity still blocks and stays unnamed")
     func legacyEntryBlocksUnnamed() {
         let report = DeviceRegistrationService.otherDeviceReport(

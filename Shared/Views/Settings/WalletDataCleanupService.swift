@@ -240,6 +240,9 @@ class WalletDataCleanupService {
     /// unlock a wipe that also destroys a healthy device's seed. (All-doubtful
     /// gating decided 2026-09-25; it replaced any-doubtful, and the mixed case
     /// now requires unlinking the healthy blocker before the override appears.)
+    /// Since 2026-11-16 the delete screen offers that unlink per blocker ("I
+    /// no longer have this device", Device_Linking.md §4.4): the user names
+    /// the device, the override stays for blockers nobody can name.
     ///
     /// This predicate is shared verbatim by `fullWipeStillJustified`, so what
     /// is offered and what is executed cannot drift apart.
@@ -499,11 +502,16 @@ class WalletDataCleanupService {
         // never onboarding. The left breadcrumb carries the date and routes a
         // launch with an unreadable keychain and a blank KVS to that screen's
         // waiting variant instead of onboarding. Set AFTER clearUserDefaults
-        // so it can't be wiped by that step.
+        // so it can't be wiped by that step. The breadcrumb remembers the
+        // wallet this install held — the link record's hash — and falls back
+        // to the KVS hash for installs from before the record existed: on the
+        // launch-check screen (§4.5) KVS is blank or names another account's
+        // wallet, which this install never held.
+        let leftWalletHash = DeviceLinkStore.record()?.walletHash ?? getHashFromUbiquitousStore()
         DeviceLinkStore.clearLink()
         if includeCloudData {
             DeviceLinkStore.clearLeft()
-        } else if let walletHash = getHashFromUbiquitousStore() {
+        } else if let walletHash = leftWalletHash {
             DeviceLinkStore.recordLeft(walletHash: walletHash)
         } else {
             #if DEBUG
@@ -1197,7 +1205,7 @@ enum SharedStateWipeCoverage {
         // This install's link to the account wallet (DeviceLinkStore, Device
         // Linking step 1, 2026-11-13); cleared on every deletion so the next
         // launch asks again
-        Entry(key: "com.arke.link.* (walletHash, linkedAt)", store: "UserDefaults",  scope: .deviceLocal),
+        Entry(key: "com.arke.link.* (walletHash, linkedAt, accountToken)", store: "UserDefaults",  scope: .deviceLocal),
         // Written by the local-only deletion, cleared by the full wipe and by
         // every link (replaced the UserDefaults tombstone in step 2,
         // 2026-11-14): the link screen's "you removed this wallet" copy and

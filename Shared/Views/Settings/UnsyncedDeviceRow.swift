@@ -33,8 +33,10 @@ struct UnsyncedDeviceRow: View {
                     .font(.system(size: 32))
                     .accessibilityHidden(true)
             } else {
-                Image(systemName: "square.dashed")
-                    .font(.system(size: 28))
+                // Same generic glyph as the delete screen's blocker row; the
+                // dashed square read as a checkbox (Christoph, 2026-11-16)
+                Image(systemName: "laptopcomputer.and.iphone")
+                    .font(.system(size: 24))
                     .foregroundStyle(.secondary)
                     .frame(width: 36)
                     .accessibilityHidden(true)

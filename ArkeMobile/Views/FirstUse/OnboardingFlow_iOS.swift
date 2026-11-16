@@ -54,6 +54,18 @@ struct OnboardingFlow_iOS: View {
     @State private var importPhrase: [String] = []
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
+
+    /// - Parameter initialState: the launch-check screen's restore exit
+    ///   (Device_Linking.md §4.5) opens the flow at the phrase step
+    init(
+        initialState: OnboardingState = .firstUse,
+        initialNetworkConfig: NetworkConfig = .mainnet,
+        onWalletReady: @escaping () -> Void
+    ) {
+        _currentState = State(initialValue: initialState)
+        _networkConfig = State(initialValue: initialNetworkConfig)
+        self.onWalletReady = onWalletReady
+    }
     
     var body: some View {
         ZStack {

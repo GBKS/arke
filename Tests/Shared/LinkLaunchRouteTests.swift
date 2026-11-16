@@ -28,9 +28,10 @@ struct LinkLaunchRouteTests {
         hash: String? = nil,
         seedFound: Bool = false,
         seedUnreadable: Bool = false,
-        ownRow: OwnRowEvidence = .absent
+        ownRow: OwnRowEvidence = .absent,
+        iCloudAccount: ICloudAccountPresence = .unknown
     ) -> LinkLaunchRoute {
-        DeviceLinkStore.launchRoute(record: record, left: left, accountHash: hash, seedFound: seedFound, seedUnreadable: seedUnreadable, ownRow: ownRow)
+        DeviceLinkStore.launchRoute(record: record, left: left, accountHash: hash, seedFound: seedFound, seedUnreadable: seedUnreadable, ownRow: ownRow, iCloudAccount: iCloudAccount)
     }
 
     // MARK: No record
@@ -100,9 +101,12 @@ struct LinkLaunchRouteTests {
     func walletMismatch() {
         // Never fall through to detection: that would register under the new
         // wallet and pair local files with it (S10)
-        #expect(route(record: record, hash: "hash-B", seedFound: true, ownRow: .primary) == .awaitingLink(.walletMismatch))
-        // Full wipe elsewhere or iCloud sign-out: hash gone and seed gone
-        #expect(route(record: record, ownRow: .absent) == .awaitingLink(.walletMismatch))
+        #expect(route(record: record, hash: "hash-B", seedFound: true, ownRow: .primary) == .awaitingLink(.walletMismatch(.differentAccount)))
+        // Full wipe elsewhere or iCloud sign-out: hash gone and seed gone; the
+        // account status tells the two apart, and its absence is said so
+        #expect(route(record: record, ownRow: .absent) == .awaitingLink(.walletMismatch(.undetermined)))
+        #expect(route(record: record, ownRow: .absent, iCloudAccount: .present) == .awaitingLink(.walletMismatch(.undetermined)))
+        #expect(route(record: record, ownRow: .absent, iCloudAccount: .absent) == .awaitingLink(.walletMismatch(.signedOut)))
     }
 
     @Test("The left breadcrumb is stale once the account definitively holds nothing or another wallet")

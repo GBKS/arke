@@ -23,6 +23,12 @@ struct DeletePermanentlyConfirmationView: View {
     /// Devices the registries say still hold the wallet, for the override copy.
     var blockers: [OtherWalletDevice] = []
 
+    /// Replaces the strategy's warning paragraph. The launch-check screen
+    /// (Device_Linking.md §4.5) runs a local-only deletion after a wipe
+    /// elsewhere or an account switch, where "your other devices keep this
+    /// wallet" would be false.
+    var warningOverride: String? = nil
+
     @Environment(\.walletDataCleanupService) private var cleanupService
     /// Never reset here on purpose: every failure closes this sheet and shows
     /// its error on the info screen behind it (`DeleteWalletSettingView`), and
@@ -295,6 +301,9 @@ struct DeletePermanentlyConfirmationView: View {
     }
 
     private var warningText: String {
+        if let warningOverride {
+            return warningOverride
+        }
         if isOverride {
             return String(localized: "settings_delete_permanent_warning_override", defaultValue: "This removes the wallet from this device, from iCloud, and from every other device on this iCloud account — including the recovery phrase in iCloud Keychain. Only a phrase you wrote down can restore it.")
         }

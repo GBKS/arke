@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import Combine
+import CloudKit
 
 struct MainView: View {
     @State private var hasWallet: Bool = false
@@ -26,6 +27,16 @@ struct MainView: View {
             if isCheckingWallet {
                 // Show loading state while checking for wallet
                 LoadingView()
+            } else if case .accountWalletAwaitingLink(.walletMismatch(let launchCase)) = walletState {
+                // The launch-check screen (Device_Linking.md §4.5); no restore
+                // exit on the desktop, which has no phrase-import island here
+                LaunchCheckView(
+                    launchCase: launchCase,
+                    isChecking: isLinkingDevice,
+                    onCheckAgain: { Task { await recheckFromLaunchCheck() } },
+                    onRemoved: { Task { await recheckFromLaunchCheck() } }
+                )
+                .environment(walletManager)
             } else if case .accountWalletAwaitingLink(let reason) = walletState {
                 // The account has a wallet this install has not linked — show the
                 // link screen, never onboarding (Device_Linking.md §4.2)
@@ -162,12 +173,36 @@ struct MainView: View {
         return securityService.hashMnemonic(mnemonic)
     }
 
+    /// Mirrors MainView_iOS: the launch-check screen's re-check and routing
+    private func recheckFromLaunchCheck() async {
+        isLinkingDevice = true
+        defer { isLinkingDevice = false }
+        await checkForExistingWallet()
+    }
+
+    /// Mirrors MainView_iOS: a mismatch reached while a wallet is open closes
+    /// bark without a backup (Device_Linking.md §15.2)
+    private func closeOpenWalletOnMismatch(_ state: WalletState) async {
+        guard case .accountWalletAwaitingLink(.walletMismatch) = state else { return }
+        let handleOpen = (walletManager.wallet as? BarkWalletFFI)?.wallet != nil
+        guard handleOpen || walletManager.isInitialized || walletManager.isInitializing else { return }
+        print("🔗 [MainView] Account mismatch while the wallet is open — closing without a backup")
+        try? await walletManager.closeWalletForMigration(backingUp: false)
+    }
+
+    /// Mirrors MainView_iOS
+    private func accountChangeMayAlterRoute() -> Bool {
+        if case .accountWalletAwaitingLink = walletState { return true }
+        guard let record = DeviceLinkStore.record() else { return true }
+        return securityService.getUbiquitousHash() != record.walletHash
+    }
+
     /// The link screen's one action (Device_Linking.md §4.2); mirrors MainView_iOS
     private func linkThisDevice() async {
         isLinkingDevice = true
         defer { isLinkingDevice = false }
         if case .accountWalletAwaitingLink(let reason) = walletState,
-           reason == .waitingForICloud || reason == .walletMismatch {
+           reason == .waitingForICloud {
             await checkForExistingWallet()
             return
         }
@@ -224,6 +259,18 @@ struct MainView: View {
             }
         }
         
+        NotificationCenter.default.addObserver(
+            forName: .CKAccountChanged,
+            object: nil,
+            queue: .main
+        ) { _ in
+            Task { @MainActor in
+                guard self.accountChangeMayAlterRoute() else { return }
+                print("🔗 [MainView] CKAccountChanged — re-running wallet detection")
+                await self.checkForExistingWallet()
+            }
+        }
+
         #if DEBUG
         print("🔔 [MainView] Subscribed to NSUbiquitousKeyValueStore changes")
         #endif
@@ -267,6 +314,13 @@ struct MainView: View {
             #if DEBUG
             print("📦 [MainView] NSUbiquitousKeyValueStore change detected: \(reason)")
             #endif
+
+            // Mirrors MainView_iOS (Device_Linking.md §4.5)
+            if changeReason == NSUbiquitousKeyValueStoreAccountChange, accountChangeMayAlterRoute() {
+                print("🔗 [MainView] iCloud KVS account change — re-running wallet detection")
+                await checkForExistingWallet()
+                return
+            }
         }
         
         // Check if the ubiquitousHashKey was changed
@@ -361,6 +415,7 @@ struct MainView: View {
                 // Not linked: show the link screen, no initialization or
                 // registration until the user links
                 print("🔗 Account wallet awaiting link - showing link screen (cached detection path)")
+                await closeOpenWalletOnMismatch(state)
                 hasWallet = false
                 isCheckingWallet = false
             } else if case .noWallet = state {
@@ -401,6 +456,7 @@ struct MainView: View {
                 // first import can land behind it
                 print("🔗 Account wallet awaiting link - showing link screen")
                 activateLateDetectedWalletServices()
+                await closeOpenWalletOnMismatch(state)
                 hasWallet = false
                 isCheckingWallet = false
 

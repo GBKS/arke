@@ -15421,6 +15421,17 @@
         }
       }
     },
+    "error_wallet_still_on_device" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device still holds a wallet. Restore it with its recovery phrase, or remove it from this device first."
+          }
+        }
+      }
+    },
     "exit_blocked_fees_explanation" : {
       "localizations" : {
         "de" : {
@@ -17987,6 +17998,138 @@
         }
       }
     },
+    "launch_check_button_remove" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Remove from This Device…"
+          }
+        }
+      }
+    },
+    "launch_check_button_restore" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restore with Recovery Phrase"
+          }
+        }
+      }
+    },
+    "launch_check_message_deleted" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "It was deleted on another device. Its data is still on this device. Restore it with your recovery phrase to keep using it here, or remove it from this device."
+          }
+        }
+      }
+    },
+    "launch_check_message_different_account" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet on this device belongs to another iCloud account. Sign back in to that account and check again, or remove the wallet from this device before linking this account's wallet."
+          }
+        }
+      }
+    },
+    "launch_check_message_signed_out" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Spending and sync need the wallet's iCloud account. Sign back in in the Settings app, then check again. Or remove the wallet from this device."
+          }
+        }
+      }
+    },
+    "launch_check_message_undetermined" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet on this device is no longer the one on this iCloud account, and iCloud hasn't said whether you are signed in. Check again in a moment, or remove the wallet from this device."
+          }
+        }
+      }
+    },
+    "launch_check_remove_warning_deleted" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All wallet data will be permanently deleted from this device. The wallet was already deleted from iCloud, so only your recovery phrase can restore it later."
+          }
+        }
+      }
+    },
+    "launch_check_remove_warning_kept" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "All wallet data will be permanently deleted from this device. The wallet stays on its iCloud account and on any other device linked to it."
+          }
+        }
+      }
+    },
+    "launch_check_title_deleted" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This wallet was deleted from your iCloud account"
+          }
+        }
+      }
+    },
+    "launch_check_title_different_account" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device is signed in to a different iCloud account"
+          }
+        }
+      }
+    },
+    "launch_check_title_signed_out" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You are signed out of iCloud"
+          }
+        }
+      }
+    },
+    "launch_check_title_undetermined" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "iCloud isn't answering"
+          }
+        }
+      }
+    },
     "link_button" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -18016,17 +18159,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter Recovery Phrase"
-          }
-        }
-      }
-    },
-    "link_message_mismatch" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "The wallet on this device is no longer the one on this iCloud account. It may have been deleted from another device, or this device is signed in to a different account. Sign back in to the wallet's account, or remove the wallet from this device in Settings."
           }
         }
       }
@@ -18148,17 +18280,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Link this device again"
-          }
-        }
-      }
-    },
-    "link_title_mismatch" : {
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This wallet is not on this iCloud account"
           }
         }
       }
@@ -25534,6 +25655,29 @@
         }
       }
     },
+    "settings_delete_blocker_last_seen %@" : {
+      "comment" : "%@ is a relative time such as '2 hours ago'",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Last seen %@"
+          }
+        }
+      }
+    },
+    "settings_delete_blocker_no_longer_have" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "I no longer have this device"
+          }
+        }
+      }
+    },
     "settings_delete_export_body" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -26201,6 +26345,17 @@
         }
       }
     },
+    "settings_delete_primary_note" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This is the primary device. Make another device primary first, or the wallet continues from this device's last backup."
+          }
+        }
+      }
+    },
     "settings_delete_step_confirm_words" : {
       "extractionState" : "extracted_with_value",
       "localizations" : {
@@ -26284,6 +26439,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "儲存你的錢包備份檔案"
+          }
+        }
+      }
+    },
+    "settings_delete_unlink_blocker_explanation" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Removes this device from the wallet's device list. Only do this for a device you no longer have: once no device is left, deleting here removes the wallet from the account, and a device that still runs Arké loses it."
           }
         }
       }
@@ -26432,8 +26598,19 @@
         }
       }
     },
-    "settings_delete_warning_local_only_named %@" : {
+    "settings_delete_warning_local_only_devices_below" : {
       "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This will permanently delete your wallet from this device. The wallet stays on the account for the devices below."
+          }
+        }
+      }
+    },
+    "settings_delete_warning_local_only_named %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26462,7 +26639,7 @@
       }
     },
     "settings_delete_warning_local_only_unnamed" : {
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

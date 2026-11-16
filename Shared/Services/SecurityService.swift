@@ -294,7 +294,7 @@ class SecurityService {
         var seedUnreadable = false
         if case .unavailable = mnemonicStatus { seedUnreadable = true }
         let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(fallbackContainer: nil)
-        let route = DeviceLinkStore.launchRoute(
+        var route = DeviceLinkStore.launchRoute(
             record: DeviceLinkStore.record(),
             left: DeviceLinkStore.left(),
             accountHash: accountHash,
@@ -302,6 +302,22 @@ class SecurityService {
             seedUnreadable: seedUnreadable,
             ownRow: ownRow
         )
+        // Only the mismatch needs to know whether an iCloud account is
+        // present (deleted elsewhere vs signed out); ask CloudKit only then
+        if case .awaitingLink(.walletMismatch) = route {
+            let presence = await ICloudAccountStatus.presence()
+            let identityMatches = ICloudAccountIdentity.matches(stored: DeviceLinkStore.accountToken())
+            route = DeviceLinkStore.launchRoute(
+                record: DeviceLinkStore.record(),
+                left: DeviceLinkStore.left(),
+                accountHash: accountHash,
+                seedFound: seedFound,
+                seedUnreadable: seedUnreadable,
+                ownRow: ownRow,
+                iCloudAccount: presence,
+                accountIdentityMatches: identityMatches
+            )
+        }
         switch route {
         case .awaitingLink(let reason):
             // A keychain or registry that could not be read is re-checked when
@@ -319,13 +335,26 @@ class SecurityService {
             }
         case .noAccountWallet:
             // The breadcrumb must not outlive the wallet it remembers: left
-            // behind after a wipe elsewhere it would refuse creation forever
+            // behind after a wipe elsewhere it would refuse creation forever.
+            // But a blank KVS and a seedless keychain are definitive only
+            // with an iCloud account present; signed out, nothing is known,
+            // and clearing would let Create run while signed out, to collide
+            // with the account's seed on sign-in (adversarial pass
+            // 2026-11-16, F5). The status call runs only with a breadcrumb.
             if DeviceLinkStore.leftBreadcrumbIsStale(left: DeviceLinkStore.left(), accountHash: accountHash, seedFound: seedFound, seedUnreadable: seedUnreadable) {
-                DeviceLinkStore.clearLeft()
-                Self.logger.notice("🔗 Left breadcrumb cleared: the account wallet it remembered is gone")
+                if await ICloudAccountStatus.presence() == .absent {
+                    Self.logger.notice("🔗 Left breadcrumb kept: signed out of iCloud, the account wallet's fate is unknown")
+                } else {
+                    DeviceLinkStore.clearLeft()
+                    Self.logger.notice("🔗 Left breadcrumb cleared: the account wallet it remembered is gone")
+                }
             }
         case .linked:
-            break
+            // Records from before the identity was stored learn it on a
+            // healthy launch, so a later mismatch can be told apart
+            if DeviceLinkStore.accountToken() == nil {
+                DeviceLinkStore.recordAccountToken(ICloudAccountIdentity.currentTokenData())
+            }
         }
 
         Self.logger.debug("Wallet state detection: checking local keychain...")

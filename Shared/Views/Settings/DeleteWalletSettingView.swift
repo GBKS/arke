@@ -11,7 +11,15 @@ import ArkeUI
 struct DeleteWalletSettingView: View {
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.walletDataCleanupService) private var cleanupService
+    @Environment(\.deviceRegistrationService) private var deviceService
     @State private var showingDeletionConfirmation = false
+    /// The per-blocker remedy (Device_Linking.md §4.4, DECIDED 2026-11-13):
+    /// "I no longer have this device" runs the ordinary unlink and
+    /// re-assesses. Clearing the last blocker reaches the full outcome with
+    /// the phrase check still in front.
+    @State private var blockerToUnlink: OtherWalletDevice?
+    @State private var showingUnlinkConfirmation = false
+    @State private var isUnlinking = false
     @State private var isDeleting = false
     @State private var deleteError: String?
     @State private var deletionStrategy: DeletionStrategy?
@@ -56,6 +64,31 @@ struct DeleteWalletSettingView: View {
                         .font(.title3)
                         .lineSpacing(6)
                         .foregroundColor(.secondary)
+
+                    // Removal stays allowed on the primary (DECIDED 2026-11-13):
+                    // one line says what the other devices then continue from
+                    if deletionStrategy == .localOnly, !walletManager.isReadOnlyMode {
+                        Text(String(localized: "settings_delete_primary_note",
+                                    defaultValue: "This is the primary device. Make another device primary first, or the wallet continues from this device's last backup."))
+                            .font(.title3)
+                            .lineSpacing(6)
+                            .foregroundColor(.secondary)
+                    }
+
+                    // The devices that keep this deletion local, each with its
+                    // remedy. Names and dates come from the merged report, so
+                    // this list and Linked Devices cannot disagree.
+                    if deletionStrategy == .localOnly, let report = blockerReport, !report.others.isEmpty {
+                        VStack(alignment: .leading, spacing: 14) {
+                            ForEach(report.others) { device in
+                                DeletionBlockerRow(device: device, isDisabled: isUnlinking || isDeleting) {
+                                    blockerToUnlink = device
+                                    showingUnlinkConfirmation = true
+                                }
+                            }
+                        }
+                        .padding(.top, 10)
+                    }
 
                     // The three steps ahead as a list (Christoph, 2026-11-12:
                     // a second paragraph gets skipped). Last-device path only;
@@ -250,6 +283,23 @@ struct DeleteWalletSettingView: View {
                 showingPhraseConfirmation = false
             }
         }
+        .confirmationDialog(
+            String(localized: "settings_unlink_device", defaultValue: "Unlink Device"),
+            isPresented: $showingUnlinkConfirmation,
+            presenting: blockerToUnlink
+        ) { (device: OtherWalletDevice) in
+            Button(String(format: String(localized: "button_unlink_device_name", defaultValue: "Unlink %@"),
+                          UnsyncedDeviceRow.title(for: device)),
+                   role: .destructive) {
+                Task { await unlinkBlocker(device) }
+            }
+        } message: { (device: OtherWalletDevice) in
+            // Honest about the consequence for a device that is not gone: it
+            // lands on its link screen and can link again (Device_Linking.md
+            // §11.6); the irreversible step keeps its own gate below
+            Text(String(localized: "settings_delete_unlink_blocker_explanation",
+                        defaultValue: "Removes this device from the wallet's device list. Only do this for a device you no longer have: once no device is left, deleting here removes the wallet from the account, and a device that still runs Arké loses it."))
+        }
         .sheet(isPresented: $showingDeletionConfirmation, onDismiss: {
             // The override survives a cancelled sheet only while the
             // sub-flow is still up: the user can slide again from the phrase
@@ -375,21 +425,15 @@ struct DeleteWalletSettingView: View {
     private var introText: String {
         switch deletionStrategy {
         case .localOnly:
-            guard let report = blockerReport else {
+            guard blockerReport != nil else {
                 // Registries unreadable — the strategy is conservative by
                 // design, and the copy must not invent devices to justify it
                 return String(localized: "settings_delete_warning_check_failed", defaultValue: "This will permanently delete your wallet from this device. Your other devices couldn't be checked, so the wallet stays on the account.")
             }
-
-            let names = report.others.compactMap(\.deviceName)
-            if !names.isEmpty {
-                return String(format: String(localized: "settings_delete_warning_local_only_named %@", defaultValue: "This will permanently delete your wallet from this device. Still registered elsewhere: %@."),
-                              names.formatted(.list(type: .and)))
-            }
-
-            // Blockers exist but nothing can name them: mirror entries whose
-            // registry rows haven't arrived, or never will
-            return String(localized: "settings_delete_warning_local_only_unnamed", defaultValue: "This will permanently delete your wallet from this device. Another device on this iCloud account is still registered to the wallet, though its details haven't reached this device yet.")
+            // The blockers follow as rows, named from the merged report (or
+            // "Device linked …" for an entry without identity), each with its
+            // remedy (Device_Linking.md §4.4)
+            return String(localized: "settings_delete_warning_local_only_devices_below", defaultValue: "This will permanently delete your wallet from this device. The wallet stays on the account for the devices below.")
         case .promptForCloudData:
             // Last device: the consequence and the recommended way back
             // (phrase + wallet backup file; the phrase alone is the emergency
@@ -473,6 +517,22 @@ struct DeleteWalletSettingView: View {
             amountSat: ark.map { $0.totalSat - $0.pendingExitSat } ?? 0,
             earliestExpiryHeight: nil
         )
+    }
+
+    /// "I no longer have this device": the ordinary unlink (mirror entries
+    /// first, then every registry row), then a fresh assessment. A failure
+    /// shows here like any other pre-seed error.
+    private func unlinkBlocker(_ device: OtherWalletDevice) async {
+        isUnlinking = true
+        deleteError = nil
+        do {
+            try await deviceService.unlinkDevice(device.deviceId)
+        } catch {
+            deleteError = String(format: String(localized: "error_unlink_device", defaultValue: "Failed to unlink device: %@"),
+                                 error.localizedDescription)
+        }
+        isUnlinking = false
+        await checkDevices()
     }
 
     /// Re-runs on every return to this screen (sheet dismissal, phrase-screen
@@ -592,3 +652,68 @@ struct DeleteWalletSettingView: View {
         deleteError = error.localizedDescription
     }
 }
+
+/// One device that keeps the deletion local, with its remedy. Drawn from the
+/// merged report like `UnsyncedDeviceRow`: name or "Device linked …", a
+/// heartbeat where the registry has one ("last seen") and the registration
+/// date otherwise ("linked"), never "unrecognized" (Device_Linking.md §5.3).
+private struct DeletionBlockerRow: View {
+    let device: OtherWalletDevice
+    let isDisabled: Bool
+    let onNoLongerHave: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if let platform = device.platform {
+                Text(platform.icon)
+                    .font(.system(size: 28))
+                    .accessibilityHidden(true)
+            } else {
+                // A device of unknown kind: a generic device glyph, not the
+                // dashed square, which read as a checkbox (Christoph, 2026-11-16)
+                Image(systemName: "laptopcomputer.and.iphone")
+                    .font(.system(size: 22))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32)
+                    .accessibilityHidden(true)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(UnsyncedDeviceRow.title(for: device))
+                    .font(.system(size: 16, weight: .medium))
+                if device.deviceName != nil {
+                    Text(dateLine)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                Button(action: onNoLongerHave) {
+                    Text(String(localized: "settings_delete_blocker_no_longer_have", defaultValue: "I no longer have this device"))
+                        .font(.callout)
+                        .fontWeight(.medium)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(isDisabled)
+                .padding(.top, 2)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var dateLine: String {
+        if let lastSeenAt = device.lastSeenAt {
+            return String(format: String(localized: "settings_delete_blocker_last_seen %@", defaultValue: "Last seen %@",
+                                         comment: "%@ is a relative time such as '2 hours ago'"),
+                          lastSeenAt.formatted(.relative(presentation: .named)))
+        }
+        guard let registeredAt = device.registeredAt else {
+            return String(localized: "linked_devices_linked_earlier", defaultValue: "Linked earlier")
+        }
+        return String(format: String(localized: "linked_devices_linked_on %@", defaultValue: "Linked %@",
+                                     comment: "%@ is a date (abbreviated)"),
+                      registeredAt.formatted(date: .abbreviated, time: .omitted))
+    }
+}
+

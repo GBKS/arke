@@ -110,9 +110,10 @@ struct LinkWalletView: View {
 
     // MARK: - Copy
 
-    /// Variants with nothing to link to: no import wait, no link action
+    /// The variant with nothing to link to yet: no import wait, no link
+    /// action. The mismatch has its own screen (`LaunchCheckView`).
     private var isBlocked: Bool {
-        reason == .waitingForICloud || reason == .walletMismatch
+        reason == .waitingForICloud
     }
 
     private var title: String {
@@ -120,7 +121,8 @@ struct LinkWalletView: View {
         case .waitingForICloud:
             return String(localized: "link_title_waiting", defaultValue: "Waiting for iCloud")
         case .walletMismatch:
-            return String(localized: "link_title_mismatch", defaultValue: "This wallet is not on this iCloud account")
+            // Routed to LaunchCheckView by the main views; never shown here
+            return String(localized: "launch_check_title_undetermined", defaultValue: "iCloud isn't answering")
         case .removedHere, .removedByAnotherDevice:
             return String(localized: "link_title_again", defaultValue: "Link this device again")
         case .newDevice:
@@ -134,8 +136,7 @@ struct LinkWalletView: View {
             return String(localized: "link_message_waiting",
                           defaultValue: "This device held a wallet before. iCloud hasn't answered yet; the wallet appears as soon as it does.")
         case .walletMismatch:
-            return String(localized: "link_message_mismatch",
-                          defaultValue: "The wallet on this device is no longer the one on this iCloud account. It may have been deleted from another device, or this device is signed in to a different account. Sign back in to the wallet's account, or remove the wallet from this device in Settings.")
+            return ""
         case .removedHere(let leftAt):
             return String(format: String(localized: "link_message_removed_here %@",
                                          defaultValue: "You removed this wallet from this device on %@. Link it again to keep viewing it."),

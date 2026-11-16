@@ -1782,6 +1782,8 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
     case binaryNotFound
     case commandFailed(String)
     case walletAlreadyOnAccount
+    /// This install's link record still names a wallet (launch-check cases)
+    case walletStillOnDevice
     /// The account names a custom Ark server whose details have not synced to
     /// this device yet; creating or importing with another server would
     /// replace it account-wide (Ark_Server_Selection.md §4.2).
@@ -1801,6 +1803,8 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
             return message
         case .walletAlreadyOnAccount:
             return String(localized: "error_wallet_already_on_account", defaultValue: "This iCloud account already has a wallet. Rejoin it or import its recovery phrase — creating a second wallet would overwrite the existing one.")
+        case .walletStillOnDevice:
+            return String(localized: "error_wallet_still_on_device", defaultValue: "This device still holds a wallet. Restore it with its recovery phrase, or remove it from this device first.")
         case .customServerConfigPending(let host):
             return String(format: String(localized: "error_custom_server_pending", defaultValue: "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."), host)
         case .backupBelongsToAnotherServer:
