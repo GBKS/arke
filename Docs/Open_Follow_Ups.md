@@ -383,14 +383,13 @@ check). The security-check matrix is still its own Tier 0 item.
 
 - [ ] **Explicit device linking — build** (DECIDED 2026-11-13, plan
   `Features/Device_Linking.md` §8): six steps, each with its own adversarial
-  pass. Steps 1–3 built, device-checked and committed (last 6c1aa69,
-  2026-11-14; records §11–§13). **Step 4 (make-primary flow) built,
-  reviewed and unit-tested 2026-11-15** (§14.3; eight findings fixed, the
-  confirmed one a post-promote wait that passed at once; 717 tests green);
-  owed: the two-phone handover, timeout, takeover and direct checks in
-  §14.3, then commit. Next: step 5 (delete remedy, launch check), 6 (docs,
-  translations). Open checks: per-app iCloud toggle (optional); the
-  Keychain-off seed entry is Tier 2 debt.
+  pass. Steps 1–4 built, device-checked and committed (last 804aa72,
+  2026-11-16; records §11–§14). **Step 5 (delete-flow per-blocker unlink,
+  launch-check screen, account-change re-detection) built, reviewed and
+  unit-tested 2026-11-16** (§15.4; five findings fixed, two of them
+  confirmed); owed: the five device checks in §15.5, then commit. Next:
+  step 6 (docs, translations). Open checks: per-app iCloud toggle
+  (optional); the Keychain-off seed entry is Tier 2 debt.
 
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read

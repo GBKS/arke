@@ -322,7 +322,11 @@ The link-record validation at launch is one pure function over five inputs:
 record hash, account hash, seed status, iCloud identity present, own row
 present. It replaces `tombstoneRouting`. Three of its outcomes share one
 view with two safe exits, "Remove from this iPhone" and a second exit per
-case; nothing happens without a tap.
+case; nothing happens without a tap. (Built 2026-11-16, §15: "iCloud
+identity" became two inputs, the CloudKit account status for "signed out"
+and the link-time `ubiquityIdentityToken` for "same account or another";
+an Apple ID with no wallet is otherwise indistinguishable from a wipe
+elsewhere, §15.4 F2.)
 
 | Case | Inputs | Copy | Second exit |
 |---|---|---|---|
@@ -1183,3 +1187,163 @@ gone.
 **Device run 2026-11-16 (Christoph, two phones):** hand over A → B, hand
 back B → A, X-Ray on A populated without a relaunch. PASSED. Step 4 device
 checks complete.
+
+## 15. Step 5 build plan (2026-11-16)
+
+Delete-flow blocker remedy, the launch-check screen, re-detection on
+account change (§4.4 blocked case, §4.5, §8 step 5).
+
+### 15.1 Facts settled for this step
+
+- **Verified** (`WalletDataCleanupService.performDeleteWalletData`): a
+  local-only deletion keeps the seed, clears the link record and writes the
+  left breadcrumb from the KVS hash. On the launch-check screen the KVS
+  hash is nil or another account's, so the breadcrumb must come from the
+  link record instead.
+- **Verified** (`DeviceRegistrationService.unlinkDevice`): clears the
+  mirror entries first, then every registry row for the id; a row-less id
+  with mirror entries removed is a successful unlink. So one remedy serves
+  registry-backed and mirror-only blockers alike.
+- **Verified** (`WalletManager.createWallet`): the FFI create removes an
+  existing directory. A device on the aftermath screen whose user backs
+  out of the restore into onboarding and taps Create would lose wallet X's
+  database, the only copy of its offchain state after a wipe elsewhere.
+  The creation guard therefore also refuses while a link record exists.
+- **Verified** (`BarkWalletFFI.importWallet`): the FFI import does not
+  remove the data directory; it creates it when missing and only drops the
+  legacy BDK file. **Assumed** (bark): opening an existing database with
+  the phrase that created it succeeds and keeps its state, so "Restore with
+  recovery phrase" on the aftermath screen imports over the local files and
+  keeps history. Not verified at the bindings; the device check decides.
+- **Verified** (`MainView_iOS.handleUbiquitousStoreChange`): the KVS
+  account-change reason is logged only; detection re-runs only when the
+  hash key is among the changed keys. No `CKAccountChanged` observer exists
+  anywhere.
+- **Derived** (Apple docs, checked 2026-11-13, §4.5): `CKContainer.
+  accountStatus()` distinguishes `.available` from `.noAccount`; every
+  other status is treated as unknown and gets the undetermined copy.
+
+### 15.2 Changes
+
+1. **Launch-check case**, pure: `DeviceLinkStore.launchCheckCase(recordHash:
+   accountHash:seedFound:iCloudAccount:)` → `.differentAccount` (hash
+   present and different), `.deletedElsewhere` (no hash, seed `.notFound`,
+   account present), `.signedOut` (same, account absent), `.undetermined`
+   (account status unknown). `LinkPromptReason.walletMismatch` carries it.
+   `launchRoute` takes the account presence as a defaulted parameter;
+   detection resolves the status only when the first pass says mismatch.
+2. **`ICloudAccountStatus.presence()`** (new, Shared): one `CKContainer`
+   call on the app's container, mapped to present / absent / unknown.
+3. **`LaunchCheckView`** (new, Shared) replaces the link screen's mismatch
+   variant. Copy per §4.5 plus the undetermined fallback. Exits: "Check
+   Again" (all cases), "Restore with Recovery Phrase" (deleted elsewhere,
+   iOS: onboarding opens at the phrase step, local files untouched), and
+   "Remove from This Device" (slider sheet, local-only deletion, routes
+   again). Re-checks when the app returns to the foreground.
+4. **Mid-session mismatch**: when detection re-runs on an initialised
+   wallet and lands on the mismatch, the wallet is closed *without* a
+   backup, so wallet X's database is never written into account Y's Drive.
+5. **Re-detection**: KVS account-change reason re-runs detection; both main
+   views observe `CKAccountChanged` and do the same.
+6. **Breadcrumb**: the local-only deletion remembers the link record's hash
+   when present, the KVS hash otherwise.
+7. **Creation guard**: `createWallet` refuses first while a link record
+   exists, with its own error text (`walletStillOnDevice`); the pure
+   `accountHasWalletSignals` is unchanged.
+8. **Delete screen**: under the local-only intro, one row per blocker
+   (name or "Device linked …", last seen / linked date)
+   with "I no longer have this device"; confirmation dialog, then
+   `unlinkDevice` and a fresh assessment. On a primary the intro gains the
+   §4.4 line. The two named/unnamed intro keys are replaced by one.
+9. Desktop compiles with the same routing minus the restore exit.
+
+### 15.3 Sweep
+
+`reason == .walletMismatch` sites: `LinkWalletView` (variant removed),
+both main views' link action (guard narrowed to waiting). `WalletState`
+switches: unchanged shape, reason-carried case. `LinkLaunchRouteTests`
+mismatch assertions pattern-match the case; `LaunchCheckCaseTests` pins
+the case function and the CloudKit status mapping. Strings: every new key
+with `defaultValue:`; translations in step 6.
+
+### 15.4 Build record (2026-11-16)
+
+Built as planned; adversarial pass (fault-class-reviewer, uncommitted diff)
+returned two CONFIRMED and three PLAUSIBLE findings, all fixed the same day:
+
+- **F1 CONFIRMED (class 2 + 5), fixed.** The restore exit opened onboarding
+  at the phrase step with the flow's default `.mainnet` config, skipping the
+  cover screen's server picker. For a signet wallet the import's
+  network-mismatch retry (`WalletManager.importWallet`) removes the
+  directory, the one copy of the orphaned wallet's offchain state. The
+  §15.1 "Verified" claim about the FFI import was true of the FFI and false
+  of the wrapper. Fix: `OnboardingFlow_iOS(initialNetworkConfig:)`, the
+  restore passes the wallet's own persisted config. Ledger row.
+- **F2 CONFIRMED (class 5 + 1), fixed.** The §4.5 table's claim that five
+  inputs separate the three cases was false: a device moved to an Apple ID
+  that has no wallet shows record X, blank KVS, seedless keychain and an
+  account present, exactly like a wipe elsewhere, and the restore exit would
+  have paired wallet X with account Y. Fix: the link record stores the
+  archived `ubiquityIdentityToken` at link time (`com.arke.link.accountToken`,
+  backfilled on every healthy launch for older records; wipe inventory
+  updated); `launchCheckCase` takes `accountIdentityMatches`. A matching
+  identity is the aftermath, a different one the account switch, no
+  comparison possible falls back to the account status, which can still say
+  "signed out" but never "deleted". Apple names the ubiquity token as the
+  account-change signal for iCloud Drive and KVS users, which Arké is; the
+  CloudKit status stays the sign-out signal (**derived**). Ledger row.
+- **F3 PLAUSIBLE (class 3), fixed.** `closeOpenWalletOnMismatch` keyed off
+  `isInitialized`, false during an in-flight open, so a mismatch landing
+  mid-open could leave a running primary behind the launch-check screen,
+  and Remove's local teardown would then shut bark down *with* a backup
+  into the current account's Drive. Fix: the guard also checks the FFI
+  handle and `isInitializing`; `LaunchCheckView.remove()` closes without a
+  backup first when a handle is open, and honours the refresh gate instead
+  of passing `false`.
+- **F4 PLAUSIBLE (class 5), reconciled.** The per-blocker unlink lets the
+  user clear a young mirror entry the override logic deliberately protects.
+  Accepted by the 2026-11-13 ruling (the user names the device; the phrase
+  gate stays in front, confirmed by the reviewer); dialog copy and the
+  service comment now say so.
+- **F5 PLAUSIBLE (class 1), narrowed.** Remove on the signed-out case led to
+  onboarding with Create enabled: a blank KVS and a seedless keychain are
+  "definitive" to `leftBreadcrumbIsStale`, so the breadcrumb was cleared and
+  a wallet could be created while signed out, to collide with the account's
+  seed on sign-in. Fix: the breadcrumb is kept while CloudKit reports no
+  account (status asked only when a breadcrumb exists). Creation while
+  signed out on a genuinely fresh install is pre-existing and out of scope.
+
+Sweep per reviewer: every mismatch pattern site covered; block-based
+`CKAccountChanged` observers are never removed (same pre-existing shape as
+the KVS observer). Not verified by anyone: everything on a device (§15.5).
+
+**Device run 2026-11-16 (Christoph):** all five §15.5 checks PASSED. One
+nit: every blocker row on the delete screen showed the dashed-square
+"unknown kind" glyph, which reads as a checkbox. Cause: the report merge
+dropped the registry row's platform, so only mirror-only devices had one.
+`RegistryDeviceSnapshot` now carries `platform`, the registry branch falls
+back to the fast entry's, and the remaining unknown-kind fallback (an old
+entry without identity) is a generic device glyph in both rows. Pinned by
+`FastRegistryEntryTests/registryPlatform`.
+
+### 15.5 Device checks owed
+
+1. **Delete flow, blocked.** On A (two devices linked): Settings › Delete
+   wallet shows B as a row with "I no longer have this device"; tap, confirm;
+   B goes to its link screen; A's screen re-assesses to the last-device
+   steps (backup file, two words, slider). Do not slide; back out, relink B.
+2. **Different account.** Sign A out of iCloud and into another Apple ID
+   (or the same test: sign out only). Launch: the launch-check screen with
+   the right title. Check Again after signing back in returns to the wallet.
+3. **Signed out.** Sign out; launch; "You are signed out of iCloud"; sign
+   back in; the screen re-checks on return to the foreground and the wallet
+   comes back.
+4. **Deleted elsewhere + restore (signet, two phones).** Unlink A from B,
+   full-wipe on B; A shows "deleted from your iCloud account" (needs the
+   identity token, so A must have launched linked once on this build
+   first); Restore with Recovery Phrase; the import opens the existing
+   database and history is still there. This also settles the ASSUMED
+   bark fact in §15.1.
+5. **Remove from this device** on any of the above: the slider sheet, then
+   onboarding (or the link screen on a different account that has a
+   wallet). The log must not show a backup written during the removal.
