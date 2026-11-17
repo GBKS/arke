@@ -607,7 +607,20 @@ holds its old row and flag until a sync arrives, and its first foreground
 launch settles it. To keep that window to sync lag, unlink, unregister
 and the full wipe remove the affected device's KVS primary flag, and the
 headless launch reads the row through `WalletManager.headlessModelContainer`
-rather than trusting the flag alone. Companion state: the per-install link
+rather than trusting the flag alone. The row is evidence only for the
+wallet it was registered under (since 2026-11-16, range review G1): the
+gate and detection ask `ownRowEvidence(fallbackContainer:walletHash:)`
+about the linked wallet (the record's hash, else the account's) and a row
+for another wallet reads as `.otherWallet`, which every reader treats as
+no row, so a primary row left by a wallet that was wiped and replaced
+elsewhere never opens the replacement; with no wallet to ask about a
+found row is `.unavailable`, not a role. Detection takes the hash of the
+seed in hand as the account hash whenever KVS is blank, so a record for
+another wallet is a mismatch (the launch check), never a missing row the
+link button would re-point. For the same reason
+the pre-record self-heal in `launchRoute` yields to a left breadcrumb: an
+install that deleted locally while its unregister retained the row shows
+"you removed this wallet", it is not silently re-linked and restored. Companion state: the per-install link
 record (`DeviceLinkStore`, `com.arke.link.*`), written by every successful
 registration and cleared by the deletion's Step 4 (after the fallible
 CloudKit and keychain steps, like the tombstone, so a deletion that throws

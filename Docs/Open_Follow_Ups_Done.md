@@ -119,6 +119,14 @@ section; the open file never holds ticked lines.
 
 
 ## Multi-Device (guiding doc: `Architecture/Multi_Device_Design.md`)
+- [x] **Seed-only phrase entry on a linked device without its key — device-checked 2026-11-17 (Christoph, B with iCloud Keychain off, passed as reported)**
+  (`SeedEntrySheet_iOS`, device linking step 2, 2026-11-14): with iCloud
+  Keychain off on B, a fresh install shows the link screen's key-missing
+  line, "Enter Recovery Phrase" saves the seed after the account-hash check,
+  B's log has no bark import line, and B stays a secondary. Not run on
+  2026-11-14 (no device set-up for Keychain off); the path reuses the
+  validated phrase grid and the existing keychain save.
+  `Features/Device_Linking.md` §12.3.
 Status 2026-08-19: S10 DECIDED (read-only + explain). S7 blocking, the S5
 assistant sketch, and the security-check matrix are PROPOSALS in the doc
 awaiting Christoph's call — the items below assume acceptance:

@@ -1051,6 +1051,9 @@ window. Also seen: A's list picked B up only after re-entering the screen
 (backlog Tier 3 Settings, devices, deletion). Re-run owed after the reset
 to the shared signet wallet (done the same day).
 
+**Re-run 2026-11-17 (Christoph, two phones): passed** (`Development/Device_Day_2026-11-17.md`
+§1). Step 3 has no open device checks.
+
 ## 14. Step 4 build plan (2026-11-14)
 
 Scope: flow 4.3, "Make this device primary", replacing the promote and
@@ -1208,6 +1211,14 @@ gone.
 **Device run 2026-11-16 (Christoph, two phones):** hand over A → B, hand
 back B → A, X-Ray on A populated without a relaunch. PASSED. Step 4 device
 checks complete.
+
+**Device run 2026-11-17 (Christoph, two phones):** the three paths the
+2026-11-16 record did not name, run as `Development/Device_Day_2026-11-17.md`
+§3: idle-primary handover (no timeout on either side, which settles §17
+H3 on device: the mtime-only slot stamp propagated), timeout path,
+takeover with the reconcile line, direct promotion. All passed as
+reported. The Activity list after the hand-back was populated, so §17
+H1's visible symptom did not reproduce on device.
 
 ## 15. Step 5 build plan (2026-11-16)
 
@@ -1369,6 +1380,14 @@ entry without identity) is a generic device glyph in both rows. Pinned by
    onboarding (or the link screen on a different account that has a
    wallet). The log must not show a backup written during the removal.
 
+**Results 2026-11-17 (Christoph, `Development/Device_Day_2026-11-17.md`):**
+item 1 passed (§2 there); item 5 passed from the replaced-wallet
+launch-check screen (§4 there, no backup line). Items 2 and 3 DEFERRED
+(DECIDED 2026-11-17): run once on B before the first TestFlight build that
+ships the launch-check screen; they verify iOS boundary facts, not app
+logic, and every launch-check case opens nothing. Item 4 waits for the
+restore-exit fix (§17 I1) and stays owed.
+
 ## 16. Step 6: docs and translations (2026-11-16)
 
 - `Multi_Device_Design.md`: S2, S3, S4, S6, S7, S9 and S10 walkthroughs
@@ -1404,7 +1423,8 @@ findings are in `Import_Screen_Split.md` §15, the export-copy finding in
 
 **Rulings (DECIDED 2026-11-16, Christoph, delegated to the session's
 recommendation):** fix order G1/D1 → I1 → H1 → I2, one session each, the
-PLAUSIBLE set after. H2: conflict losers (`reconcilePrimaryConflicts`
+PLAUSIBLE set after (2026-11-17: H1's visible symptom did not reproduce
+on device, so fix 3 now follows I2). H2: conflict losers (`reconcilePrimaryConflicts`
 self-demotion) close with `backingUp: false`; only the guided demote writes
 the handover backup. D2: the per-blocker unlink keeps its designed flow, no
 settle window; the hazard is closed in the restore path instead, which
@@ -1434,6 +1454,61 @@ Fix status is tracked per finding below as fixes land.
   `LinkLaunchRouteTests` pins self-heal and the breadcrumb separately; no
   case has both. The shared root is the unscoped own row, which also feeds
   `walletAccessVerdict` layer 3.
+  **Fixed 2026-11-16 (built, scoped suites 55/55, adversarial pass on the
+  diff below).** `OwnRowEvidence.otherWallet`: a row registered under a
+  different wallet than the one asked about, treated as no row by
+  `validity`, `launchRoute` and `accessVerdict`.
+  `ownRowEvidence(fallbackContainer:walletHash:)` scopes the row through
+  the pure `ownRowEvidence(isPrimary:rowWalletHash:expectedWalletHash:)`;
+  the hash parameter has no default, and with no wallet named a found row
+  is `.unavailable` (not evidence either way), no row still `.absent`.
+  Detection treats the hash of the seed in hand as the account hash
+  whenever KVS is blank (the synchronizable seed is account-wide), feeds
+  it to the route, the scoping and the self-heal write alike; the gate
+  asks about the record's hash, else the KVS hash; the link screen's
+  `ownRowWasPrimary` uses KVS, else the seed hash, the same source as the
+  link action. `launchRoute` self-heals only with no left breadcrumb.
+  Tests: `LinkLaunchRouteTests` (breadcrumb beats self-heal, other-wallet
+  row never heals or links), `DeviceLinkValidityTests`,
+  `WalletAccessVerdictTests` (other-wallet row blocks),
+  `OwnRowEvidenceTests` (scoped, nil and blank reads, absent unscoped);
+  56/56 across the six linking suites; full mobile suite after the pass on
+  the fix: 731 tests in 104 suites passed, 5 live-probe tests skipped. The
+  seed-as-account-hash
+  composition lives in `performWalletStateDetection` and is traced by
+  hand, not unit-tested. **Device-checked 2026-11-17** (Christoph,
+  `Development/Device_Day_2026-11-17.md` §4): B offline with the shared
+  wallet, A full-wiped and created a new wallet, B online → launch-check
+  screen, bark never opened, Remove from this device wrote no backup.
+  Scenario (b), the retained row, has no device recipe without a forced
+  unregister failure and stays owed to a debug hook.
+
+  **Adversarial pass on the fix (2026-11-16, uncommitted diff), five
+  findings:** F1 CONFIRMED, class 2, fixed: record X, KVS blank, seed Y
+  synced, row X: scoping by the seed hash alone read the row as
+  `.otherWallet` → "removed by another device" → the link tap would have
+  re-pointed the record to Y with X's database on disk; now the seed hash
+  is the account hash for the whole route, so the record check itself
+  yields `walletChanged` → launch check. Ledger row. F2 PLAUSIBLE, class
+  2, fixed: the `walletHash: nil` default left the unscoped read as the
+  default for any caller and a nil hash self-heal unscoped; default
+  removed, nil → `.unavailable`. F3 PLAUSIBLE, fixed: the link screen
+  scoped by KVS only while the route and the action fall back to the seed
+  hash; aligned. F4 PLAUSIBLE, accepted: a local deletion whose unregister
+  retained a *primary* row now shows "you removed" and the link tap
+  re-registers with the role preserved, restoring the final backup the
+  deletion wrote; a successful unregister removes the row and the re-link
+  is a secondary, so this is the failure case only, the tap is explicit,
+  the lineage is this device's own, and a takeover in between is settled
+  by `reconcilePrimaryConflicts`. F5 PLAUSIBLE (low), inherited:
+  `.otherWallet` maps to `noRegistration`, unsettled, so a headless wake
+  chain retries although only a link can change the answer; same as
+  `.absent` before. Behaviour change noted by the pass: a retained row
+  after a local deletion now stays until re-link or 30-day staleness and
+  counts as a blocker on other devices' full wipe (per-blocker unlink
+  covers it); before, the next launch re-legitimised it. Not verified by
+  the pass: any run; bark's refusal of X's db with Y's seed; the channel
+  order (KVS vs iCloud Keychain vs CloudKit import) that reaches F1.
 - **G2 CONFIRMED, class 2, desktop.** `ArkeDesktop` `MainView` attaches
   `.walletClosedAfterUnlink` only inside the link-screen branch, so a Mac
   unlinked while running closes bark correctly but stays on the wallet view
@@ -1483,7 +1558,13 @@ Fix status is tracked per finding below as fixes land.
   `addressService` is created only in `setModelContext` when not read-only,
   so a device that started the session as a secondary and is promoted has
   no address service; `arkAddress` / `onchainAddress` return empty
-  (PLAUSIBLE for the visible symptom).
+  (PLAUSIBLE for the visible symptom). **Device 2026-11-17:** the Activity
+  list after a hand-over-and-back was populated, so the visible symptom
+  did not reproduce; the context asymmetry is still there in code (the
+  list may be fed by `transactionService`, whose context survives the
+  close), and onchain persistence was not checked. Fix 3 stays in the
+  order but drops below I2 in urgency; the builder should first trace
+  which service actually feeds the list.
 - **H2 PLAUSIBLE, class 1.** `reconcilePrimaryConflicts` makes the loser
   self-demote through `.deviceDemotedFromPrimary`, whose handler closes
   *with* backup; the range's stamp makes that slot write "newer". Two
@@ -1498,6 +1579,10 @@ Fix status is tracked per finding below as fixes land.
   the other device's `NSMetadataItemFSContentChangeDateKey` is unverified.
   If not, B times out at 240 s and is steered into a takeover that unlinks
   a healthy A. The "A idle for an hour" check in §14.3 has no recorded run.
+  **Settled on device 2026-11-17:** the idle-primary handover completed
+  with no timeout on either side (`Development/Device_Day_2026-11-17.md`
+  §3.1), so the mtime-only stamp does propagate to the peer's metadata.
+  Closed.
 - **H4 PLAUSIBLE, class 4, bark.** `recoverVtxos` at `lib-0.8.0`:
   `InFlight` states other than unclaimed → `db.remove_vtxo`. The takeover
   reconcile passes every locally spendable id; a VTXO the lost primary put

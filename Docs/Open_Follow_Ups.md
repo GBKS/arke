@@ -584,14 +584,6 @@ names the fix it verifies; the write-ups are in the Done log.
 
 ### Two-device
 
-- [ ] **Seed-only phrase entry on a linked device without its key**
-  (`SeedEntrySheet_iOS`, device linking step 2, 2026-11-14): with iCloud
-  Keychain off on B, a fresh install shows the link screen's key-missing
-  line, "Enter Recovery Phrase" saves the seed after the account-hash check,
-  B's log has no bark import line, and B stays a secondary. Not run on
-  2026-11-14 (no device set-up for Keychain off); the path reuses the
-  validated phrase grid and the existing keychain save.
-  `Features/Device_Linking.md` §12.3.
 - [ ] **Backup import rolled back for a server mismatch leaves the FFI handle
   open on an unlinked database** (`WalletManager.importWalletWithBackup`
   → `BarkErrorArke.backupBelongsToAnotherServer`; same shape as the older

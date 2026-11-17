@@ -266,6 +266,13 @@ as passed in aggregate, which also settles §9 F3 (long-press back) and F4
 (two-level push plus the sheet) for iOS. The two-device half stays owed to
 the deletion set's Device stage.
 
+### 8.2 Two-device half (Christoph, 2026-11-17)
+
+Run as `Development/Device_Day_2026-11-17.md` §9: the override route from
+a secondary offers the export step before the phrase check, and a demoted
+device exports the slot's newer copy. Passed as reported in aggregate.
+Nothing owed on device for this plan.
+
 ## 9. Review record (2026-11-12, `fault-class-reviewer`, same session, on the uncommitted diff)
 
 - **F1 CONFIRMED, class 2 — fixed.** Demoted device: local `db.sqlite`
