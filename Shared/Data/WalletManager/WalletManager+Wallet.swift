@@ -57,6 +57,23 @@ extension WalletManager {
         guard !trimmedMnemonic.isEmpty else {
             throw BarkErrorArke.commandFailed("Mnemonic phrase cannot be empty")
         }
+
+        // Same two refusals as the phrase-only path: with a link record this
+        // install still holds a linked wallet, and only its own phrase into
+        // an account that still shows nothing may proceed. Reachable here
+        // during the hand-back after a blocked restore, when the flow has
+        // left restore mode but detection has not landed yet (adversarial
+        // pass 2026-11-17, finding 2).
+        if let record = DeviceLinkStore.record() {
+            if securityService.hashMnemonic(trimmedMnemonic) != record.walletHash {
+                Self.logger.error("❌ Backup import refused: the phrase is not the one of the wallet still on this device")
+                throw BarkErrorArke.phraseNotThisWallets
+            }
+            if Self.restoreExitBlocked(kvsHash: securityService.getUbiquitousHash(), mnemonicStatus: SecurityService.mnemonicKeychainStatus()) {
+                Self.logger.error("❌ Backup import refused: the iCloud account's wallet state changed since the launch check — re-detecting")
+                throw BarkErrorArke.accountChangedSinceLaunchCheck
+            }
+        }
         
         // Step 1: Validate the mnemonic using SecurityService
         let validation = await securityService.validateMnemonic(trimmedMnemonic)
@@ -154,6 +171,14 @@ extension WalletManager {
                 Self.logger.warning("⚠️ Server not reachable right after backup import (continuing): \(error.localizedDescription)")
             }
 
+            // Step 6c: first backup to the account slot only now, with the
+            // database known to be this server's and this phrase's (range
+            // review 2026-11-16, I2; the FFI import no longer backs up itself,
+            // so a rollback above never left the slot overwritten)
+            if let ffiWallet = wallet as? BarkWalletFFI {
+                _ = await ffiWallet.backupWallet()
+            }
+
             // Step 7: Persist the network configuration
             NetworkConfigPersistence.save(config)
             
@@ -194,7 +219,8 @@ extension WalletManager {
             }
             
             Self.logger.info("✅ Wallet imported successfully with backup restoration")
-            
+            backupService.discardPreservedDatabase()
+
             return result
             
         } catch {
@@ -238,12 +264,13 @@ extension WalletManager {
                 await ffiWallet.shutdownWallet(backingUp: false)
             }
 
-            // Rollback Step 2: Remove restored backup database if it was restored
+            // Rollback Step 2: remove the restored database and put back the
+            // one it replaced, if there was one (range review 2026-11-16, I1)
             if backupRestored {
-                Self.logger.info("🔄 Rolling back: Removing restored database...")
+                Self.logger.info("🔄 Rolling back: Removing restored database, restoring the previous one if any...")
                 do {
-                    try backupService.removeRestoredDatabase()
-                    Self.logger.info("✅ Rollback: Database removed")
+                    try backupService.rollBackUserBackupRestore()
+                    Self.logger.info("✅ Rollback: Database state restored")
                 } catch {
                     Self.logger.error("⚠️ Rollback failed: Could not remove database: \(error.localizedDescription)")
                 }
@@ -293,16 +320,58 @@ extension WalletManager {
             throw BarkErrorArke.commandFailed("Invalid recovery phrase - a word is misspelled or out of order, or the count is not 12 or 24")
         }
         
+        // A link record names the wallet whose database is still in the
+        // directory (the launch-check restore exit, Device_Linking.md §4.5).
+        // Another phrase cannot be that wallet's: refuse before anything is
+        // opened or written, with a message that says so. Without this, the
+        // mismatch surfaces from BDK's descriptor check as a generic error
+        // (adversarial pass 2026-11-17, F2).
+        if let record = DeviceLinkStore.record() {
+            if securityService.hashMnemonic(trimmedMnemonic) != record.walletHash {
+                Self.logger.error("❌ Import refused: the phrase is not the one of the wallet still on this device")
+                throw BarkErrorArke.phraseNotThisWallets
+            }
+            // The restore exit was offered on "blank KVS, no seed, same
+            // account". Those inputs also hold for a moment while another
+            // device has wiped and *recreated* the account's wallet and its
+            // new hash and seed have not synced here yet; importing then
+            // would write this wallet's seed back into the account's keychain
+            // item, its hash into KVS and its database into the slot. Refuse
+            // here, before the open, and again right before the seed write
+            // below: the open is seconds of network work (DECIDED 2026-11-17,
+            // range review F7 on the I1 fix; second gate from the pass on it).
+            if Self.restoreExitBlocked(
+                kvsHash: securityService.getUbiquitousHash(),
+                mnemonicStatus: SecurityService.mnemonicKeychainStatus()
+            ) {
+                Self.logger.error("❌ Import refused: the iCloud account's wallet state changed since the launch check — re-detecting")
+                throw BarkErrorArke.accountChangedSinceLaunchCheck
+            }
+        }
+
         // Use provided networkConfig or fall back to wallet's current config
         let config = networkConfig ?? wallet.networkConfig
         try await Self.refuseIfCustomServerPending(for: config)
 
         // Update the wallet's network configuration BEFORE importing: the FFI
         // derives its esplora URL from the stored config, so importing first
-        // pairs the new network with the old network's esplora endpoint
+        // pairs the new network with the old network's esplora endpoint. The
+        // previous value is put back on every refusal below, or the restore
+        // exit would reopen pre-set to the wrong network.
+        let previousConfig = wallet.networkConfig
         wallet.updateNetworkConfig(config)
 
         removeStaleWalletDirectoryIfMarked()
+        // A parked database from an interrupted backup-file import belongs to
+        // no one once this import succeeds; it is cleared below on success.
+        // With a record and no live database, the parked file IS the linked
+        // wallet's database (a kill between park and copy): put it back
+        // first, or the FFI would create a fresh wallet over it.
+        let backupService = WalletBackupService(walletDirectory: wallet.walletDir)
+        if DeviceLinkStore.record() != nil, backupService.hasParkedDatabaseWithoutLive {
+            Self.logger.warning("⚠️ Parked database found with no live one on a linked install — putting it back before the import")
+            try? backupService.rollBackUserBackupRestore()
+        }
 
         // Import the wallet. Seed-only import: leftover wallet data from another
         // network is stale (nothing restored it deliberately - common on macOS,
@@ -320,6 +389,15 @@ extension WalletManager {
                 mnemonic: trimmedMnemonic
             )
         } catch BarkWalletFFIError.networkMismatch(let message) {
+            // With a link record the directory is a linked wallet's database,
+            // not stale leftovers: the launch-check restore exit reaches this
+            // path with the network read from the local cache, and a wrong
+            // network must surface, never wipe (range review 2026-11-16, I3)
+            if DeviceLinkStore.record() != nil {
+                Self.logger.error("❌ Existing wallet data belongs to another network than \(config.name) (\(message)) and this install still links it — not wiping")
+                wallet.updateNetworkConfig(previousConfig)
+                throw BarkErrorArke.existingWalletOnAnotherNetwork(networkName: config.name)
+            }
             Self.logger.warning("⚠️ Existing wallet data belongs to another network (\(message)) - wiping stale data and retrying import")
             try? await Task.sleep(nanoseconds: 500_000_000) // let Rust release sqlite handles
             try? FileManager.default.removeItem(at: wallet.walletDir)
@@ -329,6 +407,27 @@ extension WalletManager {
                 arkServer: config.arkServerBaseURL,
                 mnemonic: trimmedMnemonic
             )
+        }
+
+        // Second gate for the restore exit, right before the account-wide
+        // writes: the open above took seconds, during which the account's
+        // hash or seed may have arrived, or detection (which re-runs on a KVS
+        // change) may already have closed this handle under us. Either way,
+        // write nothing: close without backup, put the network back, and hand
+        // back to detection.
+        if DeviceLinkStore.record() != nil {
+            let handleClosed = (wallet as? BarkWalletFFI).map { !$0.isWalletOpen } ?? false
+            if handleClosed || Self.restoreExitBlocked(
+                kvsHash: securityService.getUbiquitousHash(),
+                mnemonicStatus: SecurityService.mnemonicKeychainStatus()
+            ) {
+                Self.logger.error("❌ Import aborted before the seed write: the account's wallet state changed during the open (handle closed: \(handleClosed)) — re-detecting")
+                if let ffiWallet = wallet as? BarkWalletFFI, ffiWallet.isWalletOpen {
+                    await ffiWallet.shutdownWallet(backingUp: false)
+                }
+                wallet.updateNetworkConfig(previousConfig)
+                throw BarkErrorArke.accountChangedSinceLaunchCheck
+            }
         }
 
         // Persist the network configuration so it's restored on next app launch
@@ -347,6 +446,14 @@ extension WalletManager {
         isInitialized = true
         freshWalletOrigin = .imported
         Self.logger.info("🌱 Fresh wallet origin: imported - transaction list shows skeleton until first sync completes")
+        backupService.discardPreservedDatabase()
+
+        // First backup only now: the database is this phrase's and the account
+        // state was re-checked (range review 2026-11-16, I2; the FFI import no
+        // longer backs up on its own)
+        if let ffiWallet = wallet as? BarkWalletFFI {
+            _ = await ffiWallet.backupWallet()
+        }
 
         // A successful import is this install's link to the wallet
         // (Device_Linking.md §4.1); it supersedes any memory of having left
@@ -390,6 +497,16 @@ extension WalletManager {
     /// brick onboarding; the KVS hash and the left breadcrumb (this install
     /// removed a wallet locally, Device_Linking.md §2.1) still guard the
     /// dangerous cases. Extracted for testability.
+    /// Pure guard for the launch-check restore exit: the import may proceed
+    /// only while the account still shows no wallet at all. Any KVS hash
+    /// (another wallet's or this one's, re-synced) or any keychain answer
+    /// other than a definitive "not found" blocks; detection re-runs and
+    /// routes the install correctly (linked again, mismatch, or the screen).
+    nonisolated static func restoreExitBlocked(kvsHash: String?, mnemonicStatus: MnemonicKeychainStatus) -> Bool {
+        if let kvsHash, !kvsHash.isEmpty { return true }
+        return mnemonicStatus != .notFound
+    }
+
     nonisolated static func accountHasWalletSignals(
         kvsHashPresent: Bool,
         mnemonicStatus: MnemonicKeychainStatus,

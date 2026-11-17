@@ -1802,6 +1802,16 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
     /// A restored backup database was created from a different recovery
     /// phrase than the one typed; bark compares the seed fingerprint on open.
     case backupBelongsToAnotherPhrase
+    /// The wallet database already on this device belongs to another network
+    /// than the one selected, and this install still links it, so it is not
+    /// wiped (launch-check restore exit, range review I3)
+    case existingWalletOnAnotherNetwork(networkName: String)
+    /// The phrase typed is not the one of the wallet this install still
+    /// links; nothing was opened or written (launch-check restore exit)
+    case phraseNotThisWallets
+    /// Between the launch check and the restore tap the account gained a
+    /// wallet signal again (hash or seed); the restore must not write over it
+    case accountChangedSinceLaunchCheck
 
     var errorDescription: String? {
         switch self {
@@ -1813,6 +1823,12 @@ enum BarkErrorArke: Swift.Error, LocalizedError {
             return String(localized: "error_wallet_already_on_account", defaultValue: "This iCloud account already has a wallet. Rejoin it or import its recovery phrase — creating a second wallet would overwrite the existing one.")
         case .walletStillOnDevice:
             return String(localized: "error_wallet_still_on_device", defaultValue: "This device still holds a wallet. Restore it with its recovery phrase, or remove it from this device first.")
+        case .accountChangedSinceLaunchCheck:
+            return String(localized: "error_account_changed_since_check", defaultValue: "Your iCloud account's wallet changed since this screen was shown. Arké is checking again.")
+        case .phraseNotThisWallets:
+            return String(localized: "error_phrase_not_this_wallets", defaultValue: "This is not the recovery phrase of the wallet on this device. Nothing was changed; check the words and try again.")
+        case .existingWalletOnAnotherNetwork(let networkName):
+            return String(format: String(localized: "error_existing_wallet_other_network", defaultValue: "The wallet on this device is not a %@ wallet. Nothing was changed; check the network setting and try again."), networkName)
         case .customServerConfigPending(let host):
             return String(format: String(localized: "error_custom_server_pending", defaultValue: "Your iCloud account uses the server %@, but its details have not synced to this device yet. Wait a moment and try again, or enter that server under Custom server."), host)
         case .backupBelongsToAnotherServer:

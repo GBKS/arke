@@ -24,6 +24,9 @@ struct MainView_iOS: View {
     /// Where onboarding opens. The launch-check screen's restore exit starts
     /// it at the phrase step (Device_Linking.md §4.5).
     @State private var onboardingStart: OnboardingState = .firstUse
+    /// Set by the launch-check restore exit: onboarding's phrase step opens
+    /// the existing database instead of offering a backup file (I1)
+    @State private var onboardingRestoresExistingDatabase = false
     @Environment(WalletManager.self) private var walletManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.securityService) private var securityService
@@ -131,13 +134,16 @@ struct MainView_iOS: View {
     }
 
     /// Deleted elsewhere: open onboarding at the phrase step with the local
-    /// files untouched, so the import opens the existing database for the
-    /// same phrase and keeps its state (Device_Linking.md §15.1). The link
-    /// record stays until the import replaces it; a relaunch before that
-    /// returns here, and the creation guard refuses while it exists.
+    /// files untouched, in restore mode, so the phrase-only import opens the
+    /// existing database and keeps its state (Device_Linking.md §15.1; the
+    /// backup-file step is skipped because its default path replaces the
+    /// database, range review I1). The link record stays until the import
+    /// replaces it; a relaunch before that returns here, and the creation
+    /// guard refuses while it exists.
     private func restoreFromLaunchCheck() {
-        Self.logger.notice("🔗 Restore requested from the launch check — opening onboarding at the phrase step")
+        Self.logger.notice("🔗 Restore requested from the launch check — opening onboarding at the phrase step, keeping the local database")
         onboardingStart = .importWallet
+        onboardingRestoresExistingDatabase = true
         walletState = .noWallet
         hasWallet = false
     }
@@ -261,7 +267,17 @@ struct MainView_iOS: View {
                     // mismatch retry, which wipes the directory (adversarial
                     // pass 2026-11-16, F1). Ordinary onboarding keeps mainnet.
                     initialNetworkConfig: onboardingStart == .importWallet ? (walletManager.networkConfig ?? .mainnet) : .mainnet,
+                    restoresExistingDatabase: onboardingRestoresExistingDatabase,
+                    onRestoreBlocked: {
+                        onboardingStart = .firstUse
+                        onboardingRestoresExistingDatabase = false
+                        Task { await recheckFromLaunchCheck() }
+                    },
                     onWalletReady: {
+                        // The restore exit's mode is one-shot: a later onboarding in
+                        // this session (after a deletion) starts at the cover screen
+                        onboardingStart = .firstUse
+                        onboardingRestoresExistingDatabase = false
                         // Transition to the wallet UI immediately - createWallet already
                         // set isInitialized and started services, so WalletView_iOS can
                         // render while the remaining setup completes in the background

@@ -22,6 +22,7 @@ Import wallet sequence
  */
 
 import SwiftUI
+import OSLog
 import ArkeUI
 import Combine
 
@@ -52,19 +53,71 @@ struct OnboardingFlow_iOS: View {
     /// The validated recovery phrase, carried from the phrase step to the
     /// backup-file step and back; cleared when the import branch is left.
     @State private var importPhrase: [String] = []
+    /// Restore mode (see `restoresExistingDatabase`): the phrase-only import
+    /// is running, and its error if it failed
+    @State private var isRestoring = false
+    @State private var restoreError: String?
     @Environment(WalletManager.self) private var walletManager
     let onWalletReady: () -> Void
+    /// The launch-check screen's restore exit (Device_Linking.md §4.5,
+    /// range review I1): the wallet's database is still on this device, so
+    /// the phrase step imports phrase-only and the backup-file step, whose
+    /// default path replaces the database, is never shown.
+    let restoresExistingDatabase: Bool
+    /// Restore mode: the import refused because the account's wallet state
+    /// changed since the launch check; the owner re-runs detection
+    let onRestoreBlocked: (() -> Void)?
+
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.arke", category: "OnboardingFlow")
 
     /// - Parameter initialState: the launch-check screen's restore exit
     ///   (Device_Linking.md §4.5) opens the flow at the phrase step
+    /// - Parameter restoresExistingDatabase: that exit keeps the local
+    ///   database; the phrase step restores directly
     init(
         initialState: OnboardingState = .firstUse,
         initialNetworkConfig: NetworkConfig = .mainnet,
+        restoresExistingDatabase: Bool = false,
+        onRestoreBlocked: (() -> Void)? = nil,
         onWalletReady: @escaping () -> Void
     ) {
         _currentState = State(initialValue: initialState)
         _networkConfig = State(initialValue: initialNetworkConfig)
+        self.restoresExistingDatabase = restoresExistingDatabase
+        self.onRestoreBlocked = onRestoreBlocked
         self.onWalletReady = onWalletReady
+    }
+
+    /// Restore mode: open the existing database with the phrase typed.
+    /// `importWallet` refuses another phrase against the link record before
+    /// opening anything, refuses to wipe the directory while the record
+    /// exists, and leaves `db.sqlite` untouched on success, so a wrong phrase
+    /// or network costs nothing but the error. `isRestoring` is set by the
+    /// tap handler, before the first hop, so Back and a second tap are
+    /// blocked from the start.
+    private func restoreExistingWallet(words: [String]) async {
+        defer { isRestoring = false }
+        do {
+            let result = try await walletManager.importWallet(
+                mnemonic: words.joined(separator: " "),
+                networkConfig: networkConfig
+            )
+            Self.logger.info("✅ Existing wallet restored from the recovery phrase: \(result)")
+            importPhrase = []
+            navigationDirection = .forward
+            withAnimation(.smooth(duration: 0.4)) {
+                currentState = .walletImported
+            }
+        } catch BarkErrorArke.accountChangedSinceLaunchCheck {
+            // Not a user error: the account moved on; hand back to detection,
+            // which lands on the right screen (linked again, mismatch, or the
+            // launch check with fresh inputs)
+            Self.logger.notice("🔗 Restore refused: account wallet state changed since the launch check — handing back to detection")
+            restoreError = BarkErrorArke.accountChangedSinceLaunchCheck.errorDescription
+            onRestoreBlocked?()
+        } catch {
+            restoreError = String(format: String(localized: "error_import_wallet", defaultValue: "Failed to import wallet: %@"), error.localizedDescription)
+        }
     }
     
     var body: some View {
@@ -142,13 +195,29 @@ struct OnboardingFlow_iOS: View {
                                 }
                             },
                             onContinue: { words in
+                                if restoresExistingDatabase {
+                                    importPhrase = words
+                                    isRestoring = true
+                                    Task { await restoreExistingWallet(words: words) }
+                                    return
+                                }
                                 importPhrase = words
                                 navigationDirection = .forward
                                 withAnimation(.smooth(duration: 0.4)) {
                                     currentState = .importBackupFile
                                 }
-                            }
+                            },
+                            restoresExistingDatabase: restoresExistingDatabase,
+                            isBusy: isRestoring
                         )
+                        .alert(String(localized: "error_import", defaultValue: "Import Error"), isPresented: Binding(
+                            get: { restoreError != nil },
+                            set: { if !$0 { restoreError = nil } }
+                        )) {
+                            Button(String(localized: "button_ok", defaultValue: "OK"), role: .cancel) { restoreError = nil }
+                        } message: {
+                            Text(restoreError ?? "")
+                        }
                         .transition(.asymmetric(
                             insertion: navigationDirection == .forward ?
                                 .move(edge: .trailing).combined(with: .opacity) :

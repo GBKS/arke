@@ -25,6 +25,12 @@ struct ImportPhraseView_iOS: View {
     let onBack: () -> Void
     /// Called with the validated words, in order.
     let onContinue: ([String]) -> Void
+    /// The launch-check screen's restore exit (Device_Linking.md §4.5): the
+    /// wallet's database is still on this device and the phrase reopens it.
+    /// No backup-file step follows; the button restores directly.
+    var restoresExistingDatabase: Bool = false
+    /// The restore is running (restore mode only)
+    var isBusy: Bool = false
 
     private static let maxWordCount = 24
 
@@ -59,6 +65,13 @@ struct ImportPhraseView_iOS: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
+                        if restoresExistingDatabase {
+                            Text(String(localized: "onboarding_restore_existing_body", defaultValue: "This device still holds the wallet's data. Its recovery phrase opens it again and keeps the history."))
+                                .font(.system(.body))
+                                .foregroundStyle(Color.Arke.gold)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+
                         // Funds live per Ark server: a phrase used on Second restores
                         // as empty on another server, and bark cannot warn about it
                         if networkConfig.serverKind == .custom {
@@ -82,10 +95,15 @@ struct ImportPhraseView_iOS: View {
                     Spacer(minLength: 10)
 
                     Button {
+                        guard !isBusy else { return }
                         focusedIndex = nil
                         onContinue(Array(words.prefix(wordCount)))
                     } label: {
-                        Text(String(localized: "button_continue", defaultValue: "Continue"))
+                        Text(restoresExistingDatabase
+                             ? (isBusy
+                                ? String(localized: "status_restoring", defaultValue: "Restoring...")
+                                : String(localized: "button_restore_wallet", defaultValue: "Restore Wallet"))
+                             : String(localized: "button_continue", defaultValue: "Continue"))
                             .font(.system(.title2, weight: .semibold))
                             .foregroundStyle(Color.Arke.gold4)
                             .frame(maxWidth: .infinity)
@@ -168,6 +186,7 @@ struct ImportPhraseView_iOS: View {
             .controlSize(.large)
             .tint(Color.Arke.gold)
             .accessibilityLabel(L10n.buttonBack)
+            .disabled(isBusy)
 
             Spacer()
         }

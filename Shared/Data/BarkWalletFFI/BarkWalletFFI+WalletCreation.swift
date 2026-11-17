@@ -564,9 +564,10 @@ extension BarkWalletFFI {
                 }
             }
 
-            // Perform initial backup after wallet import
-            await backupWallet()
-
+            // No backup here: the manager runs the first backup only after its
+            // own checks passed (server key, phrase, account state), so a
+            // rolled-back import never replaces the account's iCloud slot
+            // (range review 2026-11-16, I2)
             print("✅ Wallet imported successfully")
             return "Wallet imported successfully. Syncing with network..."
             
