@@ -30,7 +30,7 @@ struct MakeSecondaryView_iOS: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                ArkeCircularIcon(icon: Image(systemName: "arrow.down.circle"))
+                ArkeCircularIcon(icon: Image(systemName: "arrow.down"))
 
                 Text(title)
                     .font(.system(.title, design: .serif))
