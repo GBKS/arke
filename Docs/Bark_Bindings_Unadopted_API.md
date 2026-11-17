@@ -5,11 +5,11 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.26.1** (bark **v0.8.0**), tag
-`v0.26.1+bark-0.8.0` @ `4670c1a`, pinned as an exact revision in the
-project. v0.26.1 (2026-10-27) rebuilt the same `bark-ffi` crate commit as
-v0.26.0 (`4a1c1c0`, bark-wallet 0.8.0); the generated Swift is identical,
-so the surface below is unchanged since the v0.26.0 comparison against
+**Baseline:** bark-ffi-bindings **v0.27.0** (bark **v0.8.1**), tag
+`v0.27.0+bark-0.8.1` @ `66d047f`, pinned as an exact revision in the
+project since 2026-11-17. The v0.27.0 additions are in their own section
+below (diffed against v0.26.1 @ `4670c1a`); the older sections are
+unchanged since the v0.26.0 comparison against
 `Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage on
 2026-10-25.
 
@@ -22,6 +22,33 @@ it to the Adopted-since list at the bottom with the date. Sibling doc:
 *we* haven't used yet).
 
 ---
+
+## New in v0.27.0 (bark v0.8.1)
+
+Theme: exits that someone else can finish (presigned CPFP children, a list
+of what is left to broadcast) and a settable invoice expiry. Diff and repo
+impact in `Migrations/Bark-0.26.1-to-0.27.0/`. The bump itself serves the
+Lightning `wait: false` change; everything below is **unadopted**, and no
+backlog entry serves it yet.
+
+### `presignEmergencyExit(vtxoIds:feeRateSatPerVb:) -> PresignedExits`
+
+Signs, without broadcasting, a CPFP child for every exit transaction that
+still needs one, as a wave-by-wave broadcast plan that can run later or
+from another device. Fails with a callback onchain wallet. Serves the exit
+area (a prepared exit for when the server is gone).
+
+### `remainingExitTransactions(vtxoIds:) -> RemainingExitTransactions`
+
+Read-only list of the exit transactions of the given VTXOs not yet
+confirmed, parents before children; `nil` means every spendable VTXO, `[]`
+means none. Could show how much of an exit is left.
+
+### `bolt11Invoice(… expirySecs:)` / `bolt11InvoiceForAddress(… expirySecs:)`
+
+Invoice expiry, at most the server's `invoice_expiry`; building fails if
+the server ignores it. Defaults to `nil` (server default), which the app
+uses.
 
 ## New in v0.26.0 (bark v0.8.0)
 
@@ -277,7 +304,7 @@ Methods present in the bindings before v0.18.0 that neither
 - **`pendingBoards() -> [PendingBoard]`** / **`pendingBoardVtxos() -> [Vtxo]`**
   — boards in flight. Today a board is invisible between initiation and
   confirmation; Activity/Data views could show it as a pending row.
-- **`pendingLightningSends() -> [LightningSend]`** /
+- ~~**`pendingLightningSends() -> [LightningSend]`**~~ (adopted 2026-11-17, see §4) /
   **`pendingLightningSendVtxos() -> [Vtxo]`** — in-flight lightning sends.
   We only surface the failure end (`stuckFailedLightningSends`); the happy
   path in progress is invisible.
@@ -419,3 +446,7 @@ the FFI, policy lives in `WalletManager`).
   (lossy); own domain case is Track B.
 - **Movement ids from `sendArkoorPayment` / `OffboardResult`** —
   2026-10-25, logged only; linking is Track B.
+- **`pendingLightningSends()`**, 2026-11-17, on the protocol: after a
+  `wait: false` pay call throws, `WalletManager.payLightning` waits for a
+  send that appeared during the call instead of reporting a failure
+  (`Migrations/Bark-0.26.1-to-0.27.0/README.md` item 7).

@@ -264,6 +264,13 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
+- [ ] **A Lightning address, LNURL or offer send can read "did not go through"
+  when it was paid** (filed 2026-11-17): an `.unknown` straight from
+  `payLightningAddress` / `payLnurl` / `payLightningOffer` carries no hash, so
+  `LightningSettlement` cannot read it again; a settlement racing bark-ffi's
+  after-drive read would show as a failure. Tier 1: the wrong message invites
+  paying twice. Needs a hash from bark (ask) or the movement.
+  `Migrations/Bark-0.26.1-to-0.27.0/README.md` Known gap.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -728,6 +735,12 @@ log).
 
 ### Send
 
+- [ ] **Lightning address, LNURL and offer sends skip `onTransactionCompleted`**
+  (filed 2026-11-17): only `WalletManager.payLightningInvoice` runs it after
+  settlement (balance refresh, VTXO notification reschedule, backup
+  transaction count); the other three call bark directly. Tier 3: movement
+  notifications still refresh the balance, so only the reschedule and the
+  backup count lag. Fix: run the same callback in `payLightning`.
 - [ ] **The selected row can vanish from the "Pay from" ranking on a typed
   amount** (release review 2026-11-04, PLAUSIBLE): `oneRowPerBalance` runs
   on every re-rank, so when the selected Lightning row turns unviable for
@@ -1082,6 +1095,13 @@ survivors.)
 
 ### Concurrency and the FFI boundary
 
+- [ ] **`pollLightningPaymentStatus` now runs on every invoice send**
+  (filed 2026-11-17): `BarkWalletFFI.payLightningInvoice` starts a 1 s
+  `checkLightningPayment` loop (up to 60 tries) on each in-progress return,
+  which `wait: false` makes the normal case. bark 0.8.1's mailbox and daemon
+  already drive the send, so this is a third driver. Tier 4: nothing breaks,
+  it is redundant work. Keep it as a fallback or remove it; not measured on
+  its own (`Migrations/Bark-0.26.1-to-0.27.0/`).
 - [ ] **Export noise from the 2026-10-19 mainnet device check** (not
   caused by the ceiling; filed so the next reader does not chase them):
   eleven `client connection error: hyper::Error(IncompleteMessage)` lines
@@ -1233,7 +1253,7 @@ survivors.)
 ### Bindings adoption
 
 `Bark_Bindings_Unadopted_API.md` records the unadopted surface (baseline
-v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
+v0.27.0 / bark 0.8.1 since 2026-11-17). Migration guides in `Migrations/`.
 
 - [ ] **Keep the unadopted-API record current on every bindings bump**.
 - [ ] **PROPOSAL (2026-10-29) — BIP-353 validation through bark-ffi**: the
@@ -1261,10 +1281,12 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 - [ ] **0.26 Track B — movement ids from sends into `PendingPaymentMetadata`**
   (`sendArkoorPayment` → `UInt32`, `OffboardResult.movementId`,
   `LightningSend.movementId`): feedback ask 3's "deletes the heuristic
-  matching subsystem". Own plan in `Features/Send_Metadata.md` first. Plan
-  §Track B 3.
+  matching subsystem". Own plan in `Features/Send_Metadata.md` first;
+  `WalletManager.payLightning` holds the `LightningSend` and returns only
+  `.paid`. Plan §Track B 3.
 - [ ] **0.26 Track B — protocol mirroring and startup adoptions**:
-  `retryForSecs` on the four `pay*` methods (nil until a policy exists);
+  `retryForSecs` on the four `pay*` methods (nil until a policy exists;
+  with `nil` the server's retry window bounds the send screen's wait);
   `walletExists(datadir:)` / `readDatadirInfo` for the existence probes
   (throws on a corrupt db — design the error path; Launch_Sequence_Contract
   rule 3 successor); `listFinishedExits` / `listAllExits` as the completed
