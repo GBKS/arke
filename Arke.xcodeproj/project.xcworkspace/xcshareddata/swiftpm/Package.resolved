@@ -6,7 +6,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://gitlab.com/ark-bitcoin/bark-ffi-bindings.git",
       "state" : {
-        "revision" : "4670c1ad54bf0778d0579661bc497f5413ec2b53"
+        "revision" : "66d047f7ee08c2bca3675605ea7a88bc8b50adb3"
       }
     },
     {

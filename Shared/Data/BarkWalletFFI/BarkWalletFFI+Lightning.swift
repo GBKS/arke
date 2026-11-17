@@ -647,7 +647,8 @@ extension BarkWalletFFI {
         // Non-blocking status check for a specific payment
         
         if isPreview {
-            return .unknown
+            // The preview pay methods return in progress; settle them
+            return .paid(paymentHash: paymentHash, preimage: "preview")
         }
         
         guard let wallet = wallet else {
@@ -713,6 +714,28 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.configurationError("Failed to attempt Lightning receive exit: \(error.localizedDescription)")
         } catch {
             Self.logger.error("Error attempting Lightning receive exit: \(error)")
+            throw error
+        }
+    }
+    
+    func pendingLightningSends() async throws -> [LightningSend] {
+        // Every Lightning send that still has a checkpoint
+        
+        if isPreview {
+            return []
+        }
+        
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+        
+        do {
+            return try await wallet.pendingLightningSends()
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error getting pending Lightning sends: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to get pending Lightning sends: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error getting pending Lightning sends: \(error)")
             throw error
         }
     }
