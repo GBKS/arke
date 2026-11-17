@@ -289,11 +289,22 @@ class SecurityService {
         // retrying resolver turns a transiently unreadable keychain into
         // "unknown", never into "no wallet".
         let mnemonicStatus = await resolveMnemonicStatus()
-        let accountHash = getUbiquitousHash()
         let seedFound = mnemonicStatus == .found
         var seedUnreadable = false
         if case .unavailable = mnemonicStatus { seedUnreadable = true }
-        let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(fallbackContainer: nil)
+        // The account's wallet is the KVS hash, else the hash of the seed in
+        // hand: the synchronizable seed is account-wide, so when KVS is still
+        // blank (fresh reinstall, sign-in lag) the seed names the account's
+        // wallet just as well. Feeding it to the route as the account hash
+        // makes a record for another wallet a mismatch (the launch check),
+        // never a "missing row" that the link button would re-point (range
+        // review 2026-11-16, G1; adversarial pass on the fix, F1). The same
+        // hash scopes the own row: a row registered under another wallet is
+        // no evidence for this one.
+        let kvsHash = getUbiquitousHash()
+        let seedHash: String? = seedFound ? (try? loadMnemonic()).flatMap { $0 }.map(hashMnemonic) : nil
+        let accountHash = (kvsHash?.isEmpty == false ? kvsHash : nil) ?? seedHash
+        let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(fallbackContainer: nil, walletHash: accountHash)
         var route = DeviceLinkStore.launchRoute(
             record: DeviceLinkStore.record(),
             left: DeviceLinkStore.left(),
@@ -328,8 +339,7 @@ class SecurityService {
         case .selfHeal:
             // An install from before the link record existed: its own
             // registry row is the proof it linked. Write the record silently.
-            let hash = accountHash ?? (try? loadMnemonic()).flatMap { $0 }.map(hashMnemonic)
-            if let hash {
+            if let hash = accountHash {
                 DeviceLinkStore.recordLink(walletHash: hash, replacingExisting: true)
                 Self.logger.notice("🔗 Link record written for an existing install (own registry row present)")
             }

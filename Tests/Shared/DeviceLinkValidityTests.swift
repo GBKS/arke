@@ -56,6 +56,8 @@ struct DeviceLinkValidityTests {
     @Test("A record whose own row is gone means another device unlinked this one")
     func missingOwnRow() {
         #expect(DeviceLinkStore.validity(record: record, accountHash: "hash-A", seedPresent: true, ownRow: .absent) == .ownRowMissing)
+        // A row for another wallet is no row for this one
+        #expect(DeviceLinkStore.validity(record: record, accountHash: "hash-A", seedPresent: true, ownRow: .otherWallet) == .ownRowMissing)
     }
 
     @Test("An unavailable registry is not evidence of a missing row")

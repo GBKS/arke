@@ -2,7 +2,7 @@
 //  OwnRowEvidenceTests.swift
 //  ArkéTests
 //
-//  DeviceRegistrationService.ownRowEvidence(fallbackContainer:) — the registry
+//  DeviceRegistrationService.ownRowEvidence(fallbackContainer:walletHash:) — the registry
 //  read the access gate makes on a headless launch, where no model context was
 //  ever configured (Device_Linking.md §11.1, adversarial finding F1).
 //  Created by Assistant on 11/14/26.
@@ -34,13 +34,13 @@ struct OwnRowEvidenceTests {
         DeviceRegistrationService(taskManager: TaskDeduplicationManager())
     }
 
-    private func insertOwnRow(isPrimary: Bool, into container: ModelContainer, service: DeviceRegistrationService) throws {
+    private func insertOwnRow(isPrimary: Bool, walletHash: String = "hash-A", into container: ModelContainer, service: DeviceRegistrationService) throws {
         let context = ModelContext(container)
         let row = DeviceRegistration(
             deviceId: try service.getOrCreateDeviceId(),
             deviceName: "Test phone",
             platform: .iOS,
-            walletHash: "hash-A",
+            walletHash: walletHash,
             hasSeed: true,
             isPrimaryDevice: isPrimary
         )
@@ -51,7 +51,7 @@ struct OwnRowEvidenceTests {
     @Test("No context and no container is unavailable, not absent")
     func nothingToAskIsUnavailable() async {
         let service = headlessService()
-        #expect(await service.ownRowEvidence(fallbackContainer: nil) == .unavailable)
+        #expect(await service.ownRowEvidence(fallbackContainer: nil, walletHash: "hash-A") == .unavailable)
     }
 
     @Test("A headless launch reads its own primary row through the fallback container")
@@ -60,7 +60,7 @@ struct OwnRowEvidenceTests {
         let container = try container()
         try insertOwnRow(isPrimary: true, into: container, service: service)
 
-        #expect(await service.ownRowEvidence(fallbackContainer: container) == .primary)
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: "hash-A") == .primary)
     }
 
     @Test("A headless launch sees a secondary row as secondary")
@@ -69,7 +69,7 @@ struct OwnRowEvidenceTests {
         let container = try container()
         try insertOwnRow(isPrimary: false, into: container, service: service)
 
-        #expect(await service.ownRowEvidence(fallbackContainer: container) == .secondary)
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: "hash-A") == .secondary)
     }
 
     @Test("A headless launch on an unlinked device sees no row, which blocks")
@@ -79,9 +79,33 @@ struct OwnRowEvidenceTests {
         let service = headlessService()
         let container = try container()
 
-        let evidence = await service.ownRowEvidence(fallbackContainer: container)
+        let evidence = await service.ownRowEvidence(fallbackContainer: container, walletHash: "hash-A")
         #expect(evidence == .absent)
         #expect(WalletManager.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: .primary, ownRow: evidence) == .block(.noRegistration))
+    }
+
+    @Test("A row registered under another wallet is otherWallet, not a role")
+    func rowForAnotherWalletIsNotEvidence() async throws {
+        // Range review 2026-11-16, G1: the upgrade cohort's old primary row
+        // after a wipe-and-recreate elsewhere
+        let service = headlessService()
+        let container = try container()
+        try insertOwnRow(isPrimary: true, walletHash: "hash-X", into: container, service: service)
+
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: "hash-Y") == .otherWallet)
+        // Same wallet, or no wallet known: the role stands
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: "hash-X") == .primary)
+        // No wallet to ask about: a row is not evidence either way (F2 of
+        // the pass on this fix), while no row is still no row
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: nil) == .unavailable)
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: "") == .unavailable)
+    }
+
+    @Test("No row is absent whatever wallet is asked about, including none")
+    func absentRowIsAbsentUnscoped() async throws {
+        let service = headlessService()
+        let container = try container()
+        #expect(await service.ownRowEvidence(fallbackContainer: container, walletHash: nil) == .absent)
     }
 
     @Test("A configured context wins over the fallback container")
@@ -93,6 +117,6 @@ struct OwnRowEvidenceTests {
         service.setModelContext(ModelContext(configured))
 
         // The configured store is empty; the fallback must not be consulted
-        #expect(await service.ownRowEvidence(fallbackContainer: fallback) == .absent)
+        #expect(await service.ownRowEvidence(fallbackContainer: fallback, walletHash: "hash-A") == .absent)
     }
 }

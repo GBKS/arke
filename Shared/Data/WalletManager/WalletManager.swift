@@ -1576,7 +1576,7 @@ class WalletManager {
         switch ownRow {
         case .primary: return .allow
         case .secondary: return .block(.secondary)
-        case .absent: return .block(.noRegistration)
+        case .absent, .otherWallet: return .block(.noRegistration)
         case .unavailable: return mirror == .primary ? .allow : .block(.registryUnavailable)
         }
     }
@@ -1669,12 +1669,20 @@ class WalletManager {
         // store). "No row" and "could not ask" are different answers. The
         // headless background launch never configures the registry's model
         // context, so the service falls back to a fresh context on the app's
-        // container, wired in App.init next to the BGTask coordinator.
+        // container, wired in App.init next to the BGTask coordinator. The
+        // row counts only for the wallet this install linked (the record's
+        // hash, else the account's): a primary row left by a wallet that was
+        // wiped and replaced elsewhere is not evidence for the replacement.
+        let expectedWalletHash = DeviceLinkStore.record()?.walletHash ?? securityService.getUbiquitousHash()
         let ownRow = await ServiceContainer.shared.deviceRegistrationService.ownRowEvidence(
-            fallbackContainer: Self.headlessModelContainer
+            fallbackContainer: Self.headlessModelContainer,
+            walletHash: expectedWalletHash
         )
         if ownRow == .unavailable {
             Self.logger.info("ℹ️ [WalletManager] Registry unavailable for the access check; relying on the KV mirror")
+        }
+        if ownRow == .otherWallet {
+            Self.logger.notice("🔒 [WalletManager] This device's registration row belongs to another wallet than the one linked here — not evidence of primary")
         }
 
         let verdict = Self.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: mirrorVerdict, ownRow: ownRow)

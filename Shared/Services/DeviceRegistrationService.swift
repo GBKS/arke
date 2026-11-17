@@ -1115,10 +1115,19 @@ class DeviceRegistrationService {
     /// launch never calls `configureServices`, and without this the gate
     /// could only consult the KVS mirror, whose own `primary` flag goes stale
     /// when another device unlinks or wipes this one.
-    func ownRowEvidence(fallbackContainer: ModelContainer?) async -> OwnRowEvidence {
+    ///
+    /// - Parameter walletHash: the wallet the caller is asking about (the
+    ///   link record's hash, or the account hash when there is no record).
+    ///   A row registered under another wallet is `.otherWallet`, never a
+    ///   role: an old primary row of a wallet wiped and replaced elsewhere
+    ///   must not open the replacement (range review 2026-11-16, G1). With
+    ///   no wallet to ask about (`nil` or blank) a found row is
+    ///   `.unavailable`: it cannot be evidence for a wallet nobody named.
+    ///   Absence is still `.absent`; no row is no link to anything.
+    func ownRowEvidence(fallbackContainer: ModelContainer?, walletHash: String?) async -> OwnRowEvidence {
         do {
             if let device = try await getCurrentDevice() {
-                return device.isPrimaryDevice ? .primary : .secondary
+                return Self.ownRowEvidence(isPrimary: device.isPrimaryDevice, rowWalletHash: device.walletHash, expectedWalletHash: walletHash)
             }
             return .absent
         } catch DeviceRegistrationError.noModelContext {
@@ -1130,7 +1139,7 @@ class DeviceRegistrationService {
                     predicate: #Predicate { $0.deviceId == deviceId }
                 )
                 guard let device = try context.fetch(descriptor).first else { return .absent }
-                return device.isPrimaryDevice ? .primary : .secondary
+                return Self.ownRowEvidence(isPrimary: device.isPrimaryDevice, rowWalletHash: device.walletHash, expectedWalletHash: walletHash)
             } catch {
                 Self.logger.warning("Own-row evidence: fallback container fetch failed (\(error.localizedDescription, privacy: .public))")
                 return .unavailable
@@ -1141,6 +1150,14 @@ class DeviceRegistrationService {
         }
     }
     
+    /// Pure mapping of a found row to evidence, scoped to the wallet asked
+    /// about. No wallet named means the row is not evidence either way.
+    nonisolated static func ownRowEvidence(isPrimary: Bool, rowWalletHash: String, expectedWalletHash: String?) -> OwnRowEvidence {
+        guard let expectedWalletHash, !expectedWalletHash.isEmpty else { return .unavailable }
+        if rowWalletHash != expectedWalletHash { return .otherWallet }
+        return isPrimary ? .primary : .secondary
+    }
+
     /// Gets stale devices (not seen in specified number of days)
     func getStaleDevices(olderThan days: Int = 30) async throws -> [DeviceRegistration] {
         guard let modelContext = modelContext else {

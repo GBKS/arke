@@ -55,6 +55,24 @@ struct LinkLaunchRouteTests {
         #expect(route(hash: "hash-A", ownRow: .secondary) == .selfHeal)
     }
 
+    @Test("A left breadcrumb beats the self-heal: a local deletion whose unregister kept the row is not undone")
+    func leftBreadcrumbBeatsSelfHeal() {
+        // Range review 2026-11-16, G1/D1: step 1's unregister may retain the
+        // row by design; the next cold launch must still show "you removed"
+        #expect(route(left: left, hash: "hash-A", seedFound: true, ownRow: .primary) == .awaitingLink(.removedHere(leftAt: left.leftAt)))
+        #expect(route(left: left, hash: "hash-A", ownRow: .secondary) == .awaitingLink(.removedHere(leftAt: left.leftAt)))
+        // Breadcrumb for another wallet: still no self-heal, a new device
+        #expect(route(left: left, hash: "hash-B", ownRow: .primary) == .awaitingLink(.newDevice))
+    }
+
+    @Test("A row registered under another wallet never heals or links")
+    func otherWalletRowIsNoEvidence() {
+        // The upgrade cohort after a wipe-and-recreate elsewhere: the old
+        // primary row must not write a record for the new wallet
+        #expect(route(hash: "hash-B", seedFound: true, ownRow: .otherWallet) == .awaitingLink(.newDevice))
+        #expect(route(record: record, hash: "hash-A", seedFound: true, ownRow: .otherWallet) == .awaitingLink(.removedByAnotherDevice))
+    }
+
     @Test("A reinstall sees the link screen until its row has imported")
     func reinstallAsksFirst() {
         // Own row absent locally until the first CloudKit import

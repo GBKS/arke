@@ -71,6 +71,14 @@ struct WalletAccessVerdictTests {
         #expect(WalletManager.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: .primary, ownRow: .absent) == .block(.noRegistration))
     }
 
+    @Test("A primary row for another wallet is no evidence for this one")
+    func otherWalletRowBlocks() {
+        // Range review 2026-11-16, G1: wallet X's primary row must not open
+        // wallet Y's database after a wipe-and-recreate elsewhere
+        #expect(WalletManager.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: .primary, ownRow: .otherWallet) == .block(.noRegistration))
+        #expect(WalletManager.accessVerdict(deviceIdReadable: true, wasDemoted: false, mirror: .noOpinion, ownRow: .otherWallet) == .block(.noRegistration))
+    }
+
     @Test("A registry that cannot be asked defers to a positive mirror answer only")
     func unavailableRegistryNeedsPrimaryMirror() {
         // Last resort when even the fallback container is missing (desktop):

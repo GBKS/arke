@@ -58,6 +58,12 @@ nonisolated enum OwnRowEvidence: Equatable, Sendable {
     case secondary
     /// The registry answered and has no row for this device
     case absent
+    /// The registry answered with a row for this device, but the row was
+    /// registered under another wallet than the one asked about. Not a link
+    /// to the account's wallet: an old row left by a wallet that was wiped
+    /// and replaced elsewhere (range review 2026-11-16, G1). Treated as
+    /// absent by every reader; the role it carries belongs to that other wallet.
+    case otherWallet
     /// The registry could not be asked: no model context (headless launch)
     /// or a fetch error. Not evidence either way.
     case unavailable
@@ -214,7 +220,7 @@ nonisolated enum DeviceLinkStore {
     /// transiently empty after an iCloud sign-in and before its first sync.
     /// While the seed is present the record stands; only a *different* hash
     /// contradicts it. The own-row check applies only when the registry
-    /// actually answered.
+    /// actually answered; a row for another wallet counts as no row.
     static func validity(
         record: DeviceLinkRecord?,
         accountHash: String?,
@@ -233,7 +239,7 @@ nonisolated enum DeviceLinkStore {
             return .walletChanged
         }
 
-        if case .absent = ownRow { return .ownRowMissing }
+        if ownRow == .absent || ownRow == .otherWallet { return .ownRowMissing }
         return .valid
     }
 
@@ -300,7 +306,12 @@ nonisolated enum DeviceLinkStore {
                 if seedUnreadable, left != nil { return .awaitingLink(.waitingForICloud) }
                 return .noAccountWallet
             }
-            if ownRowPresent { return .selfHeal }
+            // The own row heals a pre-record install only when nothing says
+            // this install left on purpose: a local deletion whose unregister
+            // retained the row would otherwise be undone on the next launch
+            // (range review 2026-11-16, G1/D1). The row must also belong to
+            // the wallet asked about; `.otherWallet` is not present here.
+            if ownRowPresent, left == nil { return .selfHeal }
             if let left, hashPresent, left.walletHash == accountHash {
                 return .awaitingLink(.removedHere(leftAt: left.leftAt))
             }

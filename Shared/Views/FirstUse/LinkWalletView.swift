@@ -212,7 +212,10 @@ struct LinkWalletView: View {
             let name = primary.deviceName.trimmingCharacters(in: .whitespacesAndNewlines)
             primaryDeviceName = name.isEmpty ? nil : name
         }
-        ownRowWasPrimary = await deviceService.ownRowEvidence(fallbackContainer: nil) == .primary
+        // Same wallet the route and the link action ask about: KVS, else the
+        // seed in hand (adversarial pass 2026-11-16 on the G1 fix, F3)
+        let seedHash = (try? securityService.loadMnemonic()).flatMap { $0 }.map(securityService.hashMnemonic)
+        ownRowWasPrimary = await deviceService.ownRowEvidence(fallbackContainer: nil, walletHash: deviceService.accountWalletHash() ?? seedHash) == .primary
         importSettled = true
     }
 
