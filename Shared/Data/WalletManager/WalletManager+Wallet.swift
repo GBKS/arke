@@ -112,6 +112,14 @@ extension WalletManager {
         let backupService = WalletBackupService(walletDirectory: walletDirectory)
 
         removeStaleWalletDirectoryIfMarked()
+        // Same gate as the seed-only import: with a record, a stranded parked
+        // file is the linked wallet's database and goes back before this
+        // import parks anything, or the park below would clear it as stale
+        // (adversarial pass 2026-11-17 on the D2 fix, second round, F2)
+        if DeviceLinkStore.record() != nil, backupService.hasStrandedParkedDatabase {
+            Self.logger.warning("⚠️ Stranded parked database found on a linked install — putting it back before the backup-file import")
+            try? backupService.rollBackUserBackupRestore()
+        }
 
         do {
             // Step 2: Restore backup file to wallet directory BEFORE wallet initialization
@@ -364,12 +372,13 @@ extension WalletManager {
         removeStaleWalletDirectoryIfMarked()
         // A parked database from an interrupted backup-file import belongs to
         // no one once this import succeeds; it is cleared below on success.
-        // With a record and no live database, the parked file IS the linked
-        // wallet's database (a kill between park and copy): put it back
-        // first, or the FFI would create a fresh wallet over it.
+        // With a record and a stranded parked file (no live database beside
+        // it, or a slot copy never confirmed by an open), the parked file IS
+        // the linked wallet's database: put it back first, or the FFI would
+        // create a fresh wallet over it or open the unconfirmed copy.
         let backupService = WalletBackupService(walletDirectory: wallet.walletDir)
-        if DeviceLinkStore.record() != nil, backupService.hasParkedDatabaseWithoutLive {
-            Self.logger.warning("⚠️ Parked database found with no live one on a linked install — putting it back before the import")
+        if DeviceLinkStore.record() != nil, backupService.hasStrandedParkedDatabase {
+            Self.logger.warning("⚠️ Stranded parked database found on a linked install — putting it back before the import")
             try? backupService.rollBackUserBackupRestore()
         }
 

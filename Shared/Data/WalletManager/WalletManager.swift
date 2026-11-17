@@ -810,20 +810,24 @@ class WalletManager {
         }
         
         // Step 0c: CRITICAL - For primary devices, check if wallet backup needs to be restored
+        var slotRestoreParkedLocalDatabase = false
         if !isReadOnlyMode {
-            await restoreWalletIfNeeded()
+            slotRestoreParkedLocalDatabase = await restoreWalletIfNeeded()
         }
         
         // Step 1: Branch based on read-only mode
         if isReadOnlyMode {
             await initializeReadOnlyMode()
         } else {
-            await initializePrimaryMode()
+            await initializePrimaryMode(slotRestoreParkedLocalDatabase: slotRestoreParkedLocalDatabase)
         }
     }
     
     /// Initialize wallet in full mode (primary device with ASP connection)
-    private func initializePrimaryMode() async {
+    /// - Parameter slotRestoreParkedLocalDatabase: `restoreWalletIfNeeded`
+    ///   replaced this device's database with the slot copy and parked the
+    ///   original; the open below decides which one stays.
+    private func initializePrimaryMode(slotRestoreParkedLocalDatabase: Bool) async {
         guard let wallet = wallet else {
             error = "Wallet not available"
             return
@@ -840,7 +844,29 @@ class WalletManager {
         
         // Step 1: Explicitly open the wallet if it exists (FFI only)
         if let ffiWallet = wallet as? BarkWalletFFI {
-            let opened = await ffiWallet.openWalletIfNeeded()
+            // The slot copy may have replaced this device's own database a
+            // moment ago. Keep whichever one opens: the original is dropped
+            // the moment the copy has opened (before the server wait, so a
+            // kill in that window cannot roll back what bark already wrote),
+            // and a copy that fails to open is put back out of the way and the
+            // original reopened (range review 2026-11-16, D2). The import
+            // flows do the same with the same helpers.
+            let backupService = WalletBackupService(walletDirectory: ffiWallet.walletDir)
+            var confirmSlotRestore: (@MainActor () -> Void)?
+            if slotRestoreParkedLocalDatabase {
+                confirmSlotRestore = { backupService.discardPreservedDatabase() }
+            }
+            var opened = await ffiWallet.openWalletIfNeeded(onOpened: confirmSlotRestore)
+            if slotRestoreParkedLocalDatabase, !opened {
+                do {
+                    Self.logger.error("❌ [WalletManager] The database restored from the backup slot did not open — putting this device's own database back")
+                    try backupService.rollBackUserBackupRestore()
+                    opened = await ffiWallet.openWalletIfNeeded()
+                    Self.logger.notice("↩️ [WalletManager] Own database put back after the slot copy failed to open (reopened: \(opened))")
+                } catch {
+                    Self.logger.error("❌ [WalletManager] Could not put this device's own database back: \(error.localizedDescription)")
+                }
+            }
             if !opened {
                 if securityService.hasMnemonic() {
                     // A seed exists but the wallet database could not be opened -
@@ -1732,13 +1758,33 @@ class WalletManager {
         return verdict
     }
     
+    /// A parked database stranded by a process kill (between a restore's park
+    /// and copy, or between a slot copy and the open that would have
+    /// confirmed it) is this device's own database: put it back before
+    /// anything opens or compares, or the slot would be copied over an empty
+    /// directory, a headless open would create a fresh wallet beside it, or
+    /// the next restore would clear it as stale (adversarial pass 2026-11-17
+    /// on the D2 fix, F1 and F2). Runs before every primary open.
+    func putBackStrandedDatabaseIfAny(walletDirectory: URL) {
+        let backupService = WalletBackupService(walletDirectory: walletDirectory)
+        guard backupService.hasStrandedParkedDatabase else { return }
+        Self.logger.warning("⚠️ [WalletManager] Stranded parked database found — putting this device's own database back before the open")
+        do {
+            try backupService.rollBackUserBackupRestore()
+        } catch {
+            Self.logger.error("❌ [WalletManager] Could not put the stranded database back: \(error.localizedDescription)")
+        }
+    }
+
     /// Restores wallet from iCloud backup if needed
     /// Called when device becomes primary and needs to sync with latest wallet state
     /// CRITICAL: Compares timestamps to ensure we always use the newest data
-    private func restoreWalletIfNeeded() async {
+    /// - Returns: whether a local database was parked and the slot copy put
+    ///   in its place; `initializePrimaryMode` then keeps whichever opens.
+    private func restoreWalletIfNeeded() async -> Bool {
         guard let ffiWallet = wallet as? BarkWalletFFI else {
             Self.logger.warning("⚠️ [WalletManager] Cannot restore - wallet is not BarkWalletFFI")
-            return
+            return false
         }
 
         // An open wallet is authoritative - restoring a backup over it would
@@ -1747,8 +1793,10 @@ class WalletManager {
         // exist in iCloud from a previously deleted wallet)
         guard ffiWallet.wallet == nil else {
             Self.logger.info("ℹ️ [WalletManager] Wallet is open - skipping backup restore check")
-            return
+            return false
         }
+
+        putBackStrandedDatabaseIfAny(walletDirectory: ffiWallet.walletDir)
 
         let walletFileExists = WalletBackupService.hasLocalWalletFile()
         let hasBackup = ffiWallet.hasBackupAvailable()
@@ -1771,6 +1819,7 @@ class WalletManager {
             } else {
                 Self.logger.info("ℹ️ [WalletManager] No backup available - wallet will start fresh")
             }
+            return false  // nothing local to park
         } else if hasBackup {
             // Both local file and backup exist - compare timestamps to use the newest
             let localDate = WalletBackupService.getLocalWalletFileModificationDate()
@@ -1789,12 +1838,13 @@ class WalletManager {
                     Self.logger.warning("⚠️ [WalletManager] Backup is newer than local file")
                     Self.logger.warning("   Local:  \(localDate)")
                     Self.logger.warning("   Backup: \(backupDate)")
-                    Self.logger.warning("   Restoring from backup to prevent data loss")
+                    Self.logger.warning("   Restoring from backup; the local file is parked until the restored copy opens")
                     
                     do {
                         let restored = try await ffiWallet.restoreWalletFromBackup()
                         if restored {
-                            Self.logger.info("✅ [WalletManager] Restored newer backup over stale local file")
+                            Self.logger.info("✅ [WalletManager] Restored newer backup over the local file (parked)")
+                            return true
                         } else {
                             Self.logger.error("❌ [WalletManager] Failed to restore newer backup")
                         }
@@ -1812,6 +1862,7 @@ class WalletManager {
         } else {
             Self.logger.info("ℹ️ [WalletManager] Local wallet file exists, no backup available")
         }
+        return false
     }
 }
 

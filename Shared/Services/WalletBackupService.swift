@@ -21,16 +21,30 @@ class WalletBackupService {
 
     /// Live database filename as of bark 0.11
     nonisolated static let currentDatabaseFileName = "db.sqlite"
-    /// Where `restoreFromUserBackup` parks the database it replaces until the
-    /// import either succeeds (`discardPreservedDatabase`) or is rolled back
-    /// (`rollBackUserBackupRestore` puts it back). Range review 2026-11-16,
-    /// I1: a replaced database was removed outright, so a failed import left
-    /// no database at all.
+    /// Where a restore parks the database it replaces until the open that
+    /// follows either succeeds (`discardPreservedDatabase`) or fails
+    /// (`rollBackUserBackupRestore` puts it back). Both restores park:
+    /// `restoreFromUserBackup` (range review 2026-11-16, I1: a replaced
+    /// database was removed outright, so a failed import left no database
+    /// at all) and the slot restore `restoreFromBackup(overwriteExisting:)`
+    /// (same review, D2: a slot refilled by a live, unlinked primary replaced
+    /// a newer local database with no copy kept).
     nonisolated static let preservedDatabaseFileName = "db.sqlite.pre-import"
+    /// Written beside a slot restore's parked database until the open that
+    /// follows confirms the copy (`discardPreservedDatabase`) or rejects it
+    /// (`rollBackUserBackupRestore`). A launch that finds it still there was
+    /// killed between the copy and the open; the parked file is this device's
+    /// database and goes back before anything opens or compares (adversarial
+    /// pass 2026-11-17 on the D2 fix, F1).
+    nonisolated static let pendingSlotRestoreMarkerFileName = "db.sqlite.slot-restore-pending"
     /// Pre-0.11 filename; survives only in legacy iCloud backup artifacts
     nonisolated static let legacyDatabaseFileName = "bark.sqlite"
 
     private static let backupSubdirectory = "Backups"
+
+    /// Test seam: a slot directory standing in for the iCloud container, so
+    /// the slot restore can run where no ubiquity container exists
+    private let backupDirectoryOverride: URL?
     
     /// iCloud ubiquity container URL (nil if iCloud unavailable)
     private var ubiquityContainer: URL? {
@@ -39,7 +53,7 @@ class WalletBackupService {
 
     /// iCloud backup directory (nil if iCloud unavailable)
     private var backupDirectory: URL? {
-        ubiquityContainer?.appendingPathComponent(Self.backupSubdirectory, isDirectory: true)
+        backupDirectoryOverride ?? ubiquityContainer?.appendingPathComponent(Self.backupSubdirectory, isDirectory: true)
     }
 
     /// Existing iCloud backup artifact, preferring the current name over the legacy one
@@ -63,12 +77,21 @@ class WalletBackupService {
     /// would lose that transaction's rollback
     private var journalFile: URL { walletDirectory.appendingPathComponent(Self.currentDatabaseFileName + "-journal") }
     private var preservedJournalFile: URL { walletDirectory.appendingPathComponent(Self.preservedDatabaseFileName + "-journal") }
+    private var pendingSlotRestoreMarker: URL { walletDirectory.appendingPathComponent(Self.pendingSlotRestoreMarkerFileName) }
 
-    /// A parked database with no live one: a kill between park and copy. On
-    /// a linked install the parked file is the wallet's database.
-    var hasParkedDatabaseWithoutLive: Bool {
-        FileManager.default.fileExists(atPath: preservedDatabaseFile.path)
-            && !FileManager.default.fileExists(atPath: localDatabaseFile.path)
+    /// A parked database no running restore owns, i.e. this device's own
+    /// database stranded by a process kill: either no live database sits
+    /// beside it (killed between park and copy, any restore) or a slot
+    /// restore's copy was never confirmed by an open (marker still present,
+    /// killed between copy and open). A backup-file import's parked database
+    /// with a live one beside it is NOT stranded: the import owns it until
+    /// its own rollback or discard. Callers put a stranded database back with
+    /// `rollBackUserBackupRestore` before anything opens or compares.
+    var hasStrandedParkedDatabase: Bool {
+        let parked = FileManager.default.fileExists(atPath: preservedDatabaseFile.path)
+        guard parked else { return false }
+        return !FileManager.default.fileExists(atPath: localDatabaseFile.path)
+            || FileManager.default.fileExists(atPath: pendingSlotRestoreMarker.path)
     }
     
     // MARK: - Static Helpers for Device Migration
@@ -155,8 +178,9 @@ class WalletBackupService {
     
     // MARK: - Initialization
     
-    init(walletDirectory: URL) {
+    init(walletDirectory: URL, backupDirectory: URL? = nil) {
         self.walletDirectory = walletDirectory
+        self.backupDirectoryOverride = backupDirectory
         
         if ubiquityContainer != nil {
             Self.logger.info("✅ iCloud available for wallet backup")
@@ -303,11 +327,16 @@ class WalletBackupService {
     
     // MARK: - Restore Operations
     
-    /// Restores the wallet database from iCloud backup
-    /// - Parameter overwriteExisting: If true, will overwrite existing database
+    /// Restores the wallet database from the account's iCloud backup slot.
+    /// An existing local database is parked, never removed: the caller
+    /// (`WalletManager.restoreWalletIfNeeded`) opens the restored copy next
+    /// and puts the parked one back with `rollBackUserBackupRestore` if that
+    /// open fails, or drops it with `discardPreservedDatabase` once it
+    /// succeeded (range review 2026-11-16, D2).
+    /// - Parameter overwriteExisting: If true, an existing database is parked and replaced
     /// - Returns: Success status
     func restoreFromBackup(overwriteExisting: Bool = false) async -> Bool {
-        guard ubiquityContainer != nil else {
+        guard backupDirectory != nil else {
             Self.logger.warning("Restore failed - iCloud unavailable")
             return false
         }
@@ -321,20 +350,25 @@ class WalletBackupService {
         // Always restore to the current name - it's the only file bark opens
         let destinationFile = localDatabaseFile
         
-        // Check if destination exists
-        if FileManager.default.fileExists(atPath: destinationFile.path) {
-            guard overwriteExisting else {
-                Self.logger.debug("Restore skipped - database exists and overwrite=false")
-                return false
-            }
-            
-            // Remove existing file
-            do {
-                try FileManager.default.removeItem(at: destinationFile)
-            } catch {
-                Self.logger.error("Failed to remove existing database: \(error.localizedDescription)")
-                return false
-            }
+        if FileManager.default.fileExists(atPath: destinationFile.path), !overwriteExisting {
+            Self.logger.debug("Restore skipped - database exists and overwrite=false")
+            return false
+        }
+
+        // A parked file still present here belongs to a backup-file import in
+        // flight (a stranded one was put back by the caller's pre-open guard):
+        // the slot restore must not clear it, so it refuses instead
+        let parkedExisting: Bool
+        do {
+            parkedExisting = try parkLiveDatabase(clearingStaleParkedFile: false)
+        } catch {
+            Self.logger.error("Failed to park the existing database: \(error.localizedDescription)")
+            return false
+        }
+        if parkedExisting {
+            // Marks the parked database as this device's until the copy opens;
+            // cleared by the rollback or the discard, never by the copy alone
+            FileManager.default.createFile(atPath: pendingSlotRestoreMarker.path, contents: nil)
         }
         
         // Create wallet directory if needed
@@ -346,11 +380,61 @@ class WalletBackupService {
         // Copy backup to wallet directory
         do {
             try FileManager.default.copyItem(at: sourceBackup, to: destinationFile)
-            Self.logger.info("✅ Wallet database restored from backup")
+            Self.logger.info("✅ Wallet database restored from backup\(parkedExisting ? " (previous database parked until it opens)" : "")")
             return true
         } catch {
             Self.logger.error("❌ Restore failed: \(error.localizedDescription)")
+            if parkedExisting {
+                putParkedDatabaseBackAfterFailedCopy()
+            }
             return false
+        }
+    }
+
+    /// Moves the live database, and its hot journal if any, under the parked
+    /// name. Returns whether there was a database to park.
+    ///
+    /// - Parameter clearingStaleParkedFile: the backup-file import passes
+    ///   `true`: a parked file from an earlier, interrupted attempt belongs to
+    ///   no one and is cleared first, whether or not a live database exists,
+    ///   so a later rollback can only ever put back what this attempt parked.
+    ///   The slot restore passes `false`: after its caller's stranded put-back,
+    ///   a parked file still present is owned by an import in flight, and
+    ///   the restore throws rather than clear it (adversarial pass
+    ///   2026-11-17 on the D2 fix, second round, F5).
+    private func parkLiveDatabase(clearingStaleParkedFile: Bool) throws -> Bool {
+        if clearingStaleParkedFile {
+            try? FileManager.default.removeItem(at: preservedDatabaseFile)
+            try? FileManager.default.removeItem(at: preservedJournalFile)
+            try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
+        } else if FileManager.default.fileExists(atPath: preservedDatabaseFile.path) {
+            throw BackupError.removalFailed("a parked database is still owned by a running import")
+        }
+        guard FileManager.default.fileExists(atPath: localDatabaseFile.path) else { return false }
+        try FileManager.default.moveItem(at: localDatabaseFile, to: preservedDatabaseFile)
+        if FileManager.default.fileExists(atPath: journalFile.path) {
+            try FileManager.default.moveItem(at: journalFile, to: preservedJournalFile)
+        }
+        Self.logger.info("Existing database parked as \(Self.preservedDatabaseFileName) until the restored copy opens")
+        return true
+    }
+
+    /// Undoes `parkLiveDatabase` when the copy that was to replace the parked
+    /// database failed: the caller's rollback runs only after a successful
+    /// restore, and the previous database must not be left under the parked
+    /// name where no reader finds it (adversarial pass 2026-11-17, F1)
+    private func putParkedDatabaseBackAfterFailedCopy() {
+        try? FileManager.default.removeItem(at: localDatabaseFile)  // a partial copy, if any
+        do {
+            try FileManager.default.moveItem(at: preservedDatabaseFile, to: localDatabaseFile)
+            if FileManager.default.fileExists(atPath: preservedJournalFile.path) {
+                try? FileManager.default.moveItem(at: preservedJournalFile, to: journalFile)
+            }
+            // The marker goes only once the move it protects has happened
+            try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
+            Self.logger.info("↩️ Previous database put back after the failed copy")
+        } catch {
+            Self.logger.error("❌ Could not put the previous database back after the failed copy: \(error.localizedDescription)")
         }
     }
     
@@ -400,24 +484,12 @@ class WalletBackupService {
         // wallet's offchain state (the launch-check restore exit). Rolled
         // back by `rollBackUserBackupRestore`, dropped by
         // `discardPreservedDatabase` once the import succeeded.
-        // A parked file from an earlier, interrupted attempt belongs to no
-        // one: clear it first, whether or not a live database exists, so a
-        // later rollback can only ever put back what this attempt parked
-        try? FileManager.default.removeItem(at: preservedDatabaseFile)
-        try? FileManager.default.removeItem(at: preservedJournalFile)
-        var parkedExisting = false
-        if FileManager.default.fileExists(atPath: destinationFile.path) {
-            do {
-                try FileManager.default.moveItem(at: destinationFile, to: preservedDatabaseFile)
-                if FileManager.default.fileExists(atPath: journalFile.path) {
-                    try FileManager.default.moveItem(at: journalFile, to: preservedJournalFile)
-                }
-                parkedExisting = true
-                Self.logger.info("Existing database parked as \(Self.preservedDatabaseFileName) until the import settles")
-            } catch {
-                Self.logger.error("Failed to park the existing database: \(error.localizedDescription)")
-                throw BackupError.removalFailed(error.localizedDescription)
-            }
+        let parkedExisting: Bool
+        do {
+            parkedExisting = try parkLiveDatabase(clearingStaleParkedFile: true)
+        } catch {
+            Self.logger.error("Failed to park the existing database: \(error.localizedDescription)")
+            throw BackupError.removalFailed(error.localizedDescription)
         }
         
         // Create wallet directory if needed
@@ -426,10 +498,7 @@ class WalletBackupService {
             withIntermediateDirectories: true
         )
         
-        // Copy backup to wallet directory. A failed copy undoes the park
-        // itself: the caller's rollback runs only after a successful restore,
-        // and the previous database must not be left under the parked name
-        // where no reader finds it (adversarial pass 2026-11-17, F1)
+        // Copy backup to wallet directory. A failed copy undoes the park itself
         do {
             try FileManager.default.copyItem(at: sourceFileURL, to: destinationFile)
             Self.logger.info("✅ Wallet database restored from user backup: \(sourceFileURL.lastPathComponent)")
@@ -437,16 +506,7 @@ class WalletBackupService {
         } catch {
             Self.logger.error("❌ Failed to copy backup file: \(error.localizedDescription)")
             if parkedExisting {
-                try? FileManager.default.removeItem(at: destinationFile)  // a partial copy, if any
-                do {
-                    try FileManager.default.moveItem(at: preservedDatabaseFile, to: destinationFile)
-                    if FileManager.default.fileExists(atPath: preservedJournalFile.path) {
-                        try? FileManager.default.moveItem(at: preservedJournalFile, to: journalFile)
-                    }
-                    Self.logger.info("↩️ Previous database put back after the failed copy")
-                } catch {
-                    Self.logger.error("❌ Could not put the previous database back after the failed copy: \(error.localizedDescription)")
-                }
+                putParkedDatabaseBackAfterFailedCopy()
             }
             throw BackupError.copyFailed(error.localizedDescription)
         }
@@ -484,10 +544,9 @@ class WalletBackupService {
         existingBackupFile
     }
 
-    /// Removes the restored database file (used for rollback during failed imports)
-    /// This deletes the wallet database file from the wallet directory
-    /// Rollback of `restoreFromUserBackup`: the restored copy goes, and the
-    /// database it replaced, if any, comes back under its own name.
+    /// Rollback of `restoreFromUserBackup` and of the slot restore: the
+    /// restored copy goes, and the database it replaced, if any, comes back
+    /// under its own name.
     func rollBackUserBackupRestore() throws {
         let databaseFile = localDatabaseFile
         let restoredExists = FileManager.default.fileExists(atPath: databaseFile.path)
@@ -508,6 +567,9 @@ class WalletBackupService {
                 if FileManager.default.fileExists(atPath: preservedJournalFile.path) {
                     try? FileManager.default.moveItem(at: preservedJournalFile, to: journalFile)
                 }
+                // The marker goes only once the move it protects has happened,
+                // so a kill in between still reads as stranded next launch
+                try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
                 Self.logger.info("↩️ Previous database put back after the failed import")
             } catch {
                 Self.logger.error("❌ Failed to put the previous database back: \(error.localizedDescription)")
@@ -516,6 +578,8 @@ class WalletBackupService {
             return
         }
 
+        // Nothing parked: a marker without a parked file protects nothing
+        try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
         guard restoredExists else {
             Self.logger.debug("No restored database file to remove (rollback)")
             return
@@ -529,13 +593,17 @@ class WalletBackupService {
         }
     }
 
-    /// The import succeeded: the parked previous database is no longer needed
+    /// The restored copy opened: the parked previous database is no longer needed
     func discardPreservedDatabase() {
         try? FileManager.default.removeItem(at: preservedJournalFile)
-        guard FileManager.default.fileExists(atPath: preservedDatabaseFile.path) else { return }
+        guard FileManager.default.fileExists(atPath: preservedDatabaseFile.path) else {
+            try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
+            return
+        }
         do {
             try FileManager.default.removeItem(at: preservedDatabaseFile)
-            Self.logger.info("🗑️ Discarded the previous database after a successful import")
+            try? FileManager.default.removeItem(at: pendingSlotRestoreMarker)
+            Self.logger.info("🗑️ Discarded the previous database after the restored copy opened")
         } catch {
             Self.logger.warning("Could not discard the parked previous database: \(error.localizedDescription)")
         }

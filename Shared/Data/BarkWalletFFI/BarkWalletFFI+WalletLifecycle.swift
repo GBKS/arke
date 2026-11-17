@@ -28,6 +28,15 @@ extension BarkWalletFFI {
     /// - Returns: `true` if wallet was opened or already open, `false` if no wallet exists
     @discardableResult
     func openWalletIfNeeded() async -> Bool {
+        await openWalletIfNeeded(onOpened: nil)
+    }
+
+    /// FFI-only variant of the protocol's `openWalletIfNeeded()`.
+    /// - Parameter onOpened: runs the moment `Wallet.open` has returned a
+    ///   handle, before the diagnostics and the server wait that follow, so a
+    ///   caller confirming a restored database does it within the shortest
+    ///   possible window after the open (adversarial pass 2026-11-17, F4)
+    func openWalletIfNeeded(onOpened: (@MainActor () -> Void)?) async -> Bool {
         // If wallet is already open, nothing to do
         if wallet != nil {
             Self.logger.info("Wallet already open")
@@ -35,14 +44,14 @@ extension BarkWalletFFI {
         }
         
         // Try to open existing wallet
-        await tryOpenExistingWallet()
+        await tryOpenExistingWallet(onOpened: onOpened)
         
         // Return whether we successfully have an open wallet
         return wallet != nil
     }
     
     /// Attempt to open an existing wallet if one exists
-    private func tryOpenExistingWallet() async {
+    private func tryOpenExistingWallet(onOpened: (@MainActor () -> Void)? = nil) async {
         guard !isPreview else { return }
         
         #if DEBUG
@@ -267,6 +276,7 @@ extension BarkWalletFFI {
             self.wallet = openedWallet
             self.onchainWallet = builtInWallet
             self.cachedMnemonic = mnemonic
+            onOpened?()
             secureWalletFilePermissions()
 
             // let afterOpen = Date()
@@ -407,9 +417,10 @@ extension BarkWalletFFI {
     ///   last sync. `WalletManager.deleteWallet(scope: .everywhere)` passes
     ///   `false`: the cleanup service has already emptied the backup slot and
     ///   the final backup would refill it with the database being deleted
-    ///   (Launch_Sequence_Contract rule 17). Every other caller keeps the
-    ///   default — on a local-only deletion the backup is the newest copy a
-    ///   promoted secondary restores from.
+    ///   (Launch_Sequence_Contract rule 17), and so does every migration
+    ///   close whose `MigrationCloseReason` is not the hand-over. Other
+    ///   callers keep the default — on a local-only deletion the backup is
+    ///   the newest copy a promoted secondary restores from.
     func shutdownWallet(backingUp: Bool = true) async {
         guard let wallet = wallet else { return }
         
@@ -444,7 +455,7 @@ extension BarkWalletFFI {
         if backingUp {
             await runBackupNow()
         } else {
-            Self.logger.notice("Skipping final backup (full wipe) — the backup slot stays empty")
+            Self.logger.notice("Skipping final backup — the backup slot is left as it is")
         }
 
         // Clear references (this should trigger Rust cleanup)

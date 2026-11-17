@@ -133,8 +133,17 @@ extension WalletManager {
             // means a 0xdead10cc kill, so hold an assertion across it — the
             // BGTask's own window doesn't cover a wake push, and neither
             // window survives the system deciding to suspend us early.
-            enum HeadlessOpen { case opened, demoted, unknown, failed }
+            enum HeadlessOpen { case opened, demoted, unknown, failed, launchInFlight }
             let outcome = await withBackgroundActivityAssertion("background-wallet-open") { () -> HeadlessOpen in
+                // A foreground initialize is mid-flight (its open can take
+                // seconds and may be confirming a slot restore): this path is
+                // not serialised with it, so neither the stranded put-back
+                // nor a second open may run now. The launch registers the
+                // relay itself; a later wake retries (adversarial pass
+                // 2026-11-17 on the D2 fix, second round, F1).
+                if isInitializing || ffiWallet.isWalletOpen {
+                    return .launchInFlight
+                }
                 // Rules 14 and 28: check the access evidence BEFORE opening — a
                 // demoted ex-primary with a leftover local db must not open bark
                 // from a headless wake (the two-open-wallets hazard step 0a
@@ -148,9 +157,20 @@ extension WalletManager {
                     return reason.isSettled ? .demoted : .unknown
                 }
                 await reconcileNetworkConfigBeforeWalletOpen()
+                // Same pre-open guard as the launch path: a database stranded
+                // by a kill mid-restore must go back first, or this open would
+                // create a fresh wallet beside it (createIfNotExists). The
+                // handle is known closed here (checked above, nothing awaited
+                // since that could open it except the two calls on this path).
+                if !isInitializing, !ffiWallet.isWalletOpen {
+                    putBackStrandedDatabaseIfAny(walletDirectory: ffiWallet.walletDir)
+                }
                 return await ffiWallet.openWalletIfNeeded() ? .opened : .failed
             }
             switch outcome {
+            case .launchInFlight:
+                Self.logger.notice("Background relay auth refresh: a foreground initialize is in flight - not opening the wallet, retrying on a later wake")
+                return .failed
             case .demoted:
                 // .nothingToDo, not .failed: the new primary owns the mailbox,
                 // so retrying this wake chain would never succeed
