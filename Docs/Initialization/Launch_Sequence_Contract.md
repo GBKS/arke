@@ -53,8 +53,25 @@ Enforced: `WalletManager.swift` (`restoreWalletIfNeeded`). Test: none.
 **5. Network mismatch: seed-only import wipes stale data and retries; backup import surfaces the error and never wipes.**
 Leftover data from another network can't be the wallet being seed-imported —
 but a user-picked backup file is precious and the mismatch is user error.
+Since 2026-11-17 the seed-only wipe is also refused while a link record
+exists (`BarkErrorArke.existingWalletOnAnotherNetwork`): with a record the
+directory is a linked wallet's database, reached through the launch-check
+restore exit, and a wrong network must surface, never wipe. The same path
+refuses a phrase whose hash is not the record's
+(`BarkErrorArke.phraseNotThisWallets`) before opening anything. The backup
+import parks the database it replaces as `db.sqlite.pre-import` and puts it
+back on rollback (`WalletBackupService.rollBackUserBackupRestore`), so a
+failed import never leaves the device with less than it had. The first
+backup to the account slot runs in the manager after every check passed,
+never inside the FFI import, so a rolled-back import never replaces the
+slot. With a record, both import paths re-check the account's hash and
+seed before the open and again right before the seed write, and refuse
+with `accountChangedSinceLaunchCheck` if the account moved on or detection
+closed the handle meanwhile.
 Enforced: `WalletManager+Wallet.swift` (`importWallet` vs
-`importWalletWithBackup`). Test: none.
+`importWalletWithBackup`), `WalletBackupService.swift`,
+`BarkWalletFFI+WalletCreation.swift`. Test: `UserBackupRestoreTests`,
+`RestoreExitGuardTests`.
 
 **6. The mnemonic keychain item migrates to `afterFirstUnlock` at launch (idempotent).**
 Background sync needs the seed after one unlock per boot; `whenUnlocked`

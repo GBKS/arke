@@ -1385,8 +1385,11 @@ item 1 passed (§2 there); item 5 passed from the replaced-wallet
 launch-check screen (§4 there, no backup line). Items 2 and 3 DEFERRED
 (DECIDED 2026-11-17): run once on B before the first TestFlight build that
 ships the launch-check screen; they verify iOS boundary facts, not app
-logic, and every launch-check case opens nothing. Item 4 waits for the
-restore-exit fix (§17 I1) and stays owed.
+logic, and every launch-check case opens nothing. Item 4 ran on
+2026-11-17 on the fix 2 working tree (§17 I1): the restore-mode phrase
+screen showed, a wrong phrase was refused, the right phrase reopened the
+existing database with its history. Passed. Step 5 has no open device
+checks apart from the deferred pair.
 
 ## 16. Step 6: docs and translations (2026-11-16)
 
@@ -1424,7 +1427,8 @@ findings are in `Import_Screen_Split.md` §15, the export-copy finding in
 **Rulings (DECIDED 2026-11-16, Christoph, delegated to the session's
 recommendation):** fix order G1/D1 → I1 → H1 → I2, one session each, the
 PLAUSIBLE set after (2026-11-17: H1's visible symptom did not reproduce
-on device, so fix 3 now follows I2). H2: conflict losers (`reconcilePrimaryConflicts`
+on device, so fix 3 now follows I2; I2 was then folded into fix 2 the
+same day, so fix 3, H1, is next). H2: conflict losers (`reconcilePrimaryConflicts`
 self-demotion) close with `backingUp: false`; only the guided demote writes
 the handover backup. D2: the per-blocker unlink keeps its designed flow, no
 settle window; the hazard is closed in the restore path instead, which
@@ -1649,6 +1653,117 @@ Fix status is tracked per finding below as fixes land.
   at all, with the account slot already gone. Only Skip, styled as the
   emergency path, keeps the state (`createIfNotExists: false`). The copy is
   inverted for this entry.
+  **Fixed 2026-11-17 (built; adversarial pass on the diff below).** The
+  restore exit sets a one-shot restore mode on onboarding
+  (`OnboardingFlow_iOS(restoresExistingDatabase:)`): the phrase step shows
+  "This device still holds the wallet's data…", its button reads "Restore
+  Wallet", and continuing runs the phrase-only `importWallet` directly; the
+  backup-file step is never shown on this path. The flag and the start
+  state reset in `onWalletReady`, so a later onboarding in the same
+  session starts at the cover screen. Independently,
+  `WalletBackupService.restoreFromUserBackup` now parks an existing
+  `db.sqlite` as `db.sqlite.pre-import` instead of removing it;
+  `rollBackUserBackupRestore` (replaces `removeRestoredDatabase`) removes
+  the restored copy and puts the parked file back, and
+  `discardPreservedDatabase` drops it after a successful
+  `importWalletWithBackup`, so a failed backup-file import on any entry
+  leaves the device as it was (the ruling of 2026-11-16: never replace a
+  local database without keeping it until the open succeeds). Tests:
+  `UserBackupRestoreTests` (parked, rolled back, nothing to put back,
+  discarded on success, stale parked copy replaced). The restore mode
+  itself is view routing, traced by hand. **Device-checked 2026-11-17**
+  (Christoph, `Development/Device_Day_2026-11-17.md` §8, on the working
+  tree with both review rounds applied): wrong phrase refused, right
+  phrase reopened the database with its history. The §15.1 ASSUMED bark fact
+  is now **verified by reading** at `bark-0.8.0`: `Wallet.open` on an
+  existing database opens on `read_properties` plus fingerprint equality,
+  bails "incorrect mnemonic" before any write on a mismatch, and runs no
+  recovery scan when the database was not created now; the FFI passes
+  `createIfNotExists: false` when `db.sqlite` exists.
+
+  **Adversarial pass on the fix (2026-11-17, uncommitted diff), seven
+  findings:** F1 CONFIRMED, class 2, fixed: the park was undone only on
+  the happy path; a failed copy left the previous database under the
+  parked name where no reader finds it, and the rollback's removal could
+  throw before the move-back. Now a failed copy puts the parked file back
+  itself, and the rollback replaces in one step (`replaceItemAt`) or moves
+  back when the restored copy is missing. Ledger row. F2 CONFIRMED
+  (mechanism), fixed: a wrong phrase in restore mode failed inside BDK's
+  descriptor check with a generic error, not bark's "incorrect mnemonic";
+  the phrase-only import now compares the phrase's hash with the link
+  record's before opening anything and throws
+  `BarkErrorArke.phraseNotThisWallets`. F3 PLAUSIBLE, accepted: the I3
+  guard fires on the text "Network mismatch", which BDK's own network
+  check (first on an intact directory) may not produce; either way nothing
+  is wiped, only the "Nothing was changed" copy may not show. A simulator
+  run with a wrong network logging the raw `Bark.Error` settles the text.
+  F4 PLAUSIBLE, fixed: nobody owned a stale `db.sqlite.pre-import` after a
+  kill; it is now cleared at the start of every backup-file restore,
+  whether or not a live database exists, and after a successful phrase-only
+  import. F5 PLAUSIBLE, fixed: `isRestoring` is set in the tap handler and
+  Back is disabled while busy. F6 PLAUSIBLE, pre-existing (= I4 in
+  `Import_Screen_Split.md` §15): the phrase-only import has no rollback
+  after a successful open, and `backupWallet()` inside the FFI import
+  uploads the database before the seed is written (= I2, next fix). F7
+  PLAUSIBLE, class 1, two-device, **open, needs a ruling**: the
+  `deletedElsewhere` verdict (blank KVS, seed not found, same identity)
+  also holds transiently while another device has wiped and *recreated*
+  the account's wallet and neither the hash nor the keychain item has
+  synced yet; the restore then writes seed X back into the synchronizable
+  item, X's hash to KVS, X's database to the slot and claims primary.
+  **DECIDED 2026-11-17 (Christoph, on the session's recommendation) and
+  built:** the phrase-only import, when a link record exists, re-reads the
+  KVS hash and the keychain right before writing and refuses with
+  `BarkErrorArke.accountChangedSinceLaunchCheck` unless both still say
+  "nothing" (`WalletManager.restoreExitBlocked`, `RestoreExitGuardTests`);
+  the flow hands back to detection (`onRestoreBlocked`), which lands on
+  linked / mismatch / the launch check with fresh inputs. The lag window
+  is narrowed to the gap between the re-read and the writes, not closed;
+  the alternative (a minimum age of the record's last healthy launch) was
+  not taken. Not a regression; the restore exit is the first path that
+  deliberately imports into a `deletedElsewhere` account. Also noted: the Skip path keeps rule-5
+  wipe-and-retry (no record there); desktop has no restore exit; the
+  `onWalletReady` reset ordering is sound. Not verified by the pass: BDK
+  3.2.0's error strings; any run; the exit end to end on two phones.
+  Full mobile suite after the pass: 738 tests in 105 suites passed, 5
+  live-probe tests skipped.
+
+  **Second pass on the second round (2026-11-17, uncommitted diff), five
+  findings:** 1 CONFIRMED, classes 5 and 3, fixed: the F7 re-check ran
+  before the FFI open, which is seconds of network work (open, esplora
+  scan), not "right before writing", and a detection re-run on a KVS
+  change during that window closes the handle and tears the flow down
+  while the unstructured import task keeps writing. Now a second gate runs
+  right before the seed write: with a record present it re-reads KVS and
+  the keychain again and checks the handle is still open; if either moved
+  it shuts down without backup, puts the in-memory network back and throws
+  `accountChangedSinceLaunchCheck`. Ledger row. 2 PLAUSIBLE, fixed:
+  `importWalletWithBackup` had neither record guard and is reachable in
+  the hand-back window through the file step; both refusals added there,
+  and a phrase-only import on a linked install with a parked database and
+  no live one puts the parked file back first
+  (`hasParkedDatabaseWithoutLive`), so the FFI cannot create a fresh
+  wallet over it and the success path cannot discard the only copy. 3
+  PLAUSIBLE, fixed: the I3 refusal left the wallet's in-memory network
+  switched, so the restore exit would reopen pre-set to the wrong network;
+  every refusal now restores the previous config. 4 PLAUSIBLE (low),
+  accepted: a failed put-back followed by the next attempt's stale-clear
+  would delete the only copy; two regular files in one sandbox directory,
+  left as is. 5 note, fixed: bark runs SQLite in rollback-journal mode
+  (verified at `bark-0.8.0`, no pragma), so `db.sqlite-journal` is parked
+  and put back with its database (`journalTravelsWithDatabase`). **I2
+  folded in:** the FFI import no longer calls `backupWallet()`; both
+  manager import paths run the first backup only after their checks
+  (server key, phrase, account state), so a rolled-back import never
+  replaces the account's iCloud slot. The create path keeps its own backup.
+  The pass also confirmed, by reading, that `importWalletWithBackup`
+  wrote the seed at step 3 before the open, so its guards sit before any
+  write; that the sibling `restoreWalletFromBackup` (launch-time slot
+  restore) still removes `db.sqlite` outright, which is the D2 ruling's
+  remaining half, not this fix; and that "linked again" after a block
+  means read-only, never an open wallet. Not verified by the pass: any
+  run; the two-device interleaving; BDK's error strings; SwiftUI's
+  delivery of a second tap before the re-render.
 - **I3 PLAUSIBLE, class 2.** The phrase-only import's network-mismatch
   retry removes the wallet directory with no `DeviceLinkStore.record()`
   guard (`createWallet` got one). Reachable with a record only through the
@@ -1656,6 +1771,13 @@ Fix status is tracked per finding below as fixes land.
   without its JSON (older builds wrote the id alone) falls back to mainnet,
   so a custom-server signet wallet would be opened as mainnet, mismatch,
   directory wiped, fresh mainnet wallet created.
+  **Fixed 2026-11-17** with I1: the wipe branch checks
+  `DeviceLinkStore.record()` and, with a record present, throws
+  `BarkErrorArke.existingWalletOnAnotherNetwork(networkName:)` ("The wallet
+  on this device is not a %@ wallet. Nothing was changed…") instead of
+  wiping; the `custom:*`-id-without-JSON cache case is thereby contained,
+  not resolved (the user sees the error and can pick the server on the
+  cover screen after Remove, or wait for the config to sync).
 - Sound, checked: the seed-only save cannot overwrite the account seed
   (`.valid` needs hash equality, `.validNoReference` refused, update-then-add
   on the same item) and writes no record; rollback runs before `recordLink`

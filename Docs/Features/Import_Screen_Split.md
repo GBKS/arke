@@ -379,7 +379,12 @@ into the grid only, never pasted from a tracked file.
 
 Import-area findings from the four-pass range review recorded in
 `Device_Linking.md` §17. The restore-exit finding (I1) and the phrase-only
-wipe guard (I3) are there; the rest is here. Nothing fixed yet.
+wipe guard (I3) are there, both fixed 2026-11-17; the backup-file step's
+`restoreFromUserBackup` now parks the replaced database until the import
+settles (`UserBackupRestoreTests`), which also serves this screen's
+ordinary file path. I2 was folded into fix 2 on 2026-11-17: the FFI
+import no longer backs up; both manager import paths back up only after
+their checks. The rest is here; I4, I5 and I6 are not fixed.
 
 - **I2 CONFIRMED, classes 1 and 5, pre-existing.** `BarkWalletFFI.importWallet`
   ends with `backupWallet()`, which replaces the account's iCloud slot and

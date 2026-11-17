@@ -3,8 +3,10 @@
 **Results 2026-11-17 (Christoph, two phones):** §1, §2, §3 (all four
 runs, including the hand-back Activity list), §4 with the folded-in Remove
 check, §7 and §9 all passed, reported in aggregate ("everything worked out
-well"). §8 not run, waits for fix 2. §5 deferred by ruling. §10 not
-runnable. The idle-primary handover passing settles H3 on device: the
+well"). §8 run later the same day on the fix 2 working tree (restore
+mode screen, wrong phrase refused, right phrase reopened the existing
+database with its history): passed, "everything worked great". §5
+deferred by ruling. §10 not runnable. The idle-primary handover passing settles H3 on device: the
 mtime-only slot stamp did propagate. The Activity list after hand-back
 being populated means H1's visible symptom did not reproduce; the code
 asymmetry stands (see `Features/Device_Linking.md` §17.2).
@@ -157,17 +159,25 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   secondary (read-only wallet), B log has **no** bark import line. Turn
   Keychain back on afterwards.
 
-## 8. Deleted elsewhere, then restore (step 5, §15.5 item 4) — **wait for fix 2**
+## 8. Deleted elsewhere, then restore (step 5, §15.5 item 4) — fix 2 built 2026-11-17, **PASSED 2026-11-17**
 
-- The Restore exit's default backup-file path deletes the local database
-  (I1). Until fix 2 lands, if you run it anyway tap **Skip** on the
-  backup-file step; never pick a file.
 - (a) A must have launched linked once on this build (identity token).
-  Destructive: §R after.
-- (b) Unlink A from B. Full wipe on B. Launch A.
-- (c) Pass: A shows "deleted from your iCloud account". Restore with
-  Recovery Phrase → phrase → Skip → the existing database opens and the
-  history is still there. Settles the ASSUMED bark fact in §15.1.
+  Destructive: §R after. Both phones on a build that includes fix 2.
+- (b) Unlink A from B. Full wipe on B. Launch A. On the launch-check
+  screen tap Restore with Recovery Phrase. The phrase screen must show
+  "This device still holds the wallet's data…" and a **Restore Wallet**
+  button; there is no backup-file step on this path. First type a wrong
+  phrase (any valid 12 words that are not the wallet's), then the right
+  one.
+- (c) Pass: the wrong phrase is refused with "This is not the recovery
+  phrase of the wallet on this device" and A's log shows
+  `Import refused: the phrase is not the one of the wallet still on this device`
+  with no `Wallet opened` line. The right phrase opens the existing
+  database: the Activity history is still there, A's log has
+  `Existing wallet restored from the recovery phrase`. Then §R. Export A's
+  log either way; it also shows whether the stale-parked-file line or any
+  backup line appears during the restore.
+- (d) Fail: A's log, screenshots of the restore screen and the result.
 
 ## 9. Deletion export step, two-device half (`Wallet_Deletion_Export_Step.md` §8)
 
