@@ -109,7 +109,8 @@ struct MetadataExportService {
     static func hasUserAddedMetadata(context: ModelContext) throws -> Bool {
         let standard = ContactType.standard.rawValue
 
-        var profiles = FetchDescriptor<UserProfile>(predicate: #Predicate { !$0.name.isEmpty || $0.avatarData != nil })
+        // `!= ""`, not `isEmpty`: SwiftData's `isEmpty` does not match an empty string
+        var profiles = FetchDescriptor<UserProfile>(predicate: #Predicate { $0.name != "" || $0.avatarData != nil })
         profiles.fetchLimit = 1
         if try context.fetchCount(profiles) > 0 { return true }
 
