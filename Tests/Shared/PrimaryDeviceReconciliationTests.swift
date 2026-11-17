@@ -5,7 +5,9 @@
 //  Unit tests for the deterministic primary-conflict winner rule that drives
 //  DeviceRegistrationService.reconcilePrimaryConflicts(). Every device must
 //  independently pick the same winner from the same candidate set, or the
-//  self-demotion protocol would not converge.
+//  self-demotion protocol would not converge. Also the loser's close reason:
+//  a conflict loser must not write the hand-over backup (range review
+//  2026-11-16, H2), while the guided demote and legacy posters must.
 //
 
 import Testing
@@ -71,5 +73,20 @@ struct PrimaryDeviceReconciliationTests {
         ])
         #expect(single == "only")
         #expect(DeviceRegistrationService.primaryConflictWinner(candidates: []) == nil)
+    }
+
+    @Test("A conflict loser's demotion closes without the hand-over backup and stays in the wallet")
+    func conflictLoserClosesWithoutBackup() {
+        let reason = Notification.deviceDemoted(reason: .primaryConflict).migrationCloseReason
+        #expect(reason == .primaryConflict)
+        #expect(!reason.writesBackup)
+        #expect(!reason.leavesWallet)
+    }
+
+    @Test("The guided demote and a reason-less post both write the hand-over backup")
+    func handoverWritesBackup() {
+        #expect(Notification.deviceDemoted(reason: .handover).migrationCloseReason.writesBackup)
+        let legacy = Notification(name: .deviceDemotedFromPrimary, object: nil)
+        #expect(legacy.migrationCloseReason == .handover)
     }
 }

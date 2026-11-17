@@ -1379,16 +1379,19 @@ class WalletManager {
     /// 
     /// Unlike closeWallet(), this does NOT clear transaction history
     /// because secondary devices need to display synced transaction data
-    /// - Parameter backingUp: pass `false` when this device was removed from
-    ///   the wallet by another device (`.deviceUnlinkedWhileRunning`): its
-    ///   state must not land in the account's backup slot, which a takeover's
-    ///   new primary restores from and a wipe elsewhere may have emptied.
-    func closeWalletForMigration(backingUp: Bool = true) async throws {
+    /// - Parameter reason: why the wallet closes; it decides whether the final
+    ///   backup is written (`MigrationCloseReason.writesBackup`) and whether
+    ///   the main view re-runs detection afterwards (`leavesWallet`). Only
+    ///   the guided hand-over backs up: every other close must not land this
+    ///   device's state in the account's backup slot, which the next primary
+    ///   restores from as "newest" and a wipe elsewhere may have emptied.
+    func closeWalletForMigration(reason: MigrationCloseReason) async throws {
         guard let wallet = wallet else {
             throw BarkErrorArke.commandFailed("Wallet not initialized")
         }
+        let backingUp = reason.writesBackup
         
-        Self.logger.info("🔄 [WalletManager] Closing wallet for migration...")
+        Self.logger.info("🔄 [WalletManager] Closing wallet for migration (\(reason.rawValue, privacy: .public), backup: \(backingUp))...")
         
         // Step 1: Reset manager state (lightweight - preserves SwiftData)
         Self.logger.info("Step 1: Resetting manager state (preserving SwiftData)...")
@@ -1433,7 +1436,7 @@ class WalletManager {
         
         Self.logger.info("✅ Wallet closed successfully for migration (SwiftData preserved)")
 
-        if !backingUp {
+        if reason.leavesWallet {
             // Removed by another device: the main view re-runs detection and
             // lands on the link screen (Device_Linking.md §12.1)
             NotificationCenter.default.post(name: .walletClosedAfterUnlink, object: nil)
@@ -1442,14 +1445,17 @@ class WalletManager {
     
     /// Observe migration notifications
     private func observeMigrationNotifications() {
-        // Demotion notification
+        // Demotion notification. The poster says whether this is the guided
+        // hand-over (final backup written) or a lost primary conflict (no
+        // backup: range review 2026-11-16, H2)
         NotificationCenter.default.addObserver(
             forName: .deviceDemotedFromPrimary,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
+        ) { [weak self] notification in
+            let reason = notification.migrationCloseReason
             Task { @MainActor in
-                try? await self?.closeWalletForMigration()
+                try? await self?.closeWalletForMigration(reason: reason)
                 // The close resets `isInitialized`; a device that started this
                 // session as a secondary is shown by the main view's secondary
                 // branch, which displays the loading screen until the manager
@@ -1469,7 +1475,7 @@ class WalletManager {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                try? await self?.closeWalletForMigration(backingUp: false)
+                try? await self?.closeWalletForMigration(reason: .leavingWallet)
             }
         }
 
@@ -1807,6 +1813,28 @@ class WalletManager {
             Self.logger.info("ℹ️ [WalletManager] Local wallet file exists, no backup available")
         }
     }
+}
+
+/// Why `WalletManager.closeWalletForMigration` closes the wallet. The case
+/// decides the two things a close does besides shutting bark down: whether
+/// the final backup goes to the account's slot, and whether this install
+/// leaves the wallet UI afterwards.
+nonisolated enum MigrationCloseReason: String, Sendable {
+    /// The guided demote (`MakeSecondaryView`): the final backup is the
+    /// hand-over copy the next primary restores from.
+    case handover
+    /// This device lost a primary conflict (`reconcilePrimaryConflicts`) and
+    /// stays a linked secondary. No backup: the slot's date is the backup
+    /// time, so the loser's copy would read "newest" and the winner's next
+    /// relaunch would restore it over its own (range review 2026-11-16, H2).
+    case primaryConflict
+    /// This install is leaving the wallet: unlinked or wiped by another
+    /// device, iCloud account mismatch mid-session, or the launch-check
+    /// remove. No backup, and the main view re-runs detection afterwards.
+    case leavingWallet
+
+    var writesBackup: Bool { self == .handover }
+    var leavesWallet: Bool { self == .leavingWallet }
 }
 
 enum BarkErrorArke: Swift.Error, LocalizedError {

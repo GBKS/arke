@@ -1300,6 +1300,7 @@ class DeviceRegistrationService {
         // This ensures the new primary has the latest wallet state
         // Note: The actual backup will be triggered by WalletManager's closeWalletForMigration()
         // which is called when it receives the deviceDemotedFromPrimary notification
+        // with the `.handover` reason below; this is the only demotion that backs up
         Self.logger.debug("Backup will occur during wallet closure")
 
         // 4. Update current device to be secondary
@@ -1316,8 +1317,8 @@ class DeviceRegistrationService {
         // 7. Set local UserDefaults flag for instant detection on next launch
         UserDefaults.standard.set(true, forKey: "device_\(currentDevice.deviceId)_wasDemoted")
 
-        // 8. Signal to WalletManager to close wallet immediately
-        NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+        // 8. Signal to WalletManager to close wallet immediately, writing the hand-over backup
+        NotificationCenter.default.post(.deviceDemoted(reason: .handover))
 
         Self.logger.info("Device demoted to secondary")
         
@@ -1465,8 +1466,11 @@ class DeviceRegistrationService {
 
         UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
 
-        // Close the wallet if it's currently running in primary mode
-        NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+        // Close the wallet if it's currently running in primary mode. No
+        // hand-over backup: the loser's copy would be stamped newest in the
+        // slot and the winner's next relaunch would restore it over its own
+        // state (range review 2026-11-16, H2)
+        NotificationCenter.default.post(.deviceDemoted(reason: .primaryConflict))
 
         await loadRegisteredDevices()
     }

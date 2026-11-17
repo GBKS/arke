@@ -195,7 +195,7 @@ struct LaunchCheckView: View {
         // teardown's own shutdown backs up by default, and that backup would
         // go to whichever account's Drive is current. Close without one first.
         if (walletManager.wallet as? BarkWalletFFI)?.wallet != nil || walletManager.isInitialized {
-            try? await walletManager.closeWalletForMigration(backingUp: false)
+            try? await walletManager.closeWalletForMigration(reason: .leavingWallet)
         }
         do {
             _ = try await cleanupService.deleteWalletData(

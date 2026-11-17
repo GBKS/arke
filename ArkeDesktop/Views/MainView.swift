@@ -187,7 +187,7 @@ struct MainView: View {
         let handleOpen = (walletManager.wallet as? BarkWalletFFI)?.wallet != nil
         guard handleOpen || walletManager.isInitialized || walletManager.isInitializing else { return }
         print("🔗 [MainView] Account mismatch while the wallet is open — closing without a backup")
-        try? await walletManager.closeWalletForMigration(backingUp: false)
+        try? await walletManager.closeWalletForMigration(reason: .leavingWallet)
     }
 
     /// Mirrors MainView_iOS
@@ -365,8 +365,11 @@ struct MainView: View {
                     // Set local UserDefaults flag
                     UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
 
-                    // Trigger wallet closure if currently running
-                    NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+                    // Trigger wallet closure if currently running. No in-app
+                    // code flips another device's flag, so this branch fires
+                    // only on an echoed or initial-sync value of this device's
+                    // own flag; it keeps the pre-existing hand-over close
+                    NotificationCenter.default.post(.deviceDemoted(reason: .handover))
                 } else if isPrimary {
                     print("✅ [MainView] Device has been promoted to primary")
 

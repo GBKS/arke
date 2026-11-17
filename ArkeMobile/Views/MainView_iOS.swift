@@ -159,7 +159,7 @@ struct MainView_iOS: View {
         let handleOpen = (walletManager.wallet as? BarkWalletFFI)?.wallet != nil
         guard handleOpen || walletManager.isInitialized || walletManager.isInitializing else { return }
         Self.logger.warning("🔗 Account mismatch while the wallet is open — closing without a backup")
-        try? await walletManager.closeWalletForMigration(backingUp: false)
+        try? await walletManager.closeWalletForMigration(reason: .leavingWallet)
     }
 
     /// Whether an iCloud account change can change the launch decision:
@@ -551,8 +551,11 @@ struct MainView_iOS: View {
                     // Set local UserDefaults flag
                     UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
                     
-                    // Trigger wallet closure if currently running
-                    NotificationCenter.default.post(name: .deviceDemotedFromPrimary, object: nil)
+                    // Trigger wallet closure if currently running. No in-app
+                    // code flips another device's flag, so this branch fires
+                    // only on an echoed or initial-sync value of this device's
+                    // own flag; it keeps the pre-existing hand-over close
+                    NotificationCenter.default.post(.deviceDemoted(reason: .handover))
                 } else if isPrimary {
                     Self.logger.info("✅ Device has been promoted to primary")
                     
