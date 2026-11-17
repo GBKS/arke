@@ -394,6 +394,14 @@ absorbs S3/S4 (flow 4.3), S5 (link-screen entry, after the flow), the rest
 of S7 (per-blocker unlink, aftermath screen) and the S10 build (launch
 check). The security-check matrix is still its own Tier 0 item.
 
+- [ ] **A live lost primary refills the slot until its row deletion
+  arrives** (PROPOSED 2026-11-17, H2's second shape): after a takeover the
+  old primary keeps backing up on backgrounding until it sees its row gone;
+  that copy is the same wallet's and opens, so the fix-4 restore guard does
+  not help and the new primary's next relaunch restores the older state
+  over its own. Candidates: ignore slot copies stamped before this
+  device's own `becamePrimaryAt`; or the backup hook checks the mirror
+  first. `Features/Device_Linking.md` §17.2 H2.
 - [ ] **Range-wide review `22829b1..HEAD` (2026-11-16): 24 findings, 8
   CONFIRMED, none fixed yet** — four fault-class passes by area over
   everything since the 2026-11-04 release. Most severe: `launchRoute`'s
@@ -1082,6 +1090,14 @@ survivors.)
 
 ### Concurrency and the FFI boundary
 
+- [ ] **Overlapping migration closes: the second caller's reason decides
+  the backup** (filed 2026-11-17, fix-4 pass round 1, F3):
+  `closeWalletForMigration` is not deduplicated; a `.handover` post landing
+  during a `.primaryConflict` close finds the handle still set and backs up
+  anyway. Only the main views' KVS observer posts `.handover` unprompted,
+  on an echoed own-flag value (unverified that iCloud KVS echoes). Settle
+  with `Development/Device_Day_2026-11-17.md` §12 (d); remedy: an in-flight
+  guard that keeps the first reason. `Features/Device_Linking.md` §17.2 H2.
 - [ ] **Export noise from the 2026-10-19 mainnet device check** (not
   caused by the ceiling; filed so the next reader does not chase them):
   eleven `client connection error: hyper::Error(IncompleteMessage)` lines
@@ -1297,6 +1313,16 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 ### Startup and background structure
 
+- [ ] **Orphaned import park blocks later slot restores; a parked file is
+  not local wallet evidence** (filed 2026-11-17, fix-4 pass round 2, F5,
+  F6): the slot restore refuses to park over an existing `db.sqlite.pre-import`
+  (an import may own it), so a park orphaned by a kill mid-import stops
+  slot restores on that device until the next backup-file import; and
+  `SecurityService.localWalletDatabaseExists` ignores a parked file, so
+  keychain-unavailable with no KVS hash routes a stranded device to
+  onboarding. Remedy: an import-in-flight flag on `WalletManager` lets the
+  slot path clear orphans; count the parked file as evidence.
+  `Features/Device_Linking.md` §17.3 D2.
 - [ ] **Network config iCloud sync writes before the reconciler decides**
   (release review 2026-11-04): `syncFromiCloud` overwrites the local cache
   with the account's config, then the `.keepCurrent` branch of

@@ -1434,7 +1434,9 @@ the handover backup. D2: the per-blocker unlink keeps its designed flow, no
 settle window; the hazard is closed in the restore path instead, which
 must never replace a local database with a slot copy without keeping the
 local file until the open succeeds (covers the I1 backup-file path too).
-Fix status is tracked per finding below as fixes land.
+Fix status is tracked per finding below as fixes land. Fix 4 (H2 and D2
+together) built 2026-11-17, three adversarial rounds, device checks owed
+(`Development/Device_Day_2026-11-17.md` §12, §13).
 
 ### 17.1 Access gate, link record, launch route (steps 1, 2, 3, 5)
 
@@ -1611,6 +1613,32 @@ Fix status is tracked per finding below as fixes land.
   primary that is alive and backs up on backgrounding until its row
   deletion arrives. Needs a ruling: conflict losers close with
   `backingUp: false`?
+  **Fixed 2026-11-17 (fix 4, with D2).** `closeWalletForMigration(reason:)`
+  replaces the `backingUp:` default with `MigrationCloseReason`
+  (`handover` / `primaryConflict` / `leavingWallet`: only the first writes
+  the backup, only the last posts `.walletClosedAfterUnlink`). The reason
+  travels in the demotion notification's userInfo
+  (`Notification.deviceDemoted(reason:)`; a bare post reads as the
+  hand-over, the behaviour every poster had). `reconcilePrimaryConflicts`
+  posts `.primaryConflict`, so the loser closes with no backup and stays a
+  linked secondary, re-entering read-only as before; `demoteThisDevice`
+  posts `.handover`; the five former `backingUp: false` callers (live
+  unlink handler, account mismatch in both main views, launch-check
+  remove) are `.leavingWallet`. Sweep: six close callers and four posters,
+  all explicit. The round-1 adversarial pass found class 1 sound. Two
+  PLAUSIBLE notes not fixed: overlapping closes (the function is not
+  deduplicated, so a `.handover` post landing during a `.primaryConflict`
+  close would still back up; the only unprompted `.handover` poster is the
+  main views' KVS observer, which fires on an echoed or initial-sync value
+  of this device's own flag, and whether iCloud KVS ever echoes a local
+  write is unverified; device check §12 includes the log line that would
+  show it; filed Tier 4 Concurrency), and this finding's second shape, a
+  live lost primary backing up on backgrounding until its row deletion
+  arrives, which neither ruling covers: that slot copy is the same wallet's
+  and opens, so the D2 restore guard does not help (filed Tier 1
+  Multi-device, PROPOSED). Test: `PrimaryDeviceReconciliationTests`
+  (reason decode: conflict loser no backup and stays; bare post is the
+  hand-over). Device check owed: §12 of the device day.
 - **H3 PLAUSIBLE, class 4, iCloud Drive.** The idle-primary fix stamps the
   slot without changing bytes; whether an mtime-only change propagates to
   the other device's `NSMetadataItemFSContentChangeDateKey` is unverified.
@@ -1660,6 +1688,61 @@ Fix status is tracked per finding below as fixes land.
   creates Y, A's next cold launch sees slot X stamped newer, bytes differ,
   and `restoreFromBackup(overwriteExisting: true)` replaces Y's database
   with X's, no safety copy. Two-phone check listed in the report.
+  **Fixed 2026-11-17 (fix 4, with H2), three review rounds.**
+  `WalletBackupService.restoreFromBackup(overwriteExisting: true)` parks
+  the local database and its journal through the same helper the
+  backup-file import uses: the park and put-back blocks of
+  `restoreFromUserBackup` became `parkLiveDatabase(clearingStaleParkedFile:)`
+  and `putParkedDatabaseBackAfterFailedCopy`. `restoreWalletIfNeeded`
+  returns whether it parked; `initializePrimaryMode` confirms the slot copy
+  with `discardPreservedDatabase` from the FFI's `onOpened` hook the moment
+  `Wallet.open` returned (before the diagnostics and the 20 s server wait),
+  and on a failed open calls `rollBackUserBackupRestore` and reopens the
+  device's own database. A slot copy that keeps failing to open (the D2
+  scenario: X's database under Y's phrase) costs one failing open per
+  launch until this device's first backup overwrites the slot.
+  **Round 1** (CONFIRMED F1, class 2): the rollback decision lived only in
+  memory, so a kill between the copy and the open left the own database
+  parked beside an unopenable copy every launch, and the next restore's
+  stale-clear would have deleted it. Fix: a `db.sqlite.slot-restore-pending`
+  marker written when the slot restore parks and removed by the rollback or
+  the discard; `hasStrandedParkedDatabase` (parked with no live file, or
+  parked with the marker) replaces `hasParkedDatabaseWithoutLive`;
+  `WalletManager.putBackStrandedDatabaseIfAny` runs at the top of
+  `restoreWalletIfNeeded`, before the headless background open (round-1
+  F2: `createIfNotExists` would have created a fresh wallet beside a
+  parked-only database) and in both import gates. **Round 2** (CONFIRMED
+  F1 class 3, F2 class 2, F3 class 2): the headless put-back could run
+  under the launch's own in-flight open (now `HeadlessOpen.launchInFlight`:
+  `isInitializing || isWalletOpen` skips both the put-back and the open,
+  retried on a later wake; the launch registers the relay itself);
+  `importWalletWithBackup` lacked the stranded gate its seed-only sibling
+  got (added); both put-back helpers removed the marker before the move it
+  protects (reordered). Round-2 PLAUSIBLE: F4, a kill inside the confirm
+  window rolled back what bark's daemon had already written (window shrunk
+  from up to 20 s to the hook); F5, a slot restore during an in-flight
+  backup-file import cleared the import's parked database (the slot path
+  now refuses to park over an existing parked file; the liveness cost, an
+  import park orphaned by a kill blocking later slot restores on that
+  device, is filed Tier 4); F6, a parked file does not count as local
+  wallet evidence in `SecurityService.localWalletDatabaseExists`
+  (pre-existing since fix 2, filed with F5). **Round 3 did not complete**
+  (the reviewer hit a rate limit before reporting); the session traced its
+  five questions by hand, not fresh-context: a wake before `isInitializing`
+  is set opens headless and the launch then skips the restore on the open
+  handle (pre-existing shape); a wake during the post-demotion read-only
+  initialize retries later and then finds access blocked; the launch's
+  own step 6 registers the relay, so `.launchInFlight` cannot starve the
+  refresh; the hook runs only after a successful `Wallet.open`, once, and
+  never on the reopen; every kill point in the reordered helpers leaves at
+  most a lone marker, which `hasStrandedParkedDatabase` ignores. Tests:
+  `UserBackupRestoreTests` slot cases (park, rollback, no-overwrite,
+  stranded versus owned, refusal over an owned park). Not verified: the
+  launch decision in `initializePrimaryMode` itself (`WalletManager` is not
+  constructed in the suite); bark's behaviour on a slot copy with a newer
+  schema (a trap during the open is a stranded case the marker now
+  recovers). Device check owed: §13 of the device day, including the kill
+  variant.
 - **D3** → `Wallet_Deletion_Export_Step.md` §12.
 - **D4 PLAUSIBLE (low), class 3.** `LaunchCheckView.remove` closes an open
   handle through `closeWalletForMigration(backingUp: false)`, which posts

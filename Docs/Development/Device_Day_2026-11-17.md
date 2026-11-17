@@ -11,9 +11,10 @@ mtime-only slot stamp did propagate. The Activity list after hand-back
 being populated means H1's visible symptom did not reproduce; the code
 asymmetry stands (see `Features/Device_Linking.md` §17.2).
 
-**Status:** DRAFT 2026-11-17. Review has not closed: fixes 2–4 of the
-range review (`Features/Device_Linking.md` §17: I1 restore exit, H1 service
-rebuild, I2 import backup order) are not built. Sections marked **wait**
+**Status:** DRAFT 2026-11-17. Fixes 2, 3 and 4 of the range review
+(`Features/Device_Linking.md` §17: I1+I2 restore exit, H1 service rebuild,
+H2+D2 conflict-loser close and slot-restore parking) are built; §8 and §11
+passed, §12 and §13 (fix 4) are owed. Sections marked **wait**
 exercise code those fixes change; run them after. Everything else can run
 on the current working tree (fix 1 included). Tick a section when run and
 paste the exported log path under it.
@@ -193,12 +194,9 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
 
 ## 10. Not runnable with two phones
 
-- H2, two secondaries promoting at once, needs three devices.
-- D2, per-blocker unlink of a live backgrounded primary refilling the
-  slot: wait for the restore-path fix (ruling 2026-11-16), then it is a
-  two-phone run: background B (primary, open); on A unlink B from the
-  delete screen, full wipe, create; foreground B; cold-relaunch A; grep A
-  for `Backup is newer than local file`.
+- H2 with two secondaries promoting at once needs three devices; §12 is
+  the two-phone version (one phone promotes offline). D2 became runnable
+  with fix 4: §13.
 
 ## 11. Service rewiring after promotion (fix 3, §17.2 H1) — built 2026-11-17, **PASSED 2026-11-17** (reported in aggregate, "seems all to be working well")
 
@@ -214,6 +212,56 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   refresh is scheduled for the same VTXOs (X-Ray › Background Activity or
   the log's `VTXORefreshService` lines).
 - (d) Fail: A's log, screenshot of the balance card during the refresh.
+
+## 12. Primary conflict loser closes without a backup (fix 4, §17.2 H2) — built 2026-11-17
+
+- (a) A primary, B secondary. Demote A with the guided flow (Make Device
+  Secondary) and let it finish. Put A in airplane mode before touching B.
+  On B: Make Device Primary, direct promotion; B is primary. On A, still
+  offline: Devices › Make Device Primary, direct promotion (A has not seen
+  B's row). Premise, assumed: a promotion saves locally without the network
+  (SwiftData queues the CloudKit push). If A refuses offline, this check
+  needs the third device §10 named.
+- (b) Take A out of airplane mode. Both rows are primary; the earliest
+  claim wins, so B keeps primary and A self-demotes.
+- (c) Pass: A's log has `Primary conflict (2 primaries) - self-demoting`,
+  then `Closing wallet for migration (primaryConflict, backup: false)` and
+  `Skipping final backup — the backup slot is left as it is`, with no
+  `Wallet backup completed` or `Backup skipped - no changes detected`
+  between them. A shows the secondary UI, not the link screen. B's log
+  has `this device wins`. Relaunch B: `identical to the local file` or
+  `Local wallet file is up to date`, never `Restoring from backup`.
+- (d) Also grep A for `Device has been demoted from primary`: it must be
+  absent. If present, the KVS observer echoed A's own flag and the
+  overlapping-close note (Tier 4 Concurrency) is live; export A's log.
+- (e) Fail: both logs. Hand primary back to A with the guided flow.
+
+## 13. Per-blocker unlink of a live backgrounded primary; the slot must not replace the other phone's database (fix 4, §17.3 D2) — built 2026-11-17 — **destructive group**, §R afterwards
+
+- (a) B primary, open on the signet wallet X; A secondary. Background B
+  (home), do not kill it.
+- (b) On A: Settings › Delete wallet, unlink B from its blocker row, full
+  wipe, then create a wallet Y on A (a create on the shared Apple ID: only
+  inside this group, and §R follows).
+- (c) Foreground B for a moment and background it again, so B's
+  backgrounding backup runs before B notices its row is gone. B's log
+  tells which happened: `Wallet backup completed` after the wipe time means
+  the slot was refilled with X (the case under test); `Own registration
+  row is gone` first means B closed before refilling, and the run is
+  inconclusive (repeat with a shorter foreground).
+- (d) Swipe A away and cold-relaunch it. Pass: A's log shows either no
+  restore, or `Backup is newer than local file` → `Restoring from backup;
+  the local file is parked` → `The database restored from the backup slot
+  did not open` → `Own database put back after the slot copy failed to open
+  (reopened: true)`, and A opens Y with Y's history. `Discarded the
+  previous database` must be absent in that case. Fail: `Restored newer
+  backup over the local file` followed by a successful open (A shows X's
+  history), or `Wallet could not be opened`.
+- (e) Kill variant (optional, settles round-1 F1 on device): repeat (d)
+  but kill A within the first second of the relaunch (swipe away while the
+  loading screen shows). Relaunch again. Pass: `Stranded parked database
+  found — putting this device's own database back`, then Y opens.
+- (f) Then §R: full wipe Y from A, re-import the signet phrase on A, relink B.
 
 ## R. Reset to the shared signet wallet
 
