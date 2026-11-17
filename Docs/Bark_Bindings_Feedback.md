@@ -419,6 +419,7 @@ doesn't do (a missing daemon capability):
 | `ExitProgressionService` | 5 min | exit state transitions | claim (`drainExits`); progress with an explicit fee rate off-mainnet |
 | `VTXORefreshService` | 60 min | approaching refresh/expiry heights | refresh when the fee schedule makes it free |
 | `pollLightningPaymentStatus` (ad hoc) | 1 s × 60 | send settlement after `.inProgress` | — |
+| `LightningSettlement.wait` (ad hoc, since 2026-11-17) | 100 ms, no end | a send's preimage after `wait: false` (local `lightningSendState` reads) | none |
 | `waitForServerConnection` (ad hoc) | 1 s, 20 s timeout | connection state changes | — |
 
 **Relationship to the daemon.** We run `runDaemon` whenever the wallet is

@@ -126,12 +126,14 @@ one — metadata entered during a failed attempt is **not** carried over.
 Bark returns the payment hash only in `LightningSendStatus.paid(paymentHash, _)`.
 After each Lightning path (invoice, address, BOLT12, LNURL, and the send-max
 retry loop) the view model calls `extractPaymentHash(from:)` and, when present,
-`updatePendingMetadataWithPaymentHash(_:)`. `.inProgress` and `.unknown` yield
-no hash; those payments fall back to timestamp matching. Ark and onchain sends
-never have a hash.
+`updatePendingMetadataWithPaymentHash(_:)`. Since 2026-11-17 every Lightning
+pay call that returns comes back `.paid` (`WalletManager` waits for bark's
+preimage, `LightningSettlement`), so every returned Lightning send has a hash.
+Ark and onchain sends never have a hash.
 
-Because the hash is written after the FFI call returns, a movement sync that
-races ahead of it matches by timestamp instead. The result is the same row.
+Because the hash is written only after settlement, a movement sync that races
+ahead of it matches by timestamp instead, which is the common case for a slow
+payment. The result is the same row.
 
 ### 3. Note pre-population
 
