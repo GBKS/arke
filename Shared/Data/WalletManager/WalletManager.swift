@@ -555,6 +555,29 @@ class WalletManager {
             self?.processStateService?.incrementBackupTransactionCount()
             Self.logger.info("📊 DataVersion incremented to \(self?.dataVersion ?? 0) after transaction")
         }
+
+        // At init the context is not set yet and setModelContext() wires it
+        // later; on a rebuild after a migration close it already is, and
+        // nothing else would apply it to the new instances
+        wireModelContextIntoRebuiltServices()
+    }
+
+    /// `setModelContext` runs once, at launch. Services rebuilt after a
+    /// migration close (demote → promote in one session) came back without
+    /// a context, so `UnifiedTransactionService.mergeTransactions` returned
+    /// early and the stored merge behind `transactions` stayed empty for
+    /// the rest of the session. Its readers are the refresh-state signals
+    /// `hasActiveRefresh` and `vtxoIdsBeingRefreshed`: Guard C in
+    /// `VTXORefreshService`, the balance refresh status, the exit view, the
+    /// fee summary (range review 2026-11-16, H1, narrowed by the pass on
+    /// the fix 2026-11-17: the iOS activity list is a `@Query`, not this
+    /// merge, and onchain persistence is dead code regardless). The onchain
+    /// service gets the context too, for parity with launch.
+    private func wireModelContextIntoRebuiltServices() {
+        guard let context = modelContext else { return }
+        onchainTransactionService?.setModelContext(context)
+        unifiedTransactionService?.setModelContext(context)
+        Self.logger.info("🔧 [WalletManager] Model context re-applied to rebuilt wallet services")
     }
     
     func setModelContext(_ context: ModelContext, caller: String = #function, file: String = #file, line: Int = #line) {

@@ -9143,6 +9143,17 @@
         }
       }
     },
+    "button_restore_wallet" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restore Wallet"
+          }
+        }
+      }
+    },
     "button_retry" : {
       "localizations" : {
         "de" : {
@@ -14427,6 +14438,17 @@
         }
       }
     },
+    "error_account_changed_since_check" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your iCloud account's wallet changed since this screen was shown. Arké is checking again."
+          }
+        }
+      }
+    },
     "error_address_not_found" : {
       "localizations" : {
         "de" : {
@@ -14768,6 +14790,17 @@
         }
       }
     },
+    "error_existing_wallet_other_network" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The wallet on this device is not a %@ wallet. Nothing was changed; check the network setting and try again."
+          }
+        }
+      }
+    },
     "error_faucet_rate_limited_minutes %lld" : {
       "localizations" : {
         "de" : {
@@ -15092,6 +15125,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "付款失敗"
+          }
+        }
+      }
+    },
+    "error_phrase_not_this_wallets" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This is not the recovery phrase of the wallet on this device. Nothing was changed; check the words and try again."
           }
         }
       }
@@ -22562,6 +22606,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "連線至 %@。只會復原該 Ark 伺服器上的資金。"
+          }
+        }
+      }
+    },
+    "onboarding_restore_existing_body" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "This device still holds the wallet's data. Its recovery phrase opens it again and keeps the history."
           }
         }
       }
@@ -30740,6 +30795,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在解析地址…"
+          }
+        }
+      }
+    },
+    "status_restoring" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Restoring..."
           }
         }
       }
