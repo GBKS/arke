@@ -1569,6 +1569,39 @@ Fix status is tracked per finding below as fixes land.
   close), and onchain persistence was not checked. Fix 3 stays in the
   order but drops below I2 in urgency; the builder should first trace
   which service actually feeds the list.
+  **Fixed 2026-11-17, narrowed by its adversarial pass.**
+  `buildWalletScopedServices` ends with
+  `wireModelContextIntoRebuiltServices()`: a no-op at init (no context
+  yet); on a rebuild after a migration close it re-applies the context to
+  `unifiedTransactionService` and `onchainTransactionService`. The pass
+  corrected two of the finding's premises, each verified by the session
+  against the source: the iOS Activity list is a `@Query` over
+  `PersistentTransaction`, not the unified merge (`TransactionListModel`,
+  which reads the merge, has no constructor anywhere), so "the activity
+  list is empty or stale" was never possible and the 2026-11-17 device
+  observation says nothing about the merge; and `OnchainTransactionEntity`
+  is not in the schema, so onchain persistence fails in every session, not
+  only after a rebuild (Tier 4 item "persistence is dead code"). What the
+  missing context actually broke after a re-promotion is the stored merge
+  behind `WalletManager.transactions`, whose readers are
+  `hasActiveRefresh` and `vtxoIdsBeingRefreshed`: Guard C in
+  `VTXORefreshService` went blind (duplicate refresh schedule, fail-open),
+  the balance refresh status, the exit view and the fee summary read an
+  empty list. That is what the fix restores. The second shape, a missing
+  `addressService` after a promotion from a read-only start, is
+  unreachable: `setModelContext` runs before any `initialize` on both
+  platforms while `isReadOnlyMode` is still false, so the primary address
+  service always exists and `closeWalletForMigration` never nils it; the
+  `ensurePrimaryAddressService` half was removed as dead code. Two
+  pre-existing PLAUSIBLE notes from the pass, not fixed: demotion leaves
+  `addressService` holding the closed wallet (safe today, every linking
+  call is database-only; `generateNewAddress` from a receive view while
+  read-only is the one path not checked), and a demotion landing inside
+  `restoreWalletIfNeeded` still rebuilds the services before the post-open
+  re-check (same family as H5). No unit test: `WalletManager` is not
+  constructed in the suite; traced by hand. **Device-checked 2026-11-17**
+  (Christoph, `Development/Device_Day_2026-11-17.md` §11, passed as
+  reported). H1 closed.
 - **H2 PLAUSIBLE, class 1.** `reconcilePrimaryConflicts` makes the loser
   self-demote through `.deviceDemotedFromPrimary`, whose handler closes
   *with* backup; the range's stamp makes that slot write "newer". Two

@@ -200,6 +200,21 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   delete screen, full wipe, create; foreground B; cold-relaunch A; grep A
   for `Backup is newer than local file`.
 
+## 11. Service rewiring after promotion (fix 3, §17.2 H1) — built 2026-11-17, **PASSED 2026-11-17** (reported in aggregate, "seems all to be working well")
+
+- (a) A primary, B secondary, both on a build with fix 3. Signet wallet
+  with at least one spendable VTXO.
+- (b) Hand over A → B, then hand back B → A, in one session on A (no
+  relaunch). On A open the balance card's refresh modal and start a VTXO
+  refresh.
+- (c) Pass: A's log has `Model context re-applied to rebuilt wallet
+  services` right after the hand-back, and while the refresh is pending
+  the balance card's refresh status shows it as in progress (that status
+  reads `hasActiveRefresh`, which is empty without the fix). No second
+  refresh is scheduled for the same VTXOs (X-Ray › Background Activity or
+  the log's `VTXORefreshService` lines).
+- (d) Fail: A's log, screenshot of the balance card during the refresh.
+
 ## R. Reset to the shared signet wallet
 
 After §4 or §8: full wipe of whatever wallet is on the account from the
