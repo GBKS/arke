@@ -9,4 +9,6 @@ enum SendModalState: Equatable {
     case sending
     case success
     case error(String)
+    /// The payment may or may not have gone through (`LightningSendFailure.isUnconfirmed`)
+    case unconfirmed(String)
 }

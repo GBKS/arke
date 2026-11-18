@@ -93,6 +93,9 @@ four make the custom-server release (DECIDED 2026-11-04, Tier 0 does not
 gate it). Also since: the deletion export step, built, reviewed and
 device-checked 2026-11-12 (`Features/Wallet_Deletion_Export_Step.md`), not
 yet in a build; its four-letter rule was removed again the same day.
+Picked 2026-11-18: Lightning send settlement (`Features/Lightning_Send_Settlement.md`),
+bindings bump v0.27.0 first as its own commit; both built and reviewed
+2026-11-18, device checks owed.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -264,6 +267,12 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
+- [ ] **Lightning sends: pay with `wait: false`, "Sent" on bark's preimage,
+  refresh after** (filed 2026-11-18): today every format pays with
+  `wait: true` (bark polls the server every 2 s, deaf to the mailbox), the
+  invoice path refreshes before "Sent", and a refunded failure (`.unknown`)
+  reads "Payment Sent". Step 0 is the bindings bump to v0.27.0+bark-0.8.1 as
+  its own commit (DECIDED 2026-11-18). Plan: `Features/Lightning_Send_Settlement.md`.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -744,6 +753,12 @@ log).
 
 ### Send
 
+- [ ] **Address, LNURL and offer sends that fail inside the pay call read
+  "Payment Not Confirmed", not "Payment Failed"** (review 2026-11-18, F2,
+  PLAUSIBLE, class 4): bark revokes and returns a hashless `.unknown`, which
+  the app cannot read again. Safe direction (the copy says check Activity
+  first). Fix is bindings ask 24 (hash on `.unknown`).
+  `Features/Lightning_Send_Settlement.md` §9.
 - [ ] **The selected row can vanish from the "Pay from" ranking on a typed
   amount** (release review 2026-11-04, PLAUSIBLE): `oneRowPerBalance` runs
   on every re-rank, so when the selected Lightning row turns unviable for
@@ -887,6 +902,13 @@ log).
 
 ### Refresh
 
+- [ ] **PROPOSED — movement notifications fire a full balance refresh each
+  during a Lightning send** (device log 2026-11-18): one send produced
+  `movementCreated` plus two `movementUpdated` events inside bark's handoff,
+  each running `refreshBalances` (Esplora onchain fetch + Ark balance), then
+  the post-settlement refresh made four in three seconds. Options: debounce
+  movement-triggered refreshes, or skip them while a send is in flight.
+  `Features/Lightning_Send_Settlement.md` §9a.
 - [ ] **X-Ray: list local notifications** (requested 2026-09-27): show
   `pendingNotificationRequests()` (id, title, category, `nextTriggerDate`)
   and `deliveredNotifications()` next to the Background Activity rows, plus
@@ -952,6 +974,12 @@ log).
 
 ### Settings, devices, deletion
 
+- [ ] **Esplora URL changeable in Settings for the built-in servers**
+  (DECIDED 2026-11-18, after the Lightning send settlement item): the mainnet
+  default stays Second's explorer; a Settings row lets a nearer explorer be
+  tried on real devices (Asia latency sits inside the Lightning handoff).
+  Override stored in the persisted `NetworkConfig`, applied at the next
+  launch. Design notes: `Features/Lightning_Send_Settlement.md` §7a.
 - [ ] **Promotion racing an initialize leaves the device on the loading
   screen or in a 90 s dead end** (range review 2026-11-16, H5 and H6,
   PLAUSIBLE, class 3): a self-demotion landing while the promote's
@@ -1114,6 +1142,12 @@ survivors.)
 
 ### Concurrency and the FFI boundary
 
+- [ ] **PROPOSED — slow fallback driver for parked Lightning sends** (review
+  2026-11-18, F3): after `wait: false`, a send parked by a transient error
+  waits for bark's daemon tick (60 s default) or the mailbox; the 1 s FFI
+  poll that used to drive it was removed. Options: pass a shorter
+  `daemonSyncIntervalSecs`, or one `checkLightningPayment(wait: false)` every
+  10 s inside the wait. Decide after the device check, §5j of the plan.
 - [ ] **Overlapping migration closes: the second caller's reason decides
   the backup** (filed 2026-11-17, fix-4 pass round 1, F3):
   `closeWalletForMigration` is not deduplicated; a `.handover` post landing

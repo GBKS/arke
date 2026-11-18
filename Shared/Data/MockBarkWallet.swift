@@ -775,6 +775,12 @@ class MockBarkWallet: BarkWalletProtocol {
         return [] // No stuck sends in mock
     }
     
+    func pendingLightningSends() async throws -> [LightningSend] {
+        try await Task.sleep(nanoseconds: 300_000_000)
+        print("🔍 Mock: Checking for pending Lightning sends...")
+        return [] // No pending sends in mock
+    }
+    
     func isInvoicePaid(paymentHash: String) async throws -> Bool {
         try await Task.sleep(nanoseconds: 300_000_000)
         print("🔍 Mock: Checking if invoice paid for payment hash: \(String(paymentHash.prefix(16)))...")
@@ -784,7 +790,9 @@ class MockBarkWallet: BarkWalletProtocol {
     func lightningSendState(paymentHash: String) async throws -> LightningSendStatus {
         try await Task.sleep(nanoseconds: 300_000_000)
         print("🔍 Mock: Getting Lightning send state for payment hash: \(String(paymentHash.prefix(16)))...")
-        return .unknown
+        // The mock's pay methods return in progress; report the send paid so a
+        // DEBUG send ends in "Sent" (the app waits for this state)
+        return .paid(paymentHash: paymentHash, preimage: "mock-preimage")
     }
     
     // MARK: - Fee Estimation

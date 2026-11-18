@@ -197,6 +197,8 @@ protocol BarkWalletProtocol: ExitClaimWallet {
     func allowLightningSendToExit(paymentHash: String) async throws
     func attemptLightningReceiveExit(paymentHash: String) async throws
     func stuckFailedLightningSends() async throws -> [LightningSend]
+    /// Every Lightning send that still has a checkpoint (in progress, or failed with its HTLCs not yet revoked)
+    func pendingLightningSends() async throws -> [LightningSend]
     
     // MARK: - Mailbox Operations
     

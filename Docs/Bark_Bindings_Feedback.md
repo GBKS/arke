@@ -610,6 +610,28 @@ checkpoint, since round and Lightning messages may still need replaying;
 (c) make `sync_mailbox` single-flight, so a second caller waits for the
 running pass instead of starting its own.
 
+### 2.9 `LightningSendStatus.unknown` drops the payment hash bark-ffi already has
+
+Read 2026-11-18 at bark-ffi `ca8f174` (bindings v0.27.0) and
+`bark-0.8.1`. Every `pay_lightning_*` in `src/core/wallet.rs` ends with
+`lightning_send_status(resolved_invoice)`, which reads
+`Wallet::lightning_send_state(invoice.payment_hash())` after the drive and
+maps it to the FFI enum. `Paid` and `InProgress` carry the hash (directly
+or in `LightningSend`); `Unknown` is a bare case. `lightning_send_state`
+reads the paid record before the checkpoint, and a settlement writes the
+paid record first and removes the checkpoint last, so a read that lands
+between bark's two lookups returns `Unknown` once for a paid send. An
+app paying with `wait: false` reads the state again to tell that apart
+from a refunded failure, which also reads `Unknown`. For a BOLT11 invoice
+the app parses its own hash; for a Lightning address, LNURL or BOLT12
+offer the hash exists only inside bark-ffi, so a bare `Unknown` from
+those three calls cannot be read again and has to be shown as
+"outcome unknown".
+
+**Ask:** carry the payment hash on `LightningSendStatus::Unknown`
+(`unknown(paymentHash:)`), or return the resolved invoice alongside the
+status from the address, LNURL and offer pay calls.
+
 ## Priority 3 — ergonomics and polish
 
 **Server info**
@@ -789,3 +811,4 @@ pattern we're asking you to extend everywhere:
 | 21 | Check already-known before validating a received arkoor VTXO (§2.8) | Minutes of per-message chain fetches on the first sync after recovery |
 | 22 | First sync after recovery skips the arkoor messages recovery already stored (§2.8) | The full-history replay after every seed import |
 | 23 | Single-flight `sync_mailbox` (§2.8) | Doubled mailbox work and the "Checkpoint not advanced" error storm |
+| 24 | Payment hash on `LightningSendStatus.unknown` for address, LNURL and offer sends (§2.9) | A "could not confirm this payment" message for a payment that settled during bark-ffi's own state read |

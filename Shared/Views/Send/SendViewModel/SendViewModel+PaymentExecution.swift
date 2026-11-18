@@ -444,6 +444,15 @@ extension SendViewModel {
             } catch {
                 logger.warning("   ⚠️ Attempt \(attemptNumber) failed: \(error)")
                 
+                // A settlement failure is a completed payment attempt that bark
+                // already refunded or still holds, not a pre-send balance error:
+                // never retry it with a smaller amount (its "back in your
+                // balance" text would match the guard below)
+                if error is LightningSendFailure {
+                    logger.error("   ❌ Payment settled as a failure, not retrying: \(error)")
+                    throw error
+                }
+                
                 // Check if this looks like an insufficient balance error
                 let errorString = error.localizedDescription.lowercased()
                 if errorString.contains("insufficient") || errorString.contains("balance") {

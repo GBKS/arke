@@ -35,6 +35,7 @@ Reference docs for shipped features, plus the plans still in flight. Each doc ca
 
 ## Payments
 
+- **[Lightning_Send_Settlement.md](Lightning_Send_Settlement.md)** — Lightning sends with `wait: false`, "Sent" on bark's preimage, typed failure outcomes (PLANNED 2026-11-18)
 - **[Send_Metadata.md](Send_Metadata.md)** — assigning contact, tags, and notes during send (`PendingPaymentMetadata`)
 - **[LNURL_Pay.md](LNURL_Pay.md)** — LNURL-pay send support
 - **[Signet_Faucet.md](Signet_Faucet.md)** — the signet faucet contact

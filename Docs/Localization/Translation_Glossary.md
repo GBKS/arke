@@ -244,6 +244,17 @@ Recorded so later batches reuse them; a native reviewer may overrule any row.
 | contact support | wende dich an den Support | サポートにお問い合わせください | 聯絡客服 | |
 | coins (user-facing refresh and transfer copy) | Bitcoin | ビットコイン | 比特幣 | DECIDED 2026-11-11: English keeps the idiomatic "these coins" (never "VTXOs" in user-facing copy); the translations say Bitcoin, de „Münzen" is never used. Test-network copy keeps Coins / Test-Coins. |
 
+## Terms added 2026-11-18 (Lightning send settlement — all ⚠️ pending native review)
+
+Four keys from `Features/Lightning_Send_Settlement.md` §6: the three failure
+messages and the fourth send-modal title.
+
+| English | German (du) | Japanese | zh-Hant | Notes |
+|---|---|---|---|---|
+| Payment Not Confirmed (modal title; the outcome is open, not a failure) | Zahlung nicht bestätigt | 支払いは未確認です | 付款未確認 | Sibling of "Payment Failed" (Zahlung fehlgeschlagen / 支払いに失敗しました / 付款失敗); must not read as failed. |
+| did not go through (a Lightning payment the server rejected) | ist nicht durchgegangen | 完了しませんでした | 未能完成 | Softer than "failed"; the sentence after it says where the amount is. |
+| Check Activity before you pay again | Prüfe die Aktivität, bevor du erneut zahlst | もう一度支払う前にアクティビティを確認してください | 再次付款前請先查看活動 | "Activity" is the tab name (Aktivität / アクティビティ / 活動). |
+
 ## Terms added 2026-11-11 (review pass — all ⚠️ pending native review)
 
 Decided by the per-language consistency reviewers while aligning sibling keys.

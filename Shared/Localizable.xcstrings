@@ -15017,6 +15017,93 @@
         }
       }
     },
+    "error_lightning_held_by_server" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Zahlung ist nicht durchgegangen. Der Server hält den Betrag noch; Arké versucht weiter, ihn zurückzuholen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The payment did not go through. The server still holds the amount; Arké keeps trying to get it back."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払いは完了しませんでした。サーバーがまだ金額を保持しています。Arké は引き続き取り戻しを試みます。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "付款未能完成。伺服器仍持有這筆金額；Arké 會持續嘗試取回。"
+          }
+        }
+      }
+    },
+    "error_lightning_not_confirmed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké konnte diese Zahlung nicht bestätigen. Prüfe die Aktivität, bevor du erneut zahlst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arké could not confirm this payment. Check Activity before you pay again."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké はこの支払いを確認できませんでした。もう一度支払う前にアクティビティを確認してください。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Arké 無法確認這筆付款。再次付款前請先查看活動。"
+          }
+        }
+      }
+    },
+    "error_lightning_not_sent" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Die Zahlung ist nicht durchgegangen. Der Betrag ist wieder in deinem Guthaben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The payment did not go through. The amount is back in your balance."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払いは完了しませんでした。金額は残高に戻っています。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "付款未能完成。金額已退回你的餘額。"
+          }
+        }
+      }
+    },
     "error_load_statistics" : {
       "localizations" : {
         "de" : {
@@ -30259,6 +30346,35 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "進行中"
+          }
+        }
+      }
+    },
+    "status_payment_not_confirmed" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zahlung nicht bestätigt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Payment Not Confirmed"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "支払いは未確認です"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "付款未確認"
           }
         }
       }

@@ -43,8 +43,8 @@ struct SendModalContentView: View {
                 }
                  */
                 
-                // Error message (only for error state)
-                if case .error(let errorMessage) = state {
+                // Error message (error and unconfirmed states)
+                if let errorMessage = stateErrorMessage {
                     Text(errorMessage)
                         .font(.body)
                         .foregroundColor(.secondary)
@@ -58,8 +58,8 @@ struct SendModalContentView: View {
                     SendMetadataSection(pendingMetadata: $pendingMetadata)
                 }
                 
-                // Action button (always visible unless error state)
-                if case .error = state {
+                // Action button (always visible unless error or unconfirmed state)
+                if stateErrorMessage != nil {
                     // Don't show the success button in error state
                 } else {
                     Button {
@@ -77,8 +77,8 @@ struct SendModalContentView: View {
                     .disabled(!(state == .success))
                 }
                 
-                // Dismiss button (only for error state)
-                if case .error = state {
+                // Dismiss button (error and unconfirmed states)
+                if stateErrorMessage != nil {
                     Button {
                         onDismiss()
                     } label: {
@@ -98,6 +98,16 @@ struct SendModalContentView: View {
     
     // MARK: - State-based helpers
     
+    /// The message under the title for the two terminal states that are not a success
+    private var stateErrorMessage: String? {
+        switch state {
+        case .error(let message), .unconfirmed(let message):
+            return message
+        case .sending, .success:
+            return nil
+        }
+    }
+    
     @ViewBuilder
     private var videoBackground: some View {
         // Top-aligned so the character's head survives the crop when the
@@ -115,7 +125,7 @@ struct SendModalContentView: View {
             return videoPair.idle
         case .success:
             return videoPair.thumbsUp
-        case .error:
+        case .error, .unconfirmed:
             // For now, use the same video as sending state
             // Phase 3b will add an error-specific video
             return videoPair.idle
@@ -130,6 +140,8 @@ struct SendModalContentView: View {
             return String(localized: "status_payment_sent", defaultValue: "Payment Sent")
         case .error:
             return String(localized: "error_payment_failed", defaultValue: "Payment Failed")
+        case .unconfirmed:
+            return String(localized: "status_payment_not_confirmed", defaultValue: "Payment Not Confirmed")
         }
     }
     
@@ -139,7 +151,7 @@ struct SendModalContentView: View {
             return String(localized: "onboarding_relax", defaultValue: "Relax your mind and body.")
         case .success:
             return String(localized: "message_confirm_shortly", defaultValue: "It will be confirmed shortly.")
-        case .error:
+        case .error, .unconfirmed:
             return nil // Error message comes from the error itself
         }
     }

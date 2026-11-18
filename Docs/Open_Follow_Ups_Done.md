@@ -10,6 +10,17 @@ the item off in `Open_Follow_Ups.md` with the date and move it here in the
 same commit, under a matching header or a dated "Moved from the open list"
 section; the open file never holds ticked lines.
 
+## Moved from the open list 2026-11-18
+- [x] **DECIDE — mainnet Esplora default and the two Lightning failure
+  titles — ruled 2026-11-18** (PROPOSED 2026-11-18, `Features/Lightning_Send_Settlement.md` §7):
+  switch `NetworkConfig.mainnet` from Second's explorer to `mempool.space/api`
+  as a TestFlight trial, or make the field editable for built-in servers; and
+  whether an unconfirmed Lightning outcome gets its own modal title.
+  Rulings: default stays Second's explorer, the URL becomes changeable in
+  Settings for the built-in servers (Tier 3 Settings entry); the unconfirmed
+  outcome gets a fourth modal state "Payment Not Confirmed"; the three
+  messages as proposed (plan §6, §7).
+
 ## Localization
 - [x] **`balance_vtxos_expired_and_expiring %lld %lld` needs plural
   substitutions in de — fixed 2026-11-11** — English uses a `%#@expired@` substitution plus a

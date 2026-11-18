@@ -52,6 +52,11 @@ struct SendModalView: View {
             
             state = .success
             PaymentFeedback.shared.paymentSent()
+        } catch let failure as LightningSendFailure where failure.isUnconfirmed {
+            await enforceMinimumSendingDuration()
+            
+            state = .unconfirmed(failure.localizedDescription)
+            PaymentFeedback.shared.paymentFailed()
         } catch {
             // Ensure minimum display time for "sending" state
             await enforceMinimumSendingDuration()

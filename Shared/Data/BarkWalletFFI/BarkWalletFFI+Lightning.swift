@@ -60,15 +60,6 @@ extension BarkWalletFFI {
                 Self.logger.info("Lightning payment settled, Payment hash: \(String(paymentHash.prefix(16)))..., Preimage: \(String(preimage.prefix(16)))...")
             case .inProgress(let send):
                 Self.logger.info("Lightning payment in progress, Invoice: \(send.invoice), Amount: \(send.amountSats) sats, Fee: \(send.feeSats) sats")
-                
-                // Extract payment hash and poll for settlement in background
-                if let paymentHash = LightningInvoiceParser.extractPaymentHash(fromInvoice: send.invoice) {
-                    Task {
-                        await pollLightningPaymentStatus(paymentHash: paymentHash)
-                    }
-                } else {
-                    Self.logger.warning("Could not extract payment hash from invoice: \(String(send.invoice.prefix(30)))...")
-                }
             case .unknown:
                 Self.logger.warning("Lightning payment status unknown after payment attempt")
             }
@@ -418,48 +409,6 @@ extension BarkWalletFFI {
         }
     }
 
-    // MARK: - Payment Status Polling
-    
-    /// Poll lightning payment status until preimage is available or max attempts reached
-    /// - Parameters:
-    ///   - paymentHash: The payment hash to check
-    ///   - maxAttempts: Maximum number of polling attempts (default: 10)
-    ///   - intervalSeconds: Seconds between polling attempts (default: 1)
-    private func pollLightningPaymentStatus(paymentHash: String, maxAttempts: Int = 60, intervalSeconds: UInt64 = 1) async {
-        Self.logger.debug("Starting Lightning payment status polling, Payment hash: \(String(paymentHash))..., Max attempts: \(maxAttempts)")
-        
-        for attempt in 1...maxAttempts {
-            do {
-                let status = try await checkLightningPayment(paymentHash: paymentHash, wait: false)
-                
-                switch status {
-                case .paid(_, let preimage):
-                    Self.logger.info("Lightning payment settled on attempt \(attempt)/\(maxAttempts), Preimage: \(String(preimage.prefix(16)))...")
-                    return
-                case .inProgress:
-                    Self.logger.debug("Lightning payment still in progress, Attempt: \(attempt)/\(maxAttempts)")
-                case .unknown:
-                    Self.logger.warning("Lightning payment not found on attempt \(attempt)/\(maxAttempts)")
-                    return
-                }
-                
-                // Wait before next attempt (unless this was the last attempt)
-                if attempt < maxAttempts {
-                    try await Task.sleep(nanoseconds: intervalSeconds * 1_000_000_000)
-                }
-            } catch {
-                Self.logger.warning("Failed to check Lightning payment on attempt \(attempt)/\(maxAttempts): \(error)")
-                
-                // Wait before retry (unless this was the last attempt)
-                if attempt < maxAttempts {
-                    try? await Task.sleep(nanoseconds: intervalSeconds * 1_000_000_000)
-                }
-            }
-        }
-        
-        Self.logger.warning("Lightning payment polling completed without settlement after \(maxAttempts) attempts")
-    }
-    
     // MARK: - BOLT12 Offers
     
     func checkLightningPayment(paymentHash: String, wait: Bool) async throws -> LightningSendStatus {
@@ -647,7 +596,8 @@ extension BarkWalletFFI {
         // Non-blocking status check for a specific payment
         
         if isPreview {
-            return .unknown
+            // The preview pay methods return in progress; settle them
+            return .paid(paymentHash: paymentHash, preimage: "preview")
         }
         
         guard let wallet = wallet else {
@@ -713,6 +663,28 @@ extension BarkWalletFFI {
             throw BarkWalletFFIError.configurationError("Failed to attempt Lightning receive exit: \(error.localizedDescription)")
         } catch {
             Self.logger.error("Error attempting Lightning receive exit: \(error)")
+            throw error
+        }
+    }
+    
+    func pendingLightningSends() async throws -> [LightningSend] {
+        // Every Lightning send that still has a checkpoint
+        
+        if isPreview {
+            return []
+        }
+        
+        guard let wallet = wallet else {
+            throw BarkWalletFFIError.walletNotInitialized
+        }
+        
+        do {
+            return try await wallet.pendingLightningSends()
+        } catch let error as Bark.Error {
+            Self.logger.error("FFI Error getting pending Lightning sends: \(error)")
+            throw BarkWalletFFIError.configurationError("Failed to get pending Lightning sends: \(error.localizedDescription)")
+        } catch {
+            Self.logger.error("Error getting pending Lightning sends: \(error)")
             throw error
         }
     }
