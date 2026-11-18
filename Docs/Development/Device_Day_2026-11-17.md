@@ -10,11 +10,18 @@ deferred by ruling. §10 not runnable. The idle-primary handover passing settles
 mtime-only slot stamp did propagate. The Activity list after hand-back
 being populated means H1's visible symptom did not reproduce; the code
 asymmetry stands (see `Features/Device_Linking.md` §17.2).
+**Results 2026-11-18 (Christoph, two phones):** the guided hand-over and
+hand-back on the fix-4 build, §12, §14 and §13 all passed, reported in
+aggregate ("all worked great"). §13's first attempt surfaced the demotion
+breadcrumb (fix 5, §14) and was re-run after it. Creates and imports that
+day were on mainnet by choice; §R restored the signet pair.
 
-**Status:** DRAFT 2026-11-17. Fixes 2, 3 and 4 of the range review
-(`Features/Device_Linking.md` §17: I1+I2 restore exit, H1 service rebuild,
-H2+D2 conflict-loser close and slot-restore parking) are built; §8 and §11
-passed, §12 and §13 (fix 4) are owed. Sections marked **wait**
+**Status:** DRAFT 2026-11-17, continued 2026-11-18. Fixes 2, 3 and 4 of
+the range review (`Features/Device_Linking.md` §17: I1+I2 restore exit, H1
+service rebuild, H2+D2 conflict-loser close and slot-restore parking) are
+built; §8, §11 and §12 passed; §13 is owed (its first attempt surfaced the
+demotion-breadcrumb finding, fix 5, §14). The 2026-11-18 creates and
+imports were on mainnet by choice; §R re-imports signet explicitly. Sections marked **wait**
 exercise code those fixes change; run them after. Everything else can run
 on the current working tree (fix 1 included). Tick a section when run and
 paste the exported log path under it.
@@ -213,7 +220,7 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   the log's `VTXORefreshService` lines).
 - (d) Fail: A's log, screenshot of the balance card during the refresh.
 
-## 12. Primary conflict loser closes without a backup (fix 4, §17.2 H2) — built 2026-11-17
+## 12. Primary conflict loser closes without a backup (fix 4, §17.2 H2) — built 2026-11-17, **PASSED 2026-11-18** ("worked great")
 
 - (a) A primary, B secondary. Demote A with the guided flow (Make Device
   Secondary) and let it finish. Put A in airplane mode before touching B.
@@ -236,7 +243,7 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   overlapping-close note (Tier 4 Concurrency) is live; export A's log.
 - (e) Fail: both logs. Hand primary back to A with the guided flow.
 
-## 13. Per-blocker unlink of a live backgrounded primary; the slot must not replace the other phone's database (fix 4, §17.3 D2) — built 2026-11-17 — **destructive group**, §R afterwards
+## 13. Per-blocker unlink of a live backgrounded primary; the slot must not replace the other phone's database (fix 4, §17.3 D2) — built 2026-11-17 — **destructive group**, §R afterwards — **PASSED 2026-11-18** (reported in aggregate, "all worked great"; the first attempt on 2026-11-18 surfaced §14)
 
 - (a) B primary, open on the signet wallet X; A secondary. Background B
   (home), do not kill it.
@@ -262,6 +269,22 @@ The Remove exit is the same `LaunchCheckView` whichever case shows it;
   loading screen shows). Relaunch again. Pass: `Stranded parked database
   found — putting this device's own database back`, then Y opens.
 - (f) Then §R: full wipe Y from A, re-import the signet phrase on A, relink B.
+
+## 14. Demote, wipe, create on one phone (fix 5, §17.5 N1) — built 2026-11-18, **PASSED 2026-11-18**
+
+- First run 2026-11-18 (before the fix, during §13's setup): the created
+  wallet came up read-only, "1 device", no Send tab, across restarts and
+  twenty minutes; a reinstall cleared it. Log confirmed `Wallet access
+  blocked (demoted)` right after `Device registered as primary after
+  wallet creation`.
+- (a) A primary (any wallet on the account). Demote A with the guided flow
+  and let it finish; do not promote anything.
+- (b) On A: Settings › Delete wallet, full wipe. Then create a wallet.
+- (c) Pass: the new wallet opens in primary mode (Send tab present, Devices
+  shows A as primary); A's log has `Initializing in PRIMARY mode` after
+  the create and no `Wallet access blocked (demoted)`. Fail: the read-only
+  UI, or the blocked line.
+- (d) Then §R. Creates on the shared Apple ID stay inside this group.
 
 ## R. Reset to the shared signet wallet
 

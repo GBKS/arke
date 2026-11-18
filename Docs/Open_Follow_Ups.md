@@ -403,7 +403,8 @@ check). The security-check matrix is still its own Tier 0 item.
   device's own `becamePrimaryAt`; or the backup hook checks the mirror
   first. `Features/Device_Linking.md` §17.2 H2.
 - [ ] **Range-wide review `22829b1..HEAD` (2026-11-16): 24 findings, 8
-  CONFIRMED, none fixed yet** — four fault-class passes by area over
+  CONFIRMED, all eight fixed and device-checked by 2026-11-18 (fixes 1–5);
+  open: the PLAUSIBLE set** — four fault-class passes by area over
   everything since the 2026-11-04 release. Most severe: `launchRoute`'s
   self-heal is unscoped by wallet and runs before the left breadcrumb
   (undoes a local deletion, mis-links the upgrade cohort); the launch-check

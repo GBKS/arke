@@ -234,7 +234,12 @@ Enforced: nothing — this rule records a limit, not a guard. Test: none.
 **14. Check demotion before opening the wallet.**
 A demoted device must fall back to read-only mode without touching the seed;
 the layered check (UserDefaults → iCloud KV → CloudKit cache) runs as step 0
-of initialization. Since 2026-11-13 the layers feed one pure verdict
+of initialization. The UserDefaults layer is the breadcrumb
+`device_<id>_wasDemoted`; since 2026-11-18 it is cleared wherever the own
+mirror flag is written true (`writeOwnPrimaryFlag`, which every primary
+claim goes through) and by every deletion that reaches Step 4, because a
+breadcrumb that outlives the wallet it judged held a freshly created
+wallet in read-only mode. Since 2026-11-13 the layers feed one pure verdict
 (`WalletManager.accessVerdict`, rule 28): an unreadable device ID, a
 missing row, or an unavailable registry with no positive mirror answer all
 block, where they used to pass. Since 2026-09-25 the background wake path honors it too:

@@ -1435,8 +1435,11 @@ settle window; the hazard is closed in the restore path instead, which
 must never replace a local database with a slot copy without keeping the
 local file until the open succeeds (covers the I1 backup-file path too).
 Fix status is tracked per finding below as fixes land. Fix 4 (H2 and D2
-together) built 2026-11-17, three adversarial rounds, device checks owed
-(`Development/Device_Day_2026-11-17.md` §12, §13).
+together) built 2026-11-17, three adversarial rounds, device-checked
+2026-11-18 (`Development/Device_Day_2026-11-17.md` §12, §13). Fix 5 (N1,
+§17.5, found on device 2026-11-18) built and device-checked the same day
+(§14). All eight CONFIRMED findings of the range review are now fixed and
+device-checked; the PLAUSIBLE set stays as recorded per finding.
 
 ### 17.1 Access gate, link record, launch route (steps 1, 2, 3, 5)
 
@@ -1638,7 +1641,9 @@ together) built 2026-11-17, three adversarial rounds, device checks owed
   and opens, so the D2 restore guard does not help (filed Tier 1
   Multi-device, PROPOSED). Test: `PrimaryDeviceReconciliationTests`
   (reason decode: conflict loser no backup and stays; bare post is the
-  hand-over). Device check owed: §12 of the device day.
+  hand-over). **Device-checked 2026-11-18** (Christoph,
+  `Development/Device_Day_2026-11-17.md` §12, passed as reported, one phone
+  promoted offline). H2 closed.
 - **H3 PLAUSIBLE, class 4, iCloud Drive.** The idle-primary fix stamps the
   slot without changing bytes; whether an mtime-only change propagates to
   the other device's `NSMetadataItemFSContentChangeDateKey` is unverified.
@@ -1741,8 +1746,10 @@ together) built 2026-11-17, three adversarial rounds, device checks owed
   launch decision in `initializePrimaryMode` itself (`WalletManager` is not
   constructed in the suite); bark's behaviour on a slot copy with a newer
   schema (a trap during the open is a stranded case the marker now
-  recovers). Device check owed: §13 of the device day, including the kill
-  variant.
+  recovers). **Device-checked 2026-11-18** (Christoph,
+  `Development/Device_Day_2026-11-17.md` §13, passed as reported in
+  aggregate, "all worked great"; Y on mainnet, X on signet; whether the
+  kill variant was run is not recorded). D2 closed.
 - **D3** → `Wallet_Deletion_Export_Step.md` §12.
 - **D4 PLAUSIBLE (low), class 3.** `LaunchCheckView.remove` closes an open
   handle through `closeWalletForMigration(backingUp: false)`, which posts
@@ -1899,7 +1906,47 @@ together) built 2026-11-17, three adversarial rounds, device checks owed
   on the same item) and writes no record; rollback runs before `recordLink`
   and registration; bark's validator semantics and the 12/24 guard hold.
 
-### 17.5 Not verified by the four passes
+### 17.5 Found on device 2026-11-18, outside the four passes
+
+- **N1 CONFIRMED on device, class 2, rules 14 and 28.** A guided demote,
+  a full wipe and a create on the same phone (device day §13 setup) left
+  the fresh wallet in read-only mode at every launch, "1 device", no Send
+  tab, until a reinstall from Xcode cleared it. Log (Christoph's export):
+  the create logged `Created new device registration (isPrimary=true,
+  claimAllowed=true)` and the initialize that followed logged `Wallet
+  access blocked (demoted)`. Cause: `accessVerdict` layer 1 reads the
+  UserDefaults breadcrumb `device_<id>_wasDemoted` first and
+  unconditionally; every demotion set it, only `promoteThisDeviceToPrimary`,
+  the conflict winner and `dedupeOwnRecords` cleared it, and no deletion
+  path touched it, while the device id lives in the keychain and survives
+  a wipe and a reinstall. `registerCurrentDevice`, which the create and
+  both imports call with `allowPrimaryClaim: true`, wrote the KVS mirror
+  true and the row primary and left the breadcrumb. Yesterday's §4 create
+  did not hit it because a hand-back (a promote) had cleared it first.
+  **Fixed 2026-11-18 (fix 5).** `writeOwnPrimaryFlag(true)` clears the
+  breadcrumb (the mirror and the breadcrumb are caches of one fact; the
+  three explicit clears that followed it were removed as redundant);
+  `DeviceRegistrationService.clearDemotionBreadcrumbs(in:)` removes every
+  `device_*_wasDemoted` key and `WalletDataCleanupService.clearUserDefaults`
+  calls it on both deletion scopes, with an inventory entry; all key sites
+  go through `demotionBreadcrumbKey(deviceId:)`. Adversarial pass
+  2026-11-18: sound in scope, reach and routing; two PLAUSIBLE notes not
+  fixed. (a) Class 2: `registerCurrentDevice`'s existing-row branch now
+  clears the breadcrumb whenever the local row says primary, even with
+  `allowPrimaryClaim: false`; row and breadcrumb diverge only if the
+  conflict loser's `try? modelContext.save()` failed after it wrote the
+  breadcrumb, which before the fix was a permanent read-only wedge and is
+  now a conflict window reconciliation closes. (b) Class 3:
+  `reconcilePrimaryConflicts` is not gated by `registrationSuspended`;
+  reaching the loser branch mid-deletion needs the unregister's save to
+  have failed and a conflict to land in the same window. Both accepted as
+  out of range; noted here, no backlog entry. Test:
+  `WalletAccessVerdictTests.deletionClearsDemotionBreadcrumbs`;
+  `WalletWipeCoverageTests` for the inventory. **Device-checked 2026-11-18**
+  (Christoph, `Development/Device_Day_2026-11-17.md` §14, passed as
+  reported). N1 closed.
+
+### 17.6 Not verified by the four passes
 
 No build, no test, no device or simulator run. Device-only: the signal
 order on an Apple ID switch (G4); two simultaneous promotions (H2); the
