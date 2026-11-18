@@ -68,8 +68,8 @@ summarised in one line under "Past trains".
 | Decide | first cut DECIDED 2026-10-25 (recovery release, Track A / Track B); fee-cluster rulings 2026-10-27; the remaining picks are PROPOSED below |
 | Build | 0.26 Track A built 2026-10-25; dependency bump (bark v0.26.1, bdk-swift 3.1.1, qrcode 28.1.0, BIP39 pinned) and the send-fee cluster in two batches built 2026-10-27 (`Features/Send_Fee_Quotes.md`) |
 | Review | 0.26 Track A adversarial pass 2026-10-25; fee cluster two adversarial passes 2026-10-27, every confirmed finding fixed the same day, rework ledger updated |
-| Device | 0.26 recovery scenarios (Christoph, before the upload); fee cluster device look 2026-10-27 (§8.8–8.9), two states unreachable on the phone and waived or left to their entries |
-| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). **Shipped 2026-11-04** (Christoph); the device re-check of "backup from another server refused" stays in Tier 2. **Range review `22829b1..HEAD` 2026-11-16:** four fault-class passes by area, 24 findings (8 CONFIRMED), record in `Features/Device_Linking.md` §17; fix set pending Christoph's ruling, full suite after the fixes |
+| Device | 0.26 recovery scenarios (Christoph, before the upload); fee cluster device look 2026-10-27 (§8.8–8.9), two states unreachable on the phone and waived or left to their entries; device linking two-phone days 2026-11-16, 2026-11-17 and 2026-11-18 (`Development/Device_Day_2026-11-17.md`), everything passed except §5 deferred by ruling |
+| Release | **build 26 shipped 2026-10-27**, the two diverged-wallet users informed. Next build (custom-server release): `/code-review` pass over `34bba59..HEAD` done 2026-11-04 at high effort, eight findings: four fixed the same day (Lightning Max returned a non-fitting probe, typed-amount precedence, import rollback left the bark handle open, resolver cancellation mapped to a failure; ledger rows), four filed (Tier 3 Send, Tier 3 Activity, Tier 4 Startup ×2). **Shipped 2026-11-04** (Christoph); the device re-check of "backup from another server refused" stays in Tier 2. **Range review `22829b1..HEAD` 2026-11-16:** four fault-class passes by area, 24 findings (8 CONFIRMED), record in `Features/Device_Linking.md` §17; fixes 1–5 built and reviewed 2026-11-17/18 (G1/D1, I1+I2, H1, H2+D2, N1 found on device), every CONFIRMED finding closed, the PLAUSIBLE set filed per tier 2026-11-18 |
 | Soak | from 2026-10-27, Christoph's daily use |
 
 Delivered from Train 1's deferral list: the Tier 1 gate on onchain sends at
@@ -394,6 +394,20 @@ absorbs S3/S4 (flow 4.3), S5 (link-screen entry, after the flow), the rest
 of S7 (per-blocker unlink, aftermath screen) and the S10 build (launch
 check). The security-check matrix is still its own Tier 0 item.
 
+- [ ] **Takeover reconcile can forget a coin the lost primary had in a
+  round** (range review 2026-11-16, H4, PLAUSIBLE, class 4): bark's
+  `recoverVtxos` at lib 0.8.0 removes in-flight VTXOs other than unclaimed
+  from the db; a coin the old primary put into a round after its last
+  backup vanishes from the new primary's db, and if that round fails it
+  stays spendable on the server with no rescan. One-round window. Settle
+  by reading the deployed tag, then a deliberate takeover with a payment
+  in flight. `Features/Device_Linking.md` §17.2.
+- [ ] **Registry observer dead for the session after delete-from-this-device
+  → link** (range review 2026-11-16, G5, CONFIRMED low, class 3):
+  `onWalletDeleted` stops CloudKit sync on iOS and the link path never
+  restarts it, so live unlink, duplicate-primary reconcile and new-device
+  notices are silent until relaunch. Desktop does not stop it.
+  `Features/Device_Linking.md` §17.1.
 - [ ] **A live lost primary refills the slot until its row deletion
   arrives** (PROPOSED 2026-11-17, H2's second shape): after a takeover the
   old primary keeps backing up on backgrounding until it sees its row gone;
@@ -402,20 +416,6 @@ check). The security-check matrix is still its own Tier 0 item.
   over its own. Candidates: ignore slot copies stamped before this
   device's own `becamePrimaryAt`; or the backup hook checks the mirror
   first. `Features/Device_Linking.md` §17.2 H2.
-- [ ] **Range-wide review `22829b1..HEAD` (2026-11-16): 24 findings, 8
-  CONFIRMED, all eight fixed and device-checked by 2026-11-18 (fixes 1–5);
-  open: the PLAUSIBLE set** — four fault-class passes by area over
-  everything since the 2026-11-04 release. Most severe: `launchRoute`'s
-  self-heal is unscoped by wallet and runs before the left breadcrumb
-  (undoes a local deletion, mis-links the upgrade cohort); the launch-check
-  Restore exit's default backup-file path deletes the database it promises
-  to keep; re-promotion rebuilds services without a model context; the FFI
-  import backs up to the account slot before the server-key check. Record
-  with all findings: `Features/Device_Linking.md` §17, import extras in
-  `Features/Import_Screen_Split.md` §15, export copy in
-  `Features/Wallet_Deletion_Export_Step.md` §12. Fix set needs a ruling;
-  unfixed findings then get their own entries.
-
 - [ ] **A payment on the primary does not promptly update the secondary's
   balance**, while tags and activity do. Narrowed 2026-09-23: the re-read
   path is proven (`ReadOnlySyncedDataTests/balancePicksUpInPlaceUpdate`), so
@@ -602,6 +602,13 @@ names the fix it verifies; the write-ups are in the Done log.
   Found by the second adversarial pass 2026-10-30 (R6),
   `Features/Ark_Server_Selection.md` §7.
 
+- [ ] **Apple ID switch with a stale KVS cache can backfill the new
+  account's token into the old record** (range review 2026-11-16, G4,
+  PLAUSIBLE, classes 1 and 5): the store purge, `CKAccountChanged` and the
+  KVS account-change notice have no ordering guarantee; purge first means
+  the live unlink re-detects as linked and may write X's row into account
+  B's store. Device-only, two Apple IDs, log the order of the three signals
+  (device day 2026-11-17 §5 deferred by ruling). `Features/Device_Linking.md` §17.1.
 - [ ] **Deletion + rejoin** (fix 2026-08-19, `Features/Wallet_Deletion_And_Rejoin.md`
   definition of done). Retired with linking build step 2
   (`Features/Device_Linking.md` §6.4): the tombstone and the rejoin screen
@@ -945,6 +952,22 @@ log).
 
 ### Settings, devices, deletion
 
+- [ ] **Promotion racing an initialize leaves the device on the loading
+  screen or in a 90 s dead end** (range review 2026-11-16, H5 and H6,
+  PLAUSIBLE, class 3): a self-demotion landing while the promote's
+  `initialize` is in flight joins it and leaves `isInitialized` false; a
+  promote joining a still-running launch initialize times out with the row
+  already primary and the retry throws `alreadyPrimary`. Both cleared by a
+  relaunch, which the copy already says. `Features/Device_Linking.md` §17.2.
+- [ ] **Promotion copy says "no backup has reached iCloud" for an
+  undownloaded placeholder** (range review 2026-11-16, H7, PLAUSIBLE low):
+  branch B/C derives the backup date from a local `fileExists`, false for
+  a placeholder that `promote()` then downloads fine. Wrong sentence, right
+  outcome. `Features/Device_Linking.md` §17.2.
+- [ ] **Reinstalled primary that links before its old row imports stays
+  read-only until relaunch** (range review 2026-11-16, G6, PLAUSIBLE low,
+  class 2): `dedupeOwnRecords` keeps the primary row and rewrites the flag
+  but posts nothing. `Features/Device_Linking.md` §17.1.
 - [ ] **Mirror-only blocker copy reads as a fact during a sync gap**
   (Christoph, 2026-10-19 device check, PROPOSED): right after B's local
   deletion, A's delete screen said "Another device on this iCloud account
@@ -1314,6 +1337,14 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 ### Startup and background structure
 
+- [ ] **Launch-check Remove can be torn down mid-flight; heartbeat key
+  missing from the wipe inventory** (range review 2026-11-16, D4,
+  PLAUSIBLE low, class 3): `LaunchCheckView.remove` closes the handle with
+  `.leavingWallet`, which posts `.walletClosedAfterUnlink`, and the main
+  view re-runs detection while the removal still runs; the files are
+  deleted either way. Same pass: `com.arke.device.lastHeartbeat` is cleared
+  by no deletion (harmless, 24 h skip) and the wipe-coverage test checks
+  three keys, not completeness. `Features/Device_Linking.md` §17.3.
 - [ ] **Orphaned import park blocks later slot restores; a parked file is
   not local wallet evidence** (filed 2026-11-17, fix-4 pass round 2, F5,
   F6): the slot restore refuses to park over an existing `db.sqlite.pre-import`
@@ -1468,6 +1499,11 @@ they are the infrastructure `Development/Release_Train.md` assumes.
 - [ ] **Set up CI via GitHub**: no `.github/` exists. Pair with the nightly
   AI security review via scheduled Claude tasks, which needs CI first. Until
   then the release-candidate step runs the mobile suite by hand.
+- [ ] **Desktop `linkThisDevice` has no record rollback on a failed
+  registration** (range review 2026-11-16, G3, CONFIRMED, class 2): the
+  next detection reads "removed by another device". iOS got the rollback
+  in step 5; desktop waits for the guided-flow parity batch.
+  `Features/Device_Linking.md` §17.1.
 - [ ] **macOS test suite fails ~68 of 272, flaky, for an unknown length of
   time** (measured 2026-09-22 on a clean tree; the suite has grown since):
   failures span nearly every suite while iOS runs the same Shared tests

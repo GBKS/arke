@@ -1,8 +1,12 @@
 # Device Linking
 
-**Status:** scope pass DECIDED 2026-11-13 (Christoph, in session). Build
-pending; order of work decided below. Nothing in this document has been
-built, run or tested. Code claims are read from the tree at `8904ca2`.
+**Status:** scope pass DECIDED 2026-11-13 (Christoph, in session); all six
+build steps built and committed by 2026-11-16 (§11–§16); range-wide
+adversarial review 2026-11-16 with fixes 1–5 built, reviewed and
+device-checked 2026-11-17/18 (§17); the review's PLAUSIBLE set is filed in
+`Open_Follow_Ups.md` per tier. Open from this design: the live lost
+primary refilling the slot (Tier 1, PROPOSED) and desktop parity of the
+guided flow (Parked). Code claims in §1–§10 were read at `8904ca2`.
 
 Parent: `Architecture/Multi_Device_Design.md` (principles, scenario catalog,
 failure modes). This document is the design the 2026-10-10 "explicit device

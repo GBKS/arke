@@ -16,12 +16,11 @@ aggregate ("all worked great"). §13's first attempt surfaced the demotion
 breadcrumb (fix 5, §14) and was re-run after it. Creates and imports that
 day were on mainnet by choice; §R restored the signet pair.
 
-**Status:** DRAFT 2026-11-17, continued 2026-11-18. Fixes 2, 3 and 4 of
-the range review (`Features/Device_Linking.md` §17: I1+I2 restore exit, H1
-service rebuild, H2+D2 conflict-loser close and slot-restore parking) are
-built; §8, §11 and §12 passed; §13 is owed (its first attempt surfaced the
-demotion-breadcrumb finding, fix 5, §14). The 2026-11-18 creates and
-imports were on mainnet by choice; §R re-imports signet explicitly. Sections marked **wait**
+**Status:** CLOSED 2026-11-18. Every section ran and passed except §5
+(deferred by ruling, now Tier 2 Two-device as G4) and §10 (superseded by
+§12 and §13). Fixes 2 to 5 of the range review are built and
+device-checked. The 2026-11-18 creates and imports were on mainnet by
+choice; §R restored the signet pair. Sections marked **wait**
 exercise code those fixes change; run them after. Everything else can run
 on the current working tree (fix 1 included). Tick a section when run and
 paste the exported log path under it.

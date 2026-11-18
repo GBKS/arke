@@ -222,6 +222,22 @@ awaiting Christoph's call — the items below assume acceptance:
   (4) iCloud signed out + import → seeds after ~90 s timeout log
   (`log show --info --debug`, or the info lines vanish).
 
+- [x] **Range-wide review `22829b1..HEAD` (2026-11-16): 24 findings, 8
+  CONFIRMED — closed 2026-11-18: all eight fixed (fixes 1–5, two to three
+  adversarial rounds each) and device-checked 2026-11-17/18; the PLAUSIBLE
+  set has its own entries (Tier 1 Multi-device H4, G5; Tier 2 Two-device
+  G4; Tier 3 Settings H5+H6, H7, G6; Tier 4 Startup D4; Parked desktop G3)** — four fault-class passes by area over
+  everything since the 2026-11-04 release. Most severe: `launchRoute`'s
+  self-heal is unscoped by wallet and runs before the left breadcrumb
+  (undoes a local deletion, mis-links the upgrade cohort); the launch-check
+  Restore exit's default backup-file path deletes the database it promises
+  to keep; re-promotion rebuilds services without a model context; the FFI
+  import backs up to the account slot before the server-key check. Record
+  with all findings: `Features/Device_Linking.md` §17, import extras in
+  `Features/Import_Screen_Split.md` §15, export copy in
+  `Features/Wallet_Deletion_Export_Step.md` §12. Fix set needs a ruling;
+  unfixed findings then get their own entries.
+
 ## Wallet Deletion & Device Registry
 - [x] **Autocomplete on the phrase verification screen — declined 2026-11-12** — was DECIDED
   2026-11-12 (Christoph) for its own session: word suggestions while typing the
