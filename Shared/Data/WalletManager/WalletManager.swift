@@ -1684,7 +1684,7 @@ class WalletManager {
         }
         
         // Layer 1: Check local UserDefaults (instant, <1ms)
-        let wasDemoted = UserDefaults.standard.bool(forKey: "device_\(deviceId)_wasDemoted")
+        let wasDemoted = UserDefaults.standard.bool(forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: deviceId))
         if wasDemoted {
             Self.logger.info("🛑 [WalletManager] Blocked: UserDefaults indicates demotion")
             return .block(.demoted)

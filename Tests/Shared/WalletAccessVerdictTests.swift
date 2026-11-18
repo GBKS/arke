@@ -9,6 +9,7 @@
 //
 
 import Testing
+import Foundation
 
 #if os(iOS)
 @testable import ArkeMobile
@@ -101,5 +102,23 @@ struct WalletAccessVerdictTests {
     func blocksFlag() {
         #expect(Verdict.allow.blocks == false)
         #expect(Verdict.block(.noRegistration).blocks)
+    }
+
+    @Test("Deletion clears every device's demotion breadcrumb and nothing else")
+    func deletionClearsDemotionBreadcrumbs() throws {
+        // Device run 2026-11-18: demote → full wipe → create came up read-only
+        // because layer 1 still said demoted after the wipe
+        let suite = "WalletAccessVerdictTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(true, forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: "A"))
+        defaults.set(true, forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: "B"))
+        defaults.set(true, forKey: DeviceRegistrationService.selfWrotePrimaryFlagKey(deviceId: "A"))
+
+        DeviceRegistrationService.clearDemotionBreadcrumbs(in: defaults)
+
+        #expect(defaults.object(forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: "A")) == nil)
+        #expect(defaults.object(forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: "B")) == nil)
+        #expect(defaults.bool(forKey: DeviceRegistrationService.selfWrotePrimaryFlagKey(deviceId: "A")))
     }
 }

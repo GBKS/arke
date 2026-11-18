@@ -1315,7 +1315,7 @@ class DeviceRegistrationService {
         writeOwnPrimaryFlag(false, deviceId: currentDevice.deviceId)
 
         // 7. Set local UserDefaults flag for instant detection on next launch
-        UserDefaults.standard.set(true, forKey: "device_\(currentDevice.deviceId)_wasDemoted")
+        UserDefaults.standard.set(true, forKey: Self.demotionBreadcrumbKey(deviceId: currentDevice.deviceId))
 
         // 8. Signal to WalletManager to close wallet immediately, writing the hand-over backup
         NotificationCenter.default.post(.deviceDemoted(reason: .handover))
@@ -1353,11 +1353,8 @@ class DeviceRegistrationService {
         // 5. Save to CloudKit
         try modelContext?.save()
 
-        // 6. Update iCloud KV Store for faster sync
+        // 6. Update iCloud KV Store for faster sync (also clears the demotion breadcrumb)
         writeOwnPrimaryFlag(true, deviceId: currentDevice.deviceId)
-
-        // 7. Clear any demotion flags
-        UserDefaults.standard.removeObject(forKey: "device_\(currentDevice.deviceId)_wasDemoted")
 
         // 8. Signal to WalletManager to initialize as primary
         // WalletManager's observeMigrationNotifications() handler will:
@@ -1449,10 +1446,9 @@ class DeviceRegistrationService {
         guard winnerId != deviceId else {
             Self.logger.warning("⚠️ Primary conflict (\(primaries.count) primaries) - this device wins, expecting others to self-demote")
 
-            // Clear any stale demotion breadcrumbs so the winning claim survives the
-            // next launch - shouldBlockWalletAccess reads both before initialization
+            // Clear any stale demotion breadcrumb so the winning claim survives the
+            // next launch - the access verdict reads it before initialization
             writeOwnPrimaryFlag(true, deviceId: deviceId)
-            UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
             return
         }
 
@@ -1464,7 +1460,7 @@ class DeviceRegistrationService {
 
         writeOwnPrimaryFlag(false, deviceId: deviceId)
 
-        UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
+        UserDefaults.standard.set(true, forKey: Self.demotionBreadcrumbKey(deviceId: deviceId))
 
         // Close the wallet if it's currently running in primary mode. No
         // hand-over backup: the loser's copy would be stamped newest in the
@@ -1515,7 +1511,6 @@ class DeviceRegistrationService {
             // the flag to match the surviving record or the device wedges in
             // read-only despite being primary.
             writeOwnPrimaryFlag(true, deviceId: deviceId)
-            UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
         }
 
         Self.logger.warning("Deduplicated \(records.count - 1) duplicate registration(s) for this device")
@@ -1540,14 +1535,42 @@ class DeviceRegistrationService {
         "device_\(deviceId)_selfWroteIsPrimary"
     }
 
+    /// The local demotion breadcrumb `WalletManager.accessVerdict` reads as
+    /// layer 1, before the mirror and the row. Set by the guided demote, the
+    /// conflict loser and the main views' KVS observer (the live unlink writes
+    /// none by design: the missing row blocks); cleared by
+    /// `writeOwnPrimaryFlag(true)` and by every deletion that reaches Step 4.
+    nonisolated static func demotionBreadcrumbKey(deviceId: String) -> String {
+        "device_\(deviceId)_wasDemoted"
+    }
+
+    /// Removes every device's demotion breadcrumb from `defaults`. Called by
+    /// the deletion service on both scopes: a device that left a wallet must
+    /// not carry a verdict about it into the next create or import (device
+    /// run 2026-11-18: demote → full wipe → create landed in read-only mode
+    /// until a reinstall cleared UserDefaults).
+    nonisolated static func clearDemotionBreadcrumbs(in defaults: UserDefaults) {
+        for key in defaults.dictionaryRepresentation().keys
+        where key.hasPrefix("device_") && key.hasSuffix("_wasDemoted") {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
     /// Mirrors this device's primary status to iCloud KVS and leaves the
-    /// breadcrumb. Use this rather than writing the flag directly.
+    /// self-write breadcrumb. Use this rather than writing the flag directly.
+    /// Writing `true` also clears the demotion breadcrumb: the two are caches
+    /// of one fact, and a claim that writes only the mirror leaves layer 1 of
+    /// the access verdict saying demoted (the create and both imports did
+    /// exactly that through `registerCurrentDevice`, device run 2026-11-18).
     private func writeOwnPrimaryFlag(_ isPrimary: Bool, deviceId: String) {
         let kvStore = NSUbiquitousKeyValueStore.default
         kvStore.set(isPrimary, forKey: "device_\(deviceId)_isPrimary")
         kvStore.synchronize()
 
         UserDefaults.standard.set(isPrimary, forKey: Self.selfWrotePrimaryFlagKey(deviceId: deviceId))
+        if isPrimary {
+            UserDefaults.standard.removeObject(forKey: Self.demotionBreadcrumbKey(deviceId: deviceId))
+        }
     }
 
     /// Registers a device in the fast KV store registry

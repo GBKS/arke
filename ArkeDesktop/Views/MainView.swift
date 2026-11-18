@@ -363,7 +363,7 @@ struct MainView: View {
                     print("⚠️ [MainView] Device has been demoted from primary")
 
                     // Set local UserDefaults flag
-                    UserDefaults.standard.set(true, forKey: "device_\(deviceId)_wasDemoted")
+                    UserDefaults.standard.set(true, forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: deviceId))
 
                     // Trigger wallet closure if currently running. No in-app
                     // code flips another device's flag, so this branch fires
@@ -374,7 +374,7 @@ struct MainView: View {
                     print("✅ [MainView] Device has been promoted to primary")
 
                     // Clear demotion flag
-                    UserDefaults.standard.removeObject(forKey: "device_\(deviceId)_wasDemoted")
+                    UserDefaults.standard.removeObject(forKey: DeviceRegistrationService.demotionBreadcrumbKey(deviceId: deviceId))
 
                     // Trigger re-initialization as primary
                     NotificationCenter.default.post(name: .devicePromotedToPrimary, object: nil)

@@ -586,6 +586,12 @@ class WalletDataCleanupService {
         // Reset initial sync completion marker
         UserDefaults.standard.removeObject(forKey: UserDefaults.initialSyncCompletedKey)
 
+        // Forget this device's demotion breadcrumb: a verdict about a wallet
+        // this device no longer has. Left in place it blocks the next create
+        // or import on this device as "demoted" at every launch (device run
+        // 2026-11-18); registration also clears it when it claims primary
+        DeviceRegistrationService.clearDemotionBreadcrumbs(in: UserDefaults.standard)
+
         // Forget server refresh rejections — verdicts about this wallet's
         // VTXOs, meaningless for the next wallet on this device
         UserDefaults.standard.removeObject(forKey: UserDefaults.refreshRejectedInputsKey)
@@ -1225,7 +1231,11 @@ enum SharedStateWipeCoverage {
         // Deliberately survives deletion: re-registration rewrites it, and
         // clearing it would make the next launch report a routine secondary
         // registration as an unexplained demotion
-        Entry(key: "device_<id>_selfWroteIsPrimary",       store: "UserDefaults",    scope: .deviceLocal)
+        Entry(key: "device_<id>_selfWroteIsPrimary",       store: "UserDefaults",    scope: .deviceLocal),
+        // Layer 1 of the access verdict. Cleared on every deletion and by any
+        // primary claim (`writeOwnPrimaryFlag(true)`); left behind it held a
+        // freshly created wallet in read-only mode (device run 2026-11-18)
+        Entry(key: "device_<id>_wasDemoted",               store: "UserDefaults",    scope: .deviceLocal)
     ]
 }
 
