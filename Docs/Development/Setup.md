@@ -31,7 +31,7 @@ Open `Arke.xcodeproj`. Three shared schemes:
 Package dependencies resolve on first open. The bark wallet library comes
 from `bark-ffi-bindings` (gitlab.com/ark-bitcoin), pinned to an **exact
 revision** in the project (Package Dependencies → Revision; since
-2026-10-26, tag `v0.26.1+bark-0.8.0` since 2026-10-27). Its `Package.swift`
+2026-10-26, tag `v0.27.0+bark-0.8.1` since 2026-11-18). Its `Package.swift`
 declares a `binaryTarget` that downloads `BarkFFI.xcframework.zip` for the
 matching release. Nothing is built locally; the `.gitignore` entries for
 `bark_ffi.swift` and `/BarkFFI.xcframework` are left over from the

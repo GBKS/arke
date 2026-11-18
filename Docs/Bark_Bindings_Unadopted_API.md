@@ -5,13 +5,14 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.26.1** (bark **v0.8.0**), tag
-`v0.26.1+bark-0.8.0` @ `4670c1a`, pinned as an exact revision in the
-project. v0.26.1 (2026-10-27) rebuilt the same `bark-ffi` crate commit as
-v0.26.0 (`4a1c1c0`, bark-wallet 0.8.0); the generated Swift is identical,
-so the surface below is unchanged since the v0.26.0 comparison against
-`Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage on
-2026-10-25.
+**Baseline:** bark-ffi-bindings **v0.27.0** (bark **v0.8.1**), tag
+`v0.27.0+bark-0.8.1` @ `66d047f`, pinned as an exact revision in the
+project since 2026-11-18. The bump rebuilds the binary (`bark-ffi` crate
+`4a1c1c0` → `ca8f174`, uniffi 0.31.2); the Swift surface change is small
+and additive, see "New in v0.27.0". The v0.26.0 comparison against
+`Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage
+(2026-10-25) remains the basis for everything below it; v0.26.1
+(2026-10-27) had changed nothing in the generated Swift.
 
 **Maintenance:** on every bindings bump, diff the new `WalletProtocol` in the
 package checkout against the previous version (the DerivedData checkout at
@@ -22,6 +23,39 @@ it to the Adopted-since list at the bottom with the date. Sibling doc:
 *we* haven't used yet).
 
 ---
+
+## New in v0.27.0 (bark v0.8.1)
+
+Theme: exits that can be prepared ahead of time. Diffed between the two
+tags' generated `Bark.swift` on 2026-11-17 (`Migrations/Bark-0.26.1-to-0.27.0/`).
+
+### `presignEmergencyExit(vtxoIds:feeRateSatPerVb:) -> PresignedExits`
+
+Signs, without broadcasting or reserving funds, a CPFP child for every exit
+transaction that still needs broadcasting, for as long as confirmed onchain
+funds last. Returns a wave-by-wave broadcast plan (`PresignedWave`,
+`PresignedExitPackage`, `PresignedExitChild`, `PresignedExitStatus`
+fully/partially/unsigned, `ExitFeeInfo`, `ExitTransactionInfo`); exits
+already in the mempool are listed in the first wave. Self-contained, so it
+can be executed later from cold storage or by a third party. Feature
+implication: an exportable "emergency exit kit" alongside the backup, and
+a pre-flight for `Exit_Cost_Estimate.md`. Not adopted.
+
+### `remainingExitTransactions(vtxoIds:) -> RemainingExitTransactions`
+
+Read-only list of every exit transaction of the given VTXOs not yet
+confirmed onchain: per VTXO the txids in broadcast order, plus each
+transaction once with parents before children. Nothing signed, onchain
+wallet untouched. Feature implication: the exit progress views could show
+"n of m transactions still to confirm" without our own snapshot
+(`PersistentExitCache`). Not adopted.
+
+### `bolt11Invoice(… expirySecs:)` / `bolt11InvoiceForAddress(… expirySecs:)`
+
+Optional invoice expiry, capped at the server's `invoice_expiry`; the
+default is unchanged. `BarkWalletFFI.getLightningInvoice` passes nothing.
+Feature implication: shorter-lived invoices for the receive sheet, if ever
+wanted.
 
 ## New in v0.26.0 (bark v0.8.0)
 
