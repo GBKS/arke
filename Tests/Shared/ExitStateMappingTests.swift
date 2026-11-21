@@ -62,7 +62,9 @@ struct ExitStateMappingTests {
             Bark.ExitTx(txid: "bb", status: .awaitingInputConfirmation(txids: ["cc", "dd"])),
             Bark.ExitTx(txid: "ee", status: .awaitingCpfpBroadcast),
             Bark.ExitTx(txid: "ff", status: .awaitingConfirmation(childTxid: "11", origin: .wallet(confirmedIn: nil))),
-            Bark.ExitTx(txid: "22", status: .confirmed(childTxid: "33", block: block, origin: .block(confirmedIn: block)))
+            // bark ≥ 0.9.0 reports a confirmed exit tx with an empty child
+            // txid and a `.block` origin (the fields are kept for compatibility)
+            Bark.ExitTx(txid: "22", status: .confirmed(childTxid: "", block: block, origin: .block(confirmedIn: block)))
         ])
 
         guard case .processing(let data) = ParsedExitState(from: state) else {
@@ -77,8 +79,22 @@ struct ExitStateMappingTests {
         guard case .confirmed(let confirmed) = data.transactions[4].status else {
             Issue.record("Expected confirmed"); return
         }
-        #expect(confirmed.childTxid == "33")
+        #expect(confirmed.childTxid == "")
         #expect(confirmed.origin == .block(confirmedIn: ArkeBlockRef(height: block.height, hash: block.hash)))
+    }
+
+    @Test("A confirmed exit tx with bark 0.9.0's empty child txid reports no CPFP child")
+    func testConfirmedEmptyChildIsNoChild() {
+        // bark-ffi fills childTxid with "" once bark stops tracking the
+        // child; "" must not reach txid sets or fee linking as a txid
+        let appBlock = ArkeBlockRef(height: block.height, hash: block.hash)
+        let bare = ExitTxStatus.confirmed(.init(childTxid: "", block: appBlock, origin: .block(confirmedIn: appBlock)))
+        #expect(bare.cpfpChild == nil)
+
+        // Snapshots from older builds keep their real child
+        let legacy = ExitTxStatus.confirmed(.init(childTxid: "dd", block: appBlock, origin: .wallet(.init(confirmedIn: appBlock))))
+        #expect(legacy.cpfpChild?.txid == "dd")
+        #expect(legacy.cpfpChild?.origin.isWallet == true)
     }
 
     @Test("ClaimInProgress and Claimed carry their txids")
@@ -104,6 +120,9 @@ struct ExitStateMappingTests {
             .start(tipHeight: 1),
             .processing(tipHeight: 2, transactions: [
                 Bark.ExitTx(txid: "aa", status: .awaitingInputConfirmation(txids: ["bb"])),
+                // Pre-0.9.0 snapshot shape (real child txid, wallet origin):
+                // bark no longer produces it, but persisted snapshots from
+                // older builds still carry it and must round-trip unchanged
                 Bark.ExitTx(txid: "cc", status: .confirmed(childTxid: "dd", block: block, origin: .wallet(confirmedIn: block)))
             ]),
             .awaitingDelta(tipHeight: 3, confirmedBlock: block, claimableHeight: 4),

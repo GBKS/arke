@@ -140,6 +140,14 @@ nonisolated public enum ExitTxStatus: Equatable, Codable {
     /// The CPFP child that spent this transaction's anchor, if known.
     /// Anchors are anyone-can-spend, so check `origin` before attributing
     /// the child's fee to the user.
+    ///
+    /// Since bark 0.9.0 (bindings v0.28.0) a confirmed exit tx no longer
+    /// tracks its child: `childTxid` arrives empty with a `.block` origin.
+    /// An empty txid is "unknown", not a transaction, so it is nil here;
+    /// the child a wallet-funded CPFP produced stays reachable through the
+    /// `AwaitingConfirmation` snapshot in the exit's history when a sync
+    /// observed it (Open_Follow_Ups.md, Exits: CPFP child linking after a
+    /// fast confirmation).
     public var cpfpChild: (txid: String, origin: TxOrigin)? {
         switch self {
         case .needsBroadcasting(let data):
@@ -147,7 +155,7 @@ nonisolated public enum ExitTxStatus: Equatable, Codable {
         case .broadcastWithCpfp(let data):
             return (data.childTxid, data.origin)
         case .confirmed(let data):
-            return (data.childTxid, data.origin)
+            return data.childTxid.isEmpty ? nil : (data.childTxid, data.origin)
         default:
             return nil
         }

@@ -91,6 +91,12 @@ nonisolated extension ExitTxStatus {
             // AwaitingConfirmation (0.11+) — see its doc comment
             self = .broadcastWithCpfp(.init(childTxid: childTxid, origin: TxOrigin(from: origin)))
         case .confirmed(let childTxid, let block, let origin):
+            // Since bark 0.9.0 (bindings v0.28.0) a confirmed exit tx no
+            // longer tracks its CPFP child: bark-ffi fills `childTxid` with
+            // "" and `origin` with `.block(confirmedIn: block)` for
+            // compatibility. Snapshots written by older builds still carry
+            // real values. The one reader, `ExitTxStatus.cpfpChild`, treats
+            // an empty child txid as unknown.
             self = .confirmed(.init(
                 childTxid: childTxid,
                 block: ArkeBlockRef(from: block),
