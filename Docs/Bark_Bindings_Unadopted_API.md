@@ -5,11 +5,13 @@ adopted by the app, with the feature implications of each item. Serves as
 roadmap inspiration: when looking for the next feature, check here first —
 some features are one protocol method away.
 
-**Baseline:** bark-ffi-bindings **v0.27.0** (bark **v0.8.1**), tag
-`v0.27.0+bark-0.8.1` @ `66d047f`, pinned as an exact revision in the
-project since 2026-11-18. The bump rebuilds the binary (`bark-ffi` crate
-`4a1c1c0` → `ca8f174`, uniffi 0.31.2); the Swift surface change is small
-and additive, see "New in v0.27.0". The v0.26.0 comparison against
+**Baseline:** bark-ffi-bindings **v0.28.0** (bark **v0.9.0**), tag
+`v0.28.0+bark-0.9.0` (tag object `c93f778`, commit `1c65cc1`), pinned as
+an exact revision in the project since 2026-11-20. The bump rebuilds the
+binary (`bark-ffi` crate `ca8f174` → `773b171`, uniffi 0.31.2 unchanged);
+the Swift surface change is mostly additive, with one required `Config`
+field and a re-shaped `BoardFundingInfo`, see "New in v0.28.0". The
+v0.27.0 bump (2026-11-18) was additive. The v0.26.0 comparison against
 `Shared/Data/BarkWalletProtocol.swift` and actual `BarkWalletFFI` usage
 (2026-10-25) remains the basis for everything below it; v0.26.1
 (2026-10-27) had changed nothing in the generated Swift.
@@ -23,6 +25,56 @@ it to the Adopted-since list at the bottom with the date. Sibling doc:
 *we* haven't used yet).
 
 ---
+
+## New in v0.28.0 (bark v0.9.0)
+
+Theme: recovery that resumes, boards with a chosen expiry. Diffed between
+the two tags' generated `Bark.swift` on 2026-11-20
+(`Migrations/Bark-0.27.0-to-0.28.0/`). Adopted in the same bump:
+`Config.boardLifetime` (set to `UInt16.max`, DECIDED 2026-11-20),
+`RecoveryStatus.inProgress`, `RecoveryReport.notFound` / `.abandoned`.
+
+### `pendingRecovery() -> RecoveryReport?`
+
+The live report of a recovery from seed still in progress, or nil once it
+is done or if none ran. Its `failed` ids are the ones still locked and
+retried by every sync. Feature implication: the import screen (or a
+Settings row) could show "n VTXOs still being recovered" instead of a
+balance that grows silently over the next syncs; the Tier 4 follow-up for
+the lost `foreign` retry pass would poll this for nil. Not adopted.
+
+### `syncPendingRecovery()`
+
+Drives the in-progress recovery on demand until it is done or parks again;
+`sync` already does this. Feature implication: a "Retry recovery now"
+action. Not adopted.
+
+### `boardAmount(… expiryHeight:)` / `boardAll(… expiryHeight:)` / `boardFundingAddress(expiryHeight:)`
+
+Per-board expiry height, defaulting to `Config.boardLifetime` from the tip
+and capped at the server's VTXO lifetime; too-short or too-long expiries
+are refused up front. Feature implication: a short-lived board for funds
+meant to move on within days. The app passes nothing (defaults apply).
+
+### `boardPsbt(psbtBase64:funding: BoardFundingInfo)` / `legacyBoardFundingAddress(keypairIndex:expiryHeight:)`
+
+External funding now round-trips an opaque `BoardFundingInfo` (`address`,
+`expiryHeight`, `userPubkey`) instead of a keypair index; the legacy
+builder rebuilds one for addresses handed out before the bump. Same
+payjoin-receive implication as the 0.23 entry below. Not adopted.
+
+### `ArkInfo.maxRoundParticipationOutputs`
+
+Server cap on outputs per round participation (inputs are capped at 1000
+server-side, a refresh takes the 1000 soonest-expiring). Not mapped onto
+`ArkInfoModel`; relevant only if the app ever builds a multi-output round
+request.
+
+### `CpfpParams` RBF fields (`replacedFeeSats`, `replacedFeeRateSatPerVb`, `incrementalRelayFeeSatPerVb`, `parentInMempool`)
+
+Only for a `CustomOnchainWalletCallbacks` implementation; the app uses
+bark's built-in BDK wallet. Recorded so a future custom-wallet attempt
+knows the RBF contract.
 
 ## New in v0.27.0 (bark v0.8.1)
 
@@ -220,8 +272,9 @@ checklist items under "Bark 0.23 Migration" in `Open_Follow_Ups.md`:
   depth / CPFP multiplier / margin guesses, affordability against the total
   rather than confirmed balance), Train 2 Tier 1 "Exits" in
   `Open_Follow_Ups.md`. A thrown estimate does not block the exit.
-- **`recoveryStatus()`** — distinguishes a failed recovery scan from one that
-  never ran; the import path still infers from `recoveryReport()` nil-ness.
+- ~~**`recoveryStatus()`**~~ — ADOPTED 2026-11-20 with the v0.28.0 bump:
+  `openImportedWallet` switches on it (`.inProgress` kept, `.failed`
+  wiped and retried).
 - **`RoundState.state: RoundFlowKind` / `scheduledHeight`** — richer round
   progress than the `ongoing` bool the app reads today.
 - **Externally funded board** (`boardFundingAddress` / `boardPsbt`) and

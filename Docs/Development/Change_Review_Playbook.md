@@ -269,10 +269,14 @@ contract and link it here.
 
 **Bark facts (class 4).** Verified at the bindings tag named; re-verify on
 every bump (the migration guides in `../Migrations/` are where that happens).
-- B1. The seed-recovery scan runs only on the creating `open`
+- B1. The seed-recovery scan **starts** only on the creating `open`
   (`created_now`); `initWallet` first disables it forever (bark 0.7.x;
-  re-verified at `bark-0.8.0` and `bark-0.8.1`, `lib.rs`
-  `if !created_now { NotRun }`).
+  re-verified at `bark-0.8.0`, `bark-0.8.1` and `bark-0.9.0`, `lib.rs`
+  `if !created_now`). Since bark 0.9.0 a started recovery that parks
+  (`RecoveryStatus.inProgress`) resumes on every `sync` until done, so the
+  creating open no longer guarantees a final report and `recoverVtxos`
+  fails while the recovery is being driven
+  (`Migrations/Bark-0.27.0-to-0.28.0/README.md`).
   Since 0.8.0 the scan runs an xpub lookup first and falls back to the two
   mailboxes on `Unimplemented`; any other xpub error fails the whole report
   (`Migrations/Bark-0.25.0-to-0.26.0/README.md` fact 6).
@@ -287,7 +291,11 @@ every bump (the migration guides in `../Migrations/` are where that happens).
   source level 2026-10-25; the bark-ffi 0.8.0 layer was not readable. At
   `bark-0.8.1` the `exit/mod.rs` diff is additive (presign and remaining
   modules, an `unconfirmed_txids` field); the load-time filtering is
-  untouched (diff read 2026-11-18).
+  untouched (diff read 2026-11-18). At `bark-0.9.0` the `exit/mod.rs` diff
+  is the RBF fee-field rename only; load-time filtering untouched (diff
+  read 2026-11-20). Also since 0.9.0: an exit tx counts as confirmed by its
+  own confirmation, and `ExitTxStatus.confirmed` carries an empty
+  `childTxid` and a `.block` origin.
 - B3. On a fresh DB bark replays finished exits through the state machine
   for ~2 s; they read as in-flight. (Not re-verified at 0.8.0 or 0.8.1;
   timing observation.)
@@ -296,16 +304,18 @@ every bump (the migration guides in `../Migrations/` are where that happens).
 - B5. `nil` fee rate means internal estimation on mainnet only; off mainnet
   pass the capped app-side rate. (App-side rule, tag-independent.)
 - B6. The daemon auto-starts on `Wallet.open()` when `WalletOpenArgs.runDaemon`
-  is true, which is the binding's default (re-verified at `bark-0.8.0` and
-  `bark-0.8.1`, `lib.rs` `if args.run_daemon`, binding default
-  `runDaemon: Bool = true` at v0.27.0); our explicit
+  is true, which is the binding's default (re-verified at `bark-0.8.0`,
+  `bark-0.8.1` and `bark-0.9.0`, `lib.rs` `if args.run_daemon`, binding
+  default `runDaemon: Bool = true` unchanged at v0.28.0); our explicit
   `runDaemon()` then logs bark's "already running" warning. Fix options on
   the Tier 4 item.
 - B7. `Balance.spendableSats` excludes expired and max-exit-depth VTXOs since
   0.8.0 (`needsRefreshSats`); `Balance::total = spendable + needs_refresh +
   pending()`, seven pending buckets. `ArkBalanceResponse` / `ArkBalanceModel`
   mirror it (`ArkBalanceTotalsTests`). Verified at `bark-0.8.0`
-  `balance.rs`; the file is unchanged at `bark-0.8.1`.
+  `balance.rs`; the file is unchanged at `bark-0.8.1`. At `bark-0.9.0` it
+  gains one arm: VTXOs held by a `Recovery` checkpoint are no part of the
+  balance until the server decides them (diff read 2026-11-20).
 - B8. bark's onchain `sync` covers only addresses this BDK instance has
   revealed; a previous incarnation's history needs one
   `OnchainWallet.initialScan` (esplora gap-50 full scan, birthday ignored).

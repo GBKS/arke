@@ -1166,7 +1166,7 @@
 			repositoryURL = "https://gitlab.com/ark-bitcoin/bark-ffi-bindings.git";
 			requirement = {
 				kind = revision;
-				revision = 66d047f7ee08c2bca3675605ea7a88bc8b50adb3;
+				revision = c93f778ea30962d14267e99adcdae5d07864a659;
 			};
 		};
 		596754972F509E4500396429 /* XCRemoteSwiftPackageReference "bdk-swift" */ = {

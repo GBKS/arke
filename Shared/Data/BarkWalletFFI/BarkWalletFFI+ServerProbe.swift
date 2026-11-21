@@ -192,6 +192,7 @@ extension BarkWalletFFI {
             bitcoindPass: nil,
             vtxoRefreshExpiryThreshold: nil,
             vtxoExitMargin: nil,
+            boardLifetime: nil,           // scratch wallet never boards; see makeConfig for the real value
             htlcRecvClaimDelta: nil,
             fallbackFeeRate: defaultFallbackFeeRateSatPerVb,
             roundTxRequiredConfirmations: nil,

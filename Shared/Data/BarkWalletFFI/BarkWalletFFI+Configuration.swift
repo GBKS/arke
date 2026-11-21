@@ -241,6 +241,14 @@ extension BarkWalletFFI {
             bitcoindPass: nil,
             vtxoRefreshExpiryThreshold: nil,  // Use defaults
             vtxoExitMargin: nil,
+            // bark 0.9.0 defaults a mainnet board's lifetime to 432 blocks
+            // (3 days), down from the server's full VTXO lifetime. bark caps
+            // this value at the server's lifetime, so UInt16.max keeps the
+            // pre-0.9.0 behaviour: every app defence against expiry is
+            // foreground and a 3-day board deadline would make "board
+            // Friday, reopen Tuesday" a loss (DECIDED 2026-11-20,
+            // Docs/Migrations/Bark-0.27.0-to-0.28.0/README.md).
+            boardLifetime: UInt16.max,
             htlcRecvClaimDelta: nil,
             fallbackFeeRate: defaultFallbackFeeRateSatPerVb,  // Keep fee estimation working when Esplora is down
             roundTxRequiredConfirmations: nil,  // Use default confirmations
