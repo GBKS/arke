@@ -127,12 +127,16 @@ is history and loses to a living doc.
   Avoid `log stream`, it wedges the simulator. Bundle id is `GBKS.Arke`.
 - **Build numbers are not bumped per build.** Fingerprint a device build by
   distinctive log lines plus `git log -S`, not the version header.
-- **Simulator sessions leave a trail.** A PostToolUse hook in
-  `.claude/settings.local.json` (git-ignored) copies every simulator
-  screenshot to `~/workspace/Arke-sessions/screenshots/<date>/` and appends
-  a row to that day's `index.md`. At the end of any session that drove the
-  simulator, fill the empty `Note` column with what each screenshot shows
-  and which change it belonged to; the index is what gets searched later.
+- **Simulator sessions leave a trail.** PostToolUse hooks in
+  `.claude/settings.local.json` (git-ignored) record which simulator each
+  interaction session uses and, after every `DeviceInteractionSynthesize`
+  call, re-capture that simulator at native pixel resolution via `simctl`
+  (the tool's own PNG is 1× point-sized) into
+  `~/workspace/Arke-sessions/screenshots/<date>/`, appending a row with the
+  pixel size to that day's `index.md`. At the end of any session that drove
+  the simulator, fill the empty `Note` column with what each screenshot
+  shows and which change it belonged to; the index is what gets searched
+  later.
 - **The simulator test wallet is a throwaway signet wallet.** Its recovery
   phrase is typed into the import screen only. Never write it into any
   tracked file, `Docs/`, a test fixture, memory, or this file; if automated
