@@ -15,29 +15,60 @@ import os
 // MARK: - Import recovery retry decision
 
 /// The pure decision for a seed-only import's creating open
-/// (Docs/Initialization/Launch_Sequence_Contract.md, rule 2): bark runs the
-/// seed-recovery scan only on the open that creates the wallet locally, and
-/// a scan that errors is swallowed into a nil report with no re-scan API —
-/// so a nil report while attempts remain means wipe the seconds-old
-/// database and redo the creating open.
+/// (Docs/Initialization/Launch_Sequence_Contract.md, rule 2): bark starts
+/// the recovery from seed only on the open that creates the wallet locally.
+/// A recovery that could not start is swallowed into `.failed` with no
+/// re-start API, so that outcome while attempts remain means wipe the
+/// seconds-old database and redo the creating open. Since bark 0.9.0 the
+/// recovery can also park `.inProgress` and resume on every sync; that is a
+/// started recovery, so the wallet is kept (bindings v0.28.0,
+/// Docs/Migrations/Bark-0.27.0-to-0.28.0/README.md, DECIDED 2026-11-20).
 enum ImportRecoveryLogic {
 
     static let maxAttempts = 3
 
+    /// What `recoveryStatus()` reported after the creating open, without
+    /// the Bark types so the decision stays testable.
+    enum RecoveryOutcome: Equatable {
+        /// Nothing was attempted. Not expected on a creating open with
+        /// `skipRecovery: false`; treated like `.failed`.
+        case notRun
+        /// The recovery could not be started or read back.
+        case failed(message: String)
+        /// Started, parked before it was done; bark resumes it on every sync.
+        case inProgress
+        /// Ran to the end; the report is final.
+        case completed
+    }
+
     enum Decision: Equatable {
-        /// The creating open delivered a recovery report — keep the wallet.
+        /// The creating open started the recovery — keep the wallet.
         case accept
-        /// No report, attempts remain — wipe the database and reopen.
+        /// Recovery never started, attempts remain — wipe the database and reopen.
         case wipeAndRetry
-        /// No report, attempts exhausted — keep the wallet anyway. VTXOs
-        /// still pending in the regular mailbox arrive via sync; round-
-        /// received ones stay missing until a future recovery succeeds.
+        /// Recovery never started, attempts exhausted — keep the wallet
+        /// anyway. VTXOs still pending in the regular mailbox arrive via
+        /// sync; round-received ones stay missing until a future recovery
+        /// succeeds.
         case acceptWithoutRecovery
     }
 
-    static func decision(hasReport: Bool, attempt: Int, maxAttempts: Int = Self.maxAttempts) -> Decision {
-        if hasReport { return .accept }
-        return attempt >= maxAttempts ? .acceptWithoutRecovery : .wipeAndRetry
+    static func decision(outcome: RecoveryOutcome, attempt: Int, maxAttempts: Int = Self.maxAttempts) -> Decision {
+        switch outcome {
+        case .completed, .inProgress:
+            return .accept
+        case .notRun, .failed:
+            return attempt >= maxAttempts ? .acceptWithoutRecovery : .wipeAndRetry
+        }
+    }
+
+    /// Whether the post-open `recoverVtxos` retry passes may run. bark 0.9.0
+    /// refuses `recoverVtxos` while a recovery from seed is being driven,
+    /// and an in-progress recovery is driven by every sync, so the passes
+    /// run only on a final report. The widened-gap `foreign` pass is lost
+    /// for in-progress imports (Tier 4 follow-up).
+    static func shouldRetryAfterOpen(outcome: RecoveryOutcome) -> Bool {
+        outcome == .completed
     }
 
     /// One `recoverVtxos` call to make after a completed scan: which ids,
@@ -53,15 +84,20 @@ enum ImportRecoveryLogic {
     }
 
     /// `failed` ids retry as-is — per-VTXO transient errors, the configured
-    /// scan already proved ownership. `foreign` ids retry with a widened gap
+    /// scan already proved ownership. `abandoned` ids (bark 0.9.0: given up
+    /// after 40 undecided attempts, still locked, explicitly retryable via
+    /// `recoverVtxos`) join that pass; the two buckets differ only in how
+    /// often bark already tried. `foreign` ids retry with a widened gap
     /// limit — foreign means no key was derivable within the configured
     /// limit, so only a wider scan can prove they're ours (v0.24+). The two
-    /// buckets stay separate passes: merging them would make every transient
+    /// passes stay separate: merging them would make every transient
     /// failure pay the widened scan's worst case.
-    static func retryPasses(failedIds: [String], foreignIds: [String], widenedGapLimit: UInt32) -> [RetryPass] {
+    static func retryPasses(failedIds: [String], abandonedIds: [String] = [], foreignIds: [String], widenedGapLimit: UInt32) -> [RetryPass] {
         var passes: [RetryPass] = []
-        if !failedIds.isEmpty {
-            passes.append(RetryPass(bucket: .failed, vtxoIds: failedIds, gapLimit: nil))
+        var seen = Set<String>()
+        let retryable = (failedIds + abandonedIds).filter { seen.insert($0).inserted }
+        if !retryable.isEmpty {
+            passes.append(RetryPass(bucket: .failed, vtxoIds: retryable, gapLimit: nil))
         }
         if !foreignIds.isEmpty {
             passes.append(RetryPass(bucket: .foreign, vtxoIds: foreignIds, gapLimit: widenedGapLimit))
@@ -596,11 +632,13 @@ extension BarkWalletFFI {
 
     /// Opens the wallet for a seed-only import, creating it locally.
     ///
-    /// bark runs the seed-recovery mailbox scan only on the open that performs
-    /// the local creation, and a scan that errors out (e.g. the server was
-    /// unreachable in that window) is swallowed into a nil report with no API
-    /// to re-run it. The database is seconds old at that point, so the retry
-    /// for a nil report is to wipe it and redo the creating open.
+    /// bark starts the recovery from seed only on the open that performs the
+    /// local creation, and a recovery that cannot start (e.g. the server was
+    /// unreachable in that window) is swallowed into `.failed` with no API
+    /// to re-start it. The database is seconds old at that point, so the
+    /// retry for a failed start is to wipe it and redo the creating open.
+    /// A recovery that started but parked `.inProgress` (bark 0.9.0) is
+    /// kept: every sync resumes it.
     private func openImportedWallet(
         network net: Network,
         mnemonic: String,
@@ -629,21 +667,40 @@ extension BarkWalletFFI {
                 )
             )
 
-            let report = wallet.recoveryReport()
-            switch ImportRecoveryLogic.decision(hasReport: report != nil, attempt: attempt) {
+            // `recoveryStatus()` is the snapshot as this open saw it; since
+            // bark 0.9.0 the live state moves on with every sync
+            // (`pendingRecovery()`), so decide on the snapshot once, here.
+            let status = wallet.recoveryStatus()
+            let outcome = ImportRecoveryLogic.RecoveryOutcome(status)
+            switch ImportRecoveryLogic.decision(outcome: outcome, attempt: attempt) {
             case .accept:
-                if let report {
-                    logRecoveryReport(report)
-                    await retryRecoveries(from: report, wallet: wallet)
+                switch status {
+                case .completed(let report):
+                    logRecoveryReport(report, phase: "complete")
+                    if ImportRecoveryLogic.shouldRetryAfterOpen(outcome: outcome) {
+                        await retryRecoveries(from: report, wallet: wallet)
+                    }
+                case .inProgress(let report):
+                    logRecoveryReport(report, phase: "in progress")
+                    Self.logger.info("Recovery from seed is still in progress after the creating open - bark resumes it on every sync; the immediate recoverVtxos retry is skipped because it would fail while the recovery is being driven")
+                case .notRun, .failed:
+                    break // not accepted by the decision above
                 }
                 return wallet
 
             case .acceptWithoutRecovery:
-                Self.logger.error("Recovery scan never completed after \(ImportRecoveryLogic.maxAttempts) attempts - continuing import; VTXOs still pending in the regular mailbox arrive via sync, but round-received VTXOs may be missing until a future recovery succeeds")
+                Self.logger.error("Recovery from seed never started after \(ImportRecoveryLogic.maxAttempts) attempts (last: \(String(describing: outcome))) - continuing import; VTXOs still pending in the regular mailbox arrive via sync, but round-received VTXOs may be missing until a future recovery succeeds")
                 return wallet
 
             case .wipeAndRetry:
-                Self.logger.warning("Recovery scan produced no report (attempt \(attempt)/\(ImportRecoveryLogic.maxAttempts)) - the scan errored before completing")
+                switch outcome {
+                case .failed(let message):
+                    Self.logger.warning("Recovery from seed failed to start (attempt \(attempt)/\(ImportRecoveryLogic.maxAttempts)): \(message)")
+                case .notRun:
+                    Self.logger.warning("Recovery from seed reported not run on a creating open with skipRecovery false (attempt \(attempt)/\(ImportRecoveryLogic.maxAttempts)) - treating as failed")
+                case .completed, .inProgress:
+                    break // not retried by the decision above
+                }
                 // The scan only runs on the open that creates the wallet
                 // locally, so retrying requires wiping the seconds-old
                 // database first.
@@ -673,13 +730,14 @@ extension BarkWalletFFI {
     private func retryRecoveries(from report: RecoveryReport, wallet: Wallet) async {
         let passes = ImportRecoveryLogic.retryPasses(
             failedIds: report.failed.vtxoIds,
+            abandonedIds: report.abandoned.vtxoIds,
             foreignIds: report.foreign.vtxoIds,
             widenedGapLimit: maxVtxoKeyGapLimit()
         )
         for pass in passes {
             do {
                 let retried = try await wallet.recoverVtxos(vtxoIds: pass.vtxoIds, gapLimit: pass.gapLimit)
-                Self.logger.info("Recovery retry of \(pass.vtxoIds.count) \(pass.bucket.rawValue) id(s) (gap limit \(pass.gapLimit.map(String.init) ?? "configured")): recovered \(retried.recovered.vtxoIds.count) (\(retried.recovered.totalSats) sats), still failed \(retried.failed.vtxoIds.count), still foreign \(retried.foreign.vtxoIds.count)")
+                Self.logger.info("Recovery retry of \(pass.vtxoIds.count) \(pass.bucket.rawValue) id(s) (gap limit \(pass.gapLimit.map(String.init) ?? "configured")): recovered \(retried.recovered.vtxoIds.count) (\(retried.recovered.totalSats) sats), still failed \(retried.failed.vtxoIds.count), abandoned \(retried.abandoned.vtxoIds.count), notFound \(retried.notFound.vtxoIds.count), still foreign \(retried.foreign.vtxoIds.count)")
                 if pass.bucket == .foreign && !retried.foreign.vtxoIds.isEmpty {
                     Self.logger.warning("Foreign after widened scan (another wallet's, or keyed beyond \(maxVtxoKeyGapLimit()) indices): \(retried.foreign.vtxoIds)")
                 }
@@ -689,23 +747,46 @@ extension BarkWalletFFI {
         }
     }
 
-    /// Logs the seed-recovery scan result bark produced on the creating open.
-    private func logRecoveryReport(_ report: RecoveryReport) {
+    /// Logs the seed-recovery report bark produced on the creating open.
+    /// `phase` is "complete" for a final report or "in progress" for a
+    /// parked one (bark 0.9.0), whose `failed` ids bark itself retries.
+    private func logRecoveryReport(_ report: RecoveryReport, phase: String) {
         Self.logger.info("""
-            Recovery scan complete=\(report.isComplete): \
+            Recovery from seed \(phase), isComplete=\(report.isComplete): \
             recovered \(report.recovered.vtxoIds.count) (\(report.recovered.totalSats) sats), \
             skipped \(report.skipped.vtxoIds.count), \
             foreign \(report.foreign.vtxoIds.count), \
             failed \(report.failed.vtxoIds.count), \
+            abandoned \(report.abandoned.vtxoIds.count), \
+            notFound \(report.notFound.vtxoIds.count), \
             exited \(report.exited.vtxoIds.count)
             """)
         if !report.failed.vtxoIds.isEmpty {
-            Self.logger.warning("Recovery scan failed VTXO ids (retryable via recoverVtxos): \(report.failed.vtxoIds)")
+            Self.logger.warning("Recovery failed VTXO ids (retryable via recoverVtxos): \(report.failed.vtxoIds)")
+        }
+        if !report.abandoned.vtxoIds.isEmpty {
+            Self.logger.warning("Recovery abandoned VTXO ids (40 undecided attempts, still locked, retryable via recoverVtxos): \(report.abandoned.vtxoIds)")
         }
         if !report.foreign.vtxoIds.isEmpty {
-            Self.logger.warning("Recovery scan foreign VTXO ids (retrying with widened gap limit): \(report.foreign.vtxoIds)")
+            Self.logger.warning("Recovery foreign VTXO ids (retrying with widened gap limit): \(report.foreign.vtxoIds)")
         }
     }
+}
+
+// MARK: - Bark.RecoveryStatus → ImportRecoveryLogic.RecoveryOutcome
+
+extension ImportRecoveryLogic.RecoveryOutcome {
+    init(_ status: RecoveryStatus) {
+        switch status {
+        case .notRun: self = .notRun
+        case .failed(let message): self = .failed(message: message)
+        case .inProgress: self = .inProgress
+        case .completed: self = .completed
+        }
+    }
+}
+
+extension BarkWalletFFI {
 
     // MARK: - Wallet Deletion
 

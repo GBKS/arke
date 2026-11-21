@@ -22,14 +22,21 @@ on `created_now`), with no error and no re-scan API. We shipped this shape
 for months; imports silently never recovered (2026-08-10, feedback §1.7).
 Enforced: `BarkWalletFFI+WalletCreation.swift`. Test: none.
 
-**2. Seed-only import: a nil recovery report means wipe-and-reopen, and `skipRecovery` stays false.**
-A failed scan is indistinguishable from a skipped one, and the scan runs only
-on the creating open — so on nil report, stop the daemon, wipe the
-seconds-old database, redo the creating open (bounded retries). Fresh-seed
-*creation* uses `skipRecovery: true`; import must never.
+**2. Seed-only import: a recovery that never started means wipe-and-reopen, a started one is kept, and `skipRecovery` stays false.**
+The recovery from seed starts only on the creating open, so when
+`recoveryStatus()` reports `.failed` (or `.notRun`, unreachable there),
+stop the daemon, wipe the seconds-old database, redo the creating open
+(bounded retries). Since bark 0.9.0 (bindings v0.28.0, 2026-11-20) a
+started recovery can park `.inProgress` and is resumed by every
+`Wallet.sync()`, i.e. the app's refresh, not by the daemon; it is accepted,
+never wiped, and the immediate `recoverVtxos` retry is skipped because it
+fails while the recovery is being driven. Fresh-seed *creation* uses
+`skipRecovery: true`; import must never. Until 2026-11-20 the rule read
+"a nil recovery report means wipe-and-reopen".
 Enforced: `BarkWalletFFI+WalletCreation.swift` (`openImportedWallet`,
 decision in `ImportRecoveryLogic`). Test: `ImportRecoveryLogicTests`
-(decision matrix; the wipe-before-reopen mechanics remain code-only).
+(decision matrix and retry gate; the wipe-before-reopen mechanics remain
+code-only).
 
 **3. Wallet existence is `db.sqlite` OR `bark.sqlite` — never recreate-from-seed on a "missing" database.**
 bark 0.11+ creates `db.sqlite`; a `bark.sqlite`-only probe false-detected "no

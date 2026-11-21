@@ -316,7 +316,7 @@ extension BarkWalletFFI {
         }
         do {
             let report = try await wallet.recoverVtxos(vtxoIds: vtxoIds, gapLimit: gapLimit)
-            Self.logger.info("Recovery pass over \(vtxoIds.count) VTXO id(s): recovered \(report.recovered.vtxoIds.count), skipped \(report.skipped.vtxoIds.count), foreign \(report.foreign.vtxoIds.count), failed \(report.failed.vtxoIds.count)")
+            Self.logger.info("Recovery pass over \(vtxoIds.count) VTXO id(s): recovered \(report.recovered.vtxoIds.count), skipped \(report.skipped.vtxoIds.count), foreign \(report.foreign.vtxoIds.count), failed \(report.failed.vtxoIds.count), abandoned \(report.abandoned.vtxoIds.count), notFound \(report.notFound.vtxoIds.count)")
             return report
         } catch let error as Bark.Error {
             Self.logger.error("FFI Error recovering VTXOs: \(error)")
