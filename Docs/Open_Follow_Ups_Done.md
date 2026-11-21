@@ -10,7 +10,49 @@ the item off in `Open_Follow_Ups.md` with the date and move it here in the
 same commit, under a matching header or a dated "Moved from the open list"
 section; the open file never holds ticked lines.
 
+## Moved from the open list 2026-11-20
+- [x] **Small Lightning and Ark sends fail against Second's 0.9.0 server
+  until bark 0.9.0 bindings exist — done 2026-11-20** (device 2026-11-19, mainnet): the
+  server refuses a cosign request with a dust output (< 330 sats) on the
+  checkpoint tx; bark 0.8.1 leaves dust change there when a part's non-dust
+  outputs sum below 660 sats (`lib/src/arkoor/mod.rs` `new_isolate_dust`),
+  so 103, 104 and 400 sat sends failed with "upgrade your wallet and retry". Affects the shipped build too. Fix: bindings
+  `v0.28.0+bark-0.9.0`, published 2026-11-20; built, reviewed and
+  769/769 the same day (`Migrations/Bark-0.27.0-to-0.28.0/README.md`,
+  REVIEWED); owed: signet device day, then the TestFlight release.
+  `Features/Lightning_Send_Settlement.md` §12.
+  Closed 2026-11-20: bindings v0.28.0+bark-0.9.0 built, reviewed, 769/769,
+  device-checked the same day (`Development/Device_Day_2026-11-20.md`:
+  mainnet ~100 and ~400 sat Lightning sends and a small Ark send passed, no
+  dust refusal; board kept the full server lifetime; seed import, exit to
+  confirmation, regression and relaunch passed). TestFlight release owed.
+
+- [x] **DECIDE — interim for the 0.9.0 dust rejection: tell affected users to
+  "Refresh all" in the coin list, or add a consolidating refresh to the
+  balance flow — superseded 2026-11-20** (PROPOSED 2026-11-19, replaces the same-day 330 sat floor
+  idea, which a 400 sat failure disproved): the rejections come from dust
+  change pieces, which bark 0.8.1 leaves on the checkpoint whenever the
+  part's non-dust outputs sum below 660 sats; a wallet full of dust coins
+  (this one: 37 of 49 at 1–3 sats) makes that the normal case. One refresh
+  round merges every submitted coin into one output.
+  `Features/Lightning_Send_Settlement.md` §12.
+  Closed 2026-11-20 (DECIDED): bindings `v0.28.0+bark-0.9.0` were published
+  that day and bark 0.9.0 isolates dust change client-side, so no driver is
+  left for a consolidating refresh; the "Refresh all" advice for users on
+  the shipped 0.8.0 build goes into the TestFlight release note.
+  `Migrations/Bark-0.27.0-to-0.28.0/README.md`.
+
 ## Moved from the open list 2026-11-18
+- [x] **Lightning sends: pay with `wait: false`, "Sent" on bark's preimage,
+  refresh after — done 2026-11-18** (filed 2026-11-18): today every format pays with
+  `wait: true` (bark polls the server every 2 s, deaf to the mailbox), the
+  invoice path refreshes before "Sent", and a refunded failure (`.unknown`)
+  reads "Payment Sent". Step 0 is the bindings bump to v0.27.0+bark-0.8.1 as
+  its own commit (DECIDED 2026-11-18). Plan: `Features/Lightning_Send_Settlement.md`.
+  Closed 2026-11-18: committed `401156d` + `7aea58f`, reviewed (one
+  CONFIRMED finding fixed), 764/764, four formats and the refunded failure
+  device-checked on mainnet, bump's signet check closed by a completed
+  unilateral exit.
 - [x] **DECIDE — mainnet Esplora default and the two Lightning failure
   titles — ruled 2026-11-18** (PROPOSED 2026-11-18, `Features/Lightning_Send_Settlement.md` §7):
   switch `NetworkConfig.mainnet` from Second's explorer to `mempool.space/api`

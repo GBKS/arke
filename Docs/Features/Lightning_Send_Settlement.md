@@ -1,14 +1,15 @@
 # Lightning Send Settlement (`wait: false`)
 
-**Status:** 🔨 BUILT + REVIEWED 2026-11-18. Step 0 (bindings bump) built,
-full mobile suite 751/751 before Step 1. Step 1 built; fault-class pass §9
-(one CONFIRMED finding fixed the same day); post-review full mobile suite
-764/764 (107 suites, `LightningSettlementTests` 13 of them); de/ja/zh-Hant
-for the four new keys applied, lint clean. Device check §5j: all four formats and the refunded failure passed on
-mainnet 2026-11-18 (§9a; the failure reported, not logged). Left: a
-first-after-launch send with a log (diagnostic for the slow first send,
-not a gate), and the bump's signet onchain check (§4.5), of which only the exit's
-progress to confirmation is still open (migration README status). Reference implementation: PR #11 on GitHub
+**Status:** ✅ DONE 2026-11-18. Committed as `401156d` (bindings bump) and
+`7aea58f` (the change). Fault-class pass §9 with one CONFIRMED finding
+fixed the same day; full mobile suite 764/764; de/ja/zh-Hant applied.
+Device-checked on mainnet the same day (§9a): all four formats to "Sent",
+app-side wait without measurable cost, refunded failure to "Payment
+Failed"; the bump's signet check closed when the unilateral exit
+completed. Left as diagnostics, not gates: a first-after-launch send with
+a log (the slow first send of the day is unexplained), the hashless
+failure F2 (Tier 3 Send, bindings ask 24), the fallback-driver question F3
+(Tier 4 FFI). Reference implementation: PR #11 on GitHub
 (`lightning-send-wait-false`), rewritten here in the repo's workflow rather
 than merged (agreed with its author 2026-11-18).
 
@@ -349,3 +350,61 @@ again. Goes into `Bark_Bindings_Feedback.md` with Step 1.
 Server-side handoff and routing (the report's factors 2 and 3). The
 `retryForSecs` policy. Event-driven "Sent" from `movementUpdated` instead of
 the 100 ms poll: possible later, the poll is a local database read.
+
+## 12. Server moved to bark 0.9.0 (2026-11-19)
+
+Second released bark 0.9.0 on 2026-11-19 with a dust fix that is not fully
+backward compatible. Observed on mainnet the same morning: one Lightning
+send succeeded, then invoices of 103 and 104 sats failed at the HTLC
+cosign with the server's "invalid cosign request at index #1: An output is
+below the dust threshold, upgrade your wallet and retry". The error comes
+before any checkpoint exists, so the app shows a plain "Payment Failed"
+with bark's text, as designed; nothing is pending afterwards.
+
+- **Rule, read at both tags.** Server 0.9.0 (`lib/src/arkoor/mod.rs`,
+  commit `4015bd978`): a checkpoint tx may carry no output below
+  `P2TR_DUST` (330 sats) unless the input itself is dust; the client side
+  of 0.9.0 puts every dust output in the isolation tx. bark 0.8.1's
+  `new_isolate_dust` skips isolation when all outputs of a part are dust
+  (or all are not), so a part whose outputs are all below 330 sats, the
+  shape of a small HTLC piece, lands dust on the checkpoint and is refused.
+  Larger sends mostly pass, matching Second's note; a dust change piece on
+  a larger send can still trip it.
+- **Reach.** Lightning sends and Ark (arkoor) sends; boards, rounds,
+  offboards and exits are not arkoor cosigns. The shipped TestFlight build
+  (bark 0.8.0) is affected the same way.
+- **Fix.** Bindings for bark 0.9.0. As of 2026-11-19 none exist: bindings
+  master is `v0.27.0+bark-0.8.1`, bark-ffi master is the 0.8.1 bump. Ask
+  Second for the release; the bump then follows the usual migration path
+  (0.9.0 also renames `RecoveryReport.seen` to `contains`, adds
+  `RecoveryStatus.inProgress` and NWC, all BREAKING in bark).
+- **Corrected the same day by a 400 sat failure (same error, "index #1").**
+  The amount is not the trigger; the change is. bark 0.8.1's
+  `new_isolate_dust` (lines 1164–1215 at the tag): outputs all dust or all
+  non-dust → no isolation; mixed with the dust sum ≥ 330 → isolate; mixed
+  with the dust sum < 330 **and the non-dust sum < 660 → "just accept"**,
+  dust stays on the checkpoint; non-dust sum ≥ 660 → split a non-dust
+  output to fill the isolation. A 400 sat send has an HTLC output of 420,
+  so any dust change piece (`split_change_amount`, two pieces when the
+  change exceeds the payment) is accepted on the checkpoint and the 0.9.0
+  server refuses it. Sends whose parts carry 660 sats or more of non-dust
+  outputs isolate correctly and pass, which is why larger sends work.
+- **This wallet's coins make it the normal case.** The export lists 49
+  spendable VTXOs: 37 of them 1–3 sats, then 14, 89, 152, 167, 208, 211,
+  334, 475 sats, and six larger ones up to 69,474. Input selection for a
+  small payment lands on the small coins and produces dust change.
+- **Interim, PROPOSED (replaces the 330 sat floor, withdrawn).** One
+  refresh round merges every submitted coin into a single output
+  (`build_refresh_participation`, `outputs: vec![req]`, read at 0.8.1).
+  The Data view's coin list already has "Refresh all", which submits every
+  spendable coin; the balance flow's refresh only submits coins bark says
+  need refreshing (`getVtxosToRefresh`). After a consolidating refresh a
+  small send draws on the one large coin and its change pieces are large,
+  so the 0.9.0 server accepts it. Dust change can still occur by chance
+  (amount within 330 sats of a coin), so this softens, it does not fix.
+  **Assumed, settled by trying it:** that the 0.9.0 server accepts 1–3 sat
+  round inputs. Options: (a) tell affected users to use "Refresh all";
+  (b) add a consolidating option to the balance refresh flow; (c) both.
+- Also in this export: the launch's first `arkInfo` probe failed and the
+  connection poll recovered within its 20 s window; the send later reached
+  the server, so unrelated.

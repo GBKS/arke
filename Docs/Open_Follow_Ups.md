@@ -94,8 +94,13 @@ gate it). Also since: the deletion export step, built, reviewed and
 device-checked 2026-11-12 (`Features/Wallet_Deletion_Export_Step.md`), not
 yet in a build; its four-letter rule was removed again the same day.
 Picked 2026-11-18: Lightning send settlement (`Features/Lightning_Send_Settlement.md`),
-bindings bump v0.27.0 first as its own commit; both built and reviewed
-2026-11-18, device checks owed.
+bindings bump v0.27.0 first as its own commit; both built, reviewed,
+device-checked and committed 2026-11-18 (`401156d`, `7aea58f`).
+Picked 2026-11-20: bindings bump v0.28.0+bark-0.9.0 (dust rejection on
+Second's 0.9.0 server, forfeit unlock-hash fix), built, reviewed and
+769/769 and device-checked the same day
+(`Migrations/Bark-0.27.0-to-0.28.0/README.md`,
+`Development/Device_Day_2026-11-20.md`); TestFlight release owed.
 
 **Picks for the rest of Train 2 — PROPOSED 2026-10-27, Christoph to
 confirm:** his Lugano UI observations first, one per session; then either
@@ -267,12 +272,6 @@ needs a ruling or a sentence of reasoning before it can become work.
 
 ### Send and fees
 
-- [ ] **Lightning sends: pay with `wait: false`, "Sent" on bark's preimage,
-  refresh after** (filed 2026-11-18): today every format pays with
-  `wait: true` (bark polls the server every 2 s, deaf to the mailbox), the
-  invoice path refreshes before "Sent", and a refunded failure (`.unknown`)
-  reads "Payment Sent". Step 0 is the bindings bump to v0.27.0+bark-0.8.1 as
-  its own commit (DECIDED 2026-11-18). Plan: `Features/Lightning_Send_Settlement.md`.
 - [ ] **PROPOSAL (2026-10-07) — Human-readable address header**: a plain
   Lightning address shows the address twice in a greyed, disabled destination
   row. `QuickPaymentView.swift:481` passes `formatNameOverride` whenever
@@ -651,6 +650,16 @@ names the fix it verifies; the write-ups are in the Done log.
   moved from row to list), check a tag-filtered and a contact-filtered list.
 ### Exits and refresh
 
+- [ ] **CPFP child linking after a fast exit confirmation (bark 0.9.0)**
+  (filed 2026-11-20, review of the v0.28.0 bump): a confirmed exit tx no
+  longer names its CPFP child, so `extractUserFundedTransactionIds` finds
+  the wallet's child only in the exit's history snapshot of
+  `AwaitingConfirmation`. An exit whose child confirms between two
+  `syncExits` ticks never had that snapshot and its CPFP fee is not linked
+  to the movement (fee summary, Activity linking). Verify on the signet
+  device day (one exit to confirmation, check the movement's `childTxids`);
+  if it reproduces, source the child from `remainingExitTransactions` or
+  the onchain tx list. `Migrations/Bark-0.27.0-to-0.28.0/README.md`.
 - [ ] **Exit blocked state**: on-device verify + WalletManager tests
   (`Features/Exit_Blocked_State.md`, phases 1–3 done). Also closes the
   Reminders report "error when not enough onchain to progress exit".
@@ -1142,6 +1151,17 @@ survivors.)
 
 ### Concurrency and the FFI boundary
 
+- [ ] **VTXO kind strings: bark-ffi emits Debug names, the app matches
+  kebab-case** (device log 2026-11-20): `Vtxo.kind` is
+  `format!("{:?}", policy_type())`, so HTLC coins arrive as
+  `ServerHtlcRecv` / `ServerHtlcSend` (and `_v0` variants), while
+  `mapFFIKindToVTXOKind` and `VTXOModel+Bark` match `server-htlc-receive`
+  / `serverhtlcreceive` and fall back to `.pubkey` with a warning. Effect:
+  a pending Lightning-receive coin reads as a plain coin in the coin list.
+  Pre-existing, not from the 0.28.0 bump (same formatting at both tags).
+  Fix both sites together: match the Debug names (lowercased
+  `serverhtlcrecv`, `serverhtlcsend`, `serverhtlcrecv_v0`, …) and add a
+  test over bark's `VtxoPolicyKind` variant list.
 - [ ] **PROPOSED — slow fallback driver for parked Lightning sends** (review
   2026-11-18, F3): after `wait: false`, a send parked by a transient error
   waits for bark's daemon tick (60 s default) or the mailbox; the 1 s FFI
@@ -1354,7 +1374,16 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
   evidence attached. Plan §Track B 9.
 - [ ] **`recoveryStatus()` adoption** — distinguishes recovery-failed from
   never-ran; at minimum log `.failed(message:)` where the import path reads
-  `recoveryReport()` (`BarkWalletFFI+WalletCreation.swift:572`).
+  `recoveryReport()` (`openImportedWallet`). Absorbed by the v0.28.0 bump
+  (DECIDED 2026-11-20: the import path switches on `recoveryStatus()` to
+  see `.inProgress`; `Migrations/Bark-0.27.0-to-0.28.0/README.md`).
+- [ ] **Widened-gap `foreign` retry for imports whose recovery is still in
+  progress** (filed 2026-11-20): at bark 0.9.0 `recoverVtxos` fails while a
+  seed recovery is being driven, so the bump skips both retry passes on
+  `.inProgress` and the `foreign` pass (keys beyond the 250 gap limit) is
+  lost for those imports. Run it once `pendingRecovery()` returns nil, e.g.
+  from the first sync after import. Rare: foreign ids need a wallet keyed
+  past the gap limit. `Migrations/Bark-0.27.0-to-0.28.0/README.md`.
 - [ ] **0.23 Phase 3 (optional, ask first)**: `RoundFlowKind`-rich round UI,
   externally funded board (`boardFundingAddress`/`boardPsbt`),
   `OnchainWallet.evictTx`.
@@ -1512,6 +1541,12 @@ v0.26.0 / bark 0.8.0 since 2026-10-25). Migration guides in `Migrations/`.
 
 ### Tooling, CI and process
 
+- [ ] **bark's "VTXO … is uneconomical to exit, should be refreshed" is
+  logged at error level per dust coin per selection** (device log
+  2026-11-20): 1001 of the export's 1011 error entries on a wallet with 37
+  dust coins, which buries real errors in the X-Ray export summary. Options:
+  downgrade lines from `bark::vtxo::selection` matching that text in the
+  logger bridge, or ask Second to log it at debug. Tooling only.
 Moved out of Tier 1 "Release readiness" 2026-10-09: no user hits these;
 they are the infrastructure `Development/Release_Train.md` assumes.
 

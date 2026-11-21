@@ -1,17 +1,13 @@
 # Bark FFI Bindings Migration: v0.26.1 → v0.27.0
 
 **Date:** 2026-11-18
-**Status:** 🔨 BUILT 2026-11-18, signet device check mostly PASSED the same
-day. Revision changed in Xcode, build green, full mobile suite 751/751 on
-the new binary before any app change. Signet, Christoph, 2026-11-18:
-onchain send from Payments and from Savings, receive, board and offboard
-passed (reported, not logged); a unilateral exit of three VTXOs started
-cleanly (logged: exit movement, three VTXOs, 1 sat/vB on signet) and is
-being watched. The exit's CPFP children are the first thing the bdk 3.2.0
-signer change actually signs and broadcasts, so the bump counts as
-device-checked when that exit confirms. Companion plan:
-`../../Features/Lightning_Send_Settlement.md` (the bump lands as its own
-commit ahead of the behaviour change, DECIDED 2026-11-18).
+**Status:** ✅ DONE 2026-11-18, committed as `401156d`. Build green, full
+mobile suite 751/751 on the new binary before any app change. Signet
+device check the same day (Christoph): onchain send from Payments and from
+Savings, receive, board, offboard, and a unilateral exit of three VTXOs
+started, progressed and completed, which exercised the bdk 3.2.0
+signer change on the exit's CPFP children and the claim. Companion plan:
+`../../Features/Lightning_Send_Settlement.md`.
 **Bark Version:** v0.8.0 → **v0.8.1**
 **FFI Bindings Version:** v0.26.1 → v0.27.0 (tag `v0.27.0+bark-0.8.1`,
 commit `66d047f7ee08c2bca3675605ea7a88bc8b50adb3`, exact-revision pin as
